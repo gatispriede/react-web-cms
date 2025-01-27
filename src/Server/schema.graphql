@@ -1,0 +1,70 @@
+
+
+enum EItemType {
+    Text,
+    Image,
+    Carousel
+}
+
+type IItem {
+    name: String
+    type: Int
+    content: String
+}
+
+type ILine {
+    type: String,
+    content: [IItem]
+}
+
+type ICollection {
+    name: String
+    lines: [ILine]
+}
+
+type IPage {
+    name: String
+    collections: [ICollection]
+}
+
+type IContent {
+    id: Int,
+    name: String
+    value: String
+    page: IPage
+}
+
+type INavigation {
+    _id: String
+    type: String
+    page: String,
+    content: IContent
+}
+
+
+type ILoadData {
+    name: String
+    sizeOnDisk: Float
+    empty: Boolean
+}
+
+type TMongo {
+    getMongoDBUri: String
+    loadData: [ILoadData]
+    createDatabase: String
+    getNavigationCollection: [INavigation]
+}
+type MMongo {
+    addNavigationItem(pageName: String!): String
+}
+
+type Query {
+    sample: String
+    greeting: String
+    bar: String
+    mongo: TMongo
+}
+
+type Mutation {
+    mongo: MMongo
+}

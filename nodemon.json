@@ -1,0 +1,5 @@
+{
+  "watch": ["src/Server/*"],
+  "ignore": ["src/**/*.spec.ts"],
+  "exec": "tsx watch --include src/Server/* ./src/Server/index.ts"
+}
