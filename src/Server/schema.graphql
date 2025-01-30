@@ -32,6 +32,7 @@ type TMongo {
     loadData: [ILoadData]
     createDatabase: String
     getNavigationCollection: [INavigation]
+    getSections(ids: [String]): [ISection]
 }
 type MMongo {
     addUpdateNavigationItem(pageName: String!, sections: [String]): String

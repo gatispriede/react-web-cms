@@ -95,9 +95,21 @@ class MongoDBConnection {
 
         const navigationCollection = await this.client.db('Homepage').collection('Navigation').find({type: 'navigation'}).toArray();
 
-        console.log(navigationCollection)
-
         return navigationCollection
+    }
+    public async getSections({ids}: {ids: string[]}): Promise<any> {
+        if (!this.client) {
+            return 0
+        }
+        console.log(ids)
+        const sections: ISection[] = []
+        const sectionsDB = await this.client.db('Homepage').collection('Sections')
+        ids.map(id => {
+            const section = sectionsDB.findOne({id: id}) as unknown as ISection
+            sections.push(section)
+        })
+
+        return sections
     }
 
     public async removeSectionItem({id}: {id: string}) {

@@ -98,6 +98,7 @@ export const generatedSchema = {
     createDatabase: { __type: "String" },
     getMongoDBUri: { __type: "String" },
     getNavigationCollection: { __type: "[INavigation]" },
+    getSections: { __type: "[ISection]", __args: { ids: "[String]" } },
     loadData: { __type: "[ILoadData]" },
   },
   mutation: { __typename: { __type: "String!" }, mongo: { __type: "MMongo" } },
@@ -162,6 +163,9 @@ export interface TMongo {
   createDatabase?: Maybe<ScalarsEnums["String"]>;
   getMongoDBUri?: Maybe<ScalarsEnums["String"]>;
   getNavigationCollection?: Maybe<Array<Maybe<INavigation>>>;
+  getSections: (args?: {
+    ids?: Maybe<Array<Maybe<ScalarsEnums["String"]>>>;
+  }) => Maybe<Array<Maybe<ISection>>>;
   loadData?: Maybe<Array<Maybe<ILoadData>>>;
 }
 
