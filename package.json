@@ -3,42 +3,58 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "scripts": {
+    "start": "next src/frontend",
+    "dev": "nodemon --config ./nodemon.json"
+  },
+  "gqty": {
+    "introspections": {
+      "http://localhost:9000/": {}
+    }
+  },
   "dependencies": {
+    "@astrojs/solid-js": "^5.0.4",
+    "@chakra-ui/react": "^3.5.1",
+    "@emotion/react": "^11.14.0",
     "@graphql-tools/schema": "^10.0.16",
     "@radix-ui/themes": "^3.2.0",
+    "@solidjs/router": "^0.15.3",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.2.0",
+    "@types/node": "^22.12.0",
     "@types/react": "^19.0.8",
     "apollo-server": "^3.13.0",
+    "astro": "^5.1.10",
+    "babel-preset-solid": "^1.9.3",
     "buffer": "^6.0.3",
+    "cors": "^2.8.5",
     "cra-template-typescript": "1.2.0",
     "crypto": "^1.0.1",
     "crypto-browserify": "^3.12.1",
     "crypto-js": "^4.2.0",
     "express": "^4.21.2",
     "express-graphql": "^0.12.0",
+    "gqty": "^3.2.2",
     "graphql": "^16.10.0",
     "graphql-http": "^1.22.4",
     "graphql-playground-middleware-express": "^1.7.23",
     "graphql-tools": "^9.0.11",
     "mongodb": "^6.12.0",
     "net": "^1.0.2",
+    "next": "^15.1.6",
+    "next-themes": "^0.4.4",
     "node-polyfill-webpack-plugin": "^4.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-icons": "^5.4.0",
     "react-scripts": "5.0.1",
     "redis": "^4.7.0",
+    "solid-devtools": "^0.33.0",
+    "solid-js": "^1.9.4",
     "tls": "^0.0.1",
     "url": "^0.11.4",
     "util": "^0.12.5",
     "web-vitals": "^4.2.4"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "dev": "nodemon --config ./nodemon.json",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": [

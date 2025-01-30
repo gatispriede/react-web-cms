@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "es6",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true, // Add this line
@@ -14,8 +18,8 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx",
-    "baseUrl": "./",
+    "jsx": "react",
+    "baseUrl": "./src/frontend",
     "paths": {
       "crypto": [
         "node_modules/crypto-js"
@@ -23,7 +27,25 @@
       "stream": [
         "node_modules/stream-browserify"
       ]
-    }
+    },
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
-  "include": ["src"]
+  "include": [
+    "src/frontend/**/*",
+    ".next/types/**/*.ts"
+  ],
+  "extends": "astro/tsconfigs/base",
+  "exclude": [
+    "dist"
+  ],
+  "plugins": [
+    {
+      "name": "@astrojs/ts-plugin"
+    }
+  ]
 }

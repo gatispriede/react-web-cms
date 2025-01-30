@@ -1,46 +1,25 @@
-
-
-enum EItemType {
-    Text,
-    Image,
-    Carousel
-}
-
-type IItem {
+input InItem {
     name: String
-    type: Int
+    type: String
     content: String
 }
-
-type ILine {
-    type: String,
+type IItem {
+    name: String
+    type: String
+    content: String
+}
+type ISection {
+    id: String
+    type: Int
     content: [IItem]
 }
 
-type ICollection {
-    name: String
-    lines: [ILine]
-}
-
-type IPage {
-    name: String
-    collections: [ICollection]
-}
-
-type IContent {
-    id: Int,
-    name: String
-    value: String
-    page: IPage
-}
-
 type INavigation {
-    _id: String
+    id: String
     type: String
-    page: String,
-    content: IContent
+    page: String
+    sections: [String]
 }
-
 
 type ILoadData {
     name: String
@@ -55,7 +34,9 @@ type TMongo {
     getNavigationCollection: [INavigation]
 }
 type MMongo {
-    addNavigationItem(pageName: String!): String
+    addUpdateNavigationItem(pageName: String!, sections: [String]): String
+    addUpdateSectionItem(id:String, type: Int!, content: [InItem]!, pageName: String): String
+    removeSectionItem(id:String!): String
 }
 
 type Query {

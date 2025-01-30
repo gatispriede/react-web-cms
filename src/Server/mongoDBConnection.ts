@@ -1,4 +1,5 @@
 import {MongoClient} from 'mongodb'
+import guid from "../helpers/guid";
 
 interface ISettings {
     apiKey: string;
@@ -18,17 +19,10 @@ export interface ILoadData {
     empty?: boolean | undefined
 }
 
-enum ELineType {
-    single = "single",
-    double = "double",
-    tripple = "tripple",
-    quadrupple = "quadrupple"
-}
-
 enum EItemType {
-    Text,
-    Image,
-    Carousel
+    Text = "TEXT",
+    Image = "IMAGE",
+    Carousel = "CAROUSEL"
 }
 
 interface IItem {
@@ -37,26 +31,18 @@ interface IItem {
     content: string;
 }
 
-interface ILine {
-    type: ELineType,
+interface ISection {
+    id?: string;
+    type?: number,
+    page?: string,
     content: IItem[]
 }
 
-interface ICollection {
-    name: string;
-    lines: ILine[]
-}
-
-interface IPage {
-    name: string;
-    collections: ICollection[]
-}
-
 interface INavigation {
-    id: number
-    name: string;
-    value: string,
-    page: IPage
+    id: string
+    type: string;
+    page: string,
+    sections: string[]
 }
 
 class MongoDBConnection {
@@ -74,6 +60,7 @@ class MongoDBConnection {
     private client: MongoClient | undefined
 
     constructor() {
+        console.log('construct')
         this.connectToDB()
     }
 
@@ -83,7 +70,7 @@ class MongoDBConnection {
         if (newClient) {
             this.client = newClient
         }
-
+        console.log(newClient)
     }
 
     async loadData(): Promise<ILoadData[]> {
@@ -113,86 +100,135 @@ class MongoDBConnection {
         return navigationCollection
     }
 
-    public async addNavigationItem({pageName, collections}: { pageName: string, collections?: ICollection[] }): Promise<string> {
+    public async removeSectionItem({id}: {id: string}) {
         if (!this.client) {
             console.log('no client')
             return 'no client'
         }
-        let newCollections: ICollection[] = []
-        if (collections) {
-            newCollections = collections
-        } else {
-            newCollections = [
-                {
-                    name: 'Collection 1',
-                    lines: [
-                        {
-                            type: ELineType.double,
-                            content: [
-                                {
-                                    name: 'Item 1',
-                                    type: EItemType.Text,
-                                    content: 'Text content'
-                                },
-                                {
-                                    name: 'Item 2',
-                                    type: EItemType.Image,
-                                    content: 'Image content'
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ]
+        const sectionItem = await this.client.db('Homepage').collection('Sections').findOne({id: id}) as unknown as ISection
+        if(!sectionItem){
+            return 'no item with id: ' + id
         }
-        let nav: { type: string, page: string, content: INavigation } | undefined = undefined
+        let returnResult = ''
+        if(sectionItem.page){
+            const navigationItem = await this.client.db('Homepage').collection('Navigation').findOne({
+                    type: 'navigation',
+                    page: sectionItem.page
+                }
+            ) as unknown as INavigation
+            const indexToRemove = navigationItem.sections.findIndex(v => v === id)
+            console.log('indexToRemove: ',indexToRemove)
+            if(indexToRemove > -1){
+                navigationItem.sections.splice(indexToRemove, 1)
+                await this.client.db('Homepage').collection('Navigation').findOneAndUpdate({
+                    type: 'navigation',
+                    page: sectionItem.page
+                },
+                    {$set: {sections: navigationItem.sections}}
+                )
+                returnResult += ' removing from ' + sectionItem.page + ' ' + sectionItem.id + ' at index: ' + indexToRemove
+            }
+        }
+        const deleteResult = await this.client.db('Homepage').collection('Sections').deleteOne({id: id})
+        returnResult += "  " + JSON.stringify(deleteResult)
+        return returnResult
+    }
 
+    public async addUpdateSectionItem({id, type, content, pageName}: {
+        id: string,
+        content: IItem[],
+        pageName?: string
+        type: number
+    }): Promise<any> {
+        if (!this.client) {
+            console.log('no client')
+            return 'no client'
+        }
+        let response = ''
+        const section: ISection = {
+            content: content,
+            type: type
+        }
+        if (pageName) {
+            section.page = pageName
+        }
+        if (id) {
+            section.id = id
+            const result = await this.client.db('Homepage').collection('Sections').findOneAndUpdate({id: id}, {$set: section})
+            if(!result){
+                return 'error, no section found with the ID provided'
+            }
+            response = 'update a section entry:' + JSON.stringify(result)
+        } else {
+            section.id = guid()
+            const result = await this.client.db('Homepage').collection('Sections').insertOne(section)
+            response = 'Create a new section entry:' + JSON.stringify(result)
+        }
+        if (pageName) {
+            const navigationItem = await this.client.db('Homepage').collection('Navigation').findOne({
+                type: 'navigation',
+                page: pageName
+            }) as unknown as INavigation
+            if(navigationItem){
+                const found = navigationItem.sections.find(v => v === section.id)
+                if (navigationItem && !found) {
+                    navigationItem.sections.push(section.id)
+                    const navigation = await this.client.db('Homepage').collection('Navigation').findOneAndUpdate({
+                            type: 'navigation',
+                            page: pageName
+                        },
+                        {$set: {sections: navigationItem.sections}}
+                    )
+                    response += ' & update navigation entry: ' + JSON.stringify(navigation)
+                }
+            }
+
+        }
+
+        return response
+
+    }
+
+    public async addUpdateNavigationItem({pageName, sections}: {
+        pageName: string,
+        sections?: string[]
+    }): Promise<string> {
+        if (!this.client) {
+            console.log('no client')
+            return 'no client'
+        }
         const navigationCollection = this.client.db('Homepage').collection('Navigation')
 
-        const navigation = await navigationCollection.findOne({
+        const navigationItemInDb = await navigationCollection.findOne({
             type: 'navigation',
             page: pageName
         })
 
-        if(!collections){
-            nav = {
+        let navigationItem: INavigation
+        if (!navigationItemInDb) {
+            navigationItem = {
+                id: guid(),
                 type: 'navigation',
                 page: pageName,
-                content: {
-                    id: 1,
-                    name: pageName,
-                    value: pageName,
-                    page: {
-                        name: 'test',
-                        collections: newCollections
-                    }
-                }
+                sections: []
             }
-        }else{
-            nav = {
-                type: 'navigation',
-                page: pageName,
-                content: {
-                    id: 1,
-                    name: pageName,
-                    value: pageName,
-                    page: {
-                        name: 'test',
-                        collections: newCollections
-                    }
-                }
-            }
+        } else {
+            navigationItem = navigationItemInDb as unknown as INavigation
         }
 
-        if (navigation === null) {
-            const result = await this.client.db('Homepage').collection('Navigation').insertOne(nav)
-            console.log('create a new entry:',result)
+        if (sections) {
+            navigationItem.sections = sections
+        }
+
+        if (!navigationItemInDb) {
+            const result = await this.client.db('Homepage').collection('Navigation').insertOne(navigationItem)
+            console.log('create a new entry:', result)
             return 'create a new entry:' + JSON.stringify(result)
-        }else{
+        } else {
             const result = await navigationCollection.findOneAndUpdate({
                 type: 'navigation',
                 page: pageName
-            }, {$set: nav})
+            }, {$set: navigationItem})
             return 'update existing entry: ' + JSON.stringify(result)
         }
     }
