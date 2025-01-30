@@ -28,18 +28,14 @@ const Home = () => {
                         )
                     }) : ''}
                 </Tabs.List>
-                {loader ? loader.pages.map(item => {
+                {loader ? loader.pages.map((item: { page: string; sections: any[]; }) => {
                     return (
                         <Tabs.Content value={item.page}>
-                            {
-                                item.sections.map(section => {
-                                    return (
-                                        <div>
-                                            <div>{section}</div>
-                                        </div>
-                                    )
-                                })
-                            }
+                            {item.sections.map(section => (
+                                <div key={section}>
+                                    <div>{section}</div>
+                                </div>
+                            ))}
                         </Tabs.Content>
                     )
                 }) : ''}
