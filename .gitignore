@@ -2,11 +2,15 @@
 
 #frontend
 /src/frontend/.next
+/.cache
 
 # dependencies
 /node_modules
 /.pnp
 .pnp.js
+
+#IDE
+/.idea
 
 # testing
 /coverage
