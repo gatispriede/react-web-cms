@@ -2,6 +2,8 @@
 
 #frontend
 /src/frontend/.next
+/src/frontend/.next/
+src/frontend/.next/
 /.cache
 
 # dependencies
