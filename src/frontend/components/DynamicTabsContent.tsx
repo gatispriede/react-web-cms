@@ -1,17 +1,52 @@
 import React from "react";
+import {Button, Image} from "@chakra-ui/react";
+import Text from '../components/common/Text'
+import AddNewSectionItem from "./common/AddNewSectionItem";
 
+enum EType {
+    TEXT = "TEXT",
+    IMAGE = "IMAGE",
+}
 
 const DynamicTabsContent = ({sections}) => {
     return (
-        sections.map(section => (
-            <div key={section.name}>
+        <div>
+            <div>
                 {
-                    section.content.map((content, id) => {
-                        return <div key={id.name}>{content.content}</div>
-                    })
+                    sections.map(section => {
+
+                            return (
+                                <div key={section.name}>
+                                    {
+                                        section.content.map((content, id) => {
+                                            switch (content.type) {
+                                                case EType.TEXT:
+                                                    return (
+                                                        <div key={id}>
+                                                            <Text value={content.content as string}/>
+                                                        </div>
+                                                    )
+                                                case EType.IMAGE:
+                                                    return (
+                                                        <div key={id}>
+                                                            <Image src={content.content}/>
+                                                        </div>
+                                                    )
+                                                default:
+                                                    return '';
+                                            }
+                                        })
+                                    }
+                                </div>
+                            )
+                        }
+                    )
                 }
             </div>
-        ))
+            <div>
+                <AddNewSectionItem />
+            </div>
+        </div>
     )
 }
 

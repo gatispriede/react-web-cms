@@ -1,8 +1,9 @@
 import React, {useEffect, useState} from 'react'
-import {Tabs} from "@chakra-ui/react"
+import {Button, Tabs} from "@chakra-ui/react"
 import {Provider} from "../components/ui/provider";
 import {NavigationLoader} from "../Classes/NavigationLoader";
 import DynamicTabsContent from "../components/DynamicTabsContent";
+import AddNewDialogNavigation from "../components/common/AddNewDialog";
 
 let loader
 const Home = () => {
@@ -35,6 +36,11 @@ const Home = () => {
                             </Tabs.Trigger>
                         )
                     }) : ''}
+                    {
+                        <div>
+                            <AddNewDialogNavigation />
+                        </div>
+                    }
                 </Tabs.List>
                 {loader ? loader.pages.map((item: { page: string; sections: any[]; }) => {
                     return (

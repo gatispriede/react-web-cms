@@ -51,6 +51,8 @@
     "redis": "^4.7.0",
     "solid-devtools": "^0.33.0",
     "solid-js": "^1.9.4",
+    "styled-components": "^6.1.14",
+    "styled-icons": "^10.47.1",
     "tls": "^0.0.1",
     "url": "^0.11.4",
     "util": "^0.12.5",
