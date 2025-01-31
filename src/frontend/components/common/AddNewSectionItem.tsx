@@ -33,8 +33,8 @@ const fieldTypes = createListCollection({
 const AddNewSectionItem = () => {
     return (
         <DialogRoot>
-            <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
+            <DialogTrigger  asChild>
+                <Button variant="outline" size="sm" >
                     <PlusSquareDotted />
                 </Button>
             </DialogTrigger>
@@ -62,7 +62,8 @@ const AddNewSectionItem = () => {
                         <Button variant="outline">Cancel</Button>
                     </DialogActionTrigger>
                     <DialogActionTrigger asChild>
-                        <Button>Save</Button>
+                        <Button onClick={() => {
+                            console.log('change')}}>Save</Button>
                     </DialogActionTrigger>
                 </DialogFooter>
                 <DialogCloseTrigger />

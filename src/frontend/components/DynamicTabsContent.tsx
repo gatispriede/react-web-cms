@@ -1,51 +1,58 @@
 import React from "react";
-import {Button, Image} from "@chakra-ui/react";
+import {Box, Flex, Image} from "@chakra-ui/react";
 import Text from '../components/common/Text'
-import AddNewSectionItem from "./common/AddNewSectionItem";
+import EditWrapper from "./common/EditWrapper";
+import AddNewSection from "./common/AddNewSection";
 
 enum EType {
     TEXT = "TEXT",
     IMAGE = "IMAGE",
 }
 
+enum ETypeWidth {
+    '100%',
+    '50%',
+    '33%',
+    '25%',
+}
+
 const DynamicTabsContent = ({sections}) => {
     return (
         <div>
-            <div>
+            <Flex boxSizing="border-box" display="flex" flexDirection="column">
                 {
                     sections.map(section => {
-
                             return (
-                                <div key={section.name}>
+                                <Box key={section.name} display="flex" width={ETypeWidth[section.type]} flexDirection="row">
                                     {
                                         section.content.map((content, id) => {
                                             switch (content.type) {
                                                 case EType.TEXT:
                                                     return (
-                                                        <div key={id}>
+                                                        <EditWrapper key={id}>
                                                             <Text value={content.content as string}/>
-                                                        </div>
+                                                        </EditWrapper>
                                                     )
                                                 case EType.IMAGE:
                                                     return (
-                                                        <div key={id}>
+                                                        <EditWrapper key={id}>
                                                             <Image src={content.content}/>
-                                                        </div>
+                                                        </EditWrapper>
                                                     )
                                                 default:
                                                     return '';
                                             }
                                         })
                                     }
-                                </div>
+                                </Box>
                             )
                         }
                     )
                 }
-            </div>
-            <div>
-                <AddNewSectionItem />
-            </div>
+            </Flex>
+            <Box>
+                <AddNewSection/>
+            </Box>
         </div>
     )
 }

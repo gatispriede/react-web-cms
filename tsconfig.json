@@ -14,7 +14,7 @@
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
@@ -40,7 +40,6 @@
     "src/frontend/**/*",
     ".next/types/**/*.ts"
   ],
-  "extends": "astro/tsconfigs/base",
   "exclude": [
     "dist"
   ],
