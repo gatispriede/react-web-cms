@@ -91,6 +91,7 @@ export const generatedSchema = {
         type: "Int!",
       },
     },
+    deleteNavigationItem: { __type: "String", __args: { pageName: "String!" } },
     removeSectionItem: { __type: "String", __args: { id: "String!" } },
   },
   TMongo: {
@@ -152,6 +153,9 @@ export interface MMongo {
     id?: Maybe<ScalarsEnums["String"]>;
     pageName?: Maybe<ScalarsEnums["String"]>;
     type: ScalarsEnums["Int"];
+  }) => Maybe<ScalarsEnums["String"]>;
+  deleteNavigationItem: (args: {
+    pageName: ScalarsEnums["String"];
   }) => Maybe<ScalarsEnums["String"]>;
   removeSectionItem: (args: {
     id: ScalarsEnums["String"];

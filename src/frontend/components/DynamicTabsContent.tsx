@@ -1,58 +1,62 @@
 import React from "react";
-import {Box, Flex, Image} from "@chakra-ui/react";
-import Text from '../components/common/Text'
 import EditWrapper from "./common/EditWrapper";
 import AddNewSection from "./common/AddNewSection";
-
-enum EType {
-    TEXT = "TEXT",
-    IMAGE = "IMAGE",
-}
+import {ISection, resolve} from "../gqty";
+import SectionContent from "./SectionContent";
 
 enum ETypeWidth {
-    '100%',
+    '100%' = 1,
     '50%',
     '33%',
     '25%',
 }
 
-const DynamicTabsContent = ({sections}) => {
+const DynamicTabsContent = ({sections, page, refresh}: { sections: ISection[], page: string, refresh: () => void }) => {
+    const deleteSection = async (sectionId: string) => {
+        if(!sectionId){
+            return;
+        }
+        const result = await resolve(
+            ({mutation}) => {
+                const update = {
+                    id: sectionId
+                }
+                return mutation.mongo.removeSectionItem(update)
+            },
+        );
+        console.log(result)
+        refresh()
+    }
     return (
         <div>
-            <Flex boxSizing="border-box" display="flex" flexDirection="column">
+            <div>
                 {
-                    sections.map(section => {
+                    sections.map((section: ISection) => {
+                            const emptySections = section.type - section.content?.length
+                            if(emptySections > 0){
+                                const emptySection = {
+                                    type: "EMPTY"
+                                }
+                                for(let i = 0; i < emptySections; i++){
+                                    section.content?.push(emptySection)
+                                }
+                            }
                             return (
-                                <Box key={section.name} display="flex" width={ETypeWidth[section.type]} flexDirection="row">
-                                    {
-                                        section.content.map((content, id) => {
-                                            switch (content.type) {
-                                                case EType.TEXT:
-                                                    return (
-                                                        <EditWrapper key={id}>
-                                                            <Text value={content.content as string}/>
-                                                        </EditWrapper>
-                                                    )
-                                                case EType.IMAGE:
-                                                    return (
-                                                        <EditWrapper key={id}>
-                                                            <Image src={content.content}/>
-                                                        </EditWrapper>
-                                                    )
-                                                default:
-                                                    return '';
-                                            }
-                                        })
-                                    }
-                                </Box>
+                                <EditWrapper deleteAction={() => {
+                                    deleteSection(section.id)
+                                }}>
+                                    <SectionContent content={section.content}/>
+                                </EditWrapper>
                             )
                         }
                     )
                 }
-            </Flex>
-            <Box>
-                <AddNewSection/>
-            </Box>
+            </div>
+            <div>
+                <AddNewSection refresh={() => {
+                    refresh()
+                }} page={page}/>
+            </div>
         </div>
     )
 }

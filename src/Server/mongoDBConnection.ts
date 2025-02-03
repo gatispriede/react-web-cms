@@ -60,7 +60,6 @@ class MongoDBConnection {
     private client: MongoClient | undefined
 
     constructor() {
-        console.log('construct')
         this.connectToDB()
     }
 
@@ -199,6 +198,26 @@ class MongoDBConnection {
 
         return response
 
+    }
+
+    public async deleteNavigationItem({pageName}: { pageName: string }) {
+        if (!this.client) {
+            console.log('no client')
+            return 'no client'
+        }
+        const navigationItem = await this.client.db('Homepage').collection('Navigation').findOne({
+            type: 'navigation',
+            page: pageName
+        }) as unknown as INavigation
+        if (!navigationItem) {
+            return 'no navigation found for page:'+ pageName
+        }
+        const result = await this.client.db('Homepage').collection('Navigation').deleteOne({
+            type: 'navigation',
+            page: pageName
+        })
+        console.log('delete navigation entry:', JSON.stringify(result))
+        return 'delete navigation entry:' + JSON.stringify(result)
     }
 
     public async addUpdateNavigationItem({pageName, sections}: {

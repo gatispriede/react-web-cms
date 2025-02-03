@@ -1,75 +1,56 @@
-import {
-    Button,
-    createListCollection,
-    Input, SelectContent, SelectItem,
-    SelectLabel,
-    SelectRoot,
-    SelectTrigger,
-    SelectValueText
-} from "@chakra-ui/react"
-import {
-    DialogActionTrigger,
-    DialogBody,
-    DialogCloseTrigger,
-    DialogContent,
-    DialogFooter,
-    DialogHeader,
-    DialogRoot,
-    DialogTitle,
-    DialogTrigger,
-} from "../ui/dialog"
-import {PlusSquareDotted} from "@styled-icons/bootstrap/PlusSquareDotted"
+import {Button, Input, Modal, Select} from "antd";
+import {PlusCircleOutlined} from "@ant-design/icons";
+import React from "react";
 
-const fieldTypes = createListCollection({
-    items: [
-        { label: "Simple Text", value: "TEXT" },
-        { label: "Rich text", value: "RICH_TEXT" },
-        { label: "Image", value: "IMAGE" },
-        { label: "Image with text", value: "IMAGE_WITH_TEXT" },
-        { label: "Carousel of images", value: "CAROUSEL" },
-    ],
-})
+class AddNewSectionItem  extends React.Component {
+    state = {
+        dialogOpen: false,
+        selected: 'TEXT',
+        selectOptions: [
+            { label: "Simple Text", value: "TEXT" },
+            { label: "Rich text", value: "RICH_TEXT" },
+            { label: "Image", value: "IMAGE" },
+            { label: "Image with text", value: "IMAGE_WITH_TEXT" },
+            { label: "Carousel of images", value: "CAROUSEL" },
+        ]
+    }
 
-const AddNewSectionItem = () => {
-    return (
-        <DialogRoot>
-            <DialogTrigger  asChild>
-                <Button variant="outline" size="sm" >
-                    <PlusSquareDotted />
+    constructor(props: {}) {
+        super(props);
+
+    }
+
+    render() {
+        return (
+            <>
+                <Button type="primary" onClick={() => {
+                    this.setState({dialogOpen: true})
+                }}>
+                    <PlusCircleOutlined/>
                 </Button>
-            </DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Add new section item</DialogTitle>
-                </DialogHeader>
-                <DialogBody>
-                    <SelectRoot collection={fieldTypes} size="sm" width="320px">
-                        <SelectLabel>Select type</SelectLabel>
-                        <SelectTrigger>
-                            <SelectValueText placeholder="Select item type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {fieldTypes.items.map((item) => (
-                                <SelectItem item={item} key={item.value}>
-                                    {item.label}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </SelectRoot>
-                </DialogBody>
-                <DialogFooter>
-                    <DialogActionTrigger asChild>
-                        <Button variant="outline">Cancel</Button>
-                    </DialogActionTrigger>
-                    <DialogActionTrigger asChild>
-                        <Button onClick={() => {
-                            console.log('change')}}>Save</Button>
-                    </DialogActionTrigger>
-                </DialogFooter>
-                <DialogCloseTrigger />
-            </DialogContent>
-        </DialogRoot>
-    )
+                <Modal open={this.state.dialogOpen}
+                       onCancel={() => {
+                           this.setState({dialogOpen: false})
+                       }}
+                       onOk={() => {
+                           this.setState({dialogOpen: false})
+                       }}
+
+                >
+                    <Select defaultValue={this.state.selectOptions[0]} options={this.state.selectOptions} onSelect={(e) => {
+                        this.setState({selected: e})
+                    }}/>
+                    <div>Selected content type: {this.state.selectOptions.find(item => item.value === this.state.selected).label}</div>
+                    <div>
+                        Content:
+                        <div>
+                            <Input />
+                        </div>
+                    </div>
+                </Modal>
+            </>
+        )
+    }
 }
 
 export default AddNewSectionItem

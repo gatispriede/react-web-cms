@@ -38,6 +38,7 @@ type MMongo {
     addUpdateNavigationItem(pageName: String!, sections: [String]): String
     addUpdateSectionItem(id:String, type: Int!, content: [InItem]!, pageName: String): String
     removeSectionItem(id:String!): String
+    deleteNavigationItem(pageName:String!): String
 }
 
 type Query {

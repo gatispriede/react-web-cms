@@ -1,24 +1,34 @@
-import {Box, Button} from "@chakra-ui/react";
-import {Delete} from "@styled-icons/typicons/Delete"
-import {Edit} from "@styled-icons/fluentui-system-regular/Edit"
+import {useState} from "react";
+import {DeleteOutlined} from "@ant-design/icons";
+import {Button, Popconfirm} from 'antd';
 
-const EditWrapper = ({children}) => {
+const EditWrapper = ({children, deleteAction}) => {
+    const [delConf, setDelConf] = useState(false);
     return (
         <>
             <div className={'edit-button-container'}>
-                <Button variant="subtle">
-                    <Edit />
+                <Button>
+                    edit
                 </Button>
             </div>
             {
-                children && <Box width={'100%'}>{children}</Box>
+                children && <div>{children}</div>
             }
-            <Box className={'edit-button-container'}>
-                <Button onClick={(e) => {
-                    console.log(e,'click')}} variant="subtle">
-                    <Delete   />
-                </Button>
-            </Box>
+            <div className={'edit-button-container'}>
+                <Popconfirm
+                    title="Delete"
+                    description="Are you sure to delete?"
+                    onConfirm={() => {
+                        deleteAction()
+                    }}
+                    okText="Delete"
+                    cancelText="Cancel"
+                >
+                    <Button danger>
+                        <DeleteOutlined/>
+                    </Button>
+                </Popconfirm>
+            </div>
         </>
     )
 }
