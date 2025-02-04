@@ -39,6 +39,12 @@ export interface InItem {
   type?: InputMaybe<Scalars["String"]["input"]>;
 }
 
+export interface InSection {
+  content?: InputMaybe<Array<InputMaybe<InItem>>>;
+  id?: InputMaybe<Scalars["String"]["input"]>;
+  type?: InputMaybe<Scalars["Int"]["input"]>;
+}
+
 export const scalarsEnumsHash: ScalarsEnumsHash = {
   Boolean: true,
   Float: true,
@@ -61,7 +67,7 @@ export const generatedSchema = {
   INavigation: {
     __typename: { __type: "String!" },
     id: { __type: "String" },
-    page: { __type: "String" },
+    page: { __type: "String!" },
     sections: { __type: "[String]" },
     type: { __type: "String" },
   },
@@ -69,12 +75,18 @@ export const generatedSchema = {
     __typename: { __type: "String!" },
     content: { __type: "[IItem]" },
     id: { __type: "String" },
-    type: { __type: "Int" },
+    page: { __type: "String" },
+    type: { __type: "Int!" },
   },
   InItem: {
     content: { __type: "String" },
     name: { __type: "String" },
     type: { __type: "String" },
+  },
+  InSection: {
+    content: { __type: "[InItem]" },
+    id: { __type: "String" },
+    type: { __type: "Int" },
   },
   MMongo: {
     __typename: { __type: "String!" },
@@ -84,12 +96,7 @@ export const generatedSchema = {
     },
     addUpdateSectionItem: {
       __type: "String",
-      __args: {
-        content: "[InItem]!",
-        id: "String",
-        pageName: "String",
-        type: "Int!",
-      },
+      __args: { pageName: "String", section: "InSection!" },
     },
     deleteNavigationItem: { __type: "String", __args: { pageName: "String!" } },
     removeSectionItem: { __type: "String", __args: { id: "String!" } },
@@ -130,7 +137,7 @@ export interface ILoadData {
 export interface INavigation {
   __typename?: "INavigation";
   id?: Maybe<ScalarsEnums["String"]>;
-  page?: Maybe<ScalarsEnums["String"]>;
+  page: ScalarsEnums["String"];
   sections?: Maybe<Array<Maybe<ScalarsEnums["String"]>>>;
   type?: Maybe<ScalarsEnums["String"]>;
 }
@@ -139,7 +146,8 @@ export interface ISection {
   __typename?: "ISection";
   content?: Maybe<Array<Maybe<IItem>>>;
   id?: Maybe<ScalarsEnums["String"]>;
-  type?: Maybe<ScalarsEnums["Int"]>;
+  page?: Maybe<ScalarsEnums["String"]>;
+  type: ScalarsEnums["Int"];
 }
 
 export interface MMongo {
@@ -149,10 +157,8 @@ export interface MMongo {
     sections?: Maybe<Array<Maybe<ScalarsEnums["String"]>>>;
   }) => Maybe<ScalarsEnums["String"]>;
   addUpdateSectionItem: (args: {
-    content: Array<Maybe<InItem>>;
-    id?: Maybe<ScalarsEnums["String"]>;
     pageName?: Maybe<ScalarsEnums["String"]>;
-    type: ScalarsEnums["Int"];
+    section: InSection;
   }) => Maybe<ScalarsEnums["String"]>;
   deleteNavigationItem: (args: {
     pageName: ScalarsEnums["String"];

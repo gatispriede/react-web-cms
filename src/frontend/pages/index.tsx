@@ -4,15 +4,24 @@ import {Tabs} from 'antd';
 import AddNewDialogNavigation from "../components/common/AddNewDialogNavigation";
 import DynamicTabsContent from "../components/DynamicTabsContent";
 import EditWrapper from "../components/common/EditWrapper";
+import {IPage} from "../Interfaces/IPage";
+
+interface IHomeState {
+    loading: boolean,
+    activeTab: string,
+    pages: IPage[],
+    tabProps: any[]
+}
 
 class Home extends React.Component {
     url: string = 'http://localhost:9000'
-    pages: any[] = []
     sections: any[] = []
 
-    state = {
+    state: IHomeState = {
         loading: false,
-        tabProps: []
+        pages: [],
+        tabProps: [],
+        activeTab: ''
     }
 
     constructor(props: {}) {
@@ -21,8 +30,8 @@ class Home extends React.Component {
     }
 
     async initialize(): Promise<void> {
-        this.setState({loading: true});
-        this.pages = await resolve(
+        this.setState({loading: true})
+        const pages = await resolve(
             ({query}) => {
                 const list: any[] = []
                 query.mongo.getNavigationCollection.map((item: INavigation) => {
@@ -33,45 +42,53 @@ class Home extends React.Component {
                 })
                 return list
             },
-        );
-        if (this.pages[0]) {
+        )
+        this.setState({pages: pages});
+        if (pages[0]) {
             const newTabsState = []
-            for (let id in this.pages) {
-                if(this.pages[id]){
-                    const sectionsData = await this.loadSections(this.pages[id].page)
+            for (let id in pages) {
+                if (pages[id]) {
+                    const sectionsData = await this.loadSections(pages[id].page, pages)
                     newTabsState.push({
                         key: id,
+                        page: pages[id].page,
                         label: <EditWrapper deleteAction={() => {
-                            this.deleteNavigation(this.pages[id].page)
+                            this.deleteNavigation(pages[id].page)
                             this.initialize()
-                        }}>{this.pages[id].page}</EditWrapper>,
+                        }}>{pages[id].page}</EditWrapper>,
                         children: <DynamicTabsContent refresh={() => {
                             this.initialize()
-                        }} sections={sectionsData} page={this.pages[id].page}/>
+                        }} sections={sectionsData} page={pages[id].page}/>
                     })
                 }
             }
             newTabsState.push({
                 key: 'add',
-                label: <AddNewDialogNavigation refresh={() => {this.initialize()}}/>,
+                label: <AddNewDialogNavigation refresh={() => {
+                    this.initialize()
+                }}/>,
             })
             this.setState({tabProps: newTabsState})
         }
+        this.setState({loading: false})
 
-        this.setState({loading: false});
     }
 
-    async loadSections(pageName: string) {
-        const page = this.pages.find(p => p.page === pageName)
+    async loadSections(pageName: string, pages?: IPage[]) {
+        let page
+        if (pages) {
+            page = pages.find(p => p.page === pageName)
+        } else {
+            page = this.state.pages.find(p => p.page === pageName)
+        }
         if (page) {
             const sectionIds = page.sections
             if (sectionIds.length > 0) {
                 return await resolve(
-                    ({query, mutation}) => {
-                        const list = []
-                        query.mongo.getSections({ids: sectionIds}).map(item => {
+                    ({query}) => {
+                        const list = query.mongo.getSections({ids: sectionIds}).map(item => {
                             let content = [];
-                            if(!item){
+                            if (!item) {
                                 return
                             }
                             content = item.content.map(value => {
@@ -81,11 +98,12 @@ class Home extends React.Component {
                                     name: value.name
                                 }
                             })
-                            list.push({
+                            return {
                                 id: item.id,
+                                page: item.page,
                                 content: content,
                                 type: item.type,
-                            })
+                            }
                         })
                         return list
                     },
@@ -103,7 +121,7 @@ class Home extends React.Component {
         )
         const sections = navigationItem.sections
         if (sections && sections.length > 0) {
-            for(let id in sections) {
+            for (let id in sections) {
                 await resolve(
                     ({mutation}) => {
                         return mutation.mongo?.removeSectionItem({id: sections[id]})
@@ -120,13 +138,23 @@ class Home extends React.Component {
                 return mutation.mongo.deleteNavigationItem(update)
             },
         );
+        const tab = this.state.tabProps.find(tab => tab.page === pageName)
+        if (tab) {
+            this.state.tabProps.splice(this.state.tabProps.indexOf(tab), 1)
+            this.setState({tabProps: this.state.tabProps})
+        }
         this.initialize()
     }
 
     render() {
         return (
             <div>
-                <Tabs defaultActiveKey={"0"} items={this.state.tabProps}/>
+                {this.state.loading ? <div>Loading...</div> :
+                    <Tabs onChange={(value) => {
+                        this.setState({activeTab: value})
+                    }} activeKey={this.state.activeTab} defaultActiveKey={"0"} items={this.state.tabProps}/>
+                }
+
             </div>
         );
     }

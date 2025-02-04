@@ -29,19 +29,21 @@ class AddNewSection extends React.Component {
     }
 
     async addSectionToPage() {
-        console.log('section type: ' + this.state.type)
-        console.log('page: ' + this.state.page)
         const result = await resolve(
             ({mutation}) => {
                 const item = {
                     pageName: this.state.page,
-                    type: this.state.type,
-                    content: []
+                    section: {
+                        page: this.state.page,
+                        type: this.state.type,
+                        content: []
+                    }
                 }
 
                 return mutation.mongo.addUpdateSectionItem(item)
             },
         );
+        console.log(result)
         this.refresh()
     }
 

@@ -1,6 +1,5 @@
 import EditWrapper from "./common/EditWrapper";
 import React from "react";
-import {Button} from "antd";
 import AddNewSectionItem from "./common/AddNewSectionItem";
 enum EType {
     TEXT = "TEXT",
@@ -8,31 +7,44 @@ enum EType {
     EMPTY = "EMPTY",
 }
 
-const SectionContent = ({content}) => {
+const SectionContent = ({section, addRemoveSectionItem}) => {
+    console.log('load')
     return (
         <div>
             {
-                content.map((item, id) => {
+                section.content.map((item, id: number) => {
                     switch (item.type) {
                         case EType.TEXT:
                             return (
-                                <EditWrapper key={id} children={<input value={item.content as string}/>}
-                                             deleteAction={undefined}>
-
+                                <EditWrapper key={id}
+                                             deleteAction={() => {
+                                                 addRemoveSectionItem(section.id, {
+                                                     index: id,
+                                                     type: EType.EMPTY,
+                                                     content: "",
+                                                 })
+                                             }}>
+                                    <span >{item.content}</span>
                                 </EditWrapper>
                             )
                         case EType.IMAGE:
                             return (
-                                <EditWrapper key={id} children={<input value={item.content as string}/>}
-                                             deleteAction={undefined}>
-
+                                <EditWrapper key={id}
+                                             deleteAction={() => {
+                                                 addRemoveSectionItem(section.id, {
+                                                     index: id,
+                                                     type: EType.EMPTY,
+                                                     content: "",
+                                                 })
+                                             }}>
+                                    <img src={item.content}></img>
                                 </EditWrapper>
                             )
                         case EType.EMPTY:
                             return (
                                 <div>
-                                    Empty section
-                                    <AddNewSectionItem />
+                                    Empty section item
+                                    <AddNewSectionItem index={id} section={section} addSectionItem={addRemoveSectionItem}/>
                                 </div>
                             )
                         default:

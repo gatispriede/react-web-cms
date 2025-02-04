@@ -1,16 +1,14 @@
-import {useState} from "react";
 import {DeleteOutlined} from "@ant-design/icons";
 import {Button, Popconfirm} from 'antd';
 
-const EditWrapper = ({children, deleteAction}) => {
-    const [delConf, setDelConf] = useState(false);
+const EditWrapper = ({children, deleteAction, edit = false}) => {
     return (
         <>
-            <div className={'edit-button-container'}>
+            {edit && <div className={'edit-button-container'}>
                 <Button>
                     edit
                 </Button>
-            </div>
+            </div>}
             {
                 children && <div>{children}</div>
             }

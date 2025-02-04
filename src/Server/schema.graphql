@@ -1,8 +1,15 @@
+input InSection {
+    id: String
+    type: Int
+    page: String
+    content: [InItem]
+}
 input InItem {
     name: String
     type: String
     content: String
 }
+
 type IItem {
     name: String
     type: String
@@ -10,14 +17,15 @@ type IItem {
 }
 type ISection {
     id: String
-    type: Int
+    page: String
+    type: Int!
     content: [IItem]
 }
 
 type INavigation {
     id: String
     type: String
-    page: String
+    page: String!
     sections: [String]
 }
 
@@ -36,7 +44,7 @@ type TMongo {
 }
 type MMongo {
     addUpdateNavigationItem(pageName: String!, sections: [String]): String
-    addUpdateSectionItem(id:String, type: Int!, content: [InItem]!, pageName: String): String
+    addUpdateSectionItem(section: InSection!, pageName: String): String
     removeSectionItem(id:String!): String
     deleteNavigationItem(pageName:String!): String
 }

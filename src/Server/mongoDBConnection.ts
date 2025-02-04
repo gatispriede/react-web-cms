@@ -145,27 +145,18 @@ class MongoDBConnection {
         return returnResult
     }
 
-    public async addUpdateSectionItem({id, type, content, pageName}: {
-        id: string,
-        content: IItem[],
+    public async addUpdateSectionItem({section, pageName}: {
+        section: ISection,
         pageName?: string
-        type: number
     }): Promise<any> {
         if (!this.client) {
             console.log('no client')
             return 'no client'
         }
         let response = ''
-        const section: ISection = {
-            content: content,
-            type: type
-        }
-        if (pageName) {
-            section.page = pageName
-        }
-        if (id) {
-            section.id = id
-            const result = await this.client.db('Homepage').collection('Sections').findOneAndUpdate({id: id}, {$set: section})
+
+        if (section.id) {
+            const result = await this.client.db('Homepage').collection('Sections').findOneAndUpdate({id: section.id}, {$set: section})
             if(!result){
                 return 'error, no section found with the ID provided'
             }
@@ -176,6 +167,7 @@ class MongoDBConnection {
             response = 'Create a new section entry:' + JSON.stringify(result)
         }
         if (pageName) {
+            section.page = pageName
             const navigationItem = await this.client.db('Homepage').collection('Navigation').findOne({
                 type: 'navigation',
                 page: pageName

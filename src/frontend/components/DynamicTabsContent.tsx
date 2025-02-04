@@ -1,7 +1,7 @@
 import React from "react";
 import EditWrapper from "./common/EditWrapper";
 import AddNewSection from "./common/AddNewSection";
-import {ISection, resolve} from "../gqty";
+import {resolve} from "../gqty";
 import SectionContent from "./SectionContent";
 
 enum ETypeWidth {
@@ -11,12 +11,47 @@ enum ETypeWidth {
     '25%',
 }
 
-const DynamicTabsContent = ({sections, page, refresh}: { sections: ISection[], page: string, refresh: () => void }) => {
-    const deleteSection = async (sectionId: string) => {
-        if(!sectionId){
+interface ISection {
+    section: any;
+    id: string,
+    type: number,
+    page: string,
+    content: any[]
+}
+
+interface IContentProps {
+    sections: ISection[],
+    page: string,
+    refresh: () => void
+}
+
+interface SContent {
+    sections: ISection[],
+    page: string,
+}
+
+class DynamicTabsContent extends React.Component {
+    private readonly refresh: () => void;
+    state: SContent = {
+        sections: [],
+        page: '',
+    }
+
+    constructor(props: IContentProps) {
+        super(props)
+        const {sections, page, refresh} = props
+        this.refresh = refresh
+        this.state = {
+            sections: sections,
+            page: page,
+        }
+    }
+
+    deleteSection = async (sectionId: string) => {
+        if (!sectionId) {
             return;
         }
-        const result = await resolve(
+        await resolve(
             ({mutation}) => {
                 const update = {
                     id: sectionId
@@ -24,41 +59,64 @@ const DynamicTabsContent = ({sections, page, refresh}: { sections: ISection[], p
                 return mutation.mongo.removeSectionItem(update)
             },
         );
-        console.log(result)
-        refresh()
+        this.refresh()
     }
-    return (
-        <div>
+    addRemoveSectionItem = async (sectionId: string, config: any) => {
+        const section = this.state.sections.find(section => section.id === sectionId)
+        if (!section) {
+            console.log('no section to add item to')
+            return;
+        }
+        (section as ISection).content[config.index] = {
+            type: config.type,
+            content: config.content
+        }
+        const input = {
+            section: section
+        }
+        await resolve(
+            ({mutation}) => {
+                return mutation.mongo.addUpdateSectionItem(input)
+            },
+        )
+        this.refresh()
+    }
+
+    render() {
+        console.log('refresh')
+        return (
             <div>
-                {
-                    sections.map((section: ISection) => {
-                            const emptySections = section.type - section.content?.length
-                            if(emptySections > 0){
-                                const emptySection = {
-                                    type: "EMPTY"
+                <div>
+                    {
+                        this.state.sections.map((section: ISection) => {
+                                const emptySections = section.type - section.content?.length
+                                if (emptySections > 0) {
+                                    const emptySection = {
+                                        type: "EMPTY"
+                                    }
+                                    for (let i = 0; i < emptySections; i++) {
+                                        section.content?.push(emptySection)
+                                    }
                                 }
-                                for(let i = 0; i < emptySections; i++){
-                                    section.content?.push(emptySection)
-                                }
+                                return (
+                                    <EditWrapper deleteAction={() => {
+                                        this.deleteSection(section.id)
+                                    }}>
+                                        <SectionContent section={section} addRemoveSectionItem={this.addRemoveSectionItem}/>
+                                    </EditWrapper>
+                                )
                             }
-                            return (
-                                <EditWrapper deleteAction={() => {
-                                    deleteSection(section.id)
-                                }}>
-                                    <SectionContent content={section.content}/>
-                                </EditWrapper>
-                            )
-                        }
-                    )
-                }
+                        )
+                    }
+                </div>
+                <div>
+                    <AddNewSection refresh={() => {
+                        this.refresh()
+                    }} page={this.state.page}/>
+                </div>
             </div>
-            <div>
-                <AddNewSection refresh={() => {
-                    refresh()
-                }} page={page}/>
-            </div>
-        </div>
-    )
+        )
+    }
 }
 
 export default DynamicTabsContent
