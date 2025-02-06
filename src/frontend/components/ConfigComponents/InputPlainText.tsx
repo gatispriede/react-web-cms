@@ -5,7 +5,7 @@ import {RichTextContent} from "../SectionComponents/RichText";
 import {EItemType} from "../../../enums/EItemType";
 
 const InputPlainText = ({content, setContent}:IInputContent) => {
-    const richTextContent = new RichTextContent(EItemType.RichText, content)
+    const richTextContent = new RichTextContent(EItemType.Text, content)
     return (
         <div className={'plain-text'}>
             <label>Please enter text: </label>

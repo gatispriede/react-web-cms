@@ -6,7 +6,7 @@ import {EItemType} from "../../../enums/EItemType";
 class PreviewDialog extends React.Component {
     props = {
         type: EItemType.Text,
-        content: ''
+        content: '{}'
     }
     state = {
         dialogOpen: false,

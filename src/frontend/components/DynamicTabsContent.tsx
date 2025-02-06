@@ -115,7 +115,8 @@ class DynamicTabsContent extends React.Component {
                                 const emptySections = section.type - section.content?.length
                                 if (emptySections > 0) {
                                     const emptySection = {
-                                        type: "EMPTY"
+                                        type: "EMPTY",
+                                        content: '{}'
                                     }
                                     for (let i = 0; i < emptySections; i++) {
                                         section.content?.push(emptySection as IItem)
