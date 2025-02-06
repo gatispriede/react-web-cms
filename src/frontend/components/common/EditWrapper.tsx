@@ -1,24 +1,22 @@
 import {DeleteOutlined, EditOutlined} from "@ant-design/icons";
 import {Button, Popconfirm} from 'antd';
+import {JSX} from "react";
 
 interface PropsEditWrapper {
     children: React.ReactNode,
     deleteAction?: () => Promise<void>,
     editAction?: () => void,
+    editContent?: JSX.Element,
     edit?: boolean
     del?: boolean
 }
 
-const EditWrapper = ({children, editAction, deleteAction, edit = false, del = true}: PropsEditWrapper) => {
+const EditWrapper = ({children, editAction, editContent, deleteAction, edit = false, del = true}: PropsEditWrapper) => {
     return (
         <div className={'edit-wrapper'}>
-            {(edit && editAction) && <div className={'edit-button-container'}>
+            {(edit && editContent) && <div className={'edit-button-container'}>
                 <div className={'edit-button'}>
-                    <Button onClick={() => {
-                        editAction()
-                    }}>
-                        <EditOutlined />
-                    </Button>
+                    {editContent}
                 </div>
             </div>}
             {

@@ -1,8 +1,8 @@
 import {EItemType} from "../../../enums/EItemType";
 import {IContentTypeProps} from "../../../Interfaces/IContentTypeProps";
-import PlainText from "../InputContent/PlainText";
-import PlainImage from "../InputContent/PlainImage";
-import RichText from "../InputContent/RichText";
+import PlainText from "../SectionComponents/PlainText";
+import PlainImage from "../SectionComponents/PlainImage";
+import RichText from "../SectionComponents/RichText";
 
 const ContentType = (props: IContentTypeProps) => {
     switch (props.type) {

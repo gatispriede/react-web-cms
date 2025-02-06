@@ -67,9 +67,14 @@ class SectionContent extends React.Component {
                                     key={id}
                                     del={item.type !== EItemType.Empty}
                                     edit={item.type !== EItemType.Empty}
-                                    editAction={() => {
-
-                                    }}
+                                    editContent={
+                                        <AddNewSectionItem
+                                            index={id}
+                                            addSectionItem={this.props.addRemoveSectionItem}
+                                            section={this.state.section}
+                                            loadItem={true}
+                                        />
+                                    }
                                     deleteAction={ async () => {
                                         await this.state.addRemoveSectionItem(this.state.section.id, {
                                             index: id,
@@ -87,6 +92,7 @@ class SectionContent extends React.Component {
                                                     index={id}
                                                     addSectionItem={this.props.addRemoveSectionItem}
                                                     section={this.state.section}
+                                                    loadItem={false}
                                                 />
                                             }
                                         />

@@ -1,18 +1,18 @@
 import React from "react";
-import InputPlainText from "../OutputContent/InputPlainText";
-import InputRichText from "../OutputContent/InputRichText";
-import InputPlainImage from "../OutputContent/InputPlainImage";
+import InputPlainText from "../ConfigComponents/InputPlainText";
+import InputRichText from "../ConfigComponents/InputRichText";
+import InputPlainImage from "../ConfigComponents/InputPlainImage";
 
-export const ContentSection = ({selected, setContent}: { selected: string, setContent: (value: string) => void }) => {
+export const ContentSection = ({selected, content, setContent}: { content: string, selected: string, setContent: (value: string) => void }) => {
     switch (selected) {
         case 'TEXT':
-            return <InputPlainText setContent={setContent} />
+            return <InputPlainText content={content} setContent={setContent} />
         case 'RICH_TEXT':
-            return <InputRichText setContent={setContent} />
+            return <InputRichText content={content} setContent={setContent} />
         case 'IMAGE':
         case 'IMAGE_WITH_TEXT':
         case 'CAROUSEL':
-            return <InputPlainImage setContent={setContent} />
+            return <InputPlainImage content={content} setContent={setContent} />
         default:
             return <></>
 
