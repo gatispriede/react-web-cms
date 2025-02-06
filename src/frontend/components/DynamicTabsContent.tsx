@@ -3,26 +3,17 @@ import EditWrapper from "./common/EditWrapper";
 import AddNewSection from "./common/AddNewSection";
 import {resolve} from "../gqty";
 import SectionContent from "./SectionContent";
+import {InSection, MutationMongo} from "../../Interfaces/IMongo";
+import {ISection} from "../../Interfaces/ISection";
+import {IItem} from "../../Interfaces/IItem";
+import {Layout} from "antd";
+import AddNewSectionItem from "./common/AddNewSectionItem";
 
-enum ETypeWidth {
-    '100%' = 1,
-    '50%',
-    '33%',
-    '25%',
-}
-
-interface ISection {
-    section: any;
-    id: string,
-    type: number,
-    page: string,
-    content: any[]
-}
 
 interface IContentProps {
     sections: ISection[],
     page: string,
-    refresh: () => void
+    refresh: () => Promise<void>
 }
 
 interface SContent {
@@ -31,7 +22,13 @@ interface SContent {
 }
 
 class DynamicTabsContent extends React.Component {
-    private readonly refresh: () => void;
+    props: IContentProps = {
+        sections: [],
+        page: '',
+        refresh: async () => {
+        }
+    }
+    public refresh: () => Promise<void>;
     state: SContent = {
         sections: [],
         page: '',
@@ -56,62 +53,95 @@ class DynamicTabsContent extends React.Component {
                 const update = {
                     id: sectionId
                 }
-                return mutation.mongo.removeSectionItem(update)
+                return (mutation as MutationMongo).mongo.removeSectionItem(update)
             },
-        );
-        this.refresh()
+        )
+        this.forceUpdate()
     }
-    addRemoveSectionItem = async (sectionId: string, config: any) => {
+    addRemoveSectionItem = async (sectionId: string | undefined, config: any) => {
         const section = this.state.sections.find(section => section.id === sectionId)
+        console.log(section, config.index, config.content)
         if (!section) {
             console.log('no section to add item to')
             return;
         }
-        (section as ISection).content[config.index] = {
+        section.content[config.index] = {
             type: config.type,
             content: config.content
         }
         const input = {
-            section: section
+            section: (section as InSection)
         }
-        await resolve(
+        const result = await resolve(
             ({mutation}) => {
-                return mutation.mongo.addUpdateSectionItem(input)
+                return (mutation as MutationMongo).mongo.addUpdateSectionItem(input)
             },
         )
-        this.refresh()
+        await this.props.refresh()
+    }
+
+    async addSectionToPage(item: any) {
+
+        const result = await resolve(
+            ({mutation}) => {
+
+                console.log('adding section')
+
+                return (mutation as MutationMongo).mongo.addUpdateSectionItem(item)
+            },
+        );
+
+        try {
+            const resultObject = JSON.parse(result)
+            if (resultObject.createSection) {
+                if (resultObject.createSection.id) {
+                    item.section.id = resultObject.createSection.id
+                    const sections = this.state.sections
+                    sections.push(item.section)
+                    this.setState({sections})
+                }
+            }
+        } catch (err) {
+            console.log(err)
+        }
     }
 
     render() {
-        console.log('refresh')
         return (
-            <div>
+            <div className={'dynamic-content'}>
                 <div>
                     {
-                        this.state.sections.map((section: ISection) => {
+                        this.state.sections.map((section: ISection, index) => {
                                 const emptySections = section.type - section.content?.length
                                 if (emptySections > 0) {
                                     const emptySection = {
                                         type: "EMPTY"
                                     }
                                     for (let i = 0; i < emptySections; i++) {
-                                        section.content?.push(emptySection)
+                                        section.content?.push(emptySection as IItem)
                                     }
                                 }
                                 return (
-                                    <EditWrapper deleteAction={() => {
-                                        this.deleteSection(section.id)
+                                    <EditWrapper deleteAction={async () => {
+                                        this.state.sections.splice(index, 1)
+                                        await this.deleteSection(section.id ? section.id : '')
                                     }}>
-                                        <SectionContent section={section} addRemoveSectionItem={this.addRemoveSectionItem}/>
+                                        <SectionContent
+                                            section={section}
+                                            refresh={async () => {
+                                                await this.refresh()
+                                            }}
+                                            addRemoveSectionItem={this.addRemoveSectionItem}/>
+
                                     </EditWrapper>
                                 )
                             }
                         )
                     }
                 </div>
-                <div>
-                    <AddNewSection refresh={() => {
-                        this.refresh()
+                <div className={'new-section-wrapper'}>
+                    <AddNewSection addSectionToPage={async (item) => {
+                        await this.addSectionToPage(item)
                     }} page={this.state.page}/>
                 </div>
             </div>

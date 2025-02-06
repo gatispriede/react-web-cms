@@ -1,33 +1,48 @@
-import {DeleteOutlined} from "@ant-design/icons";
+import {DeleteOutlined, EditOutlined} from "@ant-design/icons";
 import {Button, Popconfirm} from 'antd';
 
-const EditWrapper = ({children, deleteAction, edit = false}) => {
+interface PropsEditWrapper {
+    children: React.ReactNode,
+    deleteAction?: () => Promise<void>,
+    editAction?: () => void,
+    edit?: boolean
+    del?: boolean
+}
+
+const EditWrapper = ({children, editAction, deleteAction, edit = false, del = true}: PropsEditWrapper) => {
     return (
-        <>
-            {edit && <div className={'edit-button-container'}>
-                <Button>
-                    edit
-                </Button>
+        <div className={'edit-wrapper'}>
+            {(edit && editAction) && <div className={'edit-button-container'}>
+                <div className={'edit-button'}>
+                    <Button onClick={() => {
+                        editAction()
+                    }}>
+                        <EditOutlined />
+                    </Button>
+                </div>
             </div>}
             {
                 children && <div>{children}</div>
             }
-            <div className={'edit-button-container'}>
-                <Popconfirm
-                    title="Delete"
-                    description="Are you sure to delete?"
-                    onConfirm={() => {
-                        deleteAction()
-                    }}
-                    okText="Delete"
-                    cancelText="Cancel"
-                >
-                    <Button danger>
-                        <DeleteOutlined/>
-                    </Button>
-                </Popconfirm>
-            </div>
-        </>
+            {
+                (del && deleteAction) && <div className={'edit-button-container'}>
+                    <Popconfirm
+                        title="Delete"
+                        description="Are you sure to delete?"
+                        onConfirm={async () => {
+                            await deleteAction()
+                        }}
+                        okText="Delete"
+                        cancelText="Cancel"
+                    >
+                        <Button danger>
+                            <DeleteOutlined/>
+                        </Button>
+                    </Popconfirm>
+                </div>
+            }
+
+        </div>
     )
 }
 export default EditWrapper

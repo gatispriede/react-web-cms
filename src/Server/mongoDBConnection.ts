@@ -1,5 +1,7 @@
 import {MongoClient} from 'mongodb'
 import guid from "../helpers/guid";
+import {ISection} from "../Interfaces/ISection";
+import {INavigation} from "../Interfaces/INavigation";
 
 interface ISettings {
     apiKey: string;
@@ -17,32 +19,6 @@ export interface ILoadData {
     name: string
     sizeOnDisk?: number | undefined
     empty?: boolean | undefined
-}
-
-enum EItemType {
-    Text = "TEXT",
-    Image = "IMAGE",
-    Carousel = "CAROUSEL"
-}
-
-interface IItem {
-    name: string;
-    type: EItemType;
-    content: string;
-}
-
-interface ISection {
-    id?: string;
-    type?: number,
-    page?: string,
-    content: IItem[]
-}
-
-interface INavigation {
-    id: string
-    type: string;
-    page: string,
-    sections: string[]
 }
 
 class MongoDBConnection {
@@ -69,7 +45,6 @@ class MongoDBConnection {
         if (newClient) {
             this.client = newClient
         }
-        console.log(newClient)
     }
 
     async loadData(): Promise<ILoadData[]> {
@@ -91,8 +66,8 @@ class MongoDBConnection {
         if (!this.client) {
             return 0
         }
-
         const navigationCollection = await this.client.db('Homepage').collection('Navigation').find({type: 'navigation'}).toArray();
+        await this.client.close()
 
         return navigationCollection
     }
@@ -100,7 +75,6 @@ class MongoDBConnection {
         if (!this.client) {
             return 0
         }
-        console.log(ids)
         const sections: ISection[] = []
         const sectionsDB = await this.client.db('Homepage').collection('Sections')
         ids.map(id => {
@@ -128,7 +102,6 @@ class MongoDBConnection {
                 }
             ) as unknown as INavigation
             const indexToRemove = navigationItem.sections.findIndex(v => v === id)
-            console.log('indexToRemove: ',indexToRemove)
             if(indexToRemove > -1){
                 navigationItem.sections.splice(indexToRemove, 1)
                 await this.client.db('Homepage').collection('Navigation').findOneAndUpdate({
@@ -153,18 +126,24 @@ class MongoDBConnection {
             console.log('no client')
             return 'no client'
         }
-        let response = ''
+        let response = {
+            updateSection: {},
+            createSection: {},
+            updateNavigation: {}
+        }
 
         if (section.id) {
             const result = await this.client.db('Homepage').collection('Sections').findOneAndUpdate({id: section.id}, {$set: section})
             if(!result){
                 return 'error, no section found with the ID provided'
             }
-            response = 'update a section entry:' + JSON.stringify(result)
+            response.updateSection = result
         } else {
             section.id = guid()
             const result = await this.client.db('Homepage').collection('Sections').insertOne(section)
-            response = 'Create a new section entry:' + JSON.stringify(result)
+            response.createSection = result
+            // @ts-ignore
+            response.createSection.id = section.id
         }
         if (pageName) {
             section.page = pageName
@@ -182,13 +161,13 @@ class MongoDBConnection {
                         },
                         {$set: {sections: navigationItem.sections}}
                     )
-                    response += ' & update navigation entry: ' + JSON.stringify(navigation)
+                    response.updateNavigation = navigation
                 }
             }
 
         }
 
-        return response
+        return JSON.stringify(response)
 
     }
 
@@ -208,8 +187,7 @@ class MongoDBConnection {
             type: 'navigation',
             page: pageName
         })
-        console.log('delete navigation entry:', JSON.stringify(result))
-        return 'delete navigation entry:' + JSON.stringify(result)
+        return JSON.stringify(result)
     }
 
     public async addUpdateNavigationItem({pageName, sections}: {
@@ -245,14 +223,13 @@ class MongoDBConnection {
 
         if (!navigationItemInDb) {
             const result = await this.client.db('Homepage').collection('Navigation').insertOne(navigationItem)
-            console.log('create a new entry:', result)
-            return 'create a new entry:' + JSON.stringify(result)
+            return JSON.stringify(result)
         } else {
             const result = await navigationCollection.findOneAndUpdate({
                 type: 'navigation',
                 page: pageName
             }, {$set: navigationItem})
-            return 'update existing entry: ' + JSON.stringify(result)
+            return JSON.stringify(result)
         }
     }
 

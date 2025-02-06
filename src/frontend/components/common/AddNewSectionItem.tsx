@@ -1,32 +1,20 @@
-import {Button, Input, Modal, Select} from "antd";
+import {Button, Modal, Select} from "antd";
 import {PlusCircleOutlined} from "@ant-design/icons";
 import React from "react";
-
-const ContentSection = ({selected, setContent}:{selected: string, setContent: (value: string) => void}) => {
-    switch(selected){
-        case 'TEXT':
-        case 'RICH_TEXT':
-            return <Input onChange={(e) => {
-                setContent(e.target.value)
-                // this.setState({content: e.target.value})
-            }}/>
-        case 'IMAGE':
-        case 'IMAGE_WITH_TEXT':
-        case 'CAROUSEL':
-            return <Input onChange={(e) => {
-                setContent(e.target.value)
-                // this.setState({content: e.target.value})
-            }}/>
-        default:
-            return <></>
-
-    }
-}
+import {ISection} from "../../../Interfaces/ISection";
+import {ContentSection} from "./ContentSection";
+import PreviewDialog from "./PreviewDialog";
+import {EItemType} from "../../../enums/EItemType";
 
 class AddNewSectionItem extends React.Component {
+    props = {
+        addSectionItem: (sectionId: string, config: any) => {},
+        section: {},
+        index: 0,
+    }
     state = {
         dialogOpen: false,
-        selected: 'TEXT',
+        selected: EItemType.Text,
         content: '',
         selectOptions: [
             {
@@ -56,35 +44,33 @@ class AddNewSectionItem extends React.Component {
             },
         ]
     }
-    section: any
+    section: ISection
     index: number
-    addSectionItemParent: (sectionId: string, config: any) => void
 
     constructor(props: {
         addSectionItem: (sectionId: string, config: any) => void,
-        section: any,
+        section: ISection,
         index: number,
     }) {
         super(props);
         this.section = props.section
         this.index = props.index
-        this.addSectionItemParent = props.addSectionItem
     }
 
-    addSectionItem = () => {
-        this.addSectionItemParent(
-            this.section.id, {
+    addSectionItem = async () => {
+        this.props.addSectionItem(
+            this.section.id ? this.section.id : '', {
                 index: this.index,
                 type: this.state.selected,
                 content: this.state.content
             }
         )
     }
-    activeLabel = (): string => {
-        return this.state.selectOptions.find(item => item.value === this.state.selected).label
+    activeLabel = () => {
+        return this.state.selectOptions.find(item => item.value === this.state.selected)?.label
     }
-    activeContentText = (): string => {
-        return this.state.selectOptions.find(item => item.value === this.state.selected).text
+    activeContentText = () => {
+        return this.state.selectOptions.find(item => item.value === this.state.selected)?.text
     }
 
     render() {
@@ -93,31 +79,34 @@ class AddNewSectionItem extends React.Component {
                 <Button type="primary" onClick={() => {
                     this.setState({dialogOpen: true})
                 }}>
-                    <PlusCircleOutlined/>
+                    <PlusCircleOutlined/> Add content
                 </Button>
                 <Modal open={this.state.dialogOpen}
                        onCancel={() => {
                            this.setState({dialogOpen: false})
                        }}
-                       onOk={() => {
+                       onOk={async () => {
+                           await this.addSectionItem()
                            this.setState({dialogOpen: false})
-                           this.addSectionItem()
                        }}
 
                 >
-                    <Select defaultValue={this.state.selectOptions[0]} options={this.state.selectOptions}
-                            onSelect={(e) => {
-                                this.setState({selected: e})
-                            }}/>
-                    <div>Selected content
-                        type: {this.activeLabel()}
+                    <div>
+                        <h2>Type</h2>
+                        <label>Please select content type: </label>
+                        <Select defaultValue={this.state.selectOptions[0]} options={this.state.selectOptions}
+                                onSelect={(e) => {
+                                    this.setState({selected: e})
+                                }}/>
                     </div>
                     <div>
-                        {this.activeContentText()}
+                        <hr />
+                        <h2>Configuration</h2>
                         <ContentSection selected={this.state.selected} setContent={(value: string) => {
                             this.setState({content: value})
                         }} />
-                    </div>
+                        <hr />
+                        <PreviewDialog type={this.state.selected} content={this.state.content}/> </div>
                 </Modal>
             </>
         )

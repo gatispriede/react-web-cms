@@ -2,10 +2,14 @@ import React from "react";
 import {resolve} from '../../gqty'
 import {Button, Input, Modal} from "antd";
 import {PlusCircleOutlined} from "@ant-design/icons";
+import {MutationMongo} from "../../../Interfaces/IMongo";
 
 class AddNewDialogNavigation extends React.Component {
+    props = {
+        refresh: async () => {}
+    }
     sections: string[] = []
-    refresh: () => void
+    refresh: () => Promise<void>
     state = {
         dialogOpen: false,
         newNavigationName: ''
@@ -13,7 +17,7 @@ class AddNewDialogNavigation extends React.Component {
     private count = 0
 
     constructor(props: {
-        refresh: () => void
+        refresh: () => Promise<void>
     }) {
         super(props)
         this.refresh = props.refresh
@@ -26,18 +30,18 @@ class AddNewDialogNavigation extends React.Component {
     public async createNavigation() {
         await resolve(
             ({mutation}) => {
-                const update = {
+                const update: {pageName: string, sections: string[]} = {
                     pageName: this.state.newNavigationName,
                     sections: []
                 }
                 if (this.sections.length > 0) {
                     update.sections = this.sections
                 }
-                return mutation.mongo.addUpdateNavigationItem(update)
+                return (mutation as MutationMongo).mongo.addUpdateNavigationItem(update)
             },
         );
         this.newNavigationName = ''
-        this.refresh()
+        await this.refresh()
     }
 
     render() {
@@ -52,9 +56,9 @@ class AddNewDialogNavigation extends React.Component {
                 </Button>
                 <Modal open={this.state.dialogOpen}
                        okButtonProps={{disabled: this.state.newNavigationName.length < 4}}
-                       onOk={() => {
+                       onOk={async () => {
                            this.setState({dialogOpen: false})
-                           this.createNavigation()
+                           await this.createNavigation()
                        }}
                        onCancel={() => {
                            this.setState({dialogOpen: false})

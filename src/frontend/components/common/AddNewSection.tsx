@@ -1,50 +1,37 @@
 import React from "react";
 import {Button, Modal, Select} from "antd";
 import {PlusCircleOutlined} from "@ant-design/icons";
-import {ISection, resolve} from "../../gqty";
 
 class AddNewSection extends React.Component {
-    refresh: () => void;
+    props = {
+        page: '',
+        addSectionToPage: async (item: any) => {}
+    }
     state = {
         dialogOpen: false,
         page: '',
         type: 1,
-        selectOptions:
-            [
-                {label: "100%", value: 1},
-                {label: "50% 50%", value: 2},
-                {label: "30% 30% 30%", value: 3},
-                {label: "25% 25% 25% 25%", value: 4},
-            ],
-
+        selectOptions: [
+            {label: "100%", value: 1},
+            {label: "50% 50%", value: 2},
+            {label: "30% 30% 30%", value: 3},
+            {label: "25% 25% 25% 25%", value: 4},
+        ],
     }
 
     constructor(props: {
         page: string,
-        refresh: () => void,
+        refresh: () => { },
     }) {
         super(props)
         this.state.page = props.page
-        this.refresh = props.refresh
     }
 
-    async addSectionToPage() {
-        const result = await resolve(
-            ({mutation}) => {
-                const item = {
-                    pageName: this.state.page,
-                    section: {
-                        page: this.state.page,
-                        type: this.state.type,
-                        content: []
-                    }
-                }
 
-                return mutation.mongo.addUpdateSectionItem(item)
-            },
-        );
-        console.log(result)
-        this.refresh()
+
+    selectedSection() {
+        const selectedOption = this.state.selectOptions.find(o => o.value === this.state.type)
+        return selectedOption?.label
     }
 
     render() {
@@ -53,15 +40,23 @@ class AddNewSection extends React.Component {
                 <Button type="primary" onClick={() => {
                     this.setState({dialogOpen: true})
                 }}>
-                    <PlusCircleOutlined/>
+                    Add new section <PlusCircleOutlined/>
                 </Button>
                 <Modal open={this.state.dialogOpen}
                        onCancel={() => {
                            this.setState({dialogOpen: false})
                        }}
-                       onOk={() => {
+                       onOk={ async () => {
+                           const item = {
+                               pageName: this.state.page,
+                               section: {
+                                   page: this.state.page,
+                                   type: this.state.type,
+                                   content: []
+                               }
+                           }
+                           await this.props.addSectionToPage(item)
                            this.setState({dialogOpen: false})
-                           this.addSectionToPage()
                        }}
 
                 >
@@ -69,7 +64,7 @@ class AddNewSection extends React.Component {
                         this.setState({type: e})
                     }}/>
                     <div>Selected
-                        section(-s): {this.state.selectOptions.find(item => item.value === this.state.type).label}</div>
+                        section(-s): {this.selectedSection()}</div>
                 </Modal>
             </>
         )

@@ -1,8 +1,10 @@
+// @ts-ignore
 import express from 'express';
 import {graphqlHTTP} from 'express-graphql';
 import {makeExecutableSchema} from 'graphql-tools';
 import redisConnection from "./redisConnection";
 import MongoDBConnection from "./mongoDBConnection";
+// @ts-ignore
 import cors from "cors";
 import { readFileSync } from 'fs';
 
