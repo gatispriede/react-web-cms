@@ -4,7 +4,7 @@ import ContentType from "./ContentType";
 import {EItemType} from "../../../enums/EItemType";
 
 class PreviewDialog extends React.Component {
-    props = {
+    props: any = {
         type: EItemType.Text,
         content: '{}'
     }

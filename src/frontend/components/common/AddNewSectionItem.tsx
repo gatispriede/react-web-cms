@@ -7,7 +7,7 @@ import PreviewDialog from "./PreviewDialog";
 import {EItemType} from "../../../enums/EItemType";
 
 class AddNewSectionItem extends React.Component {
-    props = {
+    props: any = {
         addSectionItem: (sectionId: string, config: any) => {},
         section: {},
         index: 0,

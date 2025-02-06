@@ -123,7 +123,7 @@ class DynamicTabsContent extends React.Component {
                                     }
                                 }
                                 return (
-                                    <EditWrapper deleteAction={async () => {
+                                    <EditWrapper key={index} deleteAction={async () => {
                                         this.state.sections.splice(index, 1)
                                         await this.deleteSection(section.id ? section.id : '')
                                     }}>
@@ -141,9 +141,12 @@ class DynamicTabsContent extends React.Component {
                     }
                 </div>
                 <div className={'new-section-wrapper'}>
-                    <AddNewSection addSectionToPage={async (item) => {
-                        await this.addSectionToPage(item)
-                    }} page={this.state.page}/>
+                    <AddNewSection
+                        page={this.state.page}
+                        addSectionToPage={async (item: any) => {
+                            await this.addSectionToPage(item)
+                        }}
+                    />
                 </div>
             </div>
         )

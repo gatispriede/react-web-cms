@@ -3,7 +3,7 @@ import {Button, Modal, Select} from "antd";
 import {PlusCircleOutlined} from "@ant-design/icons";
 
 class AddNewSection extends React.Component {
-    props = {
+    props: any = {
         page: '',
         addSectionToPage: async (item: any) => {}
     }
@@ -21,13 +21,11 @@ class AddNewSection extends React.Component {
 
     constructor(props: {
         page: string,
-        refresh: () => { },
+        addSectionToPage: (item: any) => Promise<void>
     }) {
         super(props)
         this.state.page = props.page
     }
-
-
 
     selectedSection() {
         const selectedOption = this.state.selectOptions.find(o => o.value === this.state.type)

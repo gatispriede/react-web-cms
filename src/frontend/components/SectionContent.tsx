@@ -8,7 +8,7 @@ import AddNewSectionItem from "./common/AddNewSectionItem";
 interface PropsSectionContent {
     section: ISection;
     addRemoveSectionItem: (sectionId: string | undefined, config: any) => Promise<void>;
-    refresh: () => void;
+    refresh: () => Promise<void>;
 }
 
 class SectionContent extends React.Component {
@@ -18,10 +18,8 @@ class SectionContent extends React.Component {
             type: 0,
             id: ''
         },
-        addRemoveSectionItem: async () => {
-        },
-        refresh: async () => {
-        }
+        addRemoveSectionItem: async () => {},
+        refresh: async () => {}
     }
     state: PropsSectionContent = {
         section: {
@@ -62,7 +60,7 @@ class SectionContent extends React.Component {
                             height: '100%'
                         }
                         return (
-                            <div className={'section-item-container'} style={style}>
+                            <div key={id} className={'section-item-container'} style={style}>
                                 <EditWrapper
                                     key={id}
                                     del={item.type !== EItemType.Empty}

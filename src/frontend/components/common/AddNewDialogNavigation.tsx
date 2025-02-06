@@ -4,10 +4,11 @@ import {Button, Input, Modal} from "antd";
 import {PlusCircleOutlined} from "@ant-design/icons";
 import {MutationMongo} from "../../../Interfaces/IMongo";
 
-class AddNewDialogNavigation extends React.Component {
-    props = {
-        refresh: async () => {}
-    }
+interface IProps {
+    refresh:  () => Promise<void>;
+}
+
+class AddNewDialogNavigation extends React.Component<IProps, {}> {
     sections: string[] = []
     refresh: () => Promise<void>
     state = {
@@ -16,9 +17,7 @@ class AddNewDialogNavigation extends React.Component {
     }
     private count = 0
 
-    constructor(props: {
-        refresh: () => Promise<void>
-    }) {
+    constructor(props: IProps) {
         super(props)
         this.refresh = props.refresh
     }

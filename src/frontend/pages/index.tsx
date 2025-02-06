@@ -29,17 +29,22 @@ class Home extends React.Component {
 
     constructor(props: {}) {
         super(props);
-        void this.initialize()
+        this.state.loading = true
+        void this.initialize(true)
     }
 
-    async initialize(): Promise<void> {
+    async initialize(init: boolean = false): Promise<void> {
         let newState: IHomeState = {
             loading: false,
             pages: this.state.tabProps,
             tabProps: this.state.tabProps,
             activeTab: this.state.activeTab
         }
-        this.setState({loading: true})
+        if(init){
+            this.state.loading = true
+        }else{
+            this.setState({loading: true})
+        }
         const pages = await resolve(
             ({query}) => {
                 const list: any[] = [];
