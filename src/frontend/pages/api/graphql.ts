@@ -29,7 +29,7 @@ const apolloServer = new ApolloServer({
     context: ({req}) => {
     },
     introspection: true,
-    playground: true,
+    // playground: true,
 });
 const serverStart = apolloServer.start();
 export default cors(async (req: MicroRequest, res: ServerResponse<IncomingMessage>) => {

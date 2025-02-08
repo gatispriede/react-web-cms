@@ -1,4 +1,4 @@
-import {Button, Modal, Select} from "antd";
+import {Button, Modal, Select, Tabs} from "antd";
 import {EditOutlined, PlusCircleOutlined} from "@ant-design/icons";
 import React from "react";
 import {ISection} from "../../../Interfaces/ISection";
@@ -8,7 +8,8 @@ import {EItemType} from "../../../enums/EItemType";
 
 class AddNewSectionItem extends React.Component {
     props: any = {
-        addSectionItem: (sectionId: string, config: any) => {},
+        addSectionItem: (sectionId: string, config: any) => {
+        },
         section: {},
         index: 0,
         loadItem: false
@@ -16,7 +17,32 @@ class AddNewSectionItem extends React.Component {
     state = {
         dialogOpen: false,
         selected: EItemType.Text,
+        actionContentSelected: EItemType.Text,
         content: '{}',
+        actionType: '',
+        actionContent: '{}',
+        actionSelectOptions: [
+            {
+                label: "No action",
+                value: "none",
+            },
+            {
+                label: "On click",
+                value: "onClick",
+            },
+        ],
+        tabContent: [
+            {
+                key: 'content',
+                label: 'Content',
+                children: <></>
+            },
+            {
+                key: 'action',
+                label: 'Action',
+                children: <></>
+            }
+        ],
         selectOptions: [
             {
                 label: "Simple Text",
@@ -57,10 +83,49 @@ class AddNewSectionItem extends React.Component {
         super(props);
         this.section = props.section
         this.index = props.index
-        if(props.loadItem){
+        if (props.loadItem) {
             this.state.selected = this.section.content[props.index].type
             this.state.content = this.section.content[props.index].content
         }
+    }
+
+    generateContentSection() {
+        return <div>
+            <h2>Content configuration: </h2>
+            <label>Please select content type: </label>
+            <Select value={this.activeOption()} options={this.state.selectOptions}
+                    onSelect={(e) => {
+                        this.setState({selected: e})
+                    }}/>
+            <label>Please enter content: </label>
+            <hr/>
+            <ContentSection content={this.state.content} selected={this.state.selected} setContent={(value: string) => {
+                this.setState({content: value})
+            }}/>
+        </div>
+    }
+
+    generateActionSection() {
+        return <div>
+            <h2>Action configuration</h2>
+            <label>Please select action type: </label>
+            <Select value={this.state.actionContentSelected} options={this.state.actionSelectOptions}
+                    onChange={(value) => {
+                        this.setState({actionContentSelected: value})
+                    }}/>
+            <h2>Content configuration: </h2>
+            <label>Please select content type: </label>
+            <Select value={this.state.actionType} options={this.state.selectOptions}
+                    onSelect={(e) => {
+                        this.setState({actionType: e})
+                    }}/>
+            <hr/>
+            <label>Please enter content: </label>
+            <ContentSection content={this.state.actionContent} selected={this.state.actionType}
+                            setContent={(value: string) => {
+                                this.setState({actionContent: value})
+                            }}/>
+        </div>
     }
 
     addSectionItem = async () => {
@@ -68,7 +133,9 @@ class AddNewSectionItem extends React.Component {
             this.section.id ? this.section.id : '', {
                 index: this.index,
                 type: this.state.selected,
-                content: this.state.content
+                content: this.state.content,
+                actionType: this.state.actionType,
+                actionContent: this.state.actionContent,
             }
         )
     }
@@ -83,6 +150,9 @@ class AddNewSectionItem extends React.Component {
     }
 
     render() {
+        const tabContent = this.state.tabContent
+        tabContent[0].children = this.generateContentSection()
+        tabContent[1].children = this.generateActionSection()
         return (
             <>
                 {
@@ -90,15 +160,15 @@ class AddNewSectionItem extends React.Component {
                         this.setState({dialogOpen: true})
                     }}>
 
-                        {!this.props.loadItem ? <div><PlusCircleOutlined/> Add content</div> : <EditOutlined />}
+                        {!this.props.loadItem ? <div><PlusCircleOutlined/> Add content</div> : <EditOutlined/>}
                     </Button>
                 }
                 <Modal open={this.state.dialogOpen}
-                       footer={(_, { OkBtn, CancelBtn }) => (
+                       footer={(_, {OkBtn, CancelBtn}) => (
                            <>
-                               <CancelBtn />
+                               <CancelBtn/>
                                <PreviewDialog type={this.state.selected} content={this.state.content}/>
-                               <OkBtn />
+                               <OkBtn/>
                            </>
                        )}
                        onCancel={() => {
@@ -109,21 +179,7 @@ class AddNewSectionItem extends React.Component {
                            this.setState({dialogOpen: false})
                        }}
                 >
-                    <div>
-                        <h2>Type</h2>
-                        <label>Please select content type: </label>
-                        <Select value={this.activeOption()} defaultValue={this.state.selectOptions[0]} options={this.state.selectOptions}
-                                onSelect={(e) => {
-                                    this.setState({selected: e})
-                                }}/>
-                    </div>
-                    <div>
-                        <hr />
-                        <h2>Configuration</h2>
-                        <ContentSection content={this.state.content} selected={this.state.selected} setContent={(value: string) => {
-                            this.setState({content: value})
-                        }} />
-                    </div>
+                    <Tabs tabPosition={'left'} defaultActiveKey="1" items={tabContent}/>
                 </Modal>
             </>
         )

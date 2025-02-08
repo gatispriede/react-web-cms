@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "start": "next src/frontend ",
-    "dev": "nodemon --config ./nodemon.json"
+    "build": "next build src/frontend ",
+    "dev": "nodemon --config ./nodemon.json",
+    "generate-schema": "npx @gqty/cli   --target=src/frontend/gqty/index.ts http://localhost:3000/api/graphql"
   },
   "gqty": {
     "introspections": {
@@ -19,6 +21,7 @@
     "@ant-design/icons-svg": "^4.4.2",
     "@ant-design/nextjs-registry": "^1.0.2",
     "@graphql-tools/schema": "^10.0.16",
+    "@types/micro-cors": "^0.1.5",
     "@types/node": "^22.12.0",
     "@types/react": "^19.0.8",
     "antd": "^5.23.3",

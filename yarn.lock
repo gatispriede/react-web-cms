@@ -3397,6 +3397,20 @@
   resolved "https://registry.yarnpkg.com/@types/long/-/long-4.0.2.tgz#b74129719fc8d11c01868010082d483b7545591a"
   integrity sha512-MqTGEo5bj5t157U6fA/BiDynNkn0YknVdh48CMPkTSpFTVmvao5UQmm7uEF6xBEo7qIMAlY/JSleYaE6VOdpaA==
 
+"@types/micro-cors@^0.1.5":
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/@types/micro-cors/-/micro-cors-0.1.5.tgz#78056823d4cd282040eaaee39786113cb1a917c0"
+  integrity sha512-BTHpXEz+yC/7/Jv2BfDFbGtgnwdKUDVX2PY+Cd2k4Jx9+uUfVooAxhlGEy6p0Uvm0+yM5FgSyc1n2tdVHyCDbw==
+  dependencies:
+    "@types/micro" "^7.3.7"
+
+"@types/micro@^7.3.7":
+  version "7.3.7"
+  resolved "https://registry.yarnpkg.com/@types/micro/-/micro-7.3.7.tgz#84bef63ef8cc113a70b9a64345ebea2d99946647"
+  integrity sha512-MFsX7eCj0Tg3TtphOQvANNvNtFpya+s/rYOCdV6o+DFjOQPFi2EVRbBALjbbgZTXUaJP1Q281MJiJOD40d0UxQ==
+  dependencies:
+    "@types/node" "*"
+
 "@types/mime@^1":
   version "1.3.5"
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-1.3.5.tgz#1ef302e01cf7d2b5a0fa526790c9123bf1d06690"

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {cache} from 'react'
 import {INavigation, resolve} from "../gqty";
 import {Spin, Tabs} from 'antd';
 import DynamicTabsContent from "../components/DynamicTabsContent";
@@ -7,6 +7,7 @@ import theme from '../theme/themeConfig';
 import {ConfigProvider} from 'antd';
 import {IMongo} from "../../Interfaces/IMongo";
 import MongoApi from '../api/MongoApi';
+import {ISection} from "../../Interfaces/ISection";
 
 interface IHomeState {
     loading: boolean,
@@ -18,6 +19,8 @@ interface IHomeState {
 class App extends React.Component<{}> {
     sections: any[] = []
     private MongoApi = new MongoApi()
+    loadSections: any
+    getNavigationListCache: any
     state: IHomeState = {
         loading: false,
         pages: [],
@@ -28,7 +31,30 @@ class App extends React.Component<{}> {
     constructor(props: {}) {
         super(props);
         this.state.loading = true
+        this.loadSections = cache(this.MongoApi.loadSections)
+        this.getNavigationListCache = cache(this.getNavigationList)
         void this.initialize(true)
+    }
+
+    async getSectionData(pages: IPage[], id: number): Promise<ISection[]> {
+        'use cache'
+        return await this.loadSections(pages[id].page, pages)
+    }
+
+    async getNavigationList (): Promise<IPage[]> {
+        'use cache'
+        return await resolve(
+            ({query}): IPage[] => {
+                const list: any[] = [];
+                (query as unknown as IMongo).mongo.getNavigationCollection.map((item: INavigation) => {
+                    list.push({
+                        page: item.page,
+                        sections: item.sections
+                    })
+                })
+                return list
+            },
+        )
     }
 
     async initialize(init: boolean = false): Promise<void> {
@@ -43,23 +69,12 @@ class App extends React.Component<{}> {
         } else {
             this.setState({loading: true})
         }
-        const pages = await resolve(
-            ({query}) => {
-                const list: any[] = [];
-                (query as unknown as IMongo).mongo.getNavigationCollection.map((item: INavigation) => {
-                    list.push({
-                        page: item.page,
-                        sections: item.sections
-                    })
-                })
-                return list
-            },
-        )
+        const pages: IPage[] = await this.getNavigationListCache()
         if (pages[0]) {
             const newTabsState = []
             for (let id in pages) {
                 if (pages[id]) {
-                    const sectionsData: any[] = await this.MongoApi.loadSections(pages[id].page, pages)
+                    const sectionsData: ISection[] = await this.getSectionData(pages, id as unknown as number)
                     newTabsState.push({
                         key: id,
                         page: pages[id].page,

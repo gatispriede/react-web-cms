@@ -1,19 +1,23 @@
 input InSection {
     id: String
-    type: Int
-    page: String
-    content: [InItem]
+    type: Int!
+    page: String!
+    content: [InItem]!
 }
 input InItem {
     name: String
-    type: String
-    content: String
+    type: String!
+    content: String!
+    actionType: String
+    actionContent: String
 }
 
 type IItem {
     name: String
-    type: String
-    content: String
+    type: String!
+    content: String!
+    actionType: Int
+    actionContent: String
 }
 type ISection {
     id: String

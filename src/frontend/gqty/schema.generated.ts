@@ -34,16 +34,18 @@ export interface Scalars {
 }
 
 export interface InItem {
-  content?: InputMaybe<Scalars["String"]["input"]>;
+  actionContent?: InputMaybe<Scalars["String"]["input"]>;
+  actionType?: InputMaybe<Scalars["String"]["input"]>;
+  content: Scalars["String"]["input"];
   name?: InputMaybe<Scalars["String"]["input"]>;
-  type?: InputMaybe<Scalars["String"]["input"]>;
+  type: Scalars["String"]["input"];
 }
 
 export interface InSection {
-  content?: InputMaybe<Array<InputMaybe<InItem>>>;
+  content: Array<InputMaybe<InItem>>;
   id?: InputMaybe<Scalars["String"]["input"]>;
-  page?: InputMaybe<Scalars["String"]["input"]>;
-  type?: InputMaybe<Scalars["Int"]["input"]>;
+  page: Scalars["String"]["input"];
+  type: Scalars["Int"]["input"];
 }
 
 export const scalarsEnumsHash: ScalarsEnumsHash = {
@@ -55,9 +57,11 @@ export const scalarsEnumsHash: ScalarsEnumsHash = {
 export const generatedSchema = {
   IItem: {
     __typename: { __type: "String!" },
-    content: { __type: "String" },
+    actionContent: { __type: "String" },
+    actionType: { __type: "Int" },
+    content: { __type: "String!" },
     name: { __type: "String" },
-    type: { __type: "String" },
+    type: { __type: "String!" },
   },
   ILoadData: {
     __typename: { __type: "String!" },
@@ -80,15 +84,17 @@ export const generatedSchema = {
     type: { __type: "Int!" },
   },
   InItem: {
-    content: { __type: "String" },
+    actionContent: { __type: "String" },
+    actionType: { __type: "String" },
+    content: { __type: "String!" },
     name: { __type: "String" },
-    type: { __type: "String" },
+    type: { __type: "String!" },
   },
   InSection: {
-    content: { __type: "[InItem]" },
+    content: { __type: "[InItem]!" },
     id: { __type: "String" },
-    page: { __type: "String" },
-    type: { __type: "Int" },
+    page: { __type: "String!" },
+    type: { __type: "Int!" },
   },
   MMongo: {
     __typename: { __type: "String!" },
@@ -127,9 +133,11 @@ export const generatedSchema = {
 
 export interface IItem {
   __typename?: "IItem";
-  content?: Maybe<ScalarsEnums["String"]>;
+  actionContent?: Maybe<ScalarsEnums["String"]>;
+  actionType?: Maybe<ScalarsEnums["Int"]>;
+  content: ScalarsEnums["String"];
   name?: Maybe<ScalarsEnums["String"]>;
-  type?: Maybe<ScalarsEnums["String"]>;
+  type: ScalarsEnums["String"];
 }
 
 export interface ILoadData {

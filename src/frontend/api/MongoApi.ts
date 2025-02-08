@@ -5,7 +5,6 @@ import {IConfigSectionAddRemove} from "../../Interfaces/IConfigSectionAddRemove"
 import {IPage} from "../../Interfaces/IPage";
 import {INavigation} from "../../Interfaces/INavigation";
 import {IItem} from "../../Interfaces/IItem";
-import { unstable_cache } from 'next/cache'
 
 class MongoApi {
     async deleteSection(sectionId: string): Promise<string> {
@@ -108,7 +107,9 @@ class MongoApi {
         }
         section.content[config.index] = {
             type: config.type,
-            content: config.content
+            content: config.content,
+            actionType: config.actionType,
+            actionContent: config.actionContent
         }
         const input = {
             section: (section as InSection)
@@ -132,7 +133,9 @@ class MongoApi {
                                 return {
                                     name: value.name,
                                     type: value.type,
-                                    content: value.content
+                                    content: value.content,
+                                    actionType: value.actionType,
+                                    actionContent: value.actionContent
                                 }
                             })
                             return {

@@ -41,7 +41,7 @@ class MongoDBConnection {
         this._settings.mongoDBDatabaseUrl = `mongodb+srv://${this._settings.mongodbUser}:${this._settings.mongodbPassword}@${this._settings.mongoDBClusterUrl}`;
         const newClient = new MongoClient(this._settings.mongoDBDatabaseUrl, {
             monitorCommands: true,
-            connectTimeoutMS: 100,
+            connectTimeoutMS: 200,
             maxConnecting: 75,
             waitQueueTimeoutMS: 2000,
         });
