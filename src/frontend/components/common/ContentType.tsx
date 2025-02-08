@@ -21,7 +21,7 @@ const ContentType = (props: IContentTypeProps) => {
         case EItemType.Empty:
             return (
                 <div>
-                    {props.addButton}
+                    {props.admin && props.addButton}
                 </div>
             )
         default:

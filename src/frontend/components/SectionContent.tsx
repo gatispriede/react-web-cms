@@ -4,24 +4,21 @@ import {ISection} from "../../Interfaces/ISection";
 import {EItemType} from "../../enums/EItemType";
 import ContentType from "./common/ContentType";
 import AddNewSectionItem from "./common/AddNewSectionItem";
+import {IConfigSectionAddRemove} from "../../Interfaces/IConfigSectionAddRemove";
 
-interface PropsSectionContent {
+interface IPropsSectionContent {
     section: ISection;
-    addRemoveSectionItem: (sectionId: string | undefined, config: any) => Promise<void>;
+    addRemoveSectionItem: (sectionId: string, config: IConfigSectionAddRemove) => Promise<void>;
+    refresh: () => Promise<void>;
+    admin: boolean
+}
+interface IStateSectionContent {
+    section: ISection;
     refresh: () => Promise<void>;
 }
 
-class SectionContent extends React.Component {
-    props: PropsSectionContent = {
-        section: {
-            content: [],
-            type: 0,
-            id: ''
-        },
-        addRemoveSectionItem: async () => {},
-        refresh: async () => {}
-    }
-    state: PropsSectionContent = {
+class SectionContent extends React.Component<IPropsSectionContent> {
+    props: IPropsSectionContent = {
         section: {
             content: [],
             type: 0,
@@ -30,17 +27,31 @@ class SectionContent extends React.Component {
         addRemoveSectionItem: async () => {
         },
         refresh: async () => {
+        },
+        admin: false
+    }
+    state: IStateSectionContent = {
+        section: {
+            content: [],
+            type: 0,
+            id: ''
+        },
+
+        refresh: async () => {
         }
     }
+    admin: boolean = false;
+    addRemoveSectionItem: (sectionId: string, config: IConfigSectionAddRemove) => Promise<void>
 
-    constructor({section, addRemoveSectionItem}: PropsSectionContent) {
-        super({section, addRemoveSectionItem});
+    constructor(props: IPropsSectionContent) {
+        super(props);
         this.state = {
-            section: section,
-            addRemoveSectionItem,
+            section: props.section,
             refresh: async () => {
             }
         }
+        this.addRemoveSectionItem = props.addRemoveSectionItem;
+        this.admin = props.admin;
     }
 
     render() {
@@ -59,9 +70,11 @@ class SectionContent extends React.Component {
                             width: sectionWidth[this.state.section.type],
                             height: '100%'
                         }
+                        const sectionId = this.state.section.id ? this.state.section.id : ''
                         return (
                             <div key={id} className={'section-item-container'} style={style}>
                                 <EditWrapper
+                                    admin={this.admin}
                                     key={id}
                                     del={item.type !== EItemType.Empty}
                                     edit={item.type !== EItemType.Empty}
@@ -74,8 +87,8 @@ class SectionContent extends React.Component {
                                         /> :
                                             <></>
                                     }
-                                    deleteAction={ async () => {
-                                        await this.state.addRemoveSectionItem(this.state.section.id, {
+                                    deleteAction={async () => {
+                                         await this.addRemoveSectionItem(sectionId, {
                                             index: id,
                                             type: EItemType.Empty,
                                             content: "",
@@ -84,12 +97,13 @@ class SectionContent extends React.Component {
                                 >
                                     <div className={'content-wrapper'}>
                                         <ContentType
+                                            admin={this.admin}
                                             type={item.type}
                                             content={item.content}
                                             addButton={
                                                 <AddNewSectionItem
                                                     index={id}
-                                                    addSectionItem={this.props.addRemoveSectionItem}
+                                                    addSectionItem={this.addRemoveSectionItem}
                                                     section={this.state.section}
                                                     loadItem={false}
                                                 />

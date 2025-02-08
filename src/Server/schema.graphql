@@ -24,9 +24,9 @@ type ISection {
 
 type INavigation {
     id: String
-    type: String
+    type: String!
     page: String!
-    sections: [String]
+    sections: [String]!
 }
 
 type ILoadData {
@@ -37,25 +37,25 @@ type ILoadData {
 
 type TMongo {
     getMongoDBUri: String
-    loadData: [ILoadData]
-    createDatabase: String
-    getNavigationCollection: [INavigation]
-    getSections(ids: [String]): [ISection]
+    loadData: [ILoadData!]!
+    createDatabase: String!
+    getNavigationCollection: [INavigation!]!
+    getSections(ids: [String]): [ISection!]!
 }
 type MMongo {
-    addUpdateNavigationItem(pageName: String!, sections: [String]): String
-    addUpdateSectionItem(section: InSection!, pageName: String): String
-    removeSectionItem(id:String!): String
-    deleteNavigationItem(pageName:String!): String
+    addUpdateNavigationItem(pageName: String!, sections: [String]): String!
+    addUpdateSectionItem(section: InSection!, pageName: String): String!
+    removeSectionItem(id:String!): String!
+    deleteNavigationItem(pageName:String!): String!
 }
 
 type Query {
-    sample: String
-    greeting: String
-    bar: String
-    mongo: TMongo
+    sample: String!
+    greeting: String!
+    bar: String!
+    mongo: TMongo!
 }
 
 type Mutation {
-    mongo: MMongo
+    mongo: MMongo!
 }

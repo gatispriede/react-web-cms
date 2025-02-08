@@ -42,6 +42,7 @@ export interface InItem {
 export interface InSection {
   content?: InputMaybe<Array<InputMaybe<InItem>>>;
   id?: InputMaybe<Scalars["String"]["input"]>;
+  page?: InputMaybe<Scalars["String"]["input"]>;
   type?: InputMaybe<Scalars["Int"]["input"]>;
 }
 
@@ -68,8 +69,8 @@ export const generatedSchema = {
     __typename: { __type: "String!" },
     id: { __type: "String" },
     page: { __type: "String!" },
-    sections: { __type: "[String]" },
-    type: { __type: "String" },
+    sections: { __type: "[String]!" },
+    type: { __type: "String!" },
   },
   ISection: {
     __typename: { __type: "String!" },
@@ -86,36 +87,40 @@ export const generatedSchema = {
   InSection: {
     content: { __type: "[InItem]" },
     id: { __type: "String" },
+    page: { __type: "String" },
     type: { __type: "Int" },
   },
   MMongo: {
     __typename: { __type: "String!" },
     addUpdateNavigationItem: {
-      __type: "String",
+      __type: "String!",
       __args: { pageName: "String!", sections: "[String]" },
     },
     addUpdateSectionItem: {
-      __type: "String",
+      __type: "String!",
       __args: { pageName: "String", section: "InSection!" },
     },
-    deleteNavigationItem: { __type: "String", __args: { pageName: "String!" } },
-    removeSectionItem: { __type: "String", __args: { id: "String!" } },
+    deleteNavigationItem: {
+      __type: "String!",
+      __args: { pageName: "String!" },
+    },
+    removeSectionItem: { __type: "String!", __args: { id: "String!" } },
   },
   TMongo: {
     __typename: { __type: "String!" },
-    createDatabase: { __type: "String" },
+    createDatabase: { __type: "String!" },
     getMongoDBUri: { __type: "String" },
-    getNavigationCollection: { __type: "[INavigation]" },
-    getSections: { __type: "[ISection]", __args: { ids: "[String]" } },
-    loadData: { __type: "[ILoadData]" },
+    getNavigationCollection: { __type: "[INavigation!]!" },
+    getSections: { __type: "[ISection!]!", __args: { ids: "[String]" } },
+    loadData: { __type: "[ILoadData!]!" },
   },
-  mutation: { __typename: { __type: "String!" }, mongo: { __type: "MMongo" } },
+  mutation: { __typename: { __type: "String!" }, mongo: { __type: "MMongo!" } },
   query: {
     __typename: { __type: "String!" },
-    bar: { __type: "String" },
-    greeting: { __type: "String" },
-    mongo: { __type: "TMongo" },
-    sample: { __type: "String" },
+    bar: { __type: "String!" },
+    greeting: { __type: "String!" },
+    mongo: { __type: "TMongo!" },
+    sample: { __type: "String!" },
   },
   subscription: {},
 } as const;
@@ -138,8 +143,8 @@ export interface INavigation {
   __typename?: "INavigation";
   id?: Maybe<ScalarsEnums["String"]>;
   page: ScalarsEnums["String"];
-  sections?: Maybe<Array<Maybe<ScalarsEnums["String"]>>>;
-  type?: Maybe<ScalarsEnums["String"]>;
+  sections: Array<Maybe<ScalarsEnums["String"]>>;
+  type: ScalarsEnums["String"];
 }
 
 export interface ISection {
@@ -155,41 +160,41 @@ export interface MMongo {
   addUpdateNavigationItem: (args: {
     pageName: ScalarsEnums["String"];
     sections?: Maybe<Array<Maybe<ScalarsEnums["String"]>>>;
-  }) => Maybe<ScalarsEnums["String"]>;
+  }) => ScalarsEnums["String"];
   addUpdateSectionItem: (args: {
     pageName?: Maybe<ScalarsEnums["String"]>;
     section: InSection;
-  }) => Maybe<ScalarsEnums["String"]>;
+  }) => ScalarsEnums["String"];
   deleteNavigationItem: (args: {
     pageName: ScalarsEnums["String"];
-  }) => Maybe<ScalarsEnums["String"]>;
+  }) => ScalarsEnums["String"];
   removeSectionItem: (args: {
     id: ScalarsEnums["String"];
-  }) => Maybe<ScalarsEnums["String"]>;
+  }) => ScalarsEnums["String"];
 }
 
 export interface TMongo {
   __typename?: "TMongo";
-  createDatabase?: Maybe<ScalarsEnums["String"]>;
+  createDatabase: ScalarsEnums["String"];
   getMongoDBUri?: Maybe<ScalarsEnums["String"]>;
-  getNavigationCollection?: Maybe<Array<Maybe<INavigation>>>;
+  getNavigationCollection: Array<INavigation>;
   getSections: (args?: {
     ids?: Maybe<Array<Maybe<ScalarsEnums["String"]>>>;
-  }) => Maybe<Array<Maybe<ISection>>>;
-  loadData?: Maybe<Array<Maybe<ILoadData>>>;
+  }) => Array<ISection>;
+  loadData: Array<ILoadData>;
 }
 
 export interface Mutation {
   __typename?: "Mutation";
-  mongo?: Maybe<MMongo>;
+  mongo: MMongo;
 }
 
 export interface Query {
   __typename?: "Query";
-  bar?: Maybe<ScalarsEnums["String"]>;
-  greeting?: Maybe<ScalarsEnums["String"]>;
-  mongo?: Maybe<TMongo>;
-  sample?: Maybe<ScalarsEnums["String"]>;
+  bar: ScalarsEnums["String"];
+  greeting: ScalarsEnums["String"];
+  mongo: TMongo;
+  sample: ScalarsEnums["String"];
 }
 
 export interface Subscription {

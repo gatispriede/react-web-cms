@@ -13,13 +13,14 @@ import {
   scalarsEnumsHash,
   type GeneratedSchema,
 } from "./schema.generated";
-
+const ip = 'http://localhost:3000';
+// const ip = 'https://5992-212-3-194-236.ngrok-free.app';
 const queryFetcher: QueryFetcher = async function (
   { query, variables, operationName },
   fetchOptions
 ) {
   // Modify "http://localhost:9000/" if needed
-  const response = await fetch("http://localhost:9000/", {
+  const response = await fetch(`${ip}/api/graphql`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

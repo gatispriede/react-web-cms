@@ -33,16 +33,16 @@ class AddNewSectionItem extends React.Component {
                 value: "IMAGE",
                 text: "Please enter image URL"
             },
-            {
-                label: "Image with text",
-                value: "IMAGE_WITH_TEXT",
-                text: "Please enter text"
-            },
-            {
-                label: "Carousel of images",
-                value: "CAROUSEL",
-                text: "Please enter text"
-            },
+            // {
+            //     label: "Image with text",
+            //     value: "IMAGE_WITH_TEXT",
+            //     text: "Please enter text"
+            // },
+            // {
+            //     label: "Carousel of images",
+            //     value: "CAROUSEL",
+            //     text: "Please enter text"
+            // },
         ]
     }
     section: ISection

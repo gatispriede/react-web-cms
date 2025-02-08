@@ -22,8 +22,7 @@ const resolvers = {
 
 };
 const server: express.Application = express();
-const port = 9000;
-
+const port = 3000;
 
 const typeDefs = readFileSync('./src/Server/schema.graphql', { encoding: 'utf-8' });
 

@@ -35,7 +35,7 @@ class PreviewDialog extends React.Component {
                     }}
                 >
                     <div>
-                        <ContentType type={this.props.type} content={this.props.content} addButton={""} />
+                        <ContentType admin={false} type={this.props.type} content={this.props.content} addButton={""} />
                     </div>
                 </Modal>
             </>

@@ -1,18 +1,16 @@
 import React from "react";
 import EditWrapper from "./common/EditWrapper";
 import AddNewSection from "./common/AddNewSection";
-import {resolve} from "../gqty";
 import SectionContent from "./SectionContent";
-import {InSection, MutationMongo} from "../../Interfaces/IMongo";
 import {ISection} from "../../Interfaces/ISection";
 import {IItem} from "../../Interfaces/IItem";
-import {Layout} from "antd";
-import AddNewSectionItem from "./common/AddNewSectionItem";
+import MongoApi from "../api/MongoApi";
+import {IConfigSectionAddRemove} from "../../Interfaces/IConfigSectionAddRemove";
 
-
-interface IContentProps {
+interface IDynamicTabsContent {
     sections: ISection[],
     page: string,
+    admin: boolean,
     refresh: () => Promise<void>
 }
 
@@ -21,10 +19,11 @@ interface SContent {
     page: string,
 }
 
-class DynamicTabsContent extends React.Component {
-    props: IContentProps = {
+class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
+    props: IDynamicTabsContent = {
         sections: [],
         page: '',
+        admin: false,
         refresh: async () => {
         }
     }
@@ -33,76 +32,17 @@ class DynamicTabsContent extends React.Component {
         sections: [],
         page: '',
     }
+    private readonly admin: boolean = false
+    private MongoApi = new MongoApi()
 
-    constructor(props: IContentProps) {
+    constructor(props: IDynamicTabsContent) {
         super(props)
-        const {sections, page, refresh} = props
+        const {sections, page, refresh, admin} = props
         this.refresh = refresh
+        this.admin = admin
         this.state = {
             sections: sections,
             page: page,
-        }
-    }
-
-    deleteSection = async (sectionId: string) => {
-        if (!sectionId) {
-            return;
-        }
-        await resolve(
-            ({mutation}) => {
-                const update = {
-                    id: sectionId
-                }
-                return (mutation as MutationMongo).mongo.removeSectionItem(update)
-            },
-        )
-        this.forceUpdate()
-    }
-    addRemoveSectionItem = async (sectionId: string | undefined, config: any) => {
-        const section = this.state.sections.find(section => section.id === sectionId)
-        console.log(section, config.index, config.content)
-        if (!section) {
-            console.log('no section to add item to')
-            return;
-        }
-        section.content[config.index] = {
-            type: config.type,
-            content: config.content
-        }
-        const input = {
-            section: (section as InSection)
-        }
-        const result = await resolve(
-            ({mutation}) => {
-                return (mutation as MutationMongo).mongo.addUpdateSectionItem(input)
-            },
-        )
-        await this.props.refresh()
-    }
-
-    async addSectionToPage(item: any) {
-
-        const result = await resolve(
-            ({mutation}) => {
-
-                console.log('adding section')
-
-                return (mutation as MutationMongo).mongo.addUpdateSectionItem(item)
-            },
-        );
-
-        try {
-            const resultObject = JSON.parse(result)
-            if (resultObject.createSection) {
-                if (resultObject.createSection.id) {
-                    item.section.id = resultObject.createSection.id
-                    const sections = this.state.sections
-                    sections.push(item.section)
-                    this.setState({sections})
-                }
-            }
-        } catch (err) {
-            console.log(err)
         }
     }
 
@@ -123,16 +63,24 @@ class DynamicTabsContent extends React.Component {
                                     }
                                 }
                                 return (
-                                    <EditWrapper key={index} deleteAction={async () => {
+                                    <EditWrapper admin={this.admin} key={index} deleteAction={async () => {
+                                        await this.MongoApi.deleteSection(section.id ? section.id : '')
                                         this.state.sections.splice(index, 1)
-                                        await this.deleteSection(section.id ? section.id : '')
+                                        this.setState({sections: this.state.sections})
                                     }}>
                                         <SectionContent
+                                            admin={this.admin}
                                             section={section}
                                             refresh={async () => {
                                                 await this.refresh()
                                             }}
-                                            addRemoveSectionItem={this.addRemoveSectionItem}/>
+                                            addRemoveSectionItem={
+                                                async (sectionId: string, config: IConfigSectionAddRemove) => {
+                                                    console.log(config)
+                                                    await this.MongoApi.addRemoveSectionItem(sectionId, config, this.state.sections)
+                                                    await this.props.refresh()
+                                                }
+                                            }/>
 
                                     </EditWrapper>
                                 )
@@ -140,14 +88,16 @@ class DynamicTabsContent extends React.Component {
                         )
                     }
                 </div>
-                <div className={'new-section-wrapper'}>
+                {this.admin && <div className={'new-section-wrapper'}>
                     <AddNewSection
                         page={this.state.page}
                         addSectionToPage={async (item: any) => {
-                            await this.addSectionToPage(item)
+                            const result = await this.MongoApi.addSectionToPage(item, this.state.sections)
+                            this.setState({sections: result})
                         }}
                     />
                 </div>
+                }
             </div>
         )
     }
