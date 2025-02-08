@@ -5,6 +5,7 @@ import {EItemType} from "../../enums/EItemType";
 import ContentType from "./common/ContentType";
 import AddNewSectionItem from "./common/AddNewSectionItem";
 import {IConfigSectionAddRemove} from "../../Interfaces/IConfigSectionAddRemove";
+import ActionDialog from "./common/ActionDialog";
 
 interface IPropsSectionContent {
     section: ISection;
@@ -12,8 +13,10 @@ interface IPropsSectionContent {
     refresh: () => Promise<void>;
     admin: boolean
 }
+
 interface IStateSectionContent {
     section: ISection;
+    actionDialogOpen: boolean;
     refresh: () => Promise<void>;
 }
 
@@ -31,6 +34,7 @@ class SectionContent extends React.Component<IPropsSectionContent> {
         admin: false
     }
     state: IStateSectionContent = {
+        actionDialogOpen: false,
         section: {
             content: [],
             type: 0,
@@ -45,11 +49,7 @@ class SectionContent extends React.Component<IPropsSectionContent> {
 
     constructor(props: IPropsSectionContent) {
         super(props);
-        this.state = {
-            section: props.section,
-            refresh: async () => {
-            }
-        }
+        this.state.section = props.section
         this.addRemoveSectionItem = props.addRemoveSectionItem;
         this.admin = props.admin;
     }
@@ -80,22 +80,26 @@ class SectionContent extends React.Component<IPropsSectionContent> {
                                     edit={item.type !== EItemType.Empty}
                                     editContent={
                                         item.type !== EItemType.Empty ? <AddNewSectionItem
-                                            index={id}
-                                            addSectionItem={this.props.addRemoveSectionItem}
-                                            section={this.state.section}
-                                            loadItem={true}
-                                        /> :
+                                                index={id}
+                                                addSectionItem={this.props.addRemoveSectionItem}
+                                                section={this.state.section}
+                                                loadItem={true}
+                                            /> :
                                             <></>
                                     }
                                     deleteAction={async () => {
-                                         await this.addRemoveSectionItem(sectionId, {
+                                        await this.addRemoveSectionItem(sectionId, {
                                             index: id,
                                             type: EItemType.Empty,
                                             content: "",
                                         })
                                     }}
                                 >
-                                    <div className={'content-wrapper'}>
+                                    <div className={`content-wrapper ${item.action === "onClick" ? 'action-enabled' : ''}`} onClick={(event) => {
+                                        if (item.action === 'onClick' && !this.state.actionDialogOpen) {
+                                            this.setState({actionDialogOpen: true})
+                                        }
+                                    }}>
                                         <ContentType
                                             admin={this.admin}
                                             item={item}
@@ -108,6 +112,9 @@ class SectionContent extends React.Component<IPropsSectionContent> {
                                                 />
                                             }
                                         />
+                                        <ActionDialog item={item} open={this.state.actionDialogOpen} close={() => {
+                                            this.setState({actionDialogOpen: false})
+                                        }}/>
                                     </div>
                                 </EditWrapper>
                             </div>

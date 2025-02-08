@@ -2,6 +2,7 @@ import React from "react";
 import ContentManager from "../../helpers/ContentManager";
 import {EItemType} from "../../../enums/EItemType";
 import {Image} from "antd";
+import {IItem} from "../../../Interfaces/IItem";
 
 export interface IPlainImage {
     src: string;
@@ -25,11 +26,12 @@ export class PlainImageContent extends ContentManager {
 
 }
 
-const PlainImage = ({content}:{content: string}) => {
-    const plainImage = new PlainImageContent(EItemType.Image, content);
+const PlainImage = ({item}:{item: IItem}) => {
+    const plainImage = new PlainImageContent(EItemType.Image, item.content);
+    const preview = plainImage.data.preview ? plainImage.data.preview : typeof item.action !== "string"
     return (
         <div className={'plain-image'}>
-            <Image src={plainImage.data.src} preview={plainImage.data.preview ? plainImage.data.preview : true} />
+            <Image preview={preview} src={plainImage.data.src} />
         </div>
     )
 }

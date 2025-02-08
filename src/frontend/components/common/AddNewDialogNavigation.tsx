@@ -36,7 +36,7 @@ class AddNewDialogNavigation extends React.Component<IProps, {}> {
                 }}>
                     Pievienot jaunu lapu: <PlusCircleOutlined/>
                 </Button>
-                <Modal open={this.state.dialogOpen}
+                <Modal width={'90%'} open={this.state.dialogOpen}
                        okButtonProps={{disabled: this.state.newNavigationName.length < 4}}
                        onOk={async () => {
                            await this.MongoApi.createNavigation(this.state.newNavigationName, this.sections)

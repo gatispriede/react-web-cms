@@ -1,18 +1,17 @@
 import React from "react";
 import {Button, Modal} from "antd";
 import ContentType from "./ContentType";
-import {EItemType} from "../../../enums/EItemType";
+import {IItem} from "../../../Interfaces/IItem";
 
-class PreviewDialog extends React.Component {
+class PreviewDialog extends React.Component<{item: IItem}> {
     props: any = {
-        type: EItemType.Text,
-        content: '{}'
+        item: {},
     }
     state = {
         dialogOpen: false,
     }
 
-    constructor(props: {}) {
+    constructor(props: {item: IItem}) {
         super(props)
     }
 
@@ -25,6 +24,7 @@ class PreviewDialog extends React.Component {
                     Preview
                 </Button>
                 <Modal
+                    width={'90%'}
                     title={'Preview'}
                     open={this.state.dialogOpen}
                     onCancel={async () => {
@@ -35,7 +35,7 @@ class PreviewDialog extends React.Component {
                     }}
                 >
                     <div>
-                        <ContentType admin={false} type={this.props.type} content={this.props.content} addButton={""} />
+                        <ContentType admin={false} item={this.props.item} addButton={""} />
                     </div>
                 </Modal>
             </>

@@ -1,4 +1,7 @@
 .content-wrapper{
+  &.action-enabled{
+    cursor: pointer;
+  }
   .plain-image{
     img{
       width: 100%;

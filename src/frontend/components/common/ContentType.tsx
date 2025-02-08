@@ -8,15 +8,15 @@ const ContentType = (props: IContentTypeProps) => {
     switch (props.item.type) {
         case EItemType.Text:
             return (
-                <PlainText content={props.item.content} />
+                <PlainText item={props.item} />
             )
         case EItemType.RichText:
             return (
-                <RichText content={props.item.content} />
+                <RichText item={props.item} />
             )
         case EItemType.Image:
             return (
-                <PlainImage content={props.item.content} />
+                <PlainImage item={props.item} />
             )
         case EItemType.Empty:
             return (

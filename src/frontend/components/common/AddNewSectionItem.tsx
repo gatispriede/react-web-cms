@@ -21,7 +21,7 @@ class AddNewSectionItem extends React.Component {
         selected: EItemType.Text,
         action: 'none',
         content: '{}',
-        actionType: '',
+        actionType: EItemType.Text,
         actionContent: '{}',
         actionSelectOptions: [
             {
@@ -89,22 +89,21 @@ class AddNewSectionItem extends React.Component {
             const item: IItem = this.section.content[props.index]
             this.state.selected = item.type
             this.state.content = item.content
-            if(item.action)this.state.action = item.action
-            if(item.actionType)this.state.actionType = item.actionType
-            if(item.actionContent)this.state.actionContent = item.actionContent
+            if (item.action) this.state.action = item.action
+            if (item.actionType) this.state.actionType = item.actionType
+            if (item.actionContent) this.state.actionContent = item.actionContent
 
         }
     }
 
     generateContentSection() {
         return <div>
-            <h2>Content configuration: </h2>
+            <h4>Content configuration: </h4>
             <label>Please select content type: </label>
-            <Select value={this.activeOption()} options={this.state.selectOptions}
+            <Select variant={'filled'} value={this.activeOption()} options={this.state.selectOptions}
                     onSelect={(e) => {
                         this.setState({selected: e})
                     }}/>
-            <label>Please enter content: </label>
             <hr/>
             <ContentSection content={this.state.content} selected={this.state.selected} setContent={(value: string) => {
                 this.setState({content: value})
@@ -114,24 +113,28 @@ class AddNewSectionItem extends React.Component {
 
     generateActionSection() {
         return <div>
-            <h2>Action configuration</h2>
+            <h4>Action configuration</h4>
             <label>Please select action type: </label>
-            <Select value={this.state.action} options={this.state.actionSelectOptions}
+            <Select variant={'filled'} value={this.state.action} options={this.state.actionSelectOptions}
                     onChange={(value) => {
                         this.setState({action: value})
                     }}/>
-            <h2>Content configuration: </h2>
-            <label>Please select content type: </label>
-            <Select value={this.state.actionType} options={this.state.selectOptions}
-                    onSelect={(e) => {
-                        this.setState({actionType: e})
-                    }}/>
-            <hr/>
-            <label>Please enter content: </label>
-            <ContentSection content={this.state.actionContent} selected={this.state.actionType}
-                            setContent={(value: string) => {
-                                this.setState({actionContent: value})
+            {this.state.action !== 'none' &&
+                <div>
+                    <h4>Content configuration: </h4>
+                    <label>Please select content type: </label>
+                    <Select variant={'filled'} value={this.state.actionType} options={this.state.selectOptions}
+                            onSelect={(e) => {
+                                this.setState({actionType: e})
                             }}/>
+                    <hr/>
+                    <ContentSection content={this.state.actionContent} selected={this.state.actionType}
+                                    setContent={(value: string) => {
+                                        this.setState({actionContent: value})
+                                    }}
+                    />
+                </div>
+            }
         </div>
     }
 
@@ -171,11 +174,11 @@ class AddNewSectionItem extends React.Component {
                         {!this.props.loadItem ? <div><PlusCircleOutlined/> Add content</div> : <EditOutlined/>}
                     </Button>
                 }
-                <Modal open={this.state.dialogOpen}
+                <Modal width={'90%'} open={this.state.dialogOpen}
                        footer={(_, {OkBtn, CancelBtn}) => (
                            <>
                                <CancelBtn/>
-                               <PreviewDialog type={this.state.selected} content={this.state.content}/>
+                               <PreviewDialog item={this.section.content[this.index]} content={this.state.content}/>
                                <OkBtn/>
                            </>
                        )}

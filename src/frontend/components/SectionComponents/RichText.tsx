@@ -1,6 +1,7 @@
 import React, {RefObject, useEffect} from "react";
 import ContentManager from "../../helpers/ContentManager";
 import {EItemType} from "../../../enums/EItemType";
+import {IItem} from "../../../Interfaces/IItem";
 
 export interface IRichText {
     value: string;
@@ -24,8 +25,8 @@ export class RichTextContent extends ContentManager {
 
 }
 
-const RichText = ({content}: { content: string }) => {
-    const richTextContent = new RichTextContent(EItemType.RichText, content);
+const RichText = ({item}:{item: IItem}) => {
+    const richTextContent = new RichTextContent(EItemType.RichText, item.content);
     const contentRef: RefObject<HTMLDivElement | null> = React.createRef();
     useEffect(() => {
         if(contentRef.current){

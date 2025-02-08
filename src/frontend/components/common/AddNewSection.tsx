@@ -40,7 +40,7 @@ class AddNewSection extends React.Component {
                 }}>
                     Add new section <PlusCircleOutlined/>
                 </Button>
-                <Modal open={this.state.dialogOpen}
+                <Modal width={'90%'} open={this.state.dialogOpen}
                        onCancel={() => {
                            this.setState({dialogOpen: false})
                        }}
@@ -58,7 +58,7 @@ class AddNewSection extends React.Component {
                        }}
 
                 >
-                    <Select defaultValue={'1'} options={this.state.selectOptions} onSelect={(e) => {
+                    <Select variant={'filled'} defaultValue={'1'} options={this.state.selectOptions} onSelect={(e) => {
                         this.setState({type: e})
                     }}/>
                     <div>Selected
