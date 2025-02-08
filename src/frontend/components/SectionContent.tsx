@@ -98,8 +98,7 @@ class SectionContent extends React.Component<IPropsSectionContent> {
                                     <div className={'content-wrapper'}>
                                         <ContentType
                                             admin={this.admin}
-                                            type={item.type}
-                                            content={item.content}
+                                            item={item}
                                             addButton={
                                                 <AddNewSectionItem
                                                     index={id}

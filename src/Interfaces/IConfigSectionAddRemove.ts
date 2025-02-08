@@ -4,6 +4,7 @@ export interface IConfigSectionAddRemove {
     index: number
     type: EItemType
     content: string,
-    actionType: EItemType,
-    actionContent: string,
+    action?: string,
+    actionType?: EItemType,
+    actionContent?: string,
 }

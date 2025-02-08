@@ -5,18 +5,18 @@ import PlainImage from "../SectionComponents/PlainImage";
 import RichText from "../SectionComponents/RichText";
 
 const ContentType = (props: IContentTypeProps) => {
-    switch (props.type) {
+    switch (props.item.type) {
         case EItemType.Text:
             return (
-                <PlainText content={props.content} />
+                <PlainText content={props.item.content} />
             )
         case EItemType.RichText:
             return (
-                <RichText content={props.content} />
+                <RichText content={props.item.content} />
             )
         case EItemType.Image:
             return (
-                <PlainImage content={props.content} />
+                <PlainImage content={props.item.content} />
             )
         case EItemType.Empty:
             return (

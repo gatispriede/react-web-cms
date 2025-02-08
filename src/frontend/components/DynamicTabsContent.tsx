@@ -76,7 +76,6 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
                                             }}
                                             addRemoveSectionItem={
                                                 async (sectionId: string, config: IConfigSectionAddRemove) => {
-                                                    console.log(config)
                                                     await this.MongoApi.addRemoveSectionItem(sectionId, config, this.state.sections)
                                                     await this.props.refresh()
                                                 }

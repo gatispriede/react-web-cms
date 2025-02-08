@@ -2,12 +2,14 @@ input InSection {
     id: String
     type: Int!
     page: String!
-    content: [InItem]!
+    content: [InItem]
 }
+
 input InItem {
     name: String
     type: String!
     content: String!
+    action: String
     actionType: String
     actionContent: String
 }
@@ -16,7 +18,8 @@ type IItem {
     name: String
     type: String!
     content: String!
-    actionType: Int
+    action: String
+    actionType: String
     actionContent: String
 }
 type ISection {

@@ -5,6 +5,8 @@ import {ISection} from "../../../Interfaces/ISection";
 import {ContentSection} from "./ContentSection";
 import PreviewDialog from "./PreviewDialog";
 import {EItemType} from "../../../enums/EItemType";
+import {IConfigSectionAddRemove} from "../../../Interfaces/IConfigSectionAddRemove";
+import {IItem} from "../../../Interfaces/IItem";
 
 class AddNewSectionItem extends React.Component {
     props: any = {
@@ -17,7 +19,7 @@ class AddNewSectionItem extends React.Component {
     state = {
         dialogOpen: false,
         selected: EItemType.Text,
-        actionContentSelected: EItemType.Text,
+        action: 'none',
         content: '{}',
         actionType: '',
         actionContent: '{}',
@@ -75,7 +77,7 @@ class AddNewSectionItem extends React.Component {
     index: number
 
     constructor(props: {
-        addSectionItem: (sectionId: string, config: any) => void,
+        addSectionItem: (sectionId: string, config: IConfigSectionAddRemove) => void,
         section: ISection,
         index: number,
         loadItem: boolean
@@ -84,8 +86,13 @@ class AddNewSectionItem extends React.Component {
         this.section = props.section
         this.index = props.index
         if (props.loadItem) {
-            this.state.selected = this.section.content[props.index].type
-            this.state.content = this.section.content[props.index].content
+            const item: IItem = this.section.content[props.index]
+            this.state.selected = item.type
+            this.state.content = item.content
+            if(item.action)this.state.action = item.action
+            if(item.actionType)this.state.actionType = item.actionType
+            if(item.actionContent)this.state.actionContent = item.actionContent
+
         }
     }
 
@@ -109,9 +116,9 @@ class AddNewSectionItem extends React.Component {
         return <div>
             <h2>Action configuration</h2>
             <label>Please select action type: </label>
-            <Select value={this.state.actionContentSelected} options={this.state.actionSelectOptions}
+            <Select value={this.state.action} options={this.state.actionSelectOptions}
                     onChange={(value) => {
-                        this.setState({actionContentSelected: value})
+                        this.setState({action: value})
                     }}/>
             <h2>Content configuration: </h2>
             <label>Please select content type: </label>
@@ -134,6 +141,7 @@ class AddNewSectionItem extends React.Component {
                 index: this.index,
                 type: this.state.selected,
                 content: this.state.content,
+                action: this.state.action,
                 actionType: this.state.actionType,
                 actionContent: this.state.actionContent,
             }

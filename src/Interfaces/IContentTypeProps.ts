@@ -1,9 +1,8 @@
-import {EItemType} from "../enums/EItemType";
 import {JSX} from "react";
+import {IItem} from "./IItem";
 
 export interface IContentTypeProps {
-    type: EItemType,
-    content: string,
+    item: IItem,
     addButton: JSX.Element | string,
     admin: boolean,
 }

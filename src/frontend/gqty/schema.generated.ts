@@ -34,6 +34,7 @@ export interface Scalars {
 }
 
 export interface InItem {
+  action?: InputMaybe<Scalars["String"]["input"]>;
   actionContent?: InputMaybe<Scalars["String"]["input"]>;
   actionType?: InputMaybe<Scalars["String"]["input"]>;
   content: Scalars["String"]["input"];
@@ -42,7 +43,7 @@ export interface InItem {
 }
 
 export interface InSection {
-  content: Array<InputMaybe<InItem>>;
+  content?: InputMaybe<Array<InputMaybe<InItem>>>;
   id?: InputMaybe<Scalars["String"]["input"]>;
   page: Scalars["String"]["input"];
   type: Scalars["Int"]["input"];
@@ -57,8 +58,9 @@ export const scalarsEnumsHash: ScalarsEnumsHash = {
 export const generatedSchema = {
   IItem: {
     __typename: { __type: "String!" },
+    action: { __type: "String" },
     actionContent: { __type: "String" },
-    actionType: { __type: "Int" },
+    actionType: { __type: "String" },
     content: { __type: "String!" },
     name: { __type: "String" },
     type: { __type: "String!" },
@@ -84,6 +86,7 @@ export const generatedSchema = {
     type: { __type: "Int!" },
   },
   InItem: {
+    action: { __type: "String" },
     actionContent: { __type: "String" },
     actionType: { __type: "String" },
     content: { __type: "String!" },
@@ -91,7 +94,7 @@ export const generatedSchema = {
     type: { __type: "String!" },
   },
   InSection: {
-    content: { __type: "[InItem]!" },
+    content: { __type: "[InItem]" },
     id: { __type: "String" },
     page: { __type: "String!" },
     type: { __type: "Int!" },
@@ -133,8 +136,9 @@ export const generatedSchema = {
 
 export interface IItem {
   __typename?: "IItem";
+  action?: Maybe<ScalarsEnums["String"]>;
   actionContent?: Maybe<ScalarsEnums["String"]>;
-  actionType?: Maybe<ScalarsEnums["Int"]>;
+  actionType?: Maybe<ScalarsEnums["String"]>;
   content: ScalarsEnums["String"];
   name?: Maybe<ScalarsEnums["String"]>;
   type: ScalarsEnums["String"];

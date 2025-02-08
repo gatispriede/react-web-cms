@@ -108,6 +108,7 @@ class MongoApi {
         section.content[config.index] = {
             type: config.type,
             content: config.content,
+            action: config.action,
             actionType: config.actionType,
             actionContent: config.actionContent
         }
@@ -134,6 +135,7 @@ class MongoApi {
                                     name: value.name,
                                     type: value.type,
                                     content: value.content,
+                                    action: value.action,
                                     actionType: value.actionType,
                                     actionContent: value.actionContent
                                 }
