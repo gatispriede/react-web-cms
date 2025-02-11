@@ -8,6 +8,7 @@
     "start": "cross-env NODE_ENV=production next start -p 80 src/frontend ",
     "build": "cross-env NODE_ENV=production next build src/frontend",
     "dev": "nodemon --config ./nodemon.json",
+    "standalone-graphql": "npx tsx src/Server/index.ts",
     "generate-schema": "npx @gqty/cli http://localhost:3000/api/graphql --target=src/frontend/gqty/index.ts "
   },
   "gqty": {
