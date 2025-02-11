@@ -14,15 +14,15 @@ import {
   type GeneratedSchema,
 } from "./schema.generated";
 const serverIP = process.env.IP || '127.0.0.1';
-const port = process.env.NODE_ENV === "production" ? '9000' : '80'
-const ip = `http://${serverIP}:${port}`;
+const port = process.env.NODE_ENV === "production" ? '80' : '80'
+const serverAddress = `http://${serverIP}:${port}`;
 // const ip = 'https://5992-212-3-194-236.ngrok-free.app';
 const queryFetcher: QueryFetcher = async function (
   { query, variables, operationName },
   fetchOptions
 ) {
   // Modify "http://localhost:9000/" if needed
-  const response = await fetch(`${ip}/api/graphql`, {
+  const response = await fetch(`${serverAddress}/api/graphql`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

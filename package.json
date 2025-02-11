@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev-client": "cross-env NODE_ENV=development next dev -p 80 src/frontend ",
-    "start": "cross-env NODE_ENV=production next start src/frontend ",
+    "start": "cross-env NODE_ENV=production next start -p 80 src/frontend ",
     "build": "cross-env NODE_ENV=production next build src/frontend",
     "dev": "nodemon --config ./nodemon.json",
     "generate-schema": "npx @gqty/cli http://localhost:3000/api/graphql --target=src/frontend/gqty/index.ts "

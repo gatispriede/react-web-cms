@@ -18,7 +18,6 @@ interface IHomeState {
 }
 
 class admin extends React.Component {
-    url: string = 'http://localhost:9000'
     sections: any[] = []
     admin: boolean = true
     private MongoApi = new MongoApi()
