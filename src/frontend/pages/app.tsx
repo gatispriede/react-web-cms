@@ -37,12 +37,10 @@ class App extends React.Component<{}> {
     }
 
     async getSectionData(pages: IPage[], id: number): Promise<ISection[]> {
-        'use cache'
         return await this.loadSections(pages[id].page, pages)
     }
 
-    async getNavigationList (): Promise<IPage[]> {
-        'use cache'
+    async getNavigationList(): Promise<IPage[]> {
         return await resolve(
             ({query}): IPage[] => {
                 const list: any[] = [];
@@ -58,6 +56,14 @@ class App extends React.Component<{}> {
     }
 
     async initialize(init: boolean = false): Promise<void> {
+        let cacheDataSource: any
+        if(typeof window === 'undefined'){
+            // @ts-ignore
+            cacheDataSource = global.preloadedData
+        }else{
+            // @ts-ignore
+            cacheDataSource = window.preloadedData
+        }
         let newState: IHomeState = {
             loading: false,
             pages: this.state.tabProps,
@@ -65,16 +71,32 @@ class App extends React.Component<{}> {
             activeTab: this.state.activeTab
         }
         if (init) {
+            // eslint-disable-next-line react/no-direct-mutation-state
             this.state.loading = true
         } else {
             this.setState({loading: true})
         }
-        const pages: IPage[] = await this.getNavigationListCache()
+        let pages: IPage[];
+
+        // @ts-ignore
+        if(cacheDataSource){
+            // @ts-ignore
+            pages = cacheDataSource.pages
+        }else{
+            pages = await this.getNavigationListCache()
+        }
         if (pages[0]) {
             const newTabsState = []
             for (let id in pages) {
                 if (pages[id]) {
-                    const sectionsData: ISection[] = await this.getSectionData(pages, id as unknown as number)
+                    let sectionsData: ISection[];
+                    // @ts-ignore
+                    if(cacheDataSource){
+                        // @ts-ignore
+                        sectionsData = cacheDataSource.sectionsData[id]
+                    }else{
+                        sectionsData = await this.getSectionData(pages, id as unknown as number)
+                    }
                     newTabsState.push({
                         key: id,
                         page: pages[id].page,
@@ -93,20 +115,28 @@ class App extends React.Component<{}> {
             }
             newState.tabProps = newTabsState
         }
+
         newState.pages = pages
         newState.loading = false
-        this.setState(newState)
+        if(init){
+            this.state = newState
+        }else{
+            this.setState(newState)
+        }
+
     }
 
     render() {
         return (
-            <ConfigProvider theme={theme}>
-                <Spin spinning={this.state.loading}>
-                    <Tabs onChange={(value) => {
-                        this.setState({activeTab: value})
-                    }} activeKey={this.state.activeTab} defaultActiveKey={"0"} items={this.state.tabProps}/>
-                </Spin>
-            </ConfigProvider>
+            <div>
+                <ConfigProvider theme={theme}>
+                    <Spin spinning={this.state.loading}>
+                        <Tabs onChange={(value) => {
+                            this.setState({activeTab: value})
+                        }} activeKey={this.state.activeTab} defaultActiveKey={"0"} items={this.state.tabProps}/>
+                    </Spin>
+                </ConfigProvider>
+            </div>
         );
     }
 };

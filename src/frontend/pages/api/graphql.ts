@@ -4,6 +4,7 @@ import Cors from "micro-cors";
 import MongoDBConnection from "../../../Server/mongoDBConnection";
 import { MicroRequest } from "apollo-server-micro/dist/types";
 import { ServerResponse, IncomingMessage } from "http";
+// import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
 
 const typeDefs = readFileSync('src/Server/schema.graphql', {encoding: 'utf-8'});
 const resolvers = {
@@ -24,6 +25,7 @@ export const config = {
 };
 const cors = Cors();
 const apolloServer = new ApolloServer({
+    // cache: new InMemoryLRUCache(),
     typeDefs,
     resolvers,
     context: ({req}) => {

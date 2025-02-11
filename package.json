@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "next src/frontend ",
-    "build": "next build src/frontend ",
+    "dev-client": "next dev src/frontend ",
+    "start": "cross-env NODE_ENV=production next start src/frontend ",
+    "build": "cross-env NODE_ENV=production next build src/frontend",
     "dev": "nodemon --config ./nodemon.json",
     "generate-schema": "npx @gqty/cli http://localhost:3000/api/graphql --target=src/frontend/gqty/index.ts "
   },

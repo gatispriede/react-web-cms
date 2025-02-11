@@ -38,6 +38,16 @@ const nextConfig = {
         "rc-upload",
         "rc-util",
     ],
+    images: {
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: '*.googleusercontent.com',
+                port: '',
+                pathname: '**',
+            },
+        ],
+    },
 }
 
 module.exports = nextConfig

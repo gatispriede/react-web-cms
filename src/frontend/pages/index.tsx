@@ -9,6 +9,6 @@ class Index extends React.Component {
             <App />
         );
     }
-};
+}
 
 export default Index;
