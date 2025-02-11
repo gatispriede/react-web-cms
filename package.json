@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev-client": "cross-env NODE_ENV=development next dev -p 80 src/frontend ",
-    "start": "cross-env NODE_ENV=production next start -p 80 src/frontend ",
-    "build": "cross-env NODE_ENV=production next build src/frontend",
+    "start": "cross-env IP=104.248.39.167 NODE_ENV=production next start -p 80 src/frontend ",
+    "build": "cross-env IP=104.248.39.167 NODE_ENV=production next build src/frontend",
     "clean": "rm -rf src/frontend/.next",
     "dev": "nodemon --config ./nodemon.json",
     "standalone-graphql": "npx tsx --tsconfig src/Server/tsconfig.custom.json src/Server/index.ts",
