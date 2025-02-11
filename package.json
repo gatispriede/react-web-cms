@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev-client": "next dev src/frontend ",
+    "dev-client": "cross-env NODE_ENV=development next dev -p 80 src/frontend ",
     "start": "cross-env NODE_ENV=production next start src/frontend ",
     "build": "cross-env NODE_ENV=production next build src/frontend",
     "dev": "nodemon --config ./nodemon.json",

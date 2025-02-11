@@ -13,9 +13,9 @@ import {
   scalarsEnumsHash,
   type GeneratedSchema,
 } from "./schema.generated";
-
-const port = process.env.NODE_ENV === "production" ? '9000' : '3000'
-const ip = `http://127.0.0.1:${port}`;
+const serverIP = process.env.IP || '127.0.0.1';
+const port = process.env.NODE_ENV === "production" ? '9000' : '80'
+const ip = `http://${serverIP}:${port}`;
 // const ip = 'https://5992-212-3-194-236.ngrok-free.app';
 const queryFetcher: QueryFetcher = async function (
   { query, variables, operationName },
