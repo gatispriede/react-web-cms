@@ -1,5 +1,5 @@
 import React, {RefObject, useEffect} from "react";
-import ContentManager from "../../helpers/ContentManager";
+import ContentManager from "../ContentManager";
 import {EItemType} from "../../../enums/EItemType";
 import {IItem} from "../../../Interfaces/IItem";
 

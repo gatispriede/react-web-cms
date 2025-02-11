@@ -1,5 +1,5 @@
 import React from "react";
-import ContentManager from "../../helpers/ContentManager";
+import ContentManager from "../ContentManager";
 import {EItemType} from "../../../enums/EItemType";
 import {Image} from "antd";
 import {IItem} from "../../../Interfaces/IItem";

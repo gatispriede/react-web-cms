@@ -9,8 +9,8 @@ import {ISection} from "../../Interfaces/ISection";
 import {IItem} from "../../Interfaces/IItem";
 import {unstable_cache} from "next/cache";
 
-const isProduction = process.env.NODE_ENV === 'production';
-let myCache: { pages: IPage[]; sectionsData: ISection[][]; } | undefined = undefined
+// const isProduction = process.env.NODE_ENV === 'production';
+// let myCache: { pages: IPage[]; sectionsData: ISection[][]; } | undefined = undefined
 
 const preloadData = async () => {
     const pages  = await resolve(

@@ -5,3 +5,4 @@ export enum EItemType {
     Carousel = "CAROUSEL",
     Empty = 'EMPTY',
 }
+export default EItemType
