@@ -1,11 +1,11 @@
 import {Input} from "antd";
 import React from "react";
 import {IInputContent} from "../../../Interfaces/IInputContent";
-import {RichTextContent} from "../SectionComponents/RichText";
 import {EItemType} from "../../../enums/EItemType";
+import {PlainTextContent} from "../SectionComponents/PlainText";
 
 const InputPlainText = ({content, setContent}:IInputContent) => {
-    const richTextContent = new RichTextContent(EItemType.Text, content)
+    const richTextContent = new PlainTextContent(EItemType.Text, content)
     return (
         <div className={'plain-text'}>
             <label>Please enter text: </label>

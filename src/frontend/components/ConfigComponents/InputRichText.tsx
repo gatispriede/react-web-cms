@@ -4,6 +4,7 @@ import {RichTextContent} from "../SectionComponents/RichText";
 import {EItemType} from "../../../enums/EItemType";
 import 'react-quill/dist/quill.snow.css';
 import dynamic from 'next/dynamic'
+import {RawDraftContentState} from "draft-js";
 const RichTextEditor = dynamic(
     () => import('../common/RichTextEditor'),
     { ssr: false }
@@ -12,15 +13,10 @@ const RichTextEditor = dynamic(
 const InputRichText = ({content,setContent}: IInputContent) => {
     const richTextContent = new RichTextContent(EItemType.RichText, content)
     return (
-        <RichTextEditor value={richTextContent.data.value} setValue={(value: string) => {
+        <RichTextEditor value={richTextContent.data.value} setValue={(value: RawDraftContentState) => {
             richTextContent.setValue(value)
             setContent(richTextContent.stringData)
         }} />
-        // <ReactQuill theme="snow" value={value} onChange={(value: string) => {
-        //     richTextContent.setValue(value)
-        //     setValue(value)
-        //     setContent(richTextContent.stringData)
-        // }}/>
     )
 }
 
