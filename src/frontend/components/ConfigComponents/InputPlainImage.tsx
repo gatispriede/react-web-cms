@@ -4,6 +4,7 @@ import {IInputContent} from "../../../Interfaces/IInputContent";
 import {EItemType} from "../../../enums/EItemType";
 import {PlainImageContent} from "../SectionComponents/PlainImage";
 import dynamic from 'next/dynamic'
+import {RawDraftContentState} from "draft-js";
 const RichTextEditor = dynamic(
     () => import('../common/RichTextEditor'),
     { ssr: false }
@@ -20,7 +21,7 @@ const InputPlainImage = ({content, setContent}:IInputContent) => {
                 setContent(plainImage.stringData)
             }}/>
             <label>Description:</label>
-            <RichTextEditor value={plainImage.data.description} setValue={(value: string) => {
+            <RichTextEditor value={plainImage.data.description} setValue={(value: RawDraftContentState) => {
                 plainImage.setDescription(value)
                 setContent(plainImage.stringData)
             }} />
