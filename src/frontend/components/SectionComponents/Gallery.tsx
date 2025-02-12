@@ -73,27 +73,29 @@ const Gallery = ({item}: { item: IItem }) => {
     gallery.setDisablePreview(item.action !== "onClick");
     const data = gallery.data
     return (
-        <div className={'gallery-wrapper'}>
-            <Image.PreviewGroup>
-            {
-                data.items.map((item: IGalleryItem) => {
-                    return (
-                        <div className={`container text-${item.textPosition}`}>
-                            <div className={'image'}>
-                                <Image
-                                    preview={data.disablePreview ? false : item.preview}
-                                    src={item.src}
-                                    alt={item.alt}
-                                />
-                            </div>
-                            <div className={'text'}>
-                                <p>{item.text}</p>
-                            </div>
-                        </div>
-                    )
-                })
-            }
-            </Image.PreviewGroup>
+        <div>
+            <div className={'gallery-wrapper'}>
+                <Image.PreviewGroup>
+                    {
+                        data.items.map((item: IGalleryItem) => {
+                            return (
+                                <div className={`container text-${item.textPosition}`}>
+                                    <div className={'image'}>
+                                        <Image
+                                            preview={data.disablePreview ? false : item.preview}
+                                            src={item.src}
+                                            alt={item.alt}
+                                        />
+                                    </div>
+                                    <div className={'text'}>
+                                        <p>{item.text}</p>
+                                    </div>
+                                </div>
+                            )
+                        })
+                    }
+                </Image.PreviewGroup>
+            </div>
         </div>
     )
 }
