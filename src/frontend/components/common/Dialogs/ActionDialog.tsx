@@ -1,8 +1,8 @@
-import ContentType from "./ContentType";
+import ContentType from "../ContentType";
 import {Modal} from "antd";
 import React from "react";
-import {IItem} from "../../../Interfaces/IItem";
-import {EItemType} from "../../../enums/EItemType";
+import {IItem} from "../../../../Interfaces/IItem";
+import {EItemType} from "../../../../enums/EItemType";
 
 const ActionDialog = ({item, open, close}: {item: IItem, open:boolean, close: () => void}) => {
     const newItem = {
@@ -12,6 +12,7 @@ const ActionDialog = ({item, open, close}: {item: IItem, open:boolean, close: ()
     return (
         <Modal
             title={''}
+            width={'90%'}
             open={open}
             onCancel={async () => {
                 close()

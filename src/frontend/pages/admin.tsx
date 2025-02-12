@@ -1,7 +1,7 @@
 import React from 'react'
 import {INavigation, resolve} from "../gqty";
 import {Spin, Tabs} from 'antd';
-import AddNewDialogNavigation from "../components/common/AddNewDialogNavigation";
+import AddNewDialogNavigation from "../components/common/Dialogs/AddNewDialogNavigation";
 import DynamicTabsContent from "../components/DynamicTabsContent";
 import EditWrapper from "../components/common/EditWrapper";
 import {IPage} from "../../Interfaces/IPage";

@@ -1,7 +1,7 @@
 import React from "react";
 import {Button, Modal} from "antd";
-import ContentType from "./ContentType";
-import {IItem} from "../../../Interfaces/IItem";
+import ContentType from "../ContentType";
+import {IItem} from "../../../../Interfaces/IItem";
 
 class PreviewDialog extends React.Component<{item: IItem}> {
     props: any = {

@@ -1,6 +1,6 @@
 import React from "react";
 import EditWrapper from "./common/EditWrapper";
-import AddNewSection from "./common/AddNewSection";
+import AddNewSection from "./common/Dialogs/AddNewSection";
 import SectionContent from "./SectionContent";
 import {ISection} from "../../Interfaces/ISection";
 import {IItem} from "../../Interfaces/IItem";

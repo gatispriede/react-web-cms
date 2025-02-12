@@ -26,7 +26,7 @@ const EditWrapper = (
         <>{
             admin ?
                 <div className={'edit-wrapper'}>
-                    {(edit && editContent) && <div className={'edit-button-container'}>
+                    {(edit && editContent) && <div className={'edit-button-container edit-container'}>
                         <div className={'edit-button'}>
                             {editContent}
                         </div>
@@ -35,7 +35,7 @@ const EditWrapper = (
                         children && <div>{children}</div>
                     }
                     {
-                        (del && deleteAction) && <div className={'edit-button-container'}>
+                        (del && deleteAction) && <div className={'edit-button-container delete-container'}>
                             <Popconfirm
                                 title="Delete"
                                 description="Are you sure to delete?"

@@ -1,7 +1,7 @@
 import React from "react";
 import {Button, Input, Modal} from "antd";
 import {PlusCircleOutlined} from "@ant-design/icons";
-import MongoApi from "../../api/MongoApi";
+import MongoApi from "../../../api/MongoApi";
 
 interface IProps {
     refresh:  () => Promise<void>;

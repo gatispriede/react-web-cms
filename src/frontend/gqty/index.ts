@@ -13,16 +13,18 @@ import {
   scalarsEnumsHash,
   type GeneratedSchema,
 } from "./schema.generated";
-const serverIP = process.env.IP || '127.0.0.1';
+
+const serverIP = process.env.SIP || "127.0.0.1";
 const port = process.env.NODE_ENV === "production" ? '80' : '80'
 const serverAddress = `http://${serverIP}:${port}`;
-// const ip = 'https://5992-212-3-194-236.ngrok-free.app';
+const fetchUrl = `${serverAddress}/api/graphql`
+
 const queryFetcher: QueryFetcher = async function (
   { query, variables, operationName },
   fetchOptions
 ) {
-  // Modify "http://localhost:9000/" if needed
-  const response = await fetch(`${serverAddress}/api/graphql`, {
+
+  const response = await fetch(fetchUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

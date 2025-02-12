@@ -3,6 +3,7 @@ import {IContentTypeProps} from "../../../Interfaces/IContentTypeProps";
 import PlainText from "../SectionComponents/PlainText";
 import PlainImage from "../SectionComponents/PlainImage";
 import RichText from "../SectionComponents/RichText";
+import Gallery from "../SectionComponents/Gallery";
 
 const ContentType = (props: IContentTypeProps) => {
     switch (props.item.type) {
@@ -17,6 +18,10 @@ const ContentType = (props: IContentTypeProps) => {
         case EItemType.Image:
             return (
                 <PlainImage item={props.item} />
+            )
+        case EItemType.Gallery:
+            return (
+                <Gallery item={props.item} />
             )
         case EItemType.Empty:
             return (

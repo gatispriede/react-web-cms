@@ -1,12 +1,12 @@
 import {Button, Modal, Select, Tabs} from "antd";
 import {EditOutlined, PlusCircleOutlined} from "@ant-design/icons";
 import React from "react";
-import {ISection} from "../../../Interfaces/ISection";
-import {ContentSection} from "./ContentSection";
+import {ISection} from "../../../../Interfaces/ISection";
+import {ContentSection} from "../ContentSection";
 import PreviewDialog from "./PreviewDialog";
-import {EItemType} from "../../../enums/EItemType";
-import {IConfigSectionAddRemove} from "../../../Interfaces/IConfigSectionAddRemove";
-import {IItem} from "../../../Interfaces/IItem";
+import {EItemType} from "../../../../enums/EItemType";
+import {IConfigSectionAddRemove} from "../../../../Interfaces/IConfigSectionAddRemove";
+import {IItem} from "../../../../Interfaces/IItem";
 
 class AddNewSectionItem extends React.Component {
     props: any = {
@@ -61,16 +61,11 @@ class AddNewSectionItem extends React.Component {
                 value: "IMAGE",
                 text: "Please enter image URL"
             },
-            // {
-            //     label: "Image with text",
-            //     value: "IMAGE_WITH_TEXT",
-            //     text: "Please enter text"
-            // },
-            // {
-            //     label: "Carousel of images",
-            //     value: "CAROUSEL",
-            //     text: "Please enter text"
-            // },
+            {
+                label: "Gallery",
+                value: "GALLERY",
+                text: ""
+            },
         ]
     }
     section: ISection

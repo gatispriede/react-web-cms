@@ -6,13 +6,14 @@ import {IItem} from "../../../Interfaces/IItem";
 
 export interface IPlainImage {
     src: string;
+    description: string;
     alt: string;
     height: number;
     preview: boolean
 }
 
 export class PlainImageContent extends ContentManager {
-    public _parsedContent: IPlainImage = {alt: "", height: 0, preview: false, src: ""}
+    public _parsedContent: IPlainImage = {alt: "", height: 0, preview: false, src: "", description: ""}
     get data(): IPlainImage {
         this.parse();
         return this._parsedContent
@@ -22,6 +23,9 @@ export class PlainImageContent extends ContentManager {
     }
     setSrc(value: string){
         this._parsedContent.src = value;
+    }
+    setDescription(value: string){
+        this._parsedContent.description = value;
     }
 
 }

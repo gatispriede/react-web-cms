@@ -3,8 +3,25 @@
 @use "Layout/Content";
 @use "Admin/Navigation";
 @use "Components/PlainImage";
+@use "Components/Gallery";
+@use "Admin/InputGallery";
+
+@font-face {
+  font-family: 'Salesforce-Sans';
+  src: url('/src/frontend/scss/Fonts/SalesforceSans-Regular.ttf')
+}
 
 body{
   margin-left: 10%;
   margin-right: 10%;
+  font-family: 'Salesforce-Sans', sans-serif;
+  color: #3b3939;
+  .ant-tabs{
+    font-family: 'Salesforce-Sans', sans-serif;
+    color: #3b3939;
+  }
+  .dynamic-content{
+    font-family: 'Salesforce-Sans', sans-serif;
+    color: #3b3939;
+  }
 }

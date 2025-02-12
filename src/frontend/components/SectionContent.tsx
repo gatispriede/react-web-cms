@@ -3,9 +3,9 @@ import React from "react";
 import {ISection} from "../../Interfaces/ISection";
 import {EItemType} from "../../enums/EItemType";
 import ContentType from "./common/ContentType";
-import AddNewSectionItem from "./common/AddNewSectionItem";
+import AddNewSectionItem from "./common/Dialogs/AddNewSectionItem";
 import {IConfigSectionAddRemove} from "../../Interfaces/IConfigSectionAddRemove";
-import ActionDialog from "./common/ActionDialog";
+import ActionDialog from "./common/Dialogs/ActionDialog";
 
 interface IPropsSectionContent {
     section: ISection;

@@ -3,6 +3,7 @@ export enum EItemType {
     RichText = "RICH_TEXT",
     Image = "IMAGE",
     Carousel = "CAROUSEL",
+    Gallery = "GALLERY",
     Empty = 'EMPTY',
 }
 export default EItemType
