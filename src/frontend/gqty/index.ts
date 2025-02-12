@@ -13,8 +13,9 @@ import {
   scalarsEnumsHash,
   type GeneratedSchema,
 } from "./schema.generated";
+import {IP} from '../../../IP'
 
-const serverIP = process.env.SIP || "127.0.0.1";
+const serverIP = process.env.NODE_ENV === "production" ? IP : "127.0.0.1";
 const port = process.env.NODE_ENV === "production" ? '80' : '80'
 const serverAddress = `http://${serverIP}:${port}`;
 const fetchUrl = `${serverAddress}/api/graphql`
