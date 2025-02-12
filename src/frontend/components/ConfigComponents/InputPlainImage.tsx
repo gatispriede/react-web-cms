@@ -3,10 +3,15 @@ import React from "react";
 import {IInputContent} from "../../../Interfaces/IInputContent";
 import {EItemType} from "../../../enums/EItemType";
 import {PlainImageContent} from "../SectionComponents/PlainImage";
-import RichTextEditor from "../common/RichTextEditor";
+import dynamic from 'next/dynamic'
+const RichTextEditor = dynamic(
+    () => import('../common/RichTextEditor'),
+    { ssr: false }
+)
 
 const InputPlainImage = ({content, setContent}:IInputContent) => {
     const plainImage = new PlainImageContent(EItemType.Image, content);
+
     return (
         <div>
             <label>Image URL:</label>
@@ -15,11 +20,10 @@ const InputPlainImage = ({content, setContent}:IInputContent) => {
                 setContent(plainImage.stringData)
             }}/>
             <label>Description:</label>
-            <Input value={plainImage.data.description} onChange={(e) => {
-                plainImage.setDescription(e.target.value)
+            <RichTextEditor value={plainImage.data.description} setValue={(value: string) => {
+                plainImage.setDescription(value)
                 setContent(plainImage.stringData)
-            }}/>
-            <RichTextEditor />
+            }} />
         </div>
     )
 }

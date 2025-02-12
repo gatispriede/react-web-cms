@@ -2,13 +2,18 @@ import React, {RefObject, useEffect} from "react";
 import ContentManager from "../ContentManager";
 import {EItemType} from "../../../enums/EItemType";
 import {IItem} from "../../../Interfaces/IItem";
+import {RawDraftContentState} from "draft-js";
+import draftToHtml from "draftjs-to-html";
 
 export interface IRichText {
-    value: string;
+    value: RawDraftContentState;
 }
 
 export class RichTextContent extends ContentManager {
-    public _parsedContent: IRichText = {value: ''}
+    public _parsedContent: IRichText = {value: {
+            blocks: [],
+            entityMap: {}
+        }}
 
     get data(): IRichText {
         this.parse();
@@ -19,7 +24,7 @@ export class RichTextContent extends ContentManager {
         this._parsedContent = value;
     }
 
-    setValue(value: string) {
+    setValue(value: RawDraftContentState) {
         this._parsedContent.value = value;
     }
 
@@ -30,7 +35,7 @@ const RichText = ({item}:{item: IItem}) => {
     const contentRef: RefObject<HTMLDivElement | null> = React.createRef();
     useEffect(() => {
         if(contentRef.current){
-            contentRef.current.innerHTML = richTextContent.data.value
+            contentRef.current.innerHTML = draftToHtml(richTextContent.data.value)
         }
     }, []);
     return (
