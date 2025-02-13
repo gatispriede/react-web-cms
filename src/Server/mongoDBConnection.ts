@@ -40,10 +40,12 @@ class MongoDBConnection {
     constructor() {
         this._settings.mongoDBDatabaseUrl = `mongodb+srv://${this._settings.mongodbUser}:${this._settings.mongodbPassword}@${this._settings.mongoDBClusterUrl}`;
         const newClient = new MongoClient(this._settings.mongoDBDatabaseUrl, {
-            monitorCommands: false,
+            tls: true,
             connectTimeoutMS: 500,
-            maxConnecting: 20,
+            maxConnecting: 5,
+            maxIdleTimeMS: 5000,
             waitQueueTimeoutMS: 2000,
+            tlsAllowInvalidCertificates: true
         });
         if (newClient) {
             this.client = newClient
@@ -64,6 +66,7 @@ class MongoDBConnection {
     public async getNavigationCollection(): Promise<any> {
         const session = this.client.startSession()
         try {
+
             return await this.navigationsDB.find({type: 'navigation'}).toArray();
         } finally {
             await session.endSession()
