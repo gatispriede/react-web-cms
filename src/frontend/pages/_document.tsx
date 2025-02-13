@@ -7,7 +7,7 @@ import {IPage} from "../../Interfaces/IPage";
 import {IMongo} from "../../Interfaces/IMongo";
 import {ISection} from "../../Interfaces/ISection";
 import {IItem} from "../../Interfaces/IItem";
-import {unstable_cache} from "next/cache";
+// import {unstable_cache} from "next/cache";
 
 // const isProduction = process.env.NODE_ENV === 'production';
 // let myCache: { pages: IPage[]; sectionsData: ISection[][]; } | undefined = undefined
@@ -66,10 +66,10 @@ const preloadData = async () => {
 // const cacheReleaseTime = process.env.NODE_ENV === 'production' ? dayInSeconds : 60
 
 const HeadData = async () => {
-    const myCacheLoader = unstable_cache(async () => preloadData(), ['preloadedData'], {
-        revalidate: 1
-    })
-    const data = await myCacheLoader()
+    // const myCacheLoader = unstable_cache(async () => preloadData(), ['preloadedData'], {
+    //     revalidate: 1
+    // })
+    const data = await preloadData()
     // @ts-ignore
     global.preloadedData = data
     const str = `window.preloadedData = ${JSON.stringify(data)}`
