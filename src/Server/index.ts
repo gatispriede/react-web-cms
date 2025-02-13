@@ -9,12 +9,13 @@ import MongoDBConnection from "./mongoDBConnection";
 // @ts-ignore
 import cors from "cors";
 import { readFileSync } from 'fs';
-import * as fs from "node:fs";
-import * as https from "node:https";
+// import * as fs from "node:fs";
+// import * as https from "node:https";
+import * as http from "node:http";
 
-const privateKey = fs.readFileSync('certificates/localhost-key.pem', 'utf8');
-const certificate = fs.readFileSync('certificates/localhost.pem', 'utf8');
-const credentials = {key: privateKey, cert: certificate};
+// const privateKey = fs.readFileSync('certificates/localhost-key.pem', 'utf8');
+// const certificate = fs.readFileSync('certificates/localhost.pem', 'utf8');
+// const credentials = {key: privateKey, cert: certificate};
 
 const red = new redisConnection()
 
@@ -29,8 +30,10 @@ const resolvers = {
     }
 
 };
-const app: express.Application = express(credentials);
-const port = 443;
+// const app: express.Application = express(credentials);
+const app: express.Application = express();
+// const port = 443;
+const port = 80;
 
 const typeDefs = readFileSync('./src/Server/schema.graphql', { encoding: 'utf-8' });
 
@@ -43,10 +46,11 @@ app.use(
     })
 );
 
-const server = https.createServer(credentials, app);
+// const server = https.createServer(credentials, app);
+const server = http.createServer(app);
 
 const serverStartup = () => {
-    console.log(`Server running at https://localhost:${port}`)
+    console.log(`Server running at http://localhost:${port}`)
 }
 
 server.listen(port,serverStartup);

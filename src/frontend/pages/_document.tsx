@@ -67,7 +67,7 @@ const preloadData = async () => {
 
 const HeadData = async () => {
     const myCacheLoader = unstable_cache(async () => preloadData(), ['preloadedData'], {
-        revalidate: 10
+        revalidate: 1
     })
     const data = await myCacheLoader()
     // @ts-ignore

@@ -1,4 +1,4 @@
-import {Collection, Document, MongoClient} from 'mongodb'
+import {Collection, Db, Document, MongoClient, WithId} from 'mongodb'
 import guid from "../helpers/guid";
 import {ISection} from "../Interfaces/ISection";
 import {INavigation} from "../Interfaces/INavigation";
@@ -13,6 +13,7 @@ interface ISettings {
     mongodbPassword: string;
     mongoDBClusterUrl: string;
     mongoDBDatabaseUrl: string;
+    mongoDBLocalUrl: string;
 }
 
 export interface ILoadData {
@@ -31,26 +32,35 @@ class MongoDBConnection {
         mongodbUser: 'admin',
         mongodbPassword: 'AMd011wAQNN3eWwP',
         mongoDBClusterUrl: 'cluster.0fmyz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster',
+        mongoDBLocalUrl: 'mongodb://localhost:27017',
         mongoDBDatabaseUrl: ''
     }
-    private readonly client!: MongoClient;
-    private readonly sectionsDB!: Collection<Document>;
-    private readonly navigationsDB!: Collection<Document>;
+    private client!: MongoClient;
+    private db: Db | undefined;
+    private sectionsDB!: Collection<Document>;
+    private navigationsDB!: Collection<Document>;
 
     constructor() {
         this._settings.mongoDBDatabaseUrl = `mongodb+srv://${this._settings.mongodbUser}:${this._settings.mongodbPassword}@${this._settings.mongoDBClusterUrl}`;
-        const newClient = new MongoClient(this._settings.mongoDBDatabaseUrl, {
-            tls: true,
+        void this.setupClient()
+    }
+
+    async setupClient() {
+        if (this.db) {
+            await this.client.close()
+        }
+        const dbUrl: string = process.env.NODE_ENV === 'production' ? this._settings.mongoDBDatabaseUrl : this._settings.mongoDBLocalUrl
+        const newClient = new MongoClient(dbUrl, {
+            retryReads: true,
             connectTimeoutMS: 500,
-            maxConnecting: 5,
             maxIdleTimeMS: 5000,
-            waitQueueTimeoutMS: 2000,
-            tlsAllowInvalidCertificates: true
+            maxPoolSize: 20,
         });
         if (newClient) {
+            this.db = newClient.db('Homepage')
             this.client = newClient
-            this.sectionsDB = this.client.db('Homepage').collection('Sections')
-            this.navigationsDB = this.client.db('Homepage').collection('Navigation')
+            this.sectionsDB = this.db.collection('Sections')
+            this.navigationsDB = this.db.collection('Navigation')
         }
     }
 
@@ -64,39 +74,38 @@ class MongoDBConnection {
     }
 
     public async getNavigationCollection(): Promise<any> {
-        const session = this.client.startSession()
+        let navList: WithId<Document>[] = []
         try {
-
-            return await this.navigationsDB.find({type: 'navigation'}).toArray();
-        } finally {
-            await session.endSession()
+            navList = await this.navigationsDB.find({type: 'navigation'}).toArray();
+        } catch (err) {
+            console.log(err)
+            await this.setupClient()
         }
+        return navList
     }
 
     public async getSections({ids}: { ids: string[] }): Promise<any> {
-
-        const session = this.client.startSession()
+        const sections: ISection[] = []
         try {
-            const sections: ISection[] = []
             ids.map(id => {
                 const section = this.sectionsDB.findOne({id: id}) as unknown as ISection
                 sections.push(section)
             })
-
-            return sections
-        } finally {
-            await session.endSession()
+        } catch (err) {
+            console.log(err)
+            await this.setupClient()
         }
+        return sections
     }
 
     public async removeSectionItem({id}: { id: string }) {
-        const session = this.client.startSession()
+        let returnResult = ''
         try {
             const sectionItem = await this.sectionsDB.findOne({id: id}) as unknown as ISection
             if (!sectionItem) {
                 return 'no item with id: ' + id
             }
-            let returnResult = ''
+            
             if (sectionItem.page) {
                 const navigationItem = await this.navigationsDB.findOne({
                         type: 'navigation',
@@ -116,25 +125,24 @@ class MongoDBConnection {
                 }
             }
             const deleteResult = await this.sectionsDB.deleteOne({id: id})
-            returnResult += "  " + JSON.stringify(deleteResult)
-            return returnResult
-        } finally {
-            await session.endSession()
+            returnResult += JSON.stringify(deleteResult)
+        } catch (err) {
+            console.log(err)
+            await this.setupClient()
         }
+        return returnResult
     }
 
     public async addUpdateSectionItem({section, pageName}: {
         section: ISection,
         pageName?: string
     }): Promise<any> {
-        const session = this.client.startSession()
+        let response = {
+            updateSection: {},
+            createSection: {},
+            updateNavigation: {}
+        }
         try {
-            let response = {
-                updateSection: {},
-                createSection: {},
-                updateNavigation: {}
-            }
-
             if (section.id) {
                 const result = await this.sectionsDB.findOneAndUpdate({id: section.id}, {$set: section})
                 if (!result) {
@@ -170,15 +178,15 @@ class MongoDBConnection {
                 }
 
             }
-
-            return JSON.stringify(response)
-        } finally {
-            await session.endSession()
+        } catch (err) {
+            console.log(err)
+            await this.setupClient()
         }
+        return JSON.stringify(response)
     }
 
     public async deleteNavigationItem({pageName}: { pageName: string }) {
-        const session = this.client.startSession()
+        let result
         try {
             const navigationItem = await this.navigationsDB.findOne({
                 type: 'navigation',
@@ -187,21 +195,22 @@ class MongoDBConnection {
             if (!navigationItem) {
                 return 'no navigation found for page:' + pageName
             }
-            const result = await this.navigationsDB.deleteOne({
+            result = await this.navigationsDB.deleteOne({
                 type: 'navigation',
                 page: pageName
             })
-            return JSON.stringify(result)
-        } finally {
-            await session.endSession()
+        } catch (err) {
+            console.log(err)
+            await this.setupClient()
         }
+        return JSON.stringify(result)
     }
 
     public async addUpdateNavigationItem({pageName, sections}: {
         pageName: string,
         sections?: string[]
     }): Promise<string> {
-        const session = this.client.startSession()
+        let returnResult = ''
         try {
             const navigationCollection = this.navigationsDB
 
@@ -228,17 +237,19 @@ class MongoDBConnection {
 
             if (!navigationItemInDb) {
                 const result = await this.navigationsDB.insertOne(navigationItem)
-                return JSON.stringify(result)
+                returnResult =  JSON.stringify(result)
             } else {
                 const result = await navigationCollection.findOneAndUpdate({
                     type: 'navigation',
                     page: pageName
                 }, {$set: navigationItem})
-                return JSON.stringify(result)
+                returnResult = JSON.stringify(result)
             }
-        } finally {
-            await session.endSession()
+        } catch (err) {
+            console.log(err)
+            await this.setupClient()
         }
+        return returnResult
     }
 
     public getMongoDBUri(): string {

@@ -16,7 +16,8 @@ import {
 import {IP} from '../../../IP'
 
 const serverIP = process.env.NODE_ENV === "production" ? IP : "127.0.0.1";
-const serverAddress = `https://${serverIP}`;
+const port = '80'
+const serverAddress = `http://${serverIP}:${port}`;
 const fetchUrl = `${serverAddress}/api/graphql`
 
 const queryFetcher: QueryFetcher = async function (

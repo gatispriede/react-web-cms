@@ -148,7 +148,7 @@ class MongoApi {
                             }
                         })
                         return list
-                    },
+                    }
                 );
             }
         }
