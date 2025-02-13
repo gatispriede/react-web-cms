@@ -40,9 +40,9 @@ class MongoDBConnection {
     constructor() {
         this._settings.mongoDBDatabaseUrl = `mongodb+srv://${this._settings.mongodbUser}:${this._settings.mongodbPassword}@${this._settings.mongoDBClusterUrl}`;
         const newClient = new MongoClient(this._settings.mongoDBDatabaseUrl, {
-            monitorCommands: true,
-            connectTimeoutMS: 200,
-            maxConnecting: 75,
+            monitorCommands: false,
+            connectTimeoutMS: 500,
+            maxConnecting: 20,
             waitQueueTimeoutMS: 2000,
         });
         if (newClient) {
