@@ -5,6 +5,8 @@ import MongoApi from "../../../api/MongoApi";
 
 interface IProps {
     refresh:  () => Promise<void>;
+    close:  () => void;
+    open: boolean
 }
 
 class AddNewDialogNavigation extends React.Component<IProps, {}> {
@@ -30,21 +32,16 @@ class AddNewDialogNavigation extends React.Component<IProps, {}> {
 
         return (
             <>
-
-                <Button type="primary" onClick={() => {
-                    this.setState({dialogOpen: true})
-                }}>
-                    Pievienot jaunu lapu: <PlusCircleOutlined/>
-                </Button>
-                <Modal width={'90%'} open={this.state.dialogOpen}
+                <Modal width={'90%'} open={this.props.open}
                        okButtonProps={{disabled: this.state.newNavigationName.length < 4}}
                        onOk={async () => {
                            await this.MongoApi.createNavigation(this.state.newNavigationName, this.sections)
-                           this.setState({newNavigationName: '', dialogOpen: false})
+                           this.setState({newNavigationName: ''})
                            await this.props.refresh()
+                           this.props.close()
                        }}
                        onCancel={() => {
-                           this.setState({dialogOpen: false})
+                           this.props.close()
                        }}>
                     <label>Enter name</label>
                     <Input value={this.state.newNavigationName}

@@ -51,7 +51,7 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
             <div className={'dynamic-content'}>
                 <div>
                     {
-                        this.state.sections.map((section: ISection, index) => {
+                        this.state.sections && this.state.sections.map((section: ISection, index) => {
                                 const emptySections = section.type - section.content?.length
                                 if (emptySections > 0) {
                                     const emptySection = {

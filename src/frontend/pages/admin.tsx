@@ -10,8 +10,11 @@ import {ConfigProvider} from 'antd';
 import {IMongo} from "../../Interfaces/IMongo";
 import MongoApi from '../api/MongoApi';
 
+type TargetKey = React.MouseEvent | React.KeyboardEvent | string;
+
 interface IHomeState {
     loading: boolean,
+    addNewDialogOpen: boolean,
     activeTab: string,
     pages: IPage[],
     tabProps: any[]
@@ -24,6 +27,7 @@ class admin extends React.Component {
 
     state: IHomeState = {
         loading: false,
+        addNewDialogOpen: false,
         pages: [],
         tabProps: [],
         activeTab: '0'
@@ -35,9 +39,28 @@ class admin extends React.Component {
         void this.initialize(true)
     }
 
+    onEdit = async (targetKey: TargetKey, action: 'add' | 'remove') => {
+        if (action === 'add') {
+            this.setState({addNewDialogOpen: true})
+        } else {
+            let page
+            const newItems = this.state.tabProps.filter((item) => {
+                if(item.key === targetKey){
+                    page = item.page
+                }
+                return item.key !== targetKey
+            });
+            if(page){
+                await this.MongoApi.deleteNavigation(page)
+                this.setState({tabProps: newItems, activeTab: 1, loading: false})
+            }
+        }
+    }
+
     async initialize(init: boolean = false): Promise<void> {
         let newState: IHomeState = {
             loading: false,
+            addNewDialogOpen: false,
             pages: this.state.tabProps,
             tabProps: this.state.tabProps,
             activeTab: this.state.activeTab
@@ -69,13 +92,7 @@ class admin extends React.Component {
                         page: pages[id].page,
                         label:
                             <div className={'navigation-container'}>
-                                <EditWrapper
-                                    admin={this.admin}
-                                    deleteAction={async () => {
-                                        await this.MongoApi.deleteNavigation(pages[id].page)
-                                        await this.initialize()
-                                    }}
-                                >{pages[id].page}</EditWrapper>
+                                {pages[id].page}
                             </div>,
                         children: (
                             <DynamicTabsContent
@@ -92,15 +109,6 @@ class admin extends React.Component {
             }
 
         }
-        newTabsState.push({
-            key: 'add',
-            label:
-                <AddNewDialogNavigation
-                    refresh={async () => {
-                        await this.initialize()
-                    }}
-                />,
-        })
         newState.tabProps = newTabsState
         newState.pages = pages
         newState.loading = false
@@ -111,9 +119,29 @@ class admin extends React.Component {
         return (
             <ConfigProvider theme={theme}>
                 <Spin spinning={this.state.loading}>
-                    <Tabs onChange={(value) => {
-                        this.setState({activeTab: value})
-                    }} activeKey={this.state.activeTab} defaultActiveKey={"0"} items={this.state.tabProps}/>
+                    <AddNewDialogNavigation
+                        close={() => {
+                            this.setState({addNewDialogOpen: false})
+                        }}
+                        open={this.state.addNewDialogOpen}
+                        refresh={async () => {
+                            await this.initialize()
+                        }}
+                    />
+                    <Tabs
+                        type="editable-card"
+                        tabBarStyle={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            textTransform: "uppercase"
+                        }}
+                        onEdit={this.onEdit}
+                        onChange={(value) => {
+                            this.setState({activeTab: value})
+                        }}
+                        activeKey={this.state.activeTab}
+                        defaultActiveKey={"0"}
+                        items={this.state.tabProps}/>
                 </Spin>
             </ConfigProvider>
         );

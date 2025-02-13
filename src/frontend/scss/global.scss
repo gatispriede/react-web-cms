@@ -8,17 +8,21 @@
 
 @font-face {
   font-family: 'Salesforce-Sans';
-  src: url('/src/frontend/scss/Fonts/SalesforceSans-Regular.ttf')
+  src: '../public/fonts/SalesforceSans-Regular.ttf'
 }
 
 body{
-  margin-left: 10%;
-  margin-right: 10%;
+  margin-left: 16px;
+  margin-right: 16px;
+  overflow: auto;
   font-family: 'Salesforce-Sans', sans-serif;
   color: #3b3939;
   .ant-tabs{
     font-family: 'Salesforce-Sans', sans-serif;
-    color: #3b3939;
+    .ant-tabs-nav-wrap{
+      text-transform: uppercase;
+
+    }
   }
   .dynamic-content{
     font-family: 'Salesforce-Sans', sans-serif;
