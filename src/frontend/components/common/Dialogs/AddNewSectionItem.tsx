@@ -176,7 +176,7 @@ class AddNewSectionItem extends React.Component {
                        footer={(_, {OkBtn, CancelBtn}) => (
                            <>
                                <CancelBtn/>
-                               <PreviewDialog item={item} content={this.state.content}/>
+                               <PreviewDialog item={item}/>
                                <OkBtn/>
                            </>
                        )}
