@@ -15,7 +15,7 @@ import {
 } from "./schema.generated";
 import {IP} from '../../../IP'
 
-const serverIP = process.env.NODE_ENV === "production" ? IP : "127.0.0.1";
+const serverIP = String(process.env.NODE_ENV) === "production" ? IP : "127.0.0.1";
 const port = '80'
 const serverAddress = `http://${serverIP}:${port}`;
 const fetchUrl = `${serverAddress}/api/graphql`

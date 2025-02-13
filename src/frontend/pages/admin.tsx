@@ -66,9 +66,9 @@ class admin extends React.Component {
             activeTab: this.state.activeTab
         }
         if (init) {
-            // this.state.loading = true
+            this.state.loading = true
         } else {
-            // this.setState({loading: true})
+            this.setState({loading: true})
         }
         const pages = await resolve(
             ({query}) => {
@@ -116,10 +116,9 @@ class admin extends React.Component {
     }
 
     render() {
-        console.log('here')
         return (
             <ConfigProvider theme={theme}>
-                {/*<Spin spinning={this.state.loading}>*/}
+                <Spin spinning={this.state.loading}>
                     <AddNewDialogNavigation
                         close={() => {
                             this.setState({addNewDialogOpen: false})
@@ -143,7 +142,7 @@ class admin extends React.Component {
                         activeKey={this.state.activeTab}
                         defaultActiveKey={"0"}
                         items={this.state.tabProps}/>
-                {/*</Spin>*/}
+                </Spin>
             </ConfigProvider>
         );
     }
