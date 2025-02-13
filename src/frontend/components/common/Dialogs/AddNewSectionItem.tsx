@@ -144,12 +144,7 @@ class AddNewSectionItem extends React.Component {
                 actionContent: this.state.actionContent,
             }
         )
-    }
-    activeLabel = () => {
-        return this.state.selectOptions.find(item => item.value === this.state.selected)?.label
-    }
-    activeContentText = () => {
-        return this.state.selectOptions.find(item => item.value === this.state.selected)?.text
+
     }
     activeOption = () => {
         return this.state.selectOptions.find(item => item.value === this.state.selected)
@@ -159,6 +154,14 @@ class AddNewSectionItem extends React.Component {
         const tabContent = this.state.tabContent
         tabContent[0].children = this.generateContentSection()
         tabContent[1].children = this.generateActionSection()
+        const item = {
+            index: this.index,
+            type: this.state.selected,
+            content: this.state.content,
+            action: this.state.action,
+            actionType: this.state.actionType,
+            actionContent: this.state.actionContent,
+        }
         return (
             <>
                 {
@@ -173,7 +176,7 @@ class AddNewSectionItem extends React.Component {
                        footer={(_, {OkBtn, CancelBtn}) => (
                            <>
                                <CancelBtn/>
-                               <PreviewDialog item={this.section.content[this.index]} content={this.state.content}/>
+                               <PreviewDialog item={item} content={this.state.content}/>
                                <OkBtn/>
                            </>
                        )}
@@ -186,6 +189,7 @@ class AddNewSectionItem extends React.Component {
                        }}
                 >
                     <Tabs tabPosition={'left'} defaultActiveKey="1" items={tabContent}/>
+
                 </Modal>
             </>
         )
