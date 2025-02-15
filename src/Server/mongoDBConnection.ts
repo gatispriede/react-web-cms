@@ -49,7 +49,7 @@ class MongoDBConnection {
         if (this.db) {
             await this.client.close()
         }
-        const dbUrl: string = process.env.NODE_ENV === 'production' ? this._settings.mongoDBDatabaseUrl : this._settings.mongoDBLocalUrl
+        const dbUrl: string = this._settings.mongoDBLocalUrl//process.env.NODE_ENV === 'production' ? this._settings.mongoDBDatabaseUrl : this._settings.mongoDBLocalUrl
         const newClient = new MongoClient(dbUrl, {
             retryReads: true,
             connectTimeoutMS: 500,
