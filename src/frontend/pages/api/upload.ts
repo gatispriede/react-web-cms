@@ -14,7 +14,7 @@ const uploadForm = (next: { (req: any, res: any): void; (arg0: any, arg1: any): 
             const form = new Formidable.IncomingForm({
                 multiples: false,
                 keepExtensions: true,
-                uploadDir: path.join(process.cwd(), 'src/frontend/', `public/images/`)
+                uploadDir: path.join(process.cwd(), 'src/frontend/', `public/temp/`)
             });
 
             form.once("error", console.error);
@@ -31,13 +31,6 @@ const uploadForm = (next: { (req: any, res: any): void; (arg0: any, arg1: any): 
                 if (err) {
                     throw String(JSON.stringify(err, null, 2));
                 }
-                // console.log(
-                //     files.file[0],
-                //     "moving file: ",
-                //     files.file[0].filepath,
-                //     " to ",
-                //     `public/images/${files.file[0].originalFilename}`
-                // );
 
                 fs.renameSync(files.file[0].filepath, path.join(process.cwd(), 'src/frontend/', `public/images/${files.file[0].originalFilename}`));
                 req.form = {fields, files};

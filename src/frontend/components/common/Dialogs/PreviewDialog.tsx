@@ -19,7 +19,7 @@ class PreviewDialog extends React.Component<{item: IItem}> {
 
     render() {
         return (
-            <>
+            <div>
                 <Button type="primary" onClick={() => {
                     this.setState({dialogOpen: true})
                 }}>
@@ -47,7 +47,7 @@ class PreviewDialog extends React.Component<{item: IItem}> {
                         }}/>
                     </div>
                 </Modal>
-            </>
+            </div>
         )
     }
 }

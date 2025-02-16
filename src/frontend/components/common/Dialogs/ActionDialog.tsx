@@ -9,6 +9,7 @@ const ActionDialog = ({item, open, close}: {item: IItem, open:boolean, close: ()
         type: item.actionType ? item.actionType : EItemType.Text,
         content: item.actionContent ? item.actionContent : '{}'
     }
+    console.log(item);
     return (
         <Modal
             title={''}

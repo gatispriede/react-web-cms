@@ -95,11 +95,13 @@ class SectionContent extends React.Component<IPropsSectionContent> {
                                         })
                                     }}
                                 >
-                                    <div className={`content-wrapper ${item.action === "onClick" ? 'action-enabled' : ''}`} onClick={(event) => {
-                                        if (item.action === 'onClick' && !this.state.actionDialogOpen) {
-                                            this.setState({actionDialogOpen: true})
-                                        }
-                                    }}>
+                                    <div
+                                        className={`content-wrapper ${item.action === "onClick" ? 'action-enabled' : ''}`}
+                                        onClick={(event) => {
+                                            if (item.action === 'onClick' && !this.state.actionDialogOpen) {
+                                                this.setState({actionDialogOpen: true})
+                                            }
+                                        }}>
                                         <ContentType
                                             admin={this.admin}
                                             item={item}
@@ -112,9 +114,11 @@ class SectionContent extends React.Component<IPropsSectionContent> {
                                                 />
                                             }
                                         />
-                                        <ActionDialog item={item} open={this.state.actionDialogOpen} close={() => {
-                                            this.setState({actionDialogOpen: false})
-                                        }}/>
+                                        {item.action && item.action !== 'none' &&
+                                            <ActionDialog item={item} open={this.state.actionDialogOpen} close={() => {
+                                                this.setState({actionDialogOpen: false})
+                                            }}/>
+                                        }
                                     </div>
                                 </EditWrapper>
                             </div>

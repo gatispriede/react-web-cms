@@ -4,6 +4,7 @@ import {IInputContent} from "../../../Interfaces/IInputContent";
 import {EItemType} from "../../../enums/EItemType";
 import {GalleryContent, IGalleryItem} from "../SectionComponents/Gallery";
 import EditWrapper from "../common/EditWrapper";
+import ImageUpload from "../ImageUpload";
 
 const InputGallery = ({content, setContent}: IInputContent) => {
     const galleryContent = new GalleryContent(EItemType.Image, content);
@@ -12,6 +13,13 @@ const InputGallery = ({content, setContent}: IInputContent) => {
         <div className={'gallery-wrapper'}>
             {
                 data.items && data.items.map((item: IGalleryItem, index) => {
+                    const setFile = (file: File) => {
+                        galleryContent.setItem(index, {
+                            ...item,
+                            src: 'images/' + file.name
+                        })
+                        setContent(galleryContent.stringData)
+                    }
                     return (
                         <EditWrapper admin={true} del={true} deleteAction={async () => {
                             galleryContent.removeItem(index)
@@ -21,16 +29,11 @@ const InputGallery = ({content, setContent}: IInputContent) => {
                                 <label>
                                     Image URL:
                                 </label>
+                                <ImageUpload setFile={setFile}/>
                                 <Input
                                     placeholder={'Image URL'}
                                     value={item.src}
-                                    onChange={({target: {value}}) => {
-                                        galleryContent.setItem(index, {
-                                            ...item,
-                                            src: value
-                                        })
-                                        setContent(galleryContent.stringData)
-                                    }}
+                                    disabled={true}
                                 />
                                 <label>
                                     Description:
