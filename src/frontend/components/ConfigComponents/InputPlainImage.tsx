@@ -5,6 +5,8 @@ import {EItemType} from "../../../enums/EItemType";
 import {PlainImageContent} from "../SectionComponents/PlainImage";
 import dynamic from 'next/dynamic'
 import {RawDraftContentState} from "draft-js";
+import ImageUpload from "../ImageUpload";
+
 const RichTextEditor = dynamic(
     () => import('../common/RichTextEditor'),
     { ssr: false }
@@ -12,11 +14,16 @@ const RichTextEditor = dynamic(
 
 const InputPlainImage = ({content, setContent}:IInputContent) => {
     const plainImage = new PlainImageContent(EItemType.Image, content);
-
+    const setFile = (file: File) => {
+        // console.log(file)
+        plainImage.setSrc(file.name)
+        setContent(plainImage.stringData)
+    }
     return (
         <div>
             <label>Image URL:</label>
-            <Input value={plainImage.data.src} onChange={(e) => {
+            <ImageUpload setFile={setFile}/>
+            <Input disabled={true} value={plainImage.data.src} onChange={(e) => {
                 plainImage.setSrc(e.target.value)
                 setContent(plainImage.stringData)
             }}/>
@@ -24,7 +31,7 @@ const InputPlainImage = ({content, setContent}:IInputContent) => {
             <RichTextEditor value={plainImage.data.description} setValue={(value: RawDraftContentState) => {
                 plainImage.setDescription(value)
                 setContent(plainImage.stringData)
-            }} />
+            }}/>
         </div>
     )
 }

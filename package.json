@@ -10,6 +10,7 @@
     "clean": "rm -rf src/frontend/.next",
     "dev-server": "nodemon --config ./nodemon.json",
     "standalone-graphql": "npx tsx --tsconfig src/Server/tsconfig.custom.json src/Server/index.ts",
+    "ssl": "npx tsx --tsconfig src/Server/tsconfig.custom.json src/Server/sslServer.ts",
     "generate-schema": "npx @gqty/cli http://localhost:3000/api/graphql --target=src/frontend/gqty/index.ts "
   },
   "gqty": {
@@ -73,6 +74,8 @@
     "styled-components": "^6.1.14",
     "styled-icons": "^10.47.1",
     "tls": "^0.0.1",
+    "uppload": "^3.2.1",
+    "uppload-react": "^1.2.1",
     "url": "^0.11.4",
     "util": "^0.12.5"
   },
