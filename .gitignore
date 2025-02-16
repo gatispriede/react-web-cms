@@ -6,6 +6,9 @@
 /src/frontend/.next/*
 src/frontend/.next/*
 src/frontend/.next/
+src/frontend/public/images
+src/frontend/public/images/*
+src/frontend/public/images/
 /.cache
 
 # dependencies
