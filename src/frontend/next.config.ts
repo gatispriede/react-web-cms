@@ -38,6 +38,9 @@ const nextConfig = {
         "rc-upload",
         "rc-util",
     ],
+    unstable_allowDynamic: [
+        'src/frontend/pages/api/upload.ts'
+        ],
     images: {
         remotePatterns: [
             {

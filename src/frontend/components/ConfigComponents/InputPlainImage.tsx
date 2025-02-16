@@ -16,7 +16,7 @@ const InputPlainImage = ({content, setContent}:IInputContent) => {
     const plainImage = new PlainImageContent(EItemType.Image, content);
     const setFile = (file: File) => {
         // console.log(file)
-        plainImage.setSrc(file.name)
+        plainImage.setSrc('images/' + file.name)
         setContent(plainImage.stringData)
     }
     return (

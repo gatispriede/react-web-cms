@@ -38,18 +38,7 @@ class UpploadManager {
             bind: this._previewRef,
             call: this._buttonRef,
             value: this._defaultImgUrl,
-            uploader: (file, updateProgress) => {
-                console.log('Blob:',file)
-                const data = new FormData()
-                data.append('file', file)
-                data.append('user', 'hubot')
-                fetch('/api/upload', {
-                    method: 'POST',
-                    body: data
-                }).then(response => response.json())
-                    .then(data => console.log(data))
-                    .catch(error => console.error(error));
-
+            uploader: async (file, updateProgress) => {
                 return new Promise(resolve => {
                     const resultFile = file as File
                     try {
@@ -63,7 +52,23 @@ class UpploadManager {
                             if (progress > 99) clearInterval(interval);
                             if (updateProgress) updateProgress(progress++);
                         }, 25);
+                        const formData = new FormData()
+                        formData.append('file', file)
 
+                        fetch('/api/upload', {
+                            method: 'POST',
+                            // headers: {
+                            //   "Content-Type": "multipart/form-data"
+                            // },
+                            body: formData
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                console.log(data);
+                            })
+                            .catch(error => {
+                                console.error(error);
+                            });
                     }catch (e){
                         console.log('File upload error:', e)
                     }

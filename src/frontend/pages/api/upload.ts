@@ -1,36 +1,65 @@
-import { NextResponse } from "next/server";
-import path from "path";
-import { writeFile } from "fs/promises";
-
-const POST = async (req: { formData: () => any; }, res: any) => {
-    const formData = await req.formData();
-
-    const file = formData.get("file");
-    if (!file) {
-        return NextResponse.json({ error: "No files received." }, { status: 400 });
-    }
-
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const filename =  file.name.replaceAll(" ", "_");
-    console.log(filename);
-    try {
-        await writeFile(
-            path.join(process.cwd(), "public/images/" + filename),
-            buffer
-        );
-        return NextResponse.json({ Message: "Success", status: 201 });
-    } catch (error) {
-        console.log("Error occured ", error);
-        return NextResponse.json({ Message: "Failed", status: 500 });
-    }
-};
+import * as Formidable from 'formidable';
+import fs from "fs";
+import path from "node:path";
 
 export const config = {
     api: {
-        bodyParser: {
-            sizeLimit: '10mb',
-        },
-    },
+        bodyParser: false
+    }
+};
+
+const uploadForm = (next: { (req: any, res: any): void; (arg0: any, arg1: any): unknown; }) => (req: any, res: any) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const form = new Formidable.IncomingForm({
+                multiples: false,
+                keepExtensions: true,
+                uploadDir: path.join(process.cwd(), 'src/frontend/', `public/images/`)
+            });
+
+            form.once("error", console.error);
+            form
+                .on("fileBegin", (fields: any, files: any) => {
+                    console.log("start uploading: ", files.originalFilename);
+                })
+                .on("aborted", () => console.log("Aborted..."));
+            form.once("end", () => {
+                console.log("Done!");
+            });
+            form.parse(req, async (err: any, fields: any, files: any) => {
+
+                if (err) {
+                    throw String(JSON.stringify(err, null, 2));
+                }
+                // console.log(
+                //     files.file[0],
+                //     "moving file: ",
+                //     files.file[0].filepath,
+                //     " to ",
+                //     `public/images/${files.file[0].originalFilename}`
+                // );
+
+                fs.renameSync(files.file[0].filepath, path.join(process.cwd(), 'src/frontend/', `public/images/${files.file[0].originalFilename}`));
+                req.form = {fields, files};
+                return resolve(next(req, res));
+            });
+        } catch (error) {
+            console.log(error)
+            return resolve(res.status(403).send(error));
+        }
+    });
+};
+
+function handler(req: any, res: any) {
+    try {
+        if (req.method === "POST") {
+            res.status(200).send(req.form);
+        } else {
+            throw String("Method not allowed");
+        }
+    } catch (error) {
+        res.status(400).json({message: JSON.stringify(error, null, 2)});
+    }
 }
 
-export default POST
+export default uploadForm(handler);
