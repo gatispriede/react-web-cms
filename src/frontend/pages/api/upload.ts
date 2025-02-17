@@ -4,7 +4,7 @@ import path from "node:path";
 import MongoApi from "../../api/MongoApi";
 import {IImage} from "../../gqty";
 import guid from "../../../helpers/guid";
-import PersistentFile from "formidable/PersistentFile";
+import {PUBLIC_IMAGE_PATH} from "../../../constants/imgPath";
 
 export const config = {
     api: {
@@ -45,7 +45,7 @@ const uploadForm = (next: { (req: any, res: any): void; (arg0: any, arg1: any): 
                     const image: IImage = {
                         created: new Date().toDateString(),
                         id: guid(),
-                        location: `images/${file.originalFilename}`,
+                        location: `${PUBLIC_IMAGE_PATH}${file.originalFilename}`,
                         name: file.originalFilename,
                         size: file.size,
                         type: file.mimetype,

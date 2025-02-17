@@ -6,6 +6,7 @@ import {PlainImageContent} from "../SectionComponents/PlainImage";
 import dynamic from 'next/dynamic'
 import {RawDraftContentState} from "draft-js";
 import ImageUpload from "../ImageUpload";
+import {PUBLIC_IMAGE_PATH} from "../../../constants/imgPath";
 
 const RichTextEditor = dynamic(
     () => import('../common/RichTextEditor'),
@@ -15,7 +16,7 @@ const RichTextEditor = dynamic(
 const InputPlainImage = ({content, setContent}:IInputContent) => {
     const plainImage = new PlainImageContent(EItemType.Image, content);
     const setFile = (file: File) => {
-        plainImage.setSrc('images/' + file.name)
+        plainImage.setSrc(PUBLIC_IMAGE_PATH + file.name)
         setContent(plainImage.stringData)
     }
     return (

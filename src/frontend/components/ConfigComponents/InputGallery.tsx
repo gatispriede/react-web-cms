@@ -5,6 +5,7 @@ import {EItemType} from "../../../enums/EItemType";
 import {GalleryContent, IGalleryItem} from "../SectionComponents/Gallery";
 import EditWrapper from "../common/EditWrapper";
 import ImageUpload from "../ImageUpload";
+import {PUBLIC_IMAGE_PATH} from "../../../constants/imgPath";
 
 const InputGallery = ({content, setContent}: IInputContent) => {
     const galleryContent = new GalleryContent(EItemType.Image, content);
@@ -16,7 +17,7 @@ const InputGallery = ({content, setContent}: IInputContent) => {
                     const setFile = (file: File) => {
                         galleryContent.setItem(index, {
                             ...item,
-                            src: 'images/' + file.name
+                            src: PUBLIC_IMAGE_PATH + file.name
                         })
                         setContent(galleryContent.stringData)
                     }

@@ -1,5 +1,5 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+const nextConfig: import('next').NextConfig = {
     transpilePackages: [
         // antd & deps
         "@ant-design",
@@ -39,14 +39,13 @@ const nextConfig = {
         "rc-util",
     ],
     images: {
-        remotePatterns: [
-            {
-                protocol: 'https',
-                hostname: '*.googleusercontent.com',
-                port: '',
-                pathname: '**',
-            },
-        ],
+        unoptimized: true
+    },
+    webpack5: true,
+    webpack: (config) => {
+        config.resolve.fallback = { fs: false };
+
+        return config;
     },
 }
 
