@@ -14,6 +14,26 @@ input InItem {
     actionContent: String
 }
 
+input InImage {
+    id: String!
+    name: String!
+    location: String!
+    created: String!
+    type: String!
+    size: Int!
+    tags: [String]
+}
+
+type IImage {
+    id: String!
+    name: String!
+    location: String!
+    created: String!
+    type: String!
+    size: Int!
+    tags: [String]!
+}
+
 type IItem {
     name: String
     type: String!
@@ -42,27 +62,29 @@ type ILoadData {
     empty: Boolean
 }
 
-type TMongo {
+type QueryMongo {
     getMongoDBUri: String
     loadData: [ILoadData!]!
     createDatabase: String!
     getNavigationCollection: [INavigation!]!
     getSections(ids: [String]): [ISection!]!
+    getImages(tags: String!): [IImage!]!
 }
-type MMongo {
+type MutationMongo {
     addUpdateNavigationItem(pageName: String!, sections: [String]): String!
     addUpdateSectionItem(section: InSection!, pageName: String): String!
     removeSectionItem(id:String!): String!
     deleteNavigationItem(pageName:String!): String!
+    saveImage(image: InImage!): String!
 }
 
 type Query {
     sample: String!
     greeting: String!
     bar: String!
-    mongo: TMongo!
+    mongo: QueryMongo!
 }
 
 type Mutation {
-    mongo: MMongo!
+    mongo: MutationMongo!
 }

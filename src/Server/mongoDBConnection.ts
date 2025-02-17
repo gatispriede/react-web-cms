@@ -2,6 +2,7 @@ import {Collection, Db, Document, MongoClient, WithId} from 'mongodb'
 import guid from "../helpers/guid";
 import {ISection} from "../Interfaces/ISection";
 import {INavigation} from "../Interfaces/INavigation";
+import IImage from "../Interfaces/IImage";
 
 interface ISettings {
     apiKey: string;
@@ -39,6 +40,7 @@ class MongoDBConnection {
     private db: Db | undefined;
     private sectionsDB!: Collection<Document>;
     private navigationsDB!: Collection<Document>;
+    private imagesDB!: Collection<Document>;
 
     constructor() {
         this._settings.mongoDBDatabaseUrl = `mongodb+srv://${this._settings.mongodbUser}:${this._settings.mongodbPassword}@${this._settings.mongoDBClusterUrl}`;
@@ -61,9 +63,33 @@ class MongoDBConnection {
             this.client = newClient
             this.sectionsDB = this.db.collection('Sections')
             this.navigationsDB = this.db.collection('Navigation')
+            this.imagesDB = this.db.collection('Images')
         }
     }
-
+    async saveImage({image}: { image: IImage }){
+        let res = ''
+        try {
+            const result = await this.imagesDB.insertOne(image)
+            res = JSON.stringify({result: result})
+        } catch (err) {
+            res = JSON.stringify({error: err})
+            await this.setupClient()
+        }
+        return res
+    }
+    async getImages({tags}: {tags: string}): Promise<any> {
+        console.log(tags)
+        let images: WithId<Document>[] = []
+        try {
+            images = await this.imagesDB.find({
+                tags: tags
+            }).toArray();
+        } catch (err) {
+            console.log(err)
+            await this.setupClient()
+        }
+        return images
+    }
     async loadData(): Promise<ILoadData[]> {
         if (!this.client) {
             return []

@@ -16,22 +16,41 @@ import "uppload/dist/uppload.css";
 import "uppload/dist/themes/light.css";
 
 class UpploadManager {
+
     private readonly _previewRef: HTMLImageElement;
     private readonly _buttonRef: HTMLButtonElement;
 
     private readonly _defaultImgUrl: string = "https://images.pexels.com/photos/1525041/pexels-photo-1525041.jpeg?auto=compress&cs=tinysrgb&w=600"
 
     private readonly _setFile: (file: File) => void;
+    private readonly _setError: (error: string) => void;
 
+    public error: string = 'Invalid'
     public fileName: string = ''
     public file: any = undefined
+    public tags: string[] = ['All']
 
-    constructor(previewRef: HTMLImageElement, buttonRef: HTMLButtonElement, setFile: (file: File) => void) {
+    constructor(previewRef: HTMLImageElement, buttonRef: HTMLButtonElement, setFile: (file: File) => void, setError: (error: string) => void) {
         this._previewRef = previewRef
         this._buttonRef = buttonRef
         this._setFile = setFile
+        this._setError = setError
         this.setup()
     }
+
+    setError(error: string) {
+        this.error = error
+        this._setError(error)
+        setTimeout(() => {
+            this.error = ''
+            this._setError('')
+        }, 10000)
+    }
+
+    setTags(tags: string[]): void {
+        this.tags = tags
+    }
+
     setup() {
         const uploader = new Uppload({
             lang: en,
@@ -43,7 +62,7 @@ class UpploadManager {
                     const resultFile = file as File
                     try {
                         this.fileName = resultFile.name
-                        this.file = resultFile
+                        this.file = resultFile;
                         this._setFile(resultFile)
                         setTimeout(() => resolve(window.URL.createObjectURL(file)), 2750);
 
@@ -54,22 +73,25 @@ class UpploadManager {
                         }, 25);
                         const formData = new FormData()
                         formData.append('file', file)
-
-                        fetch('/api/upload', {
-                            method: 'POST',
-                            // headers: {
-                            //   "Content-Type": "multipart/form-data"
-                            // },
-                            body: formData
-                        })
-                            .then(response => response.json())
-                            .then(data => {
-                                console.log(data);
+                        formData.append('tags', JSON.stringify(this.tags.length ? this.tags : ['All']))
+                        try {
+                            fetch('/api/upload', {
+                                method: 'POST',
+                                body: formData
                             })
-                            .catch(error => {
-                                console.error(error);
-                            });
-                    }catch (e){
+                                .then(response => response.json())
+                                .then(response => {
+                                    if (response.error) {
+                                        this.setError(response.error)
+                                    }
+                                })
+                                .catch(error => {
+                                    this.setError(error)
+                                });
+                        } catch (e) {
+                            console.log('File upload error:', e)
+                        }
+                    } catch (e) {
                         console.log('File upload error:', e)
                     }
                 })
@@ -96,4 +118,5 @@ class UpploadManager {
         });
     }
 }
+
 export default UpploadManager;

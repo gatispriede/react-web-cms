@@ -11,7 +11,7 @@
     "dev-server": "nodemon --config ./nodemon.json",
     "standalone-graphql": "npx tsx --tsconfig src/Server/tsconfig.custom.json src/Server/index.ts",
     "ssl": "npx tsx --tsconfig src/Server/tsconfig.custom.json src/Server/sslServer.ts",
-    "generate-schema": "npx @gqty/cli http://localhost:3000/api/graphql --target=src/frontend/gqty/index.ts "
+    "generate-schema": "npx @gqty/cli http://localhost:80/api/graphql --target=src/frontend/gqty/index.ts "
   },
   "gqty": {
     "introspections": {

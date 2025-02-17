@@ -1,4 +1,4 @@
-import {resolve} from "../gqty";
+import {IImage, InImage, resolve} from "../gqty";
 import {IMongo, InSection, MutationMongo} from "../../Interfaces/IMongo";
 import {ISection} from "../../Interfaces/ISection";
 import {IConfigSectionAddRemove} from "../../Interfaces/IConfigSectionAddRemove";
@@ -7,6 +7,31 @@ import {INavigation} from "../../Interfaces/INavigation";
 import {IItem} from "../../Interfaces/IItem";
 
 class MongoApi {
+    async saveImage(image: InImage): Promise<any>{
+        return await resolve(
+            ({mutation}) => {
+                return (mutation).mongo.saveImage({image})
+            },
+        )
+    }
+    async getImages(tags: string): Promise<IImage[]>{
+        console.log(tags)
+        return await resolve(
+            ({query}) => {
+                return query.mongo.getImages({tags}).map(image => {
+                    return {
+                        created: image.created,
+                        id: image.id,
+                        location: image.location,
+                        name: image.name,
+                        size: image.size,
+                        tags: image.tags,
+                        type: image.type
+                    }
+                })
+            },
+        )
+    }
     async deleteSection(sectionId: string): Promise<string> {
         if (!sectionId) {
             return '';
