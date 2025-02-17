@@ -1,4 +1,4 @@
-import React, {cache} from 'react'
+import React from 'react'
 import {INavigation, resolve} from "../gqty";
 import {Spin, Tabs} from 'antd';
 import DynamicTabsContent from "../components/DynamicTabsContent";
@@ -31,8 +31,8 @@ class App extends React.Component<{}> {
     constructor(props: {}) {
         super(props);
         this.state.loading = true
-        this.loadSections = cache(this.MongoApi.loadSections)
-        this.getNavigationListCache = cache(this.getNavigationList)
+        this.loadSections = this.MongoApi.loadSections
+        this.getNavigationListCache = this.getNavigationList
         void this.initialize(true)
     }
 

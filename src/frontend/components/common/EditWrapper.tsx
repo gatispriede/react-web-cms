@@ -23,7 +23,8 @@ const EditWrapper = (
         del = true
     }: PropsEditWrapper) => {
     return (
-        <>{
+        <div>
+            {
             admin ?
                 <div className={'edit-wrapper'}>
                     {(edit && editContent) && <div className={'edit-button-container edit-container'}>
@@ -54,9 +55,9 @@ const EditWrapper = (
 
                 </div>
                 :
-                <>{children}</>
+                <div>{children}</div>
         }
-        </>
+        </div>
     )
 }
 export default EditWrapper

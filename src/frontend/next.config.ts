@@ -38,15 +38,9 @@ const nextConfig: import('next').NextConfig = {
         "rc-upload",
         "rc-util",
     ],
-    images: {
-        unoptimized: true
-    },
-    webpack5: true,
-    webpack: (config) => {
-        config.resolve.fallback = { fs: false };
-
-        return config;
-    },
+    extends: [
+        'plugin:@next/next/recommended',
+    ],
 }
 
 module.exports = nextConfig
