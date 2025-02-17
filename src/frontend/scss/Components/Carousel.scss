@@ -1,0 +1,13 @@
+.carousel-wrapper{
+  color: #151313;
+  .slick-dots{
+    li button{
+      height: 10px;
+      background: #151313;
+    }
+    li.slick-active button{
+      height: 10px;
+      background: #151313;
+    }
+  }
+}

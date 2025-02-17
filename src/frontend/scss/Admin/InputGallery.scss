@@ -1,6 +1,17 @@
 .gallery-wrapper{
   max-height: 500px;
   overflow: auto;
+  .config-item{
+    width: 100%;
+    display: flex;
+    label{
+      font-weight: bold;
+      width: 20%;
+    }
+    input{
+      width: 150px;
+    }
+  }
   .edit-wrapper{
     width: 100%;
     position: relative;

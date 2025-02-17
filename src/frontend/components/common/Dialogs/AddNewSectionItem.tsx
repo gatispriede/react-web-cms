@@ -48,22 +48,27 @@ class AddNewSectionItem extends React.Component {
         selectOptions: [
             {
                 label: "Simple Text",
-                value: "TEXT",
+                value: EItemType.Text,
                 text: "Please enter text"
             },
             {
                 label: "Rich text",
-                value: "RICH_TEXT",
+                value: EItemType.RichText,
                 text: "Please enter text"
             },
             {
                 label: "Image",
-                value: "IMAGE",
+                value: EItemType.Image,
                 text: "Please enter image URL"
             },
             {
                 label: "Gallery",
-                value: "GALLERY",
+                value: EItemType.Gallery,
+                text: ""
+            },
+            {
+                label: "Carousel",
+                value: EItemType.Carousel,
                 text: ""
             },
         ]
