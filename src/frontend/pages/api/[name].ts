@@ -16,7 +16,7 @@ const handleImages = (next: {
         const fileName = req.url.replace('\/api\/','')
         const tmp = fileName.split('.')
         const fileType = tmp[tmp.length]
-        responseHeader.set('Content-Type', 'image/' + fileType);
+        responseHeader.set('Content-Type', 'api/' + fileType);
         const stream = fs.readFileSync(MEDIA_ROOT_PATH + 'images/' + fileName);
         try {
             resolve(res

@@ -38,15 +38,15 @@ const uploadForm = (next: { (req: any, res: any): void; (arg0: any, arg1: any): 
                     throw String(JSON.stringify(err, null, 2));
                 }
                 const file = files.file[0]
-
+                const fileTargetName = file.originalFilename.replace(' ','_')
                 const existingFile = fs.existsSync(`src/frontend/public/images/${file.originalFilename}`);
                 if(!existingFile){
-                    fs.renameSync(file.filepath, path.join(process.cwd(), 'src/frontend/', `public/images/${file.originalFilename}`));
+                    fs.renameSync(file.filepath, path.join(process.cwd(), 'src/frontend/', `public/images/${fileTargetName}`));
                     const image: IImage = {
                         created: new Date().toDateString(),
                         id: guid(),
-                        location: `${PUBLIC_IMAGE_PATH}${file.originalFilename}`,
-                        name: file.originalFilename,
+                        location: `${PUBLIC_IMAGE_PATH}${fileTargetName}`,
+                        name: fileTargetName,
                         size: file.size,
                         type: file.mimetype,
                         tags: JSON.parse(fields.tags)

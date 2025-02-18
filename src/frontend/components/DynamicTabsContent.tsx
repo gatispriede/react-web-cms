@@ -49,7 +49,7 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
     render() {
         return (
             <div className={'dynamic-content'}>
-                <div>
+                <>
                     {
                         this.state.sections && this.state.sections.map((section: ISection, index) => {
                                 const emptySections = section.type - section.content?.length
@@ -86,7 +86,7 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
                             }
                         )
                     }
-                </div>
+                </>
                 {this.admin && <div className={'new-section-wrapper'}>
                     <AddNewSection
                         page={this.state.page}

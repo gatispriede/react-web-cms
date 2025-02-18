@@ -91,31 +91,30 @@ export class CarouselContent extends ContentManager {
 const CarouselView = ({item}: { item: IItem }) => {
     const gallery = new CarouselContent(EItemType.Image, item.content);
     gallery.setDisablePreview(item.action !== "onClick");
-    const data = gallery.data
+    const data = gallery.data;
+    const children= data.items.map((item: IGalleryItem, index: number) => {
+        return (
+            <li key={index} className={`container text-${item.textPosition}`}>
+                <div className={'image'}>
+                    <Image
+                        preview={false}
+                        src={item.src}
+                        alt={item.alt}
+                    />
+                </div>
+                <div className={'text'}>
+                    <p>{item.text}</p>
+                </div>
+            </li>
+        )
+    })
     return (
-        <div style={{
-            display: 'block'
-        }}>
-            <div className={'carousel-wrapper'}>
+        <div >
+            <div className={'carousel-wrapper'} style={{
+                display: "block"
+            }}>
                 <Carousel autoplay={data.autoplay} autoplaySpeed={data.autoplaySpeed} arrows={data.arrows} infinite={data.infinity} dotPosition={'bottom'} dots={data.dots}>
-                    {
-                        data.items.map((item: IGalleryItem) => {
-                            return (
-                                <div className={`container text-${item.textPosition}`}>
-                                    <div className={'image'}>
-                                        <Image
-                                            preview={false}
-                                            src={item.src}
-                                            alt={item.alt}
-                                        />
-                                    </div>
-                                    <div className={'text'}>
-                                        <p>{item.text}</p>
-                                    </div>
-                                </div>
-                            )
-                        })
-                    }
+                    {children}
                 </Carousel>
             </div>
         </div>

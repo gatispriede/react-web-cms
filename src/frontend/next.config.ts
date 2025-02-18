@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig: import('next').NextConfig = {
     transpilePackages: [
+        //
+        "@glidejs",
+        "react-glidejs",
         // antd & deps
         "@ant-design",
         "@rc-component",
@@ -37,9 +40,6 @@ const nextConfig: import('next').NextConfig = {
         "rc-tree-select",
         "rc-upload",
         "rc-util",
-    ],
-    extends: [
-        'plugin:@next/next/recommended',
     ],
 }
 

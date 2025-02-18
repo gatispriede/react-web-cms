@@ -57,13 +57,13 @@ class App extends React.Component<{}> {
 
     async initialize(init: boolean = false): Promise<void> {
         let cacheDataSource: any
-        if(typeof window === 'undefined'){
-            // @ts-ignore
-            cacheDataSource = global.preloadedData
-        }else{
-            // @ts-ignore
-            cacheDataSource = window.preloadedData
-        }
+        // if(typeof window === 'undefined'){
+        //     // @ts-ignore
+        //     cacheDataSource = global.preloadedData
+        // }else{
+        //     // @ts-ignore
+        //     cacheDataSource = window.preloadedData
+        // }
         let newState: IHomeState = {
             loading: false,
             pages: this.state.tabProps,
@@ -77,25 +77,26 @@ class App extends React.Component<{}> {
             this.setState({loading: true})
         }
         let pages: IPage[];
-
+        pages = await this.getNavigationList()
         // @ts-ignore
         if(cacheDataSource){
             // @ts-ignore
-            pages = cacheDataSource.pages
+            // pages = cacheDataSource.pages
         }else{
-            pages = await this.getNavigationListCache()
+            // pages = await this.getNavigationList()
         }
         if (pages[0]) {
             const newTabsState = []
             for (let id in pages) {
                 if (pages[id]) {
                     let sectionsData: ISection[];
+                    sectionsData = await this.getSectionData(pages, id as unknown as number)
                     // @ts-ignore
                     if(cacheDataSource){
                         // @ts-ignore
-                        sectionsData = cacheDataSource.sectionsData[id]
+                        // sectionsData = cacheDataSource.sectionsData[id]
                     }else{
-                        sectionsData = await this.getSectionData(pages, id as unknown as number)
+                        // sectionsData = await this.getSectionData(pages, id as unknown as number)
                     }
                     newTabsState.push({
                         key: id,
@@ -118,12 +119,7 @@ class App extends React.Component<{}> {
 
         newState.pages = pages
         newState.loading = false
-        if(init){
-            this.state = newState
-        }else{
-            this.setState(newState)
-        }
-
+        this.setState(newState)
     }
 
     render() {
