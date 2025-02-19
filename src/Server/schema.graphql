@@ -72,6 +72,7 @@ type QueryMongo {
 }
 type MutationMongo {
     addUpdateNavigationItem(pageName: String!, sections: [String]): String!
+    updateNavigation(page: String!, sections: [String]): String!
     addUpdateSectionItem(section: InSection!, pageName: String): String!
     removeSectionItem(id:String!): String!
     deleteNavigationItem(pageName:String!): String!

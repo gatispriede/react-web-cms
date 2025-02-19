@@ -145,6 +145,10 @@ export const generatedSchema = {
     },
     removeSectionItem: { __type: "String!", __args: { id: "String!" } },
     saveImage: { __type: "String!", __args: { image: "InImage!" } },
+    updateNavigation: {
+      __type: "String!",
+      __args: { page: "String!", sections: "[String]" },
+    },
   },
   QueryMongo: {
     __typename: { __type: "String!" },
@@ -231,6 +235,10 @@ export interface MutationMongo {
     id: ScalarsEnums["String"];
   }) => ScalarsEnums["String"];
   saveImage: (args: { image: InImage }) => ScalarsEnums["String"];
+  updateNavigation: (args: {
+    page: ScalarsEnums["String"];
+    sections?: Maybe<Array<Maybe<ScalarsEnums["String"]>>>;
+  }) => ScalarsEnums["String"];
 }
 
 export interface QueryMongo {

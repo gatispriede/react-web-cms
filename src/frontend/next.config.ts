@@ -2,6 +2,7 @@
 const nextConfig: import('next').NextConfig = {
     transpilePackages: [
         //
+        "react-drag-reorder",
         "@glidejs",
         "react-glidejs",
         // antd & deps

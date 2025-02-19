@@ -67,18 +67,19 @@ class MongoDBConnection {
             this.imagesDB = this.db.collection('Images')
         }
     }
-    async deleteImage({id}: { id: string }){
+
+    async deleteImage({id}: { id: string }) {
         let res = ''
         try {
             const image: IImage = await this.imagesDB.findOne({id: id}) as unknown as IImage
 
-            if(image && image.name){
+            if (image && image.name) {
                 const deleteResult = await this.imagesDB.deleteOne({id: id})
                 res = JSON.stringify({success: deleteResult})
 
                 const existingFile = fs.existsSync(`src/frontend/public/images/${image.name}`);
 
-                if(existingFile){
+                if (existingFile) {
                     fs.unlinkSync(`src/frontend/public/images/${image.name}`)
                 }
             }
@@ -89,7 +90,8 @@ class MongoDBConnection {
         }
         return res
     }
-    async saveImage({image}: { image: IImage }){
+
+    async saveImage({image}: { image: IImage }) {
         let res = ''
         try {
             const result = await this.imagesDB.insertOne(image)
@@ -100,7 +102,8 @@ class MongoDBConnection {
         }
         return res
     }
-    async getImages({tags}: {tags: string}): Promise<any> {
+
+    async getImages({tags}: { tags: string }): Promise<any> {
         console.log(tags)
         let images: WithId<Document>[] = []
         try {
@@ -113,6 +116,7 @@ class MongoDBConnection {
         }
         return images
     }
+
     async loadData(): Promise<ILoadData[]> {
         if (!this.client) {
             return []
@@ -120,6 +124,20 @@ class MongoDBConnection {
         const dbs = await this.client.db().admin().listDatabases();
         const databases = dbs.databases
         return databases
+    }
+
+    public async updateNavigation({page, sections}: { page: string, sections: string[] }): Promise<string> {
+        try {
+            const result = await this.navigationsDB.findOneAndUpdate({
+                type: 'navigation',
+                page: page
+            }, {$set: {sections: sections}});
+            return JSON.stringify(result)
+        } catch (err) {
+            console.log(err)
+            await this.setupClient()
+            return 'Error while fetching navigation data'
+        }
     }
 
     public async getNavigationCollection(): Promise<any> {
@@ -154,7 +172,7 @@ class MongoDBConnection {
             if (!sectionItem) {
                 return 'no item with id: ' + id
             }
-            
+
             if (sectionItem.page) {
                 const navigationItem = await this.navigationsDB.findOne({
                         type: 'navigation',
@@ -286,7 +304,7 @@ class MongoDBConnection {
 
             if (!navigationItemInDb) {
                 const result = await this.navigationsDB.insertOne(navigationItem)
-                returnResult =  JSON.stringify(result)
+                returnResult = JSON.stringify(result)
             } else {
                 const result = await navigationCollection.findOneAndUpdate({
                     type: 'navigation',

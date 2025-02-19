@@ -66,6 +66,18 @@ class MongoApi {
             },
         );
     }
+    async updateNavigation(page: string, sections: string[]): Promise<string> {
+        return await resolve(
+            ({mutation}) => {
+                const update: { page: string, sections: string[] } = {
+                    page: page,
+                    sections: sections
+                }
+                console.log(update)
+                return mutation.mongo.updateNavigation(update)
+            },
+        );
+    }
     async deleteNavigation(pageName: string): Promise<string> {
         const NavigationCollection = await resolve(
             ({query}) => {

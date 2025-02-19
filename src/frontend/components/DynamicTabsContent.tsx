@@ -1,3 +1,4 @@
+'use client'
 import React from "react";
 import EditWrapper from "./common/EditWrapper";
 import AddNewSection from "./common/Dialogs/AddNewSection";
@@ -6,6 +7,7 @@ import {ISection} from "../../Interfaces/ISection";
 import {IItem} from "../../Interfaces/IItem";
 import MongoApi from "../api/MongoApi";
 import {IConfigSectionAddRemove} from "../../Interfaces/IConfigSectionAddRemove";
+import {Draggable} from "react-drag-reorder";
 
 interface IDynamicTabsContent {
     sections: ISection[],
@@ -35,6 +37,20 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
     private readonly admin: boolean = false
     private MongoApi = new MongoApi()
 
+    getChangedPos = (currentPos: any, newPos: any) => {
+        const sections = this.state.sections;
+        sections[currentPos] = sections.splice(newPos, 1, sections[currentPos])[0];
+        this.setState({sections});
+        const sectionsStringArray: string[] = []
+        sections.map((section: ISection) => {
+                if(section.id) sectionsStringArray.push(section.id as string)
+            }
+        )
+        if (sectionsStringArray.length > 0) {
+            void this.MongoApi.updateNavigation(this.state.page, sectionsStringArray)
+        }
+    };
+
     constructor(props: IDynamicTabsContent) {
         super(props)
         const {sections, page, refresh, admin} = props
@@ -49,7 +65,7 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
     render() {
         return (
             <div className={'dynamic-content'}>
-                <>
+                <Draggable onPosChange={this.getChangedPos}>
                     {
                         this.state.sections && this.state.sections.map((section: ISection, index) => {
                                 const emptySections = section.type - section.content?.length
@@ -91,7 +107,7 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
                             }
                         )
                     }
-                </>
+                </Draggable>
                 {this.admin && <div className={'new-section-wrapper'}>
                     <AddNewSection
                         page={this.state.page}
