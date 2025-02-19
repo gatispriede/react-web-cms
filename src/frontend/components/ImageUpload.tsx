@@ -6,6 +6,7 @@ import EditableTags from "./common/EditableTags";
 import {IImage} from "../gqty";
 import MongoApi from "../api/MongoApi";
 import {ImImages} from "react-icons/im";
+import EditWrapper from "./common/EditWrapper";
 
 const ImageUpload = ({setFile}: { setFile: (file: File) => void }) => {
 
@@ -97,6 +98,10 @@ const ImageUpload = ({setFile}: { setFile: (file: File) => void }) => {
                     {
                         images.map((image: IImage, index) => {
                             return (
+                                <EditWrapper admin={true} del={true} deleteAction={async () => {
+                                    await mongoApi.deleteImage(image.id);
+                                    await loadImages()
+                                }}>
                                 <div key={index} className={'image-item'}>
                                     <img src={image.location} alt="" width={150} height={50}/>
                                     <Button onClick={() => {
@@ -107,6 +112,7 @@ const ImageUpload = ({setFile}: { setFile: (file: File) => void }) => {
                                         Select image
                                     </Button>
                                 </div>
+                                </EditWrapper>
                             )
                         })
                     }

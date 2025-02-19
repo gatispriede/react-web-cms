@@ -14,8 +14,14 @@ class MongoApi {
             },
         )
     }
+    async deleteImage(id: string): Promise<any>{
+        return await resolve(
+            ({mutation}) => {
+                return (mutation).mongo.deleteImage({id})
+            },
+        )
+    }
     async getImages(tags: string): Promise<IImage[]>{
-        console.log(tags)
         return await resolve(
             ({query}) => {
                 return query.mongo.getImages({tags}).map(image => {

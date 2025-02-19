@@ -3,6 +3,7 @@ import guid from "../helpers/guid";
 import {ISection} from "../Interfaces/ISection";
 import {INavigation} from "../Interfaces/INavigation";
 import IImage from "../Interfaces/IImage";
+import fs from 'fs'
 
 interface ISettings {
     apiKey: string;
@@ -65,6 +66,28 @@ class MongoDBConnection {
             this.navigationsDB = this.db.collection('Navigation')
             this.imagesDB = this.db.collection('Images')
         }
+    }
+    async deleteImage({id}: { id: string }){
+        let res = ''
+        try {
+            const image: IImage = await this.imagesDB.findOne({id: id}) as unknown as IImage
+
+            if(image && image.name){
+                const deleteResult = await this.imagesDB.deleteOne({id: id})
+                res = JSON.stringify({success: deleteResult})
+
+                const existingFile = fs.existsSync(`src/frontend/public/images/${image.name}`);
+
+                if(existingFile){
+                    fs.unlinkSync(`src/frontend/public/images/${image.name}`)
+                }
+            }
+
+        } catch (err) {
+            res = JSON.stringify({error: err})
+            await this.setupClient()
+        }
+        return res
     }
     async saveImage({image}: { image: IImage }){
         let res = ''

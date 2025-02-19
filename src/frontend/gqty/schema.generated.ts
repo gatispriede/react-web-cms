@@ -138,6 +138,7 @@ export const generatedSchema = {
       __type: "String!",
       __args: { pageName: "String", section: "InSection!" },
     },
+    deleteImage: { __type: "String!", __args: { id: "String!" } },
     deleteNavigationItem: {
       __type: "String!",
       __args: { pageName: "String!" },
@@ -222,6 +223,7 @@ export interface MutationMongo {
     pageName?: Maybe<ScalarsEnums["String"]>;
     section: InSection;
   }) => ScalarsEnums["String"];
+  deleteImage: (args: { id: ScalarsEnums["String"] }) => ScalarsEnums["String"];
   deleteNavigationItem: (args: {
     pageName: ScalarsEnums["String"];
   }) => ScalarsEnums["String"];

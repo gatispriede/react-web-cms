@@ -76,6 +76,7 @@ type MutationMongo {
     removeSectionItem(id:String!): String!
     deleteNavigationItem(pageName:String!): String!
     saveImage(image: InImage!): String!
+    deleteImage(id: String!): String!
 }
 
 type Query {
