@@ -48,7 +48,7 @@ const ImageUpload = ({setFile}: { setFile: (file: File) => void }) => {
     }, [window, imageRef.current, buttonRef.current, dialogOpen])
 
     return (
-        <div className={'image-upload'}>
+        <div>
             <Button type={'primary'} onClick={() => {
                 setDialogOpen(true)
             }}>
@@ -65,59 +65,70 @@ const ImageUpload = ({setFile}: { setFile: (file: File) => void }) => {
                     setDialogOpen(false)
                 }}
             >
-                <div className={'upload-image-container'}>
-                    {
-                        error !== '' &&
-                        <Alert
-                            message="Error"
-                            description={error}
-                            type="error"
-                            showIcon
-                        />
-                    }
-                    <div className={'tag-container'}>
-                        <label>Add / Remove Tags</label>
-                        <EditableTags setTagsProp={(tags: string[]) => {
-                            setTags(tags)
-                        }}/>
+                <div className={'image-upload'}>
+                    <div className={'upload-image-container'}>
+                        {
+                            error !== '' &&
+                            <Alert
+                                message="Error"
+                                description={error}
+                                type="error"
+                                showIcon
+                            />
+                        }
+                        <div className={'tag-container'}>
+                            <label>Add / Remove Tags</label>
+                            <EditableTags setTagsProp={(tags: string[]) => {
+                                setTags(tags)
+                            }}/>
+                        </div>
+                        <div className={'image-container'}>
+                            <Button ref={buttonRef} className="pure-button pure-button-primary">
+                                <CloudUploadOutlined/> Upload New Image
+                            </Button>
+                        </div>
+                        <div className={'image-preview'}>
+                            Image Preview
+                            <img ref={imageRef} alt="" className="uppload-image" />
+                        </div>
                     </div>
-                    <div className={'image-container'}>
-                        <Button ref={buttonRef} className="pure-button pure-button-primary">
-                            <CloudUploadOutlined/> Upload New Image
-                        </Button>
-                        <img ref={imageRef} alt="" className="uppload-image" width={150} height={50}/>
+                    <hr/>
+                    <div className={'image-select-container'}>
+                        <div className={'image-search-container'}>
+                            <Input value={searchTag} onChange={(e) => {
+                                setSearchTag(e.target.value);
+                            }}/>
+                            <Button onClick={loadImages}>Search Images</Button>
+                        </div>
+                        <hr/>
+                        <div className={'image-result-container'}>
+                            {
+                                images.map((image: IImage, index) => {
+                                    return (
+                                        <div className={'image-item'}>
+
+                                            <EditWrapper key={index} admin={true} del={true} deleteAction={async () => {
+                                                await mongoApi.deleteImage(image.id);
+                                                await loadImages()
+                                            }}>
+                                                <div key={index}>
+                                                    <img src={image.location} alt=""/>
+                                                    <Button onClick={() => {
+                                                        console.log(image)
+                                                        setFile(image as unknown as File)
+                                                        setDialogOpen(false)
+                                                    }}>
+                                                        Select image
+                                                    </Button>
+                                                </div>
+                                            </EditWrapper>
+                                        </div>
+                                    )
+                                })
+                            }
+                        </div>
                     </div>
-
                 </div>
-                <hr />
-                <div className={'image-select-container'}>
-                    <Input value={searchTag} onChange={(e) => {
-                        setSearchTag(e.target.value);
-                    }} />
-                    <Button onClick={loadImages}>Search Images</Button>
-                    {
-                        images.map((image: IImage, index) => {
-                            return (
-                                <EditWrapper admin={true} del={true} deleteAction={async () => {
-                                    await mongoApi.deleteImage(image.id);
-                                    await loadImages()
-                                }}>
-                                <div key={index} className={'image-item'}>
-                                    <img src={image.location} alt="" width={150} height={50}/>
-                                    <Button onClick={() => {
-                                        console.log(image)
-                                        setFile(image as unknown as File)
-                                        setDialogOpen(false)
-                                    }}>
-                                        Select image
-                                    </Button>
-                                </div>
-                                </EditWrapper>
-                            )
-                        })
-                    }
-                </div>
-
             </Modal>
         </div>
     )

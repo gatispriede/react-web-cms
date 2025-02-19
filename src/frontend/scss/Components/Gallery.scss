@@ -1,8 +1,5 @@
 .gallery-wrapper{
-  display: flex;
-  flex-direction: row;
   flex-wrap: wrap;
-  justify-content : space-evenly;
   margin: 16px;
   .container{
     margin-top: 16px;
@@ -36,6 +33,22 @@
         height: inherit;
         object-fit: cover;
       }
+    }
+  }
+  hr{
+    display: flex;
+  }
+  .images-container{
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-around;
+    margin-top: 16px;
+    text-align: center;
+    p{
+      margin: 0 8px;
+      font-size: 14px;
     }
   }
 }
