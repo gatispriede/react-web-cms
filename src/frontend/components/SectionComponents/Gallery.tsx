@@ -26,7 +26,7 @@ export class GalleryContent extends ContentManager {
     }
 
     get data(): IGallery {
-        if(!this._parsedContent.items){
+        if (!this._parsedContent.items) {
             this._parsedContent.items = []
         }
         this.parse();
@@ -38,7 +38,7 @@ export class GalleryContent extends ContentManager {
     }
 
     addItem(value?: IGalleryItem) {
-        if(!this._parsedContent.items){
+        if (!this._parsedContent.items) {
             this._parsedContent.items = []
         }
         if (value) {
@@ -73,8 +73,8 @@ const Gallery = ({item}: { item: IItem }) => {
     gallery.setDisablePreview(item.action !== "onClick");
     const data = gallery.data
     return (
-        <div>
-            <div className={'gallery-wrapper'}>
+        <div className={'gallery-wrapper'}>
+            <div className={'gallery-wrapper-mages'}>
                 <Image.PreviewGroup>
                     {
                         data.items.map((item: IGalleryItem) => {

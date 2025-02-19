@@ -1,6 +1,12 @@
 .gallery-wrapper{
   flex-wrap: wrap;
   margin: 16px;
+  .gallery-wrapper-mages{
+    flex-direction: row;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+  }
   .container{
     margin-top: 16px;
     border: 1px solid rgba(21, 19, 19, 0.17);
