@@ -2,16 +2,10 @@
 
 #frontend
 /src/frontend/.next
-/src/frontend/.next/
-/src/frontend/.next/*
-src/frontend/.next/*
-src/frontend/.next/
-src/frontend/public/images
-src/frontend/public/temp
-src/frontend/public/images/*
-src/frontend/public/temp/*
-src/frontend/public/images/
-src/frontend/public/temp/
+
+/src/frontend/public/images
+/src/frontend/public/temp
+
 /.cache
 
 # dependencies
