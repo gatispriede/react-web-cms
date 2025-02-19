@@ -5,18 +5,14 @@ import {PlusCircleOutlined} from "@ant-design/icons";
 class AddNewSection extends React.Component {
     props: any = {
         page: '',
-        addSectionToPage: async (item: any) => {}
+        addSectionToPage: async (item: any) => {
+        }
     }
     state = {
         dialogOpen: false,
         page: '',
         type: 1,
-        selectOptions: [
-            {label: "100%", value: 1},
-            {label: "50% 50%", value: 2},
-            {label: "30% 30% 30%", value: 3},
-            {label: "25% 25% 25% 25%", value: 4},
-        ],
+        label: '100%',
     }
 
     constructor(props: {
@@ -27,12 +23,8 @@ class AddNewSection extends React.Component {
         this.state.page = props.page
     }
 
-    selectedSection() {
-        const selectedOption = this.state.selectOptions.find(o => o.value === this.state.type)
-        return selectedOption?.label
-    }
-
     render() {
+        console.log(this.state.type)
         return (
             <>
                 <Button type="primary" onClick={() => {
@@ -44,7 +36,7 @@ class AddNewSection extends React.Component {
                        onCancel={() => {
                            this.setState({dialogOpen: false})
                        }}
-                       onOk={ async () => {
+                       onOk={async () => {
                            const item = {
                                pageName: this.state.page,
                                section: {
@@ -58,11 +50,37 @@ class AddNewSection extends React.Component {
                        }}
 
                 >
-                    <Select variant={'filled'} defaultValue={'1'} options={this.state.selectOptions} onSelect={(e) => {
-                        this.setState({type: e})
-                    }}/>
-                    <div>Selected
-                        section(-s): {this.selectedSection()}</div>
+                    <div className={'add-new-section'}>
+                        <div className={'section-types'}>
+                            <div className={`section-100 ${this.state.type === 1 ? 'active' : ''}`} onClick={() => {
+                                this.setState({type: 1, label: '100%'})
+                            }}>
+                                <p>100%</p>
+                            </div>
+                            <div className={`section-50 ${this.state.type === 2 ? 'active' : ''}`} onClick={() => {
+                                this.setState({type: 2, label: '50% 50%'})
+                            }}>
+                                <p>50%</p>
+                                <p>50%</p>
+                            </div>
+                            <div className={`section-33 ${this.state.type === 3 ? 'active' : ''}`} onClick={() => {
+                                this.setState({type: 3, label: '33% 33% 33%'})
+                            }}>
+                                <p>33%</p>
+                                <p>33%</p>
+                                <p>33%</p>
+                            </div>
+                            <div className={`section-25 ${this.state.type === 4 ? 'active' : ''}`} onClick={() => {
+                                this.setState({type: 4, label: '25% 25% 25% 25%'})
+                            }}>
+                                <p>25%</p>
+                                <p>25%</p>
+                                <p>25%</p>
+                                <p>25%</p>
+                            </div>
+                        </div>
+                        <div>Selected type: {this.state.label}</div>
+                    </div>
                 </Modal>
             </>
         )

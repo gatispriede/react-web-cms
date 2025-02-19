@@ -1,11 +1,12 @@
-@use "Layout/Section";
 @use "Admin/EditSection";
 @use "Layout/Content";
 @use "Admin/Navigation";
+@use "Admin/ImageUpload";
+@use "Admin/InputGallery";
+@use "Admin/AddNewSection";
+
 @use "Components/PlainImage";
 @use "Components/Gallery";
-@use "Admin/InputGallery";
-@use "Admin/ImageUpload";
 @use "Components/Carousel";
 
 @font-face {

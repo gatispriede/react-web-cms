@@ -63,25 +63,30 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
                                     }
                                 }
                                 return (
-                                    <EditWrapper admin={this.admin} key={index} deleteAction={async () => {
-                                        await this.MongoApi.deleteSection(section.id ? section.id : '')
-                                        this.state.sections.splice(index, 1)
-                                        this.setState({sections: this.state.sections})
-                                    }}>
-                                        <SectionContent
-                                            admin={this.admin}
-                                            section={section}
-                                            refresh={async () => {
-                                                await this.refresh()
-                                            }}
-                                            addRemoveSectionItem={
-                                                async (sectionId: string, config: IConfigSectionAddRemove) => {
-                                                    await this.MongoApi.addRemoveSectionItem(sectionId, config, this.state.sections)
-                                                    await this.props.refresh()
-                                                }
-                                            }/>
+                                    <div key={`${index}-${section.type}`}>
+                                        <EditWrapper admin={this.admin} deleteAction={async () => {
+                                            if (section.id) {
+                                                await this.MongoApi.deleteSection(section.id)
+                                                const sections = this.state.sections.filter((filterSection: ISection) => filterSection.id !== section.id)
+                                                this.setState({sections})
+                                                this.forceUpdate()
+                                            }
+                                        }}>
+                                            <SectionContent
+                                                admin={this.admin}
+                                                section={section}
+                                                refresh={async () => {
+                                                    await this.refresh()
+                                                }}
+                                                addRemoveSectionItem={
+                                                    async (sectionId: string, config: IConfigSectionAddRemove) => {
+                                                        await this.MongoApi.addRemoveSectionItem(sectionId, config, this.state.sections)
+                                                        await this.props.refresh()
+                                                    }
+                                                }/>
 
-                                    </EditWrapper>
+                                        </EditWrapper>
+                                    </div>
                                 )
                             }
                         )

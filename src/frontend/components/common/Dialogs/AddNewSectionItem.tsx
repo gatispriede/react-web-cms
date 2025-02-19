@@ -170,12 +170,14 @@ class AddNewSectionItem extends React.Component {
         return (
             <>
                 {
-                    <Button type="primary" onClick={() => {
-                        this.setState({dialogOpen: true})
-                    }}>
+                    <div className={'add-new-section-container'}>
+                        <Button type="primary" onClick={() => {
+                            this.setState({dialogOpen: true})
+                        }}>
 
-                        {!this.props.loadItem ? <div><PlusCircleOutlined/> Add content</div> : <EditOutlined/>}
-                    </Button>
+                            {!this.props.loadItem ? <div><PlusCircleOutlined/> Add content</div> : <EditOutlined/>}
+                        </Button>
+                    </div>
                 }
                 <Modal width={'90%'} open={this.state.dialogOpen}
                        footer={(_, {OkBtn, CancelBtn}) => (
