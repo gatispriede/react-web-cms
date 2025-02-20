@@ -23,6 +23,15 @@ input InImage {
     size: Int!
     tags: [String]
 }
+input InLogo {
+    content: String!
+}
+
+type ILogo {
+    id: String!
+    type: String!
+    content: String!
+}
 
 type IImage {
     id: String!
@@ -69,6 +78,7 @@ type QueryMongo {
     getNavigationCollection: [INavigation!]!
     getSections(ids: [String]): [ISection!]!
     getImages(tags: String!): [IImage!]!
+    getLogo: ILogo!
 }
 type MutationMongo {
     addUpdateNavigationItem(pageName: String!, sections: [String]): String!
@@ -78,6 +88,7 @@ type MutationMongo {
     deleteNavigationItem(pageName:String!): String!
     saveImage(image: InImage!): String!
     deleteImage(id: String!): String!
+    saveLogo(content: String!): String!
 }
 
 type Query {

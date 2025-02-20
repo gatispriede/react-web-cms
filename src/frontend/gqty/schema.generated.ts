@@ -52,6 +52,10 @@ export interface InItem {
   type: Scalars["String"]["input"];
 }
 
+export interface InLogo {
+  content: Scalars["String"]["input"];
+}
+
 export interface InSection {
   content?: InputMaybe<Array<InputMaybe<InItem>>>;
   id?: InputMaybe<Scalars["String"]["input"]>;
@@ -91,6 +95,12 @@ export const generatedSchema = {
     name: { __type: "String" },
     sizeOnDisk: { __type: "Float" },
   },
+  ILogo: {
+    __typename: { __type: "String!" },
+    content: { __type: "String!" },
+    id: { __type: "String!" },
+    type: { __type: "String!" },
+  },
   INavigation: {
     __typename: { __type: "String!" },
     id: { __type: "String" },
@@ -122,6 +132,7 @@ export const generatedSchema = {
     name: { __type: "String" },
     type: { __type: "String!" },
   },
+  InLogo: { content: { __type: "String!" } },
   InSection: {
     content: { __type: "[InItem]" },
     id: { __type: "String" },
@@ -145,6 +156,7 @@ export const generatedSchema = {
     },
     removeSectionItem: { __type: "String!", __args: { id: "String!" } },
     saveImage: { __type: "String!", __args: { image: "InImage!" } },
+    saveLogo: { __type: "String!", __args: { content: "String!" } },
     updateNavigation: {
       __type: "String!",
       __args: { page: "String!", sections: "[String]" },
@@ -154,6 +166,7 @@ export const generatedSchema = {
     __typename: { __type: "String!" },
     createDatabase: { __type: "String!" },
     getImages: { __type: "[IImage!]!", __args: { tags: "String!" } },
+    getLogo: { __type: "ILogo!" },
     getMongoDBUri: { __type: "String" },
     getNavigationCollection: { __type: "[INavigation!]!" },
     getSections: { __type: "[ISection!]!", __args: { ids: "[String]" } },
@@ -201,6 +214,13 @@ export interface ILoadData {
   sizeOnDisk?: Maybe<ScalarsEnums["Float"]>;
 }
 
+export interface ILogo {
+  __typename?: "ILogo";
+  content: ScalarsEnums["String"];
+  id: ScalarsEnums["String"];
+  type: ScalarsEnums["String"];
+}
+
 export interface INavigation {
   __typename?: "INavigation";
   id?: Maybe<ScalarsEnums["String"]>;
@@ -235,6 +255,9 @@ export interface MutationMongo {
     id: ScalarsEnums["String"];
   }) => ScalarsEnums["String"];
   saveImage: (args: { image: InImage }) => ScalarsEnums["String"];
+  saveLogo: (args: {
+    content: ScalarsEnums["String"];
+  }) => ScalarsEnums["String"];
   updateNavigation: (args: {
     page: ScalarsEnums["String"];
     sections?: Maybe<Array<Maybe<ScalarsEnums["String"]>>>;
@@ -245,6 +268,7 @@ export interface QueryMongo {
   __typename?: "QueryMongo";
   createDatabase: ScalarsEnums["String"];
   getImages: (args: { tags: ScalarsEnums["String"] }) => Array<IImage>;
+  getLogo: ILogo;
   getMongoDBUri?: Maybe<ScalarsEnums["String"]>;
   getNavigationCollection: Array<INavigation>;
   getSections: (args?: {

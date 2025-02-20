@@ -128,7 +128,7 @@ class App extends React.Component<{}> {
             <div>
                 <ConfigProvider theme={theme}>
                     <Spin spinning={this.state.loading}>
-                        <Logo />
+                        <Logo admin={false}/>
                         <Tabs onChange={(value) => {
                             this.setState({activeTab: value})
                         }} activeKey={this.state.activeTab} defaultActiveKey={"0"} items={this.state.tabProps}/>

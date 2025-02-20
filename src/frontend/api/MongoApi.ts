@@ -5,23 +5,48 @@ import {IConfigSectionAddRemove} from "../../Interfaces/IConfigSectionAddRemove"
 import {IPage} from "../../Interfaces/IPage";
 import {INavigation} from "../../Interfaces/INavigation";
 import {IItem} from "../../Interfaces/IItem";
+import {ILogo} from "../../Interfaces/ILogo";
 
 class MongoApi {
-    async saveImage(image: InImage): Promise<any>{
+
+    async getLogo(): Promise<ILogo> {
+        const logo = await resolve(
+            ({query}) => {
+                const logo = query.mongo.getLogo
+                return {
+                    type: logo.type,
+                    content: logo.content,
+                    id: logo.id,
+                }
+            },
+        )
+        return logo
+    }
+    async saveLogo(content: string): Promise<void> {
+        await resolve(
+            ({mutation}) => {
+                return (mutation).mongo.saveLogo({content: content})
+            },
+        )
+    }
+
+    async saveImage(image: InImage): Promise<any> {
         return await resolve(
             ({mutation}) => {
                 return (mutation).mongo.saveImage({image})
             },
         )
     }
-    async deleteImage(id: string): Promise<any>{
+
+    async deleteImage(id: string): Promise<any> {
         return await resolve(
             ({mutation}) => {
                 return (mutation).mongo.deleteImage({id})
             },
         )
     }
-    async getImages(tags: string): Promise<IImage[]>{
+
+    async getImages(tags: string): Promise<IImage[]> {
         return await resolve(
             ({query}) => {
                 return query.mongo.getImages({tags}).map(image => {
@@ -38,6 +63,7 @@ class MongoApi {
             },
         )
     }
+
     async deleteSection(sectionId: string): Promise<string> {
         if (!sectionId) {
             return '';
@@ -66,6 +92,7 @@ class MongoApi {
             },
         );
     }
+
     async updateNavigation(page: string, sections: string[]): Promise<string> {
         return await resolve(
             ({mutation}) => {
@@ -78,6 +105,7 @@ class MongoApi {
             },
         );
     }
+
     async deleteNavigation(pageName: string): Promise<string> {
         const NavigationCollection = await resolve(
             ({query}) => {
@@ -94,13 +122,13 @@ class MongoApi {
             },
         )
         const navigationItem = NavigationCollection.find(item => item.page === pageName)
-        if(!navigationItem){
+        if (!navigationItem) {
             return ''
         }
         const sections: string[] | undefined = navigationItem.sections
         if (sections) {
             for (let id in sections) {
-                if(typeof sections[id] === 'string') {
+                if (typeof sections[id] === 'string') {
                     await resolve(
                         ({mutation}) => {
                             return (mutation as MutationMongo).mongo.removeSectionItem({id: sections[id]})
@@ -142,7 +170,7 @@ class MongoApi {
         return []
     }
 
-    async addRemoveSectionItem  (sectionId: string | undefined, config: IConfigSectionAddRemove, sections: ISection[]): Promise<string>  {
+    async addRemoveSectionItem(sectionId: string | undefined, config: IConfigSectionAddRemove, sections: ISection[]): Promise<string> {
         const section = sections.find(section => section.id === sectionId)
         if (!section) {
             console.log('no section to add item to')
@@ -164,6 +192,7 @@ class MongoApi {
             },
         )
     }
+
     async loadSections(pageName: string, pages: IPage[]): Promise<ISection[]> {
         const page = pages.find(p => p.page === pageName)
         if (page) {

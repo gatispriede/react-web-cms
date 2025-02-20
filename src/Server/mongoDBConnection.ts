@@ -4,6 +4,7 @@ import {ISection} from "../Interfaces/ISection";
 import {INavigation} from "../Interfaces/INavigation";
 import IImage from "../Interfaces/IImage";
 import fs from 'fs'
+import {ILogo} from "../Interfaces/ILogo";
 
 interface ISettings {
     apiKey: string;
@@ -42,11 +43,13 @@ class MongoDBConnection {
     private sectionsDB!: Collection<Document>;
     private navigationsDB!: Collection<Document>;
     private imagesDB!: Collection<Document>;
+    private entitiesDB!: Collection<Document>;
 
     constructor() {
         this._settings.mongoDBDatabaseUrl = `mongodb+srv://${this._settings.mongodbUser}:${this._settings.mongodbPassword}@${this._settings.mongoDBClusterUrl}`;
         void this.setupClient()
     }
+
 
     async setupClient() {
         if (this.db) {
@@ -65,6 +68,44 @@ class MongoDBConnection {
             this.sectionsDB = this.db.collection('Sections')
             this.navigationsDB = this.db.collection('Navigation')
             this.imagesDB = this.db.collection('Images')
+            this.entitiesDB = this.db.collection('Entities')
+        }
+    }
+    async saveLogo({content}: {content: string}){
+        let res, error;
+        try {
+             res = await this.entitiesDB.findOneAndUpdate({type: 'logo'},{$set: {content: content}})
+        } catch (err) {
+            console.error('Error saving logo:', err)
+            await this.setupClient()
+            error = err
+        }
+        return JSON.stringify({success: res, error: error})
+    }
+    async getLogo(){
+        try {
+            const logoInDB: ILogo = await this.entitiesDB.findOne({type: 'logo'}) as unknown as ILogo
+            console.log(logoInDB)
+            if(logoInDB){
+                return logoInDB
+            }
+            const content = {
+                src: '',
+                alt: '',
+                type: 'logo',
+                width: '40',
+                height: '40'
+            }
+            const newLogo = {
+                id: guid(),
+                type: 'logo',
+                content: JSON.stringify(content)
+            }
+            await this.entitiesDB.insertOne(newLogo)
+            return await this.entitiesDB.findOne({type: 'logo'})
+        } catch (err) {
+            console.error('Error getting logo:', err)
+            await this.setupClient()
         }
     }
 

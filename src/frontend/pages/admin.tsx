@@ -120,7 +120,7 @@ class admin extends React.Component {
         return (
             <ConfigProvider theme={theme}>
                 <Spin spinning={this.state.loading}>
-                    <Logo />
+                    <Logo admin={true}/>
                     <AddNewDialogNavigation
                         close={() => {
                             this.setState({addNewDialogOpen: false})
