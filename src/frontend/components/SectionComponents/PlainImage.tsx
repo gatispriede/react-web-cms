@@ -11,6 +11,7 @@ export interface IPlainImage {
     description: RawDraftContentState;
     alt: string;
     height: number;
+    useAsBackground: boolean
     preview: boolean
 }
 
@@ -18,6 +19,7 @@ export class PlainImageContent extends ContentManager {
     public _parsedContent: IPlainImage = {
         alt: "",
         height: 0,
+        useAsBackground: false,
         preview: false,
         src: "",
         description: {
@@ -43,6 +45,10 @@ export class PlainImageContent extends ContentManager {
         this._parsedContent.description = value;
     }
 
+    setUseAsBackground(value: boolean) {
+        this._parsedContent.useAsBackground = value;
+    }
+
 }
 
 const PlainImage = ({item}: { item: IItem }) => {
@@ -50,15 +56,21 @@ const PlainImage = ({item}: { item: IItem }) => {
     const preview = plainImage.data.preview ? plainImage.data.preview : typeof item.action !== "string"
     const contentRef: RefObject<HTMLDivElement | null> = React.createRef();
     useEffect(() => {
-        if (contentRef.current) {
+        if (contentRef.current && !plainImage.data.useAsBackground) {
             contentRef.current.innerHTML = draftToHtml(plainImage.data.description)
         }
     }, [plainImage.data.description]);
     return (
-        <div className={'plain-image'}>
-            <Image preview={preview} src={plainImage.data.src}/>
-            <div ref={contentRef}></div>
-        </div>
+        <>
+            {
+                plainImage.data.useAsBackground ? <div className={'background-image'}>
+                    <div style={{backgroundImage: `url(${plainImage.data.src})`}}></div>
+                </div> : <div className={'plain-image'}>
+                    <Image preview={preview} src={plainImage.data.src}/>
+                    <div ref={contentRef}></div>
+                </div>
+            }
+        </>
     )
 }
 

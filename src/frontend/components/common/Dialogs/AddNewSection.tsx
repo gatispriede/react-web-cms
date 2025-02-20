@@ -24,7 +24,6 @@ class AddNewSection extends React.Component {
     }
 
     render() {
-        console.log(this.state.type)
         return (
             <>
                 <Button type="primary" onClick={() => {
