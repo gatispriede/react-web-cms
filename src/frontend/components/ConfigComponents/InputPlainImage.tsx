@@ -20,11 +20,22 @@ const InputPlainImage = ({content, setContent}: IInputContent) => {
         setContent(plainImage.stringData)
     }
     return (
-        <div>
+        <div className={'admin-image'}>
             <div className={'settings'}>
                 <label>Use as background image</label>
                 <Switch value={plainImage.data.useAsBackground} onChange={(checked) => {
                     plainImage.setUseAsBackground(checked)
+                    setContent(plainImage.stringData)
+                }}/>
+                <label>Use gradiant</label>
+                <Switch value={plainImage.data.useGradiant} onChange={(checked) => {
+                    plainImage.setUseGradiant(checked)
+                    setContent(plainImage.stringData)
+                }}/>
+
+                <label>Image vertical offset</label>
+                <Input defaultValue={0} value={plainImage.data.offsetX} onChange={(e) => {
+                    plainImage.setOffsetX(parseInt(e.target.value))
                     setContent(plainImage.stringData)
                 }}/>
             </div>

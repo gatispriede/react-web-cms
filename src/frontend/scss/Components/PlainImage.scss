@@ -7,3 +7,23 @@
     width: 100%;
   }
 }
+.section-item-container{
+  &.IMAGE{
+    .edit-wrapper{
+      min-height: 100px;
+    }
+    .delete-container{
+
+    }
+  }
+}
+
+.background-image{
+  z-index: -1;
+  display: flex;
+  overflow: visible;
+  width: 100%;
+  position: absolute;
+  background-size: contain;
+  background-repeat: no-repeat;
+}

@@ -8,6 +8,7 @@ import {ConfigProvider} from 'antd';
 import {IMongo} from "../../Interfaces/IMongo";
 import MongoApi from '../api/MongoApi';
 import {ISection} from "../../Interfaces/ISection";
+import Logo from "../components/common/Logo";
 
 interface IHomeState {
     loading: boolean,
@@ -127,6 +128,7 @@ class App extends React.Component<{}> {
             <div>
                 <ConfigProvider theme={theme}>
                     <Spin spinning={this.state.loading}>
+                        <Logo />
                         <Tabs onChange={(value) => {
                             this.setState({activeTab: value})
                         }} activeKey={this.state.activeTab} defaultActiveKey={"0"} items={this.state.tabProps}/>

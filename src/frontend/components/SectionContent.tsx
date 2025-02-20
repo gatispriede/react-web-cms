@@ -72,7 +72,7 @@ class SectionContent extends React.Component<IPropsSectionContent> {
                         }
                         const sectionId = this.state.section.id ? this.state.section.id : ''
                         return (
-                            <div key={id} className={'section-item-container'} style={style}>
+                            <div key={id} className={`section-item-container ${item.type}`} style={style}>
                                 <EditWrapper
                                     admin={this.admin}
                                     key={id}

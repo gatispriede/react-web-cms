@@ -4,6 +4,7 @@
 @use "Admin/ImageUpload";
 @use "Admin/InputGallery";
 @use "Admin/AddNewSection";
+@use "Admin/AdminPlainImage";
 
 @use "Components/PlainImage";
 @use "Components/Gallery";
@@ -17,14 +18,26 @@
 body{
   //margin-left: 16px;
   //margin-right: 16px;
+  margin: auto;
   overflow: auto;
   font-family: 'Salesforce-Sans', sans-serif;
   color: #3b3939;
+  .logo{
+    position: absolute;
+    top: 10px;
+    left: 10%;
+    height: 40px;
+  }
   .ant-tabs{
     font-family: 'Salesforce-Sans', sans-serif;
     .ant-tabs-nav-wrap{
       text-transform: uppercase;
-
+      justify-content: center;
+    }
+    .ant-tabs-nav{
+      &::before{
+        border: none;
+      }
     }
   }
   .dynamic-content{

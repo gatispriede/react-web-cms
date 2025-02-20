@@ -9,6 +9,7 @@ import theme from '../theme/themeConfig';
 import {ConfigProvider} from 'antd';
 import {IMongo} from "../../Interfaces/IMongo";
 import MongoApi from '../api/MongoApi';
+import Logo from "../components/common/Logo";
 
 type TargetKey = React.MouseEvent | React.KeyboardEvent | string;
 
@@ -119,6 +120,7 @@ class admin extends React.Component {
         return (
             <ConfigProvider theme={theme}>
                 <Spin spinning={this.state.loading}>
+                    <Logo />
                     <AddNewDialogNavigation
                         close={() => {
                             this.setState({addNewDialogOpen: false})

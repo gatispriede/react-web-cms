@@ -1,0 +1,14 @@
+.admin-image{
+  display: flex;
+  flex-direction: column;
+  .settings{
+    display: flex;
+    flex-direction: column;
+    button{
+      width: 50px;
+    }
+    input{
+      width: 100px;
+    }
+  }
+}

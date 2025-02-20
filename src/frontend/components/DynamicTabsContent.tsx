@@ -8,6 +8,8 @@ import {IItem} from "../../Interfaces/IItem";
 import MongoApi from "../api/MongoApi";
 import {IConfigSectionAddRemove} from "../../Interfaces/IConfigSectionAddRemove";
 import {Draggable} from "react-drag-reorder";
+import guid from "../../helpers/guid";
+import DraggableWrapper from "./common/DraggableWrapper";
 
 interface IDynamicTabsContent {
     sections: ISection[],
@@ -19,6 +21,7 @@ interface IDynamicTabsContent {
 interface SContent {
     sections: ISection[],
     page: string,
+    state: string,
 }
 
 class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
@@ -33,6 +36,7 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
     state: SContent = {
         sections: [],
         page: '',
+        state: ''
     }
     private readonly admin: boolean = false
     private MongoApi = new MongoApi()
@@ -59,14 +63,15 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
         this.state = {
             sections: sections,
             page: page,
+            state: guid()
         }
     }
 
     render() {
+
         return (
             <div className={'dynamic-content'}>
-                <Draggable key={this.state.sections.length} onPosChange={this.getChangedPos}>
-
+                <DraggableWrapper admin={this.admin} key={`${this.state.sections.length}-${this.state.state}`} onPosChange={this.getChangedPos}>
                     {
                         this.state.sections && this.state.sections.map((section: ISection, index) => {
                                 const emptySections = section.type - section.content?.length
@@ -80,13 +85,12 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
                                     }
                                 }
                                 return (
-                                    <div key={`${index}-${section.type}`}>
+                                    <div key={`${index}-${section.type}`} className={`${index}-${section.type}`}>
                                         <EditWrapper admin={this.admin} deleteAction={async () => {
                                             if (section.id) {
                                                 await this.MongoApi.deleteSection(section.id)
                                                 const sections = this.state.sections.filter((filterSection: ISection) => filterSection.id !== section.id)
                                                 this.setState({sections})
-                                                this.forceUpdate()
                                             }
                                         }}>
                                             <SectionContent
@@ -98,7 +102,7 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
                                                 addRemoveSectionItem={
                                                     async (sectionId: string, config: IConfigSectionAddRemove) => {
                                                         await this.MongoApi.addRemoveSectionItem(sectionId, config, this.state.sections)
-                                                        await this.props.refresh()
+                                                        this.setState({state: guid()})
                                                     }
                                                 }/>
 
@@ -108,7 +112,7 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
                             }
                         )
                     }
-                </Draggable>
+                </DraggableWrapper>
                 {this.admin && <div className={'new-section-wrapper'}>
                     <AddNewSection
                         page={this.state.page}
