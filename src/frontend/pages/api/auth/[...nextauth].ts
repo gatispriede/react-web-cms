@@ -1,10 +1,9 @@
 import NextAuth from "next-auth/next";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { compare, hash } from "bcrypt";
+import { compare } from "bcrypt";
 import {NextAuthOptions, User} from "next-auth";
 import MongoApi from "../../../api/MongoApi";
-const saltRounds = 10;
 
 const mongoApi = new MongoApi()
 
@@ -28,14 +27,9 @@ export const authOptions: NextAuthOptions = {
                 password: { label: "Password", type: "password" },
             },
             async authorize(credentials) {
-                console.log(credentials)
                 if (!credentials) {
                     return null;
                 }
-
-                console.log(hash(credentials.password, saltRounds).then(function(hash) {
-                    console.log(hash)
-                }))
 
                 if (!credentials?.email || !credentials.password) {
                     return null
@@ -46,13 +40,10 @@ export const authOptions: NextAuthOptions = {
                 if (!user) {
                     return null
                 }
-                console.log(credentials.password,user.password)
                 const isPasswordValid = await compare(
                     credentials.password,
                     user.password
                 )
-                console.log(isPasswordValid)
-
 
                 if (!isPasswordValid) {
                     return null
