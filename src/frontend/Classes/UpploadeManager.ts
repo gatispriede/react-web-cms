@@ -53,6 +53,8 @@ class UpploadManager {
 
     setup() {
         const uploader = new Uppload({
+            compression: 0.8,
+            compressionToMime: "image/webp",
             lang: en,
             bind: this._previewRef,
             call: this._buttonRef,
