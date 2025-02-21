@@ -24,7 +24,7 @@
 
 # misc
 .DS_Store
-.env.local
+src/frontend/.env.local
 .env.development.local
 .env.test.local
 .env.production.local

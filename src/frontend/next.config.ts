@@ -42,6 +42,10 @@ const nextConfig: import('next').NextConfig = {
         "rc-upload",
         "rc-util",
     ],
+    env: {
+        NEXTAUTH_URL: 'http://localhost:80',
+        NEXT_PUBLIC_BASE_URL: 'http://localhost:80',
+    },
 }
 
 module.exports = nextConfig

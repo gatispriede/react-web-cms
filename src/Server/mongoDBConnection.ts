@@ -5,6 +5,8 @@ import {INavigation} from "../Interfaces/INavigation";
 import IImage from "../Interfaces/IImage";
 import fs from 'fs'
 import {ILogo} from "../Interfaces/ILogo";
+import {IUser} from "../Interfaces/IUser";
+import {hash} from "bcrypt";
 
 interface ISettings {
     apiKey: string;
@@ -38,12 +40,18 @@ class MongoDBConnection {
         mongoDBLocalUrl: 'mongodb://localhost:27017',
         mongoDBDatabaseUrl: ''
     }
+    private _adminName = 'Admin'
+    private _adminPassword = 'b[ua25cJW2PF'
+    private _adminPasswordHash = '$2b$10$M57z68x.otaoDBIgn3J16OXnaISuGLBca6dFsH2RB3ggr6OUBzDJ2'
+    private _hashSaltRounds = 10
+
     private client!: MongoClient;
     private db: Db | undefined;
     private sectionsDB!: Collection<Document>;
     private navigationsDB!: Collection<Document>;
     private imagesDB!: Collection<Document>;
     private entitiesDB!: Collection<Document>;
+    private usersDB!: Collection<Document>;
 
     constructor() {
         this._settings.mongoDBDatabaseUrl = `mongodb+srv://${this._settings.mongodbUser}:${this._settings.mongodbPassword}@${this._settings.mongoDBClusterUrl}`;
@@ -69,6 +77,44 @@ class MongoDBConnection {
             this.navigationsDB = this.db.collection('Navigation')
             this.imagesDB = this.db.collection('Images')
             this.entitiesDB = this.db.collection('Entities')
+            this.usersDB = this.db.collection('Users')
+        }
+    }
+    async setupAdmin(): Promise<IUser | undefined> {
+        try {
+            const user: IUser = await this.usersDB.findOne({name: this._adminName}) as unknown as IUser
+            if(!user) {
+                await this.usersDB.insertOne({
+                    id: guid(),
+                    name: this._adminName,
+                    email: 'admin@admin.com',
+                    password: this._adminPasswordHash
+                })
+            }
+            return user
+        } catch (err) {
+            console.error('Error getting user:', err)
+            await this.setupClient()
+            return undefined
+        }
+    }
+    async addUser({user}: {user: IUser}): Promise<IUser | undefined> {
+        user.password = await hash(user.password, this._hashSaltRounds)
+        try {
+            return await this.usersDB.insertOne(user) as unknown as IUser
+        } catch (err) {
+            console.error('Error getting user:', err)
+            await this.setupClient()
+            return undefined
+        }
+    }
+    async getUser({email}: {email: string}): Promise<IUser | undefined> {
+        try {
+            return await this.usersDB.findOne({email: email}) as unknown as IUser
+        } catch (err) {
+            console.error('Error getting user:', err)
+            await this.setupClient()
+            return undefined
         }
     }
     async saveLogo({content}: {content: string}){
@@ -85,7 +131,6 @@ class MongoDBConnection {
     async getLogo(){
         try {
             const logoInDB: ILogo = await this.entitiesDB.findOne({type: 'logo'}) as unknown as ILogo
-            console.log(logoInDB)
             if(logoInDB){
                 return logoInDB
             }

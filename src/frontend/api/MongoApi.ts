@@ -6,9 +6,23 @@ import {IPage} from "../../Interfaces/IPage";
 import {INavigation} from "../../Interfaces/INavigation";
 import {IItem} from "../../Interfaces/IItem";
 import {ILogo} from "../../Interfaces/ILogo";
+import {IUser} from "../../Interfaces/IUser";
 
 class MongoApi {
-
+    async getUser({email}: {email: string}): Promise<Partial<IUser> | any> {
+        const user = await resolve(
+            ({query}) => {
+                const user = query.mongo.getUser({email})
+                return {
+                    id: user?.id,
+                    name: user?.name,
+                    email: user?.email,
+                    password: user?.password,
+                }
+            },
+        )
+        return user
+    }
     async getLogo(): Promise<ILogo> {
         const logo = await resolve(
             ({query}) => {

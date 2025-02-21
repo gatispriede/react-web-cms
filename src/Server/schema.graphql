@@ -27,6 +27,15 @@ input InLogo {
     content: String!
 }
 
+type IUser {
+    id: String!
+    name: String
+    email: String!
+    password: String!
+    role: String
+    avatar: String
+}
+
 type ILogo {
     id: String!
     type: String!
@@ -72,6 +81,7 @@ type ILoadData {
 }
 
 type QueryMongo {
+    setupAdmin: IUser
     getMongoDBUri: String
     loadData: [ILoadData!]!
     createDatabase: String!
@@ -79,6 +89,7 @@ type QueryMongo {
     getSections(ids: [String]): [ISection!]!
     getImages(tags: String!): [IImage!]!
     getLogo: ILogo!
+    getUser(email: String): IUser
 }
 type MutationMongo {
     addUpdateNavigationItem(pageName: String!, sections: [String]): String!

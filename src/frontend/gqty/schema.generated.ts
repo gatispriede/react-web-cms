@@ -115,6 +115,15 @@ export const generatedSchema = {
     page: { __type: "String" },
     type: { __type: "Int!" },
   },
+  IUser: {
+    __typename: { __type: "String!" },
+    avatar: { __type: "String" },
+    email: { __type: "String!" },
+    id: { __type: "String!" },
+    name: { __type: "String" },
+    password: { __type: "String!" },
+    type: { __type: "String" },
+  },
   InImage: {
     created: { __type: "String!" },
     id: { __type: "String!" },
@@ -170,6 +179,7 @@ export const generatedSchema = {
     getMongoDBUri: { __type: "String" },
     getNavigationCollection: { __type: "[INavigation!]!" },
     getSections: { __type: "[ISection!]!", __args: { ids: "[String]" } },
+    getUser: { __type: "IUser", __args: { email: "String" } },
     loadData: { __type: "[ILoadData!]!" },
   },
   mutation: {
@@ -237,6 +247,16 @@ export interface ISection {
   type: ScalarsEnums["Int"];
 }
 
+export interface IUser {
+  __typename?: "IUser";
+  avatar?: Maybe<ScalarsEnums["String"]>;
+  email: ScalarsEnums["String"];
+  id: ScalarsEnums["String"];
+  name?: Maybe<ScalarsEnums["String"]>;
+  password: ScalarsEnums["String"];
+  type?: Maybe<ScalarsEnums["String"]>;
+}
+
 export interface MutationMongo {
   __typename?: "MutationMongo";
   addUpdateNavigationItem: (args: {
@@ -274,6 +294,7 @@ export interface QueryMongo {
   getSections: (args?: {
     ids?: Maybe<Array<Maybe<ScalarsEnums["String"]>>>;
   }) => Array<ISection>;
+  getUser: (args?: { email?: Maybe<ScalarsEnums["String"]> }) => Maybe<IUser>;
   loadData: Array<ILoadData>;
 }
 

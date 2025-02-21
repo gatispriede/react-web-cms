@@ -12,7 +12,8 @@
     "dev-server": "nodemon --config ./nodemon.json",
     "standalone-graphql": "npx tsx --tsconfig src/Server/tsconfig.custom.json src/Server/index.ts",
     "ssl": "npx tsx --tsconfig src/Server/tsconfig.custom.json src/Server/sslServer.ts",
-    "generate-schema": "npx @gqty/cli http://localhost:80/api/graphql --target=src/frontend/gqty/index.ts "
+    "generate-schema": "npx @gqty/cli http://localhost:80/api/graphql --target=src/frontend/gqty/index.ts ",
+    "setupSecrets": "npx auth@latest secret next"
   },
   "gqty": {
     "introspections": {
@@ -26,6 +27,7 @@
     "@ant-design/icons-svg": "^4.4.2",
     "@ant-design/nextjs-registry": "^1.0.2",
     "@graphql-tools/schema": "^10.0.16",
+    "@types/bcrypt": "^5.0.2",
     "@types/draftjs-to-html": "^0.8.4",
     "@types/formidable": "^3.4.5",
     "@types/glidejs__glide": "^3.6.6",
@@ -37,6 +39,7 @@
     "antd": "^5.23.3",
     "apollo-server": "^3.13.0",
     "apollo-server-micro": "^3.13.0",
+    "bcrypt": "^5.1.1",
     "buffer": "^6.0.3",
     "cors": "^2.8.5",
     "cra-template-typescript": "1.2.0",
@@ -63,6 +66,7 @@
     "mongodb": "^6.12.0",
     "net": "^1.0.2",
     "next": "^15.1.6",
+    "next-auth": "^4.24.11",
     "next-themes": "^0.4.4",
     "next-transpile-modules": "^10.0.1",
     "node-polyfill-webpack-plugin": "^4.1.0",
