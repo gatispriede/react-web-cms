@@ -1,14 +1,10 @@
 import React from 'react'
 import App from "./app";
 
-
-class Index extends React.Component {
-
-    render() {
-        return (
-            <App />
-        );
-    }
+const Slug = ()=> {
+    return (
+        <App page={'/'} />
+    )
 }
 
-export default Index;
+export default Slug;

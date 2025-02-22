@@ -9,6 +9,8 @@ import {IMongo} from "../../Interfaces/IMongo";
 import MongoApi from '../api/MongoApi';
 import {ISection} from "../../Interfaces/ISection";
 import Logo from "../components/common/Logo";
+import Link from 'next/link'
+import Head from 'next/head'
 
 interface IHomeState {
     loading: boolean,
@@ -17,11 +19,12 @@ interface IHomeState {
     tabProps: any[]
 }
 
-class App extends React.Component<{}> {
+class App extends React.Component<{page :string}> {
     sections: any[] = []
     private MongoApi = new MongoApi()
     loadSections: any
     getNavigationListCache: any
+    page: string
     state: IHomeState = {
         loading: false,
         pages: [],
@@ -29,8 +32,9 @@ class App extends React.Component<{}> {
         activeTab: '0'
     }
 
-    constructor(props: {}) {
+    constructor(props: {page: string}) {
         super(props);
+        this.page = props.page
         this.state.loading = true
         this.loadSections = this.MongoApi.loadSections
         this.getNavigationListCache = this.getNavigationList
@@ -102,7 +106,9 @@ class App extends React.Component<{}> {
                     newTabsState.push({
                         key: id,
                         page: pages[id].page,
-                        label: pages[id].page,
+                        label: (
+                            <Link href={pages[id].page.replace(' ','-').toLowerCase()}>{pages[id].page}</Link>
+                        ),
                         children:
                             <DynamicTabsContent
                                 refresh={async () => {
@@ -122,16 +128,30 @@ class App extends React.Component<{}> {
         newState.loading = false
         this.setState(newState)
     }
+    findIdForActiveTab(){
+        const firstTab = this.state.tabProps[0] ? this.state.tabProps[0].page.replace(' ','-').toLowerCase() : ''
+        const propsPage = this.props.page !== '/' ? this.props.page : firstTab
+        return this.state.tabProps.findIndex((tab) => {
+            const tabUrl = encodeURIComponent(tab.page.replace(' ','-')).toLowerCase()
+            const propsUrl = encodeURIComponent(propsPage).toLowerCase()
+            return tabUrl === propsUrl
+        })
+    }
 
     render() {
+        const activeKey = this.findIdForActiveTab()
         return (
             <div>
+                <Head>
+                    <title>{this.state.tabProps[activeKey] ? this.state.tabProps[activeKey].page : ''}</title>
+                    <meta property="og:title" content={this.props.page} key="title" />
+                </Head>
                 <ConfigProvider theme={theme}>
                     <Spin spinning={this.state.loading}>
                         <Logo admin={false}/>
                         <Tabs onChange={(value) => {
                             this.setState({activeTab: value})
-                        }} activeKey={this.state.activeTab} defaultActiveKey={"0"} items={this.state.tabProps}/>
+                        }} activeKey={"" + activeKey} defaultActiveKey={"0"} items={this.state.tabProps}/>
                     </Spin>
                 </ConfigProvider>
             </div>

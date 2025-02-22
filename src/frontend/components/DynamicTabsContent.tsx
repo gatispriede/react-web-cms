@@ -71,7 +71,7 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
 
         return (
             <div className={'dynamic-content'}>
-                <DraggableWrapper admin={this.admin} key={`${this.state.sections.length}-${this.state.state}`} onPosChange={this.getChangedPos}>
+                <DraggableWrapper admin={this.admin} id={`${this.state.sections.length}-${this.state.state}`} onPosChange={this.getChangedPos}>
                     {
                         this.state.sections && this.state.sections.map((section: ISection, index) => {
                                 const emptySections = section.type - section.content?.length

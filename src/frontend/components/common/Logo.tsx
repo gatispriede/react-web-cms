@@ -2,6 +2,7 @@ import {Component} from "react";
 import LogoEditDialog from "./Dialogs/LogoEditDialog";
 import MongoApi from "../../api/MongoApi";
 import {ILogo} from "../../../Interfaces/ILogo";
+import Link from "next/link";
 
 class Logo extends Component {
     private _mongoApi: MongoApi;
@@ -43,7 +44,7 @@ class Logo extends Component {
 
     render() {
         return (
-            <div className={'logo'} onClick={() => {
+            <Link href={'/'} className={'logo'} onClick={() => {
                 if(this.admin && !this.state.open){
                     this.setState({open: true})
                 }
@@ -56,7 +57,7 @@ class Logo extends Component {
                         this.setState({open: false})
                     }
                 }}/>
-            </div>
+            </Link>
         )
     }
 }
