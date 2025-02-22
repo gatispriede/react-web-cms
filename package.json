@@ -7,7 +7,7 @@
     "dev": "next dev -p 80 src/frontend ",
     "start": "cross-env NODE_ENV=production next start -p 80 src/frontend ",
     "build": "cross-env NODE_ENV=production next build src/frontend",
-    "postbuild": "next-sitemap",
+    "postbuild": "next-sitemap --config next-sitemap.config.cjs",
     "lint": "eslint",
     "clean": "rm -rf src/frontend/.next",
     "dev-server": "nodemon --config ./nodemon.json",

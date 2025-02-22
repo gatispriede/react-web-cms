@@ -44,6 +44,7 @@ const nextConfig: import('next').NextConfig = {
     ],
     env: {
         NEXTAUTH_URL: 'http://localhost:80',
+        API_URL: 'http://localhost',
         NEXT_PUBLIC_BASE_URL: 'http://localhost:80',
     },
 }
