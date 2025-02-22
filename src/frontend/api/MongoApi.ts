@@ -92,17 +92,20 @@ class MongoApi {
         )
     }
 
-    async createNavigation(newNavigationName: string, sections: string[]): Promise<string> {
+    async createNavigation(newNavigation:INavigation): Promise<string> {
         return await resolve(
             ({mutation}) => {
-                const update: { pageName: string, sections: string[] } = {
-                    pageName: newNavigationName,
-                    sections: []
-                }
-                if (sections.length > 0) {
-                    update.sections = sections
-                }
-                return (mutation as MutationMongo).mongo.addUpdateNavigationItem(update)
+                return (mutation).mongo.createNavigation({navigation: newNavigation})
+            },
+        );
+    }
+    async replaceUpdateNavigation(oldNavigationName: string,newNavigation:INavigation): Promise<string> {
+        return await resolve(
+            ({mutation}) => {
+                return (mutation).mongo.replaceUpdateNavigation({
+                    oldPageName: oldNavigationName,
+                    navigation: newNavigation
+                })
             },
         );
     }
@@ -129,6 +132,7 @@ class MongoApi {
                         id: item.id,
                         page: item.page,
                         sections: item.sections,
+                        seo: {},
                         type: item.type
                     })
                 })

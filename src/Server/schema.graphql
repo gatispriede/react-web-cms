@@ -26,7 +26,26 @@ input InImage {
 input InLogo {
     content: String!
 }
-
+input InSeo {
+    description: String
+    keywords: [String]
+    viewport: String
+    charSet: String
+    url: String
+    image: String
+    image_alt: String
+    published_time: String
+    modified_time: String
+    author: String
+    locale: String
+}
+input InNavigation {
+    id: String!
+    type: String!
+    page: String!
+    seo: InSeo
+    sections: [String]!
+}
 type IUser {
     id: String!
     name: String
@@ -66,11 +85,24 @@ type ISection {
     type: Int!
     content: [IItem]
 }
-
+type ISeo {
+    description: String
+    keywords: [String]
+    viewport: String
+    charSet: String
+    url: String
+    image: String
+    image_alt: String
+    published_time: String
+    modified_time: String
+    author: String
+    locale: String
+}
 type INavigation {
     id: String
     type: String!
     page: String!
+    seo: ISeo
     sections: [String]!
 }
 
@@ -92,14 +124,17 @@ type QueryMongo {
     getUser(email: String): IUser
 }
 type MutationMongo {
+    createNavigation(navigation: InNavigation!): String!
     addUpdateNavigationItem(pageName: String!, sections: [String]): String!
     updateNavigation(page: String!, sections: [String]): String!
+    replaceUpdateNavigation(oldPageName: String!,navigation: InNavigation): String!
     addUpdateSectionItem(section: InSection!, pageName: String): String!
     removeSectionItem(id:String!): String!
     deleteNavigationItem(pageName:String!): String!
     saveImage(image: InImage!): String!
     deleteImage(id: String!): String!
     saveLogo(content: String!): String!
+
 }
 
 type Query {

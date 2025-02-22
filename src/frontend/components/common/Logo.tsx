@@ -44,7 +44,7 @@ class Logo extends Component {
 
     render() {
         return (
-            <Link href={'/'} className={'logo'} onClick={() => {
+            <Link href={this.admin ? '#' : '/'} className={'logo'} onClick={() => {
                 if(this.admin && !this.state.open){
                     this.setState({open: true})
                 }

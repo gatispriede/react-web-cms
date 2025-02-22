@@ -80,10 +80,11 @@ class MongoDBConnection {
             this.usersDB = this.db.collection('Users')
         }
     }
+
     async setupAdmin(): Promise<IUser | undefined> {
         try {
             const user: IUser = await this.usersDB.findOne({name: this._adminName}) as unknown as IUser
-            if(!user) {
+            if (!user) {
                 await this.usersDB.insertOne({
                     id: guid(),
                     name: this._adminName,
@@ -98,7 +99,8 @@ class MongoDBConnection {
             return undefined
         }
     }
-    async addUser({user}: {user: IUser}): Promise<IUser | undefined> {
+
+    async addUser({user}: { user: IUser }): Promise<IUser | undefined> {
         user.password = await hash(user.password, this._hashSaltRounds)
         try {
             return await this.usersDB.insertOne(user) as unknown as IUser
@@ -108,7 +110,8 @@ class MongoDBConnection {
             return undefined
         }
     }
-    async getUser({email}: {email: string}): Promise<IUser | undefined> {
+
+    async getUser({email}: { email: string }): Promise<IUser | undefined> {
         try {
             return await this.usersDB.findOne({email: email}) as unknown as IUser
         } catch (err) {
@@ -117,10 +120,11 @@ class MongoDBConnection {
             return undefined
         }
     }
-    async saveLogo({content}: {content: string}){
+
+    async saveLogo({content}: { content: string }) {
         let res, error;
         try {
-             res = await this.entitiesDB.findOneAndUpdate({type: 'logo'},{$set: {content: content}})
+            res = await this.entitiesDB.findOneAndUpdate({type: 'logo'}, {$set: {content: content}})
         } catch (err) {
             console.error('Error saving logo:', err)
             await this.setupClient()
@@ -128,10 +132,11 @@ class MongoDBConnection {
         }
         return JSON.stringify({success: res, error: error})
     }
-    async getLogo(){
+
+    async getLogo() {
         try {
             const logoInDB: ILogo = await this.entitiesDB.findOne({type: 'logo'}) as unknown as ILogo
-            if(logoInDB){
+            if (logoInDB) {
                 return logoInDB
             }
             const content = {
@@ -218,6 +223,53 @@ class MongoDBConnection {
                 type: 'navigation',
                 page: page
             }, {$set: {sections: sections}});
+            return JSON.stringify(result)
+        } catch (err) {
+            console.log(err)
+            await this.setupClient()
+            return 'Error while fetching navigation data'
+        }
+    }
+    public async createNavigation({navigation}: { navigation: INavigation}){
+        try {
+            const existingNavigation = await this.navigationsDB.findOne({
+                page: navigation.page
+            })
+            if(!existingNavigation){
+                const result = await this.navigationsDB.insertOne(navigation)
+                return JSON.stringify(result)
+            }
+            return JSON.stringify(existingNavigation)
+        } catch (err) {
+            console.log(err)
+            await this.setupClient()
+            return 'Error while fetching navigation data'
+        }
+    }
+    public async replaceUpdateNavigation({oldPageName, navigation}: {
+        oldPageName: string,
+        navigation: INavigation
+    }): Promise<string> {
+        try {
+            let result: { navigation: any, sections: any } = {
+                navigation: undefined,
+                sections: undefined
+            }
+            if (oldPageName === navigation.page) {
+                result.navigation = await this.navigationsDB.findOneAndUpdate({
+                    type: 'navigation',
+                    id: navigation.id
+                }, {$set: navigation});
+            } else {
+                result.sections = await this.navigationsDB.updateMany({
+                    page: oldPageName
+                }, {$set: {page: navigation.page}});
+
+                result.navigation = await this.navigationsDB.findOneAndUpdate({
+                    type: 'navigation',
+                    id: navigation.id
+                }, {$set: navigation});
+            }
             return JSON.stringify(result)
         } catch (err) {
             console.log(err)
@@ -378,6 +430,7 @@ class MongoDBConnection {
                     id: guid(),
                     type: 'navigation',
                     page: pageName,
+                    seo: {},
                     sections: []
                 }
             } else {

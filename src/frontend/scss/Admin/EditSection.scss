@@ -1,6 +1,3 @@
-.section-item-container{
-
-}
 .section-item-container:hover{
   .edit-button-container{
     display: block;
@@ -19,7 +16,19 @@
     width: 100%;
   }
 }
+.ant-tabs{
+  .ant-tabs-nav-list{
+    .edit-wrapper{
+      display: flex;
+      .edit-container{
+        left: 0;
+        position: relative;
+        margin-right: 10px;
+      }
+    }
 
+  }
+}
 .dynamic-content {
   position: relative;
   .edit-wrapper{

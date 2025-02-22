@@ -56,11 +56,33 @@ export interface InLogo {
   content: Scalars["String"]["input"];
 }
 
+export interface InNavigation {
+  id: Scalars["String"]["input"];
+  page: Scalars["String"]["input"];
+  sections: Array<InputMaybe<Scalars["String"]["input"]>>;
+  seo?: InputMaybe<InSeo>;
+  type: Scalars["String"]["input"];
+}
+
 export interface InSection {
   content?: InputMaybe<Array<InputMaybe<InItem>>>;
   id?: InputMaybe<Scalars["String"]["input"]>;
   page: Scalars["String"]["input"];
   type: Scalars["Int"]["input"];
+}
+
+export interface InSeo {
+  author?: InputMaybe<Scalars["String"]["input"]>;
+  charSet?: InputMaybe<Scalars["String"]["input"]>;
+  description?: InputMaybe<Scalars["String"]["input"]>;
+  image?: InputMaybe<Scalars["String"]["input"]>;
+  image_alt?: InputMaybe<Scalars["String"]["input"]>;
+  keywords?: InputMaybe<Array<InputMaybe<Scalars["String"]["input"]>>>;
+  locale?: InputMaybe<Scalars["String"]["input"]>;
+  modified_time?: InputMaybe<Scalars["String"]["input"]>;
+  published_time?: InputMaybe<Scalars["String"]["input"]>;
+  url?: InputMaybe<Scalars["String"]["input"]>;
+  viewport?: InputMaybe<Scalars["String"]["input"]>;
 }
 
 export const scalarsEnumsHash: ScalarsEnumsHash = {
@@ -106,6 +128,7 @@ export const generatedSchema = {
     id: { __type: "String" },
     page: { __type: "String!" },
     sections: { __type: "[String]!" },
+    seo: { __type: "ISeo" },
     type: { __type: "String!" },
   },
   ISection: {
@@ -115,6 +138,20 @@ export const generatedSchema = {
     page: { __type: "String" },
     type: { __type: "Int!" },
   },
+  ISeo: {
+    __typename: { __type: "String!" },
+    author: { __type: "String" },
+    charSet: { __type: "String" },
+    description: { __type: "String" },
+    image: { __type: "String" },
+    image_alt: { __type: "String" },
+    keywords: { __type: "[String]" },
+    locale: { __type: "String" },
+    modified_time: { __type: "String" },
+    published_time: { __type: "String" },
+    url: { __type: "String" },
+    viewport: { __type: "String" },
+  },
   IUser: {
     __typename: { __type: "String!" },
     avatar: { __type: "String" },
@@ -122,7 +159,7 @@ export const generatedSchema = {
     id: { __type: "String!" },
     name: { __type: "String" },
     password: { __type: "String!" },
-    type: { __type: "String" },
+    role: { __type: "String" },
   },
   InImage: {
     created: { __type: "String!" },
@@ -142,11 +179,31 @@ export const generatedSchema = {
     type: { __type: "String!" },
   },
   InLogo: { content: { __type: "String!" } },
+  InNavigation: {
+    id: { __type: "String!" },
+    page: { __type: "String!" },
+    sections: { __type: "[String]!" },
+    seo: { __type: "InSeo" },
+    type: { __type: "String!" },
+  },
   InSection: {
     content: { __type: "[InItem]" },
     id: { __type: "String" },
     page: { __type: "String!" },
     type: { __type: "Int!" },
+  },
+  InSeo: {
+    author: { __type: "String" },
+    charSet: { __type: "String" },
+    description: { __type: "String" },
+    image: { __type: "String" },
+    image_alt: { __type: "String" },
+    keywords: { __type: "[String]" },
+    locale: { __type: "String" },
+    modified_time: { __type: "String" },
+    published_time: { __type: "String" },
+    url: { __type: "String" },
+    viewport: { __type: "String" },
   },
   MutationMongo: {
     __typename: { __type: "String!" },
@@ -158,12 +215,20 @@ export const generatedSchema = {
       __type: "String!",
       __args: { pageName: "String", section: "InSection!" },
     },
+    createNavigation: {
+      __type: "String!",
+      __args: { navigation: "InNavigation!" },
+    },
     deleteImage: { __type: "String!", __args: { id: "String!" } },
     deleteNavigationItem: {
       __type: "String!",
       __args: { pageName: "String!" },
     },
     removeSectionItem: { __type: "String!", __args: { id: "String!" } },
+    replaceUpdateNavigation: {
+      __type: "String!",
+      __args: { navigation: "InNavigation", oldPageName: "String!" },
+    },
     saveImage: { __type: "String!", __args: { image: "InImage!" } },
     saveLogo: { __type: "String!", __args: { content: "String!" } },
     updateNavigation: {
@@ -181,6 +246,7 @@ export const generatedSchema = {
     getSections: { __type: "[ISection!]!", __args: { ids: "[String]" } },
     getUser: { __type: "IUser", __args: { email: "String" } },
     loadData: { __type: "[ILoadData!]!" },
+    setupAdmin: { __type: "IUser" },
   },
   mutation: {
     __typename: { __type: "String!" },
@@ -236,6 +302,7 @@ export interface INavigation {
   id?: Maybe<ScalarsEnums["String"]>;
   page: ScalarsEnums["String"];
   sections: Array<Maybe<ScalarsEnums["String"]>>;
+  seo?: Maybe<ISeo>;
   type: ScalarsEnums["String"];
 }
 
@@ -247,6 +314,21 @@ export interface ISection {
   type: ScalarsEnums["Int"];
 }
 
+export interface ISeo {
+  __typename?: "ISeo";
+  author?: Maybe<ScalarsEnums["String"]>;
+  charSet?: Maybe<ScalarsEnums["String"]>;
+  description?: Maybe<ScalarsEnums["String"]>;
+  image?: Maybe<ScalarsEnums["String"]>;
+  image_alt?: Maybe<ScalarsEnums["String"]>;
+  keywords?: Maybe<Array<Maybe<ScalarsEnums["String"]>>>;
+  locale?: Maybe<ScalarsEnums["String"]>;
+  modified_time?: Maybe<ScalarsEnums["String"]>;
+  published_time?: Maybe<ScalarsEnums["String"]>;
+  url?: Maybe<ScalarsEnums["String"]>;
+  viewport?: Maybe<ScalarsEnums["String"]>;
+}
+
 export interface IUser {
   __typename?: "IUser";
   avatar?: Maybe<ScalarsEnums["String"]>;
@@ -254,7 +336,7 @@ export interface IUser {
   id: ScalarsEnums["String"];
   name?: Maybe<ScalarsEnums["String"]>;
   password: ScalarsEnums["String"];
-  type?: Maybe<ScalarsEnums["String"]>;
+  role?: Maybe<ScalarsEnums["String"]>;
 }
 
 export interface MutationMongo {
@@ -267,12 +349,19 @@ export interface MutationMongo {
     pageName?: Maybe<ScalarsEnums["String"]>;
     section: InSection;
   }) => ScalarsEnums["String"];
+  createNavigation: (args: {
+    navigation: InNavigation;
+  }) => ScalarsEnums["String"];
   deleteImage: (args: { id: ScalarsEnums["String"] }) => ScalarsEnums["String"];
   deleteNavigationItem: (args: {
     pageName: ScalarsEnums["String"];
   }) => ScalarsEnums["String"];
   removeSectionItem: (args: {
     id: ScalarsEnums["String"];
+  }) => ScalarsEnums["String"];
+  replaceUpdateNavigation: (args: {
+    navigation?: Maybe<InNavigation>;
+    oldPageName: ScalarsEnums["String"];
   }) => ScalarsEnums["String"];
   saveImage: (args: { image: InImage }) => ScalarsEnums["String"];
   saveLogo: (args: {
@@ -296,6 +385,7 @@ export interface QueryMongo {
   }) => Array<ISection>;
   getUser: (args?: { email?: Maybe<ScalarsEnums["String"]> }) => Maybe<IUser>;
   loadData: Array<ILoadData>;
+  setupAdmin?: Maybe<IUser>;
 }
 
 export interface Mutation {

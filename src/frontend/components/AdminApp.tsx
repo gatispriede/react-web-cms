@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
 import {INavigation, resolve} from "../gqty";
-import {Spin, Tabs} from 'antd';
+import {Button, Spin, Tabs} from 'antd';
 import AddNewDialogNavigation from "../components/common/Dialogs/AddNewDialogNavigation";
 import DynamicTabsContent from "../components/DynamicTabsContent";
 import {IPage} from "../../Interfaces/IPage";
@@ -12,12 +12,15 @@ import MongoApi from '../api/MongoApi';
 import Logo from "../components/common/Logo";
 import LoginBtn from "../components/Auth/login-btn";
 import {Session} from "next-auth";
+import EditWrapper from "./common/EditWrapper";
+import {EditOutlined} from "@ant-design/icons";
 
 type TargetKey = React.MouseEvent | React.KeyboardEvent | string;
 
 interface IHomeState {
     loading: boolean,
     addNewDialogOpen: boolean,
+    activeNavigation: INavigation,
     activeTab: string,
     pages: IPage[],
     tabProps: any[]
@@ -31,6 +34,11 @@ class AdminApp extends React.Component<{ session: Session }> {
     state: IHomeState = {
         loading: false,
         addNewDialogOpen: false,
+        activeNavigation: {
+            page: '',
+            sections: [],
+            type: ''
+        },
         pages: [],
         tabProps: [],
         activeTab: '0'
@@ -44,7 +52,7 @@ class AdminApp extends React.Component<{ session: Session }> {
 
     onEdit = async (targetKey: TargetKey, action: 'add' | 'remove') => {
         if (action === 'add') {
-            this.setState({addNewDialogOpen: true})
+            this.setState({addNewDialogOpen: true, activeNavigation: {}})
         } else {
             let page
             const newItems = this.state.tabProps.filter((item) => {
@@ -66,7 +74,13 @@ class AdminApp extends React.Component<{ session: Session }> {
             addNewDialogOpen: false,
             pages: this.state.tabProps,
             tabProps: this.state.tabProps,
-            activeTab: this.state.activeTab
+            activeTab: this.state.activeTab,
+            activeNavigation: {
+                id: '',
+                page: '',
+                sections: [],
+                type: ''
+            }
         }
         if (init) {
             this.state.loading = true
@@ -79,6 +93,8 @@ class AdminApp extends React.Component<{ session: Session }> {
                 (query as unknown as IMongo).mongo.getNavigationCollection.map((item: INavigation) => {
                     list.push({
                         page: item.page,
+                        id: item.id,
+                        type: item.type,
                         sections: item.sections
                     })
                 })
@@ -95,7 +111,21 @@ class AdminApp extends React.Component<{ session: Session }> {
                         page: pages[id].page,
                         label:
                             <div className={'navigation-container'}>
-                                {pages[id].page}
+                                <EditWrapper edit={true} editContent={<div>
+                                    <Button onClick={() => {
+                                        const pageIndex: number = parseInt(id);
+                                        if(this.state.pages.length > 0) {
+                                            const page = pages[pageIndex]
+                                            this.setState({
+                                                activeNavigation: page,
+                                                addNewDialogOpen: true
+                                            })
+                                        }
+
+                                    }} ><EditOutlined/></Button>
+                                </div>} admin={this.admin} >
+                                    {pages[id].page}
+                                </EditWrapper>
                             </div>,
                         children: (
                             <DynamicTabsContent
@@ -127,6 +157,7 @@ class AdminApp extends React.Component<{ session: Session }> {
                         close={() => {
                             this.setState({addNewDialogOpen: false})
                         }}
+                        activeNavigation={this.state.activeNavigation}
                         open={this.state.addNewDialogOpen}
                         refresh={async () => {
                             await this.initialize()
