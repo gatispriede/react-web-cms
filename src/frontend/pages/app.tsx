@@ -50,8 +50,23 @@ class App extends React.Component<{page :string}> {
             ({query}): IPage[] => {
                 const list: any[] = [];
                 (query as unknown as IMongo).mongo.getNavigationCollection.map((item: INavigation) => {
+                    let itemSeo
+                    if(item.seo){
+                        itemSeo = {
+                            description: item.seo.description,
+                            keywords: item.seo.keywords,
+                            viewport: item.seo.viewport,
+                            charSet: item.seo.charSet,
+                            url: item.seo.url,
+                            image: item.seo.image,
+                            image_alt: item.seo.image_alt,
+                            author: item.seo.author,
+                            locale: item.seo.locale,
+                        }
+                    }
                     list.push({
                         page: item.page,
+                        seo: itemSeo,
                         sections: item.sections
                     })
                 })
@@ -106,6 +121,7 @@ class App extends React.Component<{page :string}> {
                     newTabsState.push({
                         key: id,
                         page: pages[id].page,
+                        seo: pages[id].seo,
                         label: (
                             <Link href={pages[id].page.replace(' ','-').toLowerCase()}>{pages[id].page}</Link>
                         ),
@@ -140,11 +156,39 @@ class App extends React.Component<{page :string}> {
 
     render() {
         const activeKey = this.findIdForActiveTab()
+        const seo = this.state.tabProps[activeKey] ? this.state.tabProps[activeKey].seo : {}
         return (
             <div>
                 <Head>
                     <title>{this.state.tabProps[activeKey] ? this.state.tabProps[activeKey].page : ''}</title>
                     <meta property="og:title" content={this.props.page} key="title" />
+                    {seo.description &&
+                        <meta property="og:description" content={seo.description} key="description" />
+                    }
+                    {seo.keywords &&
+                        <meta property="og:keywords" content={seo.keywords} key="keywords" />
+                    }
+                    {seo.viewport &&
+                        <meta property="og:viewport" content={seo.viewport} key="viewport" />
+                    }
+                    {seo.charSet &&
+                        <meta property="og:charSet" content={seo.charSet} key="charSet" />
+                    }
+                    {seo.url &&
+                        <meta property="og:url" content={seo.url} key="url" />
+                    }
+                    {seo.image &&
+                        <meta property="og:image" content={seo.image} key="image" />
+                    }
+                    {seo.image_alt &&
+                        <meta property="og:image_alt" content={seo.image_alt} key="image_alt" />
+                    }
+                    {seo.author &&
+                        <meta property="og:author" content={seo.author} key="author" />
+                    }
+                    {seo.locale &&
+                        <meta property="og:locale" content={seo.locale} key="locale" />
+                    }
                 </Head>
                 <ConfigProvider theme={theme}>
                     <Spin spinning={this.state.loading}>

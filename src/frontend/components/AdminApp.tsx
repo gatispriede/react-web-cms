@@ -132,7 +132,6 @@ class AdminApp extends React.Component<{ session: Session }> {
                                         const pageIndex: number = parseInt(id);
                                         if(this.state.pages.length > 0) {
                                             const page = pages[pageIndex]
-                                            console.log(page)
                                             this.setState({
                                                 activeNavigation: page,
                                                 addNewDialogOpen: true
