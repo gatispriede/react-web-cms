@@ -4,6 +4,6 @@ export interface INavigation {
     id: string
     type: string;
     page: string,
-    seo: ISeo,
+    seo: ISeo | undefined,
     sections: string[]
 }

@@ -37,7 +37,9 @@ class AdminApp extends React.Component<{ session: Session }> {
         activeNavigation: {
             page: '',
             sections: [],
-            type: ''
+            type: '',
+            id: '',
+            seo: undefined
         },
         pages: [],
         tabProps: [],
@@ -79,7 +81,8 @@ class AdminApp extends React.Component<{ session: Session }> {
                 id: '',
                 page: '',
                 sections: [],
-                type: ''
+                type: '',
+                seo: undefined
             }
         }
         if (init) {

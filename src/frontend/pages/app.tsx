@@ -156,37 +156,37 @@ class App extends React.Component<{page :string}> {
 
     render() {
         const activeKey = this.findIdForActiveTab()
-        const seo = this.state.tabProps[activeKey] ? this.state.tabProps[activeKey].seo : {}
+        const seo = this.state.tabProps[activeKey] ? this.state.tabProps[activeKey].seo : undefined
         return (
             <div>
                 <Head>
                     <title>{this.state.tabProps[activeKey] ? this.state.tabProps[activeKey].page : ''}</title>
                     <meta property="og:title" content={this.props.page} key="title" />
-                    {seo.description &&
+                    {seo && seo.description &&
                         <meta property="og:description" content={seo.description} key="description" />
                     }
-                    {seo.keywords &&
+                    {seo && seo.keywords &&
                         <meta property="og:keywords" content={seo.keywords} key="keywords" />
                     }
-                    {seo.viewport &&
+                    {seo && seo.viewport &&
                         <meta property="og:viewport" content={seo.viewport} key="viewport" />
                     }
-                    {seo.charSet &&
+                    {seo && seo.charSet &&
                         <meta property="og:charSet" content={seo.charSet} key="charSet" />
                     }
-                    {seo.url &&
+                    {seo && seo.url &&
                         <meta property="og:url" content={seo.url} key="url" />
                     }
-                    {seo.image &&
+                    {seo && seo.image &&
                         <meta property="og:image" content={seo.image} key="image" />
                     }
-                    {seo.image_alt &&
+                    {seo && seo.image_alt &&
                         <meta property="og:image_alt" content={seo.image_alt} key="image_alt" />
                     }
-                    {seo.author &&
+                    {seo && seo.author &&
                         <meta property="og:author" content={seo.author} key="author" />
                     }
-                    {seo.locale &&
+                    {seo && seo.locale &&
                         <meta property="og:locale" content={seo.locale} key="locale" />
                     }
                 </Head>
