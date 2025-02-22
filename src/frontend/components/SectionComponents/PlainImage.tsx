@@ -1,4 +1,4 @@
-import React, {RefObject, useEffect, useRef, useState} from "react";
+import React, {RefObject, useEffect, useState} from "react";
 import ContentManager from "../ContentManager";
 import {EItemType} from "../../../enums/EItemType";
 import {Image} from "antd";
