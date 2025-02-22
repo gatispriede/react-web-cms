@@ -9,7 +9,7 @@ interface IProps {
     refresh:  () => Promise<void>;
     close:  () => void;
     open: boolean,
-    activeNavigation: INavigation
+    activeNavigation: Partial<INavigation>
 }
 interface ISate {
     dialogOpen: boolean,
@@ -25,7 +25,7 @@ class AddNewDialogNavigation extends React.Component<IProps, {}> {
         dialogOpen: false,
         newNavigationName: '',
         activeNavigation: {
-            id: undefined,
+            id: '',
             page: "",
             sections: [],
             type: "",
@@ -48,21 +48,11 @@ class AddNewDialogNavigation extends React.Component<IProps, {}> {
     componentDidUpdate(prevProps: Readonly<IProps>, prevState: Readonly<{}>, snapshot?: any) {
         if(this.props.activeNavigation && this.props.activeNavigation.id && this.props.activeNavigation.id.length > 0){
             this.inEditMode = true
-            if("id" in this.state.activeNavigation){
-                if(this.state.activeNavigation.id !== this.props.activeNavigation.id){
-                    this.setState({
-                        activeNavigation: {
-                            ...this.props.activeNavigation
-                        },
-                        newNavigationName: this.props.activeNavigation.page
-                    })
-                }
-            }else if("id" in this.props.activeNavigation){
+            if("id" in this.props.activeNavigation){
                 if(this.state.activeNavigation.id !== this.props.activeNavigation.id) {
                     this.setState({
-                        activeNavigation: {
-                            ...this.props.activeNavigation
-                        },
+                        activeNavigation: this.props.activeNavigation,
+                        seo: this.props.activeNavigation.seo ? this.props.activeNavigation.seo : {},
                         newNavigationName: this.props.activeNavigation.page
                     })
                 }
@@ -70,7 +60,7 @@ class AddNewDialogNavigation extends React.Component<IProps, {}> {
         }else{
             this.inEditMode = false
             if(this.state.newNavigationName.length > 0 && prevProps.open !== this.props.open){
-                this.setState({newNavigationName: '', activeNavigation: {}})
+                this.setState({newNavigationName: '', activeNavigation: {}, seo: {}})
             }
         }
     }
@@ -81,7 +71,7 @@ class AddNewDialogNavigation extends React.Component<IProps, {}> {
                 id: guid(),
                 type: 'navigation',
                 page: this.state.newNavigationName,
-                seo: this.state.activeNavigation.seo,
+                seo: this.state.seo,
                 sections: this.sections
             })
         }else{
@@ -89,6 +79,7 @@ class AddNewDialogNavigation extends React.Component<IProps, {}> {
                 const newNavigation: INavigation = this.state.activeNavigation;
                 const oldNavigationName: string = this.state.activeNavigation.page
                 newNavigation.page = this.state.newNavigationName;
+                newNavigation.seo = this.state.seo;
                 await this.MongoApi.replaceUpdateNavigation(oldNavigationName,newNavigation)
             }
 
@@ -109,10 +100,7 @@ class AddNewDialogNavigation extends React.Component<IProps, {}> {
     ]
 
     render() {
-        let seo: ISeo = {};
-        if(this.state.activeNavigation && this.state.activeNavigation.seo){
-            seo = this.state.activeNavigation.seo
-        }
+        const seo: ISeo = this.state.seo;
         return (
             <>
                 <Modal width={'90%'} open={this.props.open}
@@ -137,14 +125,10 @@ class AddNewDialogNavigation extends React.Component<IProps, {}> {
                                     <label>{field.toLocaleUpperCase()}</label>
                                     <Input value={(seo as any)[field]}
                                            onChange={(input) => {
-                                               const seo: ISeo = this.state.activeNavigation.seo
                                                this.setState({
-                                                   activeNavigation: {
-                                                       ...this.state.activeNavigation,
-                                                       seo: {
-                                                           ...seo,
-                                                           [field]: input.target.value
-                                                       }
+                                                   seo: {
+                                                       ...this.state.seo,
+                                                       [field]: input.target.value
                                                    }
                                                })
                                            }}

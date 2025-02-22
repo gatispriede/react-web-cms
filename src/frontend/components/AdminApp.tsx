@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import {INavigation, resolve} from "../gqty";
+import { resolve} from "../gqty";
 import {Button, Spin, Tabs} from 'antd';
 import AddNewDialogNavigation from "../components/common/Dialogs/AddNewDialogNavigation";
 import DynamicTabsContent from "../components/DynamicTabsContent";
@@ -10,10 +10,10 @@ import {ConfigProvider} from 'antd';
 import {IMongo} from "../../Interfaces/IMongo";
 import MongoApi from '../api/MongoApi';
 import Logo from "../components/common/Logo";
-import LoginBtn from "../components/Auth/login-btn";
 import {Session} from "next-auth";
 import EditWrapper from "./common/EditWrapper";
 import {EditOutlined} from "@ant-design/icons";
+import {INavigation} from "../../Interfaces/INavigation";
 
 type TargetKey = React.MouseEvent | React.KeyboardEvent | string;
 
@@ -91,10 +91,26 @@ class AdminApp extends React.Component<{ session: Session }> {
             ({query}) => {
                 const list: any[] = [];
                 (query as unknown as IMongo).mongo.getNavigationCollection.map((item: INavigation) => {
+                    let itemSeo
+                    if(item.seo){
+                        itemSeo = {
+                            description: item.seo.description,
+                            keywords: item.seo.keywords,
+                            viewport: item.seo.viewport,
+                            charSet: item.seo.charSet,
+                            url: item.seo.url,
+                            image: item.seo.image,
+                            image_alt: item.seo.image_alt,
+                            author: item.seo.author,
+                            locale: item.seo.locale,
+                        }
+                    }
+
                     list.push({
                         page: item.page,
                         id: item.id,
                         type: item.type,
+                        seo: itemSeo,
                         sections: item.sections
                     })
                 })
@@ -116,6 +132,7 @@ class AdminApp extends React.Component<{ session: Session }> {
                                         const pageIndex: number = parseInt(id);
                                         if(this.state.pages.length > 0) {
                                             const page = pages[pageIndex]
+                                            console.log(page)
                                             this.setState({
                                                 activeNavigation: page,
                                                 addNewDialogOpen: true
