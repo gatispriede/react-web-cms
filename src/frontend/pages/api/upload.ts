@@ -26,11 +26,11 @@ const uploadForm = (next: { (req: any, res: any): void; (arg0: any, arg1: any): 
             form.once("error", console.error);
             form
                 .on("fileBegin", (fields: any, files: any) => {
-                    console.log("start uploading: ", fields, files.originalFilename);
+                    console.warn("start uploading: ", fields, files.originalFilename);
                 })
-                .on("aborted", () => console.log("Aborted..."));
+                .on("aborted", () => console.error("Aborted..."));
             form.once("end", () => {
-                console.log("Done!");
+                console.warn("Done!");
             });
             form.parse(req, async (err: any, fields: any, files: any) => {
 
@@ -51,7 +51,6 @@ const uploadForm = (next: { (req: any, res: any): void; (arg0: any, arg1: any): 
                         type: file.mimetype,
                         tags: JSON.parse(fields.tags)
                     }
-                    console.log('saving:',image)
                     await mongoApi.saveImage(image)
                     req.form = {fields, files};
                     return resolve(next(req, res));
@@ -62,7 +61,7 @@ const uploadForm = (next: { (req: any, res: any): void; (arg0: any, arg1: any): 
 
             });
         } catch (error) {
-            console.log(error)
+            console.error(error)
             return resolve(res.status(403).send(error));
         }
     });

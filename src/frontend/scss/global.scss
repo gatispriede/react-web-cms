@@ -8,6 +8,8 @@
 @use "Admin/Login";
 
 @use "Components/PlainImage";
+@use "Components/PlainText";
+@use "Components/RichText";
 @use "Components/Gallery";
 @use "Components/Carousel";
 
@@ -40,6 +42,16 @@ body{
     .ant-tabs-nav{
       &::before{
         border: none;
+      }
+    }
+  }
+
+  .ant-modal{
+    .ant-modal-content{
+      .ant-modal-footer{
+        display: flex;
+        flex-direction: row;
+        justify-content: right;
       }
     }
   }

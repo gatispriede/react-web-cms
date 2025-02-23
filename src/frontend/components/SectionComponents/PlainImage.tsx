@@ -5,6 +5,7 @@ import {Image} from "antd";
 import {IItem} from "../../../Interfaces/IItem";
 import draftToHtml from 'draftjs-to-html';
 import {RawDraftContentState} from "draft-js";
+import {b} from "@vercel/blob/dist/create-folder-CqdraABG";
 
 export interface IPlainImage {
     src: string;
@@ -12,9 +13,15 @@ export interface IPlainImage {
     alt: string;
     height: number;
     useAsBackground: boolean
+    imageFixed: boolean
     useGradiant: boolean
     offsetX: number
     preview: boolean
+}
+
+export enum EImageStyle {
+    Default = "default",
+    CenteredBoxed = "centeredBoxed"
 }
 
 export class PlainImageContent extends ContentManager {
@@ -22,6 +29,7 @@ export class PlainImageContent extends ContentManager {
         alt: "",
         height: 0,
         useAsBackground: false,
+        imageFixed: false,
         useGradiant: false,
         offsetX: 0,
         preview: false,
@@ -58,6 +66,9 @@ export class PlainImageContent extends ContentManager {
     setOffsetX(value: number) {
         this._parsedContent.offsetX = value;
     }
+    setImageFixed(value: boolean) {
+        this._parsedContent.imageFixed = value;
+    }
 
 }
 
@@ -90,7 +101,7 @@ const PlainImage = ({item}: { item: IItem }) => {
             {
                 plainImage.data.useAsBackground
                     ?
-                    <div className={'background-image'} style={{
+                    <div className={`background-image ${plainImage.data.imageFixed && 'fixed'}`} style={{
                         marginTop: `${plainImage.data.offsetX}px`,
                         backgroundImage: backgroundProperty,
                         minHeight: minHeight

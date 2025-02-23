@@ -7,6 +7,7 @@ import {INavigation} from "../../Interfaces/INavigation";
 import {IItem} from "../../Interfaces/IItem";
 import {ILogo} from "../../Interfaces/ILogo";
 import {IUser} from "../../Interfaces/IUser";
+import {EStyle} from "../../enums/EStyle";
 
 class MongoApi {
     async getUser({email}: {email: string}): Promise<Partial<IUser> | any> {
@@ -117,7 +118,6 @@ class MongoApi {
                     page: page,
                     sections: sections
                 }
-                console.log(update)
                 return mutation.mongo.updateNavigation(update)
             },
         );
@@ -191,11 +191,12 @@ class MongoApi {
     async addRemoveSectionItem(sectionId: string | undefined, config: IConfigSectionAddRemove, sections: ISection[]): Promise<string> {
         const section = sections.find(section => section.id === sectionId)
         if (!section) {
-            console.log('no section to add item to')
+            console.error('no section to add item to')
             return '';
         }
         section.content[config.index] = {
             type: config.type,
+            style: 'Default',
             content: config.content,
             action: config.action,
             actionType: config.actionType,
@@ -204,6 +205,13 @@ class MongoApi {
         const input = {
             section: (section as InSection)
         }
+        //@todo remove once update happens
+        section.content = section.content.map(item => {
+            if(!item.style){
+                item.style = 'Default'
+            }
+            return item
+        })
         return await resolve(
             ({mutation}) => {
                 return (mutation as MutationMongo).mongo.addUpdateSectionItem(input)
@@ -220,14 +228,15 @@ class MongoApi {
                     ({query}) => {
                         const list: ISection[] = (query as unknown as IMongo).mongo.getSections({ids: sectionIds}).map(item => {
                             let content: IItem[];
-                            content = item.content.map((value: IItem) => {
+                            content = item.content.map((item: IItem) => {
                                 return {
-                                    name: value.name,
-                                    type: value.type,
-                                    content: value.content,
-                                    action: value.action,
-                                    actionType: value.actionType,
-                                    actionContent: value.actionContent
+                                    name: item.name,
+                                    type: item.type,
+                                    style: item.style,
+                                    content: item.content,
+                                    action: item.action,
+                                    actionType: item.actionType,
+                                    actionContent: item.actionContent
                                 }
                             })
                             return {

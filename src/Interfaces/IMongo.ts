@@ -12,6 +12,7 @@ export interface IMongo {
 export interface InItem {
     name?: string
     type: string
+    style: string
     content: string
 }
 

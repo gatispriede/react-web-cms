@@ -19,6 +19,10 @@ export interface IGallery {
     disablePreview: boolean;
 }
 
+export enum EGalleryStyle {
+    Default = "default",
+}
+
 export class GalleryContent extends ContentManager {
     public _parsedContent: IGallery = {
         items: [],

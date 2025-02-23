@@ -91,10 +91,10 @@ class UpploadManager {
                                     this.setError(error)
                                 });
                         } catch (e) {
-                            console.log('File upload error:', e)
+                            console.error('File upload error:', e)
                         }
                     } catch (e) {
-                        console.log('File upload error:', e)
+                        console.error('File upload error:', e)
                     }
                 })
             }

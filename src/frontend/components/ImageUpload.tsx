@@ -26,7 +26,7 @@ const ImageUpload = ({setFile}: { setFile: (file: File) => void }) => {
         setDialogOpen(false)
     }
     const setError = (err: string) => {
-        console.log(err)
+        console.error(err)
         setErrorState(err)
     }
 
@@ -114,7 +114,7 @@ const ImageUpload = ({setFile}: { setFile: (file: File) => void }) => {
                                                 <div key={index}>
                                                     <img src={image.location} alt=""/>
                                                     <Button onClick={() => {
-                                                        console.log(image)
+                                                        console.warn(image)
                                                         setFile(image as unknown as File)
                                                         setDialogOpen(false)
                                                     }}>

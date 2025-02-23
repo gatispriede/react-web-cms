@@ -6,6 +6,8 @@ import ContentType from "./common/ContentType";
 import AddNewSectionItem from "./common/Dialogs/AddNewSectionItem";
 import {IConfigSectionAddRemove} from "../../Interfaces/IConfigSectionAddRemove";
 import ActionDialog from "./common/Dialogs/ActionDialog";
+import {EStyle} from "../../enums/EStyle";
+import {IItem} from "../../Interfaces/IItem";
 
 interface IPropsSectionContent {
     section: ISection;
@@ -58,7 +60,7 @@ class SectionContent extends React.Component<IPropsSectionContent> {
         return (
             <div className={'section'}>
                 {
-                    this.state.section.content.map((item, id: number) => {
+                    this.state.section.content.map((item: IItem, id: number) => {
                         const sectionWidth = [
                             '100%',
                             '100%',
@@ -90,6 +92,7 @@ class SectionContent extends React.Component<IPropsSectionContent> {
                                     deleteAction={async () => {
                                         await this.addRemoveSectionItem(sectionId, {
                                             index: id,
+                                            style: EStyle.Default,
                                             type: EItemType.Empty,
                                             content: "",
                                         })

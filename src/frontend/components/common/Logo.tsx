@@ -31,7 +31,7 @@ class Logo extends Component {
             const content = JSON.parse(logo.content)
             this.setState({logo: content})
         }catch (e){
-            console.log(e)
+            console.error(e)
         }
     }
     async saveLogo(file: any){

@@ -12,7 +12,7 @@ const RichTextEditor = ({value, setValue}: {value: RawDraftContentState, setValu
             const editorState = EditorState.createWithContent(contentState);
             setContent(editorState)
         }catch(e){
-            console.log(e)
+            console.error(e)
         }
     }, []);
     const onContentChanged = (editorState: EditorState) => {

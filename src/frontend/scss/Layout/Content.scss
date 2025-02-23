@@ -1,6 +1,10 @@
 .content-wrapper{
   &.action-enabled{
     cursor: pointer;
+    opacity: 0.8;
+    &:hover{
+      opacity: 1;
+    }
   }
   .plain-image{
     img{

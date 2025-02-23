@@ -123,7 +123,7 @@ class App extends React.Component<{page :string}> {
                         page: pages[id].page,
                         seo: pages[id].seo,
                         label: (
-                            <Link href={pages[id].page.replace(' ','-').toLowerCase()}>{pages[id].page}</Link>
+                            <Link href={pages[id].page.replace(/ /g,'-').toLowerCase()}>{pages[id].page}</Link>
                         ),
                         children:
                             <DynamicTabsContent
@@ -145,10 +145,10 @@ class App extends React.Component<{page :string}> {
         this.setState(newState)
     }
     findIdForActiveTab(){
-        const firstTab = this.state.tabProps[0] ? this.state.tabProps[0].page.replace(' ','-').toLowerCase() : ''
+        const firstTab = this.state.tabProps[0] ? this.state.tabProps[0].page.replace(/ /g,'-').toLowerCase() : ''
         const propsPage = this.props.page !== '/' ? this.props.page : firstTab
         return this.state.tabProps.findIndex((tab) => {
-            const tabUrl = encodeURIComponent(tab.page.replace(' ','-')).toLowerCase()
+            const tabUrl = encodeURIComponent(tab.page.replace(/ /g,'-')).toLowerCase()
             const propsUrl = encodeURIComponent(propsPage).toLowerCase()
             return tabUrl === propsUrl
         })
@@ -166,7 +166,7 @@ class App extends React.Component<{page :string}> {
                         <meta property="og:description" content={seo.description} key="description" />
                     }
                     {seo && seo.keywords &&
-                        <meta property="og:keywords" content={seo.keywords} key="keywords" />
+                        <meta property="og:keywords" content={seo.keywords.join()} key="keywords" />
                     }
                     {seo && seo.viewport &&
                         <meta property="og:viewport" content={seo.viewport} key="viewport" />

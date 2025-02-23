@@ -8,6 +8,12 @@ import {RawDraftContentState} from "draft-js";
 export interface IPlainTextContent {
     value: string;
 }
+
+export enum EPlainTextStyle {
+    Default = "default",
+    CenteredBoxed = "centeredBoxed"
+}
+
 export class PlainTextContent extends ContentManager {
     public _parsedContent: IPlainTextContent = {value: ''}
 

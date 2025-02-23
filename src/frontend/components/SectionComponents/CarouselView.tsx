@@ -17,6 +17,10 @@ export interface ICarousel {
     disablePreview: boolean;
 }
 
+export enum ECarouselStyle {
+    Default = "default",
+}
+
 export class CarouselContent extends ContentManager {
     public _parsedContent: ICarousel = {
         items: [],

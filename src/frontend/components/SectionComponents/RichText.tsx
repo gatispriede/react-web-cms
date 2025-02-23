@@ -9,6 +9,11 @@ export interface IRichText {
     value: RawDraftContentState;
 }
 
+export enum ERichTextStyle {
+    Default = "default",
+    CenteredBoxed = "centeredBoxed"
+}
+
 export class RichTextContent extends ContentManager {
     public _parsedContent: IRichText = {value: {
             blocks: [],
@@ -39,7 +44,7 @@ const RichText = ({item}:{item: IItem}) => {
         }
     }, []);
     return (
-        <div className={'rich-text'}>
+        <div className={`rich-text ${item.style}`}>
             <div ref={contentRef} />
         </div>
     )

@@ -37,9 +37,11 @@ const queryFetcher: QueryFetcher = async function (
     }),
     mode: "cors",
     ...fetchOptions,
+  }).catch(err => {
+    console.error(err)
   });
 
-  return await defaultResponseHandler(response);
+  return await defaultResponseHandler(<Response>response);
 };
 
 const cache = new Cache(

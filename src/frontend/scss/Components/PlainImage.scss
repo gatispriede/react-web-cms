@@ -1,24 +1,26 @@
-.plain-image{
+.plain-image {
   margin: 20px;
   //-webkit-box-shadow: 5px 5px 5px 0px rgba(0,0,0,0.2);
   //-moz-box-shadow: 5px 5px 5px 0px rgba(0,0,0,0.2);
   //box-shadow: 5px 5px 5px 0px rgba(0,0,0,0.2);
-  .ant-image{
+  .ant-image {
     width: 100%;
   }
 }
-.section-item-container{
-  &.IMAGE{
-    .edit-wrapper{
+
+.section-item-container {
+  &.IMAGE {
+    .edit-wrapper {
       min-height: 100px;
     }
-    .delete-container{
+
+    .delete-container {
 
     }
   }
 }
 
-.background-image{
+.background-image {
   z-index: -1;
   display: flex;
   overflow: visible;
@@ -26,4 +28,7 @@
   position: absolute;
   background-repeat: no-repeat;
   background-size: 100% auto;
+  &.fixed{
+    position: fixed;
+  }
 }

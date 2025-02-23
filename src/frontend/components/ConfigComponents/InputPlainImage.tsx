@@ -27,6 +27,11 @@ const InputPlainImage = ({content, setContent}: IInputContent) => {
                     plainImage.setUseAsBackground(checked)
                     setContent(plainImage.stringData)
                 }}/>
+                <label>Make image fixed position</label>
+                <Switch value={plainImage.data.imageFixed} onChange={(checked) => {
+                    plainImage.setImageFixed(checked)
+                    setContent(plainImage.stringData)
+                }}/>
                 <label>Use gradiant</label>
                 <Switch value={plainImage.data.useGradiant} onChange={(checked) => {
                     plainImage.setUseGradiant(checked)
