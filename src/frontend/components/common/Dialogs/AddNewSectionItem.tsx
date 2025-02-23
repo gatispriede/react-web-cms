@@ -111,7 +111,7 @@ class AddNewSectionItem extends React.Component {
             console.log(item)
             this.state.selected = item.type
             this.state.content = item.content
-            this.state.style = item.style
+            this.state.style = item.style ? item.style : 'default'
             if (item.action) this.state.action = item.action
             if (item.actionType) this.state.actionType = item.actionType
             if (item.actionStyle) this.state.actionStyle = item.actionStyle
