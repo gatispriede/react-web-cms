@@ -195,7 +195,6 @@ class MongoDBConnection {
     }
 
     async getImages({tags}: { tags: string }): Promise<any> {
-        console.log(tags)
         let images: WithId<Document>[] = []
         try {
             images = await this.imagesDB.find({

@@ -182,7 +182,7 @@ class MongoApi {
                 }
             }
         } catch (err) {
-            console.log(err)
+            console.error(err)
         }
         return []
     }
@@ -195,7 +195,7 @@ class MongoApi {
         }
         section.content[config.index] = {
             type: config.type,
-            style: 'Default',
+            style: config.style ? config.style : 'default',
             content: config.content,
             action: config.action,
             actionType: config.actionType,
@@ -208,7 +208,7 @@ class MongoApi {
         if(section.content)
         section.content = section.content.map(item => {
             if(!item.style){
-                item.style = 'Default'
+                item.style = 'default'
             }
             return item
         })
@@ -220,7 +220,6 @@ class MongoApi {
     }
 
     async loadSections(pageName: string, pages: IPage[]): Promise<ISection[]> {
-        console.log(pageName,pages)
         const page = pages.find(p => p.page === pageName)
         if (page) {
             const sectionIds = page.sections

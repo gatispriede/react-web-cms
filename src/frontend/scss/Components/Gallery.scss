@@ -71,20 +71,29 @@
 
     }
 
-    .BorderedAlignedByThree{
+    &.BorderedAlignedByThree{
       .gallery-wrapper-mages{
         justify-content: space-around;
+        display: flex;
+        flex-wrap: wrap;
       }
       .container{
-        border: 1px solid rgba(21, 19, 19, 0.17);
+        width: 30%;
+
         border-radius: 4px;
-        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+        .image{
+          border-bottom: 1px solid rgba(21, 19, 19, 0.17);
+          border-top: 1px solid rgba(21, 19, 19, 0.17);
+          box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+        }
         &.text-bottom{
+          margin: 0 8px 16px 8px;
           flex-direction: column;
           align-items: center;
+          background: white;
+
           p{
-            margin: 0 8px;
-            font-size: 12px;
+            font-size: 14px;
             text-align: center;
           }
         }

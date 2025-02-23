@@ -1,35 +1,37 @@
 .gallery-wrapper{
-  max-height: 500px;
-  overflow: auto;
-  .config-item{
-    width: 100%;
-    display: flex;
-    label{
-      font-weight: bold;
-      width: 20%;
-    }
-    input{
-      width: 150px;
-    }
-  }
-  .edit-wrapper{
-    width: 100%;
-    position: relative;
-    .container{
+  &.admin{
+    max-height: 500px;
+    overflow: auto;
+    .config-item{
+      width: 100%;
       display: flex;
-      flex-direction: column;
-      flex-wrap: wrap;
-      justify-content: left;
-      align-items: flex-start;
-      padding: 16px;
+      label{
+        font-weight: bold;
+        width: 20%;
+      }
+      input{
+        width: 150px;
+      }
     }
-    .delete-container{
-      position: absolute;
-      right: 4px;
-      top: 20px;
+    .edit-wrapper{
+      width: 100%;
+      position: relative;
+      .container{
+        display: flex;
+        flex-direction: column;
+        flex-wrap: wrap;
+        justify-content: left;
+        align-items: flex-start;
+        padding: 16px;
+      }
+      .delete-container{
+        position: absolute;
+        right: 4px;
+        top: 20px;
+      }
     }
-  }
-  .add-image-container{
-    margin: 32px;
+    .add-image-container{
+      margin: 32px;
+    }
   }
 }
