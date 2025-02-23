@@ -104,7 +104,18 @@ class UpploadManager {
         uploader.use([new Local()]);
 
         uploader.use([
-            new Crop(),
+            new Crop({
+                aspectRatioOptions: {
+                    free: NaN,
+                    square: 1,
+                    "16:9": 16 / 9,
+                    "9:16": 9 / 16,
+                    "3:2": 3 / 2,
+                    "2:3": 2 / 3,
+                    "4:3": 4 / 3,
+                    "3:4": 3 / 4,
+                }
+            }),
             new Blur(),
             new Brightness(),
             new Contrast(),

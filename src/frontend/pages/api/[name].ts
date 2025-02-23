@@ -17,8 +17,9 @@ const handleImages = (next: {
         const tmp = fileName.split('.')
         const fileType = tmp[tmp.length]
         responseHeader.set('Content-Type', 'api/' + fileType);
-        const stream = fs.readFileSync(MEDIA_ROOT_PATH + 'images/' + fileName);
+
         try {
+            const stream = fs.readFileSync(MEDIA_ROOT_PATH + 'images/' + fileName);
             resolve(res
                 .status(200)
                 .setHeader("Content-Type", responseHeader)
@@ -28,18 +29,20 @@ const handleImages = (next: {
             return resolve(res.status(500).send({message: "Error fetching the document", error}));
         }
         return resolve(res.status(200).send(JSON.stringify({'error': "Image already exists, please select it from existing Images"})));
+    }).catch(() => {
+        return res.status(404).send({message: "Image not found"});
     })
 }
 
 function handler(req: any, res: any) {
     try {
         if (req.method === "GET") {
-            res.status(200).send(req.form);
+            return res.status(200).send(req.form);
         } else {
             throw String("Method not allowed");
         }
     } catch (error) {
-        res.status(400).json({message: JSON.stringify(error, null, 2)});
+        return res.status(400).json({message: JSON.stringify(error, null, 2)});
     }
 }
 
