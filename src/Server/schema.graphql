@@ -11,6 +11,7 @@ input InItem {
     style: String!
     content: String!
     action: String
+    actionStyle: String
     actionType: String
     actionContent: String
 }
@@ -78,6 +79,7 @@ type IItem {
     style: String
     content: String!
     action: String
+    actionStyle: String
     actionType: String
     actionContent: String
 }

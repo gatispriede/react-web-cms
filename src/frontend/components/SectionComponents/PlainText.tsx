@@ -11,6 +11,7 @@ export interface IPlainTextContent {
 
 export enum EPlainTextStyle {
     Default = "default",
+    Centered = "centered",
     CenteredBoxed = "centeredBoxed"
 }
 
@@ -35,8 +36,8 @@ export class PlainTextContent extends ContentManager {
 const PlainText = ({item}:{item: IItem}) => {
     const plainTextContent = new PlainTextContent(EItemType.Text, item.content);
     return (
-        <div className={'plain-text'}>
-            {plainTextContent.data.value}
+        <div className={`plain-text ${item.style}`}>
+            <p>{plainTextContent.data.value}</p>
         </div>
     )
 }

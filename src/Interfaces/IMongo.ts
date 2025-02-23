@@ -1,5 +1,6 @@
 import {INavigation} from "./INavigation";
 import {ISection} from "./ISection";
+import EItemType from "../enums/EItemType";
 
 export interface IMongo {
     mongo: {
@@ -10,10 +11,14 @@ export interface IMongo {
 }
 
 export interface InItem {
-    name?: string
-    type: string
-    style: string
-    content: string
+    name?: string;
+    type: EItemType;
+    style: string;
+    content: string;
+    action?: string;
+    actionStyle?: string;
+    actionType?: EItemType
+    actionContent?: string
 }
 
 export interface InSection {

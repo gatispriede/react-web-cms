@@ -28,6 +28,13 @@ class AddNewSectionItem extends React.Component {
         action: 'none',
         content: '{}',
         actionType: EItemType.Text,
+        actionStyle: 'default',
+        actionStyleOptions: [
+            {
+                label: "Default",
+                value: EStyle.Default,
+            }
+        ],
         actionContent: '{}',
         style: 'Default',
         styleOptions: [
@@ -101,11 +108,13 @@ class AddNewSectionItem extends React.Component {
         this.index = props.index
         if (props.loadItem) {
             const item: IItem = this.section.content[props.index]
+            console.log(item)
             this.state.selected = item.type
             this.state.content = item.content
             this.state.style = item.style
             if (item.action) this.state.action = item.action
             if (item.actionType) this.state.actionType = item.actionType
+            if (item.actionStyle) this.state.actionStyle = item.actionStyle
             if (item.actionContent) this.state.actionContent = item.actionContent
         }
     }
@@ -162,7 +171,31 @@ class AddNewSectionItem extends React.Component {
             <label>Please select action type: </label>
             <Select variant={'filled'} value={this.state.action} options={this.state.actionSelectOptions}
                     onChange={(value) => {
-                        this.setState({action: value})
+                        let styleEnum: any;
+
+                        switch (this.state.actionType as unknown as EItemType) {
+                            case EItemType.Text:
+                                styleEnum = EPlainTextStyle;
+                                break;
+                            case EItemType.RichText:
+                                styleEnum = ERichTextStyle;
+                                break;
+                            case EItemType.Gallery:
+                                styleEnum = EGalleryStyle;
+                                break;
+                            case EItemType.Carousel:
+                                styleEnum = ECarouselStyle;
+                                break;
+                            case EItemType.Image:
+                                styleEnum = EImageStyle;
+                                break;
+                            default:
+                                styleEnum = EStyle
+                        }
+                        this.setState({action: value, actionStyleOptions:  Object.keys(styleEnum).map(key => ({
+                                label: key,
+                                value: styleEnum[key],
+                            }))})
                     }}/>
             {this.state.action !== 'none' &&
                 <div>
@@ -170,6 +203,7 @@ class AddNewSectionItem extends React.Component {
                     <label>Please select content type: </label>
                     <Select variant={'filled'} value={this.state.actionType} options={this.state.selectOptions}
                             onSelect={(e) => {
+
                                 this.setState({actionType: e})
                             }}/>
                     <hr/>
@@ -192,6 +226,17 @@ class AddNewSectionItem extends React.Component {
                     onSelect={(e) => {
                         this.setState({style: e})
                     }}/>
+            {
+                this.state.action &&
+                <div>
+                    <hr/>
+                    <label>Please select style for action component: </label>
+                    <Select variant={'filled'} value={this.state.actionStyle} options={this.state.actionStyleOptions}
+                            onSelect={(e) => {
+                                this.setState({actionStyle: e})
+                            }}/>
+                </div>
+            }
         </div>
     }
 
@@ -203,6 +248,7 @@ class AddNewSectionItem extends React.Component {
                 type: this.state.selected,
                 content: this.state.content,
                 action: this.state.action,
+                actionStyle: this.state.actionStyle,
                 actionType: this.state.actionType,
                 actionContent: this.state.actionContent,
             }
@@ -224,6 +270,7 @@ class AddNewSectionItem extends React.Component {
             type: this.state.selected,
             content: this.state.content,
             action: this.state.action,
+            actionStyle: this.state.actionStyle,
             actionType: this.state.actionType,
             actionContent: this.state.actionContent,
         }
@@ -237,6 +284,31 @@ class AddNewSectionItem extends React.Component {
                             const activeOption = this.activeOption()
                             if(typeof activeOption !== 'undefined')
                             this.setActiveOptionState(activeOption.value, this.state.style)
+                            let styleEnum: any;
+
+                            switch (this.state.actionType as unknown as EItemType) {
+                                case EItemType.Text:
+                                    styleEnum = EPlainTextStyle;
+                                    break;
+                                case EItemType.RichText:
+                                    styleEnum = ERichTextStyle;
+                                    break;
+                                case EItemType.Gallery:
+                                    styleEnum = EGalleryStyle;
+                                    break;
+                                case EItemType.Carousel:
+                                    styleEnum = ECarouselStyle;
+                                    break;
+                                case EItemType.Image:
+                                    styleEnum = EImageStyle;
+                                    break;
+                                default:
+                                    styleEnum = EStyle
+                            }
+                            this.setState({actionStyleOptions:  Object.keys(styleEnum).map(key => ({
+                                    label: key,
+                                    value: styleEnum[key],
+                                }))})
                         }}>
 
                             {!this.props.loadItem ? <div><PlusCircleOutlined/> Add content</div> : <EditOutlined/>}

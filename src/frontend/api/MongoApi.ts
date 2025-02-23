@@ -198,6 +198,7 @@ class MongoApi {
             style: config.style ? config.style : 'default',
             content: config.content,
             action: config.action,
+            actionStyle: config.actionStyle,
             actionType: config.actionType,
             actionContent: config.actionContent
         }
@@ -214,7 +215,7 @@ class MongoApi {
         })
         return await resolve(
             ({mutation}) => {
-                return (mutation as MutationMongo).mongo.addUpdateSectionItem(input)
+                return (mutation).mongo.addUpdateSectionItem(input)
             },
         )
     }
@@ -235,6 +236,7 @@ class MongoApi {
                                     style: item.style,
                                     content: item.content,
                                     action: item.action,
+                                    actionStyle: item.actionStyle,
                                     actionType: item.actionType,
                                     actionContent: item.actionContent
                                 }

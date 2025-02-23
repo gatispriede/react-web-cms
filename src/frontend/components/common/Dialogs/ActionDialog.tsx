@@ -7,7 +7,8 @@ import {EItemType} from "../../../../enums/EItemType";
 const ActionDialog = ({item, open, close}: {item: IItem, open:boolean, close: () => void}) => {
     const newItem = {
         type: item.actionType ? item.actionType : EItemType.Text,
-        content: item.actionContent ? item.actionContent : '{}'
+        content: item.actionContent ? item.actionContent : '{}',
+        style: item.actionStyle ? item.actionStyle : 'default'
     }
     return (
         <Modal

@@ -6,6 +6,7 @@ export interface IConfigSectionAddRemove {
     style: string,
     content: string,
     action?: string,
+    actionStyle?: string,
     actionType?: EItemType,
     actionContent?: string,
 }

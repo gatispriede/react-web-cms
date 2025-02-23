@@ -1,0 +1,16 @@
+.plain-text {
+  &.default {
+
+  }
+
+  &.centered {
+    text-align: center;
+  }
+
+  &.centeredBoxed {
+    text-align: center;
+    -webkit-box-shadow: 5px 5px 5px 0px rgba(0, 0, 0, 0.2);
+    -moz-box-shadow: 5px 5px 5px 0px rgba(0, 0, 0, 0.2);
+    box-shadow: 5px 5px 5px 0px rgba(0, 0, 0, 0.2);
+  }
+}

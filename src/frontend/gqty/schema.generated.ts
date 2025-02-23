@@ -46,6 +46,7 @@ export interface InImage {
 export interface InItem {
   action?: InputMaybe<Scalars["String"]["input"]>;
   actionContent?: InputMaybe<Scalars["String"]["input"]>;
+  actionStyle?: InputMaybe<Scalars["String"]["input"]>;
   actionType?: InputMaybe<Scalars["String"]["input"]>;
   content: Scalars["String"]["input"];
   name?: InputMaybe<Scalars["String"]["input"]>;
@@ -107,6 +108,7 @@ export const generatedSchema = {
     __typename: { __type: "String!" },
     action: { __type: "String" },
     actionContent: { __type: "String" },
+    actionStyle: { __type: "String" },
     actionType: { __type: "String" },
     content: { __type: "String!" },
     name: { __type: "String" },
@@ -175,6 +177,7 @@ export const generatedSchema = {
   InItem: {
     action: { __type: "String" },
     actionContent: { __type: "String" },
+    actionStyle: { __type: "String" },
     actionType: { __type: "String" },
     content: { __type: "String!" },
     name: { __type: "String" },
@@ -280,6 +283,7 @@ export interface IItem {
   __typename?: "IItem";
   action?: Maybe<ScalarsEnums["String"]>;
   actionContent?: Maybe<ScalarsEnums["String"]>;
+  actionStyle?: Maybe<ScalarsEnums["String"]>;
   actionType?: Maybe<ScalarsEnums["String"]>;
   content: ScalarsEnums["String"];
   name?: Maybe<ScalarsEnums["String"]>;
