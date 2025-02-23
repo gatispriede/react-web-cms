@@ -11,7 +11,7 @@ const InputGallery = ({content, setContent}: IInputContent) => {
     const galleryContent = new GalleryContent(EItemType.Image, content);
     const data = galleryContent.data
     return (
-        <div className={'gallery-wrapper'}>
+        <div className={'gallery-wrapper admin'}>
             <div className={'images-container'}>
                 {
                     data.items && data.items.map((item: IGalleryItem, index) => {

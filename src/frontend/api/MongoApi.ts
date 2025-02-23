@@ -7,7 +7,6 @@ import {INavigation} from "../../Interfaces/INavigation";
 import {IItem} from "../../Interfaces/IItem";
 import {ILogo} from "../../Interfaces/ILogo";
 import {IUser} from "../../Interfaces/IUser";
-import {EStyle} from "../../enums/EStyle";
 
 class MongoApi {
     async getUser({email}: {email: string}): Promise<Partial<IUser> | any> {
@@ -206,6 +205,7 @@ class MongoApi {
             section: (section as InSection)
         }
         //@todo remove once update happens
+        if(section.content)
         section.content = section.content.map(item => {
             if(!item.style){
                 item.style = 'Default'
@@ -220,6 +220,7 @@ class MongoApi {
     }
 
     async loadSections(pageName: string, pages: IPage[]): Promise<ISection[]> {
+        console.log(pageName,pages)
         const page = pages.find(p => p.page === pageName)
         if (page) {
             const sectionIds = page.sections

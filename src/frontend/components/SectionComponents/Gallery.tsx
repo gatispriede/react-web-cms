@@ -21,6 +21,7 @@ export interface IGallery {
 
 export enum EGalleryStyle {
     Default = "default",
+    BorderedAlignedByThree = "BorderedAlignedByThree"
 }
 
 export class GalleryContent extends ContentManager {
@@ -77,7 +78,7 @@ const Gallery = ({item}: { item: IItem }) => {
     gallery.setDisablePreview(item.action !== "onClick");
     const data = gallery.data
     return (
-        <div className={'gallery-wrapper'}>
+        <div className={`gallery-wrapper gallery-wrapper-app ${item.style}`}>
             <div className={'gallery-wrapper-mages'}>
                 <Image.PreviewGroup>
                     {

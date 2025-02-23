@@ -230,12 +230,13 @@ class MongoDBConnection {
             return 'Error while fetching navigation data'
         }
     }
-    public async createNavigation({navigation}: { navigation: INavigation}){
+
+    public async createNavigation({navigation}: { navigation: INavigation }) {
         try {
             const existingNavigation = await this.navigationsDB.findOne({
                 page: navigation.page
             })
-            if(!existingNavigation){
+            if (!existingNavigation) {
                 const result = await this.navigationsDB.insertOne(navigation)
                 return JSON.stringify(result)
             }
@@ -246,6 +247,7 @@ class MongoDBConnection {
             return 'Error while fetching navigation data'
         }
     }
+
     public async replaceUpdateNavigation({oldPageName, navigation}: {
         oldPageName: string,
         navigation: INavigation
@@ -292,10 +294,19 @@ class MongoDBConnection {
     public async getSections({ids}: { ids: string[] }): Promise<any> {
         const sections: ISection[] = []
         try {
-            ids.map(id => {
-                const section = this.sectionsDB.findOne({id: id}) as unknown as ISection
-                sections.push(section)
-            })
+            for (let id in ids) {
+                const section = await this.sectionsDB.findOne({id: ids[id]}) as unknown as ISection
+                //@todo remove for update
+                if (section && section.content && section.content.map){
+                    section.content = section.content.map(item => {
+                        if (!item.style) {
+                            item.style = 'default'
+                        }
+                        return item
+                    })
+                }
+                if (section) sections.push(section)
+            }
         } catch (err) {
             console.log(err)
             await this.setupClient()

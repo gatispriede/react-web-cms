@@ -29,6 +29,6 @@
   background-repeat: no-repeat;
   background-size: 100% auto;
   &.fixed{
-    position: fixed;
+    background-attachment: fixed;
   }
 }
