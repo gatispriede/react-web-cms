@@ -29,7 +29,7 @@ interface IHomeState {
 class AdminApp extends React.Component<{ session: Session }> {
     sections: any[] = []
     admin: boolean = true
-    private MongoApi = new MongoApi()
+    private MongoApi
 
     state: IHomeState = {
         loading: false,
@@ -48,6 +48,7 @@ class AdminApp extends React.Component<{ session: Session }> {
 
     constructor(props: { session: any }) {
         super(props);
+        this.MongoApi = new MongoApi()
         this.state.loading = true
         void this.initialize(true)
     }
@@ -183,6 +184,7 @@ class AdminApp extends React.Component<{ session: Session }> {
                         }}
                     />
                     <Tabs
+                        key={'tabs'}
                         type="editable-card"
                         tabBarStyle={{
                             display: "flex",
@@ -195,7 +197,8 @@ class AdminApp extends React.Component<{ session: Session }> {
                         }}
                         activeKey={this.state.activeTab}
                         defaultActiveKey={"0"}
-                        items={this.state.tabProps}/>
+                        items={this.state.tabProps}
+                    />
                 </Spin>
             </ConfigProvider>
         );

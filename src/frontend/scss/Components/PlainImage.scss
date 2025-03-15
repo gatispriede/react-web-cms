@@ -4,6 +4,12 @@
   .ant-image {
     width: 100%;
   }
+  &.centeredBoxed{
+    margin: auto;
+    .content{
+      text-align: center;
+    }
+  }
 }
 
 .section-item-container {

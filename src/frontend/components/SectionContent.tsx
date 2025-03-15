@@ -61,20 +61,20 @@ class SectionContent extends React.Component<IPropsSectionContent> {
             <div className={'section'}>
                 {
                     this.state.section.content.map((item: IItem, id: number) => {
-                        const sectionWidth = [
-                            '100%',
-                            '100%',
-                            '50%',
-                            '33%',
-                            '25%',
+                        const layoutClass = [
+                            'width-100',
+                            'width-100',
+                            'width-50',
+                            'width-33',
+                            'width-25',
                         ]
                         const style = {
-                            width: sectionWidth[this.state.section.type],
+
                             height: '100%'
                         }
                         const sectionId = this.state.section.id ? this.state.section.id : ''
                         return (
-                            <div key={id} className={`section-item-container ${item.type}`} style={style}>
+                            <div key={id} className={`section-item-container ${item.type} ${layoutClass[this.state.section.type]}`} style={style}>
                                 <EditWrapper
                                     admin={this.admin}
                                     key={id}

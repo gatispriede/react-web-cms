@@ -8,6 +8,7 @@ interface IDraggableWrapper {
     onPosChange: (oldIndex: number, newIndex: number) => void,
 }
 
+
 const DraggableWrapper = ({admin, children, id, onPosChange}: IDraggableWrapper) => {
     return (
         <div key={id}>

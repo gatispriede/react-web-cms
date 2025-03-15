@@ -12,3 +12,49 @@
     }
   }
 }
+.section-item-container{
+  &.width-100{
+    width: 100%;
+  }
+  &.width-50{
+    width: 50%;
+  }
+  &.width-33{
+    width: 33.33%;
+  }
+  &.width-25{
+    width: 25%;
+  }
+}
+@media (min-width: 769px) and (max-width: 1024px){
+  .section-item-container{
+    &.width-100{
+      width: 100%;
+    }
+    &.width-50{
+      width: 50%;
+    }
+    &.width-33{
+      width: 33.33%;
+    }
+    &.width-25{
+      width: 50%;
+    }
+  }
+}
+@media (max-width: 769px){
+  .section-item-container{
+    &.width-100{
+      width: 100%;
+    }
+    &.width-50{
+      width: 100%;
+    }
+    &.width-33{
+      width: 100%;
+    }
+    &.width-25{
+      width: 100%;
+    }
+  }
+}

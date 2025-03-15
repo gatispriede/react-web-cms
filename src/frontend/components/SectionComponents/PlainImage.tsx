@@ -5,7 +5,6 @@ import {Image} from "antd";
 import {IItem} from "../../../Interfaces/IItem";
 import draftToHtml from 'draftjs-to-html';
 import {RawDraftContentState} from "draft-js";
-import {b} from "@vercel/blob/dist/create-folder-CqdraABG";
 
 export interface IPlainImage {
     src: string;
@@ -107,11 +106,13 @@ const PlainImage = ({item}: { item: IItem }) => {
                         minHeight: minHeight
                     }} />
                     :
-                    <div className={'plain-image'}>
+                    <div className={`plain-image ${item.style}`}>
                         <Image preview={preview} src={plainImage.data.src} style={{
                             marginTop: `${plainImage.data.offsetX}px`
                         }}/>
-                        <div ref={contentRef}></div>
+                        <div className={'content'}>
+                            <div ref={contentRef}></div>
+                        </div>
                     </div>
             }
         </>

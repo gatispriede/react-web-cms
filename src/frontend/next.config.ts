@@ -47,6 +47,8 @@ const nextConfig: import('next').NextConfig = {
         API_URL: 'http://localhost',
         NEXT_PUBLIC_BASE_URL: 'http://localhost:80',
     },
+    sassOptions: {
+    },
 }
 
 module.exports = nextConfig
