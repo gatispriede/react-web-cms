@@ -32,7 +32,7 @@
     }
     &.default,&.Default{
 
-      .gallery-wrapper-mages{
+      .gallery-wrapper-images{
         flex-direction: row;
         display: flex;
         flex-wrap: wrap;
@@ -83,7 +83,7 @@
     }
 
     &.BorderedAlignedByThree{
-      .gallery-wrapper-mages{
+      .gallery-wrapper-images{
         justify-content: space-around;
         display: flex;
         flex-wrap: wrap;
