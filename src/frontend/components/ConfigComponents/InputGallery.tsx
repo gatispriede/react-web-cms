@@ -23,13 +23,12 @@ const InputGallery = ({content, setContent}: IInputContent) => {
                             setContent(galleryContent.stringData)
                         }
                         return (
-                            <EditWrapper admin={true} del={true} deleteAction={async () => {
+                            <EditWrapper wrapperClass={'config-item-container'} admin={true} del={true} deleteAction={async () => {
                                 galleryContent.removeItem(index)
                                 setContent(galleryContent.stringData)
                             }}>
                                 <div className={`admin container text-${item.textPosition}`}>
                                     <div className={'config-item'}>
-                                        <label>Image URL</label>
                                         <ImageUpload setFile={setFile}/>
                                         <Input
                                             placeholder={'Image URL'}

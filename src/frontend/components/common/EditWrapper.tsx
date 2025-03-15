@@ -10,11 +10,13 @@ interface PropsEditWrapper {
     edit?: boolean
     del?: boolean
     admin: boolean
+    wrapperClass?: string
 }
 
 const EditWrapper = (
     {
         admin,
+        wrapperClass,
         children,
         editAction,
         editContent,
@@ -23,7 +25,7 @@ const EditWrapper = (
         del = true
     }: PropsEditWrapper) => {
     return (
-        <div>
+        <div className={wrapperClass}>
             {
             admin ?
                 <div className={'edit-wrapper'}>

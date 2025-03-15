@@ -83,7 +83,7 @@ const Gallery = ({item}: { item: IItem }) => {
     const data = gallery.data
     return (
         <div className={`gallery-wrapper gallery-wrapper-app ${item.style}`}>
-            <div className={'gallery-wrapper-mages'}>
+            <div className={'gallery-wrapper-images'}>
                 <Image.PreviewGroup>
                     {
                         data.items.map((item: IGalleryItem) => {

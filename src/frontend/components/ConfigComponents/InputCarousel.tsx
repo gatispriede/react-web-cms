@@ -62,34 +62,34 @@ const InputCarousel = ({content, setContent}: IInputContent) => {
                             setContent(galleryContent.stringData)
                         }
                         return (
-                            <EditWrapper admin={true} del={true} deleteAction={async () => {
-                                galleryContent.removeItem(index)
-                                setContent(galleryContent.stringData)
-                            }}>
+                            <EditWrapper wrapperClass={'config-item-container'} admin={true} del={true}
+                                         deleteAction={async () => {
+                                             galleryContent.removeItem(index)
+                                             setContent(galleryContent.stringData)
+                                         }}>
                                 <div className={`container text-${item.textPosition}`}>
-                                    <label>
-                                        Image URL:
-                                    </label>
-                                    <ImageUpload setFile={setFile}/>
-                                    <Input
-                                        placeholder={'Image URL'}
-                                        value={item.src}
-                                        disabled={true}
-                                    />
-                                    <label>
-                                        Description:
-                                    </label>
-                                    <Input
-                                        placeholder={'Text'}
-                                        value={item.text}
-                                        onChange={({target: {value}}) => {
-                                            galleryContent.setItem(index, {
-                                                ...item,
-                                                text: value
-                                            })
-                                            setContent(galleryContent.stringData)
-                                        }}
-                                    />
+                                    <div className={'config-item'}>
+                                        <ImageUpload setFile={setFile}/>
+                                        <Input
+                                            placeholder={'Image URL'}
+                                            value={item.src}
+                                            disabled={true}
+                                        />
+                                    </div>
+                                    <div className={'config-item'}>
+                                        <label>Description:</label>
+                                        <Input
+                                            placeholder={'Text'}
+                                            value={item.text}
+                                            onChange={({target: {value}}) => {
+                                                galleryContent.setItem(index, {
+                                                    ...item,
+                                                    text: value
+                                                })
+                                                setContent(galleryContent.stringData)
+                                            }}
+                                        />
+                                    </div>
                                     <hr/>
 
                                 </div>
