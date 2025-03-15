@@ -15,8 +15,8 @@ export interface IPlainImage {
     imageFixed: boolean
     useGradiant: boolean
     offsetX: number
-    imgWidth: number
-    imgHeight: number
+    imgWidth: string
+    imgHeight: string
     preview: boolean
 }
 
@@ -32,8 +32,8 @@ interface IImgProperties {
     preview: boolean,
     src: string,
     style: any,
-    width?: number,
-    height?: number,
+    width?: string,
+    height?: string,
 }
 
 export class PlainImageContent extends ContentManager {
@@ -44,8 +44,8 @@ export class PlainImageContent extends ContentManager {
         imageFixed: false,
         useGradiant: false,
         offsetX: 0,
-        imgWidth: 0,
-        imgHeight: 0,
+        imgWidth: '',
+        imgHeight: '',
         preview: false,
         src: "",
         description: {
@@ -80,10 +80,10 @@ export class PlainImageContent extends ContentManager {
     setOffsetX(value: number) {
         this._parsedContent.offsetX = value;
     }
-    setImgWidth(value: number) {
+    setImgWidth(value: string) {
         this._parsedContent.imgWidth = value;
     }
-    setImgHeight(value: number) {
+    setImgHeight(value: string) {
         this._parsedContent.imgHeight = value;
     }
     setImageFixed(value: boolean) {
@@ -123,12 +123,11 @@ const PlainImage = ({item}: { item: IItem }) => {
             marginTop: `${plainImage.data.offsetX}px`
         }
     }
-    if(plainImage.data.imgWidth > 0){
+    if(plainImage.data.imgWidth && plainImage.data.imgWidth.length > 0){
         imgProperties.width = plainImage.data.imgWidth
     }
-    if(plainImage.data.imgHeight > 0){
+    if(plainImage.data.imgHeight && plainImage.data.imgHeight.length > 0){
         imgProperties.height = plainImage.data.imgHeight
-
     }
     return (
         <>

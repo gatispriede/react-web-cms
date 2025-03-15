@@ -11,6 +11,8 @@ export interface IGalleryItem {
     preview: boolean;
     src: string;
     text: string;
+    imgWidth: string;
+    imgHeight: string;
     textPosition: ETextPosition;
 }
 
@@ -55,6 +57,8 @@ export class GalleryContent extends ContentManager {
                 preview: true,
                 src: '',
                 text: '',
+                imgWidth: '',
+                imgHeight: '',
                 textPosition: ETextPosition.Bottom
             })
         }
@@ -83,14 +87,21 @@ const Gallery = ({item}: { item: IItem }) => {
                 <Image.PreviewGroup>
                     {
                         data.items.map((item: IGalleryItem) => {
+                            const imgProperties: any = {
+                                preview:data.disablePreview ? false : item.preview,
+                                src: item.src,
+                                alt: item.alt
+                            }
+                            if(item.imgWidth && item.imgWidth.length > 0){
+                                imgProperties.width = item.imgWidth
+                            }
+                            if(item.imgHeight && item.imgHeight.length > 0){
+                                imgProperties.height = item.imgHeight
+                            }
                             return (
                                 <div className={`container text-${item.textPosition}`}>
                                     <div className={'image'}>
-                                        <Image
-                                            preview={data.disablePreview ? false : item.preview}
-                                            src={item.src}
-                                            alt={item.alt}
-                                        />
+                                        <Image {...imgProperties}/>
                                     </div>
                                     <div className={'text'}>
                                         <p>{item.text}</p>
