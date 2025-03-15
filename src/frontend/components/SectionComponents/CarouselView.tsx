@@ -57,6 +57,8 @@ export class CarouselContent extends ContentManager {
                 preview: true,
                 src: '',
                 text: '',
+                imgHeight: '',
+                imgWidth: '',
                 textPosition: ETextPosition.Bottom
             })
         }
