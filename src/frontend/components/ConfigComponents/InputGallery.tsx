@@ -27,7 +27,7 @@ const InputGallery = ({content, setContent}: IInputContent) => {
                                 galleryContent.removeItem(index)
                                 setContent(galleryContent.stringData)
                             }}>
-                                <div className={`container text-${item.textPosition}`}>
+                                <div className={`admin container text-${item.textPosition}`}>
                                     <div className={'config-item'}>
                                         <label>Image URL</label>
                                         <ImageUpload setFile={setFile}/>

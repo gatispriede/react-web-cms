@@ -12,7 +12,7 @@ const InputCarousel = ({content, setContent}: IInputContent) => {
     const galleryContent = new CarouselContent(EItemType.Image, content);
     const data = galleryContent.data
     return (
-        <div className={'gallery-wrapper'}>
+        <div className={'admin gallery-wrapper'}>
             <div className={'config-item'}>
                 <label>Autoplay</label>
                 <Switch value={galleryContent.data.autoplay} onChange={(checked) => {

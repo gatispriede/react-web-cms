@@ -87,9 +87,12 @@
       }
       .container{
         width: 30%;
-
         border-radius: 4px;
         .image{
+          justify-content: center;
+          display: flex;
+        }
+        .image .ant-image{
           border-bottom: 1px solid rgba(21, 19, 19, 0.17);
           border-top: 1px solid rgba(21, 19, 19, 0.17);
           box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
