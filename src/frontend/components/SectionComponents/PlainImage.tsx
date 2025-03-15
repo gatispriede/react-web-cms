@@ -137,7 +137,8 @@ const PlainImage = ({item}: { item: IItem }) => {
                     <div className={`background-image ${plainImage.data.imageFixed && 'fixed'}`} style={{
                         marginTop: `${plainImage.data.offsetX}px`,
                         backgroundImage: backgroundProperty,
-                        minHeight: minHeight
+                        backgroundSize: plainImage.data.imgWidth,
+                        height: minHeight
                     }} />
                     :
                     <div className={`plain-image ${item.style}`}>
