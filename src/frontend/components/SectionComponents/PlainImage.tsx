@@ -15,12 +15,25 @@ export interface IPlainImage {
     imageFixed: boolean
     useGradiant: boolean
     offsetX: number
+    imgWidth: number
+    imgHeight: number
     preview: boolean
 }
 
 export enum EImageStyle {
     Default = "default",
-    CenteredBoxed = "centeredBoxed"
+    CenteredBoxed = "centeredBoxed",
+    TextAbove = "TextAbove",
+    TextRight = "TextRight",
+    TextLeft = "TextLeft",
+}
+
+interface IImgProperties {
+    preview: boolean,
+    src: string,
+    style: any,
+    width?: number,
+    height?: number,
 }
 
 export class PlainImageContent extends ContentManager {
@@ -31,6 +44,8 @@ export class PlainImageContent extends ContentManager {
         imageFixed: false,
         useGradiant: false,
         offsetX: 0,
+        imgWidth: 0,
+        imgHeight: 0,
         preview: false,
         src: "",
         description: {
@@ -65,6 +80,12 @@ export class PlainImageContent extends ContentManager {
     setOffsetX(value: number) {
         this._parsedContent.offsetX = value;
     }
+    setImgWidth(value: number) {
+        this._parsedContent.imgWidth = value;
+    }
+    setImgHeight(value: number) {
+        this._parsedContent.imgHeight = value;
+    }
     setImageFixed(value: boolean) {
         this._parsedContent.imageFixed = value;
     }
@@ -95,6 +116,20 @@ const PlainImage = ({item}: { item: IItem }) => {
             setMinHeight(windowHeight)
         }
     }, [window, document]);
+    const imgProperties: IImgProperties = {
+        preview: preview,
+        src: plainImage.data.src,
+        style: {
+            marginTop: `${plainImage.data.offsetX}px`
+        }
+    }
+    if(plainImage.data.imgWidth > 0){
+        imgProperties.width = plainImage.data.imgWidth
+    }
+    if(plainImage.data.imgHeight > 0){
+        imgProperties.height = plainImage.data.imgHeight
+
+    }
     return (
         <>
             {
@@ -107,9 +142,7 @@ const PlainImage = ({item}: { item: IItem }) => {
                     }} />
                     :
                     <div className={`plain-image ${item.style}`}>
-                        <Image preview={preview} src={plainImage.data.src} style={{
-                            marginTop: `${plainImage.data.offsetX}px`
-                        }}/>
+                        <Image {...imgProperties}/>
                         <div className={'content'}>
                             <div ref={contentRef}></div>
                         </div>

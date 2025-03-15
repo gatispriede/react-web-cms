@@ -112,3 +112,10 @@
   }
 
 }
+@media (max-width: 720px){
+  .gallery-wrapper-app{
+    .container {
+      flex: 100%;
+    }
+  }
+}

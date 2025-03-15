@@ -4,6 +4,23 @@
   .ant-image {
     width: 100%;
   }
+  &.TextAbove {
+    flex-direction: column-reverse;
+    display: flex;
+    .content{
+      text-align: center;
+    }
+  }
+  &.TextRight {
+    flex-direction: row;
+    display: flex;
+    text-align: center;
+  }
+  &.TextLeft {
+    flex-direction: row-reverse;
+    display: flex;
+    text-align: center;
+  }
   &.centeredBoxed{
     margin: auto;
     .content{

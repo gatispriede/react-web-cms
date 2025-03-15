@@ -43,6 +43,16 @@ const InputPlainImage = ({content, setContent}: IInputContent) => {
                     plainImage.setOffsetX(parseInt(e.target.value))
                     setContent(plainImage.stringData)
                 }}/>
+                <label>Image width</label>
+                <Input defaultValue={0} value={plainImage.data.imgWidth} onChange={(e) => {
+                    plainImage.setImgWidth(parseInt(e.target.value))
+                    setContent(plainImage.stringData)
+                }}/>
+                <label>Image height</label>
+                <Input defaultValue={0} value={plainImage.data.imgHeight} onChange={(e) => {
+                    plainImage.setImgHeight(parseInt(e.target.value))
+                    setContent(plainImage.stringData)
+                }}/>
             </div>
             <label>Image</label>
             <ImageUpload setFile={setFile}/>
