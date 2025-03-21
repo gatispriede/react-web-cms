@@ -12,10 +12,13 @@ const RichTextEditor = dynamic(
 const InputRichText = ({content,setContent}: IInputContent) => {
     const richTextContent = new RichTextContent(EItemType.RichText, content)
     return (
-        <RichTextEditor value={richTextContent.data.value} setValue={(value: RawDraftContentState) => {
-            richTextContent.setValue(value)
-            setContent(richTextContent.stringData)
-        }} />
+        <div className={'rich-text-container-admin'}>
+            <RichTextEditor value={richTextContent.data.value} setValue={(value: RawDraftContentState) => {
+                richTextContent.setValue(value)
+                setContent(richTextContent.stringData)
+            }} />
+        </div>
+
     )
 }
 

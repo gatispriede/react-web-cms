@@ -1,22 +1,44 @@
-.gallery-wrapper{
-  &.admin{
-    max-height: 500px;
-    overflow: auto;
-    .config-item{
+.gallery-wrapper {
+  &.admin {
+    height: 100%;
+    position: relative;
+    .images-container{
+      max-height: 500px;
+      overflow: auto;
+      transition: all 2s ease-in-out 2s;
+    }
+
+    .config-item {
       width: 100%;
       display: flex;
-      label{
-        font-weight: bold;
-        width: 20%;
+      flex-direction: column;
+
+      label,
+      .select-image-container{
+        font-size: 14px;
+        font-weight: 500;
+        width: 100%;
+        padding-bottom: 4px;
+        text-align: left;
+        line-height: 16px;
+        margin-left: 8px;
       }
-      input{
-        width: 150px;
+
+      .content {
+        width: 100%;
+        padding-bottom: 4px;
+        input {
+          min-width: 150px;
+        }
       }
+
     }
-    .edit-wrapper{
+
+    .edit-wrapper {
       width: 100%;
       position: relative;
-      .container{
+
+      .container {
         display: flex;
         flex-direction: column;
         flex-wrap: wrap;
@@ -24,14 +46,16 @@
         align-items: flex-start;
         padding: 16px;
       }
-      .delete-container{
+
+      .delete-container {
         position: absolute;
         right: 4px;
         top: 20px;
       }
     }
-    .add-image-container{
-      margin: 32px;
+
+    .add-image-container {
+      margin: 32px 0;
     }
   }
 }

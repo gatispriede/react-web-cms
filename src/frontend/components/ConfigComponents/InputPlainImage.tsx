@@ -63,10 +63,13 @@ const InputPlainImage = ({content, setContent}: IInputContent) => {
             {!plainImage.data.useAsBackground &&
                 <div>
                     <label>Description:</label>
-                    <RichTextEditor value={plainImage.data.description} setValue={(value: RawDraftContentState) => {
-                        plainImage.setDescription(value)
-                        setContent(plainImage.stringData)
-                    }}/>
+                    <div className={'rich-text-container-admin'}>
+                        <RichTextEditor value={plainImage.data.description} setValue={(value: RawDraftContentState) => {
+                            plainImage.setDescription(value)
+                            setContent(plainImage.stringData)
+                        }}/>
+                    </div>
+
                 </div>
             }
         </div>

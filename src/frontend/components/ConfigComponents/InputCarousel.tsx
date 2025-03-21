@@ -15,40 +15,55 @@ const InputCarousel = ({content, setContent}: IInputContent) => {
         <div className={'admin gallery-wrapper'}>
             <div className={'config-item'}>
                 <label>Autoplay</label>
-                <Switch value={galleryContent.data.autoplay} onChange={(checked) => {
-                    galleryContent.setAutoplay(checked)
-                    setContent(galleryContent.stringData)
-                }}/>
+                <div className={'content'}>
+
+                    <Switch value={galleryContent.data.autoplay} onChange={(checked) => {
+                        galleryContent.setAutoplay(checked)
+                        setContent(galleryContent.stringData)
+                    }}/>
+                </div>
             </div>
             <div className={'config-item'}>
                 <Tooltip title="(In miliseconds - default = 3000)">
                     <label>Autoplay speed</label>
                 </Tooltip>
-                <Input defaultValue={3000} value={galleryContent.data.autoplaySpeed} onChange={(e) => {
-                    galleryContent.setAutoplaySpeed(parseInt(e.target.value))
-                    setContent(galleryContent.stringData)
-                }}/>
+                <div className={'content'}>
+
+                    <Input defaultValue={3000} value={galleryContent.data.autoplaySpeed} onChange={(e) => {
+                        galleryContent.setAutoplaySpeed(parseInt(e.target.value))
+                        setContent(galleryContent.stringData)
+                    }}/>
+                </div>
             </div>
             <div className={'config-item'}>
                 <label>Infinity</label>
-                <Switch value={galleryContent.data.infinity} onChange={(checked) => {
-                    galleryContent.setInfinity(checked)
-                    setContent(galleryContent.stringData)
-                }}/>
+                <div className={'content'}>
+
+                    <Switch value={galleryContent.data.infinity} onChange={(checked) => {
+                        galleryContent.setInfinity(checked)
+                        setContent(galleryContent.stringData)
+                    }}/>
+                </div>
             </div>
             <div className={'config-item'}>
                 <label>Dots</label>
-                <Switch value={galleryContent.data.dots} onChange={(checked) => {
-                    galleryContent.setDots(checked)
-                    setContent(galleryContent.stringData)
-                }}/>
+                <div className={'content'}>
+
+                    <Switch value={galleryContent.data.dots} onChange={(checked) => {
+                        galleryContent.setDots(checked)
+                        setContent(galleryContent.stringData)
+                    }}/>
+                </div>
             </div>
             <div className={'config-item'}>
                 <label>Arrows</label>
-                <Switch value={galleryContent.data.arrows} onChange={(checked) => {
-                    galleryContent.setArrows(checked)
-                    setContent(galleryContent.stringData)
-                }}/>
+                <div className={'content'}>
+
+                    <Switch value={galleryContent.data.arrows} onChange={(checked) => {
+                        galleryContent.setArrows(checked)
+                        setContent(galleryContent.stringData)
+                    }}/>
+                </div>
             </div>
             <hr/>
             <div className={'images-container'}>
@@ -69,26 +84,34 @@ const InputCarousel = ({content, setContent}: IInputContent) => {
                                          }}>
                                 <div className={`container text-${item.textPosition}`}>
                                     <div className={'config-item'}>
-                                        <ImageUpload setFile={setFile}/>
-                                        <Input
-                                            placeholder={'Image URL'}
-                                            value={item.src}
-                                            disabled={true}
-                                        />
+                                        <div className={'select-image-container'}>
+                                            <ImageUpload setFile={setFile}/>
+                                        </div>
+                                        <div className={'content'}>
+
+                                            <Input
+                                                placeholder={'Image URL'}
+                                                value={item.src}
+                                                disabled={true}
+                                            />
+                                        </div>
                                     </div>
                                     <div className={'config-item'}>
                                         <label>Description:</label>
-                                        <Input
-                                            placeholder={'Text'}
-                                            value={item.text}
-                                            onChange={({target: {value}}) => {
-                                                galleryContent.setItem(index, {
-                                                    ...item,
-                                                    text: value
-                                                })
-                                                setContent(galleryContent.stringData)
-                                            }}
-                                        />
+                                        <div className={'content'}>
+
+                                            <Input
+                                                placeholder={'Text'}
+                                                value={item.text}
+                                                onChange={({target: {value}}) => {
+                                                    galleryContent.setItem(index, {
+                                                        ...item,
+                                                        text: value
+                                                    })
+                                                    setContent(galleryContent.stringData)
+                                                }}
+                                            />
+                                        </div>
                                     </div>
                                     <hr/>
 
@@ -103,7 +126,7 @@ const InputCarousel = ({content, setContent}: IInputContent) => {
                     galleryContent.addItem()
                     setContent(galleryContent.stringData)
                 }}>
-                    Add Image
+                    Add new Image
                 </Button>
             </div>
         </div>

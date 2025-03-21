@@ -29,54 +29,69 @@ const InputGallery = ({content, setContent}: IInputContent) => {
                             }}>
                                 <div className={`admin container text-${item.textPosition}`}>
                                     <div className={'config-item'}>
-                                        <ImageUpload setFile={setFile}/>
-                                        <Input
-                                            placeholder={'Image URL'}
-                                            value={item.src}
-                                            disabled={true}
-                                        />
+                                        <div className={'select-image-container'}>
+
+                                            <ImageUpload setFile={setFile}/>
+                                        </div>
+                                        <div className={'content'}>
+
+                                            <Input
+                                                placeholder={'Image URL'}
+                                                value={item.src}
+                                                disabled={true}
+                                            />
+                                        </div>
                                     </div>
                                     <div className={'config-item'}>
                                         <label>Description</label>
-                                        <Input
-                                            placeholder={'Text'}
-                                            value={item.text}
-                                            onChange={({target: {value}}) => {
-                                                galleryContent.setItem(index, {
-                                                    ...item,
-                                                    text: value
-                                                })
-                                                setContent(galleryContent.stringData)
-                                            }}
-                                        />
+                                        <div className={'content'}>
+
+                                            <Input
+                                                placeholder={'Text'}
+                                                value={item.text}
+                                                onChange={({target: {value}}) => {
+                                                    galleryContent.setItem(index, {
+                                                        ...item,
+                                                        text: value
+                                                    })
+                                                    setContent(galleryContent.stringData)
+                                                }}
+                                            />
+                                        </div>
                                     </div>
                                     <div className={'config-item'}>
                                         <label>Image width</label>
-                                        <Input
-                                            placeholder={'Image width'}
-                                            value={item.imgWidth}
-                                            onChange={({target: {value}}) => {
-                                                galleryContent.setItem(index, {
-                                                   ...item,
-                                                    imgWidth: value
-                                                })
-                                                setContent(galleryContent.stringData)
-                                            }}
-                                        />
+                                        <div className={'content'}>
+
+                                            <Input
+                                                placeholder={'Image width'}
+                                                value={item.imgWidth}
+                                                onChange={({target: {value}}) => {
+                                                    galleryContent.setItem(index, {
+                                                        ...item,
+                                                        imgWidth: value
+                                                    })
+                                                    setContent(galleryContent.stringData)
+                                                }}
+                                            />
+                                        </div>
                                     </div>
                                     <div className={'config-item'}>
                                         <label>Image Height</label>
-                                        <Input
-                                            placeholder={'Image height'}
-                                            value={item.imgHeight}
-                                            onChange={({target: {value}}) => {
-                                                galleryContent.setItem(index, {
-                                                    ...item,
-                                                    imgHeight: value
-                                                })
-                                                setContent(galleryContent.stringData)
-                                            }}
-                                        />
+                                        <div className={'content'}>
+
+                                            <Input
+                                                placeholder={'Image height'}
+                                                value={item.imgHeight}
+                                                onChange={({target: {value}}) => {
+                                                    galleryContent.setItem(index, {
+                                                        ...item,
+                                                        imgHeight: value
+                                                    })
+                                                    setContent(galleryContent.stringData)
+                                                }}
+                                            />
+                                        </div>
                                     </div>
                                     <hr/>
 
