@@ -1,4 +1,3 @@
-'use client'
 import React from "react";
 import EditWrapper from "./common/EditWrapper";
 import AddNewSection from "./common/Dialogs/AddNewSection";
@@ -25,13 +24,6 @@ interface SContent {
 }
 
 class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
-    props: IDynamicTabsContent = {
-        sections: [],
-        page: '',
-        admin: false,
-        refresh: async () => {
-        }
-    }
     public refresh: () => Promise<void>;
     state: SContent = {
         sections: [],

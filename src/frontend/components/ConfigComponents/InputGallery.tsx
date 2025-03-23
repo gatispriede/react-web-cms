@@ -23,11 +23,11 @@ const InputGallery = ({content, setContent}: IInputContent) => {
                             setContent(galleryContent.stringData)
                         }
                         return (
-                            <EditWrapper wrapperClass={'config-item-container'} admin={true} del={true} deleteAction={async () => {
+                            <EditWrapper key={index} wrapperClass={'config-item-container'} admin={true} del={true} deleteAction={async () => {
                                 galleryContent.removeItem(index)
                                 setContent(galleryContent.stringData)
                             }}>
-                                <div className={`admin container text-${item.textPosition}`}>
+                                <div key={index} className={`admin container text-${item.textPosition}`}>
                                     <div className={'config-item'}>
                                         <div className={'select-image-container'}>
 

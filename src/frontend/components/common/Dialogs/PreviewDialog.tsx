@@ -5,9 +5,6 @@ import {IItem} from "../../../../Interfaces/IItem";
 import ActionDialog from "./ActionDialog";
 
 class PreviewDialog extends React.Component<{item: IItem}> {
-    props: any = {
-        item: {},
-    }
     state = {
         dialogOpen: false,
         actionDialogOpen: false,

@@ -1,18 +1,18 @@
 import React from "react";
-import {Button, Modal, Select} from "antd";
+import {Button, Modal} from "antd";
 import {PlusCircleOutlined} from "@ant-design/icons";
 
-class AddNewSection extends React.Component {
-    props: any = {
-        page: '',
-        addSectionToPage: async (item: any) => {
-        }
-    }
+class AddNewSection extends React.Component <{
+    page: string,
+    addSectionToPage: (item: any) => Promise<void>
+}> {
     state = {
         dialogOpen: false,
         page: '',
         type: 1,
         label: '100%',
+    }
+    addSectionToPage = async (item: any) => {
     }
 
     constructor(props: {
@@ -21,6 +21,7 @@ class AddNewSection extends React.Component {
     }) {
         super(props)
         this.state.page = props.page
+        this.addSectionToPage = props.addSectionToPage
     }
 
     render() {
@@ -44,7 +45,7 @@ class AddNewSection extends React.Component {
                                    content: []
                                }
                            }
-                           await this.props.addSectionToPage(item)
+                           await this.addSectionToPage(item)
                            this.setState({dialogOpen: false})
                        }}
 

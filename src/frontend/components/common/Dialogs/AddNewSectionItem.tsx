@@ -14,14 +14,15 @@ import {EGalleryStyle} from "../../SectionComponents/Gallery";
 import {ERichTextStyle} from "../../SectionComponents/RichText";
 import {EPlainTextStyle} from "../../SectionComponents/PlainText";
 
-class AddNewSectionItem extends React.Component {
-    props: any = {
-        addSectionItem: (sectionId: string, config: any) => {
-        },
-        section: {},
-        index: 0,
-        loadItem: false
-    }
+interface IAddNewSectionItemProps {
+    addSectionItem: (sectionId: string, config: IConfigSectionAddRemove) => void,
+    section: ISection,
+    item?: IItem,
+    index: number,
+    loadItem: boolean
+}
+
+class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
     state = {
         dialogOpen: false,
         selected: EItemType.Text,
@@ -96,19 +97,12 @@ class AddNewSectionItem extends React.Component {
     section: ISection
     index: number
 
-    constructor(props: {
-        addSectionItem: (sectionId: string, config: IConfigSectionAddRemove) => void,
-        section: ISection,
-        item: IItem,
-        index: number,
-        loadItem: boolean
-    }) {
+    constructor(props: IAddNewSectionItemProps) {
         super(props);
         this.section = props.section
         this.index = props.index
         if (props.loadItem) {
             const item: IItem = this.section.content[props.index]
-            console.log(item)
             this.state.selected = item.type
             this.state.content = item.content
             this.state.style = item.style ? item.style : 'default'

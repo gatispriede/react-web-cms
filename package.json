@@ -27,6 +27,7 @@
     "@ant-design/icons": "^5.6.0",
     "@ant-design/icons-svg": "^4.4.2",
     "@ant-design/nextjs-registry": "^1.0.2",
+    "@ant-design/v5-patch-for-react-19": "^1.0.3",
     "@graphql-tools/schema": "^10.0.16",
     "@types/bcrypt": "^5.0.2",
     "@types/draftjs-to-html": "^0.8.4",

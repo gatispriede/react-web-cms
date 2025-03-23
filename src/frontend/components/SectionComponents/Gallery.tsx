@@ -86,7 +86,7 @@ const Gallery = ({item}: { item: IItem }) => {
             <div className={'gallery-wrapper-images'}>
                 <Image.PreviewGroup>
                     {
-                        data.items.map((item: IGalleryItem) => {
+                        data.items.map((item: IGalleryItem, index: number) => {
                             const imgProperties: any = {
                                 preview:data.disablePreview ? false : item.preview,
                                 src: item.src,
@@ -99,7 +99,7 @@ const Gallery = ({item}: { item: IItem }) => {
                                 imgProperties.height = item.imgHeight
                             }
                             return (
-                                <div className={`container text-${item.textPosition}`}>
+                                <div key={index} className={`container text-${item.textPosition}`}>
                                     <div className={'image'}>
                                         <Image {...imgProperties}/>
                                     </div>

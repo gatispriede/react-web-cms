@@ -8,7 +8,6 @@ export default function LoginBtn() {
     if (session) {
         return (
             <>
-
                 <div className={'app-login-wrapper'}>
                     <div className={'container'}>
                         <p>User: {session?.user?.name}</p>

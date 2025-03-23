@@ -23,18 +23,6 @@ interface IStateSectionContent {
 }
 
 class SectionContent extends React.Component<IPropsSectionContent> {
-    props: IPropsSectionContent = {
-        section: {
-            content: [],
-            type: 0,
-            id: ''
-        },
-        addRemoveSectionItem: async () => {
-        },
-        refresh: async () => {
-        },
-        admin: false
-    }
     state: IStateSectionContent = {
         actionDialogOpen: false,
         section: {

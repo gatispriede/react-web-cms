@@ -4,7 +4,11 @@ import MongoApi from "../../api/MongoApi";
 import {ILogo} from "../../../Interfaces/ILogo";
 import Link from "next/link";
 
-class Logo extends Component {
+interface ILogoProps {
+    admin: boolean,
+}
+
+class Logo extends Component<ILogoProps> {
     private _mongoApi: MongoApi;
     state = {
         logo: {
@@ -14,11 +18,8 @@ class Logo extends Component {
         },
         open: false,
     }
-    props = {
-        admin: false,
-    }
     admin: boolean;
-    constructor(props: any) {
+    constructor(props: ILogoProps) {
         super(props);
         this._mongoApi = new MongoApi();
         this.admin = props.admin;
@@ -49,7 +50,7 @@ class Logo extends Component {
                     this.setState({open: true})
                 }
             }}>
-                <img src={this.state.logo.src} height={this.state.logo.height}/>
+                {this.state.logo.src ? <img src={this.state.logo.src} height={this.state.logo.height}/> : '' }
                 <LogoEditDialog key={`logo-${this.state.open}`} open={this.state.open} setOpen={(file: File | false): void => {
                     if(file) {
                         void this.saveLogo(file)

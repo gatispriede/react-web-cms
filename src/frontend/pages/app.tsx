@@ -11,7 +11,7 @@ import {ISection} from "../../Interfaces/ISection";
 import Logo from "../components/common/Logo";
 import Link from 'next/link'
 import Head from 'next/head'
-
+import '@ant-design/v5-patch-for-react-19';
 interface IHomeState {
     loading: boolean,
     activeTab: string,

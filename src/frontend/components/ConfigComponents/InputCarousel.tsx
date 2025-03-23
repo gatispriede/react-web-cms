@@ -77,12 +77,12 @@ const InputCarousel = ({content, setContent}: IInputContent) => {
                             setContent(galleryContent.stringData)
                         }
                         return (
-                            <EditWrapper wrapperClass={'config-item-container'} admin={true} del={true}
+                            <EditWrapper key={index} wrapperClass={'config-item-container'} admin={true} del={true}
                                          deleteAction={async () => {
                                              galleryContent.removeItem(index)
                                              setContent(galleryContent.stringData)
                                          }}>
-                                <div className={`container text-${item.textPosition}`}>
+                                <div key={index} className={`container text-${item.textPosition}`}>
                                     <div className={'config-item'}>
                                         <div className={'select-image-container'}>
                                             <ImageUpload setFile={setFile}/>
