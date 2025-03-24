@@ -1,19 +1,19 @@
 'use client'
 import React from 'react'
-import { resolve} from "../gqty";
+import { resolve} from "../../gqty";
 import {Button, Spin, Tabs} from 'antd';
-import AddNewDialogNavigation from "../components/common/Dialogs/AddNewDialogNavigation";
-import DynamicTabsContent from "../components/DynamicTabsContent";
-import {IPage} from "../../Interfaces/IPage";
-import theme from '../theme/themeConfig';
+import AddNewDialogNavigation from "../common/Dialogs/AddNewDialogNavigation";
+import DynamicTabsContent from "../DynamicTabsContent";
+import {IPage} from "../../../Interfaces/IPage";
+import theme from '../../theme/themeConfig';
 import {ConfigProvider} from 'antd';
-import {IMongo} from "../../Interfaces/IMongo";
-import MongoApi from '../api/MongoApi';
-import Logo from "../components/common/Logo";
+import {IMongo} from "../../../Interfaces/IMongo";
+import MongoApi from '../../api/MongoApi';
+import Logo from "../common/Logo";
 import {Session} from "next-auth";
-import EditWrapper from "./common/EditWrapper";
+import EditWrapper from "../common/EditWrapper";
 import {EditOutlined} from "@ant-design/icons";
-import {INavigation} from "../../Interfaces/INavigation";
+import {INavigation} from "../../../Interfaces/INavigation";
 
 type TargetKey = React.MouseEvent | React.KeyboardEvent | string;
 

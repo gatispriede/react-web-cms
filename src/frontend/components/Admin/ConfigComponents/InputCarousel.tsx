@@ -1,12 +1,12 @@
 import {Button, Input, Switch, Tooltip} from "antd";
 import React from "react";
-import {IInputContent} from "../../../Interfaces/IInputContent";
-import {EItemType} from "../../../enums/EItemType";
-import {IGalleryItem} from "../SectionComponents/Gallery";
-import EditWrapper from "../common/EditWrapper";
-import ImageUpload from "../ImageUpload";
-import {CarouselContent} from "../SectionComponents/CarouselView";
-import {PUBLIC_IMAGE_PATH} from "../../../constants/imgPath";
+import {IInputContent} from "../../../../Interfaces/IInputContent";
+import {EItemType} from "../../../../enums/EItemType";
+import {IGalleryItem} from "../../SectionComponents/Gallery";
+import EditWrapper from "../../common/EditWrapper";
+import ImageUpload from "../../ImageUpload";
+import {CarouselContent} from "../../SectionComponents/CarouselView";
+import {PUBLIC_IMAGE_PATH} from "../../../../constants/imgPath";
 
 const InputCarousel = ({content, setContent}: IInputContent) => {
     const galleryContent = new CarouselContent(EItemType.Image, content);

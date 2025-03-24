@@ -1,11 +1,11 @@
 import {Button, Input} from "antd";
 import React from "react";
-import {IInputContent} from "../../../Interfaces/IInputContent";
-import {EItemType} from "../../../enums/EItemType";
-import {GalleryContent, IGalleryItem} from "../SectionComponents/Gallery";
-import EditWrapper from "../common/EditWrapper";
-import ImageUpload from "../ImageUpload";
-import {PUBLIC_IMAGE_PATH} from "../../../constants/imgPath";
+import {IInputContent} from "../../../../Interfaces/IInputContent";
+import {EItemType} from "../../../../enums/EItemType";
+import {GalleryContent, IGalleryItem} from "../../SectionComponents/Gallery";
+import EditWrapper from "../../common/EditWrapper";
+import ImageUpload from "../../ImageUpload";
+import {PUBLIC_IMAGE_PATH} from "../../../../constants/imgPath";
 
 const InputGallery = ({content, setContent}: IInputContent) => {
     const galleryContent = new GalleryContent(EItemType.Image, content);

@@ -1,11 +1,11 @@
 import React from "react";
-import {IInputContent} from "../../../Interfaces/IInputContent";
-import {RichTextContent} from "../SectionComponents/RichText";
-import {EItemType} from "../../../enums/EItemType";
+import {IInputContent} from "../../../../Interfaces/IInputContent";
+import {RichTextContent} from "../../SectionComponents/RichText";
+import {EItemType} from "../../../../enums/EItemType";
 import dynamic from 'next/dynamic'
 import {RawDraftContentState} from "draft-js";
 const RichTextEditor = dynamic(
-    () => import('../common/RichTextEditor'),
+    () => import('../../common/RichTextEditor'),
     { ssr: false }
 )
 

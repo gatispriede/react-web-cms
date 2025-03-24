@@ -1,10 +1,10 @@
 import React from "react";
-import InputPlainText from "../ConfigComponents/InputPlainText";
-import InputRichText from "../ConfigComponents/InputRichText";
-import InputPlainImage from "../ConfigComponents/InputPlainImage";
-import InputGallery from "../ConfigComponents/InputGallery";
+import InputPlainText from "../Admin/ConfigComponents/InputPlainText";
+import InputRichText from "../Admin/ConfigComponents/InputRichText";
+import InputPlainImage from "../Admin/ConfigComponents/InputPlainImage";
+import InputGallery from "../Admin/ConfigComponents/InputGallery";
 import EItemType from "../../../enums/EItemType";
-import InputCarousel from "../ConfigComponents/InputCarousel";
+import InputCarousel from "../Admin/ConfigComponents/InputCarousel";
 
 export const ContentSection = ({selected, content, setContent}: { content: string, selected: string, setContent: (value: string) => void }) => {
     switch (selected) {

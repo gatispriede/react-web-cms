@@ -1,20 +1,14 @@
-import { useSession, signIn, signOut } from "next-auth/react"
-import AdminApp from "../AdminApp";
+import { useSession, signIn } from "next-auth/react"
 import React from "react";
 import {Button} from "antd";
+import UserStatusBar from "../Admin/UserStatusBar";
 
-export default function LoginBtn() {
+export default function LoginBtn({settings}: {settings?: boolean}) {
     const {data: session} = useSession()
     if (session) {
         return (
             <>
-                <div className={'app-login-wrapper'}>
-                    <div className={'container'}>
-                        <p>User: {session?.user?.name}</p>
-                    </div>
-                    <Button type={"link"} onClick={() => signOut()}>Sign out</Button>
-                </div>
-                <AdminApp session={session} />
+                <UserStatusBar session={session} settings={settings ? settings : false} />
             </>
         )
     }

@@ -1,8 +1,8 @@
 import {Input} from "antd";
 import React from "react";
-import {IInputContent} from "../../../Interfaces/IInputContent";
-import {EItemType} from "../../../enums/EItemType";
-import {PlainTextContent} from "../SectionComponents/PlainText";
+import {IInputContent} from "../../../../Interfaces/IInputContent";
+import {EItemType} from "../../../../enums/EItemType";
+import {PlainTextContent} from "../../SectionComponents/PlainText";
 
 const InputPlainText = ({content, setContent}:IInputContent) => {
     const richTextContent = new PlainTextContent(EItemType.Text, content)
