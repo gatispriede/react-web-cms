@@ -12,6 +12,8 @@ import Logo from "../components/common/Logo";
 import Link from 'next/link'
 import Head from 'next/head'
 import '@ant-design/v5-patch-for-react-19';
+import {GetServerSideProps} from "next";
+import {serverSideTranslations} from "next-i18next/serverSideTranslations";
 interface IHomeState {
     loading: boolean,
     activeTab: string,
@@ -202,5 +204,13 @@ class App extends React.Component<{page :string}> {
         );
     }
 };
-
+export const getServerSideProps: GetServerSideProps<{ }> = async ({
+                                                                      locale,
+                                                                  }) => ({
+    props: {
+        ...(await serverSideTranslations(locale ?? 'en', [
+            'common',
+        ])),
+    },
+})
 export default App;

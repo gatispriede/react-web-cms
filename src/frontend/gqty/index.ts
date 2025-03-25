@@ -80,4 +80,4 @@ export const {
   track,
 } = client;
 
-export * from "./schema.generated";
+export {Cache} from "./schema.generated";

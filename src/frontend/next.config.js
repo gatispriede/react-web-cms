@@ -1,5 +1,9 @@
+
+const { i18n } = require('../../next-i18next.config.js')
+const { loadCustomBuildParams } = require('./next-utils.config')
+const { tsconfigPath } = loadCustomBuildParams()
 /** @type {import('next').NextConfig} */
-const nextConfig: import('next').NextConfig = {
+const nextConfig = {
     transpilePackages: [
         //
         "react-drag-reorder",
@@ -46,6 +50,12 @@ const nextConfig: import('next').NextConfig = {
         NEXTAUTH_URL: 'http://localhost:80',
         API_URL: 'http://localhost',
         NEXT_PUBLIC_BASE_URL: 'http://localhost:80',
+    },
+    i18n: i18n,
+    reactStrictMode: true,
+
+    typescript: {
+        tsconfigPath,
     },
     sassOptions: {
     },

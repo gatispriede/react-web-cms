@@ -2,30 +2,32 @@ import {Tabs, TabsProps} from "antd";
 import AdminSettingsUsers from "./AdminSettings/Users";
 import AdminSettingsLanguages from "./AdminSettings/Languages";
 import AdminSettingsTheme from "./AdminSettings/Theme";
-const onChange = (key: string) => {
-    console.log(key);
-};
-const items: TabsProps['items'] = [
-    {
-        key: '1',
-        label: 'Users',
-        children: <AdminSettingsUsers />,
-    },
-    {
-        key: '2',
-        label: 'Languages',
-        children: <AdminSettingsLanguages />,
-    },
-    {
-        key: '3',
-        label: 'Theme',
-        children: <AdminSettingsTheme />,
-    },
-];
+import {useTranslation} from "next-i18next";
+
+const getItems = ({t}: { t: any}): TabsProps['items'] => {
+    return [
+        {
+            key: '1',
+            label: t('Users'),
+            children: <AdminSettingsUsers/>,
+        },
+        {
+            key: '2',
+            label: t('Languages'),
+            children: <AdminSettingsLanguages/>,
+        },
+        {
+            key: '3',
+            label: t('Theme'),
+            children: <AdminSettingsTheme/>,
+        },
+    ];
+}
 
 const AdminSettings = () => {
+    const t = useTranslation('common')
     return (
-        <Tabs defaultActiveKey="1" items={items} onChange={onChange} />
+        <Tabs defaultActiveKey="1" items={getItems(t)}/>
     )
 }
 export default AdminSettings

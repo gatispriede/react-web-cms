@@ -7,5 +7,4 @@ const Slug = ()=> {
         <App page={'/'} />
     )
 }
-
 export default Slug;

@@ -6,7 +6,6 @@ import {ISection} from "../../Interfaces/ISection";
 import {IItem} from "../../Interfaces/IItem";
 import MongoApi from "../api/MongoApi";
 import {IConfigSectionAddRemove} from "../../Interfaces/IConfigSectionAddRemove";
-import {Draggable} from "react-drag-reorder";
 import guid from "../../helpers/guid";
 import DraggableWrapper from "./common/DraggableWrapper";
 

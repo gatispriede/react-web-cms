@@ -7,6 +7,9 @@ import {IPage} from "../../Interfaces/IPage";
 import {IMongo} from "../../Interfaces/IMongo";
 import {ISection} from "../../Interfaces/ISection";
 import {IItem} from "../../Interfaces/IItem";
+import i18nextConfig from '../../../next-i18next.config.js'
+
+
 // import {unstable_cache} from "next/cache";
 
 // const isProduction = process.env.NODE_ENV === 'production';
@@ -81,15 +84,23 @@ const HeadData = async () => {
         </Head>
     )
 }
-const MyDocument = () => (
-    <Html lang="en">
-        <HeadData/>
-        <body>
-        <Main/>
-        <NextScript/>
-        </body>
-    </Html>
-);
+class MyDocument extends Document<{}> {
+    render(){
+        const currentLocale =
+            this.props.__NEXT_DATA__.locale ??
+            i18nextConfig.i18n.defaultLocale
+        return (
+            <Html lang={currentLocale}>
+                <meta charSet="utf-8" />
+                <HeadData/>
+                <body>
+                <Main/>
+                <NextScript/>
+                </body>
+            </Html>
+        )
+    }
+}
 
 MyDocument.getInitialProps = async (ctx: DocumentContext) => {
 
