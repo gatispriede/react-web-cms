@@ -50,7 +50,7 @@ class Logo extends Component<ILogoProps> {
                     this.setState({open: true})
                 }
             }}>
-                {this.state.logo.src ? <img src={this.state.logo.src} height={this.state.logo.height}/> : '' }
+                {this.state.logo.src ? <img src={`/${this.state.logo.src}`} height={this.state.logo.height}/> : '' }
                 <LogoEditDialog key={`logo-${this.state.open}`} open={this.state.open} setOpen={(file: File | false): void => {
                     if(file) {
                         void this.saveLogo(file)

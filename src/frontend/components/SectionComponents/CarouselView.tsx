@@ -104,7 +104,7 @@ const CarouselView = ({item}: { item: IItem }) => {
                 <div className={'image'}>
                     <Image
                         preview={false}
-                        src={item.src}
+                        src={`/${item.src}`}
                         alt={item.alt}
                     />
                 </div>

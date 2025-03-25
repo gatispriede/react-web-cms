@@ -14,6 +14,7 @@ import Head from 'next/head'
 import '@ant-design/v5-patch-for-react-19';
 import {GetServerSideProps} from "next";
 import {serverSideTranslations} from "next-i18next/serverSideTranslations";
+import {TFunction} from "i18next";
 interface IHomeState {
     loading: boolean,
     activeTab: string,
@@ -21,7 +22,7 @@ interface IHomeState {
     tabProps: any[]
 }
 
-class App extends React.Component<{page :string}> {
+class App extends React.Component<{ page: string, t?: TFunction<string, undefined> }> {
     sections: any[] = []
     private MongoApi = new MongoApi()
     loadSections: any
@@ -33,9 +34,11 @@ class App extends React.Component<{page :string}> {
         tabProps: [],
         activeTab: '0'
     }
+    private t: TFunction<string, undefined>;
 
-    constructor(props: {page: string}) {
+    constructor(props: {page: string, t: TFunction<string, undefined>}) {
         super(props);
+        this.t = props.t;
         this.page = props.page
         this.state.loading = true
         this.loadSections = this.MongoApi.loadSections

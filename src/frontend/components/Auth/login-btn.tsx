@@ -2,7 +2,7 @@ import { useSession, signIn } from "next-auth/react"
 import React from "react";
 import {Button} from "antd";
 import UserStatusBar from "../Admin/UserStatusBar";
-import { useTranslation, i18n } from 'next-i18next'
+import { useTranslation } from 'next-i18next'
 
 export default function LoginBtn({settings}: {settings?: boolean}) {
     const {data: session} = useSession()

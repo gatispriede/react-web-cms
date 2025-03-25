@@ -30,7 +30,7 @@ const UserStatusBar = ({session, settings, t}: {
                 settings ?
                     <AdminSettings/>
                     :
-                    <AdminApp session={session}/>
+                    <AdminApp t={t} session={session}/>
             }
         </>
     )

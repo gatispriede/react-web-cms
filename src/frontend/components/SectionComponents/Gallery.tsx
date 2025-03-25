@@ -89,7 +89,7 @@ const Gallery = ({item}: { item: IItem }) => {
                         data.items.map((item: IGalleryItem, index: number) => {
                             const imgProperties: any = {
                                 preview:data.disablePreview ? false : item.preview,
-                                src: item.src,
+                                src: '/' + item.src,
                                 alt: item.alt
                             }
                             if(item.imgWidth && item.imgWidth.length > 0){

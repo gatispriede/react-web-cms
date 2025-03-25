@@ -102,9 +102,9 @@ const PlainImage = ({item}: { item: IItem }) => {
             contentRef.current.innerHTML = draftToHtml(plainImage.data.description)
         }
     }, [plainImage.data.description]);
-    let backgroundProperty = `url(${plainImage.data.src})`
+    let backgroundProperty = `url(/${plainImage.data.src})`
     if(plainImage.data.useGradiant){
-        backgroundProperty = `linear-gradient(to top, rgb(255 255 255 / 0%) 95%, rgb(255 255 255)), url(${plainImage.data.src})`
+        backgroundProperty = `linear-gradient(to top, rgb(255 255 255 / 0%) 95%, rgb(255 255 255)), url(/${plainImage.data.src})`
     }
 
     useEffect(() => {
@@ -118,7 +118,7 @@ const PlainImage = ({item}: { item: IItem }) => {
     }, [window, document]);
     const imgProperties: IImgProperties = {
         preview: preview,
-        src: plainImage.data.src,
+        src: '/' + plainImage.data.src,
         style: {
             marginTop: `${plainImage.data.offsetX}px`
         }

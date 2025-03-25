@@ -1,9 +1,7 @@
 import React from "react";
 import {EItemType} from "../../../enums/EItemType";
-import {IRichText, RichTextContent} from "./RichText";
 import {IItem} from "../../../Interfaces/IItem";
 import ContentManager from "../ContentManager";
-import {RawDraftContentState} from "draft-js";
 
 export interface IPlainTextContent {
     value: string;

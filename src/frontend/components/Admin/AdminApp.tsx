@@ -14,6 +14,7 @@ import {Session} from "next-auth";
 import EditWrapper from "../common/EditWrapper";
 import {EditOutlined} from "@ant-design/icons";
 import {INavigation} from "../../../Interfaces/INavigation";
+import {TFunction} from "i18next";
 
 type TargetKey = React.MouseEvent | React.KeyboardEvent | string;
 
@@ -26,7 +27,7 @@ interface IHomeState {
     tabProps: any[]
 }
 
-class AdminApp extends React.Component<{ session: Session }> {
+class AdminApp extends React.Component<{ session: Session, t: TFunction<"translation", undefined> }> {
     sections: any[] = []
     admin: boolean = true
     private MongoApi
@@ -46,7 +47,7 @@ class AdminApp extends React.Component<{ session: Session }> {
         activeTab: '0'
     }
 
-    constructor(props: { session: any }) {
+    constructor(props: { session: any, t: TFunction<"translation", undefined> }) {
         super(props);
         this.MongoApi = new MongoApi()
         this.state.loading = true
@@ -149,6 +150,7 @@ class AdminApp extends React.Component<{ session: Session }> {
                             </div>,
                         children: (
                             <DynamicTabsContent
+                                t={this.props.t}
                                 page={pages[id].page}
                                 admin={this.admin}
                                 sections={sectionsData}
@@ -174,6 +176,7 @@ class AdminApp extends React.Component<{ session: Session }> {
                 <Spin spinning={this.state.loading}>
                     <Logo admin={true}/>
                     <AddNewDialogNavigation
+                        t={this.props.t}
                         close={() => {
                             this.setState({addNewDialogOpen: false})
                         }}

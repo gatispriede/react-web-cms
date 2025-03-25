@@ -8,12 +8,14 @@ import MongoApi from "../api/MongoApi";
 import {IConfigSectionAddRemove} from "../../Interfaces/IConfigSectionAddRemove";
 import guid from "../../helpers/guid";
 import DraggableWrapper from "./common/DraggableWrapper";
+import {TFunction} from "i18next";
 
 interface IDynamicTabsContent {
     sections: ISection[],
     page: string,
     admin: boolean,
-    refresh: () => Promise<void>
+    refresh: () => Promise<void>,
+    t: TFunction<"translation", undefined>
 }
 
 interface SContent {
@@ -38,7 +40,7 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
         this.setState({sections});
         const sectionsStringArray: string[] = []
         sections.map((section: ISection) => {
-                if(section.id) sectionsStringArray.push(section.id as string)
+                if (section.id) sectionsStringArray.push(section.id as string)
             }
         )
         if (sectionsStringArray.length > 0) {
@@ -62,7 +64,8 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
 
         return (
             <div className={'dynamic-content'}>
-                <DraggableWrapper admin={this.admin} id={`${this.state.sections.length}-${this.state.state}`} onPosChange={this.getChangedPos}>
+                <DraggableWrapper admin={this.admin} id={`${this.state.sections.length}-${this.state.state}`}
+                                  onPosChange={this.getChangedPos}>
                     {
                         this.state.sections && this.state.sections.map((section: ISection, index) => {
                                 const emptySections = section.type - section.content?.length

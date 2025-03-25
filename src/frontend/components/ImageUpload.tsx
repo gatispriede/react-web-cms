@@ -5,7 +5,6 @@ import UpploadManager from "../Classes/UpploadeManager";
 import EditableTags from "./common/EditableTags";
 import {IImage} from "../gqty";
 import MongoApi from "../api/MongoApi";
-import {ImImages} from "react-icons/im";
 import EditWrapper from "./common/EditWrapper";
 
 const ImageUpload = ({setFile}: { setFile: (file: File) => void }) => {
@@ -112,7 +111,7 @@ const ImageUpload = ({setFile}: { setFile: (file: File) => void }) => {
                                                 await loadImages()
                                             }}>
                                                 <div key={index}>
-                                                    <img src={image.location} alt=""/>
+                                                    <img src={`/${image.location}`} alt=""/>
                                                     <Button onClick={() => {
                                                         console.warn(image)
                                                         setFile(image as unknown as File)
