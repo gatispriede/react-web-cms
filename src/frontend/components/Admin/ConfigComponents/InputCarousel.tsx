@@ -8,15 +8,14 @@ import ImageUpload from "../../ImageUpload";
 import {CarouselContent} from "../../SectionComponents/CarouselView";
 import {PUBLIC_IMAGE_PATH} from "../../../../constants/imgPath";
 
-const InputCarousel = ({content, setContent}: IInputContent) => {
+const InputCarousel = ({content, setContent, t}: IInputContent) => {
     const galleryContent = new CarouselContent(EItemType.Image, content);
     const data = galleryContent.data
     return (
         <div className={'admin gallery-wrapper'}>
             <div className={'config-item'}>
-                <label>Autoplay</label>
+                <label>{t("Autoplay")}</label>
                 <div className={'content'}>
-
                     <Switch value={galleryContent.data.autoplay} onChange={(checked) => {
                         galleryContent.setAutoplay(checked)
                         setContent(galleryContent.stringData)
@@ -25,10 +24,9 @@ const InputCarousel = ({content, setContent}: IInputContent) => {
             </div>
             <div className={'config-item'}>
                 <Tooltip title="(In miliseconds - default = 3000)">
-                    <label>Autoplay speed</label>
+                    <label>{t("Autoplay speed")}</label>
                 </Tooltip>
                 <div className={'content'}>
-
                     <Input defaultValue={3000} value={galleryContent.data.autoplaySpeed} onChange={(e) => {
                         galleryContent.setAutoplaySpeed(parseInt(e.target.value))
                         setContent(galleryContent.stringData)
@@ -36,7 +34,7 @@ const InputCarousel = ({content, setContent}: IInputContent) => {
                 </div>
             </div>
             <div className={'config-item'}>
-                <label>Infinity</label>
+                <label>{t("Infinity")}</label>
                 <div className={'content'}>
 
                     <Switch value={galleryContent.data.infinity} onChange={(checked) => {
@@ -46,7 +44,7 @@ const InputCarousel = ({content, setContent}: IInputContent) => {
                 </div>
             </div>
             <div className={'config-item'}>
-                <label>Dots</label>
+                <label>{t("Dots")}</label>
                 <div className={'content'}>
 
                     <Switch value={galleryContent.data.dots} onChange={(checked) => {
@@ -56,9 +54,8 @@ const InputCarousel = ({content, setContent}: IInputContent) => {
                 </div>
             </div>
             <div className={'config-item'}>
-                <label>Arrows</label>
+                <label>{t("Arrows")}</label>
                 <div className={'content'}>
-
                     <Switch value={galleryContent.data.arrows} onChange={(checked) => {
                         galleryContent.setArrows(checked)
                         setContent(galleryContent.stringData)
@@ -77,7 +74,7 @@ const InputCarousel = ({content, setContent}: IInputContent) => {
                             setContent(galleryContent.stringData)
                         }
                         return (
-                            <EditWrapper key={index} wrapperClass={'config-item-container'} admin={true} del={true}
+                            <EditWrapper t={t} key={index} wrapperClass={'config-item-container'} admin={true} del={true}
                                          deleteAction={async () => {
                                              galleryContent.removeItem(index)
                                              setContent(galleryContent.stringData)
@@ -85,10 +82,9 @@ const InputCarousel = ({content, setContent}: IInputContent) => {
                                 <div key={index} className={`container text-${item.textPosition}`}>
                                     <div className={'config-item'}>
                                         <div className={'select-image-container'}>
-                                            <ImageUpload setFile={setFile}/>
+                                            <ImageUpload t={t} setFile={setFile}/>
                                         </div>
                                         <div className={'content'}>
-
                                             <Input
                                                 placeholder={'Image URL'}
                                                 value={item.src}
@@ -97,9 +93,8 @@ const InputCarousel = ({content, setContent}: IInputContent) => {
                                         </div>
                                     </div>
                                     <div className={'config-item'}>
-                                        <label>Description:</label>
+                                        <label>{t("Description")}:</label>
                                         <div className={'content'}>
-
                                             <Input
                                                 placeholder={'Text'}
                                                 value={item.text}
@@ -126,7 +121,7 @@ const InputCarousel = ({content, setContent}: IInputContent) => {
                     galleryContent.addItem()
                     setContent(galleryContent.stringData)
                 }}>
-                    Add new Image
+                    {t("Add new Image")}
                 </Button>
             </div>
         </div>

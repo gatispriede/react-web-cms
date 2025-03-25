@@ -13,13 +13,15 @@ import {ECarouselStyle} from "../../SectionComponents/CarouselView";
 import {EGalleryStyle} from "../../SectionComponents/Gallery";
 import {ERichTextStyle} from "../../SectionComponents/RichText";
 import {EPlainTextStyle} from "../../SectionComponents/PlainText";
+import {TFunction} from "i18next";
 
 interface IAddNewSectionItemProps {
     addSectionItem: (sectionId: string, config: IConfigSectionAddRemove) => void,
     section: ISection,
     item?: IItem,
     index: number,
-    loadItem: boolean
+    loadItem: boolean,
+    t: TFunction<"translation", undefined>
 }
 
 class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
@@ -40,56 +42,56 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
         style: 'Default',
         styleOptions: [
             {
-                label: "Default",
+                label: this.props.t("Default"),
                 value: EStyle.Default,
             }
         ],
         actionSelectOptions: [
             {
-                label: "No action",
+                label: this.props.t("No action"),
                 value: "none",
             },
             {
-                label: "On click",
+                label: this.props.t("On click"),
                 value: "onClick",
             },
         ],
         tabContent: [
             {
                 key: 'content',
-                label: 'Content',
+                label: this.props.t('Content'),
                 children: <></>
             },
             {
                 key: 'action',
-                label: 'Action',
+                label: this.props.t('Action'),
                 children: <></>
             },
             {
                 key: 'style',
-                label: 'Style',
+                label: this.props.t('Style'),
                 children: <></>
             }
         ],
         selectOptions: [
             {
-                label: "Simple Text",
+                label: this.props.t("Simple Text"),
                 value: EItemType.Text,
             },
             {
-                label: "Rich text",
+                label: this.props.t("Rich text"),
                 value: EItemType.RichText,
             },
             {
-                label: "Image",
+                label: this.props.t("Image"),
                 value: EItemType.Image,
             },
             {
-                label: "Gallery",
+                label: this.props.t("Gallery"),
                 value: EItemType.Gallery,
             },
             {
-                label: "Carousel",
+                label: this.props.t("Carousel"),
                 value: EItemType.Carousel,
             },
         ]
@@ -112,6 +114,7 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
             if (item.actionContent) this.state.actionContent = item.actionContent
         }
     }
+
     setActiveOptionState(selectedModule: any, style?: string) {
         let styleEnum: any;
 
@@ -146,14 +149,14 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
 
     generateContentSection() {
         return <div>
-            <h4>Content configuration</h4>
-            <label>Please select content type: </label>
+            <h4>{this.props.t("Content configuration")}</h4>
+            <label>{this.props.t("Please select content type")}: </label>
             <Select variant={'filled'} value={this.activeOption()} options={this.state.selectOptions}
                     onSelect={(e) => {
                         this.setActiveOptionState(e)
                     }}/>
             <hr/>
-            <ContentSection content={this.state.content} selected={this.state.selected} setContent={(value: string) => {
+            <ContentSection t={this.props.t} content={this.state.content} selected={this.state.selected} setContent={(value: string) => {
                 this.setState({content: value})
             }}/>
         </div>
@@ -161,8 +164,8 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
 
     generateActionSection() {
         return <div>
-            <h4>Action configuration</h4>
-            <label>Please select action type: </label>
+            <h4>{this.props.t("Action configuration")}</h4>
+            <label>{this.props.t("Please select action type")}: </label>
             <Select variant={'filled'} value={this.state.action} options={this.state.actionSelectOptions}
                     onChange={(value) => {
                         let styleEnum: any;
@@ -186,22 +189,23 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                             default:
                                 styleEnum = EStyle
                         }
-                        this.setState({action: value, actionStyleOptions:  Object.keys(styleEnum).map(key => ({
+                        this.setState({
+                            action: value, actionStyleOptions: Object.keys(styleEnum).map(key => ({
                                 label: key,
                                 value: styleEnum[key],
-                            }))})
+                            }))
+                        })
                     }}/>
             {this.state.action !== 'none' &&
                 <div>
-                    <h4>Content configuration</h4>
-                    <label>Please select content type: </label>
+                    <h4>{this.props.t("Content configuration")}</h4>
+                    <label>{this.props.t("Please select content type")}: </label>
                     <Select variant={'filled'} value={this.state.actionType} options={this.state.selectOptions}
                             onSelect={(e) => {
-
                                 this.setState({actionType: e})
                             }}/>
                     <hr/>
-                    <ContentSection content={this.state.actionContent} selected={this.state.actionType}
+                    <ContentSection t={this.props.t} content={this.state.actionContent} selected={this.state.actionType}
                                     setContent={(value: string) => {
                                         this.setState({actionContent: value})
                                     }}
@@ -214,8 +218,8 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
     generateStyleSection() {
 
         return <div>
-            <h4>Style configuration</h4>
-            <label>Please select style type: </label>
+            <h4>{this.props.t("Style configuration")}</h4>
+            <label>{this.props.t("Please select style type")}: </label>
             <Select variant={'filled'} value={this.state.style} options={this.state.styleOptions}
                     onSelect={(e) => {
                         this.setState({style: e})
@@ -224,7 +228,7 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                 this.state.action &&
                 <div>
                     <hr/>
-                    <label>Please select style for action component: </label>
+                    <label>{this.props.t("Please select style for action component")}: </label>
                     <Select variant={'filled'} value={this.state.actionStyle} options={this.state.actionStyleOptions}
                             onSelect={(e) => {
                                 this.setState({actionStyle: e})
@@ -276,8 +280,8 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                             this.setState({dialogOpen: true})
 
                             const activeOption = this.activeOption()
-                            if(typeof activeOption !== 'undefined')
-                            this.setActiveOptionState(activeOption.value, this.state.style)
+                            if (typeof activeOption !== 'undefined')
+                                this.setActiveOptionState(activeOption.value, this.state.style)
                             let styleEnum: any;
 
                             switch (this.state.actionType as unknown as EItemType) {
@@ -299,13 +303,15 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                                 default:
                                     styleEnum = EStyle
                             }
-                            this.setState({actionStyleOptions:  Object.keys(styleEnum).map(key => ({
+                            this.setState({
+                                actionStyleOptions: Object.keys(styleEnum).map(key => ({
                                     label: key,
                                     value: styleEnum[key],
-                                }))})
+                                }))
+                            })
                         }}>
 
-                            {!this.props.loadItem ? <div><PlusCircleOutlined/> Add content</div> : <EditOutlined/>}
+                            {!this.props.loadItem ? <div><PlusCircleOutlined/> {this.props.t("Add content")}</div> : <EditOutlined/>}
                         </Button>
                     </div>
                 }
@@ -313,7 +319,7 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                        footer={(_, {OkBtn, CancelBtn}) => (
                            <>
                                <CancelBtn/>
-                               <PreviewDialog item={item}/>
+                               <PreviewDialog t={this.props.t} item={item}/>
                                <OkBtn/>
                            </>
                        )}

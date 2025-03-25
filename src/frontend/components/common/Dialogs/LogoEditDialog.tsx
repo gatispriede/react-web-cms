@@ -1,8 +1,13 @@
 import {Modal} from "antd";
 import React from "react";
 import ImageUpload from "../../ImageUpload";
+import {TFunction} from "i18next";
 
-const LogoEditDialog = ({open, setOpen}: {open: boolean, setOpen: (file: File | false) => void}) => {
+const LogoEditDialog = ({open, setOpen, t}: {
+    open: boolean,
+    setOpen: (file: File | false) => void,
+    t: TFunction<"translation", undefined>
+}) => {
     const [file, setFile] = React.useState<File | null>(null)
     return (
         <Modal
@@ -17,7 +22,8 @@ const LogoEditDialog = ({open, setOpen}: {open: boolean, setOpen: (file: File | 
             }}
         >
             <div>
-                <ImageUpload setFile={setFile}/>
+                {t("Upload Logo Image, please select image")}
+                <ImageUpload t={t} setFile={setFile}/>
             </div>
         </Modal>
     )

@@ -2,9 +2,9 @@ import * as Formidable from 'formidable';
 import fs from "fs";
 import path from "node:path";
 import MongoApi from "../../api/MongoApi";
-import {IImage} from "../../gqty";
 import guid from "../../../helpers/guid";
 import {PUBLIC_IMAGE_PATH} from "../../../constants/imgPath";
+import IImage, {InImage} from "../../../Interfaces/IImage";
 
 export const config = {
     api: {
@@ -42,7 +42,7 @@ const uploadForm = (next: { (req: any, res: any): void; (arg0: any, arg1: any): 
                 const existingFile = fs.existsSync(`src/frontend/public/images/${file.originalFilename}`);
                 if(!existingFile){
                     fs.renameSync(file.filepath, path.join(process.cwd(), 'src/frontend/', `public/images/${fileTargetName}`));
-                    const image: IImage = {
+                    const image: InImage = {
                         created: new Date().toDateString(),
                         id: guid(),
                         location: `${PUBLIC_IMAGE_PATH}${fileTargetName}`,

@@ -10,23 +10,23 @@ const ContentType = (props: IContentTypeProps) => {
     switch (props.item.type) {
         case EItemType.Text:
             return (
-                <PlainText item={props.item} />
+                <PlainText t={props.t} item={props.item} />
             )
         case EItemType.RichText:
             return (
-                <RichText item={props.item} />
+                <RichText t={props.t}  item={props.item} />
             )
         case EItemType.Image:
             return (
-                <PlainImage item={props.item} />
+                <PlainImage t={props.t}  item={props.item} />
             )
         case EItemType.Carousel:
             return (
-                <CarouselView item={props.item} />
+                <CarouselView t={props.t}  item={props.item} />
             )
         case EItemType.Gallery:
             return (
-                <Gallery item={props.item} />
+                <Gallery t={props.t}  item={props.item} />
             )
         case EItemType.Empty:
             return (

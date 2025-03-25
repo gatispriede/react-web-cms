@@ -4,6 +4,7 @@ import {EItemType} from "../../../enums/EItemType";
 import {IItem} from "../../../Interfaces/IItem";
 import {RawDraftContentState} from "draft-js";
 import draftToHtml from "draftjs-to-html";
+import {TFunction} from "i18next";
 
 export interface IRichText {
     value: RawDraftContentState;
@@ -35,7 +36,7 @@ export class RichTextContent extends ContentManager {
 
 }
 
-const RichText = ({item}:{item: IItem}) => {
+const RichText = ({item, t}: { item: IItem, t: TFunction<"translation", undefined> }) => {
     const richTextContent = new RichTextContent(EItemType.RichText, item.content);
     const contentRef: RefObject<HTMLDivElement | null> = React.createRef();
     useEffect(() => {

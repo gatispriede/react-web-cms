@@ -3,14 +3,15 @@ import {Button, Modal} from "antd";
 import ContentType from "../ContentType";
 import {IItem} from "../../../../Interfaces/IItem";
 import ActionDialog from "./ActionDialog";
+import {TFunction} from "i18next";
 
-class PreviewDialog extends React.Component<{item: IItem}> {
+class PreviewDialog extends React.Component<{ item: IItem, t: TFunction<"translation", undefined> }> {
     state = {
         dialogOpen: false,
         actionDialogOpen: false,
     }
 
-    constructor(props: {item: IItem}) {
+    constructor(props: {item: IItem, t: TFunction<"translation", undefined>}) {
         super(props)
     }
 
@@ -24,7 +25,7 @@ class PreviewDialog extends React.Component<{item: IItem}> {
                 </Button>
                 <Modal
                     width={'90%'}
-                    title={'Preview'}
+                    title={this.props.t('Preview')}
                     open={this.state.dialogOpen}
                     onCancel={async () => {
                         this.setState({dialogOpen: false})
@@ -38,8 +39,8 @@ class PreviewDialog extends React.Component<{item: IItem}> {
                             this.setState({actionDialogOpen: true})
                         }
                     }}>
-                        <ContentType admin={false} item={this.props.item} addButton={""} />
-                        <ActionDialog item={this.props.item} open={this.state.actionDialogOpen} close={() => {
+                        <ContentType t={this.props.t}  admin={false} item={this.props.item} addButton={""} />
+                        <ActionDialog t={this.props.t} item={this.props.item} open={this.state.actionDialogOpen} close={() => {
                             this.setState({actionDialogOpen: false})
                         }}/>
                     </div>

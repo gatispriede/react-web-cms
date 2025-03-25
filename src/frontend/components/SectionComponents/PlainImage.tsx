@@ -5,6 +5,7 @@ import {Image} from "antd";
 import {IItem} from "../../../Interfaces/IItem";
 import draftToHtml from 'draftjs-to-html';
 import {RawDraftContentState} from "draft-js";
+import {TFunction} from "i18next";
 
 export interface IPlainImage {
     src: string;
@@ -92,7 +93,7 @@ export class PlainImageContent extends ContentManager {
 
 }
 
-const PlainImage = ({item}: { item: IItem }) => {
+const PlainImage = ({item, t}: { item: IItem, t: TFunction<"translation", undefined> }) => {
     const plainImage = new PlainImageContent(EItemType.Image, item.content);
     const preview = plainImage.data.preview ? plainImage.data.preview : typeof item.action !== "string"
     const contentRef: RefObject<HTMLDivElement | null> = React.createRef();

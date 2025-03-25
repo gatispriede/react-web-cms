@@ -1,10 +1,12 @@
 import React from "react";
 import {Button, Modal} from "antd";
 import {PlusCircleOutlined} from "@ant-design/icons";
+import {TFunction} from "i18next";
 
 class AddNewSection extends React.Component <{
     page: string,
-    addSectionToPage: (item: any) => Promise<void>
+    addSectionToPage: (item: any) => Promise<void>,
+    t: TFunction<"translation", undefined>
 }> {
     state = {
         dialogOpen: false,
@@ -17,7 +19,8 @@ class AddNewSection extends React.Component <{
 
     constructor(props: {
         page: string,
-        addSectionToPage: (item: any) => Promise<void>
+        addSectionToPage: (item: any) => Promise<void>,
+        t: TFunction<"translation", undefined>
     }) {
         super(props)
         this.state.page = props.page
@@ -30,7 +33,7 @@ class AddNewSection extends React.Component <{
                 <Button type="primary" onClick={() => {
                     this.setState({dialogOpen: true})
                 }}>
-                    Add new section <PlusCircleOutlined/>
+                    {this.props.t("Add new section")} <PlusCircleOutlined/>
                 </Button>
                 <Modal width={'90%'} open={this.state.dialogOpen}
                        onCancel={() => {
@@ -79,7 +82,7 @@ class AddNewSection extends React.Component <{
                                 <p>25%</p>
                             </div>
                         </div>
-                        <div>Selected type: {this.state.label}</div>
+                        <div>{this.props.t("Selected type")}: {this.state.label}</div>
                     </div>
                 </Modal>
             </>

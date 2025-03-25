@@ -5,6 +5,7 @@ import {Carousel, Image} from "antd";
 import {IItem} from "../../../Interfaces/IItem";
 import {ETextPosition} from "../../../enums/ETextPosition";
 import {IGalleryItem} from "./Gallery";
+import {TFunction} from "i18next";
 
 
 export interface ICarousel {
@@ -94,7 +95,7 @@ export class CarouselContent extends ContentManager {
     }
 }
 
-const CarouselView = ({item}: { item: IItem }) => {
+const CarouselView = ({item, t}: { item: IItem, t: TFunction<"translation", undefined> }) => {
     const gallery = new CarouselContent(EItemType.Image, item.content);
     gallery.setDisablePreview(item.action !== "onClick");
     const data = gallery.data;

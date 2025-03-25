@@ -1,12 +1,11 @@
 'use client'
 import React from 'react'
-import { resolve} from "../../gqty";
-import {Button, Spin, Tabs} from 'antd';
+import {resolve} from "../../gqty";
+import {Button, ConfigProvider, Spin, Tabs} from 'antd';
 import AddNewDialogNavigation from "../common/Dialogs/AddNewDialogNavigation";
 import DynamicTabsContent from "../DynamicTabsContent";
 import {IPage} from "../../../Interfaces/IPage";
 import theme from '../../theme/themeConfig';
-import {ConfigProvider} from 'antd';
 import {IMongo} from "../../../Interfaces/IMongo";
 import MongoApi from '../../api/MongoApi';
 import Logo from "../common/Logo";
@@ -97,7 +96,7 @@ class AdminApp extends React.Component<{ session: Session, t: TFunction<"transla
                 const list: any[] = [];
                 (query as unknown as IMongo).mongo.getNavigationCollection.map((item: INavigation) => {
                     let itemSeo
-                    if(item.seo){
+                    if (item.seo) {
                         itemSeo = {
                             description: item.seo.description,
                             keywords: item.seo.keywords,
@@ -132,10 +131,10 @@ class AdminApp extends React.Component<{ session: Session, t: TFunction<"transla
                         page: pages[id].page,
                         label:
                             <div className={'navigation-container'}>
-                                <EditWrapper edit={true} editContent={<div>
+                                <EditWrapper t={this.props.t} edit={true} editContent={<div>
                                     <Button onClick={() => {
                                         const pageIndex: number = parseInt(id);
-                                        if(this.state.pages.length > 0) {
+                                        if (this.state.pages.length > 0) {
                                             const page = pages[pageIndex]
                                             this.setState({
                                                 activeNavigation: page,
@@ -143,8 +142,8 @@ class AdminApp extends React.Component<{ session: Session, t: TFunction<"transla
                                             })
                                         }
 
-                                    }} ><EditOutlined/></Button>
-                                </div>} admin={this.admin} >
+                                    }}><EditOutlined/></Button>
+                                </div>} admin={this.admin}>
                                     {pages[id].page}
                                 </EditWrapper>
                             </div>,
@@ -164,17 +163,20 @@ class AdminApp extends React.Component<{ session: Session, t: TFunction<"transla
             }
 
         }
+
+
         newState.tabProps = newTabsState
         newState.pages = pages
         newState.loading = false
         this.setState(newState)
+
     }
 
     render() {
         return (
             <ConfigProvider theme={theme}>
                 <Spin spinning={this.state.loading}>
-                    <Logo admin={true}/>
+                    <Logo admin={true} t={this.props.t}/>
                     <AddNewDialogNavigation
                         t={this.props.t}
                         close={() => {

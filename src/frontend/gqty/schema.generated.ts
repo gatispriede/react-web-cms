@@ -424,3 +424,6 @@ export type ScalarsEnums = {
     ? Scalars[Key]["output"]
     : never;
 } & {};
+
+export class Cache {
+}

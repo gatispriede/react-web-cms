@@ -5,19 +5,25 @@ import InputPlainImage from "../Admin/ConfigComponents/InputPlainImage";
 import InputGallery from "../Admin/ConfigComponents/InputGallery";
 import EItemType from "../../../enums/EItemType";
 import InputCarousel from "../Admin/ConfigComponents/InputCarousel";
+import {TFunction} from "i18next";
 
-export const ContentSection = ({selected, content, setContent}: { content: string, selected: string, setContent: (value: string) => void }) => {
+export const ContentSection = ({selected, content, setContent, t}: {
+    content: string,
+    selected: string,
+    setContent: (value: string) => void,
+    t: TFunction<"translation", undefined>
+}) => {
     switch (selected) {
         case EItemType.Text:
-            return <InputPlainText content={content} setContent={setContent} />
+            return <InputPlainText t={t} content={content} setContent={setContent} />
         case EItemType.RichText:
-            return <InputRichText content={content} setContent={setContent} />
+            return <InputRichText t={t} content={content} setContent={setContent} />
         case EItemType.Image:
-            return <InputPlainImage content={content} setContent={setContent} />
+            return <InputPlainImage t={t} content={content} setContent={setContent} />
         case EItemType.Gallery:
-            return <InputGallery content={content} setContent={setContent} />
+            return <InputGallery t={t} content={content} setContent={setContent} />
         case EItemType.Carousel:
-            return <InputCarousel content={content} setContent={setContent} />
+            return <InputCarousel t={t} content={content} setContent={setContent} />
         default:
             return <></>
 

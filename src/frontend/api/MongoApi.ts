@@ -1,5 +1,6 @@
-import {IImage, InImage, resolve} from "../gqty";
+import {resolve} from "../gqty";
 import {IMongo, InSection, MutationMongo} from "../../Interfaces/IMongo";
+import IImage, {InImage} from "../../Interfaces/IImage";
 import {ISection} from "../../Interfaces/ISection";
 import {IConfigSectionAddRemove} from "../../Interfaces/IConfigSectionAddRemove";
 import {IPage} from "../../Interfaces/IPage";

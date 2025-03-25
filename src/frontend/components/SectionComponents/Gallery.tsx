@@ -4,6 +4,7 @@ import {EItemType} from "../../../enums/EItemType";
 import {Image} from "antd";
 import {IItem} from "../../../Interfaces/IItem";
 import {ETextPosition} from "../../../enums/ETextPosition";
+import {TFunction} from "i18next";
 
 export interface IGalleryItem {
     alt: string;
@@ -77,7 +78,7 @@ export class GalleryContent extends ContentManager {
     }
 }
 
-const Gallery = ({item}: { item: IItem }) => {
+const Gallery = ({item, t}: { item: IItem, t: TFunction<"translation", undefined> }) => {
     const gallery = new GalleryContent(EItemType.Image, item.content);
     gallery.setDisablePreview(item.action !== "onClick");
     const data = gallery.data

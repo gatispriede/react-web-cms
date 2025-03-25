@@ -4,11 +4,11 @@ import {IInputContent} from "../../../../Interfaces/IInputContent";
 import {EItemType} from "../../../../enums/EItemType";
 import {PlainTextContent} from "../../SectionComponents/PlainText";
 
-const InputPlainText = ({content, setContent}:IInputContent) => {
+const InputPlainText = ({content, setContent, t}:IInputContent) => {
     const richTextContent = new PlainTextContent(EItemType.Text, content)
     return (
         <div className={'plain-text'}>
-            <label>Please enter text: </label>
+            <label>{t("Please enter text")}: </label>
             <Input value={richTextContent.data.value} onChange={(e) => {
                 richTextContent.setValue(e.target.value)
                 setContent(richTextContent.stringData)

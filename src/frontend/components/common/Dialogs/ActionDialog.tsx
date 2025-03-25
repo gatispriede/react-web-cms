@@ -3,8 +3,14 @@ import {Modal} from "antd";
 import React from "react";
 import {IItem} from "../../../../Interfaces/IItem";
 import {EItemType} from "../../../../enums/EItemType";
+import {TFunction} from "i18next";
 
-const ActionDialog = ({item, open, close}: {item: IItem, open:boolean, close: () => void}) => {
+const ActionDialog = ({item, open, close, t}: {
+    item: IItem,
+    open: boolean,
+    close: () => void,
+    t: TFunction<"translation", undefined>
+}) => {
     const newItem = {
         type: item.actionType ? item.actionType : EItemType.Text,
         content: item.actionContent ? item.actionContent : '{}',
@@ -24,7 +30,7 @@ const ActionDialog = ({item, open, close}: {item: IItem, open:boolean, close: ()
             footer={[]}
         >
             <div>
-                <ContentType admin={false} item={newItem} addButton={""} />
+                <ContentType t={t} admin={false} item={newItem} addButton={""} />
             </div>
         </Modal>
     )

@@ -80,7 +80,7 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
                                 }
                                 return (
                                     <div key={`${index}-${section.type}`} className={`${index}-${section.type}`}>
-                                        <EditWrapper admin={this.admin} deleteAction={async () => {
+                                        <EditWrapper t={this.props.t} admin={this.admin} deleteAction={async () => {
                                             if (section.id) {
                                                 await this.MongoApi.deleteSection(section.id)
                                                 const sections = this.state.sections.filter((filterSection: ISection) => filterSection.id !== section.id)
@@ -89,6 +89,7 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
                                         }}>
                                             <SectionContent
                                                 admin={this.admin}
+                                                t={this.props.t}
                                                 section={section}
                                                 refresh={async () => {
                                                     await this.refresh()
@@ -109,6 +110,7 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
                 </DraggableWrapper>
                 {this.admin && <div className={'new-section-wrapper'}>
                     <AddNewSection
+                        t={this.props.t}
                         page={this.state.page}
                         addSectionToPage={async (item: any) => {
                             const result = await this.MongoApi.addSectionToPage(item, this.state.sections)

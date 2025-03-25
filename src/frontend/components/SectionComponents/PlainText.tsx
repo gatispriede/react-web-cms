@@ -2,6 +2,7 @@ import React from "react";
 import {EItemType} from "../../../enums/EItemType";
 import {IItem} from "../../../Interfaces/IItem";
 import ContentManager from "../ContentManager";
+import {TFunction} from "i18next";
 
 export interface IPlainTextContent {
     value: string;
@@ -31,7 +32,7 @@ export class PlainTextContent extends ContentManager {
 
 }
 
-const PlainText = ({item}:{item: IItem}) => {
+const PlainText = ({item, t}: { item: IItem, t: TFunction<"translation", undefined> }) => {
     const plainTextContent = new PlainTextContent(EItemType.Text, item.content);
     return (
         <div className={`plain-text ${item.style}`}>

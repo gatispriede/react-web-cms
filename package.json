@@ -2,6 +2,7 @@
   "name": "redis-node-js-cloud",
   "version": "0.1.0",
   "private": true,
+  "type": "esnext",
   "scripts": {
     "dev": "next dev --turbo -p 80 src/frontend  ",
     "start": "cross-env NODE_ENV=production next start -p 80 src/frontend ",

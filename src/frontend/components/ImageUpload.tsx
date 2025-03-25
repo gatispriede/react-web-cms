@@ -1,13 +1,14 @@
-import {Alert, Button, Input, Modal, Tabs} from "antd";
+import {Alert, Button, Input, Modal} from "antd";
 import {CloudUploadOutlined} from "@ant-design/icons";
 import React, {RefObject, useEffect, useState} from "react";
 import UpploadManager from "../Classes/UpploadeManager";
 import EditableTags from "./common/EditableTags";
-import {IImage} from "../gqty";
 import MongoApi from "../api/MongoApi";
 import EditWrapper from "./common/EditWrapper";
+import {TFunction} from "i18next";
+import IImage from "../../Interfaces/IImage";
 
-const ImageUpload = ({setFile}: { setFile: (file: File) => void }) => {
+const ImageUpload = ({setFile, t}: { setFile: (file: File) => void, t: TFunction<"translation", undefined> }) => {
 
     let upploadManager: UpploadManager;
     const mongoApi = new MongoApi()
@@ -51,11 +52,11 @@ const ImageUpload = ({setFile}: { setFile: (file: File) => void }) => {
             <Button type={'primary'} onClick={() => {
                 setDialogOpen(true)
             }}>
-                Select Image
+                {t("Select Image")}
             </Button>
             <Modal
                 width={'90%'}
-                title={'Image Selection'}
+                title={t('Image Selection')}
                 open={dialogOpen}
                 onCancel={async () => {
                     setDialogOpen(false)
@@ -69,25 +70,25 @@ const ImageUpload = ({setFile}: { setFile: (file: File) => void }) => {
                         {
                             error !== '' &&
                             <Alert
-                                message="Error"
+                                message={t("Error")}
                                 description={error}
                                 type="error"
                                 showIcon
                             />
                         }
                         <div className={'tag-container'}>
-                            <label>Add / Remove Tags</label>
+                            <label>{t("Add / Remove Tags")}</label>
                             <EditableTags setTagsProp={(tags: string[]) => {
                                 setTags(tags)
                             }}/>
                         </div>
                         <div className={'image-container'}>
                             <Button ref={buttonRef} className="pure-button pure-button-primary">
-                                <CloudUploadOutlined/> Upload New Image
+                                <CloudUploadOutlined/> {t("Upload New Image")}
                             </Button>
                         </div>
                         <div className={'image-preview'}>
-                            Image Preview
+                            {t("Image Preview")}
                             <img ref={imageRef} alt="" className="uppload-image" />
                         </div>
                     </div>
@@ -97,7 +98,7 @@ const ImageUpload = ({setFile}: { setFile: (file: File) => void }) => {
                             <Input value={searchTag} onChange={(e) => {
                                 setSearchTag(e.target.value);
                             }}/>
-                            <Button onClick={loadImages}>Search Images</Button>
+                            <Button onClick={loadImages}>{t("Search Images")}</Button>
                         </div>
                         <hr/>
                         <div className={'image-result-container'}>
@@ -105,8 +106,7 @@ const ImageUpload = ({setFile}: { setFile: (file: File) => void }) => {
                                 images.map((image: IImage, index) => {
                                     return (
                                         <div className={'image-item'}>
-
-                                            <EditWrapper key={index} admin={true} del={true} deleteAction={async () => {
+                                            <EditWrapper t={t} key={index} admin={true} del={true} deleteAction={async () => {
                                                 await mongoApi.deleteImage(image.id);
                                                 await loadImages()
                                             }}>
@@ -117,7 +117,7 @@ const ImageUpload = ({setFile}: { setFile: (file: File) => void }) => {
                                                         setFile(image as unknown as File)
                                                         setDialogOpen(false)
                                                     }}>
-                                                        Select image
+                                                        {t("Select image")}
                                                     </Button>
                                                 </div>
                                             </EditWrapper>

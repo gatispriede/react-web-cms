@@ -7,7 +7,7 @@ import EditWrapper from "../../common/EditWrapper";
 import ImageUpload from "../../ImageUpload";
 import {PUBLIC_IMAGE_PATH} from "../../../../constants/imgPath";
 
-const InputGallery = ({content, setContent}: IInputContent) => {
+const InputGallery = ({content, setContent, t}: IInputContent) => {
     const galleryContent = new GalleryContent(EItemType.Image, content);
     const data = galleryContent.data
     return (
@@ -23,20 +23,18 @@ const InputGallery = ({content, setContent}: IInputContent) => {
                             setContent(galleryContent.stringData)
                         }
                         return (
-                            <EditWrapper key={index} wrapperClass={'config-item-container'} admin={true} del={true} deleteAction={async () => {
+                            <EditWrapper t={t} key={index} wrapperClass={'config-item-container'} admin={true} del={true} deleteAction={async () => {
                                 galleryContent.removeItem(index)
                                 setContent(galleryContent.stringData)
                             }}>
                                 <div key={index} className={`admin container text-${item.textPosition}`}>
                                     <div className={'config-item'}>
                                         <div className={'select-image-container'}>
-
-                                            <ImageUpload setFile={setFile}/>
+                                            <ImageUpload t={t} setFile={setFile}/>
                                         </div>
                                         <div className={'content'}>
-
                                             <Input
-                                                placeholder={'Image URL'}
+                                                placeholder={t("Image URL")}
                                                 value={item.src}
                                                 disabled={true}
                                             />
@@ -60,9 +58,8 @@ const InputGallery = ({content, setContent}: IInputContent) => {
                                         </div>
                                     </div>
                                     <div className={'config-item'}>
-                                        <label>Image width</label>
+                                        <label>{t("Image width")}</label>
                                         <div className={'content'}>
-
                                             <Input
                                                 placeholder={'Image width'}
                                                 value={item.imgWidth}
@@ -77,7 +74,7 @@ const InputGallery = ({content, setContent}: IInputContent) => {
                                         </div>
                                     </div>
                                     <div className={'config-item'}>
-                                        <label>Image Height</label>
+                                        <label>{t("Image Height")}</label>
                                         <div className={'content'}>
 
                                             <Input
@@ -106,7 +103,7 @@ const InputGallery = ({content, setContent}: IInputContent) => {
                     galleryContent.addItem()
                     setContent(galleryContent.stringData)
                 }}>
-                    Add Image
+                    {t("Add New Image")}
                 </Button>
             </div>
         </div>

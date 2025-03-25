@@ -13,7 +13,7 @@ const RichTextEditor = dynamic(
     {ssr: false}
 )
 
-const InputPlainImage = ({content, setContent}: IInputContent) => {
+const InputPlainImage = ({content, setContent, t}: IInputContent) => {
     const plainImage = new PlainImageContent(EItemType.Image, content);
     const setFile = (file: File) => {
         plainImage.setSrc(PUBLIC_IMAGE_PATH + file.name)
@@ -22,47 +22,47 @@ const InputPlainImage = ({content, setContent}: IInputContent) => {
     return (
         <div className={'admin-image'}>
             <div className={'settings'}>
-                <label>Use as background image</label>
+                <label>{t("Use as background image")}</label>
                 <Switch value={plainImage.data.useAsBackground} onChange={(checked) => {
                     plainImage.setUseAsBackground(checked)
                     setContent(plainImage.stringData)
                 }}/>
-                <label>Make image fixed position</label>
+                <label>{t("Make image fixed position")}</label>
                 <Switch value={plainImage.data.imageFixed} onChange={(checked) => {
                     plainImage.setImageFixed(checked)
                     setContent(plainImage.stringData)
                 }}/>
-                <label>Use gradiant</label>
+                <label>{t("Use gradiant")}</label>
                 <Switch value={plainImage.data.useGradiant} onChange={(checked) => {
                     plainImage.setUseGradiant(checked)
                     setContent(plainImage.stringData)
                 }}/>
 
-                <label>Image vertical offset</label>
+                <label>{t("Image vertical offset")}</label>
                 <Input defaultValue={0} value={plainImage.data.offsetX} onChange={(e) => {
                     plainImage.setOffsetX(parseInt(e.target.value))
                     setContent(plainImage.stringData)
                 }}/>
-                <label>Image width</label>
+                <label>{t("Image width")}</label>
                 <Input defaultValue={0} value={plainImage.data.imgWidth} onChange={(e) => {
                     plainImage.setImgWidth((e.target.value))
                     setContent(plainImage.stringData)
                 }}/>
-                <label>Image height</label>
+                <label>{t("Image height")}</label>
                 <Input defaultValue={0} value={plainImage.data.imgHeight} onChange={(e) => {
                     plainImage.setImgHeight((e.target.value))
                     setContent(plainImage.stringData)
                 }}/>
             </div>
-            <label>Image</label>
-            <ImageUpload setFile={setFile}/>
+            <label>{t("Image")}</label>
+            <ImageUpload t={t} setFile={setFile}/>
             <Input disabled={true} value={plainImage.data.src} onChange={(e) => {
                 plainImage.setSrc(e.target.value)
                 setContent(plainImage.stringData)
             }}/>
             {!plainImage.data.useAsBackground &&
                 <div>
-                    <label>Description:</label>
+                    <label>{t("Description")}:</label>
                     <div className={'rich-text-container-admin'}>
                         <RichTextEditor value={plainImage.data.description} setValue={(value: RawDraftContentState) => {
                             plainImage.setDescription(value)

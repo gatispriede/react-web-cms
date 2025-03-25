@@ -8,12 +8,14 @@ import {IConfigSectionAddRemove} from "../../Interfaces/IConfigSectionAddRemove"
 import ActionDialog from "./common/Dialogs/ActionDialog";
 import {EStyle} from "../../enums/EStyle";
 import {IItem} from "../../Interfaces/IItem";
+import {TFunction} from "i18next";
 
 interface IPropsSectionContent {
-    section: ISection;
-    addRemoveSectionItem: (sectionId: string, config: IConfigSectionAddRemove) => Promise<void>;
-    refresh: () => Promise<void>;
-    admin: boolean
+    section: ISection,
+    addRemoveSectionItem: (sectionId: string, config: IConfigSectionAddRemove) => Promise<void>,
+    refresh: () => Promise<void>,
+    admin: boolean,
+    t: TFunction<"translation", undefined>
 }
 
 interface IStateSectionContent {
@@ -57,19 +59,22 @@ class SectionContent extends React.Component<IPropsSectionContent> {
                             'width-25',
                         ]
                         const style = {
-
                             height: '100%'
                         }
                         const sectionId = this.state.section.id ? this.state.section.id : ''
                         return (
-                            <div key={id} className={`section-item-container ${item.type} ${layoutClass[this.state.section.type]}`} style={style}>
+                            <div key={id}
+                                 className={`section-item-container ${item.type} ${layoutClass[this.state.section.type]}`}
+                                 style={style}>
                                 <EditWrapper
+                                    t={this.props.t}
                                     admin={this.admin}
                                     key={id}
                                     del={item.type !== EItemType.Empty}
                                     edit={item.type !== EItemType.Empty}
                                     editContent={
                                         item.type !== EItemType.Empty ? <AddNewSectionItem
+                                                t={this.props.t}
                                                 index={id}
                                                 addSectionItem={this.props.addRemoveSectionItem}
                                                 section={this.state.section}
@@ -94,10 +99,12 @@ class SectionContent extends React.Component<IPropsSectionContent> {
                                             }
                                         }}>
                                         <ContentType
+                                            t={this.props.t}
                                             admin={this.admin}
                                             item={item}
                                             addButton={
                                                 <AddNewSectionItem
+                                                    t={this.props.t}
                                                     index={id}
                                                     addSectionItem={this.addRemoveSectionItem}
                                                     section={this.state.section}
@@ -106,7 +113,7 @@ class SectionContent extends React.Component<IPropsSectionContent> {
                                             }
                                         />
                                         {item.action && item.action !== 'none' &&
-                                            <ActionDialog item={item} open={this.state.actionDialogOpen} close={() => {
+                                            <ActionDialog t={this.props.t} item={item} open={this.state.actionDialogOpen} close={() => {
                                                 this.setState({actionDialogOpen: false})
                                             }}/>
                                         }

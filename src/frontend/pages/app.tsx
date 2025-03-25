@@ -1,5 +1,5 @@
 import React from 'react'
-import {INavigation, resolve} from "../gqty";
+import {resolve} from "../gqty";
 import {Spin, Tabs} from 'antd';
 import DynamicTabsContent from "../components/DynamicTabsContent";
 import {IPage} from "../../Interfaces/IPage";
@@ -11,10 +11,10 @@ import {ISection} from "../../Interfaces/ISection";
 import Logo from "../components/common/Logo";
 import Link from 'next/link'
 import Head from 'next/head'
-import '@ant-design/v5-patch-for-react-19';
 import {GetServerSideProps} from "next";
 import {serverSideTranslations} from "next-i18next/serverSideTranslations";
 import {TFunction} from "i18next";
+import {INavigation} from "../gqty/schema.generated";
 interface IHomeState {
     loading: boolean,
     activeTab: string,
@@ -22,7 +22,7 @@ interface IHomeState {
     tabProps: any[]
 }
 
-class App extends React.Component<{ page: string, t?: TFunction<string, undefined> }> {
+class App extends React.Component<{ page: string, t: TFunction<string, undefined> }> {
     sections: any[] = []
     private MongoApi = new MongoApi()
     loadSections: any
@@ -34,11 +34,9 @@ class App extends React.Component<{ page: string, t?: TFunction<string, undefine
         tabProps: [],
         activeTab: '0'
     }
-    private t: TFunction<string, undefined>;
 
-    constructor(props: {page: string, t: TFunction<string, undefined>}) {
+    constructor(props: { page: string, t: TFunction<string, undefined> }) {
         super(props);
-        this.t = props.t;
         this.page = props.page
         this.state.loading = true
         this.loadSections = this.MongoApi.loadSections
@@ -132,6 +130,7 @@ class App extends React.Component<{ page: string, t?: TFunction<string, undefine
                         ),
                         children:
                             <DynamicTabsContent
+                                t={this.props.t}
                                 refresh={async () => {
                                     await this.initialize();
                                 }}
@@ -197,7 +196,7 @@ class App extends React.Component<{ page: string, t?: TFunction<string, undefine
                 </Head>
                 <ConfigProvider theme={theme}>
                     <Spin spinning={this.state.loading}>
-                        <Logo admin={false}/>
+                        <Logo t={this.props.t} admin={false}/>
                         <Tabs onChange={(value) => {
                             this.setState({activeTab: value})
                         }} activeKey={"" + activeKey} defaultActiveKey={"0"} items={this.state.tabProps}/>
@@ -207,9 +206,7 @@ class App extends React.Component<{ page: string, t?: TFunction<string, undefine
         );
     }
 };
-export const getServerSideProps: GetServerSideProps<{ }> = async ({
-                                                                      locale,
-                                                                  }) => ({
+export const getServerSideProps: GetServerSideProps<{ }> = async ({locale,}) => ({
     props: {
         ...(await serverSideTranslations(locale ?? 'en', [
             'common',
