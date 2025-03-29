@@ -10,8 +10,9 @@ import {IPlainTextContent} from "../SectionComponents/PlainText";
 import {ICarousel} from "../SectionComponents/CarouselView";
 import {IRichText} from "../SectionComponents/RichText";
 import {sanitizeKey} from "../../../utils/stringFunctions";
+import {INewLanguage} from "../interfaces/INewLanguage";
 
-class DataLoader {
+class TranslationManager {
     MongoApi: MongoApi;
     sectionsIds: string[];
     sections: ISection[];
@@ -33,6 +34,13 @@ class DataLoader {
     async loadData() {
         await this.getNavigationData();
         await this.getSectionsData();
+    }
+
+    async getLanguages(){
+        return await this.MongoApi.getLanguages()
+    }
+    async saveNewLanguage(language: INewLanguage){
+        await this.MongoApi.saveLanguage(language)
     }
 
     async getNavigationData() {
@@ -261,4 +269,4 @@ class DataLoader {
 
 }
 
-export default DataLoader;
+export default TranslationManager;

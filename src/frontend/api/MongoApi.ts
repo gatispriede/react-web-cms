@@ -8,9 +8,10 @@ import {INavigation} from "../../Interfaces/INavigation";
 import {IItem} from "../../Interfaces/IItem";
 import {ILogo} from "../../Interfaces/ILogo";
 import {IUser} from "../../Interfaces/IUser";
+import {INewLanguage} from "../components/interfaces/INewLanguage";
 
 class MongoApi {
-    async getUser({email}: {email: string}): Promise<Partial<IUser> | any> {
+    async getUser({email}: { email: string }): Promise<Partial<IUser> | any> {
         const user = await resolve(
             ({query}) => {
                 const user = query.mongo.getUser({email})
@@ -24,6 +25,7 @@ class MongoApi {
         )
         return user
     }
+
     async getLogo(): Promise<ILogo> {
         const logo = await resolve(
             ({query}) => {
@@ -37,6 +39,42 @@ class MongoApi {
         )
         return logo
     }
+
+    async getLanguages() {
+        try {
+            const data = await resolve(
+                ({query}) => {
+                    const languageList: any = query.mongo.getLanguages;
+                    return languageList.map((languageList: any) => {
+                        return {
+                            default: languageList.default,
+                            label: languageList.label,
+                            symbol: languageList.symbol,
+                        }
+                    })
+
+                },
+            )
+            const dataObject: any = {};
+            data.map((data: any) => {
+                dataObject[data.symbol] = data;
+            })
+            return dataObject
+        } catch (error) {
+            console.error('Error while fetching languages', error)
+        }
+        return []
+
+    }
+
+    async saveLanguage(language: INewLanguage) {
+        await resolve(
+            ({mutation}) => {
+                return (mutation).mongo.addUpdateLanguage({language: language})
+            },
+        )
+    }
+
     async saveLogo(content: string): Promise<void> {
         await resolve(
             ({mutation}) => {
@@ -93,14 +131,15 @@ class MongoApi {
         )
     }
 
-    async createNavigation(newNavigation:INavigation): Promise<string> {
+    async createNavigation(newNavigation: INavigation): Promise<string> {
         return await resolve(
             ({mutation}) => {
                 return (mutation).mongo.createNavigation({navigation: newNavigation})
             },
         );
     }
-    async replaceUpdateNavigation(oldNavigationName: string,newNavigation:INavigation): Promise<string> {
+
+    async replaceUpdateNavigation(oldNavigationName: string, newNavigation: INavigation): Promise<string> {
         return await resolve(
             ({mutation}) => {
                 return (mutation).mongo.replaceUpdateNavigation({
@@ -207,13 +246,13 @@ class MongoApi {
             section: (section as InSection)
         }
         //@todo remove once update happens
-        if(section.content)
-        section.content = section.content.map(item => {
-            if(!item.style){
-                item.style = 'default'
-            }
-            return item
-        })
+        if (section.content)
+            section.content = section.content.map(item => {
+                if (!item.style) {
+                    item.style = 'default'
+                }
+                return item
+            })
         return await resolve(
             ({mutation}) => {
                 return (mutation).mongo.addUpdateSectionItem(input)

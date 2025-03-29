@@ -3,9 +3,10 @@ import AdminSettingsUsers from "./AdminSettings/Users";
 import AdminSettingsLanguages from "./AdminSettings/Languages";
 import AdminSettingsTheme from "./AdminSettings/Theme";
 import {useTranslation} from "next-i18next";
-import DataLoader from "./DataLoader";
+import TranslationManager from "./TranslationManager";
+import {TFunction} from "i18next";
 
-const getItems = (t: any, dataLoader: DataLoader, i18n: any, ): TabsProps['items'] => {
+const getItems = (t: TFunction<"common", undefined>, translationManager: TranslationManager, i18n: any, ): TabsProps['items'] => {
     return [
         {
             key: '1',
@@ -15,7 +16,7 @@ const getItems = (t: any, dataLoader: DataLoader, i18n: any, ): TabsProps['items
         {
             key: '2',
             label: t('Languages'),
-            children: <AdminSettingsLanguages i18n={i18n} dataLoader={dataLoader}/>,
+            children: <AdminSettingsLanguages t={t} i18n={i18n} translationManager={translationManager}/>,
         },
         {
             key: '3',
@@ -26,10 +27,11 @@ const getItems = (t: any, dataLoader: DataLoader, i18n: any, ): TabsProps['items
 }
 
 const AdminSettings = () => {
-    const dataLoader = new DataLoader();
+    const translationManager = new TranslationManager();
+
     const {t, i18n} = useTranslation('common')
     return (
-        <Tabs defaultActiveKey="2" items={getItems(t, dataLoader, i18n)}/>
+        <Tabs defaultActiveKey="2" items={getItems(t, translationManager, i18n)}/>
     )
 }
 export default AdminSettings

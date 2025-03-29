@@ -54,6 +54,12 @@ export interface InItem {
   type: Scalars["String"]["input"];
 }
 
+export interface InLanguage {
+  default?: InputMaybe<Scalars["Boolean"]["input"]>;
+  label: Scalars["String"]["input"];
+  symbol: Scalars["String"]["input"];
+}
+
 export interface InLogo {
   content: Scalars["String"]["input"];
 }
@@ -135,6 +141,12 @@ export const generatedSchema = {
     seo: { __type: "ISeo" },
     type: { __type: "String!" },
   },
+  INewLanguage: {
+    __typename: { __type: "String!" },
+    default: { __type: "Boolean" },
+    label: { __type: "String!" },
+    symbol: { __type: "String!" },
+  },
   ISection: {
     __typename: { __type: "String!" },
     content: { __type: "[IItem]" },
@@ -184,6 +196,11 @@ export const generatedSchema = {
     style: { __type: "String!" },
     type: { __type: "String!" },
   },
+  InLanguage: {
+    default: { __type: "Boolean" },
+    label: { __type: "String!" },
+    symbol: { __type: "String!" },
+  },
   InLogo: { content: { __type: "String!" } },
   InNavigation: {
     id: { __type: "String!" },
@@ -213,6 +230,10 @@ export const generatedSchema = {
   },
   MutationMongo: {
     __typename: { __type: "String!" },
+    addUpdateLanguage: {
+      __type: "String!",
+      __args: { language: "InLanguage" },
+    },
     addUpdateNavigationItem: {
       __type: "String!",
       __args: { pageName: "String!", sections: "[String]" },
@@ -246,6 +267,7 @@ export const generatedSchema = {
     __typename: { __type: "String!" },
     createDatabase: { __type: "String!" },
     getImages: { __type: "[IImage!]!", __args: { tags: "String!" } },
+    getLanguages: { __type: "[INewLanguage]" },
     getLogo: { __type: "ILogo!" },
     getMongoDBUri: { __type: "String" },
     getNavigationCollection: { __type: "[INavigation!]!" },
@@ -314,6 +336,13 @@ export interface INavigation {
   type: ScalarsEnums["String"];
 }
 
+export interface INewLanguage {
+  __typename?: "INewLanguage";
+  default?: Maybe<ScalarsEnums["Boolean"]>;
+  label: ScalarsEnums["String"];
+  symbol: ScalarsEnums["String"];
+}
+
 export interface ISection {
   __typename?: "ISection";
   content?: Maybe<Array<Maybe<IItem>>>;
@@ -349,6 +378,9 @@ export interface IUser {
 
 export interface MutationMongo {
   __typename?: "MutationMongo";
+  addUpdateLanguage: (args?: {
+    language?: Maybe<InLanguage>;
+  }) => ScalarsEnums["String"];
   addUpdateNavigationItem: (args: {
     pageName: ScalarsEnums["String"];
     sections?: Maybe<Array<Maybe<ScalarsEnums["String"]>>>;
@@ -385,6 +417,7 @@ export interface QueryMongo {
   __typename?: "QueryMongo";
   createDatabase: ScalarsEnums["String"];
   getImages: (args: { tags: ScalarsEnums["String"] }) => Array<IImage>;
+  getLanguages?: Maybe<Array<Maybe<INewLanguage>>>;
   getLogo: ILogo;
   getMongoDBUri?: Maybe<ScalarsEnums["String"]>;
   getNavigationCollection: Array<INavigation>;
@@ -424,6 +457,3 @@ export type ScalarsEnums = {
     ? Scalars[Key]["output"]
     : never;
 } & {};
-
-export class Cache {
-}

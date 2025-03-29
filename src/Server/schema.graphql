@@ -48,6 +48,17 @@ input InNavigation {
     seo: InSeo
     sections: [String]!
 }
+
+input InLanguage {
+    label: String!
+    symbol: String!
+    default: Boolean
+}
+type INewLanguage {
+    label: String!
+    symbol: String!
+    default: Boolean
+}
 type IUser {
     id: String!
     name: String
@@ -126,6 +137,7 @@ type QueryMongo {
     getImages(tags: String!): [IImage!]!
     getLogo: ILogo!
     getUser(email: String): IUser
+    getLanguages: [INewLanguage]
 }
 type MutationMongo {
     createNavigation(navigation: InNavigation!): String!
@@ -138,6 +150,7 @@ type MutationMongo {
     saveImage(image: InImage!): String!
     deleteImage(id: String!): String!
     saveLogo(content: String!): String!
+    addUpdateLanguage(language: InLanguage): String!
 
 }
 

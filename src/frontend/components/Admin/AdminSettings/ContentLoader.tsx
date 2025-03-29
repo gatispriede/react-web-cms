@@ -1,9 +1,9 @@
-import DataLoader from "../DataLoader";
+import TranslationManager from "../TranslationManager";
 import React, {use} from "react";
 import {Input} from "antd";
 
-export const ContentLoader = ({dataLoader, currentLanguageKey, dataPromise, i18n}: {
-    dataLoader: DataLoader,
+export const ContentLoader = ({translationManager, currentLanguageKey, dataPromise, i18n}: {
+    translationManager: TranslationManager,
     currentLanguageKey: string,
     dataPromise: any,
     i18n: any
@@ -11,7 +11,7 @@ export const ContentLoader = ({dataLoader, currentLanguageKey, dataPromise, i18n
 
     use(dataPromise);
 
-    const translations = dataLoader.getTranslations()
+    const translations = translationManager.getTranslations()
     const keys = Object.keys(translations);
 
     const translationChange = (event: any) => {

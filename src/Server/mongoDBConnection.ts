@@ -7,6 +7,7 @@ import fs from 'fs'
 import {ILogo} from "../Interfaces/ILogo";
 import {IUser} from "../Interfaces/IUser";
 import {hash} from "bcrypt";
+import {INewLanguage} from "../frontend/components/interfaces/INewLanguage";
 
 interface ISettings {
     apiKey: string;
@@ -109,6 +110,52 @@ class MongoDBConnection {
             await this.setupClient()
             return undefined
         }
+    }
+
+    async getLanguages(): Promise<INewLanguage[] | string> {
+        let error: any;
+        try {
+            const languages: any = await this.entitiesDB.findOne({type: 'languages'})
+            const returnData: INewLanguage[] = []
+            if (languages && languages.content){
+                const keys = Object.keys(languages.content);
+                keys.map(key => {
+                    if (languages.content[key])
+                        returnData.push(languages.content[key])
+                })
+            }
+            console.log(returnData)
+            return returnData
+        } catch (err) {
+            console.error('Error saving language:', err)
+            await this.setupClient()
+            error = err
+        }
+        return JSON.stringify({error: error})
+    }
+
+    async addUpdateLanguage({language}: { language: INewLanguage }): Promise<string> {
+        let res: any
+        let error: any;
+        try {
+            let languages: any = await this.entitiesDB.findOne({type: 'languages'}) as unknown as INewLanguage
+            if (languages === null) {
+                languages = {
+                    type: 'languages',
+                    content: {language}
+                }
+                languages[language.symbol] = language
+                res = await this.entitiesDB.insertOne(languages)
+            } else {
+                languages.content[language.symbol] = language
+                res = await this.entitiesDB.updateOne({type: 'languages'}, {$set: {content: languages.content}})
+            }
+        } catch (err) {
+            console.error('Error saving language:', err)
+            await this.setupClient()
+            error = err
+        }
+        return JSON.stringify({success: res, error: error})
     }
 
     async getUser({email}: { email: string }): Promise<IUser | undefined> {
@@ -296,7 +343,7 @@ class MongoDBConnection {
             for (let id in ids) {
                 const section = await this.sectionsDB.findOne({id: ids[id]}) as unknown as ISection
                 //@todo remove for update
-                if (section && section.content && section.content.map){
+                if (section && section.content && section.content.map) {
                     section.content = section.content.map(item => {
                         if (!item.style) {
                             item.style = 'default'

@@ -1,36 +1,72 @@
-import DataLoader from "../DataLoader";
-import {Button, Layout, Menu, MenuProps, Spin} from 'antd';
-import React, {Suspense, useState} from "react";
-import {LoadingOutlined} from "@ant-design/icons";
+import TranslationManager from "../TranslationManager";
+import {Button,Layout, Menu, MenuProps, Spin} from 'antd';
+import React, {Suspense, useEffect, useState} from "react";
+import {LoadingOutlined, PlusCircleOutlined} from "@ant-design/icons";
 import {ContentLoader} from "./ContentLoader";
+import {TFunction} from "i18next";
+import AddNewLanguageDialog from "./AddNewLanguageDialog";
 
 const {Header, Content, Sider} = Layout;
 
 type MenuItem = Required<MenuProps>['items'][number];
 
-const AdminSettingsLanguages = ({dataLoader, i18n}: { dataLoader: DataLoader, i18n: any }) => {
+const AdminSettingsLanguages = ({translationManager, i18n, t}: { translationManager: TranslationManager, i18n: any, t: TFunction<"common", undefined> }) => {
     const [collapsed, setCollapsed] = useState(false);
-    const [currentLanguage, setCurrentLanguage] = useState('en');
-    const [currentLanguageName, setCurrentLanguageName] = useState('Default');
+    const [currentLanguage, setCurrentLanguage] = useState('default');
+    const [currentLanguageName, setCurrentLanguageName] = useState('App Translations');
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [menuItems, setMenuItems] = useState([{
+        key: 'default',
+        label: 'App Translations'
+    }])
 
-    // languages
-    const items: MenuItem[] = [
-        {
-            key: 'default',
-            label: 'Default'
-        }
-    ];
+    useEffect(() => {
+        Promise.resolve(translationManager.getLanguages()).then(data => {
+            const newMenuItems: any[] = [
+                {
+                    key: 'default',
+                    label: 'App Translations'
+                }
+            ];
+            for(let id in data){
+                if(data[id].default === 'default') continue;
+                newMenuItems.push({
+                    key: data[id].symbol,
+                    label: data[id].label
+                })
+            }
+            setMenuItems(newMenuItems)
+        })
+    }, []);
 
     return (
         <div>
+            <div>
+                <AddNewLanguageDialog t={t} open={dialogOpen} close={() => {
+                    setDialogOpen(false)
+                }} />
+            </div>
             <Layout style={{minHeight: '90vh'}}>
                 <Sider collapsible collapsed={collapsed} onCollapse={(value) => setCollapsed(value)}>
                     <Menu theme="dark" defaultSelectedKeys={['default']} onSelect={(SelectInfo) => {
                         setCurrentLanguage(SelectInfo.key)
-                        const itemLabel: any = items.find((item) => item && item.key === SelectInfo.key)
+                        const itemLabel: any = menuItems.find((item: { key: string; }) => item && item.key === SelectInfo.key)
                         if (itemLabel)
                             setCurrentLanguageName(itemLabel.label)
-                    }} mode="inline" items={items}/>
+                    }} mode="inline" items={menuItems}/>
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        padding: '16px'
+                    }}>
+                        <Button type={"default"} onClick={() => {
+                            // Add new language
+                            console.log('add new language')
+                            setDialogOpen(true)
+                        }}>
+                            <PlusCircleOutlined />Add New Language
+                        </Button>
+                    </div>
                 </Sider>
                 <Layout>
                     <Header style={{padding: '0 16px', background: '#fff'}}>
@@ -43,15 +79,15 @@ const AdminSettingsLanguages = ({dataLoader, i18n}: { dataLoader: DataLoader, i1
                             <p style={{
                                 margin: '0 16px'
                             }}>
-                                Language: {currentLanguageName}
+                                {currentLanguageName}
                             </p>
                             <Button type={'primary'}>Save</Button>
                         </div>
                     </Header>
                     <Content style={{margin: '16px', maxHeight: '80vh', overflow: 'auto'}}>
                         <Suspense fallback={<Spin indicator={<LoadingOutlined spin/>}/>}>
-                            <ContentLoader i18n={i18n} dataLoader={dataLoader} currentLanguageKey={currentLanguage}
-                                           dataPromise={dataLoader.loadData()}/>
+                            <ContentLoader i18n={i18n} translationManager={translationManager} currentLanguageKey={currentLanguage}
+                                           dataPromise={translationManager.loadData()}/>
                         </Suspense>
                     </Content>
                 </Layout>
