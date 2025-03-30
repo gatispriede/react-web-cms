@@ -71,8 +71,8 @@ class MongoDBConnection {
         const newClient = new MongoClient(dbUrl, {
             retryReads: true,
             connectTimeoutMS: 500,
-            maxIdleTimeMS: 5000,
-            maxPoolSize: 20,
+            maxIdleTimeMS: 3000,
+            maxPoolSize: 80,
         });
         if (newClient) {
             this.db = newClient.db('Homepage')
