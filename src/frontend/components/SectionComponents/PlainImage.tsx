@@ -6,6 +6,7 @@ import {IItem} from "../../../Interfaces/IItem";
 import draftToHtml from 'draftjs-to-html';
 import {RawDraftContentState} from "draft-js";
 import {TFunction} from "i18next";
+import {sanitizeKey} from "../../../utils/stringFunctions";
 
 export interface IPlainImage {
     src: string;
@@ -100,7 +101,13 @@ const PlainImage = ({item, t}: { item: IItem, t: TFunction<"translation", undefi
     const [minHeight, setMinHeight] = useState(500)
     useEffect(() => {
         if (contentRef.current && !plainImage.data.useAsBackground) {
-            contentRef.current.innerHTML = draftToHtml(plainImage.data.description)
+            const extract = plainImage.data.description
+            if(extract.blocks && extract.blocks.length > 0){
+                extract.blocks.map(block => {
+                    block.text = t(sanitizeKey(block.text))
+                })
+            }
+            contentRef.current.innerHTML = draftToHtml(extract)
         }
     }, [plainImage.data.description]);
     let backgroundProperty = `url(/${plainImage.data.src})`

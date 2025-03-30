@@ -5,6 +5,7 @@ import {Image} from "antd";
 import {IItem} from "../../../Interfaces/IItem";
 import {ETextPosition} from "../../../enums/ETextPosition";
 import {TFunction} from "i18next";
+import {sanitizeKey} from "../../../utils/stringFunctions";
 
 export interface IGalleryItem {
     alt: string;
@@ -105,7 +106,7 @@ const Gallery = ({item, t}: { item: IItem, t: TFunction<"translation", undefined
                                         <Image {...imgProperties}/>
                                     </div>
                                     <div className={'text'}>
-                                        <p>{item.text}</p>
+                                        <p>{t(sanitizeKey(item.text))}</p>
                                     </div>
                                 </div>
                             )

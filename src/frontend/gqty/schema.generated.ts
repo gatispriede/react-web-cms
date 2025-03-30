@@ -31,6 +31,7 @@ export interface Scalars {
   Boolean: { input: boolean; output: boolean };
   Int: { input: number; output: number };
   Float: { input: number; output: number };
+  JSON: { input: any; output: any };
 }
 
 export interface InImage {
@@ -97,6 +98,7 @@ export const scalarsEnumsHash: ScalarsEnumsHash = {
   Boolean: true,
   Float: true,
   Int: true,
+  JSON: true,
   String: true,
 };
 export const generatedSchema = {
@@ -232,7 +234,7 @@ export const generatedSchema = {
     __typename: { __type: "String!" },
     addUpdateLanguage: {
       __type: "String!",
-      __args: { language: "InLanguage" },
+      __args: { language: "InLanguage", translations: "JSON" },
     },
     addUpdateNavigationItem: {
       __type: "String!",
@@ -380,6 +382,7 @@ export interface MutationMongo {
   __typename?: "MutationMongo";
   addUpdateLanguage: (args?: {
     language?: Maybe<InLanguage>;
+    translations?: Maybe<ScalarsEnums["JSON"]>;
   }) => ScalarsEnums["String"];
   addUpdateNavigationItem: (args: {
     pageName: ScalarsEnums["String"];

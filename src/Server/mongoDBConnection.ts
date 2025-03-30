@@ -8,6 +8,7 @@ import {ILogo} from "../Interfaces/ILogo";
 import {IUser} from "../Interfaces/IUser";
 import {hash} from "bcrypt";
 import {INewLanguage} from "../frontend/components/interfaces/INewLanguage";
+import FileManager from "./fileManager";
 
 interface ISettings {
     apiKey: string;
@@ -53,9 +54,11 @@ class MongoDBConnection {
     private imagesDB!: Collection<Document>;
     private entitiesDB!: Collection<Document>;
     private usersDB!: Collection<Document>;
+    private fileManager: FileManager;
 
     constructor() {
         this._settings.mongoDBDatabaseUrl = `mongodb+srv://${this._settings.mongodbUser}:${this._settings.mongodbPassword}@${this._settings.mongoDBClusterUrl}`;
+        this.fileManager = new FileManager()
         void this.setupClient()
     }
 
@@ -124,7 +127,6 @@ class MongoDBConnection {
                         returnData.push(languages.content[key])
                 })
             }
-            console.log(returnData)
             return returnData
         } catch (err) {
             console.error('Error saving language:', err)
@@ -134,9 +136,10 @@ class MongoDBConnection {
         return JSON.stringify({error: error})
     }
 
-    async addUpdateLanguage({language}: { language: INewLanguage }): Promise<string> {
+    async addUpdateLanguage({language, translations}: { language: INewLanguage, translations: JSON }): Promise<string> {
         let res: any
         let error: any;
+
         try {
             let languages: any = await this.entitiesDB.findOne({type: 'languages'}) as unknown as INewLanguage
             if (languages === null) {
@@ -151,6 +154,18 @@ class MongoDBConnection {
                 res = await this.entitiesDB.updateOne({type: 'languages'}, {$set: {content: languages.content}})
             }
         } catch (err) {
+            console.error('Error saving language:', err)
+            await this.setupClient()
+            error = err
+        }
+        try {
+            if(translations){
+                const keys = Object.keys(translations)
+                if(keys.length > 0){
+                    this.fileManager.saveTranslation(language.symbol, translations)
+                }
+            }
+        }catch (err) {
             console.error('Error saving language:', err)
             await this.setupClient()
             error = err

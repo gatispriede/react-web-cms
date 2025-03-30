@@ -15,6 +15,7 @@ import {GetServerSideProps} from "next";
 import {serverSideTranslations} from "next-i18next/serverSideTranslations";
 import {TFunction} from "i18next";
 import {INavigation} from "../gqty/schema.generated";
+import {sanitizeKey} from "../../utils/stringFunctions";
 interface IHomeState {
     loading: boolean,
     activeTab: string,
@@ -126,7 +127,7 @@ class App extends React.Component<{ page: string, t: TFunction<string, undefined
                         page: pages[id].page,
                         seo: pages[id].seo,
                         label: (
-                            <Link href={pages[id].page.replace(/ /g,'-').toLowerCase()}>{pages[id].page}</Link>
+                            <Link href={pages[id].page.replace(/ /g,'-').toLowerCase()}>{this.props.t(sanitizeKey(pages[id].page))}</Link>
                         ),
                         children:
                             <DynamicTabsContent
@@ -160,6 +161,7 @@ class App extends React.Component<{ page: string, t: TFunction<string, undefined
 
     render() {
         const activeKey = this.findIdForActiveTab()
+        console.log(this.props.t(sanitizeKey("Sometext")))
         const seo = this.state.tabProps[activeKey] ? this.state.tabProps[activeKey].seo : undefined
         return (
             <div>
@@ -209,7 +211,7 @@ class App extends React.Component<{ page: string, t: TFunction<string, undefined
 export const getServerSideProps: GetServerSideProps<{ }> = async ({locale,}) => ({
     props: {
         ...(await serverSideTranslations(locale ?? 'en', [
-            'common',
+            'common','app',
         ])),
     },
 })

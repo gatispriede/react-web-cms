@@ -8,19 +8,20 @@ import {serverSideTranslations} from "next-i18next/serverSideTranslations";
 const Admin = ({session}: { session: Session }) => {
     return (
         <SessionProvider session={session}>
-            <LoginBtn />
+            <LoginBtn/>
         </SessionProvider>
     )
 }
-
-export const getServerSideProps: GetServerSideProps<{ }> = async ({
-                                                                        locale,
-                                                                    }) => ({
-    props: {
-        ...(await serverSideTranslations(locale ?? 'en', [
-            'common',
-        ])),
-    },
-})
+//
+// export const getServerSideProps: GetServerSideProps<{}> = async (
+//     {
+//         locale,
+//     }) => ({
+//     props: {
+//         ...(await serverSideTranslations(locale ?? 'en', [
+//             'common'
+//         ])),
+//     },
+// })
 
 export default Admin;

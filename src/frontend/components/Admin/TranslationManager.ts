@@ -42,6 +42,9 @@ class TranslationManager {
     async saveNewLanguage(language: INewLanguage){
         await this.MongoApi.saveLanguage(language)
     }
+    async saveNewTranslation(language: INewLanguage, translations: any){
+        await this.MongoApi.saveLanguage(language,translations)
+    }
 
     async getNavigationData() {
         let sectionsIds: string[] = [];

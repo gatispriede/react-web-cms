@@ -67,10 +67,10 @@ class MongoApi {
 
     }
 
-    async saveLanguage(language: INewLanguage) {
-        await resolve(
+    async saveLanguage(language: INewLanguage, translations?: any) {
+        return await resolve(
             ({mutation}) => {
-                return (mutation).mongo.addUpdateLanguage({language: language})
+                return (mutation).mongo.addUpdateLanguage({language: language, translations})
             },
         )
     }

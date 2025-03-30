@@ -5,6 +5,7 @@ import {IItem} from "../../../Interfaces/IItem";
 import {RawDraftContentState} from "draft-js";
 import draftToHtml from "draftjs-to-html";
 import {TFunction} from "i18next";
+import {sanitizeKey} from "../../../utils/stringFunctions";
 
 export interface IRichText {
     value: RawDraftContentState;
@@ -41,7 +42,13 @@ const RichText = ({item, t}: { item: IItem, t: TFunction<"translation", undefine
     const contentRef: RefObject<HTMLDivElement | null> = React.createRef();
     useEffect(() => {
         if(contentRef.current){
-            contentRef.current.innerHTML = draftToHtml(richTextContent.data.value)
+            const extract = richTextContent.data.value
+            if(extract.blocks && extract.blocks.length > 0){
+                extract.blocks.map(block => {
+                    block.text = t(sanitizeKey(block.text))
+                })
+            }
+            contentRef.current.innerHTML = draftToHtml(extract)
         }
     }, []);
     return (

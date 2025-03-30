@@ -3,6 +3,7 @@ import {EItemType} from "../../../enums/EItemType";
 import {IItem} from "../../../Interfaces/IItem";
 import ContentManager from "../ContentManager";
 import {TFunction} from "i18next";
+import {sanitizeKey} from "../../../utils/stringFunctions";
 
 export interface IPlainTextContent {
     value: string;
@@ -36,7 +37,7 @@ const PlainText = ({item, t}: { item: IItem, t: TFunction<"translation", undefin
     const plainTextContent = new PlainTextContent(EItemType.Text, item.content);
     return (
         <div className={`plain-text ${item.style}`}>
-            <p>{plainTextContent.data.value}</p>
+            <p>{t(sanitizeKey(plainTextContent.data.value))}</p>
         </div>
     )
 }

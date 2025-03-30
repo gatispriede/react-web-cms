@@ -10,7 +10,6 @@ import {ISection} from "../../Interfaces/ISection";
 import {IItem} from "../../Interfaces/IItem";
 import i18nextConfig from '../../../next-i18next.config.js'
 
-
 // import {unstable_cache} from "next/cache";
 
 // const isProduction = process.env.NODE_ENV === 'production';

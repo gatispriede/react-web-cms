@@ -139,6 +139,9 @@ type QueryMongo {
     getUser(email: String): IUser
     getLanguages: [INewLanguage]
 }
+
+scalar JSON
+
 type MutationMongo {
     createNavigation(navigation: InNavigation!): String!
     addUpdateNavigationItem(pageName: String!, sections: [String]): String!
@@ -150,9 +153,10 @@ type MutationMongo {
     saveImage(image: InImage!): String!
     deleteImage(id: String!): String!
     saveLogo(content: String!): String!
-    addUpdateLanguage(language: InLanguage): String!
+    addUpdateLanguage(language: InLanguage, translations: JSON): String!
 
 }
+
 
 type Query {
     sample: String!

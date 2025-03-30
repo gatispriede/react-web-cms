@@ -3,7 +3,7 @@ import LoginBtn from "../../components/Auth/login-btn";
 import {SessionProvider} from "next-auth/react";
 
 import {GetServerSideProps} from "next";
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import {serverSideTranslations} from 'next-i18next/serverSideTranslations'
 
 const AdminSettings = () => {
     return (
@@ -13,15 +13,16 @@ const AdminSettings = () => {
     )
 }
 
-
-export const getServerSideProps: GetServerSideProps<{ }> = async ({
-                                                                locale,
-                                                            }) => ({
-    props: {
-        ...(await serverSideTranslations(locale ?? 'en', [
-            'common',
-        ])),
-    },
-})
+//
+// export const getServerSideProps: GetServerSideProps<{}> = async (
+//     {
+//         locale,
+//     }) => ({
+//     props: {
+//         ...(await serverSideTranslations(locale ?? 'en', [
+//             'common', 'app'
+//         ])),
+//     },
+// })
 
 export default AdminSettings;

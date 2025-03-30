@@ -3,7 +3,7 @@ import App from "./app";
 import {useTranslation} from "next-i18next";
 
 const Slug = ()=> {
-    const {t} = useTranslation('common');
+    const {t} = useTranslation('app');
     return (
         <App t={t} page={'/'} />
     )

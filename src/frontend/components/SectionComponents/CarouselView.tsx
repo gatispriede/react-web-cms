@@ -6,6 +6,7 @@ import {IItem} from "../../../Interfaces/IItem";
 import {ETextPosition} from "../../../enums/ETextPosition";
 import {IGalleryItem} from "./Gallery";
 import {TFunction} from "i18next";
+import {sanitizeKey} from "../../../utils/stringFunctions";
 
 
 export interface ICarousel {
@@ -110,7 +111,7 @@ const CarouselView = ({item, t}: { item: IItem, t: TFunction<"translation", unde
                     />
                 </div>
                 <div className={'text'}>
-                    <p>{item.text}</p>
+                    <p>{t(sanitizeKey(item.text))}</p>
                 </div>
             </li>
         )

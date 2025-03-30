@@ -5,6 +5,7 @@ import AdminSettingsTheme from "./AdminSettings/Theme";
 import {useTranslation} from "next-i18next";
 import TranslationManager from "./TranslationManager";
 import {TFunction} from "i18next";
+import Backend from 'i18next-http-backend';
 
 const getItems = (t: TFunction<"common", undefined>, translationManager: TranslationManager, i18n: any, ): TabsProps['items'] => {
     return [
@@ -16,7 +17,7 @@ const getItems = (t: TFunction<"common", undefined>, translationManager: Transla
         {
             key: '2',
             label: t('Languages'),
-            children: <AdminSettingsLanguages t={t} i18n={i18n} translationManager={translationManager}/>,
+            children: <AdminSettingsLanguages tAdmin={t} i18n={i18n} translationManager={translationManager}/>,
         },
         {
             key: '3',
@@ -30,6 +31,8 @@ const AdminSettings = () => {
     const translationManager = new TranslationManager();
 
     const {t, i18n} = useTranslation('common')
+    i18n.use(Backend)
+
     return (
         <Tabs defaultActiveKey="2" items={getItems(t, translationManager, i18n)}/>
     )

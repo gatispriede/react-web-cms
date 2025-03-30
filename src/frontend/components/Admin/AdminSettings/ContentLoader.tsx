@@ -1,22 +1,26 @@
 import TranslationManager from "../TranslationManager";
-import React, {use} from "react";
+import React, {use, useEffect, useState} from "react";
 import {Input} from "antd";
 
-export const ContentLoader = ({translationManager, currentLanguageKey, dataPromise, i18n}: {
+export const ContentLoader = ({translationManager, currentLanguageKey, dataPromise, i18n, setTranslation, t}: {
     translationManager: TranslationManager,
     currentLanguageKey: string,
     dataPromise: any,
-    i18n: any
+    setTranslation: any,
+    i18n: any,
+    t: (data: string) => string
 }) => {
 
     use(dataPromise);
 
-    const translations = translationManager.getTranslations()
+    const [translations] = useState(translationManager.getTranslations())
+    const [newTranslations] = useState(translationManager.getTranslations())
+
     const keys = Object.keys(translations);
 
-    const translationChange = (event: any) => {
-        console.log(event.target.value);
-
+    const translationChange = (key: string, event: any) => {
+        newTranslations[key] = event.target.value
+        setTranslation(newTranslations);
     }
 
     return <div style={{
@@ -55,7 +59,9 @@ export const ContentLoader = ({translationManager, currentLanguageKey, dataPromi
                                     </div>
                                     <div>
                                         <label>{'Translation'}:</label>
-                                        <Input onChange={translationChange}/>
+                                        <Input key={key} defaultValue={t(key)} onChange={(event) => {
+                                            translationChange(key, event)
+                                        }}/>
                                     </div>
 
                                     <hr/>
