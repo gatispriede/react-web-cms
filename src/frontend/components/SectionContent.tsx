@@ -15,7 +15,8 @@ interface IPropsSectionContent {
     addRemoveSectionItem: (sectionId: string, config: IConfigSectionAddRemove) => Promise<void>,
     refresh: () => Promise<void>,
     admin: boolean,
-    t: TFunction<"translation", undefined>
+    t: TFunction<"translation", undefined>,
+    tApp: TFunction<string, undefined>
 }
 
 interface IStateSectionContent {
@@ -100,6 +101,7 @@ class SectionContent extends React.Component<IPropsSectionContent> {
                                         }}>
                                         <ContentType
                                             t={this.props.t}
+                                            tApp={this.props.tApp}
                                             admin={this.admin}
                                             item={item}
                                             addButton={
@@ -113,7 +115,8 @@ class SectionContent extends React.Component<IPropsSectionContent> {
                                             }
                                         />
                                         {item.action && item.action !== 'none' &&
-                                            <ActionDialog t={this.props.t} item={item} open={this.state.actionDialogOpen} close={() => {
+                                            <ActionDialog t={this.props.t} tApp={this.props.tApp} item={item}
+                                                          open={this.state.actionDialogOpen} close={() => {
                                                 this.setState({actionDialogOpen: false})
                                             }}/>
                                         }

@@ -7,8 +7,11 @@ import AdminSettings from "./AdminSettings";
 import {TFunction} from "i18next";
 import {i18n} from "next-i18next";
 
-const UserStatusBar = ({session, settings, t}: {
-    session: Session, settings: boolean, t:  TFunction<"translation", undefined>
+const UserStatusBar = ({session, settings, t, tApp}: {
+    session: Session,
+    settings: boolean,
+    t: TFunction<"translation", undefined>,
+    tApp: TFunction<string, undefined>
 }) => {
     const lang = i18n?.language
     return (
@@ -30,7 +33,7 @@ const UserStatusBar = ({session, settings, t}: {
                 settings ?
                     <AdminSettings/>
                     :
-                    <AdminApp t={t} session={session}/>
+                    <AdminApp t={t} tApp={tApp} session={session}/>
             }
         </>
     )

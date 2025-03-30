@@ -6,5 +6,6 @@ export interface IContentTypeProps {
     item: IItem,
     addButton: JSX.Element | string,
     admin: boolean,
-    t: TFunction<"translation", undefined>
+    t: TFunction<"translation", undefined>,
+    tApp: TFunction<string, undefined>
 }

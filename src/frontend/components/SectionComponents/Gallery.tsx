@@ -79,7 +79,11 @@ export class GalleryContent extends ContentManager {
     }
 }
 
-const Gallery = ({item, t}: { item: IItem, t: TFunction<"translation", undefined> }) => {
+const Gallery = ({item, t, tApp}: {
+    item: IItem,
+    t: TFunction<"translation", undefined>,
+    tApp: TFunction<string, undefined>
+}) => {
     const gallery = new GalleryContent(EItemType.Image, item.content);
     gallery.setDisablePreview(item.action !== "onClick");
     const data = gallery.data
@@ -106,7 +110,7 @@ const Gallery = ({item, t}: { item: IItem, t: TFunction<"translation", undefined
                                         <Image {...imgProperties}/>
                                     </div>
                                     <div className={'text'}>
-                                        <p>{t(sanitizeKey(item.text))}</p>
+                                        <p>{tApp(sanitizeKey(item.text))}</p>
                                     </div>
                                 </div>
                             )

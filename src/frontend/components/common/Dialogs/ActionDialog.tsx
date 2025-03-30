@@ -5,11 +5,12 @@ import {IItem} from "../../../../Interfaces/IItem";
 import {EItemType} from "../../../../enums/EItemType";
 import {TFunction} from "i18next";
 
-const ActionDialog = ({item, open, close, t}: {
+const ActionDialog = ({item, open, close, t, tApp}: {
     item: IItem,
     open: boolean,
     close: () => void,
-    t: TFunction<"translation", undefined>
+    t: TFunction<"translation", undefined>,
+    tApp: TFunction<string, undefined>
 }) => {
     const newItem = {
         type: item.actionType ? item.actionType : EItemType.Text,
@@ -30,7 +31,7 @@ const ActionDialog = ({item, open, close, t}: {
             footer={[]}
         >
             <div>
-                <ContentType t={t} admin={false} item={newItem} addButton={""} />
+                <ContentType t={t} tApp={tApp} admin={false} item={newItem} addButton={""} />
             </div>
         </Modal>
     )

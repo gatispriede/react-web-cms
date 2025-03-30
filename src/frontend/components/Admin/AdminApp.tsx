@@ -26,7 +26,11 @@ interface IHomeState {
     tabProps: any[]
 }
 
-class AdminApp extends React.Component<{ session: Session, t: TFunction<"translation", undefined> }> {
+class AdminApp extends React.Component<{
+    session: Session,
+    t: TFunction<"translation", undefined>,
+    tApp: TFunction<string, undefined>
+}> {
     sections: any[] = []
     admin: boolean = true
     private MongoApi
@@ -46,7 +50,7 @@ class AdminApp extends React.Component<{ session: Session, t: TFunction<"transla
         activeTab: '0'
     }
 
-    constructor(props: { session: any, t: TFunction<"translation", undefined> }) {
+    constructor(props: { session: any, t: TFunction<"translation", undefined>, tApp: TFunction<"translation", undefined> }) {
         super(props);
         this.MongoApi = new MongoApi()
         this.state.loading = true
@@ -150,6 +154,7 @@ class AdminApp extends React.Component<{ session: Session, t: TFunction<"transla
                         children: (
                             <DynamicTabsContent
                                 t={this.props.t}
+                                tApp={this.props.tApp}
                                 page={pages[id].page}
                                 admin={this.admin}
                                 sections={sectionsData}

@@ -33,11 +33,15 @@ export class PlainTextContent extends ContentManager {
 
 }
 
-const PlainText = ({item, t}: { item: IItem, t: TFunction<"translation", undefined> }) => {
+const PlainText = ({item, t, tApp}: {
+    item: IItem,
+    t: TFunction<"translation", undefined>,
+    tApp: TFunction<string, undefined>
+}) => {
     const plainTextContent = new PlainTextContent(EItemType.Text, item.content);
     return (
         <div className={`plain-text ${item.style}`}>
-            <p>{t(sanitizeKey(plainTextContent.data.value))}</p>
+            <p>{tApp(sanitizeKey(plainTextContent.data.value))}</p>
         </div>
     )
 }

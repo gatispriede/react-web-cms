@@ -6,11 +6,12 @@ import { useTranslation } from 'next-i18next'
 
 export default function LoginBtn({settings}: {settings?: boolean}) {
     const {data: session} = useSession()
-    const {t} = useTranslation('common');
+    const t = useTranslation('common').t;
+    const tApp = useTranslation('app').t;
     if (session) {
         return (
             <>
-                <UserStatusBar t={t} session={session} settings={settings ? settings : false} />
+                <UserStatusBar t={t} tApp={tApp} session={session} settings={settings ? settings : false} />
             </>
         )
     }

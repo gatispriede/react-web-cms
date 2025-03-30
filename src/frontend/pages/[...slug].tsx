@@ -5,9 +5,9 @@ import {useTranslation} from "next-i18next";
 
 const Slug = ()=> {
     const router = useRouter()
-    const {t} = useTranslation('app');
+    const {t, i18n} = useTranslation('app');
     return (
-        <App t={t} page={router.query.slug as string} />
+        <App t={t} i18n={i18n} page={router.query.slug as string} />
     )
 }
 

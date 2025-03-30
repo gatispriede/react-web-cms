@@ -12,7 +12,7 @@ import Link from 'next/link'
 import Head from 'next/head'
 import {GetServerSideProps} from "next";
 import {serverSideTranslations} from "next-i18next/serverSideTranslations";
-import {TFunction} from "i18next";
+import {i18n, TFunction} from "i18next";
 import {INavigation} from "../gqty/schema.generated";
 import {sanitizeKey} from "../../utils/stringFunctions";
 import {DownOutlined} from "@ant-design/icons";
@@ -24,7 +24,7 @@ interface IHomeState {
     tabProps: any[]
 }
 
-class App extends React.Component<{ page: string, t: TFunction<string, undefined> }> {
+class App extends React.Component<{ page: string, t: TFunction<string, undefined>, i18n: i18n }> {
     sections: any[] = []
     private MongoApi = new MongoApi()
     loadSections: any
@@ -135,6 +135,7 @@ class App extends React.Component<{ page: string, t: TFunction<string, undefined
                         children:
                             <DynamicTabsContent
                                 t={this.props.t}
+                                tApp={this.props.t}
                                 refresh={async () => {
                                     await this.initialize();
                                 }}
@@ -219,20 +220,17 @@ class App extends React.Component<{ page: string, t: TFunction<string, undefined
                         <Tabs onChange={(value) => {
                             this.setState({activeTab: value})
                         }} activeKey={"" + activeKey} defaultActiveKey={"0"} items={this.state.tabProps}/>
-                        {items.length > 0 && <div style={{
+                        {items.length > 0 && this.languages && this.languages[this.props.i18n.language] && <div style={{
                             position: "absolute",
-                            top: 0,
+                            top: 10,
                             right: 20,
                         }}>
                             <Dropdown menu={{
-                                items,
-                                selectable: true,
-                                defaultSelectedKeys: ['3'],
+                                items
                             }}>
                                 <Typography.Link>
                                     <Space>
-                                        Change language
-                                        <DownOutlined/>
+                                        {this.languages[this.props.i18n.language].label}
                                     </Space>
                                 </Typography.Link>
                             </Dropdown>

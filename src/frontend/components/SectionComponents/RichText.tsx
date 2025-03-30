@@ -37,7 +37,11 @@ export class RichTextContent extends ContentManager {
 
 }
 
-const RichText = ({item, t}: { item: IItem, t: TFunction<"translation", undefined> }) => {
+const RichText = ({item, t, tApp}: {
+    item: IItem,
+    t: TFunction<"translation", undefined>,
+    tApp: TFunction<string, undefined>
+}) => {
     const richTextContent = new RichTextContent(EItemType.RichText, item.content);
     const contentRef: RefObject<HTMLDivElement | null> = React.createRef();
     useEffect(() => {
@@ -45,7 +49,7 @@ const RichText = ({item, t}: { item: IItem, t: TFunction<"translation", undefine
             const extract = richTextContent.data.value
             if(extract && extract.blocks && extract.blocks.length > 0){
                 extract.blocks.map(block => {
-                    block.text = t(sanitizeKey(block.text))
+                    block.text = tApp(sanitizeKey(block.text))
                 })
             }
             contentRef.current.innerHTML = draftToHtml(extract)

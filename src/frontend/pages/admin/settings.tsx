@@ -2,8 +2,8 @@ import React from 'react'
 import LoginBtn from "../../components/Auth/login-btn";
 import {SessionProvider} from "next-auth/react";
 
-import {GetServerSideProps} from "next";
-import {serverSideTranslations} from 'next-i18next/serverSideTranslations'
+// import {GetServerSideProps} from "next";
+// import {serverSideTranslations} from 'next-i18next/serverSideTranslations'
 
 const AdminSettings = () => {
     return (

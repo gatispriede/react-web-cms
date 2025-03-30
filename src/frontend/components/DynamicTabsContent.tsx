@@ -15,7 +15,8 @@ interface IDynamicTabsContent {
     page: string,
     admin: boolean,
     refresh: () => Promise<void>,
-    t: TFunction<"translation", undefined>
+    t: TFunction<"translation", undefined>,
+    tApp: TFunction<string, undefined>
 }
 
 interface SContent {
@@ -90,6 +91,7 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
                                             <SectionContent
                                                 admin={this.admin}
                                                 t={this.props.t}
+                                                tApp={this.props.tApp}
                                                 section={section}
                                                 refresh={async () => {
                                                     await this.refresh()

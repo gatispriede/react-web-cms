@@ -94,7 +94,11 @@ export class PlainImageContent extends ContentManager {
 
 }
 
-const PlainImage = ({item, t}: { item: IItem, t: TFunction<"translation", undefined> }) => {
+const PlainImage = ({item, t, tApp}: {
+    item: IItem,
+    t: TFunction<"translation", undefined>,
+    tApp: TFunction<string, undefined>
+}) => {
     const plainImage = new PlainImageContent(EItemType.Image, item.content);
     const preview = plainImage.data.preview ? plainImage.data.preview : typeof item.action !== "string"
     const contentRef: RefObject<HTMLDivElement | null> = React.createRef();
@@ -104,7 +108,7 @@ const PlainImage = ({item, t}: { item: IItem, t: TFunction<"translation", undefi
             const extract = plainImage.data.description
             if(extract && extract.blocks && extract.blocks.length > 0){
                 extract.blocks.map(block => {
-                    block.text = t(sanitizeKey(block.text))
+                    block.text = tApp(sanitizeKey(block.text))
                 })
             }
             contentRef.current.innerHTML = draftToHtml(extract)
