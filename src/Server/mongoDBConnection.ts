@@ -157,6 +157,7 @@ class MongoDBConnection {
             console.error('Error saving language:', err)
             await this.setupClient()
             error = err
+            return JSON.stringify({success: res, error: error})
         }
         try {
             if(translations){

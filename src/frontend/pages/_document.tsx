@@ -72,14 +72,14 @@ const HeadData = async () => {
     // const myCacheLoader = unstable_cache(async () => preloadData(), ['preloadedData'], {
     //     revalidate: 1
     // })
-    const data = await preloadData()
+    // const data = await preloadData()
     // @ts-ignore
-    global.preloadedData = data
-    const str = `window.preloadedData = ${JSON.stringify(data)}`
+    // global.preloadedData = data
+    // const str = `window.preloadedData = ${JSON.stringify(data)}`
     return (
         <Head>
             <script type="text/javascript">
-                {str}
+                {/*{str}*/}
             </script>
         </Head>
     )
