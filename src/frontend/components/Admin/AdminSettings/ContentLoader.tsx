@@ -22,7 +22,7 @@ export const ContentLoader = ({translationManager, currentLanguageKey, dataPromi
     useEffect(() => {
         // eslint-disable-next-line array-callback-return
         keys.map(key => {
-            if(key === t(key)){
+            if(key !== t(key)){
                 newTranslations[key] = t(translations[key])
             }else{
                 newTranslations[key] = t(key)
