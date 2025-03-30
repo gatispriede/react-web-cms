@@ -154,7 +154,7 @@ type MutationMongo {
     deleteImage(id: String!): String!
     saveLogo(content: String!): String!
     addUpdateLanguage(language: InLanguage, translations: JSON): String!
-
+    deleteLanguage(language: InLanguage): String!
 }
 
 

@@ -74,6 +74,13 @@ class MongoApi {
             },
         )
     }
+    async deleteTranslation(language: INewLanguage) {
+        return await resolve(
+            ({mutation}) => {
+                return (mutation).mongo.deleteLanguage({language: language})
+            },
+        )
+    }
 
     async saveLogo(content: string): Promise<void> {
         await resolve(

@@ -33,17 +33,20 @@ class TranslationManager {
 
     async loadData() {
         await this.getNavigationData();
-        await this.getSectionsData();
+        return await this.getSectionsData();
     }
 
     async getLanguages(){
         return await this.MongoApi.getLanguages()
     }
     async saveNewLanguage(language: INewLanguage){
-        await this.MongoApi.saveLanguage(language)
+        return await this.MongoApi.saveLanguage(language)
     }
     async saveNewTranslation(language: INewLanguage, translations: any){
-        await this.MongoApi.saveLanguage(language,translations)
+        return await this.MongoApi.saveLanguage(language,translations)
+    }
+    async deleteTranslation(language: INewLanguage){
+        return await this.MongoApi.deleteTranslation(language)
     }
 
     async getNavigationData() {

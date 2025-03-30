@@ -5,9 +5,9 @@ const HttpBackend = require('i18next-http-backend/cjs')
  */
 module.exports = {
     // https://www.i18next.com/overview/configuration-options#logging
-    debug: process.env.NODE_ENV === 'development',
+    // debug: process.env.NODE_ENV === 'development',
     i18n: {
-        defaultLocale: 'en',
+        defaultLocale: 'lv',
         locales: [
             // "aa",
             // "ab",

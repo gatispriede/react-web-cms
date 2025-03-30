@@ -249,6 +249,7 @@ export const generatedSchema = {
       __args: { navigation: "InNavigation!" },
     },
     deleteImage: { __type: "String!", __args: { id: "String!" } },
+    deleteLanguage: { __type: "String!", __args: { language: "InLanguage" } },
     deleteNavigationItem: {
       __type: "String!",
       __args: { pageName: "String!" },
@@ -396,6 +397,9 @@ export interface MutationMongo {
     navigation: InNavigation;
   }) => ScalarsEnums["String"];
   deleteImage: (args: { id: ScalarsEnums["String"] }) => ScalarsEnums["String"];
+  deleteLanguage: (args?: {
+    language?: Maybe<InLanguage>;
+  }) => ScalarsEnums["String"];
   deleteNavigationItem: (args: {
     pageName: ScalarsEnums["String"];
   }) => ScalarsEnums["String"];

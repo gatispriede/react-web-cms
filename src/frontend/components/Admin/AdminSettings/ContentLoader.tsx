@@ -1,6 +1,7 @@
 import TranslationManager from "../TranslationManager";
 import React, {use, useEffect, useState} from "react";
 import {Input} from "antd";
+import {sanitizeKey} from "../../../../utils/stringFunctions";
 
 export const ContentLoader = ({translationManager, currentLanguageKey, dataPromise, i18n, setTranslation, t, tApp}: {
     translationManager: TranslationManager,
@@ -15,20 +16,18 @@ export const ContentLoader = ({translationManager, currentLanguageKey, dataPromi
     use(dataPromise);
 
     const [translations] = useState(translationManager.getTranslations())
+    const [newTranslations] = useState(Object)
 
     const keys = Object.keys(translations);
-    const newTranslations: any = {};
 
-    useEffect(() => {
-        // eslint-disable-next-line array-callback-return
-        keys.map(key => {
-            if(key !== tApp(key)){
-                newTranslations[key] = t(translations[key])
-            }else{
-                newTranslations[key] = tApp(key)
-            }
-        })
-    }, [currentLanguageKey]);
+    // eslint-disable-next-line array-callback-return
+    keys.map(key => {
+        if(key !== sanitizeKey(t(key))){
+            newTranslations[key] = tApp(key)
+        }else{
+            newTranslations[key] = translations[key]
+        }
+    })
 
     const translationChange = (key: string, event: any) => {
         newTranslations[key] = event.target.value
@@ -71,7 +70,7 @@ export const ContentLoader = ({translationManager, currentLanguageKey, dataPromi
                                     </div>
                                     <div>
                                         <label>{'Translation'}:</label>
-                                        <Input key={t(key)} defaultValue={t(key)} onChange={(event) => {
+                                        <Input key={key} defaultValue={newTranslations[key]} onChange={(event) => {
                                             translationChange(key, event)
                                         }}/>
                                     </div>

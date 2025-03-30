@@ -145,7 +145,9 @@ class MongoDBConnection {
             if (languages === null) {
                 languages = {
                     type: 'languages',
-                    content: {language}
+                    content: {
+                        [language.symbol]: language
+                    }
                 }
                 languages[language.symbol] = language
                 res = await this.entitiesDB.insertOne(languages)
@@ -166,6 +168,33 @@ class MongoDBConnection {
                     this.fileManager.saveTranslation(language.symbol, translations)
                 }
             }
+        }catch (err) {
+            console.error('Error saving language:', err)
+            await this.setupClient()
+            error = err
+        }
+        return JSON.stringify({success: res, error: error})
+    }
+    async deleteLanguage({language}: { language: INewLanguage }): Promise<string> {
+        let res: any
+        let error: any;
+
+        try {
+            let languages: any = await this.entitiesDB.findOne({type: 'languages'}) as unknown as INewLanguage
+            if (languages === null) {
+                return 'no language found'
+            } else {
+                delete languages.content[language.symbol]
+                res = await this.entitiesDB.updateOne({type: 'languages'}, {$set: {content: languages.content}})
+            }
+        } catch (err) {
+            console.error('Error saving language:', err)
+            await this.setupClient()
+            error = err
+            return JSON.stringify({success: res, error: error})
+        }
+        try {
+            this.fileManager.deleteTranslation(language.symbol)
         }catch (err) {
             console.error('Error saving language:', err)
             await this.setupClient()

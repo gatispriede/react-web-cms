@@ -13,7 +13,7 @@ const UserStatusBar = ({session, settings, t, tApp}: {
     t: TFunction<"translation", undefined>,
     tApp: TFunction<string, undefined>
 }) => {
-    const lang = i18n?.language
+    let lang = i18n?.language !== 'default' ? i18n?.language : 'en'
     return (
         <>
             <div className={'app-login-wrapper'}>

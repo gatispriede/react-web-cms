@@ -15,6 +15,20 @@ class FileManager {
         // save file
         fs.writeFileSync(fileName, JSON.stringify(translation));
     }
+    deleteTranslation(name: string) {
+        const langPath = this.publicFolderPath + '/' + name;
+        const fileName = langPath + '/app.json'
+        // folder creation
+        if (!fs.existsSync(langPath)) {
+            fs.mkdirSync(langPath, {recursive: true});
+        }
+        // save file
+        return fs.unlink(fileName,(err) => {
+            if (err) throw err;
+            console.log(`${fileName} was deleted`);
+            // fs.rmSync(langPath, { recursive: true, force: true });
+        });
+    }
 
 }
 

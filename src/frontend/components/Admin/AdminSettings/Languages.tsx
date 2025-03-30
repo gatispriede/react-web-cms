@@ -42,6 +42,16 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
         i18n.reloadResources();
     }
 
+    const deleteTranslation = async () => {
+        await translationManager.deleteTranslation({
+            label: currentLanguageName,
+            symbol: currentLanguage
+        })
+        i18n.reloadResources();
+        i18n.changeLanguage('en');
+        window.location.replace("/admin/settings");
+    }
+
     useEffect(() => {
         Promise.resolve(translationManager.getLanguages()).then(data => {
             const newMenuItems: any[] = [
@@ -62,9 +72,9 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
             }
             setMenuItems(newMenuItems)
             if(i18n.language){
+                const item = newMenuItems.find((item: any) => item && item.key === i18n.language)
                 setCurrentLanguage(i18n.language)
-                setCurrentLanguageName(newMenuItems.find((item: any) => item && item.key === i18n.language).name)
-                i18n.reloadResources(i18n.language);
+                setCurrentLanguageName(item && item.name)
             }
         })
     }, []);
@@ -74,6 +84,7 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
             <div>
                 <AddNewLanguageDialog t={t} open={dialogOpen} close={() => {
                     setDialogOpen(false)
+                    window.location.reload()
                 }}/>
             </div>
             <Layout style={{minHeight: '90vh'}}>
@@ -114,6 +125,7 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
                                 {currentLanguageName}
                             </p>
                             <Button type={'primary'} onClick={saveNewTranslation}>{tAdmin('Save')}</Button>
+                            <Button danger={true} type={'primary'} onClick={deleteTranslation}>{tAdmin('Delete')}</Button>
                         </div>
                     </Header>
                     <Content style={{margin: '16px', maxHeight: '80vh', overflow: 'auto'}}>
