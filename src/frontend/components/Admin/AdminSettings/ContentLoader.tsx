@@ -1,15 +1,15 @@
 import TranslationManager from "../TranslationManager";
 import React, {use, useEffect, useState} from "react";
 import {Input} from "antd";
-import {sanitizeKey} from "../../../../utils/stringFunctions";
 
-export const ContentLoader = ({translationManager, currentLanguageKey, dataPromise, i18n, setTranslation, t}: {
+export const ContentLoader = ({translationManager, currentLanguageKey, dataPromise, i18n, setTranslation, t, tApp}: {
     translationManager: TranslationManager,
     currentLanguageKey: string,
     dataPromise: any,
     setTranslation: any,
     i18n: any,
-    t: (data: string) => string
+    t: (data: string) => string,
+    tApp: (data: string) => string
 }) => {
 
     use(dataPromise);

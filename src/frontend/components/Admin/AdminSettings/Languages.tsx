@@ -118,7 +118,7 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
                     </Header>
                     <Content style={{margin: '16px', maxHeight: '80vh', overflow: 'auto'}}>
                         <Suspense fallback={<Spin indicator={<LoadingOutlined spin/>}/>}>
-                            <ContentLoader t={tApp} i18n={i18n} translationManager={translationManager}
+                            <ContentLoader t={t} tApp={tApp} i18n={i18n} translationManager={translationManager}
                                            setTranslation={setTranslationValue} currentLanguageKey={currentLanguage}
                                            dataPromise={translationManager.loadData()}/>
                         </Suspense>
