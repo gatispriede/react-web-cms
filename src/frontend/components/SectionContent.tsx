@@ -76,6 +76,7 @@ class SectionContent extends React.Component<IPropsSectionContent> {
                                     editContent={
                                         item.type !== EItemType.Empty ? <AddNewSectionItem
                                                 t={this.props.t}
+                                                tApp={this.props.tApp}
                                                 index={id}
                                                 addSectionItem={this.props.addRemoveSectionItem}
                                                 section={this.state.section}
@@ -107,6 +108,7 @@ class SectionContent extends React.Component<IPropsSectionContent> {
                                             addButton={
                                                 <AddNewSectionItem
                                                     t={this.props.t}
+                                                    tApp={this.props.tApp}
                                                     index={id}
                                                     addSectionItem={this.addRemoveSectionItem}
                                                     section={this.state.section}

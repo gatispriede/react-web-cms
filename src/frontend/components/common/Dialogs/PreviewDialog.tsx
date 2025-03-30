@@ -5,13 +5,17 @@ import {IItem} from "../../../../Interfaces/IItem";
 import ActionDialog from "./ActionDialog";
 import {TFunction} from "i18next";
 
-class PreviewDialog extends React.Component<{ item: IItem, t: TFunction<"translation", undefined> }> {
+class PreviewDialog extends React.Component<{
+    item: IItem,
+    t: TFunction<"translation", undefined>,
+    tApp: TFunction<string, undefined>
+}> {
     state = {
         dialogOpen: false,
         actionDialogOpen: false,
     }
 
-    constructor(props: {item: IItem, t: TFunction<"translation", undefined>}) {
+    constructor(props: {item: IItem, t: TFunction<"translation", undefined>, tApp: TFunction<"translation", undefined>}) {
         super(props)
     }
 
@@ -39,8 +43,8 @@ class PreviewDialog extends React.Component<{ item: IItem, t: TFunction<"transla
                             this.setState({actionDialogOpen: true})
                         }
                     }}>
-                        <ContentType t={this.props.t}  admin={false} item={this.props.item} addButton={""} />
-                        <ActionDialog t={this.props.t} item={this.props.item} open={this.state.actionDialogOpen} close={() => {
+                        <ContentType t={this.props.t}  tApp={this.props.tApp}  admin={false} item={this.props.item} addButton={""} />
+                        <ActionDialog t={this.props.t} tApp={this.props.tApp}  item={this.props.item} open={this.state.actionDialogOpen} close={() => {
                             this.setState({actionDialogOpen: false})
                         }}/>
                     </div>

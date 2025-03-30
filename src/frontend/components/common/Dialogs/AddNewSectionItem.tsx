@@ -21,7 +21,8 @@ interface IAddNewSectionItemProps {
     item?: IItem,
     index: number,
     loadItem: boolean,
-    t: TFunction<"translation", undefined>
+    t: TFunction<"translation", undefined>,
+    tApp: TFunction<string, undefined>
 }
 
 class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
@@ -156,9 +157,10 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                         this.setActiveOptionState(e)
                     }}/>
             <hr/>
-            <ContentSection t={this.props.t} content={this.state.content} selected={this.state.selected} setContent={(value: string) => {
-                this.setState({content: value})
-            }}/>
+            <ContentSection t={this.props.t} content={this.state.content} selected={this.state.selected}
+                            setContent={(value: string) => {
+                                this.setState({content: value})
+                            }}/>
         </div>
     }
 
@@ -311,7 +313,8 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                             })
                         }}>
 
-                            {!this.props.loadItem ? <div><PlusCircleOutlined/> {this.props.t("Add content")}</div> : <EditOutlined/>}
+                            {!this.props.loadItem ? <div><PlusCircleOutlined/> {this.props.t("Add content")}</div> :
+                                <EditOutlined/>}
                         </Button>
                     </div>
                 }
@@ -319,7 +322,7 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                        footer={(_, {OkBtn, CancelBtn}) => (
                            <>
                                <CancelBtn/>
-                               <PreviewDialog t={this.props.t} item={item}/>
+                               <PreviewDialog t={this.props.t} tApp={this.props.tApp} item={item}/>
                                <OkBtn/>
                            </>
                        )}

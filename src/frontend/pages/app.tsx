@@ -38,7 +38,7 @@ class App extends React.Component<{ page: string, t: TFunction<string, undefined
     }
     private languages: any;
 
-    constructor(props: { page: string, t: TFunction<string, undefined> }) {
+    constructor(props: { page: string, t: TFunction<string, undefined>, i18n: i18n }) {
         super(props);
         this.page = props.page
         this.state.loading = true
