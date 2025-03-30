@@ -13,6 +13,7 @@ import {
   scalarsEnumsHash,
   type GeneratedSchema,
 } from "./schema.generated";
+
 import {IP} from '../../../IP'
 
 const serverIP = IP;
@@ -79,5 +80,3 @@ export const {
   refetch,
   track,
 } = client;
-
-export {Cache} from "./schema.generated";

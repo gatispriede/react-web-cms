@@ -1,6 +1,7 @@
 import TranslationManager from "../TranslationManager";
 import React, {use, useEffect, useState} from "react";
 import {Input} from "antd";
+import {sanitizeKey} from "../../../../utils/stringFunctions";
 
 export const ContentLoader = ({translationManager, currentLanguageKey, dataPromise, i18n, setTranslation, t}: {
     translationManager: TranslationManager,
@@ -14,9 +15,16 @@ export const ContentLoader = ({translationManager, currentLanguageKey, dataPromi
     use(dataPromise);
 
     const [translations] = useState(translationManager.getTranslations())
-    const [newTranslations] = useState(translationManager.getTranslations())
 
     const keys = Object.keys(translations);
+    const newTranslations: any = {};
+
+    useEffect(() => {
+        // eslint-disable-next-line array-callback-return
+        keys.map(key => {
+            newTranslations[key] = t(key)
+        })
+    }, [currentLanguageKey]);
 
     const translationChange = (key: string, event: any) => {
         newTranslations[key] = event.target.value
@@ -59,7 +67,7 @@ export const ContentLoader = ({translationManager, currentLanguageKey, dataPromi
                                     </div>
                                     <div>
                                         <label>{'Translation'}:</label>
-                                        <Input key={key} defaultValue={t(key)} onChange={(event) => {
+                                        <Input key={t(key)} defaultValue={t(key)} onChange={(event) => {
                                             translationChange(key, event)
                                         }}/>
                                     </div>

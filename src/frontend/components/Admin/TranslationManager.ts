@@ -172,7 +172,7 @@ class TranslationManager {
                         try {
                             const contentParsed: IPlainTextContent = JSON.parse(innerContent.content)
                             if (contentParsed.value && contentParsed.value.length > 0) {
-                                this.defaultTranslations[this.contentTranslationKey + sanitizeKey(contentParsed.value)] = contentParsed.value
+                                this.defaultTranslations[sanitizeKey(contentParsed.value)] = contentParsed.value
                             }
                             const actionContentParsed = innerContent.actionContent && JSON.parse(innerContent.actionContent)
                             if (innerContent.actionType && actionContentParsed)
@@ -187,7 +187,7 @@ class TranslationManager {
                             if (contentParsed.value.blocks.length > 0) {
                                 contentParsed.value.blocks.forEach(block => {
                                     if (block.text.length > 0)
-                                        this.defaultTranslations[this.contentTranslationKey + sanitizeKey(block.text)] = block.text
+                                        this.defaultTranslations[sanitizeKey(block.text)] = block.text
                                 })
                             }
 
@@ -204,7 +204,7 @@ class TranslationManager {
                             if (contentParsed.description && contentParsed.description.blocks.length > 0) {
                                 contentParsed.description.blocks.forEach(block => {
                                     if (block.text.length > 0)
-                                        this.defaultTranslations[this.contentTranslationKey + sanitizeKey(block.text)] = block.text
+                                        this.defaultTranslations[sanitizeKey(block.text)] = block.text
                                 })
                             }
                             const actionContentParsed = innerContent.actionContent && JSON.parse(innerContent.actionContent)
@@ -221,7 +221,7 @@ class TranslationManager {
                             if (contentParsed.items.length > 0) {
                                 contentParsed.items.forEach((item) => {
                                     if (item.text.length > 0)
-                                        this.defaultTranslations[this.contentTranslationKey + sanitizeKey(item.text)] = item.text
+                                        this.defaultTranslations[sanitizeKey(item.text)] = item.text
                                 })
 
                             }
@@ -238,7 +238,7 @@ class TranslationManager {
                             if (contentParsed.items.length > 0) {
                                 contentParsed.items.forEach((item) => {
                                     if (item.text.length > 0)
-                                        this.defaultTranslations[this.contentTranslationKey + sanitizeKey(item.text)] = item.text
+                                        this.defaultTranslations[sanitizeKey(item.text)] = item.text
                                 })
 
                             }
@@ -262,7 +262,7 @@ class TranslationManager {
     getTranslations() {
         const defaultTranslations: any = {};
         this.pages.forEach((navigation) => {
-            defaultTranslations[this.navigationTranslationKey + navigation.page] = navigation.page;
+            defaultTranslations[sanitizeKey(navigation.page)] = navigation.page;
         })
         this.defaultTranslations = defaultTranslations;
         this.extractContentTranslations()

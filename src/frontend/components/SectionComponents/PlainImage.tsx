@@ -102,7 +102,7 @@ const PlainImage = ({item, t}: { item: IItem, t: TFunction<"translation", undefi
     useEffect(() => {
         if (contentRef.current && !plainImage.data.useAsBackground) {
             const extract = plainImage.data.description
-            if(extract.blocks && extract.blocks.length > 0){
+            if(extract && extract.blocks && extract.blocks.length > 0){
                 extract.blocks.map(block => {
                     block.text = t(sanitizeKey(block.text))
                 })

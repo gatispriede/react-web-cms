@@ -1,10 +1,9 @@
 import React from 'react'
 import {resolve} from "../gqty";
-import {Spin, Tabs} from 'antd';
+import {ConfigProvider, Dropdown, MenuProps, Space, Spin, Tabs, Typography} from 'antd';
 import DynamicTabsContent from "../components/DynamicTabsContent";
 import {IPage} from "../../Interfaces/IPage";
 import theme from '../theme/themeConfig';
-import {ConfigProvider} from 'antd';
 import {IMongo} from "../../Interfaces/IMongo";
 import MongoApi from '../api/MongoApi';
 import {ISection} from "../../Interfaces/ISection";
@@ -16,6 +15,8 @@ import {serverSideTranslations} from "next-i18next/serverSideTranslations";
 import {TFunction} from "i18next";
 import {INavigation} from "../gqty/schema.generated";
 import {sanitizeKey} from "../../utils/stringFunctions";
+import {DownOutlined} from "@ant-design/icons";
+
 interface IHomeState {
     loading: boolean,
     activeTab: string,
@@ -35,6 +36,7 @@ class App extends React.Component<{ page: string, t: TFunction<string, undefined
         tabProps: [],
         activeTab: '0'
     }
+    private languages: any;
 
     constructor(props: { page: string, t: TFunction<string, undefined> }) {
         super(props);
@@ -55,7 +57,7 @@ class App extends React.Component<{ page: string, t: TFunction<string, undefined
                 const list: any[] = [];
                 (query as unknown as IMongo).mongo.getNavigationCollection.map((item: INavigation) => {
                     let itemSeo
-                    if(item.seo){
+                    if (item.seo) {
                         itemSeo = {
                             description: item.seo.description,
                             keywords: item.seo.keywords,
@@ -103,10 +105,10 @@ class App extends React.Component<{ page: string, t: TFunction<string, undefined
         let pages: IPage[];
         pages = await this.getNavigationList()
         // @ts-ignore
-        if(cacheDataSource){
+        if (cacheDataSource) {
             // @ts-ignore
             // pages = cacheDataSource.pages
-        }else{
+        } else {
             // pages = await this.getNavigationList()
         }
         if (pages[0]) {
@@ -116,10 +118,10 @@ class App extends React.Component<{ page: string, t: TFunction<string, undefined
                     let sectionsData: ISection[];
                     sectionsData = await this.getSectionData(pages, id as unknown as number)
                     // @ts-ignore
-                    if(cacheDataSource){
+                    if (cacheDataSource) {
                         // @ts-ignore
                         // sectionsData = cacheDataSource.sectionsData[id]
-                    }else{
+                    } else {
                         // sectionsData = await this.getSectionData(pages, id as unknown as number)
                     }
                     newTabsState.push({
@@ -127,7 +129,8 @@ class App extends React.Component<{ page: string, t: TFunction<string, undefined
                         page: pages[id].page,
                         seo: pages[id].seo,
                         label: (
-                            <Link href={pages[id].page.replace(/ /g,'-').toLowerCase()}>{this.props.t(sanitizeKey(pages[id].page))}</Link>
+                            <Link
+                                href={pages[id].page.replace(/ /g, '-').toLowerCase()}>{this.props.t(sanitizeKey(pages[id].page))}</Link>
                         ),
                         children:
                             <DynamicTabsContent
@@ -145,15 +148,18 @@ class App extends React.Component<{ page: string, t: TFunction<string, undefined
             newState.tabProps = newTabsState
         }
 
+        this.languages = await this.MongoApi.getLanguages()
+
         newState.pages = pages
         newState.loading = false
         this.setState(newState)
     }
-    findIdForActiveTab(){
-        const firstTab = this.state.tabProps[0] ? this.state.tabProps[0].page.replace(/ /g,'-').toLowerCase() : ''
+
+    findIdForActiveTab() {
+        const firstTab = this.state.tabProps[0] ? this.state.tabProps[0].page.replace(/ /g, '-').toLowerCase() : ''
         const propsPage = this.props.page !== '/' ? this.props.page : firstTab
         return this.state.tabProps.findIndex((tab) => {
-            const tabUrl = encodeURIComponent(tab.page.replace(/ /g,'-')).toLowerCase()
+            const tabUrl = encodeURIComponent(tab.page.replace(/ /g, '-')).toLowerCase()
             const propsUrl = encodeURIComponent(propsPage).toLowerCase()
             return tabUrl === propsUrl
         })
@@ -161,39 +167,50 @@ class App extends React.Component<{ page: string, t: TFunction<string, undefined
 
     render() {
         const activeKey = this.findIdForActiveTab()
-        console.log(this.props.t(sanitizeKey("Sometext")))
-        const seo = this.state.tabProps[activeKey] ? this.state.tabProps[activeKey].seo : undefined
+        const seo = this.state.tabProps[activeKey] ? this.state.tabProps[activeKey].seo : undefined;
+        let items: MenuProps['items'] = [];
+        if (this.languages) {
+            const keys = Object.keys(this.languages)
+            let currentUrl = ''
+            if(window){
+                currentUrl = window.location.pathname.replace(/[A-Za-z]{2}\//,'')
+            }
+            items = keys.map((key) => ({
+                label: <a href={`/${this.languages[key].symbol}${currentUrl}`}>{this.languages[key].label}</a>,
+                key: key
+            }))
+        }
         return (
             <div>
                 <Head>
                     <title>{this.state.tabProps[activeKey] ? this.state.tabProps[activeKey].page : ''}</title>
-                    <meta property="og:title" content={this.props.page} key="title" />
+                    <meta property="og:title" content={this.props.page} key="title"/>
                     {seo && seo.description &&
-                        <meta property="og:description" content={seo.description} key="description" />
+                        <meta property="og:description" content={seo.description} key="description"/>
                     }
                     {seo && seo.keywords &&
-                        <meta property="og:keywords" content={seo.keywords.join()} key="keywords" />
+                        <meta property="og:keywords" content={seo.keywords.join()} key="keywords"/>
                     }
                     {seo && seo.viewport &&
-                        <meta property="og:viewport" content={seo.viewport} key="viewport" />
+                        <meta property="og:viewport" content={seo.viewport} key="viewport"/>
                     }
                     {seo && seo.charSet &&
-                        <meta property="og:charSet" content={seo.charSet} key="charSet" />
+                        <meta property="og:charSet" content={seo.charSet} key="charSet"/>
                     }
                     {seo && seo.url &&
-                        <meta property="og:url" content={seo.url} key="url" />
+                        <meta property="og:url" content={seo.url} key="url"/>
                     }
                     {seo && seo.image &&
-                        <meta property="og:image" content={seo.image} key="image" />
+                        <meta property="og:image" content={seo.image} key="image"/>
                     }
                     {seo && seo.image_alt &&
-                        <meta property="og:image_alt" content={seo.image_alt} key="image_alt" />
+                        <meta property="og:image_alt" content={seo.image_alt} key="image_alt"/>
                     }
                     {seo && seo.author &&
-                        <meta property="og:author" content={seo.author} key="author" />
+                        <meta property="og:author" content={seo.author} key="author"/>
                     }
                     {seo && seo.locale &&
-                        <meta property="og:locale" content={seo.locale} key="locale" />
+                        <meta property="og:locale" content={seo.locale} key="locale"/>
                     }
                 </Head>
                 <ConfigProvider theme={theme}>
@@ -202,16 +219,35 @@ class App extends React.Component<{ page: string, t: TFunction<string, undefined
                         <Tabs onChange={(value) => {
                             this.setState({activeTab: value})
                         }} activeKey={"" + activeKey} defaultActiveKey={"0"} items={this.state.tabProps}/>
+                        {items.length > 0 && <div style={{
+                            position: "absolute",
+                            top: 0,
+                            right: 20,
+                        }}>
+                            <Dropdown menu={{
+                                items,
+                                selectable: true,
+                                defaultSelectedKeys: ['3'],
+                            }}>
+                                <Typography.Link>
+                                    <Space>
+                                        Change language
+                                        <DownOutlined/>
+                                    </Space>
+                                </Typography.Link>
+                            </Dropdown>
+                        </div>
+                        }
                     </Spin>
                 </ConfigProvider>
             </div>
         );
     }
 };
-export const getServerSideProps: GetServerSideProps<{ }> = async ({locale,}) => ({
+export const getServerSideProps: GetServerSideProps<{}> = async ({locale,}) => ({
     props: {
         ...(await serverSideTranslations(locale ?? 'en', [
-            'common','app',
+            'app',
         ])),
     },
 })

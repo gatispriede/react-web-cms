@@ -43,7 +43,7 @@ const RichText = ({item, t}: { item: IItem, t: TFunction<"translation", undefine
     useEffect(() => {
         if(contentRef.current){
             const extract = richTextContent.data.value
-            if(extract.blocks && extract.blocks.length > 0){
+            if(extract && extract.blocks && extract.blocks.length > 0){
                 extract.blocks.map(block => {
                     block.text = t(sanitizeKey(block.text))
                 })

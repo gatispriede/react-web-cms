@@ -10,6 +10,8 @@ import {sanitizeKey} from "../../../../utils/stringFunctions";
 
 const {Header, Content, Sider} = Layout;
 
+let translation = {}
+
 const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
     translationManager: TranslationManager,
     i18n: any,
@@ -19,7 +21,6 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
     const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
     const [currentLanguageName, setCurrentLanguageName] = useState('App Translations');
     const [dialogOpen, setDialogOpen] = useState(false);
-    const [translation, setTranslation] = useState({})
 
     const {t} = useTranslation('app')
     const tApp = (data: string) => {
@@ -31,13 +32,14 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
     }])
 
     const setTranslationValue = (data: any) => {
-        setTranslation(data)
+        translation = data;
     }
     const saveNewTranslation = async () => {
         await translationManager.saveNewTranslation({
             label: currentLanguageName,
             symbol: currentLanguage
         }, translation)
+        i18n.reloadResources();
     }
 
     useEffect(() => {
