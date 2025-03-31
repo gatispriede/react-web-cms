@@ -15,16 +15,15 @@ import {serverSideTranslations} from "next-i18next/serverSideTranslations";
 import {i18n, TFunction} from "i18next";
 import {INavigation} from "../gqty/schema.generated";
 import {sanitizeKey} from "../../utils/stringFunctions";
-import {DownOutlined} from "@ant-design/icons";
-
 interface IHomeState {
     loading: boolean,
     activeTab: string,
     pages: IPage[],
     tabProps: any[]
 }
+interface IHomeProps { page: string, t: TFunction<string, undefined>, i18n: i18n, pathname: string }
 
-class App extends React.Component<{ page: string, t: TFunction<string, undefined>, i18n: i18n }> {
+class App extends React.Component<IHomeProps> {
     sections: any[] = []
     private MongoApi = new MongoApi()
     loadSections: any
@@ -38,7 +37,7 @@ class App extends React.Component<{ page: string, t: TFunction<string, undefined
     }
     private languages: any;
 
-    constructor(props: { page: string, t: TFunction<string, undefined>, i18n: i18n }) {
+    constructor(props: IHomeProps) {
         super(props);
         this.page = props.page
         this.state.loading = true
@@ -172,10 +171,8 @@ class App extends React.Component<{ page: string, t: TFunction<string, undefined
         let items: MenuProps['items'] = [];
         if (this.languages) {
             const keys = Object.keys(this.languages)
-            let currentUrl = ''
-            if(window){
-                currentUrl = window.location.pathname.replace(/[A-Za-z]{2}\//,'')
-            }
+            let currentUrl = this.props.pathname
+
             items = keys.map((key) => ({
                 label: <a href={`/${this.languages[key].symbol}${currentUrl}`}>{this.languages[key].label}</a>,
                 key: key
