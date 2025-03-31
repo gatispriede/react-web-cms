@@ -12,9 +12,9 @@ interface AddNewLanguageDialogProps {
 const AddNewLanguageDialog = ({t, open, close}: AddNewLanguageDialogProps) => {
     const translationManage = new TranslationManager();
     const [form] = Form.useForm();
-    const onFinish = (values: any) => {
+    const onFinish = async (values: any) => {
+        await translationManage.saveNewLanguage(values)
         close()
-        void translationManage.saveNewLanguage(values)
     }
 
     return (

@@ -9,6 +9,7 @@ import {IItem} from "../../Interfaces/IItem";
 import {ILogo} from "../../Interfaces/ILogo";
 import {IUser} from "../../Interfaces/IUser";
 import {INewLanguage} from "../components/interfaces/INewLanguage";
+import {tr} from "uppload";
 
 class MongoApi {
     async getUser({email}: { email: string }): Promise<Partial<IUser> | any> {
@@ -68,6 +69,7 @@ class MongoApi {
     }
 
     async saveLanguage(language: INewLanguage, translations?: any) {
+        console.log(translations)
         return await resolve(
             ({mutation}) => {
                 return (mutation).mongo.addUpdateLanguage({language: language, translations})

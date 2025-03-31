@@ -122,6 +122,7 @@ class MongoDBConnection {
             const returnData: INewLanguage[] = []
             if (languages && languages.content){
                 const keys = Object.keys(languages.content);
+                // eslint-disable-next-line array-callback-return
                 keys.map(key => {
                     if (languages.content[key])
                         returnData.push(languages.content[key])
@@ -149,7 +150,6 @@ class MongoDBConnection {
                         [language.symbol]: language
                     }
                 }
-                languages[language.symbol] = language
                 res = await this.entitiesDB.insertOne(languages)
             } else {
                 languages.content[language.symbol] = language
@@ -162,8 +162,8 @@ class MongoDBConnection {
             return JSON.stringify({success: res, error: error})
         }
         try {
-            if(translations){
-                const keys = Object.keys(translations)
+            const keys = Object.keys(translations)
+            if(keys.length > 0) {
                 if(keys.length > 0){
                     this.fileManager.saveTranslation(language.symbol, translations)
                 }

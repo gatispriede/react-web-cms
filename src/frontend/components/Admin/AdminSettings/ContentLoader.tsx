@@ -22,12 +22,15 @@ export const ContentLoader = ({translationManager, currentLanguageKey, dataPromi
 
     // eslint-disable-next-line array-callback-return
     keys.map(key => {
-        if(key !== sanitizeKey(t(key))){
+        if (key !== sanitizeKey(t(key))) {
             newTranslations[key] = tApp(key)
-        }else{
+        } else {
             newTranslations[key] = translations[key]
         }
     })
+    useEffect(() => {
+        setTranslation(newTranslations);
+    }, [currentLanguageKey])
 
     const translationChange = (key: string, event: any) => {
         newTranslations[key] = event.target.value

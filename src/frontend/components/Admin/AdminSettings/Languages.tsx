@@ -21,6 +21,7 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
     const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
     const [currentLanguageName, setCurrentLanguageName] = useState('App Translations');
     const [dialogOpen, setDialogOpen] = useState(false);
+    const [translation, setTranslation] = useState(Object);
 
     const {t} = useTranslation('app')
     const tApp = (data: string) => {
@@ -32,7 +33,7 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
     }])
 
     const setTranslationValue = (data: any) => {
-        translation = data;
+        setTranslation(data);
     }
     const saveNewTranslation = async () => {
         await translationManager.saveNewTranslation({

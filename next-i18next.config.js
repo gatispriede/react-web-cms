@@ -1,11 +1,16 @@
 // @ts-check
 const HttpBackend = require('i18next-http-backend/cjs')
+const ChainedBackend= require('i18next-chained-backend').default
+
+const isBrowser = typeof window !== 'undefined'
+const isDev = false// process.env.NODE_ENV === 'development'
+const cacheTime = 0// 60 * 60 * 1000
 /**
  * @type {import('next-i18next').UserConfig}
  */
 module.exports = {
     // https://www.i18next.com/overview/configuration-options#logging
-    // debug: process.env.NODE_ENV === 'development',
+    debug: isDev,
     i18n: {
         defaultLocale: 'lv',
         locales: [
@@ -196,22 +201,24 @@ module.exports = {
         ],
     },
     ns: ["common","app"],
-    use: [HttpBackend],
+    use: isBrowser ? [ChainedBackend] : [],
     backend: {
+        backendOptions: [{ expirationTime: isDev ? 0 : cacheTime }, {}], // 1 hour
         backends: [
             HttpBackend,
         ],
     },
     reloadOnPrerender: process.env.NODE_ENV === 'development',
+    partialBundledLanguages: isBrowser && true,
     localePath:
         typeof window === 'undefined'
             ? require('path').resolve('./src/frontend/public/locales')
-            : '/locales',
+            : '/locales/{{lng}}/{{ns}}.json',
     /**
      * @link https://github.com/i18next/next-i18next#6-advanced-configuration
      */
     // saveMissing: true,
     // strictMode: true,
-    // serializeConfig: false,
+    serializeConfig: false,
     // react: { useSuspense: false }
 }
