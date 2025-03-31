@@ -2,6 +2,7 @@ import TranslationManager from "../TranslationManager";
 import React, {use, useEffect, useState} from "react";
 import {Input} from "antd";
 import {sanitizeKey} from "../../../../utils/stringFunctions";
+const isBrowser = typeof window !== 'undefined'
 
 export const ContentLoader = ({translationManager, currentLanguageKey, dataPromise, i18n, setTranslation, t, tApp}: {
     translationManager: TranslationManager,
@@ -20,13 +21,25 @@ export const ContentLoader = ({translationManager, currentLanguageKey, dataPromi
 
     const keys = Object.keys(translations);
 
+    const i18nConfig = i18n.toJSON()
     // eslint-disable-next-line array-callback-return
     keys.map(key => {
-        if (key !== sanitizeKey(t(key))) {
-            newTranslations[key] = tApp(key)
-        } else {
-            newTranslations[key] = translations[key]
+        if(i18nConfig?.store?.data[currentLanguageKey] && i18nConfig?.store?.data[currentLanguageKey].app){
+            const configTranslations = i18nConfig?.store?.data[currentLanguageKey].app
+
+            if(typeof configTranslations[key] !== 'undefined'){
+                newTranslations[key] = tApp(key)
+            }else{
+                newTranslations[key] = translations[key]
+            }
+        }else{
+            if (key !== sanitizeKey(t(key))) {
+                newTranslations[key] = tApp(key)
+            } else {
+                newTranslations[key] = translations[key]
+            }
         }
+
     })
     useEffect(() => {
         setTranslation(newTranslations);

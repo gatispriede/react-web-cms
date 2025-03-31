@@ -23,11 +23,7 @@ class FileManager {
             fs.mkdirSync(langPath, {recursive: true});
         }
         // save file
-        return fs.unlink(fileName,(err) => {
-            if (err) throw err;
-            console.log(`${fileName} was deleted`);
-            // fs.rmSync(langPath, { recursive: true, force: true });
-        });
+        fs.writeFileSync(fileName, JSON.stringify({}));
     }
 
 }
