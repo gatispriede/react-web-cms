@@ -40,8 +40,6 @@ COPY ./src ./src
 
 RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn --frozen-lockfile
 #setup admin in db
-RUN curl http://server:3000/?query=query%7B%0A%20%20mongo%7B%0A%20%20%20%20setupAdmin%7B%0A%20%20%20%20%20%20name%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D
-RUN curl http://server:3000/?query=query%7B%0A%20%20mongo%7B%0A%20%20%20%20setupAdmin%7B%0A%20%20%20%20%20%20name%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D
 
 RUN npm run build-docker
 #USER node
