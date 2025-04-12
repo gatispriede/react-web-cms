@@ -12,24 +12,28 @@ services:
     image: 'mongo:7.0'
     container_name: mongodb
     restart: always
-#    ports:
-#      - '27018:27017'
-#    expose:
-#      - 27018
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo mongodb://mongodb:27017/ --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 5
     networks:
       - db
       - back-end
+      - front-end
   server:
     container_name: server
     build:
       context: .
       dockerfile: ServerDockerfile
     depends_on:
-      - mongodb
+      mongodb: {
+        condition: service_started
+      }
     environment:
       - NODE_ENV=production
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://server:3000?query=%7B%0A%09sample%0A%7D%0A"]
+      test:  curl --fail "http://server:3000?query=%7B%0A%09sample%0A%7D%0A" || exit 1
       interval: 10s
     command: npm run standalone-graphql-docker
     networks:
@@ -40,10 +44,15 @@ services:
     expose:
       - 3000
   app:
+    image: node-app
     container_name: front
     depends_on:
-      - mongodb
-      - server
+      mongodb: {
+        condition: service_started
+      }
+      server: {
+        condition: service_healthy
+      }
     command: npm run start-docker
     build:
       context: .
