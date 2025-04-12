@@ -33,7 +33,8 @@ const resolvers = {
 // const app: express.Application = express(credentials);
 const app: express.Application = express();
 // const port = 443;
-const port = 80;
+// @ts-ignore
+const port = process.env.NODE_SERVER_PORT ? 3000 : 80;
 
 const typeDefs = readFileSync('./src/Server/schema.graphql', { encoding: 'utf-8' });
 

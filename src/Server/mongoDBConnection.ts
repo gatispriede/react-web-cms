@@ -28,6 +28,7 @@ export interface ILoadData {
     sizeOnDisk?: number | undefined
     empty?: boolean | undefined
 }
+const server = process.env.NODE_SERVER_PORT ? 'mongodb' : 'localhost';
 
 class MongoDBConnection {
     private _settings: ISettings = {
@@ -39,7 +40,7 @@ class MongoDBConnection {
         mongodbUser: 'admin',
         mongodbPassword: 'AMd011wAQNN3eWwP',
         mongoDBClusterUrl: 'cluster.0fmyz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster',
-        mongoDBLocalUrl: 'mongodb://localhost:27017',
+        mongoDBLocalUrl: `mongodb://${server}:27017`,
         mongoDBDatabaseUrl: ''
     }
     private _adminName = 'Admin'
@@ -67,15 +68,16 @@ class MongoDBConnection {
         if (this.db) {
             await this.client.close()
         }
-        const dbUrl: string = this._settings.mongoDBLocalUrl//process.env.NODE_ENV === 'production' ? this._settings.mongoDBDatabaseUrl : this._settings.mongoDBLocalUrl
+        const dbUrl: string = this._settings.mongoDBLocalUrl;//process.env.NODE_ENV === 'production' ? this._settings.mongoDBDatabaseUrl : this._settings.mongoDBLocalUrl
         const newClient = new MongoClient(dbUrl, {
             retryReads: true,
             connectTimeoutMS: 500,
             maxIdleTimeMS: 3000,
             maxPoolSize: 80,
         });
+        console.log(newClient)
         if (newClient) {
-            this.db = newClient.db('Homepage')
+            this.db = newClient.db('DB')
             this.client = newClient
             this.sectionsDB = this.db.collection('Sections')
             this.navigationsDB = this.db.collection('Navigation')

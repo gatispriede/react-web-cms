@@ -14,10 +14,10 @@ import {
   type GeneratedSchema,
 } from "./schema.generated";
 
-import {IP} from '../../../IP'
-
-const serverIP = IP;
-const port = '80'
+// import IP from '../../../IP'
+const node_port = process.env.BUILD_PORT || 80;
+const serverIP = node_port !== 80 ? 'server' : 'localhost';
+const port = '' + node_port
 const serverAddress = `http://${serverIP}:${port}`;
 const fetchUrl = `${serverAddress}/api/graphql`
 

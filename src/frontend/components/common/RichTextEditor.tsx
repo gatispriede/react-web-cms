@@ -1,4 +1,5 @@
 'use client'
+// @ts-ignore
 import { Editor } from 'react-draft-wysiwyg';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import {useEffect, useState} from "react";
