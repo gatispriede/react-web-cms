@@ -75,7 +75,7 @@ class MongoDBConnection {
             maxIdleTimeMS: 3000,
             maxPoolSize: 80,
         });
-        console.log(newClient)
+
         if (newClient) {
             this.db = newClient.db('DB')
             this.client = newClient

@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 
 const Slug = ()=> {
     const {t, i18n} = useTranslation('app');
-    const pathname = usePathname()
+    const pathname = usePathname();
     return (
         <App pathname={pathname} i18n={i18n} t={t} page={'/'} />
     )

@@ -200,7 +200,8 @@ module.exports = {
             // "zu"
         ],
     },
-    ns: ["common","app"],
+    defaultNS: "app",
+    ns: ["app", "common"],
     use: isBrowser ? [ChainedBackend] : [],
     backend: {
         backendOptions: [{ expirationTime: isDev ? 0 : cacheTime }, {}], // 1 hour

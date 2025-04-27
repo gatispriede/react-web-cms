@@ -15,6 +15,7 @@ import {serverSideTranslations} from "next-i18next/serverSideTranslations";
 import {i18n, TFunction} from "i18next";
 import {INavigation} from "../gqty/schema.generated";
 import {sanitizeKey} from "../../utils/stringFunctions";
+import {redirect} from "next/navigation";
 interface IHomeState {
     loading: boolean,
     activeTab: string,
@@ -151,8 +152,23 @@ class App extends React.Component<IHomeProps> {
         this.languages = await this.MongoApi.getLanguages()
 
         newState.pages = pages
-        newState.loading = false
+        newState.loading = false;
+
         this.setState(newState)
+        this.adjustDefaultLangRoute(pages)
+    }
+
+    adjustDefaultLangRoute(pages: IPage[]) {
+        if(pages && pages[0] && pages[0].page && typeof window !== 'undefined') {
+            // @ts-ignore
+            if(this.props.i18n.options['defaultLocale']){
+                // @ts-ignore
+                const defaultLocale: string = this.props.i18n.options['defaultLocale']
+                if(defaultLocale && window.location.pathname === '/en'){
+                    window.location.href = `${window.location.origin}/${defaultLocale}/${pages[0].page}`
+                }
+            }
+        }
     }
 
     findIdForActiveTab() {
@@ -217,7 +233,7 @@ class App extends React.Component<IHomeProps> {
                         <Tabs onChange={(value) => {
                             this.setState({activeTab: value})
                         }} activeKey={"" + activeKey} defaultActiveKey={"0"} items={this.state.tabProps}/>
-                        {items.length > 0 && this.languages && this.languages[this.props.i18n.language] && <div style={{
+                        {items.length > 1 && this.languages && this.languages[this.props.i18n.language] && <div style={{
                             position: "absolute",
                             top: 10,
                             right: 20,
