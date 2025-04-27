@@ -37,7 +37,6 @@ class App extends NextApp {
                 // });
             },
         });
-        console.log('lang', lang)
 
         // Calls page's `getInitialProps` and fills `appProps.pageProps` - XXX See https://nextjs.org/docs#custom-app
         const appProps = await NextApp.getInitialProps(props as AppContext);
