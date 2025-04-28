@@ -15,7 +15,7 @@ import {serverSideTranslations} from "next-i18next/serverSideTranslations";
 import {i18n, TFunction} from "i18next";
 import {INavigation} from "../gqty/schema.generated";
 import {sanitizeKey} from "../../utils/stringFunctions";
-import {redirect} from "next/navigation";
+
 interface IHomeState {
     loading: boolean,
     activeTab: string,
@@ -129,7 +129,7 @@ class App extends React.Component<IHomeProps> {
                         page: pages[id].page,
                         seo: pages[id].seo,
                         label: (
-                            <Link
+                            <Link className={'navigation-item'}
                                 href={pages[id].page.replace(/ /g, '-').toLowerCase()}>{this.props.t(sanitizeKey(pages[id].page))}</Link>
                         ),
                         children:
@@ -238,7 +238,9 @@ class App extends React.Component<IHomeProps> {
                             top: 10,
                             right: 20,
                         }}>
-                            <Dropdown menu={{
+                            <Dropdown
+                                className={'language-dropdown'}
+                                menu={{
                                 items
                             }}>
                                 <Typography.Link>

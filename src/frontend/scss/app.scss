@@ -1,0 +1,19 @@
+.ant-tabs-nav-wrap{
+  justify-content: center;
+  .ant-tabs-tab-active{
+
+    .navigation-item {
+      opacity: 1;
+
+    }
+  }
+  .navigation-item{
+    color: var(--primary);
+    opacity: .8;
+    font-weight: 500;
+    font-size: var(--font-title);
+    &:hover{
+      opacity: 1;
+    }
+  }
+}

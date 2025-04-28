@@ -14,7 +14,8 @@
 .pnp.js
 
 #IDE
-/.idea
+/.idea/*
+!.idea/rcb-settings.xml
 
 # testing
 /coverage

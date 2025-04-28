@@ -1,3 +1,5 @@
+@use 'base-colors';
+
 @use "Admin/EditSection";
 @use "Layout/Content";
 @use "Admin/Navigation";
@@ -12,19 +14,15 @@
 @use "Components/RichText";
 @use "Components/Gallery";
 @use "Components/Carousel";
-
-@font-face {
-  font-family: 'Salesforce-Sans';
-  src: '../public/fonts/SalesforceSans-Regular.ttf'
-}
+@use 'app';
 
 body{
   //margin-left: 16px;
   //margin-right: 16px;
+  background: var(--background);
   margin: auto;
   overflow: auto;
-  font-family: 'Salesforce-Sans', sans-serif;
-  color: #3b3939;
+  font-family: gf_Playfair_Display variant0;
   .logo{
     position: absolute;
     top: 10px;
@@ -34,11 +32,7 @@ body{
     z-index: 2;
   }
   .ant-tabs{
-    font-family: 'Salesforce-Sans', sans-serif;
-    .ant-tabs-nav-wrap{
-      text-transform: uppercase;
-      justify-content: center;
-    }
+    font-family: gf_Playfair_Display variant0;
     .ant-tabs-nav{
       &::before{
         border: none;
@@ -56,8 +50,7 @@ body{
     }
   }
   .dynamic-content{
-    font-family: 'Salesforce-Sans', sans-serif;
-    color: #3b3939;
+    font-family: gf_Playfair_Display variant0;
   }
   .ant-select-selector{
     min-width: 150px;
