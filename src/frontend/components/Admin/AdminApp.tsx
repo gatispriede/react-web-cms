@@ -1,4 +1,3 @@
-'use client'
 import React from 'react'
 import {resolve} from "../../gqty";
 import {Button, ConfigProvider, Spin, Tabs} from 'antd';
@@ -36,7 +35,7 @@ class AdminApp extends React.Component<{
     private MongoApi
 
     state: IHomeState = {
-        loading: false,
+        loading: true,
         addNewDialogOpen: false,
         activeNavigation: {
             page: '',
@@ -53,8 +52,9 @@ class AdminApp extends React.Component<{
     constructor(props: { session: any, t: TFunction<"translation", undefined>, tApp: TFunction<"translation", undefined> }) {
         super(props);
         this.MongoApi = new MongoApi()
-        this.state.loading = true
-        void this.initialize(true)
+    }
+    componentDidMount() {
+        void this.initialize()
     }
 
     onEdit = async (targetKey: TargetKey, action: 'add' | 'remove') => {
@@ -75,7 +75,7 @@ class AdminApp extends React.Component<{
         }
     }
 
-    async initialize(init: boolean = false): Promise<void> {
+    async initialize(): Promise<void> {
         let newState: IHomeState = {
             loading: false,
             addNewDialogOpen: false,
@@ -89,11 +89,6 @@ class AdminApp extends React.Component<{
                 type: '',
                 seo: undefined
             }
-        }
-        if (init) {
-            this.state.loading = true
-        } else {
-            this.setState({loading: true})
         }
         const pages = await resolve(
             ({query}) => {
@@ -172,9 +167,7 @@ class AdminApp extends React.Component<{
 
         newState.tabProps = newTabsState
         newState.pages = pages
-        newState.loading = false
         this.setState(newState)
-
     }
 
     render() {

@@ -2,13 +2,13 @@ import React, {RefObject, useEffect} from "react";
 import ContentManager from "../ContentManager";
 import {EItemType} from "../../../enums/EItemType";
 import {IItem} from "../../../Interfaces/IItem";
-import {RawDraftContentState} from "draft-js";
-import draftToHtml from "draftjs-to-html";
 import {TFunction} from "i18next";
+import {convertFromHTML} from "draft-js";
 import {sanitizeKey} from "../../../utils/stringFunctions";
+import {extractTranslationsFromHTML} from "../../../utils/translationsutils";
 
 export interface IRichText {
-    value: RawDraftContentState;
+    value: string;
 }
 
 export enum ERichTextStyle {
@@ -17,10 +17,7 @@ export enum ERichTextStyle {
 }
 
 export class RichTextContent extends ContentManager {
-    public _parsedContent: IRichText = {value: {
-            blocks: [],
-            entityMap: {}
-        }}
+    public _parsedContent: IRichText = {value: ''}
 
     get data(): IRichText {
         this.parse();
@@ -31,7 +28,7 @@ export class RichTextContent extends ContentManager {
         this._parsedContent = value;
     }
 
-    setValue(value: RawDraftContentState) {
+    setValue(value: string) {
         this._parsedContent.value = value;
     }
 
@@ -44,15 +41,10 @@ const RichText = ({item, t, tApp}: {
 }) => {
     const richTextContent = new RichTextContent(EItemType.RichText, item.content);
     const contentRef: RefObject<HTMLDivElement | null> = React.createRef();
+
     useEffect(() => {
         if(contentRef.current){
-            const extract = richTextContent.data.value
-            if(extract && extract.blocks && extract.blocks.length > 0){
-                extract.blocks.map(block => {
-                    block.text = tApp(sanitizeKey(block.text))
-                })
-            }
-            contentRef.current.innerHTML = draftToHtml(extract)
+            contentRef.current.innerHTML = extractTranslationsFromHTML(richTextContent.data.value, tApp)
         }
     }, []);
     return (

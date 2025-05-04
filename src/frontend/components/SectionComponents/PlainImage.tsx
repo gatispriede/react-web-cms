@@ -4,13 +4,14 @@ import {EItemType} from "../../../enums/EItemType";
 import {Image} from "antd";
 import {IItem} from "../../../Interfaces/IItem";
 import draftToHtml from 'draftjs-to-html';
-import {RawDraftContentState} from "draft-js";
+import {convertFromHTML, RawDraftContentState} from "draft-js";
 import {TFunction} from "i18next";
 import {sanitizeKey} from "../../../utils/stringFunctions";
+import {extractTranslationsFromHTML} from "../../../utils/translationsutils";
 
 export interface IPlainImage {
     src: string;
-    description: RawDraftContentState;
+    description: string;
     alt: string;
     height: number;
     useAsBackground: boolean
@@ -50,10 +51,7 @@ export class PlainImageContent extends ContentManager {
         imgHeight: '',
         preview: false,
         src: "",
-        description: {
-            blocks: [],
-            entityMap: {}
-        }
+        description: ''
     }
 
     get data(): IPlainImage {
@@ -69,7 +67,7 @@ export class PlainImageContent extends ContentManager {
         this._parsedContent.src = value;
     }
 
-    setDescription(value: RawDraftContentState) {
+    setDescription(value: string) {
         this._parsedContent.description = value;
     }
 
@@ -105,13 +103,7 @@ const PlainImage = ({item, t, tApp}: {
     const [minHeight, setMinHeight] = useState(500)
     useEffect(() => {
         if (contentRef.current && !plainImage.data.useAsBackground) {
-            const extract = plainImage.data.description
-            if(extract && extract.blocks && extract.blocks.length > 0){
-                extract.blocks.map(block => {
-                    block.text = tApp(sanitizeKey(block.text))
-                })
-            }
-            contentRef.current.innerHTML = draftToHtml(extract)
+            contentRef.current.innerHTML = extractTranslationsFromHTML(plainImage.data.description, tApp)
         }
     }, [plainImage.data.description]);
     let backgroundProperty = `url(/${plainImage.data.src})`

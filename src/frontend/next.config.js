@@ -8,7 +8,6 @@ const nextConfig = {
         //
         "react-drag-reorder",
         "@glidejs",
-        "react-glidejs",
         // antd & deps
         "@ant-design",
         "@rc-component",

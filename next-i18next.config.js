@@ -218,7 +218,7 @@ module.exports = {
     /**
      * @link https://github.com/i18next/next-i18next#6-advanced-configuration
      */
-    // saveMissing: true,
+    saveMissing: true,
     // strictMode: true,
     serializeConfig: false,
     // react: { useSuspense: false }

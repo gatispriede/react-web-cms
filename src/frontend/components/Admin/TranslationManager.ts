@@ -11,6 +11,7 @@ import {ICarousel} from "../SectionComponents/CarouselView";
 import {IRichText} from "../SectionComponents/RichText";
 import {sanitizeKey} from "../../../utils/stringFunctions";
 import {INewLanguage} from "../interfaces/INewLanguage";
+import {convertFromHTML} from "draft-js";
 
 class TranslationManager {
     MongoApi: MongoApi;
@@ -120,6 +121,7 @@ class TranslationManager {
     }
 
     extractActionContentTranslations(type: any, content: any) {
+        let tmp, parsed;
         switch (type) {
             case EItemType.Text:
                 if (content.value && content.value.length > 0) {
@@ -127,20 +129,18 @@ class TranslationManager {
                 }
                 break;
             case EItemType.RichText:
-                if ((content as IRichText).value.blocks.length > 0) {
-                    (content as IRichText).value.blocks.forEach(block => {
-                        if (block.text.length > 0)
-                            this.defaultTranslations[this.contentTranslationKey + sanitizeKey(block.text)] = block.text
-                    })
-                }
+                tmp = convertFromHTML((content as IRichText).value)
+                parsed = JSON.parse(JSON.stringify(tmp))
+                parsed.contentBlocks.map((item: { text: any | string | string[]; }) => {
+                    this.defaultTranslations[this.contentTranslationKey + sanitizeKey(item.text)] = item.text
+                })
                 break;
             case EItemType.Image:
-                if (content.description && (content as IPlainImage).description.blocks.length > 0) {
-                    (content as IPlainImage).description.blocks.forEach(block => {
-                        if (block.text.length > 0)
-                            this.defaultTranslations[this.contentTranslationKey + sanitizeKey(block.text)] = block.text
-                    })
-                }
+                tmp = convertFromHTML((content as IPlainImage).description)
+                parsed = JSON.parse(JSON.stringify(tmp))
+                parsed.contentBlocks.map((item: { text: any | string | string[]; }) => {
+                    this.defaultTranslations[this.contentTranslationKey + sanitizeKey(item.text)] = item.text
+                })
                 break;
             case EItemType.Carousel:
                 if (content.items.length > 0) {
@@ -187,12 +187,11 @@ class TranslationManager {
                     case EItemType.RichText:
                         try {
                             const contentParsed: IRichText = JSON.parse(innerContent.content)
-                            if (contentParsed.value.blocks.length > 0) {
-                                contentParsed.value.blocks.forEach(block => {
-                                    if (block.text.length > 0)
-                                        this.defaultTranslations[sanitizeKey(block.text)] = block.text
-                                })
-                            }
+                            const tmp = convertFromHTML(contentParsed.value)
+                            const parsed = JSON.parse(JSON.stringify(tmp))
+                            parsed.contentBlocks.map((item: { text: any | string | string[]; }) => {
+                                this.defaultTranslations[sanitizeKey(item.text)] = item.text
+                            })
 
                             const actionContentParsed = innerContent.actionContent && JSON.parse(innerContent.actionContent)
                             if (innerContent.actionType && actionContentParsed)
@@ -204,12 +203,13 @@ class TranslationManager {
                     case EItemType.Image:
                         try {
                             const contentParsed: IPlainImage = JSON.parse(innerContent.content)
-                            if (contentParsed.description && contentParsed.description.blocks.length > 0) {
-                                contentParsed.description.blocks.forEach(block => {
-                                    if (block.text.length > 0)
-                                        this.defaultTranslations[sanitizeKey(block.text)] = block.text
-                                })
-                            }
+
+                            const tmp = convertFromHTML(contentParsed.description)
+                            const parsed = JSON.parse(JSON.stringify(tmp))
+                            parsed.contentBlocks.map((item: { text: any | string | string[]; }) => {
+                                this.defaultTranslations[sanitizeKey(item.text)] = item.text
+                            })
+
                             const actionContentParsed = innerContent.actionContent && JSON.parse(innerContent.actionContent)
                             if (innerContent.actionType && actionContentParsed)
                                 this.extractActionContentTranslations(innerContent.actionType, actionContentParsed)
