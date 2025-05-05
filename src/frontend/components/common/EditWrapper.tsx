@@ -1,4 +1,4 @@
-import {DeleteOutlined, EditOutlined} from "@ant-design/icons";
+import {DeleteOutlined} from "@ant-design/icons";
 import {Button, Popconfirm} from 'antd';
 import React, {JSX} from "react";
 import {TFunction} from "i18next";

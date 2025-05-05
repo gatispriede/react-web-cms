@@ -1,7 +1,6 @@
-
-const { i18n } = require('../../next-i18next.config.js')
-const { loadCustomBuildParams } = require('./next-utils.config')
-const { tsconfigPath } = loadCustomBuildParams()
+const {i18n} = require('../../next-i18next.config.js')
+const {loadCustomBuildParams} = require('./next-utils.config')
+const {tsconfigPath} = loadCustomBuildParams()
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     transpilePackages: [
@@ -56,8 +55,21 @@ const nextConfig = {
     typescript: {
         tsconfigPath,
     },
-    sassOptions: {
-    },
+    sassOptions: {},
+    rewrites: async () => [
+        {
+            source: "/robots.txt",
+            destination: "/api/robots.txt",
+        },
+        {
+            source: "/sitemap.xml",
+            destination: "/api/sitemap.xml",
+        },
+        {
+            source: "/sitemap-:id.xml",
+            destination: "/api/sitemap-:id.xml",
+        },
+    ]
 }
 
 module.exports = nextConfig

@@ -3,9 +3,6 @@ import { createClient, RedisClientType  } from 'redis';
 
 class redisConnection {
     private client: RedisClientType | undefined;
-    constructor() {
-        // this.connect()
-    }
     public  async connect() {
         this.client = createClient({
             username: 'Admin',

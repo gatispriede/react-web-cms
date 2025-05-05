@@ -22,7 +22,13 @@ interface IHomeState {
     pages: IPage[],
     tabProps: any[]
 }
-interface IHomeProps { page: string, t: TFunction<string, undefined>, i18n: i18n, pathname: string }
+
+interface IHomeProps {
+    page: string,
+    t: TFunction<string, undefined>,
+    i18n: i18n,
+    pathname: string
+}
 
 class App extends React.Component<IHomeProps> {
     sections: any[] = []
@@ -70,7 +76,7 @@ class App extends React.Component<IHomeProps> {
                             locale: item.seo.locale,
                         }
                     }
-                    list.push({
+                    return list.push({
                         page: item.page,
                         seo: itemSeo,
                         sections: item.sections
@@ -130,7 +136,7 @@ class App extends React.Component<IHomeProps> {
                         seo: pages[id].seo,
                         label: (
                             <Link className={'navigation-item'}
-                                href={pages[id].page.replace(/ /g, '-').toLowerCase()}>{this.props.t(sanitizeKey(pages[id].page))}</Link>
+                                  href={pages[id].page.replace(/ /g, '-').toLowerCase()}>{this.props.t(sanitizeKey(pages[id].page))}</Link>
                         ),
                         children:
                             <DynamicTabsContent
@@ -159,12 +165,12 @@ class App extends React.Component<IHomeProps> {
     }
 
     adjustDefaultLangRoute(pages: IPage[]) {
-        if(pages && pages[0] && pages[0].page && typeof window !== 'undefined') {
+        if (pages && pages[0] && pages[0].page && typeof window !== 'undefined') {
             // @ts-ignore
-            if(this.props.i18n.options['defaultLocale']){
+            if (this.props.i18n.options['defaultLocale']) {
                 // @ts-ignore
                 const defaultLocale: string = this.props.i18n.options['defaultLocale']
-                if(defaultLocale && window.location.pathname === '/en'){
+                if (defaultLocale && window.location.pathname === '/en') {
                     window.location.href = `${window.location.origin}/${defaultLocale}/${pages[0].page}`
                 }
             }
@@ -241,8 +247,8 @@ class App extends React.Component<IHomeProps> {
                             <Dropdown
                                 className={'language-dropdown'}
                                 menu={{
-                                items
-                            }}>
+                                    items
+                                }}>
                                 <Typography.Link>
                                     <Space>
                                         {this.languages[this.props.i18n.language].label}

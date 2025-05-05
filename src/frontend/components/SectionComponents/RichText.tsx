@@ -3,8 +3,6 @@ import ContentManager from "../ContentManager";
 import {EItemType} from "../../../enums/EItemType";
 import {IItem} from "../../../Interfaces/IItem";
 import {TFunction} from "i18next";
-import {convertFromHTML} from "draft-js";
-import {sanitizeKey} from "../../../utils/stringFunctions";
 import {extractTranslationsFromHTML} from "../../../utils/translationsutils";
 
 export interface IRichText {
@@ -46,7 +44,7 @@ const RichText = ({item, t, tApp}: {
         if(contentRef.current){
             contentRef.current.innerHTML = extractTranslationsFromHTML(richTextContent.data.value, tApp)
         }
-    }, []);
+    }, [contentRef, richTextContent.data.value, tApp]);
     return (
         <div className={`rich-text ${item.style}`}>
             <div ref={contentRef} />

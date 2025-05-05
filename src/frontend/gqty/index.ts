@@ -42,7 +42,7 @@ const queryFetcher: QueryFetcher = async function (
     console.error(err)
   });
 
-  return await defaultResponseHandler(<Response>response);
+  return await defaultResponseHandler(response as Response);
 };
 
 const cache = new Cache(

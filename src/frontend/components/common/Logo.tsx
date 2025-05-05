@@ -34,6 +34,7 @@ class Logo extends Component<ILogoProps> {
         try {
             const content = JSON.parse(logo.content)
             if (init) {
+                // eslint-disable-next-line react/no-direct-mutation-state
                 this.state.logo = content
             } else {
                 this.setState({logo: content})
@@ -58,7 +59,7 @@ class Logo extends Component<ILogoProps> {
                     this.setState({open: true})
                 }
             }}>
-                {this.state.logo.src ? <img src={`/${this.state.logo.src}`} height={this.state.logo.height}/> : ''}
+                {this.state.logo.src ? <img alt={this.state.logo.src} src={`/${this.state.logo.src}`} height={this.state.logo.height}/> : ''}
                 <LogoEditDialog t={this.props.t} key={`logo-${this.state.open}`} open={this.state.open}
                                 setOpen={(file: File | false): void => {
                                     if (file) {

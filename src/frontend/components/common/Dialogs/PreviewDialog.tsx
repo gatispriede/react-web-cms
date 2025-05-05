@@ -17,6 +17,10 @@ class PreviewDialog extends React.Component<{
 
     constructor(props: {item: IItem, t: TFunction<"translation", undefined>, tApp: TFunction<"translation", undefined>}) {
         super(props)
+        this.state = {
+            dialogOpen: false,
+            actionDialogOpen: false,
+        }
     }
 
     render() {

@@ -20,7 +20,7 @@ const preloadData = async () => {
         ({query}): IPage[] => {
             const list: any[] = [];
             (query as unknown as IMongo).mongo.getNavigationCollection.map((item: INavigation) => {
-                list.push({
+                return list.push({
                     page: item.page,
                     sections: item.sections
                 })

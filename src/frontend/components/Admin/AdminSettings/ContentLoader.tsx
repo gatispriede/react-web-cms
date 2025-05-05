@@ -2,7 +2,6 @@ import TranslationManager from "../TranslationManager";
 import React, {use, useEffect, useState} from "react";
 import {Input} from "antd";
 import {sanitizeKey} from "../../../../utils/stringFunctions";
-const isBrowser = typeof window !== 'undefined'
 
 export const ContentLoader = ({translationManager, currentLanguageKey, dataPromise, i18n, setTranslation, t, tApp}: {
     translationManager: TranslationManager,
@@ -43,7 +42,7 @@ export const ContentLoader = ({translationManager, currentLanguageKey, dataPromi
     })
     useEffect(() => {
         setTranslation(newTranslations);
-    }, [currentLanguageKey])
+    }, [currentLanguageKey, newTranslations, setTranslation])
 
     const translationChange = (key: string, event: any) => {
         newTranslations[key] = event.target.value

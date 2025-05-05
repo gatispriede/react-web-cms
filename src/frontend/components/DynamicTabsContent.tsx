@@ -42,6 +42,7 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
         const sectionsStringArray: string[] = []
         sections.map((section: ISection) => {
                 if (section.id) sectionsStringArray.push(section.id as string)
+                return section
             }
         )
         if (sectionsStringArray.length > 0) {

@@ -10,8 +10,6 @@ import {sanitizeKey} from "../../../../utils/stringFunctions";
 
 const {Header, Content, Sider} = Layout;
 
-let translation = {}
-
 const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
     translationManager: TranslationManager,
     i18n: any,
@@ -78,7 +76,7 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
                 setCurrentLanguageName(item && item.name)
             }
         })
-    }, []);
+    }, [i18n.language, tAdmin, translationManager]);
 
     return (
         <div>

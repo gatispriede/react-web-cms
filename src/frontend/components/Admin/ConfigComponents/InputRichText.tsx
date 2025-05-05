@@ -3,7 +3,6 @@ import {IInputContent} from "../../../../Interfaces/IInputContent";
 import {RichTextContent} from "../../SectionComponents/RichText";
 import {EItemType} from "../../../../enums/EItemType";
 import dynamic from 'next/dynamic'
-import {RawDraftContentState} from "draft-js";
 
 const RichTextEditor = dynamic(
     () => import('../../common/RichTextEditor'),
@@ -15,7 +14,7 @@ const InputRichText = ({content, setContent}: IInputContent) => {
     const [val, setVal] = useState(false)
     useEffect(() => {
         if(typeof window !== 'undefined') setVal(true)
-    }, [window]);
+    }, []);
     return (
         <div className={'rich-text-container-admin'}>
             {val &&

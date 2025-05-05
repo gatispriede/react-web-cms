@@ -42,6 +42,7 @@ const ImageUpload = ({setFile, t}: { setFile: (file: File) => void, t: TFunction
 
     useEffect(() => {
         if (imageRef.current && buttonRef.current) {
+            // eslint-disable-next-line react-hooks/exhaustive-deps
             upploadManager = new UpploadManager(imageRef.current, buttonRef.current, cb, setError);
             void loadImages()
         }

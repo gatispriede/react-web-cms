@@ -13,7 +13,7 @@ const handleImages = (next: {
 }) => (req: any, res: any) => {
     return new Promise(async (resolve, reject) => {
         const responseHeader = new Headers();
-        const fileName = req.url.replace('\/api\/','')
+        const fileName = req.url.replace('/api','')
         const tmp = fileName.split('.')
         const fileType = tmp[tmp.length]
         responseHeader.set('Content-Type', 'api/' + fileType);

@@ -6,7 +6,7 @@ export const extractTranslationsFromHTML = (html: string, tApp: (arg0: any) => a
     const parsed = JSON.parse(JSON.stringify(tmp))
     const content = parsed.contentBlocks;
     content.map((item: { text: any | string | string[]; }) => {
-        html = html.replace(item.text,tApp(sanitizeKey(item.text)))
+        return html = html.replace(item.text,tApp(sanitizeKey(item.text)))
     })
     return html
 }

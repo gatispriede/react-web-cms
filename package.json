@@ -10,7 +10,7 @@
     "build": "cross-env NODE_ENV=production next build src/frontend",
     "build-docker": "cross-env NODE_ENV=production NODE_SERVER_PORT=true BUILD_PORT=3000 next build src/frontend",
     "postbuild": "next-sitemap --config next-sitemap.config.cjs",
-    "lint": "eslint",
+    "lint": "eslint \"./**/*.{ts,tsx}\" --fix",
     "clean": "rm -rf src/frontend/.next",
     "dev-server": "nodemon --config ./nodemon.json",
     "standalone-graphql": "cross-env npx tsx --tsconfig src/Server/tsconfig.custom.json src/Server/index.ts",

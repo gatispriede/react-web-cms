@@ -109,7 +109,7 @@ class AdminApp extends React.Component<{
                         }
                     }
 
-                    list.push({
+                    return list.push({
                         page: item.page,
                         id: item.id,
                         type: item.type,

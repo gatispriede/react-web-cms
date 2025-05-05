@@ -3,10 +3,7 @@ import ContentManager from "../ContentManager";
 import {EItemType} from "../../../enums/EItemType";
 import {Image} from "antd";
 import {IItem} from "../../../Interfaces/IItem";
-import draftToHtml from 'draftjs-to-html';
-import {convertFromHTML, RawDraftContentState} from "draft-js";
 import {TFunction} from "i18next";
-import {sanitizeKey} from "../../../utils/stringFunctions";
 import {extractTranslationsFromHTML} from "../../../utils/translationsutils";
 
 export interface IPlainImage {
@@ -105,7 +102,7 @@ const PlainImage = ({item, t, tApp}: {
         if (contentRef.current && !plainImage.data.useAsBackground) {
             contentRef.current.innerHTML = extractTranslationsFromHTML(plainImage.data.description, tApp)
         }
-    }, [plainImage.data.description]);
+    }, [contentRef,plainImage.data.description, plainImage.data.useAsBackground, tApp]);
     let backgroundProperty = `url(/${plainImage.data.src})`
     if(plainImage.data.useGradiant){
         backgroundProperty = `linear-gradient(to top, rgb(255 255 255 / 0%) 95%, rgb(255 255 255)), url(/${plainImage.data.src})`
@@ -119,7 +116,7 @@ const PlainImage = ({item, t, tApp}: {
         }else{
             setMinHeight(windowHeight)
         }
-    }, [window, document]);
+    }, []);
     const imgProperties: IImgProperties = {
         preview: preview,
         src: '/' + plainImage.data.src,

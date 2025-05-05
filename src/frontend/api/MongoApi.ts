@@ -9,7 +9,6 @@ import {IItem} from "../../Interfaces/IItem";
 import {ILogo} from "../../Interfaces/ILogo";
 import {IUser} from "../../Interfaces/IUser";
 import {INewLanguage} from "../components/interfaces/INewLanguage";
-import {tr} from "uppload";
 
 class MongoApi {
     async getUser({email}: { email: string }): Promise<Partial<IUser> | any> {
@@ -58,7 +57,7 @@ class MongoApi {
             )
             const dataObject: any = {};
             data.map((data: any) => {
-                dataObject[data.symbol] = data;
+                return dataObject[data.symbol] = data;
             })
             return dataObject
         } catch (error) {
@@ -176,7 +175,7 @@ class MongoApi {
             ({query}) => {
                 const list: INavigation[] = [];
                 (query as unknown as IMongo).mongo.getNavigationCollection.map(item => {
-                    list.push({
+                    return list.push({
                         id: item.id,
                         page: item.page,
                         sections: item.sections,

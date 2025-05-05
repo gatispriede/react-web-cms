@@ -71,7 +71,7 @@ class TranslationManager {
                         }
                     }
 
-                    list.push({
+                    return list.push({
                         page: item.page,
                         id: item.id,
                         type: item.type,
@@ -132,21 +132,21 @@ class TranslationManager {
                 tmp = convertFromHTML((content as IRichText).value)
                 parsed = JSON.parse(JSON.stringify(tmp))
                 parsed.contentBlocks.map((item: { text: any | string | string[]; }) => {
-                    this.defaultTranslations[this.contentTranslationKey + sanitizeKey(item.text)] = item.text
+                    return this.defaultTranslations[this.contentTranslationKey + sanitizeKey(item.text)] = item.text
                 })
                 break;
             case EItemType.Image:
                 tmp = convertFromHTML((content as IPlainImage).description)
                 parsed = JSON.parse(JSON.stringify(tmp))
                 parsed.contentBlocks.map((item: { text: any | string | string[]; }) => {
-                    this.defaultTranslations[this.contentTranslationKey + sanitizeKey(item.text)] = item.text
+                    return this.defaultTranslations[this.contentTranslationKey + sanitizeKey(item.text)] = item.text
                 })
                 break;
             case EItemType.Carousel:
                 if (content.items.length > 0) {
                     content.items.forEach((item: any) => {
                         if (typeof item.text === 'string' && item.text.length > 0) {
-                            this.defaultTranslations[this.contentTranslationKey + sanitizeKey(item.text)] = item.text
+                            return this.defaultTranslations[this.contentTranslationKey + sanitizeKey(item.text)] = item.text
                         }
                     })
                 }
@@ -155,7 +155,7 @@ class TranslationManager {
                 if (content.items.length > 0) {
                     content.items.forEach((item: any) => {
                         if (typeof item.text === 'string'  && item.text.length > 0) {
-                            this.defaultTranslations[this.contentTranslationKey + sanitizeKey(item.text)] = item.text
+                           return  this.defaultTranslations[this.contentTranslationKey + sanitizeKey(item.text)] = item.text
                         }
                     })
                 }
@@ -190,7 +190,7 @@ class TranslationManager {
                             const tmp = convertFromHTML(contentParsed.value)
                             const parsed = JSON.parse(JSON.stringify(tmp))
                             parsed.contentBlocks.map((item: { text: any | string | string[]; }) => {
-                                this.defaultTranslations[sanitizeKey(item.text)] = item.text
+                                return this.defaultTranslations[sanitizeKey(item.text)] = item.text
                             })
 
                             const actionContentParsed = innerContent.actionContent && JSON.parse(innerContent.actionContent)
@@ -207,7 +207,7 @@ class TranslationManager {
                             const tmp = convertFromHTML(contentParsed.description)
                             const parsed = JSON.parse(JSON.stringify(tmp))
                             parsed.contentBlocks.map((item: { text: any | string | string[]; }) => {
-                                this.defaultTranslations[sanitizeKey(item.text)] = item.text
+                                return this.defaultTranslations[sanitizeKey(item.text)] = item.text
                             })
 
                             const actionContentParsed = innerContent.actionContent && JSON.parse(innerContent.actionContent)
@@ -224,7 +224,7 @@ class TranslationManager {
                             if (contentParsed.items.length > 0) {
                                 contentParsed.items.forEach((item) => {
                                     if (item.text.length > 0)
-                                        this.defaultTranslations[sanitizeKey(item.text)] = item.text
+                                       return  this.defaultTranslations[sanitizeKey(item.text)] = item.text
                                 })
 
                             }
@@ -241,7 +241,7 @@ class TranslationManager {
                             if (contentParsed.items.length > 0) {
                                 contentParsed.items.forEach((item) => {
                                     if (item.text.length > 0)
-                                        this.defaultTranslations[sanitizeKey(item.text)] = item.text
+                                       return  this.defaultTranslations[sanitizeKey(item.text)] = item.text
                                 })
 
                             }
