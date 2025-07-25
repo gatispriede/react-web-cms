@@ -92,6 +92,7 @@ const RichTextEditor = ({value, setValue}: { value: any, setValue: any }) => {
         'underline',
         'removeFormat',
         'alignment',
+        'fontbackgroundcolor',
         '|',
         'link',
         'insertTable',
