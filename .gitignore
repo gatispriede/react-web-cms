@@ -35,3 +35,8 @@ yarn-debug.log*
 yarn-error.log*
 
 IP.ts
+
+# local dev data — MongoDB WiredTiger storage, bundle exports, log files
+/data
+/mongo_data
+/src/frontend/public/LogFiles
