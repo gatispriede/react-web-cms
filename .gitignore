@@ -40,3 +40,27 @@ IP.ts
 /data
 /mongo_data
 /src/frontend/public/LogFiles
+
+# env / secrets
+.env
+.env.*
+!.env.example
+src/frontend/.env
+
+# TLS certs / keys — localhost dev or otherwise, never commit private keys
+certificates/
+**/*.pem
+**/*.key
+**/*.crt
+**/*.p12
+**/*.pfx
+
+# TS incremental build caches
+*.tsbuildinfo
+
+# OS cruft
+Thumbs.db
+desktop.ini
+
+# local Claude state — keep launch.json (shared), ignore per-user settings
+.claude/settings.local.json
