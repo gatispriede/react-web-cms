@@ -21,6 +21,7 @@ export interface SiteBundle {
         images: any[];
         themes?: any[];
         activeThemeId?: string | null;
+        posts?: any[];
     };
     /** filename -> data URI. Omitted entries are expected to be 3rd-party URLs still in `site`. */
     assets: Record<string, string>;
@@ -76,7 +77,7 @@ export class BundleService {
     }
 
     async export(): Promise<SiteBundle> {
-        const [navigation, sections, languages, images, logos, themes, activeSetting] = await Promise.all([
+        const [navigation, sections, languages, images, logos, themes, activeSetting, posts] = await Promise.all([
             this.col('Navigation').find({}).toArray(),
             this.col('Sections').find({}).toArray(),
             this.col('Languages').find({}).toArray(),
@@ -84,6 +85,7 @@ export class BundleService {
             this.col('Logos').find({}).toArray(),
             this.col('Themes').find({}).toArray(),
             this.col('SiteSettings').findOne({key: 'activeThemeId'}),
+            this.col('Posts').find({}).toArray(),
         ]);
 
         const site = stripMongoIds({
@@ -94,6 +96,7 @@ export class BundleService {
             logo: logos[0] ?? null,
             themes,
             activeThemeId: (activeSetting as any)?.value ?? null,
+            posts,
         });
 
         const localAssets = new Set<string>();
@@ -136,7 +139,7 @@ export class BundleService {
             throw new Error('Invalid bundle: missing site object');
         }
         // Required shape — each key either absent or an array (logo is singular/null).
-        for (const k of ['navigation', 'sections', 'languages', 'images', 'themes'] as const) {
+        for (const k of ['navigation', 'sections', 'languages', 'images', 'themes', 'posts'] as const) {
             if (bundle.site[k] !== undefined && !Array.isArray(bundle.site[k])) {
                 throw new Error(`Invalid bundle: site.${k} must be an array`);
             }
@@ -201,6 +204,9 @@ export class BundleService {
         await put('Logos', bundle.site.logo ? [bundle.site.logo] : []);
         if (bundle.site.themes !== undefined) {
             await put('Themes', bundle.site.themes);
+        }
+        if (bundle.site.posts !== undefined) {
+            await put('Posts', bundle.site.posts);
         }
         if (bundle.site.activeThemeId !== undefined) {
             const settings = this.col('SiteSettings');

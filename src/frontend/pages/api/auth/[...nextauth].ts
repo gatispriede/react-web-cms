@@ -39,7 +39,7 @@ export const authOptions: NextAuthOptions = {
 
                 const user = await mongoApi.getUser({email: credentials.email})
 
-                if (!user) {
+                if (!user || !user.password) {
                     return null
                 }
                 const isPasswordValid = await compare(

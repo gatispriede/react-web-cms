@@ -152,6 +152,11 @@ type QueryMongo {
     getPublishedMeta: String
     getThemes: String!
     getActiveTheme: String
+    getPublishedHistory(limit: Int): String!
+    getPosts(includeDrafts: Boolean, limit: Int): String!
+    getPost(slug: String!, includeDrafts: Boolean): String
+    getFooter: String!
+    getSiteFlags: String!
 }
 
 scalar JSON
@@ -172,10 +177,16 @@ type MutationMongo {
     addUser(user: InUser!): String!
     updateUser(user: InUser!): String!
     removeUser(id: String!): String!
-    publishSnapshot: String!
+    publishSnapshot(note: String): String!
+    rollbackToSnapshot(id: String!): String!
     saveTheme(theme: JSON!): String!
     deleteTheme(id: String!): String!
     setActiveTheme(id: String!): String!
+    savePost(post: JSON!): String!
+    deletePost(id: String!): String!
+    setPostPublished(id: String!, publish: Boolean!): String!
+    saveFooter(config: JSON!): String!
+    saveSiteFlags(flags: JSON!): String!
 }
 
 

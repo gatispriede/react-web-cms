@@ -21,5 +21,15 @@
     "": "Allows copying the draft site state into the live published snapshot."
   },
   "Password": "Password",
-  "Password is required": "Password is required"
+  "Password is required": "Password is required",
+  "Publishing": "Publishing",
+  "Posts": "Posts",
+  "Blog": "Blog",
+  "Writing": "Writing",
+  "No posts published yet": {
+    "": "No posts published yet."
+  },
+  "All posts": "All posts",
+  "Footer": "Footer",
+  "Site": "Site"
 }

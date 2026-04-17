@@ -36,6 +36,10 @@ yarn-error.log*
 
 IP.ts
 
+# local-only secrets / ops notes — infra IPs, cert fingerprints, passwords
+/secrets.md
+/secrets/
+
 # local dev data — MongoDB WiredTiger storage, bundle exports, log files
 /data
 /mongo_data
@@ -64,3 +68,4 @@ desktop.ini
 
 # local Claude state — keep launch.json (shared), ignore per-user settings
 .claude/settings.local.json
+/public/Gatis Priede CV.md

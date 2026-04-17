@@ -278,10 +278,16 @@ export const generatedSchema = {
       __type: "String!",
       __args: { page: "String!", sections: "[String]" },
     },
-    publishSnapshot: { __type: "String!" },
+    publishSnapshot: { __type: "String!", __args: { note: "String" } },
+    rollbackToSnapshot: { __type: "String!", __args: { id: "String!" } },
     saveTheme: { __type: "String!", __args: { theme: "JSON!" } },
     deleteTheme: { __type: "String!", __args: { id: "String!" } },
     setActiveTheme: { __type: "String!", __args: { id: "String!" } },
+    savePost: { __type: "String!", __args: { post: "JSON!" } },
+    deletePost: { __type: "String!", __args: { id: "String!" } },
+    setPostPublished: { __type: "String!", __args: { id: "String!", publish: "Boolean!" } },
+    saveFooter: { __type: "String!", __args: { config: "JSON!" } },
+    saveSiteFlags: { __type: "String!", __args: { flags: "JSON!" } },
   },
   QueryMongo: {
     __typename: { __type: "String!" },
@@ -299,6 +305,11 @@ export const generatedSchema = {
     getPublishedMeta: { __type: "String" },
     getThemes: { __type: "String!" },
     getActiveTheme: { __type: "String" },
+    getPublishedHistory: { __type: "String!", __args: { limit: "Int" } },
+    getPosts: { __type: "String!", __args: { includeDrafts: "Boolean", limit: "Int" } },
+    getPost: { __type: "String", __args: { slug: "String!", includeDrafts: "Boolean" } },
+    getFooter: { __type: "String!" },
+    getSiteFlags: { __type: "String!" },
   },
   mutation: {
     __typename: { __type: "String!" },
@@ -443,7 +454,13 @@ export interface MutationMongo {
   addUser: (args: { user: InUser }) => ScalarsEnums["String"];
   updateUser: (args: { user: InUser }) => ScalarsEnums["String"];
   removeUser: (args: { id: ScalarsEnums["String"] }) => ScalarsEnums["String"];
-  publishSnapshot: ScalarsEnums["String"];
+  publishSnapshot: (args?: { note?: Maybe<ScalarsEnums["String"]> }) => ScalarsEnums["String"];
+  rollbackToSnapshot: (args: { id: ScalarsEnums["String"] }) => ScalarsEnums["String"];
+  savePost: (args: { post: unknown }) => ScalarsEnums["String"];
+  deletePost: (args: { id: ScalarsEnums["String"] }) => ScalarsEnums["String"];
+  setPostPublished: (args: { id: ScalarsEnums["String"]; publish: ScalarsEnums["Boolean"] }) => ScalarsEnums["String"];
+  saveFooter: (args: { config: unknown }) => ScalarsEnums["String"];
+  saveSiteFlags: (args: { flags: unknown }) => ScalarsEnums["String"];
   saveTheme: (args: { theme: unknown }) => ScalarsEnums["String"];
   deleteTheme: (args: { id: ScalarsEnums["String"] }) => ScalarsEnums["String"];
   setActiveTheme: (args: { id: ScalarsEnums["String"] }) => ScalarsEnums["String"];
@@ -477,6 +494,11 @@ export interface QueryMongo {
   getPublishedMeta?: Maybe<ScalarsEnums["String"]>;
   getThemes: ScalarsEnums["String"];
   getActiveTheme?: Maybe<ScalarsEnums["String"]>;
+  getPublishedHistory: (args?: { limit?: Maybe<ScalarsEnums["Int"]> }) => ScalarsEnums["String"];
+  getPosts: (args?: { includeDrafts?: Maybe<ScalarsEnums["Boolean"]>; limit?: Maybe<ScalarsEnums["Int"]> }) => ScalarsEnums["String"];
+  getPost: (args: { slug: ScalarsEnums["String"]; includeDrafts?: Maybe<ScalarsEnums["Boolean"]> }) => Maybe<ScalarsEnums["String"]>;
+  getFooter: ScalarsEnums["String"];
+  getSiteFlags: ScalarsEnums["String"];
 }
 
 export interface Mutation {

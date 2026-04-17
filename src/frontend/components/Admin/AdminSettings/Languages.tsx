@@ -60,7 +60,7 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
                 }
             ];
             for (let id in data) {
-                if (data[id].default === 'default') continue;
+                if (data[id].default) continue;
                 newMenuItems.push({
                     key: data[id].symbol,
                     name: data[id].label,

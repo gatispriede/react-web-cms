@@ -8,12 +8,9 @@ import {EItemType} from "../../../../enums/EItemType";
 import {IConfigSectionAddRemove} from "../../../../Interfaces/IConfigSectionAddRemove";
 import {IItem} from "../../../../Interfaces/IItem";
 import {EStyle} from "../../../../enums/EStyle";
-import {EImageStyle} from "../../SectionComponents/PlainImage";
-import {ECarouselStyle} from "../../SectionComponents/CarouselView";
-import {EGalleryStyle} from "../../SectionComponents/Gallery";
-import {ERichTextStyle} from "../../SectionComponents/RichText";
-import {EPlainTextStyle} from "../../SectionComponents/PlainText";
 import {TFunction} from "i18next";
+import {itemTypeList, styleEnumFor} from "../../itemTypes/registry";
+import TypeDiagram from "../../itemTypes/TypeDiagram";
 
 interface IAddNewSectionItemProps {
     addSectionItem: (sectionId: string, config: IConfigSectionAddRemove) => void,
@@ -74,28 +71,10 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                 children: <></>
             }
         ],
-        selectOptions: [
-            {
-                label: this.props.t("Simple Text"),
-                value: EItemType.Text,
-            },
-            {
-                label: this.props.t("Rich text"),
-                value: EItemType.RichText,
-            },
-            {
-                label: this.props.t("Image"),
-                value: EItemType.Image,
-            },
-            {
-                label: this.props.t("Gallery"),
-                value: EItemType.Gallery,
-            },
-            {
-                label: this.props.t("Carousel"),
-                value: EItemType.Carousel,
-            },
-        ]
+        selectOptions: itemTypeList().map(def => ({
+            label: this.props.t(def.labelKey),
+            value: def.key,
+        })),
     }
     section: ISection
     index: number
@@ -120,32 +99,11 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
     }
 
     setActiveOptionState(selectedModule: EItemType, style?: string) {
-        let styleEnum: typeof EPlainTextStyle | typeof ERichTextStyle | typeof EGalleryStyle | typeof ECarouselStyle | typeof EImageStyle | typeof EStyle;
-
-        switch (selectedModule) {
-            case EItemType.Text:
-                styleEnum = EPlainTextStyle;
-                break;
-            case EItemType.RichText:
-                styleEnum = ERichTextStyle;
-                break;
-            case EItemType.Gallery:
-                styleEnum = EGalleryStyle;
-                break;
-            case EItemType.Carousel:
-                styleEnum = ECarouselStyle;
-                break;
-            case EItemType.Image:
-                styleEnum = EImageStyle;
-                break;
-            default:
-                styleEnum = EStyle
-        }
+        const styleEnum = styleEnumFor(selectedModule);
         this.setState({
-            style: style ? style : styleEnum.Default,
-            styleOptions: Object.keys(styleEnum).map((key:string) => ({
+            style: style ? style : (styleEnum.Default ?? EStyle.Default),
+            styleOptions: Object.keys(styleEnum).map((key: string) => ({
                 label: key,
-                // @ts-ignore
                 value: styleEnum[key],
             })),
             selected: selectedModule
@@ -153,13 +111,33 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
     }
 
     generateContentSection() {
+        const typeOptionRender = (opt: {data: {label: string; value: string}}) => (
+            <div style={{display: 'flex', alignItems: 'center', gap: 10, padding: '4px 0', color: 'inherit'}}>
+                <TypeDiagram type={opt.data.value}/>
+                <span>{opt.data.label}</span>
+            </div>
+        );
+        const currentDiagramType = this.activeOption()?.value;
         return <div>
             <h4>{this.props.t("Content configuration")}</h4>
             <label>{this.props.t("Please select content type")}: </label>
-            <Select variant={'filled'} value={this.activeOption()?.value} options={this.state.selectOptions}
-                    onSelect={(e: EItemType) => {
-                        this.setActiveOptionState(e)
-                    }}/>
+            <Select
+                variant={'filled'}
+                value={this.activeOption()?.value}
+                options={this.state.selectOptions}
+                style={{minWidth: 280}}
+                optionRender={typeOptionRender as any}
+                labelRender={(labelInfo) => (
+                    <div style={{display: 'flex', alignItems: 'center', gap: 8}}>
+                        {currentDiagramType && <TypeDiagram type={currentDiagramType}/>}
+                        <span>{labelInfo.label}</span>
+                    </div>
+                )}
+                onSelect={(e: EItemType) => {
+                    this.setActiveOptionState(e)
+                }}
+                listHeight={360}
+            />
             <hr/>
             <ContentSection t={this.props.t} content={this.state.content} selected={this.state.selected}
                             setContent={(value: string) => {
@@ -174,14 +152,7 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
             <label>{this.props.t("Please select action type")}: </label>
             <Select variant={'filled'} value={this.state.action} options={this.state.actionSelectOptions}
                     onChange={(value) => {
-                        const styleEnumMap: Partial<Record<EItemType, any>> = {
-                            [EItemType.Text]: EPlainTextStyle,
-                            [EItemType.RichText]: ERichTextStyle,
-                            [EItemType.Gallery]: EGalleryStyle,
-                            [EItemType.Carousel]: ECarouselStyle,
-                            [EItemType.Image]: EImageStyle
-                        };
-                        const styleEnum = styleEnumMap[this.state.actionType] || EStyle;
+                        const styleEnum = styleEnumFor(this.state.actionType);
                         const actionStyleOptions = Object.entries(styleEnum)
                             .map(([_, v]) => ({ label: v as string, value: v as string }));
                         this.setState({
@@ -192,10 +163,28 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                 <div>
                     <h4>{this.props.t("Content configuration")}</h4>
                     <label>{this.props.t("Please select content type")}: </label>
-                    <Select variant={'filled'} value={this.state.actionType} options={this.state.selectOptions}
-                            onSelect={(e: EItemType) => {
-                                this.setState({actionType: e})
-                            }}/>
+                    <Select
+                        variant={'filled'}
+                        value={this.state.actionType}
+                        options={this.state.selectOptions}
+                        style={{minWidth: 280}}
+                        optionRender={((opt: {data: {label: string; value: string}}) => (
+                            <div style={{display: 'flex', alignItems: 'center', gap: 10, padding: '4px 0'}}>
+                                <TypeDiagram type={opt.data.value}/>
+                                <span>{opt.data.label}</span>
+                            </div>
+                        )) as any}
+                        labelRender={(info) => (
+                            <div style={{display: 'flex', alignItems: 'center', gap: 8}}>
+                                <TypeDiagram type={this.state.actionType}/>
+                                <span>{info.label}</span>
+                            </div>
+                        )}
+                        onSelect={(e: EItemType) => {
+                            this.setState({actionType: e})
+                        }}
+                        listHeight={360}
+                    />
                     <hr/>
                     <ContentSection t={this.props.t} content={this.state.actionContent} selected={this.state.actionType}
                                     setContent={(value: string) => {
@@ -273,28 +262,8 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
 
                             const activeOption = this.activeOption()
                             if (typeof activeOption !== 'undefined')
-                                this.setActiveOptionState(activeOption.value, this.state.style)
-                            let styleEnum: any;
-
-                            switch (this.state.actionType as unknown as EItemType) {
-                                case EItemType.Text:
-                                    styleEnum = EPlainTextStyle;
-                                    break;
-                                case EItemType.RichText:
-                                    styleEnum = ERichTextStyle;
-                                    break;
-                                case EItemType.Gallery:
-                                    styleEnum = EGalleryStyle;
-                                    break;
-                                case EItemType.Carousel:
-                                    styleEnum = ECarouselStyle;
-                                    break;
-                                case EItemType.Image:
-                                    styleEnum = EImageStyle;
-                                    break;
-                                default:
-                                    styleEnum = EStyle
-                            }
+                                this.setActiveOptionState(activeOption.value as EItemType, this.state.style)
+                            const styleEnum = styleEnumFor(this.state.actionType);
                             this.setState({
                                 actionStyleOptions: Object.keys(styleEnum).map(key => ({
                                     label: key,

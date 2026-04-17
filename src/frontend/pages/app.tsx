@@ -14,12 +14,17 @@ import {ISection} from "../../Interfaces/ISection";
 import Logo from "../components/common/Logo";
 import Link from 'next/link'
 import Head from 'next/head'
-import {GetServerSideProps} from "next";
-import {serverSideTranslations} from "next-i18next/serverSideTranslations";
 import {i18n, TFunction} from "i18next";
 import {INavigation} from "../gqty/schema.generated";
 import {sanitizeKey} from "../../utils/stringFunctions";
 import PublishApi from "../api/PublishApi";
+import PostApi from "../api/PostApi";
+import FooterApi from "../api/FooterApi";
+import SiteFlagsApi from "../api/SiteFlagsApi";
+import SiteFooter from "../components/common/SiteFooter";
+import {DEFAULT_FOOTER, IFooterConfig} from "../../Interfaces/IFooter";
+import type {InitialPageData} from "../lib/gqlFetch";
+import {PostsProvider} from "../lib/PostsContext";
 
 interface IHomeState {
     loading: boolean,
@@ -27,13 +32,17 @@ interface IHomeState {
     pages: IPage[],
     tabProps: any[],
     themeConfig?: ThemeConfig,
+    footer: IFooterConfig,
+    hasPosts: boolean,
+    blogEnabled: boolean,
 }
 
 interface IHomeProps {
     page: string,
     t: TFunction<string, undefined>,
     i18n: i18n,
-    pathname: string
+    pathname: string,
+    initialData?: InitialPageData,
 }
 
 class App extends React.Component<IHomeProps> {
@@ -41,6 +50,9 @@ class App extends React.Component<IHomeProps> {
     private MongoApi = new MongoApi()
     private PublishApi = new PublishApi()
     private ThemeApi = new ThemeApi()
+    private PostApi = new PostApi()
+    private FooterApi = new FooterApi()
+    private SiteFlagsApi = new SiteFlagsApi()
     private snapshotSectionsByPage: Record<string, ISection[]> = {}
     loadSections: any
     getNavigationListCache: any
@@ -49,17 +61,71 @@ class App extends React.Component<IHomeProps> {
         loading: false,
         pages: [],
         tabProps: [],
-        activeTab: '0'
+        activeTab: '0',
+        footer: {...DEFAULT_FOOTER},
+        hasPosts: false,
+        blogEnabled: true,
     }
     private languages: any;
 
     constructor(props: IHomeProps) {
         super(props);
         this.page = props.page
-        this.state.loading = true
         this.loadSections = this.MongoApi.loadSections
         this.getNavigationListCache = this.getNavigationList
-        void this.initialize(true)
+        if (props.initialData) {
+            // SSG path — synchronously hydrate state so first paint has real content.
+            this.state = this.buildStateFromInitialData(props.initialData);
+            this.languages = props.initialData.languages;
+        } else {
+            this.state.loading = true
+            void this.initialize(true)
+        }
+    }
+
+    componentDidMount() {
+        if (this.props.initialData?.themeTokens) {
+            applyThemeCssVars(this.props.initialData.themeTokens);
+        }
+    }
+
+    buildStateFromInitialData(data: InitialPageData): IHomeState {
+        const pages: IPage[] = (data.pages ?? []).map(p => ({
+            page: p.page,
+            seo: p.seo,
+            sections: p.sections,
+        }));
+        const tabProps = pages.map((p, id) => ({
+            key: String(id),
+            page: p.page,
+            seo: p.seo,
+            label: (
+                <Link className={'navigation-item'}
+                      href={p.page.replace(/ /g, '-').toLowerCase()}>
+                    {this.props.t(sanitizeKey(p.page))}
+                </Link>
+            ),
+            children: (
+                <DynamicTabsContent
+                    t={this.props.t}
+                    tApp={this.props.t}
+                    refresh={async () => { await this.initialize(); }}
+                    sections={(data.sectionsByPage?.[p.page] ?? []) as ISection[]}
+                    page={p.page}
+                    admin={false}
+                />
+            ),
+        }));
+        return {
+            loading: false,
+            activeTab: '0',
+            pages,
+            tabProps,
+            footer: data.footer ?? {...DEFAULT_FOOTER},
+            hasPosts: (data.posts?.length ?? 0) > 0,
+            blogEnabled: data.blogEnabled !== false,
+            themeConfig: data.themeTokens ? buildThemeConfig(data.themeTokens) : undefined,
+        };
     }
 
     async getSectionData(pages: IPage[], id: number): Promise<ISection[]> {
@@ -111,7 +177,10 @@ class App extends React.Component<IHomeProps> {
             loading: false,
             pages: this.state.tabProps,
             tabProps: this.state.tabProps,
-            activeTab: this.state.activeTab
+            activeTab: this.state.activeTab,
+            footer: this.state.footer,
+            hasPosts: this.state.hasPosts,
+            blogEnabled: this.state.blogEnabled,
         }
         if (init) {
             // eslint-disable-next-line react/no-direct-mutation-state
@@ -184,6 +253,14 @@ class App extends React.Component<IHomeProps> {
         }
 
         this.languages = await this.MongoApi.getLanguages()
+        const [footer, postCount, flags] = await Promise.all([
+            this.FooterApi.get(),
+            this.PostApi.list({limit: 1}).then(list => list.length).catch(() => 0),
+            this.SiteFlagsApi.get(),
+        ]);
+        newState.footer = footer;
+        newState.hasPosts = postCount > 0;
+        newState.blogEnabled = flags.blogEnabled !== false;
         const activeTheme = await this.ThemeApi.getActive();
         if (activeTheme?.tokens) {
             applyThemeCssVars(activeTheme.tokens);
@@ -234,6 +311,7 @@ class App extends React.Component<IHomeProps> {
             }))
         }
         return (
+            <PostsProvider value={this.props.initialData?.posts ?? null}>
             <div>
                 <Head>
                     <title>{this.state.tabProps[activeKey] ? this.state.tabProps[activeKey].page : ''}</title>
@@ -290,17 +368,18 @@ class App extends React.Component<IHomeProps> {
                             </Dropdown>
                         </div>
                         }
+                        <SiteFooter
+                            config={this.state.footer}
+                            pages={this.state.pages.map(p => ({page: p.page}))}
+                            hasPosts={this.state.hasPosts}
+                            blogEnabled={this.state.blogEnabled}
+                            t={this.props.t as any}
+                        />
                     </Spin>
                 </ConfigProvider>
             </div>
+            </PostsProvider>
         );
     }
 };
-export const getServerSideProps: GetServerSideProps<{}> = async ({locale,}) => ({
-    props: {
-        ...(await serverSideTranslations(locale ?? 'en', [
-            'app',
-        ])),
-    },
-})
 export default App;

@@ -2,13 +2,33 @@ import {resolve} from "../gqty";
 import type {PublishedSnapshot, SnapshotMeta} from "../../Server/PublishService";
 
 export class PublishApi {
-    async publish(): Promise<{id?: string; publishedAt?: string; error?: string}> {
+    async publish(note?: string): Promise<SnapshotMeta & {error?: string}> {
         try {
-            const raw = await resolve(({mutation}) => (mutation as any).mongo.publishSnapshot);
+            const raw = await resolve(({mutation}) => (mutation as any).mongo.publishSnapshot({note}));
             const parsed = JSON.parse(raw || '{}');
             return parsed.publishSnapshot ?? parsed;
         } catch (err) {
-            return {error: String(err)};
+            return {error: String(err)} as any;
+        }
+    }
+
+    async rollback(id: string): Promise<SnapshotMeta & {error?: string}> {
+        try {
+            const raw = await resolve(({mutation}) => (mutation as any).mongo.rollbackToSnapshot({id}));
+            const parsed = JSON.parse(raw || '{}');
+            return parsed.rollbackToSnapshot ?? parsed;
+        } catch (err) {
+            return {error: String(err)} as any;
+        }
+    }
+
+    async getHistory(limit = 50): Promise<SnapshotMeta[]> {
+        try {
+            const raw = await resolve(({query}) => (query as any).mongo.getPublishedHistory({limit}));
+            return raw ? JSON.parse(raw) : [];
+        } catch (err) {
+            console.error('getHistory:', err);
+            return [];
         }
     }
 

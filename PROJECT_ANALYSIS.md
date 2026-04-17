@@ -2,14 +2,15 @@
 
 ## Overview
 
-Despite the name, this is a **Next.js 15 / React 19 CMS** backed by **MongoDB** (Redis is present but nearly unused). It lets an admin compose multilingual pages from reusable content sections (gallery, carousel, rich text, plain image/text) behind a navigation tree, with SEO metadata per page.
+Despite the name, this is a **Next.js 15 / React 19 CMS** backed by **MongoDB** (Redis is present but nearly unused). It ships a developer-portfolio-ready content model: admins compose multilingual pages from 11 reusable item types (Text / RichText / Image / Gallery / Carousel / Hero / ProjectCard / SkillPills / Timeline / SocialLinks / BlogFeed), manage a blog (`Posts` collection + `/blog` + `/blog/[slug]` routes), swap AntD themes (with live preview and CSS-variable scoping so only content modules are themed — admin chrome stays static), publish versioned snapshots (with rollback), toggle a `blogEnabled` flag, and customise a site-wide footer that auto-generates columns from navigation + blog.
 
-- **Framework:** Next.js 15 (pages router), React 19, TypeScript 5
-- **UI:** Ant Design v5 + custom SCSS, CKEditor 5 (with legacy draft-js still in tree)
-- **API:** GraphQL via Apollo Server (Next API route) **and** a standalone Express + `express-graphql` server
-- **Data:** MongoDB 7 (primary), Redis (one trivial `getBar` resolver)
-- **Auth:** NextAuth (Credentials + optional Google), bcrypt password hashing
-- **i18n:** `next-i18next`, language detection via `@unly/universal-language-detector`
+- **Framework:** Next.js 15 (pages router, Turbopack in dev), React 19, TypeScript 5
+- **UI:** Ant Design v5 + custom SCSS, CKEditor 5 (with legacy draft-js still in tree), IntersectionObserver-based reveal animations
+- **API:** GraphQL via Apollo Server (Next API route) **and** a standalone Express + `express-graphql` server. Method-level authorization proxy ([authz.ts](src/Server/authz.ts)) gates mutations by role + capability
+- **Data:** MongoDB 7 — collections: `Navigation`, `Sections`, `Images`, `Logos`, `Users`, `Languages`, `Themes`, `SiteSettings`, `PublishedSnapshots`, `Posts`. Redis still present but nearly unused
+- **Auth:** NextAuth (Credentials + optional Google), bcrypt password hashing, JWT sessions carrying `role` + `canPublishProduction`
+- **i18n:** `next-i18next`, language detection via `@unly/universal-language-detector`, translation editor table with search + missing-key filter
+- **Tests:** Vitest + `mongodb-memory-server` + Testing Library — 27 passing baseline tests
 - **Build/deploy:** Docker Compose (mongodb + standalone GraphQL server + Next app)
 
 ## Repository layout
@@ -122,10 +123,28 @@ Default admin (see [mongoDBConnection.ts:27-29](src/Server/mongoDBConnection.ts:
 
 ## Page rendering
 
-- [src/frontend/pages/[...slug].tsx](src/frontend/pages/[...slug].tsx) matches any path and delegates to `App` ([pages/app.tsx](src/frontend/pages/app.tsx)).
-- `App` fetches the navigation collection via GraphQL, builds an Ant Design `Tabs` of pages, and renders each page as `DynamicTabsContent` → iterates its section components.
+- [src/frontend/pages/[...slug].tsx](src/frontend/pages/[...slug].tsx) matches any public path and delegates to `App` ([pages/app.tsx](src/frontend/pages/app.tsx)).
+- `App` fetches navigation + sections + posts + footer + active theme via GraphQL on mount, builds an Ant Design `Tabs` of pages, and renders each page as `DynamicTabsContent` → [ContentType](src/frontend/components/common/ContentType.tsx) → registry-based Display component.
 - Per-page SEO (`description`, `keywords`, `viewport`, `charSet`, `url`, `image`, etc.) is projected into `<Head>` as `og:*` meta tags.
 - Language picker switches to `/{lang}{currentPath}` via `window.location`.
+- Blog: [pages/blog/index.tsx](src/frontend/pages/blog/index.tsx) + [pages/blog/[slug].tsx](src/frontend/pages/blog/[slug].tsx) — **SSR via `getServerSideProps`** that hits `/api/graphql` on the build/runtime host. Respects the `blogEnabled` site flag (routes 404 when disabled).
+- Footer ([SiteFooter.tsx](src/frontend/components/common/SiteFooter.tsx)) auto-generates "Site" column from navigation pages and "Writing" column from blog (when enabled + posts exist); admin-configured columns stack on top. Custom bottom line. Hide toggle.
+- Publishing: the public site can also be served from a versioned snapshot (`PublishedSnapshots` collection) — [PublishService](src/Server/PublishService.ts) copies Navigation/Sections/Languages/Logos/Images/Posts into an immutable doc per Publish; rollback appends a new snapshot that mirrors an older one.
+
+### Rendering mode (current vs. intended)
+
+Verified against the source:
+
+| Route | `getStaticProps` / SSR | Current production output |
+|---|---|---|
+| `/` (index.tsx) | none | Static HTML shell with empty tabs → client-side fetch paints content |
+| `/[...slug].tsx` | none | Same — empty shell then client-side hydrate |
+| `pages/app.tsx` (shared shell) | `getServerSideProps` returning only translations | Content is still client-side fetched |
+| `/blog` + `/blog/[slug]` | `getServerSideProps` fetching content | Full SSR, content baked into HTML |
+| `/admin` + `/admin/settings` | `getServerSideProps` (session prime) | SSR |
+| `postbuild` sitemap | `additionalPaths` in [next-sitemap.config.cjs](next-sitemap.config.cjs) calls `http://localhost/api/graphql` | **Works** only while a GraphQL server runs on port 80 during build; Docker build sets `BUILD_PORT=3000` but the sitemap URL is hardcoded to `localhost:80` |
+
+**Intent** (per [Next.js SSG docs](https://nextjs.org/docs/pages/building-your-application/rendering/static-site-generation)): `next build` should emit static HTML with content baked in (fast first paint), `npm run dev` should re-render dynamically on every request. Today only sitemap generation respects this — `/` and `/[...slug]` do not. Fixing this is tracked as **ROADMAP #10**.
 
 ## Admin panel
 

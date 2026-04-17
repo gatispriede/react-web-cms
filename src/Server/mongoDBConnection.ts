@@ -14,6 +14,11 @@ import {BundleService} from './BundleService';
 import {PublishService} from './PublishService';
 import {ThemeService} from './ThemeService';
 import {InTheme} from '../Interfaces/ITheme';
+import {PostService} from './PostService';
+import {InPost} from '../Interfaces/IPost';
+import {FooterService} from './FooterService';
+import {IFooterConfig} from '../Interfaces/IFooter';
+import {ISiteFlags, SiteFlagsService} from './SiteFlagsService';
 import {
     defaultSettings,
     ILoadData,
@@ -44,6 +49,9 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
     public bundleService!: BundleService;
     public publishService!: PublishService;
     public themeService!: ThemeService;
+    public postService!: PostService;
+    public footerService!: FooterService;
+    public siteFlagsService!: SiteFlagsService;
 
     constructor() {
         this._settings.mongoDBDatabaseUrl = `mongodb+srv://${this._settings.mongodbUser}:${this._settings.mongodbPassword}@${this._settings.mongoDBClusterUrl}`;
@@ -81,6 +89,9 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
             this.publishService = new PublishService(this.db);
             this.themeService = new ThemeService(this.db);
             void this.themeService.seedIfEmpty();
+            this.postService = new PostService(this.db);
+            this.footerService = new FooterService(this.db);
+            this.siteFlagsService = new SiteFlagsService(this.db);
 
             if (!MongoDBConnection.adminSeeded) {
                 MongoDBConnection.adminSeeded = true;
@@ -138,12 +149,30 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
         return this.navigationService.deleteNavigationItem(pageName);
     }
 
-    async publishSnapshot(): Promise<string> {
+    async publishSnapshot({note}: {note?: string} = {}): Promise<string> {
         try {
-            const meta = await this.publishService.publishSnapshot();
+            const meta = await this.publishService.publishSnapshot(undefined, note);
             return JSON.stringify({publishSnapshot: meta});
         } catch (err) {
             console.error('Error publishing snapshot:', err);
+            return JSON.stringify({error: String((err as Error).message || err)});
+        }
+    }
+
+    async getPublishedHistory({limit}: {limit?: number} = {}): Promise<string> {
+        try {
+            return JSON.stringify(await this.publishService.getHistory(limit ?? 50));
+        } catch (err) {
+            console.error('getPublishedHistory:', err);
+            return '[]';
+        }
+    }
+
+    async rollbackToSnapshot({id}: {id: string}): Promise<string> {
+        try {
+            const meta = await this.publishService.rollbackTo(id);
+            return JSON.stringify({rollbackToSnapshot: meta});
+        } catch (err) {
             return JSON.stringify({error: String((err as Error).message || err)});
         }
     }
@@ -178,6 +207,47 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
     }
     async setActiveTheme({id}: {id: string}): Promise<string> {
         try { return JSON.stringify({setActiveTheme: await this.themeService.setActive(id)}); }
+        catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+
+    async getPosts({includeDrafts, limit}: {includeDrafts?: boolean; limit?: number} = {}): Promise<string> {
+        try { return JSON.stringify(await this.postService.list({includeDrafts, limit})); }
+        catch (err) { console.error('getPosts:', err); return '[]'; }
+    }
+    async getPost({slug, includeDrafts}: {slug: string; includeDrafts?: boolean}): Promise<string | null> {
+        try {
+            const post = await this.postService.getBySlug(slug, {includeDrafts});
+            return post ? JSON.stringify(post) : null;
+        } catch (err) { console.error('getPost:', err); return null; }
+    }
+    async savePost({post}: {post: InPost}): Promise<string> {
+        try { return JSON.stringify({savePost: await this.postService.save(post)}); }
+        catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+    async deletePost({id}: {id: string}): Promise<string> {
+        try { return JSON.stringify({deletePost: await this.postService.remove(id)}); }
+        catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+    async setPostPublished({id, publish}: {id: string; publish: boolean}): Promise<string> {
+        try { return JSON.stringify({setPostPublished: await this.postService.setPublished(id, publish)}); }
+        catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+
+    async getFooter(): Promise<string> {
+        try { return JSON.stringify(await this.footerService.get()); }
+        catch (err) { console.error('getFooter:', err); return JSON.stringify({enabled: true, columns: [], bottom: ''}); }
+    }
+    async saveFooter({config}: {config: IFooterConfig}): Promise<string> {
+        try { return JSON.stringify({saveFooter: await this.footerService.save(config)}); }
+        catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+
+    async getSiteFlags(): Promise<string> {
+        try { return JSON.stringify(await this.siteFlagsService.get()); }
+        catch (err) { console.error('getSiteFlags:', err); return JSON.stringify({blogEnabled: true}); }
+    }
+    async saveSiteFlags({flags}: {flags: Partial<ISiteFlags>}): Promise<string> {
+        try { return JSON.stringify({saveSiteFlags: await this.siteFlagsService.save(flags)}); }
         catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
     }
 

@@ -65,12 +65,102 @@ const validateItemsList = (content: any, kind: string): ValidationResult => {
     return {valid: true};
 };
 
+const validateHero = (c: any): ValidationResult => {
+    if (!isObject(c)) return {valid: false, error: 'Hero content must be an object'};
+    for (const f of ['headline', 'subtitle', 'tagline', 'accent'] as const) {
+        if (c[f] !== undefined && !isString(c[f])) return {valid: false, error: `Hero.${f} must be a string`};
+    }
+    return validateImagePath(c.bgImage, 'Hero.bgImage');
+};
+
+const validateProjectCard = (c: any): ValidationResult => {
+    if (!isObject(c)) return {valid: false, error: 'ProjectCard content must be an object'};
+    for (const f of ['title', 'description'] as const) {
+        if (c[f] !== undefined && !isString(c[f])) return {valid: false, error: `ProjectCard.${f} must be a string`};
+    }
+    const imgCheck = validateImagePath(c.image, 'ProjectCard.image');
+    if (!imgCheck.valid) return imgCheck;
+    if (c.tags !== undefined) {
+        if (!Array.isArray(c.tags)) return {valid: false, error: 'ProjectCard.tags must be an array'};
+        if (c.tags.some((t: unknown) => !isString(t))) return {valid: false, error: 'ProjectCard.tags entries must be strings'};
+        if (c.tags.length > 30) return {valid: false, error: 'ProjectCard.tags exceeds 30 entries'};
+    }
+    for (const f of ['primaryLink', 'secondaryLink'] as const) {
+        if (c[f] !== undefined) {
+            if (!isObject(c[f])) return {valid: false, error: `ProjectCard.${f} must be an object`};
+            if (c[f].url !== undefined && !isString(c[f].url)) return {valid: false, error: `ProjectCard.${f}.url must be a string`};
+            if (c[f].label !== undefined && !isString(c[f].label)) return {valid: false, error: `ProjectCard.${f}.label must be a string`};
+        }
+    }
+    return {valid: true};
+};
+
+const validateSkillPills = (c: any): ValidationResult => {
+    if (!isObject(c)) return {valid: false, error: 'SkillPills content must be an object'};
+    if (c.category !== undefined && !isString(c.category)) return {valid: false, error: 'SkillPills.category must be a string'};
+    if (c.items !== undefined) {
+        if (!Array.isArray(c.items)) return {valid: false, error: 'SkillPills.items must be an array'};
+        if (c.items.some((t: unknown) => !isString(t))) return {valid: false, error: 'SkillPills.items entries must be strings'};
+        if (c.items.length > 100) return {valid: false, error: 'SkillPills.items exceeds 100 entries'};
+    }
+    return {valid: true};
+};
+
+const validateTimeline = (c: any): ValidationResult => {
+    if (!isObject(c)) return {valid: false, error: 'Timeline content must be an object'};
+    if (c.entries === undefined) return {valid: true};
+    if (!Array.isArray(c.entries)) return {valid: false, error: 'Timeline.entries must be an array'};
+    if (c.entries.length > 100) return {valid: false, error: 'Timeline.entries exceeds 100 entries'};
+    for (let i = 0; i < c.entries.length; i++) {
+        const e = c.entries[i];
+        if (!isObject(e)) return {valid: false, error: `Timeline.entries[${i}] must be an object`};
+        for (const f of ['start', 'end', 'company', 'role', 'location'] as const) {
+            if (e[f] !== undefined && !isString(e[f])) return {valid: false, error: `Timeline.entries[${i}].${f} must be a string`};
+        }
+        if (e.achievements !== undefined) {
+            if (!Array.isArray(e.achievements)) return {valid: false, error: `Timeline.entries[${i}].achievements must be an array`};
+            if (e.achievements.some((a: unknown) => !isString(a))) return {valid: false, error: `Timeline.entries[${i}].achievements entries must be strings`};
+        }
+    }
+    return {valid: true};
+};
+
+const validateSocialLinks = (c: any): ValidationResult => {
+    if (!isObject(c)) return {valid: false, error: 'SocialLinks content must be an object'};
+    if (c.links === undefined) return {valid: true};
+    if (!Array.isArray(c.links)) return {valid: false, error: 'SocialLinks.links must be an array'};
+    for (let i = 0; i < c.links.length; i++) {
+        const link = c.links[i];
+        if (!isObject(link)) return {valid: false, error: `SocialLinks.links[${i}] must be an object`};
+        if (link.platform !== undefined && !isString(link.platform)) return {valid: false, error: `SocialLinks.links[${i}].platform must be a string`};
+        if (link.url !== undefined && !isString(link.url)) return {valid: false, error: `SocialLinks.links[${i}].url must be a string`};
+        if (link.label !== undefined && !isString(link.label)) return {valid: false, error: `SocialLinks.links[${i}].label must be a string`};
+    }
+    return {valid: true};
+};
+
+const validateBlogFeed = (c: any): ValidationResult => {
+    if (!isObject(c)) return {valid: false, error: 'BlogFeed content must be an object'};
+    if (c.limit !== undefined && (typeof c.limit !== 'number' || c.limit < 1 || c.limit > 24)) {
+        return {valid: false, error: 'BlogFeed.limit must be a number between 1 and 24'};
+    }
+    if (c.tag !== undefined && !isString(c.tag)) return {valid: false, error: 'BlogFeed.tag must be a string'};
+    if (c.heading !== undefined && !isString(c.heading)) return {valid: false, error: 'BlogFeed.heading must be a string'};
+    return {valid: true};
+};
+
 const VALIDATORS: Record<string, (c: any) => ValidationResult> = {
     [EItemType.Text]: validateText,
     [EItemType.RichText]: validateRichText,
     [EItemType.Image]: validateImage,
     [EItemType.Carousel]: (c) => validateItemsList(c, 'Carousel'),
     [EItemType.Gallery]: (c) => validateItemsList(c, 'Gallery'),
+    [EItemType.Hero]: validateHero,
+    [EItemType.ProjectCard]: validateProjectCard,
+    [EItemType.SkillPills]: validateSkillPills,
+    [EItemType.Timeline]: validateTimeline,
+    [EItemType.SocialLinks]: validateSocialLinks,
+    [EItemType.BlogFeed]: validateBlogFeed,
     [EItemType.Empty]: () => ({valid: true}),
 };
 

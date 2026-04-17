@@ -8,6 +8,12 @@
       "port": 80
     },
     {
+      "name": "next-start",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["start"],
+      "port": 80
+    },
+    {
       "name": "standalone-graphql",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "standalone-graphql"],

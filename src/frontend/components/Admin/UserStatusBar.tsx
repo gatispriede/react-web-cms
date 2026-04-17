@@ -1,11 +1,12 @@
 import {Button} from "antd";
 import AdminApp from "./AdminApp";
-import React from "react";
+import React, {useEffect, useState} from "react";
 import {Session} from "next-auth";
 import {signOut} from "next-auth/react";
 import AdminSettings from "./AdminSettings";
 import {TFunction} from "i18next";
 import {i18n} from "next-i18next";
+import SiteFlagsApi from "../../api/SiteFlagsApi";
 
 const UserStatusBar = ({session, settings, t, tApp}: {
     session: Session,
@@ -14,6 +15,10 @@ const UserStatusBar = ({session, settings, t, tApp}: {
     tApp: TFunction<string, undefined>
 }) => {
     let lang = i18n?.language !== 'default' ? i18n?.language : 'en'
+    const [blogEnabled, setBlogEnabled] = useState(true);
+    useEffect(() => {
+        void new SiteFlagsApi().get().then(f => setBlogEnabled(f.blogEnabled !== false));
+    }, []);
     return (
         <>
             <div className={'app-login-wrapper'}>
@@ -38,6 +43,14 @@ const UserStatusBar = ({session, settings, t, tApp}: {
                         window.open(`/${lang}`, '_blank', 'noopener,noreferrer');
                     }
                 }}>{t("Preview")}</Button>
+                {blogEnabled && (
+                    <Button type={"link"} onClick={(e) => {
+                        e.preventDefault();
+                        if (typeof window !== 'undefined') {
+                            window.open(`/${lang}/blog`, '_blank', 'noopener,noreferrer');
+                        }
+                    }}>{t("Blog")}</Button>
+                )}
                 <Button type={"link"} href={'#'} onClick={() => signOut()}>{t("Sign out")}</Button>
             </div>
             {

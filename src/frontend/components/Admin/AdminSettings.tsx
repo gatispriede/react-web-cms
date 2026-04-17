@@ -3,6 +3,9 @@ import AdminSettingsUsers from "./AdminSettings/Users";
 import AdminSettingsLanguages from "./AdminSettings/Languages";
 import AdminSettingsTheme from "./AdminSettings/Theme";
 import BundleSettings from "./AdminSettings/Bundle";
+import AdminSettingsPublishing from "./AdminSettings/Publishing";
+import AdminSettingsPosts from "./AdminSettings/Posts";
+import AdminSettingsFooter from "./AdminSettings/Footer";
 import {useTranslation} from "next-i18next";
 import {useSession} from "next-auth/react";
 import TranslationManager from "./TranslationManager";
@@ -29,11 +32,26 @@ const getItems = (
         label: t('Theme'),
         children: <AdminSettingsTheme/>,
     });
+    items.push({
+        key: '6',
+        label: t('Posts'),
+        children: <AdminSettingsPosts/>,
+    });
+    items.push({
+        key: '7',
+        label: t('Footer'),
+        children: <AdminSettingsFooter/>,
+    });
     if (role === 'admin') {
         items.push({
             key: '4',
             label: t('Bundle'),
             children: <BundleSettings t={t}/>,
+        });
+        items.push({
+            key: '5',
+            label: t('Publishing'),
+            children: <AdminSettingsPublishing/>,
         });
     }
     items.push({

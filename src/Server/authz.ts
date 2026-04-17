@@ -72,6 +72,7 @@ export function guardMethods<T extends object>(
 
 export const MUTATION_CAPABILITIES: Record<string, Capability> = {
     publishSnapshot: (s) => s.canPublishProduction ? true : 'canPublishProduction required to publish',
+    rollbackToSnapshot: (s) => s.canPublishProduction ? true : 'canPublishProduction required to rollback',
 };
 
 export const MUTATION_REQUIREMENTS: Record<string, UserRole> = {
@@ -91,9 +92,15 @@ export const MUTATION_REQUIREMENTS: Record<string, UserRole> = {
     updateUser: 'admin',
     removeUser: 'admin',
     publishSnapshot: 'editor',
+    rollbackToSnapshot: 'editor',
     saveTheme: 'editor',
     deleteTheme: 'editor',
     setActiveTheme: 'editor',
+    savePost: 'editor',
+    deletePost: 'editor',
+    setPostPublished: 'editor',
+    saveFooter: 'editor',
+    saveSiteFlags: 'admin',
 };
 
 export const QUERY_REQUIREMENTS: Record<string, UserRole> = {
