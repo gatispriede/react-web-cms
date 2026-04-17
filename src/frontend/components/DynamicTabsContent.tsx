@@ -98,6 +98,7 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
                                                     await this.MongoApi.deleteSection(section.id)
                                                     const sections = this.state.sections.filter((filterSection: ISection) => filterSection.id !== section.id)
                                                     this.setState({sections})
+                                                    await this.refresh()
                                                 }
                                             }}>
                                                 <SectionContent

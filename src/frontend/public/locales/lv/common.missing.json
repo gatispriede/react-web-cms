@@ -1,0 +1,25 @@
+{
+  "Bundle": "Bundle",
+  "Add New Language": "Add New Language",
+  "Save": "Save",
+  "App building": "App building",
+  "Site settings": "Site settings",
+  "Email": "Email",
+  "Name": "Name",
+  "Role": "Role",
+  "Can publish": "Can publish",
+  "Actions": "Actions",
+  "Add user": "Add user",
+  "Refresh": "Refresh",
+  "Create": "Create",
+  "Email is required": "Email is required",
+  "Enter a valid email": "Enter a valid email",
+  "Viewer": "Viewer",
+  "Editor": "Editor",
+  "Can publish to production": "Can publish to production",
+  "Allows copying the draft site state into the live published snapshot": {
+    "": "Allows copying the draft site state into the live published snapshot."
+  },
+  "Password": "Password",
+  "Password is required": "Password is required"
+}

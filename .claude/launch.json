@@ -1,0 +1,29 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "next-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 80
+    },
+    {
+      "name": "standalone-graphql",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "standalone-graphql"],
+      "port": 80
+    },
+    {
+      "name": "ssl-server",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "ssl"],
+      "port": 443
+    },
+    {
+      "name": "mongodb-compose",
+      "runtimeExecutable": "docker",
+      "runtimeArgs": ["compose", "up", "-d", "mongodb"],
+      "port": 27017
+    }
+  ]
+}

@@ -101,12 +101,16 @@ export class NavigationService implements INavigationService{
 
     async removeSectionItem(sectionId: string): Promise<string> {
         try {
-            await this.sectionsDB.deleteOne({ id: sectionId });
-            return 'success';
+            const result = await this.sectionsDB.deleteOne({ id: sectionId });
+            await this.navigationDB.updateMany(
+                { sections: sectionId },
+                { $pull: { sections: sectionId } } as any,
+            );
+            return JSON.stringify({removeSectionItem: {id: sectionId, deleted: result.deletedCount}});
         } catch (err) {
             console.error('Error removing section item:', err);
             await this.setupClient();
-            return '';
+            return JSON.stringify({error: String((err as Error).message || err)});
         }
     }
 
