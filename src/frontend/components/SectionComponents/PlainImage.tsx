@@ -21,17 +21,13 @@ export interface IPlainImage {
 }
 
 export enum EImageStyle {
-    Default = "default",
-    CenteredBoxed = "centeredBoxed",
-    TextAbove = "TextAbove",
-    TextRight = "TextRight",
-    TextLeft = "TextLeft",
+    Default = "default"
 }
 
 interface IImgProperties {
     preview: boolean,
     src: string,
-    style: any,
+    style: React.CSSProperties,
     width?: string,
     height?: string,
 }
@@ -89,7 +85,7 @@ export class PlainImageContent extends ContentManager {
 
 }
 
-const PlainImage = ({item, t, tApp}: {
+const PlainImage = ({item, t: _t, tApp}: {
     item: IItem,
     t: TFunction<"translation", undefined>,
     tApp: TFunction<string, undefined>

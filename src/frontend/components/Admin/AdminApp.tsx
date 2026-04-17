@@ -1,10 +1,14 @@
 import React from 'react'
 import {resolve} from "../../gqty";
-import {Button, ConfigProvider, Spin, Tabs} from 'antd';
+import {Button, ConfigProvider, Popconfirm, Spin, Switch, Tabs, Tag, message, theme as antdTheme} from 'antd';
+import {BulbFilled, BulbOutlined, CloudUploadOutlined} from "@ant-design/icons";
+import PublishApi from "../../api/PublishApi";
 import AddNewDialogNavigation from "../common/Dialogs/AddNewDialogNavigation";
 import DynamicTabsContent from "../DynamicTabsContent";
 import {IPage} from "../../../Interfaces/IPage";
-import theme from '../../theme/themeConfig';
+import staticTheme from '../../theme/themeConfig';
+import {applyThemeCssVars} from '../../theme/applyThemeCssVars';
+import ThemeApi from '../../api/ThemeApi';
 import {IMongo} from "../../../Interfaces/IMongo";
 import MongoApi from '../../api/MongoApi';
 import Logo from "../common/Logo";
@@ -13,6 +17,7 @@ import EditWrapper from "../common/EditWrapper";
 import {EditOutlined} from "@ant-design/icons";
 import {INavigation} from "../../../Interfaces/INavigation";
 import {TFunction} from "i18next";
+import {UserRole} from "../../../Interfaces/IUser";
 
 type TargetKey = React.MouseEvent | React.KeyboardEvent | string;
 
@@ -22,7 +27,10 @@ interface IHomeState {
     activeNavigation: INavigation,
     activeTab: string,
     pages: IPage[],
-    tabProps: any[]
+    tabProps: any[],
+    publishedAt?: string,
+    publishing?: boolean,
+    darkMode: boolean,
 }
 
 class AdminApp extends React.Component<{
@@ -31,8 +39,13 @@ class AdminApp extends React.Component<{
     tApp: TFunction<string, undefined>
 }> {
     sections: any[] = []
-    admin: boolean = true
+    role: UserRole = 'viewer'
+    admin: boolean = false
+    canEditNav: boolean = false
+    canPublish: boolean = false
     private MongoApi
+    private PublishApi = new PublishApi()
+    private ThemeApi = new ThemeApi()
 
     state: IHomeState = {
         loading: true,
@@ -46,18 +59,63 @@ class AdminApp extends React.Component<{
         },
         pages: [],
         tabProps: [],
-        activeTab: '0'
+        activeTab: '0',
+        darkMode: false,
     }
 
     constructor(props: { session: any, t: TFunction<"translation", undefined>, tApp: TFunction<"translation", undefined> }) {
         super(props);
         this.MongoApi = new MongoApi()
-    }
-    componentDidMount() {
-        void this.initialize()
+        const role = ((props.session?.user as any)?.role ?? 'viewer') as UserRole;
+        this.role = role;
+        this.admin = role !== 'viewer';
+        this.canEditNav = role === 'editor' || role === 'admin';
+        this.canPublish = Boolean((props.session?.user as any)?.canPublishProduction) && this.canEditNav;
     }
 
+    loadPublishedMeta = async () => {
+        const meta = await this.PublishApi.getMeta();
+        if (meta?.publishedAt) this.setState({publishedAt: meta.publishedAt});
+    };
+
+    publish = async () => {
+        this.setState({publishing: true});
+        try {
+            const result = await this.PublishApi.publish();
+            if (result.error) {
+                message.error(result.error);
+                return;
+            }
+            message.success(`Published at ${result.publishedAt}`);
+            this.setState({publishedAt: result.publishedAt});
+        } finally {
+            this.setState({publishing: false});
+        }
+    };
+    componentDidMount() {
+        void this.initialize()
+        void this.loadPublishedMeta()
+        void this.loadThemeVars()
+        if (typeof window !== 'undefined') {
+            const saved = window.localStorage.getItem('admin.darkMode');
+            if (saved === '1') this.setState({darkMode: true});
+        }
+    }
+
+    toggleDarkMode = (on: boolean) => {
+        this.setState({darkMode: on});
+        if (typeof window !== 'undefined') {
+            window.localStorage.setItem('admin.darkMode', on ? '1' : '0');
+        }
+    };
+
+    loadThemeVars = async () => {
+        const active = await this.ThemeApi.getActive();
+        if (active?.tokens) applyThemeCssVars(active.tokens);
+    };
+
     onEdit = async (targetKey: TargetKey, action: 'add' | 'remove') => {
+        if (!this.canEditNav) return;
         if (action === 'add') {
             this.setState({addNewDialogOpen: true, activeNavigation: {}})
         } else {
@@ -82,6 +140,7 @@ class AdminApp extends React.Component<{
             pages: this.state.tabProps,
             tabProps: this.state.tabProps,
             activeTab: this.state.activeTab,
+            darkMode: this.state.darkMode,
             activeNavigation: {
                 id: '',
                 page: '',
@@ -172,9 +231,42 @@ class AdminApp extends React.Component<{
 
     render() {
         return (
-            <ConfigProvider theme={theme}>
+            <ConfigProvider theme={{
+                ...staticTheme,
+                algorithm: this.state.darkMode ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
+            }}>
                 <Spin spinning={this.state.loading}>
-                    <Logo admin={true} t={this.props.t}/>
+                    <Logo admin={this.admin} t={this.props.t}/>
+                    <div style={{display: 'flex', alignItems: 'center', gap: 8, padding: '0 16px 8px', justifyContent: 'flex-end'}}>
+                        <Switch
+                            checked={this.state.darkMode}
+                            onChange={this.toggleDarkMode}
+                            checkedChildren={<BulbFilled/>}
+                            unCheckedChildren={<BulbOutlined/>}
+                        />
+                    </div>
+                    {this.canPublish && (
+                        <div style={{display: 'flex', alignItems: 'center', gap: 8, padding: '0 16px 8px'}}>
+                            <Popconfirm
+                                title={this.props.t('Publish to production?')}
+                                description={this.props.t('This copies the current draft to the live published snapshot.')}
+                                okText={this.props.t('Publish')}
+                                cancelText={this.props.t('Cancel')}
+                                onConfirm={this.publish}
+                            >
+                                <Button type="primary" icon={<CloudUploadOutlined/>} loading={this.state.publishing}>
+                                    {this.props.t('Publish')}
+                                </Button>
+                            </Popconfirm>
+                            {this.state.publishedAt ? (
+                                <Tag color="green">
+                                    {this.props.t('Last published')}: {new Date(this.state.publishedAt).toLocaleString()}
+                                </Tag>
+                            ) : (
+                                <Tag>{this.props.t('No published snapshot yet')}</Tag>
+                            )}
+                        </div>
+                    )}
                     <AddNewDialogNavigation
                         t={this.props.t}
                         close={() => {
@@ -188,7 +280,7 @@ class AdminApp extends React.Component<{
                     />
                     <Tabs
                         key={'tabs'}
-                        type="editable-card"
+                        type={this.canEditNav ? "editable-card" : "card"}
                         tabBarStyle={{
                             display: "flex",
                             justifyContent: "space-between",

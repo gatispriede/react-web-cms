@@ -31,25 +31,25 @@ class Logo extends Component<ILogoProps> {
 
     async loadLogo(init?: boolean | undefined) {
         const logo: ILogo = await this._mongoApi.getLogo()
+        if (!logo || !logo.content) {
+            return;
+        }
         try {
             const content = JSON.parse(logo.content)
-            if (init) {
-                // eslint-disable-next-line react/no-direct-mutation-state
-                this.state.logo = content
-            } else {
-                this.setState({logo: content})
-            }
+            this.setState({logo: content});
         } catch (e) {
             console.error(e)
         }
     }
 
-    async saveLogo(file: any) {
-        const stateLogo = this.state.logo;
-        stateLogo.src = file.location
-        await this._mongoApi.saveLogo(JSON.stringify(stateLogo))
-        await this.loadLogo()
-        this.setState({open: false})
+    async saveLogo(file: File) {
+        const stateLogo = { ...this.state.logo };
+        // Assuming file has a 'location' property after upload
+        // If not, adjust this logic accordingly
+        (stateLogo as any).src = (file as any).location;
+        await this._mongoApi.saveLogo(JSON.stringify(stateLogo));
+        await this.loadLogo();
+        this.setState({ open: false });
     }
 
     render() {

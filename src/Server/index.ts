@@ -3,7 +3,7 @@ import express from 'express';
 import {graphqlHTTP} from 'express-graphql';
 import {makeExecutableSchema} from 'graphql-tools';
 import redisConnection from "./redisConnection";
-import MongoDBConnection from "./mongoDBConnection";
+import {getMongoConnection} from "./mongoDBConnection";
 
 
 // @ts-ignore
@@ -23,10 +23,10 @@ const resolvers = {
     Query: {
         bar: (): Promise<string | null> => red.getBar(),
         sample: () => "sample",
-        mongo: () => new MongoDBConnection()
+        mongo: () => getMongoConnection()
     },
     Mutation: {
-        mongo: () => new MongoDBConnection()
+        mongo: () => getMongoConnection()
     }
 
 };

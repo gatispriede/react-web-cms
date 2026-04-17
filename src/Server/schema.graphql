@@ -54,6 +54,15 @@ input InLanguage {
     symbol: String!
     default: Boolean
 }
+input InUser {
+    id: String
+    name: String
+    email: String
+    password: String
+    role: String
+    avatar: String
+    canPublishProduction: Boolean
+}
 type INewLanguage {
     label: String!
     symbol: String!
@@ -66,6 +75,7 @@ type IUser {
     password: String!
     role: String
     avatar: String
+    canPublishProduction: Boolean
 }
 
 type ILogo {
@@ -131,13 +141,17 @@ type QueryMongo {
     setupAdmin: IUser
     getMongoDBUri: String
     loadData: [ILoadData!]!
-    createDatabase: String!
     getNavigationCollection: [INavigation!]!
     getSections(ids: [String]): [ISection!]!
     getImages(tags: String!): [IImage!]!
-    getLogo: ILogo!
+    getLogo: ILogo
     getUser(email: String): IUser
+    getUsers: [IUser!]!
     getLanguages: [INewLanguage]
+    getPublishedSnapshot: String
+    getPublishedMeta: String
+    getThemes: String!
+    getActiveTheme: String
 }
 
 scalar JSON
@@ -155,6 +169,13 @@ type MutationMongo {
     saveLogo(content: String!): String!
     addUpdateLanguage(language: InLanguage, translations: JSON): String!
     deleteLanguage(language: InLanguage): String!
+    addUser(user: InUser!): String!
+    updateUser(user: InUser!): String!
+    removeUser(id: String!): String!
+    publishSnapshot: String!
+    saveTheme(theme: JSON!): String!
+    deleteTheme(id: String!): String!
+    setActiveTheme(id: String!): String!
 }
 
 

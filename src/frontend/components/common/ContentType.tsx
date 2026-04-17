@@ -1,41 +1,15 @@
 import {EItemType} from "../../../enums/EItemType";
 import {IContentTypeProps} from "../../../Interfaces/IContentTypeProps";
-import PlainText from "../SectionComponents/PlainText";
-import PlainImage from "../SectionComponents/PlainImage";
-import RichText from "../SectionComponents/RichText";
-import Gallery from "../SectionComponents/Gallery";
-import CarouselView from "../SectionComponents/CarouselView";
+import {getItemTypeDefinition} from "../itemTypes/registry";
 
 const ContentType = (props: IContentTypeProps) => {
-    switch (props.item.type) {
-        case EItemType.Text:
-            return (
-                <PlainText t={props.t} tApp={props.tApp} item={props.item} />
-            )
-        case EItemType.RichText:
-            return (
-                <RichText t={props.t} tApp={props.tApp}  item={props.item} />
-            )
-        case EItemType.Image:
-            return (
-                <PlainImage t={props.t}  tApp={props.tApp} item={props.item} />
-            )
-        case EItemType.Carousel:
-            return (
-                <CarouselView t={props.t} tApp={props.tApp}  item={props.item} />
-            )
-        case EItemType.Gallery:
-            return (
-                <Gallery t={props.t} tApp={props.tApp}  item={props.item} />
-            )
-        case EItemType.Empty:
-            return (
-                <div>
-                    {props.admin && props.addButton}
-                </div>
-            )
-        default:
-            return ''
+    if (props.item.type === EItemType.Empty) {
+        return <div>{props.admin && props.addButton}</div>;
     }
-}
-export default ContentType
+    const def = getItemTypeDefinition(props.item.type);
+    if (!def) return null;
+    const {Display} = def;
+    return <Display t={props.t} tApp={props.tApp} item={props.item}/>;
+};
+
+export default ContentType;

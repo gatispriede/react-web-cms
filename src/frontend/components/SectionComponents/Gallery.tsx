@@ -24,8 +24,7 @@ export interface IGallery {
 }
 
 export enum EGalleryStyle {
-    Default = "default",
-    BorderedAlignedByThree = "BorderedAlignedByThree"
+    Default = "default"
 }
 
 export class GalleryContent extends ContentManager {
@@ -79,7 +78,7 @@ export class GalleryContent extends ContentManager {
     }
 }
 
-const Gallery = ({item, t, tApp}: {
+const Gallery = ({item, t: _t, tApp}: {
     item: IItem,
     t: TFunction<"translation", undefined>,
     tApp: TFunction<string, undefined>
@@ -93,8 +92,14 @@ const Gallery = ({item, t, tApp}: {
                 <Image.PreviewGroup>
                     {
                         data.items.map((item: IGalleryItem, index: number) => {
-                            const imgProperties: any = {
-                                preview:data.disablePreview ? false : item.preview,
+                            const imgProperties: {
+                                preview: boolean;
+                                src: string;
+                                alt: string;
+                                width?: string;
+                                height?: string;
+                            } = {
+                                preview: data.disablePreview ? false : item.preview,
                                 src: '/' + item.src,
                                 alt: item.alt
                             }

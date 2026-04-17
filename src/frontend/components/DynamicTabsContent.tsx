@@ -1,5 +1,7 @@
 import React from "react";
+import {Empty} from "antd";
 import EditWrapper from "./common/EditWrapper";
+import SectionErrorBoundary from "./common/SectionErrorBoundary";
 import AddNewSection from "./common/Dialogs/AddNewSection";
 import SectionContent from "./SectionContent";
 import {ISection} from "../../Interfaces/ISection";
@@ -9,6 +11,7 @@ import {IConfigSectionAddRemove} from "../../Interfaces/IConfigSectionAddRemove"
 import guid from "../../helpers/guid";
 import DraggableWrapper from "./common/DraggableWrapper";
 import {TFunction} from "i18next";
+import {InSection} from "../../Interfaces/IMongo";
 
 interface IDynamicTabsContent {
     sections: ISection[],
@@ -35,18 +38,17 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
     private readonly admin: boolean = false
     private MongoApi = new MongoApi()
 
-    getChangedPos = (currentPos: any, newPos: any) => {
+    getChangedPos = (currentPos: number, newPos: number) => {
         const sections = this.state.sections;
         sections[currentPos] = sections.splice(newPos, 1, sections[currentPos])[0];
         this.setState({sections});
-        const sectionsStringArray: string[] = []
+        const sectionsStringArray: string[] = [];
         sections.map((section: ISection) => {
-                if (section.id) sectionsStringArray.push(section.id as string)
-                return section
-            }
-        )
+            if (section.id) sectionsStringArray.push(section.id as string);
+            return section;
+        });
         if (sectionsStringArray.length > 0) {
-            void this.MongoApi.updateNavigation(this.state.page, sectionsStringArray)
+            void this.MongoApi.updateNavigation(this.state.page, sectionsStringArray);
         }
     };
 
@@ -63,9 +65,17 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
     }
 
     render() {
-
+        const hasSections = this.state.sections && this.state.sections.length > 0;
         return (
             <div className={'dynamic-content'}>
+                {!hasSections && (
+                    <Empty
+                        description={this.admin
+                            ? this.props.t('No sections yet — add your first one below.')
+                            : this.props.t('This page is empty.')}
+                        style={{padding: '48px 0'}}
+                    />
+                )}
                 <DraggableWrapper admin={this.admin} id={`${this.state.sections.length}-${this.state.state}`}
                                   onPosChange={this.getChangedPos}>
                     {
@@ -82,29 +92,30 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
                                 }
                                 return (
                                     <div key={`${index}-${section.type}`} className={`${index}-${section.type}`}>
-                                        <EditWrapper t={this.props.t} admin={this.admin} deleteAction={async () => {
-                                            if (section.id) {
-                                                await this.MongoApi.deleteSection(section.id)
-                                                const sections = this.state.sections.filter((filterSection: ISection) => filterSection.id !== section.id)
-                                                this.setState({sections})
-                                            }
-                                        }}>
-                                            <SectionContent
-                                                admin={this.admin}
-                                                t={this.props.t}
-                                                tApp={this.props.tApp}
-                                                section={section}
-                                                refresh={async () => {
-                                                    await this.refresh()
-                                                }}
-                                                addRemoveSectionItem={
-                                                    async (sectionId: string, config: IConfigSectionAddRemove) => {
-                                                        await this.MongoApi.addRemoveSectionItem(sectionId, config, this.state.sections)
-                                                        this.setState({state: guid()})
-                                                    }
-                                                }/>
-
-                                        </EditWrapper>
+                                        <SectionErrorBoundary admin={this.admin} sectionId={section.id}>
+                                            <EditWrapper t={this.props.t} admin={this.admin} deleteAction={async () => {
+                                                if (section.id) {
+                                                    await this.MongoApi.deleteSection(section.id)
+                                                    const sections = this.state.sections.filter((filterSection: ISection) => filterSection.id !== section.id)
+                                                    this.setState({sections})
+                                                }
+                                            }}>
+                                                <SectionContent
+                                                    admin={this.admin}
+                                                    t={this.props.t}
+                                                    tApp={this.props.tApp}
+                                                    section={section}
+                                                    refresh={async () => {
+                                                        await this.refresh()
+                                                    }}
+                                                    addRemoveSectionItem={
+                                                        async (sectionId: string, config: IConfigSectionAddRemove) => {
+                                                            await this.MongoApi.addRemoveSectionItem(sectionId, config, this.state.sections)
+                                                            this.setState({state: guid()})
+                                                        }
+                                                    }/>
+                                            </EditWrapper>
+                                        </SectionErrorBoundary>
                                     </div>
                                 )
                             }
@@ -115,7 +126,7 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
                     <AddNewSection
                         t={this.props.t}
                         page={this.state.page}
-                        addSectionToPage={async (item: any) => {
+                        addSectionToPage={async (item: { section: InSection}) => {
                             const result = await this.MongoApi.addSectionToPage(item, this.state.sections)
                             this.setState({sections: result})
                         }}

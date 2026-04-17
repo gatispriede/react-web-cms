@@ -12,10 +12,12 @@ export const authOptions: NextAuthOptions = {
         strategy: "jwt",
     },
     providers: [
-        GoogleProvider({
-            clientId: process.env.AUTH_GOOGLE_ID || "",
-            clientSecret: process.env.AUTH_GOOGLE_SECRET || ""
-        }),
+        ...(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET
+            ? [GoogleProvider({
+                clientId: process.env.AUTH_GOOGLE_ID,
+                clientSecret: process.env.AUTH_GOOGLE_SECRET,
+            })]
+            : []),
         CredentialsProvider({
             name: "Sign in",
             credentials: {
@@ -54,7 +56,9 @@ export const authOptions: NextAuthOptions = {
                     email: user.email,
                     name: user.name,
                     password: user.password,
-                }
+                    role: (user as any).role ?? 'viewer',
+                    canPublishProduction: Boolean((user as any).canPublishProduction),
+                } as any;
             },
         }),
     ],
@@ -68,24 +72,27 @@ export const authOptions: NextAuthOptions = {
                     ...token,
                     name: session.user.name || token.name,
                     email: session.user.email || token.email,
-                    avatarUrl: session.user.avatarUrl || token.avatarUrl,
+                    avatarUrl: session.user.avatarUrl || (token as any).avatarUrl,
+                    role: (session.user as any).role || (token as any).role,
+                    canPublishProduction: (session.user as any).canPublishProduction ?? (token as any).canPublishProduction,
                 }
             }
 
             if(user) {
-                const u = user as unknown as User
+                const u = user as unknown as User & {role?: string; canPublishProduction?: boolean}
                 return {
                     ...token,
                     id: u.id,
                     name: u.name,
-                    email: u.email
+                    email: u.email,
+                    role: u.role ?? (token as any).role ?? 'viewer',
+                    canPublishProduction: u.canPublishProduction ?? (token as any).canPublishProduction ?? false,
                 }
             }
 
             return token
         },
         session: ({session, token, user}) => {
-            // console.log('Session Callback', { session, token })
             return {
                 ...session,
                 user: {
@@ -93,6 +100,8 @@ export const authOptions: NextAuthOptions = {
                     id: token.id,
                     name: token.name,
                     email: token.email,
+                    role: (token as any).role ?? 'viewer',
+                    canPublishProduction: Boolean((token as any).canPublishProduction),
                 }
             }
 

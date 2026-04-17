@@ -1,7 +1,8 @@
 import {readFileSync} from "node:fs";
 import { ApolloServer } from "apollo-server-micro";
 import Cors from "micro-cors";
-import MongoDBConnection from "../../../Server/mongoDBConnection";
+import {getMongoConnection} from "../../../Server/mongoDBConnection";
+import {guardMethods, MUTATION_REQUIREMENTS, MUTATION_CAPABILITIES, QUERY_REQUIREMENTS, sessionFromReq, GraphqlSession} from "../../../Server/authz";
 import { MicroRequest } from "apollo-server-micro/dist/types";
 import { ServerResponse, IncomingMessage } from "http";
 // import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
@@ -10,10 +11,12 @@ const typeDefs = readFileSync('src/Server/schema.graphql', {encoding: 'utf-8'});
 const resolvers = {
     Query: {
         sample: () => "sample",
-        mongo: () => new MongoDBConnection()
+        mongo: (_: unknown, __: unknown, ctx: {session: GraphqlSession}) =>
+            guardMethods(getMongoConnection(), ctx.session, QUERY_REQUIREMENTS),
     },
     Mutation: {
-        mongo: () => new MongoDBConnection()
+        mongo: (_: unknown, __: unknown, ctx: {session: GraphqlSession}) =>
+            guardMethods(getMongoConnection(), ctx.session, MUTATION_REQUIREMENTS, MUTATION_CAPABILITIES),
     }
 
 };
@@ -28,7 +31,9 @@ const apolloServer = new ApolloServer({
     // cache: new InMemoryLRUCache(),
     typeDefs,
     resolvers,
-    context: ({req}) => {
+    context: async ({req, res}) => {
+        const session = await sessionFromReq(req, res);
+        return {session};
     },
     introspection: true,
     // playground: true,

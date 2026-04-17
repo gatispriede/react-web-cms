@@ -3,9 +3,22 @@ import {Button, Modal} from "antd";
 import {PlusCircleOutlined} from "@ant-design/icons";
 import {TFunction} from "i18next";
 
+// Define a type for the section object
+export interface Section {
+    page: string;
+    type: number;
+    content: any[];
+}
+
+// Define a type for the item passed to addSectionToPage
+export interface AddSectionItem {
+    pageName: string;
+    section: Section;
+}
+
 class AddNewSection extends React.Component <{
     page: string,
-    addSectionToPage: (item: any) => Promise<void>,
+    addSectionToPage: (item: AddSectionItem) => Promise<void>,
     t: TFunction<"translation", undefined>
 }> {
     state = {
@@ -14,12 +27,12 @@ class AddNewSection extends React.Component <{
         type: 1,
         label: '100%',
     }
-    addSectionToPage = async (item: any) => {
+    addSectionToPage = async (item: AddSectionItem) => {
     }
 
     constructor(props: {
         page: string,
-        addSectionToPage: (item: any) => Promise<void>,
+        addSectionToPage: (item: AddSectionItem) => Promise<void>,
         t: TFunction<"translation", undefined>
     }) {
         super(props)

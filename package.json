@@ -17,7 +17,10 @@
     "standalone-graphql-docker": "cross-env NODE_SERVER_PORT=true npx tsx --tsconfig src/Server/tsconfig.custom.json src/Server/index.ts",
     "ssl": "npx tsx --tsconfig src/Server/tsconfig.custom.json src/Server/sslServer.ts",
     "generate-schema": "npx @gqty/cli http://localhost:80/api/graphql --target=src/frontend/gqty/index.ts ",
-    "setupSecrets": "npx auth@latest secret next"
+    "setupSecrets": "npx auth@latest secret next",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "gqty": {
     "introspections": {
@@ -133,13 +136,19 @@
   },
   "devDependencies": {
     "@svgr/webpack": "^8.1.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/jest": "^29.5.14",
     "@types/react-dom": "^19.0.3",
     "@types/react-draft-wysiwyg": "^1.13.8",
+    "@vitest/coverage-v8": "^4.1.4",
     "immutable": "^5.0.3",
+    "jsdom": "^29.0.2",
+    "mongodb-memory-server": "^11.0.1",
     "nodemon": "^3.1.9",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^4.1.4"
   }
 }

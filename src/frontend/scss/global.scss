@@ -19,10 +19,28 @@
 body{
   //margin-left: 16px;
   //margin-right: 16px;
-  background: var(--background);
+  background: var(--theme-colorBgBase, var(--background));
   margin: auto;
   overflow: auto;
   font-family: gf_Playfair_Display variant0;
+
+  .dynamic-content {
+    color: var(--theme-colorTextBase, inherit);
+    font-size: var(--theme-fontSize, var(--font-text));
+
+    .rich-text,
+    .plain-text,
+    .plain-image,
+    .gallery-container,
+    .carousel-container {
+      color: var(--theme-colorTextBase, inherit);
+    }
+    .plain-image img,
+    .gallery-container img,
+    .carousel-container img {
+      border-radius: var(--theme-borderRadius, 0);
+    }
+  }
   .logo{
     position: absolute;
     top: 10px;

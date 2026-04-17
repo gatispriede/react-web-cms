@@ -4,6 +4,7 @@ import {EItemType} from "../../../enums/EItemType";
 import {IItem} from "../../../Interfaces/IItem";
 import {TFunction} from "i18next";
 import {extractTranslationsFromHTML} from "../../../utils/translationsutils";
+import {sanitizeHtml} from "../../../utils/sanitize";
 
 export interface IRichText {
     value: string;
@@ -42,7 +43,8 @@ const RichText = ({item, t, tApp}: {
 
     useEffect(() => {
         if(contentRef.current){
-            contentRef.current.innerHTML = extractTranslationsFromHTML(richTextContent.data.value, tApp)
+            const translated = extractTranslationsFromHTML(richTextContent.data.value, tApp)
+            contentRef.current.innerHTML = sanitizeHtml(translated)
         }
     }, [contentRef, richTextContent.data.value, tApp]);
     return (

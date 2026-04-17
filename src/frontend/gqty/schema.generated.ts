@@ -173,6 +173,7 @@ export const generatedSchema = {
   IUser: {
     __typename: { __type: "String!" },
     avatar: { __type: "String" },
+    canPublishProduction: { __type: "Boolean" },
     email: { __type: "String!" },
     id: { __type: "String!" },
     name: { __type: "String" },
@@ -230,12 +231,24 @@ export const generatedSchema = {
     url: { __type: "String" },
     viewport: { __type: "String" },
   },
+  InUser: {
+    avatar: { __type: "String" },
+    canPublishProduction: { __type: "Boolean" },
+    email: { __type: "String" },
+    id: { __type: "String" },
+    name: { __type: "String" },
+    password: { __type: "String" },
+    role: { __type: "String" },
+  },
   MutationMongo: {
     __typename: { __type: "String!" },
     addUpdateLanguage: {
       __type: "String!",
       __args: { language: "InLanguage", translations: "JSON" },
     },
+    addUser: { __type: "String!", __args: { user: "InUser!" } },
+    updateUser: { __type: "String!", __args: { user: "InUser!" } },
+    removeUser: { __type: "String!", __args: { id: "String!" } },
     addUpdateNavigationItem: {
       __type: "String!",
       __args: { pageName: "String!", sections: "[String]" },
@@ -265,19 +278,27 @@ export const generatedSchema = {
       __type: "String!",
       __args: { page: "String!", sections: "[String]" },
     },
+    publishSnapshot: { __type: "String!" },
+    saveTheme: { __type: "String!", __args: { theme: "JSON!" } },
+    deleteTheme: { __type: "String!", __args: { id: "String!" } },
+    setActiveTheme: { __type: "String!", __args: { id: "String!" } },
   },
   QueryMongo: {
     __typename: { __type: "String!" },
-    createDatabase: { __type: "String!" },
     getImages: { __type: "[IImage!]!", __args: { tags: "String!" } },
     getLanguages: { __type: "[INewLanguage]" },
-    getLogo: { __type: "ILogo!" },
+    getLogo: { __type: "ILogo" },
     getMongoDBUri: { __type: "String" },
     getNavigationCollection: { __type: "[INavigation!]!" },
     getSections: { __type: "[ISection!]!", __args: { ids: "[String]" } },
     getUser: { __type: "IUser", __args: { email: "String" } },
+    getUsers: { __type: "[IUser!]!" },
     loadData: { __type: "[ILoadData!]!" },
     setupAdmin: { __type: "IUser" },
+    getPublishedSnapshot: { __type: "String" },
+    getPublishedMeta: { __type: "String" },
+    getThemes: { __type: "String!" },
+    getActiveTheme: { __type: "String" },
   },
   mutation: {
     __typename: { __type: "String!" },
@@ -372,6 +393,7 @@ export interface ISeo {
 export interface IUser {
   __typename?: "IUser";
   avatar?: Maybe<ScalarsEnums["String"]>;
+  canPublishProduction?: Maybe<ScalarsEnums["Boolean"]>;
   email: ScalarsEnums["String"];
   id: ScalarsEnums["String"];
   name?: Maybe<ScalarsEnums["String"]>;
@@ -418,22 +440,43 @@ export interface MutationMongo {
     page: ScalarsEnums["String"];
     sections?: Maybe<Array<Maybe<ScalarsEnums["String"]>>>;
   }) => ScalarsEnums["String"];
+  addUser: (args: { user: InUser }) => ScalarsEnums["String"];
+  updateUser: (args: { user: InUser }) => ScalarsEnums["String"];
+  removeUser: (args: { id: ScalarsEnums["String"] }) => ScalarsEnums["String"];
+  publishSnapshot: ScalarsEnums["String"];
+  saveTheme: (args: { theme: unknown }) => ScalarsEnums["String"];
+  deleteTheme: (args: { id: ScalarsEnums["String"] }) => ScalarsEnums["String"];
+  setActiveTheme: (args: { id: ScalarsEnums["String"] }) => ScalarsEnums["String"];
+}
+
+export interface InUser {
+  avatar?: Maybe<ScalarsEnums["String"]>;
+  canPublishProduction?: Maybe<ScalarsEnums["Boolean"]>;
+  email?: Maybe<ScalarsEnums["String"]>;
+  id?: Maybe<ScalarsEnums["String"]>;
+  name?: Maybe<ScalarsEnums["String"]>;
+  password?: Maybe<ScalarsEnums["String"]>;
+  role?: Maybe<ScalarsEnums["String"]>;
 }
 
 export interface QueryMongo {
   __typename?: "QueryMongo";
-  createDatabase: ScalarsEnums["String"];
   getImages: (args: { tags: ScalarsEnums["String"] }) => Array<IImage>;
   getLanguages?: Maybe<Array<Maybe<INewLanguage>>>;
-  getLogo: ILogo;
+  getLogo?: Maybe<ILogo>;
   getMongoDBUri?: Maybe<ScalarsEnums["String"]>;
   getNavigationCollection: Array<INavigation>;
   getSections: (args?: {
     ids?: Maybe<Array<Maybe<ScalarsEnums["String"]>>>;
   }) => Array<ISection>;
   getUser: (args?: { email?: Maybe<ScalarsEnums["String"]> }) => Maybe<IUser>;
+  getUsers: Array<IUser>;
   loadData: Array<ILoadData>;
   setupAdmin?: Maybe<IUser>;
+  getPublishedSnapshot?: Maybe<ScalarsEnums["String"]>;
+  getPublishedMeta?: Maybe<ScalarsEnums["String"]>;
+  getThemes: ScalarsEnums["String"];
+  getActiveTheme?: Maybe<ScalarsEnums["String"]>;
 }
 
 export interface Mutation {

@@ -3,7 +3,11 @@ import {resolve} from "../gqty";
 import {ConfigProvider, Dropdown, MenuProps, Space, Spin, Tabs, Typography} from 'antd';
 import DynamicTabsContent from "../components/DynamicTabsContent";
 import {IPage} from "../../Interfaces/IPage";
-import theme from '../theme/themeConfig';
+import staticTheme from '../theme/themeConfig';
+import {buildThemeConfig} from '../theme/buildThemeConfig';
+import {applyThemeCssVars} from '../theme/applyThemeCssVars';
+import ThemeApi from '../api/ThemeApi';
+import type {ThemeConfig} from 'antd';
 import {IMongo} from "../../Interfaces/IMongo";
 import MongoApi from '../api/MongoApi';
 import {ISection} from "../../Interfaces/ISection";
@@ -15,12 +19,14 @@ import {serverSideTranslations} from "next-i18next/serverSideTranslations";
 import {i18n, TFunction} from "i18next";
 import {INavigation} from "../gqty/schema.generated";
 import {sanitizeKey} from "../../utils/stringFunctions";
+import PublishApi from "../api/PublishApi";
 
 interface IHomeState {
     loading: boolean,
     activeTab: string,
     pages: IPage[],
-    tabProps: any[]
+    tabProps: any[],
+    themeConfig?: ThemeConfig,
 }
 
 interface IHomeProps {
@@ -33,6 +39,9 @@ interface IHomeProps {
 class App extends React.Component<IHomeProps> {
     sections: any[] = []
     private MongoApi = new MongoApi()
+    private PublishApi = new PublishApi()
+    private ThemeApi = new ThemeApi()
+    private snapshotSectionsByPage: Record<string, ISection[]> = {}
     loadSections: any
     getNavigationListCache: any
     page: string
@@ -54,6 +63,8 @@ class App extends React.Component<IHomeProps> {
     }
 
     async getSectionData(pages: IPage[], id: number): Promise<ISection[]> {
+        const cached = this.snapshotSectionsByPage[pages[id].page];
+        if (cached) return cached;
         return await this.loadSections(pages[id].page, pages)
     }
 
@@ -109,7 +120,24 @@ class App extends React.Component<IHomeProps> {
             this.setState({loading: true})
         }
         let pages: IPage[];
-        pages = await this.getNavigationList()
+        const snapshot = await this.PublishApi.getSnapshot();
+        if (snapshot && snapshot.navigation?.length) {
+            pages = snapshot.navigation.map((n: any) => ({
+                page: n.page,
+                seo: n.seo,
+                sections: n.sections,
+            }));
+            this.snapshotSectionsByPage = {};
+            for (const nav of snapshot.navigation) {
+                const ids: string[] = nav.sections ?? [];
+                const pageSections = ids
+                    .map((id) => snapshot.sections.find((s: any) => s.id === id))
+                    .filter(Boolean) as ISection[];
+                this.snapshotSectionsByPage[nav.page] = pageSections;
+            }
+        } else {
+            pages = await this.getNavigationList()
+        }
         // @ts-ignore
         if (cacheDataSource) {
             // @ts-ignore
@@ -156,6 +184,11 @@ class App extends React.Component<IHomeProps> {
         }
 
         this.languages = await this.MongoApi.getLanguages()
+        const activeTheme = await this.ThemeApi.getActive();
+        if (activeTheme?.tokens) {
+            applyThemeCssVars(activeTheme.tokens);
+            newState.themeConfig = buildThemeConfig(activeTheme.tokens);
+        }
 
         newState.pages = pages
         newState.loading = false;
@@ -233,7 +266,7 @@ class App extends React.Component<IHomeProps> {
                         <meta property="og:locale" content={seo.locale} key="locale"/>
                     }
                 </Head>
-                <ConfigProvider theme={theme}>
+                <ConfigProvider theme={this.state.themeConfig ?? staticTheme}>
                     <Spin spinning={this.state.loading}>
                         <Logo t={this.props.t} admin={false}/>
                         <Tabs onChange={(value) => {

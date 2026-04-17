@@ -6,4 +6,14 @@
   --font-title: 24px;
   --font-header: 16px;
   --font-text: 14px;
+
+  --theme-colorPrimary: var(--primary);
+  --theme-colorBgBase: var(--background);
+  --theme-colorTextBase: var(--primary);
+  --theme-colorSuccess: #52c41a;
+  --theme-colorWarning: #faad14;
+  --theme-colorError: #ff4d4f;
+  --theme-colorInfo: #1677ff;
+  --theme-borderRadius: 6px;
+  --theme-fontSize: 16px;
 }

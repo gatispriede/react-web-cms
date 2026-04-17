@@ -20,13 +20,24 @@ const UserStatusBar = ({session, settings, t, tApp}: {
                 <div className={'container'}>
                     <p>{`${t("User")}: ${session?.user?.name} `}</p>
                 </div>
-                {
-                    settings ?
-                        <Button type={"link"} href={`/${lang}/admin`}>{t("Admin")}</Button>
-                        :
-                        <Button type={"link"} href={`/${lang}/admin/settings`}>{t("Settings")}</Button>
-                }
-                <Button type={"link"} target={'_blank'} href={`/${lang}`}>{t("Preview")}</Button>
+                <Button
+                    type={settings ? "link" : "primary"}
+                    href={`/${lang}/admin`}
+                >
+                    {t("App building")}
+                </Button>
+                <Button
+                    type={settings ? "primary" : "link"}
+                    href={`/${lang}/admin/settings`}
+                >
+                    {t("Site settings")}
+                </Button>
+                <Button type={"link"} onClick={(e) => {
+                    e.preventDefault();
+                    if (typeof window !== 'undefined') {
+                        window.open(`/${lang}`, '_blank', 'noopener,noreferrer');
+                    }
+                }}>{t("Preview")}</Button>
                 <Button type={"link"} href={'#'} onClick={() => signOut()}>{t("Sign out")}</Button>
             </div>
             {
