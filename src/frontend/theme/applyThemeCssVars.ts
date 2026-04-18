@@ -13,6 +13,7 @@ const CSS_VAR_MAP: Array<[keyof IThemeTokens, string[]]> = [
 const NUM_VAR_MAP: Array<[keyof IThemeTokens, string, string]> = [
     ['borderRadius', '--theme-borderRadius', 'px'],
     ['fontSize', '--theme-fontSize', 'px'],
+    ['contentPadding', '--theme-contentPadding', 'px'],
 ];
 
 export function applyThemeCssVars(tokens: IThemeTokens | null | undefined): void {

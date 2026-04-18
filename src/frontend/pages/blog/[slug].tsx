@@ -27,7 +27,7 @@ interface Props {
 const BlogPost = ({post, themeTokens, footer, pages, hasPosts}: Props) => {
     const {t} = useTranslation('common');
     const ref = useRef<HTMLDivElement | null>(null);
-    if (typeof window !== 'undefined' && themeTokens) applyThemeCssVars(themeTokens);
+    useEffect(() => { if (themeTokens) applyThemeCssVars(themeTokens); }, [themeTokens]);
     const themeConfig = themeTokens ? buildThemeConfig(themeTokens) : staticTheme;
 
     useEffect(() => {
@@ -65,7 +65,7 @@ const BlogPost = ({post, themeTokens, footer, pages, hasPosts}: Props) => {
                 <Typography.Title level={1} style={{marginTop: 20}}>{post.title}</Typography.Title>
                 <Space size={12} style={{marginBottom: 16}}>
                     <Typography.Text type="secondary">
-                        {post.publishedAt ? new Date(post.publishedAt).toLocaleDateString() : ''}
+                        {post.publishedAt ? post.publishedAt.slice(0, 10) : ''}
                         {post.author ? ` · ${post.author}` : ''}
                     </Typography.Text>
                     {post.tags.length > 0 && (

@@ -5,7 +5,7 @@ import {EItemType} from "../../../enums/EItemType";
 import {IItem} from "../../../Interfaces/IItem";
 import ContentManager from "../ContentManager";
 import {TFunction} from "i18next";
-import {sanitizeKey} from "../../../utils/stringFunctions";
+import {translateOrKeep} from "../../../utils/translateOrKeep";
 
 export interface IProjectLink {
     url: string;
@@ -50,7 +50,7 @@ const ProjectCard = ({item, tApp}: {
     tApp: TFunction<string, undefined>;
 }) => {
     const c = new ProjectCardContent(EItemType.ProjectCard, item.content).data;
-    const tr = (v: string) => v ? tApp(sanitizeKey(v)) : '';
+    const tr = (v: string) => translateOrKeep(tApp, v);
     return (
         <Card
             className={`project-card ${item.style ?? ''}`}

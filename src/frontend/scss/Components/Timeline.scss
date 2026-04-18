@@ -1,0 +1,49 @@
+// Timeline module — public render only.
+
+.timeline {
+  position: relative;
+  padding-left: 24px;
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: 8px; top: 0; bottom: 0; width: 2px;
+    background: var(--theme-colorPrimary);
+    opacity: .25;
+  }
+
+  &__entry {
+    position: relative;
+    padding: 0 0 32px 20px;
+
+    &::before {
+      content: "";
+      position: absolute;
+      left: -20px; top: 6px;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--theme-colorPrimary);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--theme-colorPrimary, #1677ff) 15%, transparent);
+    }
+  }
+
+  &__when {
+    font-size: .82rem;
+    opacity: .65;
+    margin-bottom: 3px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  &__who {
+    font-weight: 600;
+    font-size: 1.15rem;
+    line-height: 1.2;
+  }
+  &__role {
+    font-size: .95rem;
+    opacity: .78;
+    margin-bottom: 10px;
+  }
+  &__achievements { margin: 6px 0 0; padding-left: 18px; }
+  &__achievements li { margin-bottom: 4px; line-height: 1.55; }
+}

@@ -16,6 +16,7 @@ const PRESETS: Omit<ITheme, 'id'>[] = [
             colorInfo: '#1677ff',
             borderRadius: 6,
             fontSize: 16,
+            contentPadding: 24,
         },
     },
     {
@@ -31,6 +32,7 @@ const PRESETS: Omit<ITheme, 'id'>[] = [
             colorInfo: '#1677ff',
             borderRadius: 8,
             fontSize: 16,
+            contentPadding: 24,
         },
     },
     {
@@ -46,6 +48,7 @@ const PRESETS: Omit<ITheme, 'id'>[] = [
             colorInfo: '#389e0d',
             borderRadius: 4,
             fontSize: 16,
+            contentPadding: 24,
         },
     },
     {
@@ -61,6 +64,7 @@ const PRESETS: Omit<ITheme, 'id'>[] = [
             colorInfo: '#177ddc',
             borderRadius: 8,
             fontSize: 16,
+            contentPadding: 28,
         },
     },
 ];

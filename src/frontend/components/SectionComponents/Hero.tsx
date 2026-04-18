@@ -3,7 +3,7 @@ import {EItemType} from "../../../enums/EItemType";
 import {IItem} from "../../../Interfaces/IItem";
 import ContentManager from "../ContentManager";
 import {TFunction} from "i18next";
-import {sanitizeKey} from "../../../utils/stringFunctions";
+import {translateOrKeep} from "../../../utils/translateOrKeep";
 import RevealOnScroll from "../common/RevealOnScroll";
 
 export interface IHero {
@@ -33,15 +33,16 @@ const Hero = ({item, tApp}: {
     tApp: TFunction<string, undefined>;
 }) => {
     const c = new HeroContent(EItemType.Hero, item.content).data;
-    const tr = (v: string) => v ? tApp(sanitizeKey(v)) : '';
+    const tr = (v: string) => translateOrKeep(tApp, v);
     const style: React.CSSProperties = {
         backgroundImage: c.bgImage ? `linear-gradient(180deg, rgba(0,0,0,.0) 0%, rgba(0,0,0,.35) 100%), url(${c.bgImage})` : undefined,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         borderLeft: c.accent ? `4px solid ${c.accent}` : undefined,
     };
+    const fullbleed = !!c.bgImage;
     return (
-        <div className={`hero ${item.style ?? ''}`} style={style}>
+        <div className={`hero ${item.style ?? ''}${fullbleed ? ' is-fullbleed' : ''}`} style={style}>
             {c.headline && (
                 <RevealOnScroll as="h1" className="hero__headline">
                     <span style={{color: c.accent || undefined}}>{tr(c.headline)}</span>

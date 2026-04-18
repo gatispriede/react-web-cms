@@ -3,7 +3,7 @@ import {EItemType} from "../../../enums/EItemType";
 import {IItem} from "../../../Interfaces/IItem";
 import ContentManager from "../ContentManager";
 import {TFunction} from "i18next";
-import {sanitizeKey} from "../../../utils/stringFunctions";
+import {translateOrKeep} from "../../../utils/translateOrKeep";
 
 export interface IPlainTextContent {
     value: string;
@@ -41,7 +41,7 @@ const PlainText = ({item, t, tApp}: {
     const plainTextContent = new PlainTextContent(EItemType.Text, item.content);
     return (
         <div className={`plain-text ${item.style}`}>
-            <p>{tApp(sanitizeKey(plainTextContent.data.value))}</p>
+            <p>{translateOrKeep(tApp, plainTextContent.data.value)}</p>
         </div>
     )
 }

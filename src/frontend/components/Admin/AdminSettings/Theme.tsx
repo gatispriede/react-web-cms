@@ -27,6 +27,7 @@ const BLANK_TOKENS: IThemeTokens = {
     colorInfo: '#1677ff',
     borderRadius: 6,
     fontSize: 16,
+    contentPadding: 24,
 };
 
 const toHex = (v: any): string => (typeof v === 'string' ? v : v?.toHexString?.() ?? '');
@@ -148,6 +149,16 @@ const ThemeEditor: React.FC<{
                                 max={24}
                                 value={draft.tokens.fontSize}
                                 onChange={v => setToken('fontSize', Number(v) || 16)}
+                            />
+                        </Form.Item>
+                    </Col>
+                    <Col xs={12} md={8}>
+                        <Form.Item label={t('Content padding (px)')} style={{marginBottom: 8}} tooltip={t('Site-wide horizontal padding. Full-bleed modules (hero with bg, image-as-background) break out.')}>
+                            <InputNumber
+                                min={0}
+                                max={96}
+                                value={draft.tokens.contentPadding}
+                                onChange={v => setToken('contentPadding', Number(v) || 24)}
                             />
                         </Form.Item>
                     </Col>

@@ -74,7 +74,7 @@ const BlogFeed = ({item}: {
                                     description={
                                         <Space direction="vertical" size={4} style={{width: '100%'}}>
                                             <span style={{fontSize: '.85em', opacity: .65}}>
-                                                {p.publishedAt ? new Date(p.publishedAt).toLocaleDateString() : ''}
+                                                {p.publishedAt ? p.publishedAt.slice(0, 10) : ''}
                                             </span>
                                             {p.excerpt && <span>{p.excerpt}</span>}
                                             {p.tags.length > 0 && (

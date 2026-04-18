@@ -9,12 +9,23 @@
 @use "Admin/AdminPlainImage";
 @use "Admin/Login";
 
+// Cross-cutting primitives
+@use "Common/Reveal";
+@use "Common/SiteFooter";
+
+// Per-module public renderers (one file per item type)
 @use "Components/PlainImage";
 @use "Components/PlainText";
 @use "Components/RichText";
 @use "Components/Gallery";
 @use "Components/Carousel";
-@use "Components/Reveal";
+@use "Components/Hero";
+@use "Components/ProjectCard";
+@use "Components/SkillPills";
+@use "Components/Timeline";
+@use "Components/SocialLinks";
+@use "Components/BlogFeed";
+
 @use 'app';
 
 body{
@@ -28,6 +39,25 @@ body{
   .dynamic-content {
     color: var(--theme-colorTextBase, inherit);
     font-size: var(--theme-fontSize, var(--font-text));
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-inline: var(--theme-contentPadding, 24px);
+
+    // Per-section vertical rhythm — designer-pass breathing room
+    > * + * {
+      margin-top: 56px;
+    }
+
+    // Sections wrap each DynamicTabsContent item
+    .section {
+      padding-inline: 0; // content already has padding-inline via .dynamic-content
+    }
+
+    // Full-bleed opt-out: break out of the padded container.
+    // Components add `.is-fullbleed` on their root when they want the whole viewport width.
+    .is-fullbleed {
+      margin-inline: calc(-1 * var(--theme-contentPadding, 24px));
+    }
 
     .rich-text,
     .plain-text,
@@ -36,6 +66,8 @@ body{
     .carousel-container {
       color: var(--theme-colorTextBase, inherit);
     }
+    .rich-text { line-height: 1.7; }
+    .plain-text { line-height: 1.6; }
     .plain-image img,
     .gallery-container img,
     .carousel-container img {

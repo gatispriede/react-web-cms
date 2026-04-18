@@ -3,7 +3,7 @@ import {EItemType} from "../../../enums/EItemType";
 import {IItem} from "../../../Interfaces/IItem";
 import ContentManager from "../ContentManager";
 import {TFunction} from "i18next";
-import {sanitizeKey} from "../../../utils/stringFunctions";
+import {translateOrKeep} from "../../../utils/translateOrKeep";
 import RevealOnScroll from "../common/RevealOnScroll";
 import {GithubOutlined, LinkedinOutlined, MailOutlined, PhoneOutlined, TwitterOutlined, GlobalOutlined, YoutubeOutlined} from "@ant-design/icons";
 
@@ -59,7 +59,7 @@ const SocialLinks = ({item, tApp}: {
     tApp: TFunction<string, undefined>;
 }) => {
     const c = new SocialLinksContent(EItemType.SocialLinks, item.content).data;
-    const tr = (v: string) => v ? tApp(sanitizeKey(v)) : '';
+    const tr = (v: string) => translateOrKeep(tApp, v);
     return (
         <RevealOnScroll className={`social-links ${item.style ?? ''}`}>
             {c.links.map((link, i) => {

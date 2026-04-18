@@ -17,7 +17,7 @@ const options = {
 
 app.prepare().then(() => {
     https.createServer(options, async (req, res) => {
-        const parsedUrl = parse(req.url, true);
+        const parsedUrl = parse(req.url ?? '/', true);
         await handle(req, res, parsedUrl);
     }).listen(port, ():void => {
         console.log(`> Ready on https://localhost:${port}`)

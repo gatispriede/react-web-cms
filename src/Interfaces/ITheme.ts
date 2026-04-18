@@ -8,6 +8,8 @@ export interface IThemeTokens {
     colorInfo?: string;
     borderRadius?: number;
     fontSize?: number;
+    /** Site-wide content padding in px, applied to every section except full-bleed modules. */
+    contentPadding?: number;
     [key: string]: string | number | undefined;
 }
 

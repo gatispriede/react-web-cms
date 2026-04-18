@@ -4,7 +4,7 @@ import {EItemType} from "../../../enums/EItemType";
 import {IItem} from "../../../Interfaces/IItem";
 import ContentManager from "../ContentManager";
 import {TFunction} from "i18next";
-import {sanitizeKey} from "../../../utils/stringFunctions";
+import {translateOrKeep} from "../../../utils/translateOrKeep";
 import RevealOnScroll from "../common/RevealOnScroll";
 
 export interface ISkillPills {
@@ -35,7 +35,7 @@ const SkillPills = ({item, tApp}: {
     tApp: TFunction<string, undefined>;
 }) => {
     const c = new SkillPillsContent(EItemType.SkillPills, item.content).data;
-    const tr = (v: string) => v ? tApp(sanitizeKey(v)) : '';
+    const tr = (v: string) => translateOrKeep(tApp, v);
     return (
         <RevealOnScroll className={`skill-pills ${item.style ?? ''}`}>
             {c.category && <div className="skill-pills__category">{tr(c.category)}</div>}

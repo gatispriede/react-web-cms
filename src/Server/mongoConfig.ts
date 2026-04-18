@@ -28,16 +28,29 @@ export interface ILoadData {
 
 const server = process.env.NODE_SERVER_PORT ? 'mongodb' : 'localhost';
 
+/**
+ * All sensitive defaults now come from environment variables.
+ * Fall back to empty strings so a missing env var fails loudly on first DB call
+ * rather than silently using a real stolen credential committed to history.
+ *
+ * Required env in production:
+ *   MONGODB_URI              full connection string (overrides local/cluster below)
+ *   ADMIN_DEFAULT_PASSWORD   seed password for the admin user on first boot
+ * Optional:
+ *   MONGODB_USER             legacy Atlas user (for mongoDBClusterUrl path)
+ *   MONGODB_PASSWORD         legacy Atlas password
+ *   MONGODB_CLUSTER_URL      legacy Atlas cluster hostname
+ */
 export const defaultSettings: ISettings = {
-    apiKey: '',
-    DB: 'MAIN-DB',
+    apiKey: process.env.CMS_API_KEY ?? '',
+    DB: process.env.MONGODB_DB ?? 'MAIN-DB',
     username: 'Admin',
-    password: 'b[ua25cJW2PF',
+    password: process.env.ADMIN_DEFAULT_PASSWORD ?? '',
     mongodb: 'Cluster',
-    mongodbUser: 'admin',
-    mongodbPassword: 'AMd011wAQNN3eWwP',
-    mongoDBClusterUrl: 'cluster.0fmyz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster',
-    mongoDBLocalUrl: `mongodb://${server}:27017`,
+    mongodbUser: process.env.MONGODB_USER ?? '',
+    mongodbPassword: process.env.MONGODB_PASSWORD ?? '',
+    mongoDBClusterUrl: process.env.MONGODB_CLUSTER_URL ?? '',
+    mongoDBLocalUrl: process.env.MONGODB_URI ?? `mongodb://${server}:27017`,
     mongoDBDatabaseUrl: ''
 };
 

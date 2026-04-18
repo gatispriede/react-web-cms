@@ -1,0 +1,15 @@
+// BlogFeed module — public render only. Grid of post cards.
+
+.blog-feed {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+
+  .blog-card {
+    transition: transform 300ms ease, box-shadow 300ms ease;
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(0,0,0,.1);
+    }
+  }
+}

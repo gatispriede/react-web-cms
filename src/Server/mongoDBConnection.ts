@@ -33,10 +33,12 @@ import {
 class MongoDBConnection implements IMongoDBConnection, IUserService {
     private static adminSeeded = false;
     private _settings: ISettings = defaultSettings
-    private _adminName = 'Admin'
-    private _adminPassword = 'b[ua25cJW2PF'
-    private _adminPasswordHash = '$2b$10$M57z68x.otaoDBIgn3J16OXnaISuGLBca6dFsH2RB3ggr6OUBzDJ2'
-    private _hashSaltRounds = 10
+    private _adminName = process.env.ADMIN_USERNAME ?? 'Admin'
+    /** Plain-text seed password — only used once to hash for the first-run admin user. */
+    private _adminPassword = process.env.ADMIN_DEFAULT_PASSWORD ?? ''
+    /** Pre-computed bcrypt hash — set ADMIN_PASSWORD_HASH to skip the hashing step on seed. */
+    private _adminPasswordHash = process.env.ADMIN_PASSWORD_HASH ?? ''
+    private _hashSaltRounds = Number(process.env.BCRYPT_ROUNDS) || 10
 
     private client!: MongoClient;
     private db: Db | undefined;

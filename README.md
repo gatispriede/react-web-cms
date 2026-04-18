@@ -1,46 +1,96 @@
-# Getting Started with Create React App
+# CMS (Next.js + MongoDB + GraphQL)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A self-hosted content-management system powering a developer portfolio.
+Admin-authored pages composed of registry-driven section blocks
+(Hero / ProjectCard / SkillPills / Timeline / SocialLinks / BlogFeed +
+Text / RichText / Image / Gallery / Carousel). Full SSG via Next.js
+`getStaticProps` + `getStaticPaths` — production pages are pre-rendered
+HTML; `next dev` keeps the workflow dynamic.
 
-## Available Scripts
+## Stack
 
-In the project directory, you can run:
+- Next.js 15 (pages router, Turbopack in dev), React 19, TypeScript 5
+- Ant Design v5 + custom SCSS + reveal-on-scroll animations
+- GraphQL via Apollo Server (Next API route) **or** standalone Express
+  ([src/Server/index.ts](src/Server/index.ts)) — same schema, same singleton
+- MongoDB 7 — `Navigation`, `Sections`, `Users`, `Languages`, `Themes`,
+  `SiteSettings`, `PublishedSnapshots`, `Posts`, `Images`, `Logos`
+- NextAuth (Credentials + optional Google), JWT sessions carrying
+  `role` + `canPublishProduction`
+- next-i18next — table-based translation editor with missing-key filter
+- Vitest + `mongodb-memory-server` baseline tests
 
-### `npm start`
+## Quickstart (local dev)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+```bash
+# 1. Install deps
+yarn --frozen-lockfile
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+# 2. Copy env template and fill values
+cp .env.example .env.local
+# At minimum: NEXTAUTH_SECRET, MONGODB_URI, ADMIN_DEFAULT_PASSWORD
 
-### `npm test`
+# 3. Start MongoDB locally (one of)
+docker compose up -d mongodb
+# or: systemctl start mongod
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+# 4. Run the Next dev server
+npm run dev            # → http://localhost/admin
 
-### `npm run build`
+# 5. Sign in to the admin
+#    email: admin@admin.com
+#    password: whatever you set as ADMIN_DEFAULT_PASSWORD
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Edit content, toggle themes, publish snapshots — all at
+`http://localhost/admin`. The public site lives at `http://localhost/lv`.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Building for production
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+See [DEPLOY.md](DEPLOY.md) for the full DigitalOcean flow. The short version:
 
-### `npm run eject`
+```bash
+# On your laptop, with the standalone GraphQL server running on :3000
+npm run build              # SSG: bakes current Mongo content into HTML
+./Scripts/deploy.sh        # rsync .next + public → droplet, pm2 reload
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+`next build` produces real static HTML for every navigation page and blog
+post. ISR (`revalidate: 60`) regenerates individual pages in the background
+when admin edits land.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Project docs
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+| Doc | What's in it |
+|---|---|
+| [PROJECT_ANALYSIS.md](PROJECT_ANALYSIS.md) | Architecture, data model, runtime topology |
+| [ROADMAP.md](ROADMAP.md) | Feature log + queued work |
+| [THEMING.md](THEMING.md) | The admin-chrome / module-output theming boundary |
+| [DEPLOY.md](DEPLOY.md) | DigitalOcean droplet setup end-to-end |
+| `secrets.md` (gitignored) | Droplet IPs, DB passwords, API tokens |
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+## Tests
 
-## Learn More
+```bash
+npm test                   # all
+npm run test:watch
+npm run test:coverage
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+27 passing tests covering content schemas, sanitizer, authorization proxy,
+theme token normalization, and UserService integration (in-memory Mongo).
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Scripts summary
+
+| Script | Purpose |
+|---|---|
+| `npm run dev` | Next dev on port 80 (Turbopack) |
+| `npm run standalone-graphql` | Standalone GraphQL server on port 80 |
+| `npm run build` | Production build (SSG + sitemap) |
+| `npm start` | Production serve of `.next/` |
+| `npm run generate-schema` | Regenerate the GQty client |
+| `./Scripts/deploy.sh` | Local build + rsync + remote reload |
+
+## License
+
+Personal project — reach out before using commercially.

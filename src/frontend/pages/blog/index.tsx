@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {GetStaticProps} from 'next';
 import {gqlFetch} from '../../lib/gqlFetch';
 import Link from 'next/link';
@@ -24,7 +24,7 @@ interface Props {
 
 const BlogIndex = ({posts, themeTokens, footer, pages}: Props) => {
     const {t} = useTranslation('common');
-    if (typeof window !== 'undefined' && themeTokens) applyThemeCssVars(themeTokens);
+    useEffect(() => { if (themeTokens) applyThemeCssVars(themeTokens); }, [themeTokens]);
     const themeConfig = themeTokens ? buildThemeConfig(themeTokens) : staticTheme;
 
     return (
@@ -51,7 +51,7 @@ const BlogIndex = ({posts, themeTokens, footer, pages}: Props) => {
                                             description={
                                                 <Space direction="vertical" size={6} style={{width: '100%'}}>
                                                     <span style={{fontSize: '.85em', opacity: .65}}>
-                                                        {p.publishedAt ? new Date(p.publishedAt).toLocaleDateString() : ''}
+                                                        {p.publishedAt ? p.publishedAt.slice(0, 10) : ''}
                                                         {p.author ? ` · ${p.author}` : ''}
                                                     </span>
                                                     {p.excerpt && <span>{p.excerpt}</span>}

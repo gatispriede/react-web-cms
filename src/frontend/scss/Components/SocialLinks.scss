@@ -1,0 +1,28 @@
+// SocialLinks module — public render only.
+
+.social-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 8px 0;
+
+  &.large a { font-size: 1.25rem; padding: 10px 14px; }
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: var(--theme-borderRadius, 6px);
+    border: 1px solid rgba(0,0,0,.1);
+    text-decoration: none;
+    color: var(--theme-colorTextBase, inherit);
+    transition: background 200ms ease, transform 200ms ease;
+
+    &:hover {
+      background: var(--theme-colorPrimary);
+      color: #fff;
+      transform: translateY(-2px);
+    }
+  }
+}

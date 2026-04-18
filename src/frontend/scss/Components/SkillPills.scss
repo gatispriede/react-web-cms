@@ -1,0 +1,42 @@
+// SkillPills module — public render only.
+
+.skill-pills {
+  padding: 8px 0;
+
+  &__category {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0 0 10px;
+    color: var(--theme-colorTextBase);
+    opacity: .72;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  &__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    .ant-tag {
+      transition: transform 180ms ease, background 180ms ease;
+      &:hover { transform: translateY(-2px); }
+    }
+  }
+
+  // style=compact → auto-scrolling marquee (studio-style logo row)
+  &.compact {
+    overflow: hidden;
+    .skill-pills__list {
+      flex-wrap: nowrap;
+      animation: skill-marquee 30s linear infinite;
+      width: max-content;
+    }
+    .skill-pills__list:hover { animation-play-state: paused; }
+  }
+}
+
+@keyframes skill-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}

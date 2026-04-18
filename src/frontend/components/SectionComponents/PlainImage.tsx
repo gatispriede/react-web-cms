@@ -131,7 +131,7 @@ const PlainImage = ({item, t: _t, tApp}: {
             {
                 plainImage.data.useAsBackground
                     ?
-                    <div className={`background-image ${plainImage.data.imageFixed && 'fixed'}`} style={{
+                    <div className={`background-image is-fullbleed ${plainImage.data.imageFixed && 'fixed'}`} style={{
                         marginTop: `${plainImage.data.offsetX}px`,
                         backgroundImage: backgroundProperty,
                         backgroundSize: plainImage.data.imgWidth,

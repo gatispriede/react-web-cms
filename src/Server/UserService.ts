@@ -33,11 +33,21 @@ export class UserService implements IUserService {
                 }
                 return existing;
             }
+            // Decide which password hash to store on the freshly-seeded admin.
+            // Precedence: ADMIN_PASSWORD_HASH (pre-computed) > hash(ADMIN_DEFAULT_PASSWORD) > abort.
+            let passwordHash = this._adminPasswordHash;
+            if (!passwordHash && this._adminPassword) {
+                passwordHash = await hash(this._adminPassword, this._hashSaltRounds);
+            }
+            if (!passwordHash) {
+                console.warn('[setupAdmin] skipped: neither ADMIN_PASSWORD_HASH nor ADMIN_DEFAULT_PASSWORD is set in env. Set one and restart to seed the admin user.');
+                return undefined;
+            }
             const newAdmin: IUser = {
                 id: guid(),
                 name: this._adminName,
-                email: 'admin@admin.com',
-                password: this._adminPasswordHash,
+                email: process.env.ADMIN_EMAIL ?? 'admin@admin.com',
+                password: passwordHash,
                 role: 'admin',
             } as IUser;
             await this.usersDB.insertOne(newAdmin as any);
