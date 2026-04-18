@@ -5,6 +5,7 @@ import {ISection} from "../Interfaces/ISection";
 import {InSection} from "../Interfaces/IMongo";
 import {INavigationService} from "./mongoConfig";
 import {validateSectionInput} from "../utils/contentSchemas";
+import {auditStamp} from "./audit";
 
 export class NavigationService implements INavigationService{
     private navigationDB: Collection;
@@ -28,11 +29,21 @@ export class NavigationService implements INavigationService{
         }
     }
 
-    async updateNavigation(page: string, sections: string[]): Promise<string> {
+    async updateNavigation(page: string, sections: string[], editedBy?: string): Promise<string> {
         try {
+            // Filter on the canonical shape so we only touch navigation docs,
+            // and `$setOnInsert` backfills `id`/`type`/`seo` when upsert
+            // creates a new doc — preventing malformed rows with only
+            // `{page, sections}` that other queries miss.
+            // Mongo forbids `$setOnInsert` on fields already in the filter
+            // (it infers them from the query), so `type` + `page` come from
+            // the filter itself; we only need to backfill `id` / `seo` on insert.
             await this.navigationDB.updateOne(
-                { page },
-                { $set: { sections } },
+                { type: 'navigation', page },
+                {
+                    $set: { sections, ...auditStamp(editedBy) },
+                    $setOnInsert: { id: guid(), seo: {} },
+                },
                 { upsert: true }
             );
             return 'success';
@@ -45,7 +56,12 @@ export class NavigationService implements INavigationService{
 
     async getNavigationCollection(): Promise<INavigation[]> {
         try {
-            const docs = await this.navigationDB.find({}).toArray();
+            // Filter to canonical-shape nav docs only. Earlier versions of
+            // `updateNavigation` could upsert bare `{page, sections}` rows
+            // (no `type` field) that survive in the DB forever. If they leak
+            // into this list, the admin renders duplicate pages and stale
+            // orders "reset" on reload from the ghost row.
+            const docs = await this.navigationDB.find({type: 'navigation'}).toArray();
             return docs.map(doc => doc as unknown as INavigation);
         } catch (err) {
             console.error('Error getting navigation collection:', err);
@@ -65,14 +81,16 @@ export class NavigationService implements INavigationService{
         }
     }
 
-    async addUpdateSectionItem(item: { section: InSection, pageName?: string }): Promise<string> {
+    async addUpdateSectionItem(item: { section: InSection, pageName?: string, editedBy?: string }): Promise<string> {
         try {
             const check = validateSectionInput(item.section);
             if (!check.valid) {
                 return JSON.stringify({error: `Invalid section: ${check.error}`});
             }
+            const now = new Date().toISOString();
+            const audit = {editedAt: now, ...(item.editedBy ? {editedBy: item.editedBy} : {})};
             if (!item.section.id) {
-                const newSection = {...item.section, id: guid()};
+                const newSection = {...item.section, id: guid(), ...audit};
                 await this.sectionsDB.insertOne(newSection);
                 if (item.pageName) {
                     const nav = await this.navigationDB.findOne({type: 'navigation', page: item.pageName});
@@ -81,7 +99,7 @@ export class NavigationService implements INavigationService{
                         sections.push(newSection.id);
                         await this.navigationDB.updateOne(
                             {type: 'navigation', page: item.pageName},
-                            {$set: {sections}}
+                            {$set: {sections, ...audit}}
                         );
                     }
                 }
@@ -89,7 +107,7 @@ export class NavigationService implements INavigationService{
             }
             await this.sectionsDB.updateOne(
                 {id: item.section.id},
-                {$set: item.section}
+                {$set: {...item.section, ...audit}}
             );
             return JSON.stringify({updateSection: {id: item.section.id}});
         } catch (err) {
@@ -114,8 +132,9 @@ export class NavigationService implements INavigationService{
         }
     }
 
-    async replaceUpdateNavigation(oldPageName: string, navigation: INavigation): Promise<string> {
+    async replaceUpdateNavigation(oldPageName: string, navigation: INavigation, editedBy?: string): Promise<string> {
         try {
+            const audit = auditStamp(editedBy);
             const result: { navigation: any, sections: any } = {navigation: undefined, sections: undefined};
             if (oldPageName !== navigation.page) {
                 result.sections = await this.navigationDB.updateMany(
@@ -125,7 +144,7 @@ export class NavigationService implements INavigationService{
             }
             result.navigation = await this.navigationDB.findOneAndUpdate(
                 {type: 'navigation', id: navigation.id},
-                {$set: navigation}
+                {$set: {...navigation, ...audit}}
             );
             return JSON.stringify(result);
         } catch (err) {
@@ -135,14 +154,23 @@ export class NavigationService implements INavigationService{
         }
     }
 
-    async deleteNavigationItem(pageName: string): Promise<string> {
+    async deleteNavigationItem(pageName: string, deletedBy?: string): Promise<string> {
         try {
             const existing = await this.navigationDB.findOne({type: 'navigation', page: pageName});
             if (!existing) {
                 return 'no navigation found for page:' + pageName;
             }
+            // Cascade — a nav doc owns its referenced sections. Without this,
+            // every `delete page` leaves the Sections collection full of
+            // orphan rows that still appear in exports and snapshots.
+            const sectionIds = Array.isArray((existing as any).sections) ? (existing as any).sections as string[] : [];
+            let sectionsDeleted = 0;
+            if (sectionIds.length > 0) {
+                const sectionResult = await this.sectionsDB.deleteMany({id: {$in: sectionIds}});
+                sectionsDeleted = sectionResult.deletedCount ?? 0;
+            }
             const result = await this.navigationDB.deleteOne({type: 'navigation', page: pageName});
-            return JSON.stringify(result);
+            return JSON.stringify({navigationDeleted: result.deletedCount ?? 0, sectionsDeleted, deletedBy});
         } catch (err) {
             console.error('Error deleting navigation:', err);
             await this.setupClient();
@@ -150,21 +178,23 @@ export class NavigationService implements INavigationService{
         }
     }
 
-    async addUpdateNavigationItem(pageName: string, sections?: string[]): Promise<string> {
+    async addUpdateNavigationItem(pageName: string, sections?: string[], editedBy?: string): Promise<string> {
         try {
+            const audit = auditStamp(editedBy);
             const existing = await this.navigationDB.findOne({type: 'navigation', page: pageName});
             if (!existing) {
-                const navigationItem: INavigation = {
+                const navigationItem: INavigation & {editedAt?: string; editedBy?: string} = {
                     id: guid(),
                     type: 'navigation',
                     page: pageName,
                     seo: {},
-                    sections: sections ?? []
+                    sections: sections ?? [],
+                    ...audit,
                 };
                 const result = await this.navigationDB.insertOne(navigationItem);
                 return JSON.stringify(result);
             }
-            const update: Partial<INavigation> = sections ? {sections} : {};
+            const update: any = sections ? {sections, ...audit} : audit;
             const result = await this.navigationDB.findOneAndUpdate(
                 {type: 'navigation', page: pageName},
                 {$set: update}

@@ -1,21 +1,19 @@
+import DOMPurify from 'isomorphic-dompurify';
+
 /**
- * Conservative HTML sanitizer — enough to defang the obvious XSS vectors
- * before setting innerHTML. Swap for DOMPurify once the dep is added.
- *
- * Strips:
- *  - <script>, <style>, <iframe>, <object>, <embed>, <link>, <meta> elements
- *  - inline event handlers (on*="…")
- *  - javascript:/data:/vbscript: URLs in href/src/xlink:href
+ * HTML sanitizer — strips script/style/iframe/etc., event handlers, and
+ * javascript:/data:/vbscript: URLs. Runs on both server and client via
+ * isomorphic-dompurify. Called before innerHTML in RichText and anywhere
+ * authored HTML reaches the DOM.
  */
+const ALLOWED_URL_SCHEMES = /^(?:https?:|mailto:|tel:|#|\/)/i;
+
 export function sanitizeHtml(raw: string): string {
     if (typeof raw !== 'string' || !raw) return '';
-
-    const DANGEROUS_TAGS = /<\/?(script|style|iframe|object|embed|link|meta|svg|math|base|form)\b[^>]*>/gi;
-    const EVENT_HANDLERS = /\s+on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi;
-    const DANGEROUS_URLS = /\s+(href|src|xlink:href|action|formaction)\s*=\s*(?:"\s*(?:javascript|data|vbscript):[^"]*"|'\s*(?:javascript|data|vbscript):[^']*'|(?:javascript|data|vbscript):[^\s>]+)/gi;
-
-    return raw
-        .replace(DANGEROUS_TAGS, '')
-        .replace(EVENT_HANDLERS, '')
-        .replace(DANGEROUS_URLS, '');
+    return DOMPurify.sanitize(raw, {
+        FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed', 'link', 'meta', 'base', 'form'],
+        FORBID_ATTR: ['srcdoc', 'formaction'],
+        ALLOWED_URI_REGEXP: ALLOWED_URL_SCHEMES,
+        USE_PROFILES: {html: true},
+    });
 }

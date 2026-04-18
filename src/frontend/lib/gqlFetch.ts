@@ -50,8 +50,9 @@ export interface InitialPageData {
     posts: IPost[];
     footer: IFooterConfig;
     blogEnabled: boolean;
+    layoutMode: 'tabs' | 'scroll';
     themeTokens: IThemeTokens | null;
-    languages: Array<{label: string; symbol: string; default?: boolean}>;
+    languages: Array<{label: string; symbol: string; default?: boolean; flag?: string}>;
 }
 
 const EMPTY_INITIAL: InitialPageData = {
@@ -60,6 +61,7 @@ const EMPTY_INITIAL: InitialPageData = {
     posts: [],
     footer: {...DEFAULT_FOOTER},
     blogEnabled: true,
+    layoutMode: 'tabs',
     themeTokens: null,
     languages: [],
 };
@@ -73,7 +75,7 @@ const NAV_AND_META_QUERY = `{
         published_time modified_time author locale
       }
     }
-    getLanguages { label symbol default }
+    getLanguages { label symbol default flag }
     getFooter
     getSiteFlags
     getActiveTheme
@@ -122,7 +124,12 @@ export async function fetchInitialPageData(): Promise<InitialPageData> {
     try { if (nav.mongo.getFooter) footer = JSON.parse(nav.mongo.getFooter); } catch {}
 
     let blogEnabled = true;
-    try { blogEnabled = JSON.parse(nav.mongo.getSiteFlags || '{}').blogEnabled !== false; } catch {}
+    let layoutMode: 'tabs' | 'scroll' = 'tabs';
+    try {
+        const flags = JSON.parse(nav.mongo.getSiteFlags || '{}');
+        blogEnabled = flags.blogEnabled !== false;
+        layoutMode = flags.layoutMode === 'scroll' ? 'scroll' : 'tabs';
+    } catch {}
 
     let themeTokens: IThemeTokens | null = null;
     try {
@@ -138,6 +145,7 @@ export async function fetchInitialPageData(): Promise<InitialPageData> {
         posts,
         footer,
         blogEnabled,
+        layoutMode,
         themeTokens,
         languages: nav.mongo.getLanguages ?? [],
     };

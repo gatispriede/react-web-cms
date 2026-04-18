@@ -48,12 +48,19 @@ const queryFetcher: QueryFetcher = async function (
 const cache = new Cache(
   undefined,
   /**
-   * Default option is immediate cache expiry but keep it for 5 minutes,
-   * allowing soft refetches in background.
+   * Admin mutations (delete section, reorder, update content) don't tell GQty
+   * which queries to invalidate — arrays of ID strings inside `INavigation`
+   * aren't covered by the normalization graph. With any nonzero maxAge we
+   * serve stale navigation right after a delete and the "deleted row pops
+   * back on refresh" bug reappears.
+   *
+   * maxAge: 0 + staleWhileRevalidate: 0 = always fetch fresh. The admin UI
+   * is low-traffic so the extra round-trips are fine; the public site goes
+   * through SSG (`gqlFetch.ts`), not this client.
    */
   {
-    maxAge: 5 * 60 * 1000,
-    staleWhileRevalidate: 5 * 60 * 1000,
+    maxAge: 0,
+    staleWhileRevalidate: 0,
     normalization: true,
   }
 );
@@ -66,6 +73,20 @@ export const client = createClient<GeneratedSchema>({
     fetcher: queryFetcher,
   },
 });
+
+/**
+ * Clear all cached query data. Call after any destructive mutation
+ * (create / update / delete / reorder) so the next read returns live
+ * server state. `maxAge: 0` alone isn't enough if HMR or React scheduling
+ * replays an in-flight result; an explicit clear removes the ambiguity.
+ */
+export function invalidateCache(): void {
+  try {
+    cache.clear();
+  } catch (err) {
+    console.warn('[gqty] cache.clear() failed:', err);
+  }
+}
 
 // Core functions
 export const { resolve, subscribe, schema } = client;

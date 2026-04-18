@@ -35,6 +35,7 @@ interface IHomeState {
     footer: IFooterConfig,
     hasPosts: boolean,
     blogEnabled: boolean,
+    layoutMode: 'tabs' | 'scroll',
 }
 
 interface IHomeProps {
@@ -65,6 +66,7 @@ class App extends React.Component<IHomeProps> {
         footer: {...DEFAULT_FOOTER},
         hasPosts: false,
         blogEnabled: true,
+        layoutMode: 'tabs',
     }
     private languages: any;
 
@@ -86,6 +88,21 @@ class App extends React.Component<IHomeProps> {
     componentDidMount() {
         if (this.props.initialData?.themeTokens) {
             applyThemeCssVars(this.props.initialData.themeTokens);
+        }
+        // SSG initialData can go stale against Mongo (language flag saved via
+        // admin after build). Always top up `languages` from live on mount so
+        // the dropdown trigger picks up flags without a rebuild.
+        if (this.props.initialData) {
+            void (async () => {
+                try {
+                    const fresh = await this.MongoApi.getLanguages();
+                    const arr = Array.isArray(fresh) ? fresh : Object.values(fresh ?? {});
+                    if (arr.length > 0) {
+                        this.languages = arr;
+                        this.forceUpdate();
+                    }
+                } catch { /* noop */ }
+            })();
         }
     }
 
@@ -124,6 +141,7 @@ class App extends React.Component<IHomeProps> {
             footer: data.footer ?? {...DEFAULT_FOOTER},
             hasPosts: (data.posts?.length ?? 0) > 0,
             blogEnabled: data.blogEnabled !== false,
+            layoutMode: (data as any).layoutMode === 'scroll' ? 'scroll' : 'tabs',
             themeConfig: data.themeTokens ? buildThemeConfig(data.themeTokens) : undefined,
         };
     }
@@ -178,6 +196,7 @@ class App extends React.Component<IHomeProps> {
             pages: this.state.tabProps,
             tabProps: this.state.tabProps,
             activeTab: this.state.activeTab,
+            layoutMode: this.state.layoutMode,
             footer: this.state.footer,
             hasPosts: this.state.hasPosts,
             blogEnabled: this.state.blogEnabled,
@@ -261,6 +280,7 @@ class App extends React.Component<IHomeProps> {
         newState.footer = footer;
         newState.hasPosts = postCount > 0;
         newState.blogEnabled = flags.blogEnabled !== false;
+        newState.layoutMode = (flags as any).layoutMode === 'scroll' ? 'scroll' : 'tabs';
         const activeTheme = await this.ThemeApi.getActive();
         if (activeTheme?.tokens) {
             applyThemeCssVars(activeTheme.tokens);
@@ -300,16 +320,29 @@ class App extends React.Component<IHomeProps> {
     render() {
         const activeKey = this.findIdForActiveTab()
         const seo = this.state.tabProps[activeKey] ? this.state.tabProps[activeKey].seo : undefined;
-        let items: MenuProps['items'] = [];
-        if (this.languages) {
-            const keys = Object.keys(this.languages)
-            let currentUrl = this.props.pathname
-
-            items = keys.map((key) => ({
-                label: <a href={`/${this.languages[key].symbol}${currentUrl}`}>{this.languages[key].label}</a>,
-                key: key
-            }))
-        }
+        // `languages` comes in as an array from initialData and a dict from the
+        // draft/SSR paths. Normalise to the array shape here so we can safely
+        // build the dropdown and look up the active locale's label.
+        const languageArray: Array<{label: string; symbol: string; default?: boolean; flag?: string}> =
+            Array.isArray(this.languages)
+                ? this.languages
+                : this.languages
+                    ? Object.values(this.languages as Record<string, any>)
+                    : [];
+        const activeLang = languageArray.find(l => l.symbol === this.props.i18n.language);
+        const currentUrl = this.props.pathname;
+        const items: MenuProps['items'] = languageArray.map(l => ({
+            label: (
+                <a href={`/${l.symbol}${currentUrl}`} style={{display: 'inline-flex', alignItems: 'center', gap: 8}}>
+                    {l.flag
+                        ? <span className="lang-glyph" aria-hidden>{l.flag}</span>
+                        : <span className="lang-glyph lang-glyph--symbol">{l.symbol.toUpperCase()}</span>
+                    }
+                    <span className="lang-label">{l.label}</span>
+                </a>
+            ),
+            key: l.symbol,
+        }));
         return (
             <PostsProvider value={this.props.initialData?.posts ?? null}>
             <div>
@@ -346,28 +379,84 @@ class App extends React.Component<IHomeProps> {
                 </Head>
                 <ConfigProvider theme={this.state.themeConfig ?? staticTheme}>
                     <Spin spinning={this.state.loading}>
-                        <Logo t={this.props.t} admin={false}/>
-                        <Tabs onChange={(value) => {
-                            this.setState({activeTab: value})
-                        }} activeKey={"" + activeKey} defaultActiveKey={"0"} items={this.state.tabProps}/>
-                        {items.length > 1 && this.languages && this.languages[this.props.i18n.language] && <div style={{
-                            position: "absolute",
-                            top: 10,
-                            right: 20,
-                        }}>
-                            <Dropdown
-                                className={'language-dropdown'}
-                                menu={{
-                                    items
-                                }}>
-                                <Typography.Link>
-                                    <Space>
-                                        {this.languages[this.props.i18n.language].label}
-                                    </Space>
-                                </Typography.Link>
-                            </Dropdown>
-                        </div>
-                        }
+                        {this.state.layoutMode === 'scroll' ? (
+                            // Single-page scroll mode — stack every page as a
+                            // `<section id="<slug>">` so hash-links work.
+                            <>
+                                <header className="site-tabs" style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px'}}>
+                                    <Logo t={this.props.t} admin={false}/>
+                                    <nav aria-label="Site navigation" style={{display: 'flex', gap: 12}}>
+                                        {this.state.tabProps.map(tp => (
+                                            <a
+                                                key={tp.key}
+                                                href={`#${tp.page.replace(/\s+/g, '-').toLowerCase()}`}
+                                                className="scroll-nav-link"
+                                                style={{textTransform: 'uppercase', textDecoration: 'none'}}
+                                            >
+                                                {this.props.t(sanitizeKey(tp.page))}
+                                            </a>
+                                        ))}
+                                    </nav>
+                                    {items.length > 1 && (
+                                        <Dropdown className="language-dropdown" menu={{items}}>
+                                            <Typography.Link>
+                                                <Space size={6}>
+                                                    {activeLang?.flag
+                                                        ? <span className="lang-glyph" aria-hidden>{activeLang.flag}</span>
+                                                        : <span className="lang-glyph lang-glyph--symbol">
+                                                            {(activeLang?.symbol ?? this.props.i18n.language).toUpperCase()}
+                                                          </span>
+                                                    }
+                                                    <span className="lang-label">
+                                                        {activeLang?.label ?? this.props.i18n.language}
+                                                    </span>
+                                                </Space>
+                                            </Typography.Link>
+                                        </Dropdown>
+                                    )}
+                                </header>
+                                <main style={{scrollBehavior: 'smooth'}}>
+                                    {this.state.tabProps.map(tp => (
+                                        <section
+                                            key={tp.key}
+                                            id={tp.page.replace(/\s+/g, '-').toLowerCase()}
+                                            aria-label={tp.page}
+                                            style={{scrollMarginTop: 80}}
+                                        >
+                                            {tp.children}
+                                        </section>
+                                    ))}
+                                </main>
+                            </>
+                        ) : (
+                            <Tabs
+                                className="site-tabs"
+                                onChange={(value) => this.setState({activeTab: value})}
+                                activeKey={"" + activeKey}
+                                defaultActiveKey={"0"}
+                                items={this.state.tabProps}
+                                tabBarExtraContent={{
+                                    left: <Logo t={this.props.t} admin={false}/>,
+                                    right: items.length > 1 ? (
+                                        <Dropdown className="language-dropdown" menu={{items}}>
+                                            <Typography.Link>
+                                                <Space size={6}>
+                                                    {activeLang?.flag
+                                                        ? <span className="lang-glyph" aria-hidden>{activeLang.flag}</span>
+                                                        : <span className="lang-glyph lang-glyph--symbol">
+                                                            {(activeLang?.symbol ?? this.props.i18n.language).toUpperCase()}
+                                                        </span>
+                                                    }
+                                                    <span className="lang-label">
+                                                        {activeLang?.label ?? this.props.i18n.language}
+                                                    </span>
+                                                </Space>
+                                            </Typography.Link>
+                                        </Dropdown>
+                                    ) : null,
+                                }}
+                            />
+                        )}
                         <SiteFooter
                             config={this.state.footer}
                             pages={this.state.pages.map(p => ({page: p.page}))}

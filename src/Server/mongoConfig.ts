@@ -63,49 +63,49 @@ export interface IMongoDBConnection {
     removeUser({id}: { id: string }): Promise<string>;
     getUsers(): Promise<IUser[]>;
     getLanguages(): Promise<INewLanguage[] | string>;
-    addUpdateLanguage({language, translations}: { language: INewLanguage, translations: JSON }): Promise<string>;
-    deleteLanguage({language}: { language: INewLanguage }): Promise<string>;
+    addUpdateLanguage(input: { language: INewLanguage, translations: JSON, _session?: {email?: string} }): Promise<string>;
+    deleteLanguage(input: { language: INewLanguage, _session?: {email?: string} }): Promise<string>;
     getUser({email}: { email: string }): Promise<IUser | undefined>;
-    saveLogo({content}: { content: string }): Promise<string>;
+    saveLogo(input: { content: string, _session?: {email?: string} }): Promise<string>;
     getLogo(): Promise<ILogo | undefined>;
     deleteImage({id}: { id: string }): Promise<string>;
     saveImage({image}: { image: InImage }): Promise<string>;
     getImages({tags}: { tags: string }): Promise<IImage[]>;
     loadData(): Promise<ILoadData[]>;
-    updateNavigation({page, sections}: { page: string, sections: string[] }): Promise<string>;
+    updateNavigation(input: { page: string, sections: string[], _session?: {email?: string} }): Promise<string>;
     createNavigation({navigation}: { navigation: INavigation }): Promise<string>;
-    replaceUpdateNavigation({oldPageName, navigation}: { oldPageName: string, navigation: INavigation }): Promise<string>;
+    replaceUpdateNavigation(input: { oldPageName: string, navigation: INavigation, _session?: {email?: string} }): Promise<string>;
     getNavigationCollection(): Promise<INavigation[]>;
     getSections({ids}: { ids: string[] }): Promise<ISection[]>;
-    removeSectionItem({id}: { id: string }): Promise<string>;
-    addUpdateSectionItem({section, pageName}: { section: ISection, pageName?: string }): Promise<string>;
-    deleteNavigationItem({pageName}: { pageName: string }): Promise<string>;
-    addUpdateNavigationItem({pageName, sections}: { pageName: string, sections?: string[] }): Promise<string>;
+    removeSectionItem(input: { id: string, _session?: {email?: string} }): Promise<string>;
+    addUpdateSectionItem(input: { section: ISection, pageName?: string, _session?: {email?: string} }): Promise<string>;
+    deleteNavigationItem(input: { pageName: string, _session?: {email?: string} }): Promise<string>;
+    addUpdateNavigationItem(input: { pageName: string, sections?: string[], _session?: {email?: string} }): Promise<string>;
     getMongoDBUri(): string;
 }
 
 export interface INavigationService {
     createNavigation(newNavigation: INavigation): Promise<string>;
-    updateNavigation(page: string, sections: string[]): Promise<string>;
+    updateNavigation(page: string, sections: string[], editedBy?: string): Promise<string>;
     getNavigationCollection(): Promise<INavigation[]>;
     getSections(sectionIds: string[]): Promise<ISection[]>;
-    addUpdateSectionItem(item: { section: InSection, pageName?: string }): Promise<string>;
+    addUpdateSectionItem(item: { section: InSection, pageName?: string, editedBy?: string }): Promise<string>;
     removeSectionItem(sectionId: string): Promise<string>;
-    replaceUpdateNavigation(oldPageName: string, navigation: INavigation): Promise<string>;
-    deleteNavigationItem(pageName: string): Promise<string>;
-    addUpdateNavigationItem(pageName: string, sections?: string[]): Promise<string>;
+    replaceUpdateNavigation(oldPageName: string, navigation: INavigation, editedBy?: string): Promise<string>;
+    deleteNavigationItem(pageName: string, deletedBy?: string): Promise<string>;
+    addUpdateNavigationItem(pageName: string, sections?: string[], editedBy?: string): Promise<string>;
 }
 export interface IAssetService {
     getLogo(): Promise<ILogo | undefined>;
-    saveLogo(content: string): Promise<string>;
+    saveLogo(content: string, editedBy?: string): Promise<string>;
     saveImage(image: InImage): Promise<string>;
     deleteImage(id: string): Promise<string>;
     getImages(tags: string): Promise<IImage[]>;
 }
 export interface ILanguageService {
     getLanguages(): Promise<INewLanguage[]>;
-    addUpdateLanguage(input: { language: INewLanguage, translations: JSON }): Promise<string>;
-    deleteLanguage(input: { language: INewLanguage }): Promise<string>;
+    addUpdateLanguage(input: { language: INewLanguage, translations: JSON, editedBy?: string }): Promise<string>;
+    deleteLanguage(input: { language: INewLanguage, deletedBy?: string }): Promise<string>;
 }
 export interface IUserService {
     setupAdmin(): Promise<IUser | undefined>;

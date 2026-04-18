@@ -1,5 +1,7 @@
 import type {NextApiRequest, NextApiResponse} from 'next';
 import {requireRole} from './_authHelpers';
+import {requireSameOrigin} from './_origin';
+import {clientIp, rateLimit} from './_rateLimit';
 import {getMongoConnection} from '../../../Server/mongoDBConnection';
 
 export const config = {
@@ -14,6 +16,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method !== 'POST') {
         res.setHeader('Allow', 'POST');
         return res.status(405).json({error: 'Method not allowed'});
+    }
+
+    if (!requireSameOrigin(req, res)) return;
+
+    const rl = rateLimit(`import:${clientIp(req)}`, 3, 60_000);
+    if (!rl.ok) {
+        res.setHeader('Retry-After', Math.ceil(rl.retryAfterMs / 1000));
+        return res.status(429).json({error: 'Too many import attempts, slow down'});
     }
 
     const auth = await requireRole(req, res, 'admin');

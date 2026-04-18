@@ -9,9 +9,15 @@ import {IPlainImage} from "../SectionComponents/PlainImage";
 import {IPlainTextContent} from "../SectionComponents/PlainText";
 import {ICarousel} from "../SectionComponents/CarouselView";
 import {IRichText} from "../SectionComponents/RichText";
+import {IHero} from "../SectionComponents/Hero";
+import {IProjectCard} from "../SectionComponents/ProjectCard";
+import {ISkillPills} from "../SectionComponents/SkillPills";
+import {ITimeline} from "../SectionComponents/Timeline";
+import {ISocialLinks} from "../SectionComponents/SocialLinks";
+import {IBlogFeed} from "../SectionComponents/BlogFeed";
 import {sanitizeKey} from "../../../utils/stringFunctions";
 import {INewLanguage} from "../interfaces/INewLanguage";
-import {convertFromHTML} from "draft-js";
+import {htmlToBlocks} from "../../../utils/htmlBlocks";
 
 class TranslationManager {
     MongoApi: MongoApi;
@@ -121,7 +127,6 @@ class TranslationManager {
     }
 
     extractActionContentTranslations(type: any, content: any) {
-        let tmp, parsed;
         switch (type) {
             case EItemType.Text:
                 if (content.value && content.value.length > 0) {
@@ -129,18 +134,14 @@ class TranslationManager {
                 }
                 break;
             case EItemType.RichText:
-                tmp = convertFromHTML((content as IRichText).value)
-                parsed = JSON.parse(JSON.stringify(tmp))
-                parsed.contentBlocks.map((item: { text: any | string | string[]; }) => {
-                    return this.defaultTranslations[this.contentTranslationKey + sanitizeKey(item.text)] = item.text
-                })
+                for (const block of htmlToBlocks((content as IRichText).value)) {
+                    this.defaultTranslations[this.contentTranslationKey + sanitizeKey(block.text)] = block.text
+                }
                 break;
             case EItemType.Image:
-                tmp = convertFromHTML((content as IPlainImage).description)
-                parsed = JSON.parse(JSON.stringify(tmp))
-                parsed.contentBlocks.map((item: { text: any | string | string[]; }) => {
-                    return this.defaultTranslations[this.contentTranslationKey + sanitizeKey(item.text)] = item.text
-                })
+                for (const block of htmlToBlocks((content as IPlainImage).description)) {
+                    this.defaultTranslations[this.contentTranslationKey + sanitizeKey(block.text)] = block.text
+                }
                 break;
             case EItemType.Carousel:
                 if (content.items.length > 0) {
@@ -187,11 +188,9 @@ class TranslationManager {
                     case EItemType.RichText:
                         try {
                             const contentParsed: IRichText = JSON.parse(innerContent.content)
-                            const tmp = convertFromHTML(contentParsed.value)
-                            const parsed = JSON.parse(JSON.stringify(tmp))
-                            parsed.contentBlocks.map((item: { text: any | string | string[]; }) => {
-                                return this.defaultTranslations[sanitizeKey(item.text)] = item.text
-                            })
+                            for (const block of htmlToBlocks(contentParsed.value)) {
+                                this.defaultTranslations[sanitizeKey(block.text)] = block.text
+                            }
 
                             const actionContentParsed = innerContent.actionContent && JSON.parse(innerContent.actionContent)
                             if (innerContent.actionType && actionContentParsed)
@@ -203,12 +202,9 @@ class TranslationManager {
                     case EItemType.Image:
                         try {
                             const contentParsed: IPlainImage = JSON.parse(innerContent.content)
-
-                            const tmp = convertFromHTML(contentParsed.description)
-                            const parsed = JSON.parse(JSON.stringify(tmp))
-                            parsed.contentBlocks.map((item: { text: any | string | string[]; }) => {
-                                return this.defaultTranslations[sanitizeKey(item.text)] = item.text
-                            })
+                            for (const block of htmlToBlocks(contentParsed.description)) {
+                                this.defaultTranslations[sanitizeKey(block.text)] = block.text
+                            }
 
                             const actionContentParsed = innerContent.actionContent && JSON.parse(innerContent.actionContent)
                             if (innerContent.actionType && actionContentParsed)
@@ -250,6 +246,76 @@ class TranslationManager {
                                 this.extractActionContentTranslations(innerContent.actionType, actionContentParsed)
                         } catch (err) {
                             console.warn('Error while extracting translations for section', section.id, err)
+                        }
+                        break;
+                    case EItemType.Hero:
+                        try {
+                            const c: IHero = JSON.parse(innerContent.content);
+                            for (const v of [c.headline, c.subtitle, c.tagline]) {
+                                if (typeof v === 'string' && v) this.defaultTranslations[sanitizeKey(v)] = v;
+                            }
+                        } catch (err) {
+                            console.warn('Error while extracting translations for section', section.id, err);
+                        }
+                        break;
+                    case EItemType.ProjectCard:
+                        try {
+                            const c: IProjectCard = JSON.parse(innerContent.content);
+                            for (const v of [c.title, c.description]) {
+                                if (typeof v === 'string' && v) this.defaultTranslations[sanitizeKey(v)] = v;
+                            }
+                            for (const tag of c.tags ?? []) {
+                                if (typeof tag === 'string' && tag) this.defaultTranslations[sanitizeKey(tag)] = tag;
+                            }
+                            for (const link of [c.primaryLink, c.secondaryLink]) {
+                                if (link?.label) this.defaultTranslations[sanitizeKey(link.label)] = link.label;
+                            }
+                        } catch (err) {
+                            console.warn('Error while extracting translations for section', section.id, err);
+                        }
+                        break;
+                    case EItemType.SkillPills:
+                        try {
+                            const c: ISkillPills = JSON.parse(innerContent.content);
+                            if (c.category) this.defaultTranslations[sanitizeKey(c.category)] = c.category;
+                            for (const item of c.items ?? []) {
+                                if (typeof item === 'string' && item) this.defaultTranslations[sanitizeKey(item)] = item;
+                            }
+                        } catch (err) {
+                            console.warn('Error while extracting translations for section', section.id, err);
+                        }
+                        break;
+                    case EItemType.Timeline:
+                        try {
+                            const c: ITimeline = JSON.parse(innerContent.content);
+                            for (const e of c.entries ?? []) {
+                                for (const v of [e.start, e.end, e.company, e.role, e.location]) {
+                                    if (typeof v === 'string' && v) this.defaultTranslations[sanitizeKey(v)] = v;
+                                }
+                                for (const a of e.achievements ?? []) {
+                                    if (typeof a === 'string' && a) this.defaultTranslations[sanitizeKey(a)] = a;
+                                }
+                            }
+                        } catch (err) {
+                            console.warn('Error while extracting translations for section', section.id, err);
+                        }
+                        break;
+                    case EItemType.SocialLinks:
+                        try {
+                            const c: ISocialLinks = JSON.parse(innerContent.content);
+                            for (const link of c.links ?? []) {
+                                if (link?.label) this.defaultTranslations[sanitizeKey(link.label)] = link.label;
+                            }
+                        } catch (err) {
+                            console.warn('Error while extracting translations for section', section.id, err);
+                        }
+                        break;
+                    case EItemType.BlogFeed:
+                        try {
+                            const c: IBlogFeed = JSON.parse(innerContent.content);
+                            if (c.heading) this.defaultTranslations[sanitizeKey(c.heading)] = c.heading;
+                        } catch (err) {
+                            console.warn('Error while extracting translations for section', section.id, err);
                         }
                         break;
                     case EItemType.Empty:

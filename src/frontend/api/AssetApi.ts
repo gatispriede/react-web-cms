@@ -7,7 +7,11 @@ export class AssetApi {
         return await resolve(({query}) => {
             const logo = query.mongo.getLogo;
             if (!logo) return {type: '', content: '', id: ''};
-            return {type: logo.type, content: logo.content, id: logo.id};
+            return {
+                type: logo.type ?? undefined,
+                content: logo.content,
+                id: logo.id ?? undefined,
+            };
         });
     }
 

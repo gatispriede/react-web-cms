@@ -22,7 +22,9 @@ The site has two visually distinct surfaces:
 
 - `src/frontend/theme/themeConfig.ts` — static AntD tokens used by the admin. Never changes at runtime.
 - `src/frontend/theme/buildThemeConfig.ts` — converts a persisted `IThemeTokens` into an AntD `ThemeConfig`. Used only on the public surface.
-- `src/frontend/theme/applyThemeCssVars.ts` — sets `--theme-colorPrimary`, `--theme-colorBgBase`, `--theme-colorTextBase`, `--theme-colorSuccess/Warning/Error/Info`, `--theme-borderRadius`, `--theme-fontSize` on `document.documentElement`. Also `resetThemeCssVars()` to clear them.
+- `src/frontend/theme/applyThemeCssVars.ts` — client-side runtime setter for `--theme-*` custom properties on `document.documentElement`. Also `resetThemeCssVars()` to clear them.
+- `src/frontend/theme/themeCssVarsString.ts` — server-side equivalent that emits a `:root { … }` rule body. [_document.tsx](src/frontend/pages/_document.tsx) `getInitialProps` fetches the active theme from Mongo and injects the rule inside a single `<Head>` as `<style data-theme-vars>…</style>` so the **first paint** already has the theme tokens (no flash of default).
+- `src/frontend/api/ThemeApi.ts` — 30s in-memory cache on `getActive()`, invalidated on every theme mutation so changes still propagate immediately.
 - `src/frontend/scss/base-colors.scss` — declares `--theme-*` fallbacks so un-themed pages still render.
 - `src/frontend/scss/global.scss` — theme tokens only bind **inside `.dynamic-content`**; body background does pick up `--theme-colorBgBase` (low-risk; admin chrome sits on top of body).
 

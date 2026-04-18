@@ -10,15 +10,25 @@ HTML; `next dev` keeps the workflow dynamic.
 ## Stack
 
 - Next.js 15 (pages router, Turbopack in dev), React 19, TypeScript 5
-- Ant Design v5 + custom SCSS + reveal-on-scroll animations
-- GraphQL via Apollo Server (Next API route) **or** standalone Express
-  ([src/Server/index.ts](src/Server/index.ts)) — same schema, same singleton
+- Ant Design v5 + custom SCSS + reveal-on-scroll animations; CSS-vars
+  theming so modules follow the active theme while admin chrome stays static
+- GraphQL via Apollo Server (Next API route) **and** standalone Express
+  ([src/Server/index.ts](src/Server/index.ts)); shared resolver map in
+  [graphqlResolvers.ts](src/Server/graphqlResolvers.ts), standalone binds
+  127.0.0.1 by default
+- Method-level authz proxy ([authz.ts](src/Server/authz.ts)) with role gates,
+  capability predicates, and session-injection for audit stamping
 - MongoDB 7 — `Navigation`, `Sections`, `Users`, `Languages`, `Themes`,
-  `SiteSettings`, `PublishedSnapshots`, `Posts`, `Images`, `Logos`
+  `SiteSettings` (footer / flags / SEO / active theme), `PublishedSnapshots`,
+  `Posts`, `Images`, `Logos`
 - NextAuth (Credentials + optional Google), JWT sessions carrying
-  `role` + `canPublishProduction`
-- next-i18next — table-based translation editor with missing-key filter
-- Vitest + `mongodb-memory-server` baseline tests
+  `role` + `canPublishProduction`; bcrypt hashing, rate-limited sign-in
+- next-i18next — table-based translation editor + side-by-side compare view
+  with CSV export/import; merge-on-save preserves untouched keys, disk +
+  Mongo kept in sync
+- Public layout: classic tabs **or** single-page scroll (site flag)
+- Versioned publishing with rollback + per-snapshot audit trail
+- Vitest + `mongodb-memory-server` — 110 passing tests, CI on every PR
 
 ## Quickstart (local dev)
 
@@ -77,8 +87,15 @@ npm run test:watch
 npm run test:coverage
 ```
 
-27 passing tests covering content schemas, sanitizer, authorization proxy,
-theme token normalization, and UserService integration (in-memory Mongo).
+110 passing tests covering content schemas, DOMPurify sanitizer, authorization
+proxy (+ session injection), theme token normalization, per-service integration
+(UserService, ThemeService, PublishService, SiteSeoService, NavigationService,
+LanguageService, AssetService, BundleService round-trip + hostile fixture,
+FooterService, SiteFlagsService), translation extractor, CSV parser, autosave
+hook, and the `_origin` / `_rateLimit` API helpers.
+
+GitHub Actions runs typecheck + `npm test` on every PR — see
+[.github/workflows/ci.yml](.github/workflows/ci.yml).
 
 ## Scripts summary
 

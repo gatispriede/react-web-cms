@@ -1,4 +1,4 @@
-import {resolve} from "../gqty";
+import {resolve, invalidateCache} from "../gqty";
 import {IMongo, InSection, MutationMongo} from "../../Interfaces/IMongo";
 import {ISection} from "../../Interfaces/ISection";
 import {IItem} from "../../Interfaces/IItem";
@@ -14,6 +14,8 @@ export class SectionApi {
                 id: item.id,
                 type: item.type,
                 page: item.page,
+                editedBy: (item as any).editedBy,
+                editedAt: (item as any).editedAt,
                 content: item.content.map((c: IItem) => ({
                     name: c.name,
                     type: c.type,
@@ -31,8 +33,10 @@ export class SectionApi {
     async deleteSection(sectionId: string): Promise<string> {
         if (!sectionId) return '';
         try {
-            return await resolve(({mutation}) =>
+            const r = await resolve(({mutation}) =>
                 (mutation as MutationMongo).mongo.removeSectionItem({id: sectionId}));
+            invalidateCache();
+            return r;
         } catch (err) {
             console.error('Error deleting section:', err);
             return '';
@@ -42,6 +46,7 @@ export class SectionApi {
     async addSectionToPage(item: { section: InSection }, sections: ISection[]): Promise<ISection[]> {
         const result = await resolve(({mutation}) =>
             (mutation as MutationMongo).mongo.addUpdateSectionItem(item));
+        invalidateCache();
         try {
             const parsed = JSON.parse(result);
             if (parsed.createSection?.id) {
@@ -77,8 +82,10 @@ export class SectionApi {
         if (section.content) {
             section.content = section.content.map((it: IItem) => ({...it, style: it.style || 'default'}));
         }
-        return await resolve(({mutation}) =>
+        const r = await resolve(({mutation}) =>
             mutation.mongo.addUpdateSectionItem({section: section as InSection}));
+        invalidateCache();
+        return r;
     }
 }
 

@@ -23,33 +23,42 @@ export const ContentLoader = ({translationManager, currentLanguageKey, dataPromi
     use(dataPromise);
 
     const [translations] = useState<Record<string, string>>(translationManager.getTranslations());
-    const [newTranslations] = useState<Record<string, string>>({});
+    const [newTranslations, setNewTranslations] = useState<Record<string, string>>({});
     const [filter, setFilter] = useState('');
     const [missingOnly, setMissingOnly] = useState(false);
 
     const keys = useMemo(() => Object.keys(translations), [translations]);
 
-    const i18nConfig = i18n.toJSON();
-    keys.forEach(key => {
-        const languageData = i18nConfig?.store?.data?.[currentLanguageKey]?.app;
-        if (languageData) {
-            if (typeof languageData[key] !== 'undefined') {
-                newTranslations[key] = tApp(key);
-            } else if (typeof newTranslations[key] === 'undefined') {
-                newTranslations[key] = translations[key];
-            }
-        } else if (typeof newTranslations[key] === 'undefined') {
-            newTranslations[key] = key !== sanitizeKey(t(key)) ? tApp(key) : translations[key];
-        }
-    });
-
+    // Seed newTranslations from the i18next store **once per language**. The
+    // earlier version seeded during render, so every re-render (including the
+    // one triggered by the user's own keystroke) overwrote the edit with the
+    // stored value before the save payload could see it — giving the visible
+    // "save doesn't persist" bug.
     useEffect(() => {
-        setTranslation(newTranslations);
-    }, [currentLanguageKey, newTranslations, setTranslation]);
+        const i18nConfig = i18n.toJSON();
+        const languageData = i18nConfig?.store?.data?.[currentLanguageKey]?.app;
+        const seeded: Record<string, string> = {};
+        for (const key of keys) {
+            if (languageData && typeof languageData[key] !== 'undefined') {
+                seeded[key] = tApp(key);
+            } else {
+                seeded[key] = key !== sanitizeKey(t(key)) ? tApp(key) : translations[key];
+            }
+        }
+        setNewTranslations(seeded);
+        setTranslation(seeded);
+        // Intentional: we only reseed when language or key-set changes, never
+        // on in-flight edits. i18n object identity shifts between renders and
+        // would cause the overwrite we just fixed — keep it out of deps.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentLanguageKey, keys, translations]);
 
     const translationChange = (key: string, value: string) => {
-        newTranslations[key] = value;
-        setTranslation({...newTranslations});
+        setNewTranslations(prev => {
+            const next = {...prev, [key]: value};
+            setTranslation(next);
+            return next;
+        });
     };
 
     const rows: TranslationRow[] = useMemo(() => {
@@ -89,9 +98,11 @@ export const ContentLoader = ({translationManager, currentLanguageKey, dataPromi
             render: (_: unknown, row: TranslationRow) => (
                 <Space.Compact style={{width: '100%'}}>
                     <Input
-                        defaultValue={row.translation}
+                        // Controlled — drives off the state we also send to the
+                        // server, so there can't be DOM/state divergence.
+                        value={row.translation}
                         placeholder={row.source}
-                        onBlur={(e) => translationChange(row.key, e.target.value)}
+                        onChange={(e) => translationChange(row.key, e.target.value)}
                         status={row.missing ? 'warning' : undefined}
                     />
                     {row.missing && <Tag color="orange" style={{marginLeft: 8}}>missing</Tag>}

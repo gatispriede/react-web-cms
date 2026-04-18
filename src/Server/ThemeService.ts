@@ -1,6 +1,7 @@
 import {Collection, Db} from 'mongodb';
 import guid from '../helpers/guid';
 import {ITheme, IThemeTokens, InTheme} from '../Interfaces/ITheme';
+import {auditStamp} from './audit';
 
 const PRESETS: Omit<ITheme, 'id'>[] = [
     {
@@ -117,20 +118,22 @@ export class ThemeService {
         return found as unknown as ITheme | null;
     }
 
-    async setActive(id: string): Promise<{id: string}> {
+    async setActive(id: string, editedBy?: string): Promise<{id: string}> {
         const exists = await this.themes.findOne({id});
         if (!exists) throw new Error('theme not found');
+        const audit = auditStamp(editedBy);
         await this.settings.updateOne(
             {key: ACTIVE_KEY},
-            {$set: {key: ACTIVE_KEY, value: id}},
+            {$set: {key: ACTIVE_KEY, value: id, ...audit}},
             {upsert: true},
         );
         return {id};
     }
 
-    async saveTheme(theme: InTheme): Promise<{id: string}> {
+    async saveTheme(theme: InTheme, editedBy?: string): Promise<{id: string}> {
         if (!theme.name?.trim()) throw new Error('name is required');
         const tokens: IThemeTokens = theme.tokens ?? {};
+        const audit = auditStamp(editedBy);
         if (theme.id) {
             const existing = await this.themes.findOne({id: theme.id});
             if (!existing) throw new Error('theme not found');
@@ -139,7 +142,7 @@ export class ThemeService {
             }
             await this.themes.updateOne(
                 {id: theme.id},
-                {$set: {name: theme.name, tokens, custom: true}},
+                {$set: {name: theme.name, tokens, custom: true, ...audit}},
             );
             return {id: theme.id};
         }
@@ -149,11 +152,12 @@ export class ThemeService {
             name: theme.name,
             tokens,
             custom: theme.custom ?? true,
+            ...audit,
         } as any);
         return {id};
     }
 
-    async deleteTheme(id: string): Promise<{id: string}> {
+    async deleteTheme(id: string, deletedBy?: string): Promise<{id: string; deletedBy?: string}> {
         const existing = await this.themes.findOne({id});
         if (!existing) throw new Error('theme not found');
         if ((existing as any).custom === false) throw new Error('cannot delete a preset theme');
@@ -163,13 +167,13 @@ export class ThemeService {
             if (fallback) {
                 await this.settings.updateOne(
                     {key: ACTIVE_KEY},
-                    {$set: {value: (fallback as any).id}},
+                    {$set: {value: (fallback as any).id, ...auditStamp(deletedBy)}},
                 );
             } else {
                 await this.settings.deleteOne({key: ACTIVE_KEY});
             }
         }
         await this.themes.deleteOne({id});
-        return {id};
+        return {id, ...(deletedBy ? {deletedBy} : {})};
     }
 }

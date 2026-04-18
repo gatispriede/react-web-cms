@@ -4,6 +4,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { compare } from "bcrypt";
 import {NextAuthOptions, User} from "next-auth";
 import MongoApi from "../../../api/MongoApi";
+import {clientIp, rateLimit} from "../_rateLimit";
 
 const mongoApi = new MongoApi()
 
@@ -28,13 +29,20 @@ export const authOptions: NextAuthOptions = {
                 },
                 password: { label: "Password", type: "password" },
             },
-            async authorize(credentials) {
+            async authorize(credentials, req) {
                 if (!credentials) {
                     return null;
                 }
 
                 if (!credentials?.email || !credentials.password) {
                     return null
+                }
+
+                const ip = clientIp(req as any);
+                // 5 attempts per minute per IP — bcrypt.compare is CPU-bound, so this also blunts login DoS.
+                const rl = rateLimit(`signin:${ip}`, 5, 60_000);
+                if (!rl.ok) {
+                    throw new Error('Too many sign-in attempts, try again in a minute');
                 }
 
                 const user = await mongoApi.getUser({email: credentials.email})

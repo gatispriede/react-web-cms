@@ -168,8 +168,12 @@ export function validateItemContent(type: string | undefined, rawContent: unknow
     if (!type) return {valid: false, error: 'item.type is required'};
     const validator = VALIDATORS[type];
     if (!validator) return {valid: true}; // unknown custom types passthrough
+    // Empty items are placeholders — their content is ignored at render time,
+    // so accept whatever the client sends (""/null/{}/undefined).
+    if (type === EItemType.Empty) return {valid: true};
     let parsed: unknown = rawContent;
     if (isString(rawContent)) {
+        if (rawContent === '') return {valid: true};
         try {
             parsed = JSON.parse(rawContent);
         } catch {

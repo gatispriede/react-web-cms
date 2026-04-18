@@ -18,6 +18,7 @@ import {EditOutlined} from "@ant-design/icons";
 import {INavigation} from "../../../Interfaces/INavigation";
 import {TFunction} from "i18next";
 import {UserRole} from "../../../Interfaces/IUser";
+import AuditBadge from "./AuditBadge";
 
 type TargetKey = React.MouseEvent | React.KeyboardEvent | string;
 
@@ -173,7 +174,9 @@ class AdminApp extends React.Component<{
                         id: item.id,
                         type: item.type,
                         seo: itemSeo,
-                        sections: item.sections
+                        sections: item.sections,
+                        editedBy: (item as any).editedBy,
+                        editedAt: (item as any).editedAt,
                     })
                 })
                 return list
@@ -188,7 +191,7 @@ class AdminApp extends React.Component<{
                         key: id,
                         page: pages[id].page,
                         label:
-                            <div className={'navigation-container'}>
+                            <div className={'navigation-container'} style={{display: 'flex', alignItems: 'center', gap: 10}}>
                                 <EditWrapper t={this.props.t} edit={true} editContent={<div>
                                     <Button onClick={() => {
                                         const pageIndex: number = parseInt(id);
@@ -204,6 +207,13 @@ class AdminApp extends React.Component<{
                                 </div>} admin={this.admin}>
                                     {pages[id].page}
                                 </EditWrapper>
+                                {this.admin && (
+                                    <AuditBadge
+                                        compact
+                                        editedBy={(pages[id] as any).editedBy}
+                                        editedAt={(pages[id] as any).editedAt}
+                                    />
+                                )}
                             </div>,
                         children: (
                             <DynamicTabsContent

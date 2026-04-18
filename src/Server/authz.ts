@@ -39,6 +39,40 @@ export function assertRole(session: GraphqlSession, minimum: UserRole) {
 
 export type Capability = (session: GraphqlSession) => boolean | string;
 
+/**
+ * Methods listed here receive the caller's session (email) merged into their
+ * first argument as `_session`. Services read `args._session?.email` to stamp
+ * audit fields like `publishedBy`/`editedBy`. The underlying service methods
+ * keep their original signatures — the Proxy injects the session; standalone
+ * server callers (which don't have sessions) just don't pass `_session` and
+ * the services fall back to `undefined`.
+ */
+export const SESSION_INJECTED_METHODS: ReadonlySet<string> = new Set([
+    // Publish/rollback — stamps `publishedBy` on the snapshot doc.
+    'publishSnapshot',
+    'rollbackToSnapshot',
+    // Content edits — stamps `editedBy` + `editedAt` on the touched doc.
+    'addUpdateSectionItem',
+    'updateNavigation',
+    'replaceUpdateNavigation',
+    'addUpdateNavigationItem',
+    'deleteNavigationItem',
+    'removeSectionItem',
+    // Theme / Post / Site-settings editors.
+    'saveTheme',
+    'deleteTheme',
+    'setActiveTheme',
+    'savePost',
+    'deletePost',
+    'setPostPublished',
+    'saveFooter',
+    'saveSiteFlags',
+    'saveSiteSeo',
+    'saveLogo',
+    'addUpdateLanguage',
+    'deleteLanguage',
+]);
+
 export function guardMethods<T extends object>(
     target: T,
     session: GraphqlSession,
@@ -64,6 +98,10 @@ export function guardMethods<T extends object>(
                         throw new AuthzError(typeof result === 'string' ? result : `Forbidden: capability check failed for ${key}`);
                     };
                 }
+            }
+            if (SESSION_INJECTED_METHODS.has(key)) {
+                const bound = value.bind(obj);
+                return (args: any = {}) => bound({...args, _session: session});
             }
             return value.bind(obj);
         },
@@ -101,6 +139,7 @@ export const MUTATION_REQUIREMENTS: Record<string, UserRole> = {
     setPostPublished: 'editor',
     saveFooter: 'editor',
     saveSiteFlags: 'admin',
+    saveSiteSeo: 'editor',
 };
 
 export const QUERY_REQUIREMENTS: Record<string, UserRole> = {

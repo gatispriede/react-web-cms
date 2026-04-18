@@ -17,6 +17,17 @@ describe('validateItemContent', () => {
         expect(validateItemContent(EItemType.Text, '{not-json').valid).toBe(false);
     });
 
+    it('accepts Empty items with any content (placeholder semantics)', () => {
+        expect(validateItemContent(EItemType.Empty, '').valid).toBe(true);
+        expect(validateItemContent(EItemType.Empty, '{}').valid).toBe(true);
+        expect(validateItemContent(EItemType.Empty, null).valid).toBe(true);
+        expect(validateItemContent(EItemType.Empty, undefined).valid).toBe(true);
+    });
+
+    it('accepts empty-string content for non-Empty items (treated as blank)', () => {
+        expect(validateItemContent(EItemType.Text, '').valid).toBe(true);
+    });
+
     it('rejects oversized RichText', () => {
         const huge = 'x'.repeat(200_001);
         const result = validateItemContent(EItemType.RichText, JSON.stringify({value: huge}));

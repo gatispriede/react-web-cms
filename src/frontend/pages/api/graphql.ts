@@ -1,48 +1,48 @@
 import {readFileSync} from "node:fs";
 import { ApolloServer } from "apollo-server-micro";
 import Cors from "micro-cors";
-import {getMongoConnection} from "../../../Server/mongoDBConnection";
-import {guardMethods, MUTATION_REQUIREMENTS, MUTATION_CAPABILITIES, QUERY_REQUIREMENTS, sessionFromReq, GraphqlSession} from "../../../Server/authz";
+// @ts-expect-error — no type defs published; value is `(depth: number) => ValidationRule`
+import depthLimit from "graphql-depth-limit";
+import {sessionFromReq} from "../../../Server/authz";
+import {nextResolvers as resolvers} from "../../../Server/graphqlResolvers";
 import { MicroRequest } from "apollo-server-micro/dist/types";
 import { ServerResponse, IncomingMessage } from "http";
-// import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
 
 const typeDefs = readFileSync('src/Server/schema.graphql', {encoding: 'utf-8'});
-const resolvers = {
-    Query: {
-        sample: () => "sample",
-        mongo: (_: unknown, __: unknown, ctx: {session: GraphqlSession}) =>
-            guardMethods(getMongoConnection(), ctx.session, QUERY_REQUIREMENTS),
-    },
-    Mutation: {
-        mongo: (_: unknown, __: unknown, ctx: {session: GraphqlSession}) =>
-            guardMethods(getMongoConnection(), ctx.session, MUTATION_REQUIREMENTS, MUTATION_CAPABILITIES),
-    }
-
-};
 
 export const config = {
     api: {
         bodyParser: false,
     },
 };
+
+/** Hard cap on incoming GraphQL request body — protects against multi-MB DoS payloads. */
+const MAX_GRAPHQL_BODY_BYTES = 1 * 1024 * 1024; // 1 MB
+
 const cors = Cors();
 const apolloServer = new ApolloServer({
-    // cache: new InMemoryLRUCache(),
     typeDefs,
     resolvers,
+    validationRules: [depthLimit(10)],
     context: async ({req, res}) => {
         const session = await sessionFromReq(req, res);
         return {session};
     },
     introspection: true,
-    // playground: true,
 });
 const serverStart = apolloServer.start();
+
 export default cors(async (req: MicroRequest, res: ServerResponse<IncomingMessage>) => {
     if (req.method === "OPTIONS") {
         res.end();
         return false;
+    }
+    const contentLength = Number(req.headers['content-length'] ?? 0);
+    if (contentLength > MAX_GRAPHQL_BODY_BYTES) {
+        res.statusCode = 413;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({error: 'GraphQL payload too large'}));
+        return;
     }
     await serverStart;
     await apolloServer.createHandler({ path: "/api/graphql" })(req, res);

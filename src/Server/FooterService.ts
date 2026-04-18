@@ -1,5 +1,6 @@
 import {Collection, Db} from 'mongodb';
 import {DEFAULT_FOOTER, IFooterConfig} from '../Interfaces/IFooter';
+import {auditStamp} from './audit';
 
 const KEY = 'footer';
 
@@ -20,7 +21,7 @@ export class FooterService {
         };
     }
 
-    async save(config: IFooterConfig): Promise<{ok: true}> {
+    async save(config: IFooterConfig, editedBy?: string): Promise<{ok: true}> {
         const sanitized: IFooterConfig = {
             enabled: Boolean(config.enabled),
             bottom: typeof config.bottom === 'string' ? config.bottom.slice(0, 500) : undefined,
@@ -36,7 +37,7 @@ export class FooterService {
         };
         await this.settings.updateOne(
             {key: KEY},
-            {$set: {key: KEY, value: sanitized}},
+            {$set: {key: KEY, value: sanitized, ...auditStamp(editedBy)}},
             {upsert: true},
         );
         return {ok: true};

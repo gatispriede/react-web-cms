@@ -10,6 +10,7 @@ import MongoApi from "../api/MongoApi";
 import {IConfigSectionAddRemove} from "../../Interfaces/IConfigSectionAddRemove";
 import guid from "../../helpers/guid";
 import DraggableWrapper from "./common/DraggableWrapper";
+import AuditBadge from "./Admin/AuditBadge";
 import {TFunction} from "i18next";
 import {InSection} from "../../Interfaces/IMongo";
 
@@ -38,17 +39,23 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
     private readonly admin: boolean = false
     private MongoApi = new MongoApi()
 
-    getChangedPos = (currentPos: number, newPos: number) => {
-        const sections = this.state.sections;
-        sections[currentPos] = sections.splice(newPos, 1, sections[currentPos])[0];
+    getChangedPos = async (currentPos: number, newPos: number) => {
+        if (currentPos === newPos) return;
+        // Move semantics — take the dragged item out and re-insert at the
+        // target index, shifting the rest. Previous swap-in-place left two
+        // items swapped instead of one moved.
+        const sections = [...this.state.sections];
+        const [moved] = sections.splice(currentPos, 1);
+        if (!moved) return;
+        sections.splice(newPos, 0, moved);
         this.setState({sections});
-        const sectionsStringArray: string[] = [];
-        sections.map((section: ISection) => {
-            if (section.id) sectionsStringArray.push(section.id as string);
-            return section;
-        });
-        if (sectionsStringArray.length > 0) {
-            void this.MongoApi.updateNavigation(this.state.page, sectionsStringArray);
+        const ids = sections.map(s => s.id).filter((id): id is string => typeof id === 'string');
+        if (ids.length === 0) return;
+        try {
+            await this.MongoApi.updateNavigation(this.state.page, ids);
+            await this.refresh();
+        } catch (err) {
+            console.error('reorder failed', err);
         }
     };
 
@@ -92,6 +99,15 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
                                 }
                                 return (
                                     <div key={`${index}-${section.type}`} className={`${index}-${section.type}`}>
+                                        {this.admin && (section as any).editedAt && (
+                                            <div style={{padding: '4px 8px 0'}}>
+                                                <AuditBadge
+                                                    editedBy={(section as any).editedBy}
+                                                    editedAt={(section as any).editedAt}
+                                                    compact
+                                                />
+                                            </div>
+                                        )}
                                         <SectionErrorBoundary admin={this.admin} sectionId={section.id}>
                                             <EditWrapper t={this.props.t} admin={this.admin} deleteAction={async () => {
                                                 if (section.id) {

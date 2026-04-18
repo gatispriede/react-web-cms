@@ -59,6 +59,7 @@ export interface InLanguage {
   default?: InputMaybe<Scalars["Boolean"]["input"]>;
   label: Scalars["String"]["input"];
   symbol: Scalars["String"]["input"];
+  flag?: InputMaybe<Scalars["String"]["input"]>;
 }
 
 export interface InLogo {
@@ -132,8 +133,8 @@ export const generatedSchema = {
   ILogo: {
     __typename: { __type: "String!" },
     content: { __type: "String!" },
-    id: { __type: "String!" },
-    type: { __type: "String!" },
+    id: { __type: "String" },
+    type: { __type: "String" },
   },
   INavigation: {
     __typename: { __type: "String!" },
@@ -142,12 +143,15 @@ export const generatedSchema = {
     sections: { __type: "[String]!" },
     seo: { __type: "ISeo" },
     type: { __type: "String!" },
+    editedBy: { __type: "String" },
+    editedAt: { __type: "String" },
   },
   INewLanguage: {
     __typename: { __type: "String!" },
     default: { __type: "Boolean" },
     label: { __type: "String!" },
     symbol: { __type: "String!" },
+    flag: { __type: "String" },
   },
   ISection: {
     __typename: { __type: "String!" },
@@ -155,6 +159,8 @@ export const generatedSchema = {
     id: { __type: "String" },
     page: { __type: "String" },
     type: { __type: "Int!" },
+    editedBy: { __type: "String" },
+    editedAt: { __type: "String" },
   },
   ISeo: {
     __typename: { __type: "String!" },
@@ -203,6 +209,7 @@ export const generatedSchema = {
     default: { __type: "Boolean" },
     label: { __type: "String!" },
     symbol: { __type: "String!" },
+    flag: { __type: "String" },
   },
   InLogo: { content: { __type: "String!" } },
   InNavigation: {
@@ -288,6 +295,7 @@ export const generatedSchema = {
     setPostPublished: { __type: "String!", __args: { id: "String!", publish: "Boolean!" } },
     saveFooter: { __type: "String!", __args: { config: "JSON!" } },
     saveSiteFlags: { __type: "String!", __args: { flags: "JSON!" } },
+    saveSiteSeo: { __type: "String!", __args: { seo: "JSON!" } },
   },
   QueryMongo: {
     __typename: { __type: "String!" },
@@ -310,6 +318,7 @@ export const generatedSchema = {
     getPost: { __type: "String", __args: { slug: "String!", includeDrafts: "Boolean" } },
     getFooter: { __type: "String!" },
     getSiteFlags: { __type: "String!" },
+    getSiteSeo: { __type: "String!" },
   },
   mutation: {
     __typename: { __type: "String!" },
@@ -358,8 +367,8 @@ export interface ILoadData {
 export interface ILogo {
   __typename?: "ILogo";
   content: ScalarsEnums["String"];
-  id: ScalarsEnums["String"];
-  type: ScalarsEnums["String"];
+  id?: Maybe<ScalarsEnums["String"]>;
+  type?: Maybe<ScalarsEnums["String"]>;
 }
 
 export interface INavigation {
@@ -369,6 +378,8 @@ export interface INavigation {
   sections: Array<Maybe<ScalarsEnums["String"]>>;
   seo?: Maybe<ISeo>;
   type: ScalarsEnums["String"];
+  editedBy?: Maybe<ScalarsEnums["String"]>;
+  editedAt?: Maybe<ScalarsEnums["String"]>;
 }
 
 export interface INewLanguage {
@@ -376,6 +387,7 @@ export interface INewLanguage {
   default?: Maybe<ScalarsEnums["Boolean"]>;
   label: ScalarsEnums["String"];
   symbol: ScalarsEnums["String"];
+  flag?: Maybe<ScalarsEnums["String"]>;
 }
 
 export interface ISection {
@@ -384,6 +396,8 @@ export interface ISection {
   id?: Maybe<ScalarsEnums["String"]>;
   page?: Maybe<ScalarsEnums["String"]>;
   type: ScalarsEnums["Int"];
+  editedBy?: Maybe<ScalarsEnums["String"]>;
+  editedAt?: Maybe<ScalarsEnums["String"]>;
 }
 
 export interface ISeo {
@@ -461,6 +475,7 @@ export interface MutationMongo {
   setPostPublished: (args: { id: ScalarsEnums["String"]; publish: ScalarsEnums["Boolean"] }) => ScalarsEnums["String"];
   saveFooter: (args: { config: unknown }) => ScalarsEnums["String"];
   saveSiteFlags: (args: { flags: unknown }) => ScalarsEnums["String"];
+  saveSiteSeo: (args: { seo: unknown }) => ScalarsEnums["String"];
   saveTheme: (args: { theme: unknown }) => ScalarsEnums["String"];
   deleteTheme: (args: { id: ScalarsEnums["String"] }) => ScalarsEnums["String"];
   setActiveTheme: (args: { id: ScalarsEnums["String"] }) => ScalarsEnums["String"];
@@ -499,6 +514,7 @@ export interface QueryMongo {
   getPost: (args: { slug: ScalarsEnums["String"]; includeDrafts?: Maybe<ScalarsEnums["Boolean"]> }) => Maybe<ScalarsEnums["String"]>;
   getFooter: ScalarsEnums["String"];
   getSiteFlags: ScalarsEnums["String"];
+  getSiteSeo: ScalarsEnums["String"];
 }
 
 export interface Mutation {

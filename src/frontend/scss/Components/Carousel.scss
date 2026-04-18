@@ -1,6 +1,6 @@
 
 .carousel-wrapper{
-  color: #151313;
+  color: var(--theme-colorTextBase, #151313);
 
   display:flex;
   //flex-shrink: 0;

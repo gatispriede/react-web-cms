@@ -10,6 +10,7 @@ export class LanguageApi {
                     default: l.default,
                     label: l.label,
                     symbol: l.symbol,
+                    flag: l.flag,
                 }));
             });
             const byKey: Record<string, INewLanguage> = {};

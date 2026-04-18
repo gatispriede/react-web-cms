@@ -175,6 +175,20 @@ pm2 startup systemd   # follow the printed sudo line
 
 `pm2` will restart `web` automatically once the `.next` directory is populated by a local deploy.
 
+### Standalone GraphQL session guard
+
+`src/Server/index.ts` bypasses the Next route's authz Proxy, so it must never
+be reachable from the public internet. Defaults in place:
+
+- Local dev binds `127.0.0.1:80`; `NODE_SERVER_PORT=true` switches to
+  `0.0.0.0:3000` for Docker's internal network.
+- Non-loopback requests are rejected at the express middleware layer.
+- Override only if you know what you're doing:
+  `STANDALONE_ALLOW_REMOTE=1 pm2 start "npm run standalone-graphql-docker" --name gql`
+
+Caddy terminates TLS and proxies to `next start` (port 80). The standalone
+server on `:3000` should stay firewalled to the droplet's private interface.
+
 ## 6. Local build + deploy (the actual publishing loop)
 
 Content is authored against **your laptop's** admin + local Mongo, built locally, and rsync'd up. The on-droplet admin is just there for rare on-server edits.

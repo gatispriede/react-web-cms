@@ -30,4 +30,27 @@ describe('guardMethods', () => {
         const editorCanPublish = guardMethods(makeTarget(), {role: 'editor', canPublishProduction: true}, MUTATION_REQUIREMENTS, MUTATION_CAPABILITIES);
         expect(editorCanPublish.publishSnapshot()).toBe('published');
     });
+
+    it('injects session into args for SESSION_INJECTED_METHODS (publishSnapshot / rollbackToSnapshot)', () => {
+        // Capture whatever the proxy delivers to the service.
+        const captured: Record<string, any> = {};
+        const target = {
+            publishSnapshot: (args: any) => { captured.publish = args; return 'ok'; },
+            rollbackToSnapshot: (args: any) => { captured.rollback = args; return 'ok'; },
+            addUser: (args: any) => { captured.addUser = args; return 'ok'; },
+        };
+        const session = {role: 'admin' as const, email: 'alice@example.com', canPublishProduction: true};
+        const guarded = guardMethods(target, session, MUTATION_REQUIREMENTS, MUTATION_CAPABILITIES);
+
+        guarded.publishSnapshot({note: 'v1'});
+        guarded.rollbackToSnapshot({id: 's1'});
+        guarded.addUser({user: {email: 'x@y.com'}});
+
+        // Publish + rollback should carry the session; regular methods should not.
+        expect(captured.publish._session.email).toBe('alice@example.com');
+        expect(captured.publish.note).toBe('v1');
+        expect(captured.rollback._session.email).toBe('alice@example.com');
+        expect(captured.rollback.id).toBe('s1');
+        expect(captured.addUser._session).toBeUndefined();
+    });
 });

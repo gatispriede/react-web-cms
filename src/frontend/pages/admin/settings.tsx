@@ -10,7 +10,7 @@ import {serverSideTranslations} from 'next-i18next/serverSideTranslations';
 const AdminSettings = ({session}: {session: Session}) => {
     return (
         <SessionProvider session={session}>
-            <LoginBtn settings={true}/>
+            <LoginBtn view="settings"/>
         </SessionProvider>
     );
 };

@@ -9,6 +9,9 @@ import {IMongo} from "../../Interfaces/IMongo";
 import {ISection} from "../../Interfaces/ISection";
 import {IItem} from "../../Interfaces/IItem";
 import i18nextConfig from '../../../next-i18next.config.js'
+import {buildThemeCssVarsRule} from '../theme/themeCssVarsString';
+import {getMongoConnection} from '../../Server/mongoDBConnection';
+import {IThemeTokens} from '../../Interfaces/ITheme';
 
 // import {unstable_cache} from "next/cache";
 
@@ -68,37 +71,45 @@ const preloadData = async () => {
 // const dayInSeconds = 60 * 60 * 24
 // const cacheReleaseTime = process.env.NODE_ENV === 'production' ? dayInSeconds : 60
 
-const HeadData = async () => {
-    // const myCacheLoader = unstable_cache(async () => preloadData(), ['preloadedData'], {
-    //     revalidate: 1
-    // })
-    const data = await preloadData()
-    // @ts-ignore
-    global.preloadedData = data
-    const str = `window.preloadedData = ${JSON.stringify(data)}`
-    return (
-        <Head>
-            <script type="text/javascript">
-                {str}
-            </script>
-        </Head>
-    )
+interface MyDocProps {
+    themeCss?: string;
+    preloadedScript?: string;
 }
-class MyDocument extends Document<{}> {
+
+class MyDocument extends Document<MyDocProps> {
     render(){
         const currentLocale =
             this.props.__NEXT_DATA__.locale ??
             i18nextConfig.i18n.defaultLocale
+        const {themeCss, preloadedScript} = this.props;
         return (
             <Html lang={currentLocale}>
-                <meta charSet="utf-8" />
-                <HeadData/>
+                <Head>
+                    <meta charSet="utf-8" />
+                    {themeCss && (
+                        <style data-theme-vars dangerouslySetInnerHTML={{__html: themeCss}}/>
+                    )}
+                    {preloadedScript && (
+                        <script dangerouslySetInnerHTML={{__html: preloadedScript}}/>
+                    )}
+                </Head>
                 <body>
                 <Main/>
                 <NextScript/>
                 </body>
             </Html>
         )
+    }
+}
+
+async function loadActiveThemeTokens(): Promise<IThemeTokens | null> {
+    try {
+        const conn = getMongoConnection();
+        const active = await conn.themeService?.getActive();
+        return active?.tokens ?? null;
+    } catch (err) {
+        console.warn('[_document] theme token fetch failed:', err);
+        return null;
     }
 }
 
@@ -115,10 +126,20 @@ MyDocument.getInitialProps = async (ctx: DocumentContext) => {
             ),
         });
 
-    const initialProps = await Document.getInitialProps(ctx);
+    const [initialProps, themeTokens, preloaded] = await Promise.all([
+        Document.getInitialProps(ctx),
+        loadActiveThemeTokens(),
+        preloadData(),
+    ]);
+    // @ts-ignore — legacy global for any consumer that still reads it server-side
+    global.preloadedData = preloaded;
     const style = extractStyle(cache, true);
+    const themeCss = buildThemeCssVarsRule(themeTokens);
+    const preloadedScript = `window.preloadedData = ${JSON.stringify(preloaded)}`;
     return {
         ...initialProps,
+        themeCss,
+        preloadedScript,
         styles: (
             <>
                 {initialProps.styles}

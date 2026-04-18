@@ -5,12 +5,15 @@
 Despite the name, this is a **Next.js 15 / React 19 CMS** backed by **MongoDB** (Redis is present but nearly unused). It ships a developer-portfolio-ready content model: admins compose multilingual pages from 11 reusable item types (Text / RichText / Image / Gallery / Carousel / Hero / ProjectCard / SkillPills / Timeline / SocialLinks / BlogFeed), manage a blog (`Posts` collection + `/blog` + `/blog/[slug]` routes), swap AntD themes (with live preview and CSS-variable scoping so only content modules are themed — admin chrome stays static), publish versioned snapshots (with rollback), toggle a `blogEnabled` flag, and customise a site-wide footer that auto-generates columns from navigation + blog.
 
 - **Framework:** Next.js 15 (pages router, Turbopack in dev), React 19, TypeScript 5
-- **UI:** Ant Design v5 + custom SCSS, CKEditor 5 (with legacy draft-js still in tree), IntersectionObserver-based reveal animations
-- **API:** GraphQL via Apollo Server (Next API route) **and** a standalone Express + `express-graphql` server. Method-level authorization proxy ([authz.ts](src/Server/authz.ts)) gates mutations by role + capability
-- **Data:** MongoDB 7 — collections: `Navigation`, `Sections`, `Images`, `Logos`, `Users`, `Languages`, `Themes`, `SiteSettings`, `PublishedSnapshots`, `Posts`. Redis still present but nearly unused
-- **Auth:** NextAuth (Credentials + optional Google), bcrypt password hashing, JWT sessions carrying `role` + `canPublishProduction`
-- **i18n:** `next-i18next`, language detection via `@unly/universal-language-detector`, translation editor table with search + missing-key filter
-- **Tests:** Vitest + `mongodb-memory-server` + Testing Library — 27 passing baseline tests
+- **UI:** Ant Design v5 + custom SCSS; CKEditor 5 is the sole rich-text editor (draft-js + deps removed); IntersectionObserver-based reveal animations; flag-aware language dropdown
+- **API:** GraphQL via Apollo Server (Next API route) **and** a standalone Express + `express-graphql` server. Shared resolver map in [graphqlResolvers.ts](src/Server/graphqlResolvers.ts). Method-level authorization proxy ([authz.ts](src/Server/authz.ts)) gates mutations by role + capability, and injects the caller's session into a curated set of methods so they can stamp `publishedBy` / `editedBy` audit fields
+- **Data:** MongoDB 7 — collections: `Navigation`, `Sections`, `Images`, `Logos`, `Users`, `Languages`, `Themes`, `SiteSettings` (holds footer / flags / SEO / activeThemeId), `PublishedSnapshots`, `Posts`. Redis still present but nearly unused
+- **Auth:** NextAuth (Credentials + optional Google), bcrypt password hashing, JWT sessions carrying `role` + `canPublishProduction`; rate-limited sign-in + same-origin guard on `/api/import`
+- **i18n:** `next-i18next`, language detection via `@unly/universal-language-detector`, table editor (single-locale + side-by-side compare) with CSV export/import and merge-on-save so untouched keys aren't wiped
+- **Theming:** 4 seeded presets + custom themes; `_document.tsx getInitialProps` emits CSS vars inline so first paint already has the active theme
+- **Public layout:** tabs mode (each nav item is its own page) or single-page scroll mode (all pages stacked as `<section id>` anchors), toggled via site flag
+- **Audit:** every content-edit mutation (Nav, Section, Theme, Post, Footer, SiteFlags, SiteSeo, Logo, Language) stamps `editedBy` + `editedAt`; publish/rollback stamp `publishedBy` / `rolledBackFrom`
+- **Tests:** Vitest + `mongodb-memory-server` + Testing Library — 110 passing tests; CI runs typecheck + `npm test` on every PR ([.github/workflows/ci.yml](.github/workflows/ci.yml))
 - **Build/deploy:** Docker Compose (mongodb + standalone GraphQL server + Next app)
 
 ## Repository layout
@@ -90,14 +93,19 @@ The Next frontend reaches the GraphQL endpoint through the generated GQty client
 
 ## Data model (from [schema.graphql](src/Server/schema.graphql))
 
-- **Navigation** (`page`, `seo`, ordered `sections[]`) — the site map
-- **Section** (`page`, `type`, `content[]`) — a chunk of a page
-- **Item** (`type`, `style`, `content`, plus optional `action*` fields) — one cell within a section
-- **Image**, **Logo** — media assets
-- **User** — `{id, name, email, password, role, avatar}`
-- **Language** — `{label, symbol, default}` with a JSON `translations` blob
+See also the UML at [public/data-model.svg](src/frontend/public/data-model.svg).
 
-Mongo collections: `Navigation`, `Sections`, `Images`, `Logos`, `Users`, `Languages`, `Entities`.
+- **Navigation** (`page`, `type: 'navigation'`, `seo`, ordered `sections[]`, `editedBy?`, `editedAt?`) — the site map. Canonical filter on reads.
+- **Section** (`page`, `type`, `content[]`, `editedBy?`, `editedAt?`) — a chunk of a page
+- **Item** (`type`, `style`, `content`, plus optional `action*` fields) — one cell within a section
+- **Image**, **Logo** — media assets; Logo carries `id` + `type` + `content` (JSON of `{src, width, height}`)
+- **User** — `{id, name, email, password, role, avatar, canPublishProduction}`
+- **Language** — `{label, symbol, default?, flag?}` with a JSON `translations` blob
+- **Theme** — `{id, name, custom, tokens}`; one row in `SiteSettings` holds `activeThemeId`
+- **PublishedSnapshot** — frozen copy of Navigation + Sections + Languages + Logos + Images + non-draft Posts; `publishedBy`, `rolledBackFrom`, `note`
+- **SiteSettings** (single collection, key-keyed docs): `activeThemeId`, `siteFlags` (`blogEnabled`, `layoutMode`), `footer`, `siteSeo`
+
+Mongo collections: `Navigation`, `Sections`, `Images`, `Logos`, `Users`, `Languages`, `Themes`, `SiteSettings`, `PublishedSnapshots`, `Posts`.
 
 ## Authentication flow
 
@@ -131,28 +139,25 @@ Default admin (see [mongoDBConnection.ts:27-29](src/Server/mongoDBConnection.ts:
 - Footer ([SiteFooter.tsx](src/frontend/components/common/SiteFooter.tsx)) auto-generates "Site" column from navigation pages and "Writing" column from blog (when enabled + posts exist); admin-configured columns stack on top. Custom bottom line. Hide toggle.
 - Publishing: the public site can also be served from a versioned snapshot (`PublishedSnapshots` collection) — [PublishService](src/Server/PublishService.ts) copies Navigation/Sections/Languages/Logos/Images/Posts into an immutable doc per Publish; rollback appends a new snapshot that mirrors an older one.
 
-### Rendering mode (current vs. intended)
+### Rendering mode
 
-Verified against the source:
-
-| Route | `getStaticProps` / SSR | Current production output |
+| Route | Rendering | Notes |
 |---|---|---|
-| `/` (index.tsx) | none | Static HTML shell with empty tabs → client-side fetch paints content |
-| `/[...slug].tsx` | none | Same — empty shell then client-side hydrate |
-| `pages/app.tsx` (shared shell) | `getServerSideProps` returning only translations | Content is still client-side fetched |
-| `/blog` + `/blog/[slug]` | `getServerSideProps` fetching content | Full SSR, content baked into HTML |
-| `/admin` + `/admin/settings` | `getServerSideProps` (session prime) | SSR |
-| `postbuild` sitemap | `additionalPaths` in [next-sitemap.config.cjs](next-sitemap.config.cjs) calls `http://localhost/api/graphql` | **Works** only while a GraphQL server runs on port 80 during build; Docker build sets `BUILD_PORT=3000` but the sitemap URL is hardcoded to `localhost:80` |
-
-**Intent** (per [Next.js SSG docs](https://nextjs.org/docs/pages/building-your-application/rendering/static-site-generation)): `next build` should emit static HTML with content baked in (fast first paint), `npm run dev` should re-render dynamically on every request. Today only sitemap generation respects this — `/` and `/[...slug]` do not. Fixing this is tracked as **ROADMAP #10**.
+| `/` (index.tsx) | `getStaticProps` → `fetchInitialPageData()` | Nav + sections + footer + theme tokens + languages all baked into HTML for first paint |
+| `/[...slug].tsx` | `getStaticProps` + `getStaticPaths` | Per-page static HTML; ISR-friendly |
+| `pages/app.tsx` (shared shell) | Receives `initialData`; also primes `<style data-theme-vars>` via [_document.tsx](src/frontend/pages/_document.tsx) | Scroll-mode branch renders pages as stacked `<section id>`; tabs-mode keeps the AntD `Tabs` |
+| `/blog` + `/blog/[slug]` | `getServerSideProps` | Honours `blogEnabled` (404 when disabled) |
+| `/admin` + `/admin/settings` + `/admin/languages` | `getServerSideProps` primes session + i18n | Locale JSON served with `Cache-Control: no-store` so admin edits take effect on first refresh |
+| `postbuild` sitemap | `additionalPaths` in [next-sitemap.config.cjs](next-sitemap.config.cjs) | Resolved from `BUILD_PORT` env var |
 
 ## Admin panel
 
-- [pages/admin.tsx](src/frontend/pages/admin.tsx) and [pages/admin/settings.tsx](src/frontend/pages/admin/settings.tsx) — require login.
-- [components/Admin/AdminApp.tsx](src/frontend/components/Admin/AdminApp.tsx) — same content shell as the public site but with edit wrappers.
-- [components/Admin/ConfigComponents/](src/frontend/components/Admin/ConfigComponents/) — per-section-type editors (`InputCarousel`, `InputGallery`, `InputPlainImage`, `InputPlainText`, `InputRichText`).
-- [components/common/Dialogs/](src/frontend/components/common/Dialogs/) — modals for adding/editing navigation entries, sections, section items, logos, preview.
-- [AdminSettings/](src/frontend/components/Admin/AdminSettings/) — `Languages`, `Users`, `Theme`, `ContentLoader`.
+- [pages/admin.tsx](src/frontend/pages/admin.tsx), [pages/admin/settings.tsx](src/frontend/pages/admin/settings.tsx), and [pages/admin/languages.tsx](src/frontend/pages/admin/languages.tsx) — require login; [UserStatusBar.tsx](src/frontend/components/Admin/UserStatusBar.tsx) picks the active view.
+- [AdminApp.tsx](src/frontend/components/Admin/AdminApp.tsx) — page tabs carry inline [`AuditBadge`](src/frontend/components/Admin/AuditBadge.tsx) ("last edited by X · 2m ago"); Publish button gated on `canPublishProduction`; Cmd/Ctrl-K palette via [CommandPalette.tsx](src/frontend/components/Admin/CommandPalette.tsx).
+- [components/Admin/ConfigComponents/](src/frontend/components/Admin/ConfigComponents/) — per-section-type editors (`InputHero`, `InputProjectCard`, `InputSkillPills`, `InputTimeline`, `InputSocialLinks`, `InputBlogFeed`, plus the Carousel/Gallery/Image/PlainText/RichText editors).
+- [components/common/Dialogs/](src/frontend/components/common/Dialogs/) — modals for navigation entries, sections, section items, logo, preview.
+- [AdminSettings/](src/frontend/components/Admin/AdminSettings/) — `Users`, `Theme`, `Logo`, `SEO`, `Posts`, `Footer`, `Bundle`, `Publishing`, `Layout` (tabs/scroll toggle). `Languages` has its own route.
+- [lib/useAutosave.ts](src/frontend/lib/useAutosave.ts) + [AutosaveStatus.tsx](src/frontend/components/Admin/AutosaveStatus.tsx) — debounced save hook + status pill, ready to wire into forms.
 
 ## Scripts ([package.json](package.json))
 
@@ -198,22 +203,23 @@ Entire site (navigation, sections, languages, logo, images metadata, + reference
 
 ## Notable issues / smells (remaining)
 
-1. **Stale README** — still the default Create React App template despite being a Next.js project.
-2. **Duplicated GraphQL surface** — Apollo (Next route) and `express-graphql` (standalone) both serve the same schema; keep in sync or consolidate.
-3. **Duplicated editor stacks** — both `draft-js` + `react-draft-wysiwyg` and `ckeditor5` are dependencies; `0d1ee9e` commit suggests the CK migration is mid-flight.
-4. **Hardcoded secrets** — [mongoConfig.ts:37-42](src/Server/mongoConfig.ts:37): admin password, Mongo Atlas username/password, cluster URL. Move to env.
-5. **Redis all but unused** — only `getBar`. Either wire it into caching/session storage or remove to simplify the stack (and the repo name).
-6. **CRA-era polyfills** (`crypto-browserify`, `node-polyfill-webpack-plugin`, `buffer`, `util`, `url`) — likely inherited from CRA origins; audit whether Next actually needs them.
-7. **`[...slug].tsx` + `app.tsx`** — `app.tsx` doubles as both an internal page and the shell re-exported into `Slug`. Cleaner to have a layout + page split.
-8. **Manual GQty client patches** — `schema.generated.ts` has hand edits (`getLogo` nullability, `createDatabase` removal). Re-run `npm run generate-schema` against a live endpoint to regenerate cleanly.
+1. **Duplicated GraphQL surface** — Apollo (Next route) and `express-graphql` (standalone) both serve the same schema. Resolver map is now centralized in [graphqlResolvers.ts](src/Server/graphqlResolvers.ts) to prevent drift. Standalone binds 127.0.0.1 by default and rejects non-loopback traffic unless `STANDALONE_ALLOW_REMOTE=1` is set.
+2. **Redis all but unused** — only `getBar`. Either wire it into caching/session storage or remove to simplify the stack (and the repo name).
+3. **`[...slug].tsx` + `app.tsx`** — `app.tsx` doubles as both an internal page and the shell re-exported into `Slug`. Cleaner to have a layout + page split.
+4. **Manual GQty client patches** — `schema.generated.ts` has hand edits (`getLogo` nullability, `createDatabase` removal, `getSiteSeo`/`saveSiteSeo`, `INewLanguage.flag`, `ILogo.id`/`type` nullability, `INavigation`/`ISection` audit fields). Re-run `npm run generate-schema` against a live endpoint to regenerate cleanly.
+5. **`sanitizeKey` regex bug** — char class closes early on `]`, so most specials survive. [`sanitizeKeyV2`](src/utils/stringFunctions.ts) sits alongside with the correct class but isn't wired (migration plan in ROADMAP debt).
 
 ## Resolved (since initial analysis)
 
 - ~~Per-request Mongo clients~~ — now a singleton via `getMongoConnection()`.
 - ~~`UserService.setupAdmin` returns null on first insert~~ — now returns the newly created document.
-- ~~Uncommitted service split~~ — services landed + extended with `BundleService`, typecheck-clean.
+- ~~Uncommitted service split~~ — services landed (User, Navigation, Asset, Language, Bundle, Publish, Theme, Post, Footer, SiteFlags, SiteSeo) + shared [audit.ts](src/Server/audit.ts) helper.
 - ~~Missing auto-seed~~ — `setupAdmin()` auto-runs on first successful Mongo connect + `/api/setup` endpoint.
+- ~~Duplicated editor stacks~~ — draft-js + deps removed; CKEditor 5 is the sole rich-text editor.
+- ~~CRA-era polyfills~~ — `crypto-browserify`, `node-polyfill-webpack-plugin`, `buffer`, `util`, `url` uninstalled.
+- ~~Hardcoded secrets~~ — admin password + Mongo Atlas credentials moved behind env vars (`.env.example` covers every supported variable).
+- ~~Stale README~~ — replaced with a real intro (see [README.md](README.md)).
 
 ## Suggested next steps
 
-See [ROADMAP.md](ROADMAP.md) for the full feature plan — Users CRUD, roles/permissions, theme switcher, menu rearrangement, translations UX, 2026 admin overhaul, content-safeguards phase 2, and test coverage.
+See [ROADMAP.md](ROADMAP.md) for the remaining feature plan — admin i18n decouple (held), translation context/inline editing, admin UX phase 2 (sidebar, drawer, DnD upgrade, undo, templates, high-contrast, icon consolidation), edit-audit UI surfacing on settings tabs, remaining frontend + API-route tests.

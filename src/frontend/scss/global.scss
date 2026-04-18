@@ -28,6 +28,22 @@
 
 @use 'app';
 
+.skip-to-content {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--theme-colorPrimary, #1677ff);
+  color: #fff;
+  padding: 8px 12px;
+  z-index: 9999;
+  text-decoration: none;
+  border-radius: 0 0 4px 0;
+
+  &:focus {
+    left: 0;
+  }
+}
+
 body{
   //margin-left: 16px;
   //margin-right: 16px;
@@ -81,6 +97,58 @@ body{
     height: 40px;
     cursor: pointer;
     z-index: 2;
+  }
+
+  // Public-site tab bar: [Logo + Nav items] grouped centre-ish, [Language
+  // dropdown] flex-aligned to the far right. Everything stays in flex flow
+  // so the dropdown can't overlap the nav even on narrow viewports.
+  .site-tabs {
+    > .ant-tabs-nav {
+      padding-inline: 16px;
+      align-items: center;
+      column-gap: 12px;
+
+      .ant-tabs-extra-content {
+        display: flex;
+        align-items: center;
+        min-height: 60px;
+      }
+
+      // Auto-margin on both sides of the Logo pushes the [Logo+Tabs] group
+      // roughly centre; the trailing auto on the last-child keeps the
+      // dropdown pinned right. Group centre is off by ±half the dropdown
+      // width — acceptable at normal viewport widths.
+      .ant-tabs-extra-content:first-child {
+        margin-left: auto;
+        .logo {
+          position: static;
+          display: inline-flex;
+          align-items: center;
+          min-height: 40px;
+        }
+      }
+      .ant-tabs-nav-wrap {
+        flex: 0 1 auto;
+        min-width: 0;
+      }
+      .ant-tabs-extra-content:last-child {
+        margin-left: auto;
+      }
+    }
+  }
+
+  // Responsive: on narrow viewports hide the language label and keep only
+  // the glyph (flag emoji if set, 2-letter symbol otherwise) to save room.
+  .lang-glyph--symbol {
+    font-variant-caps: all-small-caps;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  @media (max-width: 640px) {
+    .language-dropdown .lang-label,
+    .ant-dropdown-menu .lang-label {
+      display: none;
+    }
   }
   .ant-tabs{
     font-family: gf_Playfair_Display variant0;

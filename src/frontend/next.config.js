@@ -69,7 +69,19 @@ const nextConfig = {
             source: "/sitemap-:id.xml",
             destination: "/api/sitemap-:id.xml",
         },
-    ]
+    ],
+    // Locale JSON files are the runtime translation store — admin saves
+    // rewrite them live, so browsers MUST fetch fresh every time. Without
+    // this, the first reload after a save serves cached JSON and changes
+    // only appear on the second refresh.
+    headers: async () => [
+        {
+            source: "/locales/:lang/:ns.json",
+            headers: [
+                {key: "Cache-Control", value: "no-store, max-age=0, must-revalidate"},
+            ],
+        },
+    ],
 }
 
 module.exports = nextConfig

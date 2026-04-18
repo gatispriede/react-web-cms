@@ -1,11 +1,13 @@
-import {resolve} from "../gqty";
+import {resolve, invalidateCache} from "../gqty";
 import {IMongo, MutationMongo} from "../../Interfaces/IMongo";
 import {INavigation} from "../../Interfaces/INavigation";
 
 export class NavigationApi {
     async createNavigation(newNavigation: INavigation): Promise<string> {
         try {
-            return await resolve(({mutation}) => mutation.mongo.createNavigation({navigation: newNavigation}));
+            const r = await resolve(({mutation}) => mutation.mongo.createNavigation({navigation: newNavigation}));
+            invalidateCache();
+            return r;
         } catch (err) {
             console.error('Error creating navigation:', err);
             return '';
@@ -14,9 +16,11 @@ export class NavigationApi {
 
     async replaceUpdateNavigation(oldPageName: string, newNavigation: INavigation): Promise<string> {
         try {
-            return await resolve(({mutation}) => mutation.mongo.replaceUpdateNavigation({
+            const r = await resolve(({mutation}) => mutation.mongo.replaceUpdateNavigation({
                 oldPageName, navigation: newNavigation,
             }));
+            invalidateCache();
+            return r;
         } catch (err) {
             console.error('Error replacing/updating navigation:', err);
             return '';
@@ -25,7 +29,9 @@ export class NavigationApi {
 
     async updateNavigation(page: string, sections: string[]): Promise<string> {
         try {
-            return await resolve(({mutation}) => mutation.mongo.updateNavigation({page, sections}));
+            const r = await resolve(({mutation}) => mutation.mongo.updateNavigation({page, sections}));
+            invalidateCache();
+            return r;
         } catch (err) {
             console.error('Error updating navigation:', err);
             return '';

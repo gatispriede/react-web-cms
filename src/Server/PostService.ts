@@ -39,7 +39,7 @@ export class PostService {
         return doc ? this.normalize(doc) : null;
     }
 
-    async save(post: InPost): Promise<{id: string}> {
+    async save(post: InPost, editedBy?: string): Promise<{id: string}> {
         const title = (post.title || '').trim();
         if (!title) throw new Error('title is required');
         const now = new Date().toISOString();
@@ -51,7 +51,7 @@ export class PostService {
         if (post.id) {
             const existing = await this.posts.findOne({id: post.id});
             if (!existing) throw new Error('post not found');
-            const update: Partial<IPost> = {
+            const update: Partial<IPost> & {editedBy?: string} = {
                 slug,
                 title,
                 excerpt: post.excerpt ?? '',
@@ -62,6 +62,7 @@ export class PostService {
                 body: post.body ?? '',
                 updatedAt: now,
             };
+            if (editedBy) update.editedBy = editedBy;
             if (post.publishedAt !== undefined) update.publishedAt = post.publishedAt;
             if (update.draft === false && !(existing as any).publishedAt) update.publishedAt = now;
             await this.posts.updateOne({id: post.id}, {$set: update});
@@ -69,7 +70,7 @@ export class PostService {
         }
         const id = guid();
         const draft = post.draft ?? false;
-        const doc: IPost = {
+        const doc: IPost & {editedBy?: string} = {
             id,
             slug,
             title,
@@ -82,20 +83,22 @@ export class PostService {
             body: post.body ?? '',
             createdAt: now,
             updatedAt: now,
+            ...(editedBy ? {editedBy} : {}),
         };
         await this.posts.insertOne(doc as any);
         return {id};
     }
 
-    async remove(id: string): Promise<{id: string; deleted: number}> {
+    async remove(id: string, deletedBy?: string): Promise<{id: string; deleted: number; deletedBy?: string}> {
         const result = await this.posts.deleteOne({id});
-        return {id, deleted: result.deletedCount ?? 0};
+        return {id, deleted: result.deletedCount ?? 0, ...(deletedBy ? {deletedBy} : {})};
     }
 
-    async setPublished(id: string, publish: boolean): Promise<{id: string; draft: boolean}> {
+    async setPublished(id: string, publish: boolean, editedBy?: string): Promise<{id: string; draft: boolean}> {
         const existing = await this.posts.findOne({id});
         if (!existing) throw new Error('post not found');
         const update: any = {draft: !publish, updatedAt: new Date().toISOString()};
+        if (editedBy) update.editedBy = editedBy;
         if (publish && !(existing as any).publishedAt) update.publishedAt = new Date().toISOString();
         await this.posts.updateOne({id}, {$set: update});
         return {id, draft: update.draft};

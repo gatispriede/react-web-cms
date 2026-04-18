@@ -19,6 +19,8 @@ import {InPost} from '../Interfaces/IPost';
 import {FooterService} from './FooterService';
 import {IFooterConfig} from '../Interfaces/IFooter';
 import {ISiteFlags, SiteFlagsService} from './SiteFlagsService';
+import {SiteSeoService} from './SiteSeoService';
+import {ISiteSeoDefaults} from '../Interfaces/ISiteSeo';
 import {
     defaultSettings,
     ILoadData,
@@ -54,6 +56,7 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
     public postService!: PostService;
     public footerService!: FooterService;
     public siteFlagsService!: SiteFlagsService;
+    public siteSeoService!: SiteSeoService;
 
     constructor() {
         this._settings.mongoDBDatabaseUrl = `mongodb+srv://${this._settings.mongodbUser}:${this._settings.mongodbPassword}@${this._settings.mongoDBClusterUrl}`;
@@ -94,6 +97,7 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
             this.postService = new PostService(this.db);
             this.footerService = new FooterService(this.db);
             this.siteFlagsService = new SiteFlagsService(this.db);
+            this.siteSeoService = new SiteSeoService(this.db);
 
             if (!MongoDBConnection.adminSeeded) {
                 MongoDBConnection.adminSeeded = true;
@@ -120,23 +124,25 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
 
     // Delegate LanguageService methods
     async getLanguages() { return this.languageService.getLanguages(); }
-    async addUpdateLanguage({ language, translations }: { language: INewLanguage, translations: JSON }) { return this.languageService.addUpdateLanguage({ language, translations }); }
-    async deleteLanguage({ language }: { language: INewLanguage }) { return this.languageService.deleteLanguage({ language }); }
+    async addUpdateLanguage({ language, translations, _session }: { language: INewLanguage, translations: JSON, _session?: {email?: string} }) { return this.languageService.addUpdateLanguage({ language, translations, editedBy: _session?.email }); }
+    async deleteLanguage({ language, _session }: { language: INewLanguage, _session?: {email?: string} }) { return this.languageService.deleteLanguage({ language, deletedBy: _session?.email }); }
 
     // Delegate AssetService methods (IMongoDBConnection signatures)
     async getLogo() { return this.assetService.getLogo(); }
-    async saveLogo({ content }: { content: string }): Promise<string> { return this.assetService.saveLogo(content); }
+    async saveLogo({ content, _session }: { content: string, _session?: {email?: string} }): Promise<string> { return this.assetService.saveLogo(content, _session?.email); }
     async saveImage({ image }: { image: InImage }): Promise<string> { return this.assetService.saveImage(image); }
     async deleteImage({ id }: { id: string }): Promise<string> { return this.assetService.deleteImage(id); }
     async getImages({ tags }: { tags: string }) { return this.assetService.getImages(tags); }
 
-    // Delegate NavigationService methods (IMongoDBConnection signatures)
+    // Delegate NavigationService methods. `_session` is injected by the Next
+    // route's authz Proxy (see authz.SESSION_INJECTED_METHODS); standalone
+    // callers omit it → service falls back to anonymous edits.
     async createNavigation({ navigation }: { navigation: INavigation }): Promise<string> { return this.navigationService.createNavigation(navigation); }
-    async updateNavigation({ page, sections }: { page: string, sections: string[] }): Promise<string> { return this.navigationService.updateNavigation(page, sections); }
+    async updateNavigation({ page, sections, _session }: { page: string, sections: string[], _session?: {email?: string} }): Promise<string> { return this.navigationService.updateNavigation(page, sections, _session?.email); }
     async getNavigationCollection() { return this.navigationService.getNavigationCollection(); }
     async getSections({ ids }: { ids: string[] }) { return this.navigationService.getSections(ids); }
-    async addUpdateSectionItem({ section, pageName }: { section: ISection, pageName?: string }): Promise<string> { return this.navigationService.addUpdateSectionItem({ section: section as unknown as InSection, pageName }); }
-    async removeSectionItem({ id }: { id: string }): Promise<string> { return this.navigationService.removeSectionItem(id); }
+    async addUpdateSectionItem({ section, pageName, _session }: { section: ISection, pageName?: string, _session?: {email?: string} }): Promise<string> { return this.navigationService.addUpdateSectionItem({ section: section as unknown as InSection, pageName, editedBy: _session?.email }); }
+    async removeSectionItem({ id }: { id: string, _session?: {email?: string} }): Promise<string> { return this.navigationService.removeSectionItem(id); }
 
     async loadData(): Promise<ILoadData[]> {
         if (!this.client) return [];
@@ -144,16 +150,16 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
         return dbs.databases;
     }
 
-    async replaceUpdateNavigation({oldPageName, navigation}: { oldPageName: string, navigation: INavigation }): Promise<string> {
-        return this.navigationService.replaceUpdateNavigation(oldPageName, navigation);
+    async replaceUpdateNavigation({oldPageName, navigation, _session}: { oldPageName: string, navigation: INavigation, _session?: {email?: string} }): Promise<string> {
+        return this.navigationService.replaceUpdateNavigation(oldPageName, navigation, _session?.email);
     }
-    async deleteNavigationItem({pageName}: { pageName: string }): Promise<string> {
-        return this.navigationService.deleteNavigationItem(pageName);
+    async deleteNavigationItem({pageName, _session}: { pageName: string, _session?: {email?: string} }): Promise<string> {
+        return this.navigationService.deleteNavigationItem(pageName, _session?.email);
     }
 
-    async publishSnapshot({note}: {note?: string} = {}): Promise<string> {
+    async publishSnapshot({note, _session}: {note?: string; _session?: {email?: string}} = {}): Promise<string> {
         try {
-            const meta = await this.publishService.publishSnapshot(undefined, note);
+            const meta = await this.publishService.publishSnapshot(_session?.email, note);
             return JSON.stringify({publishSnapshot: meta});
         } catch (err) {
             console.error('Error publishing snapshot:', err);
@@ -170,9 +176,9 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
         }
     }
 
-    async rollbackToSnapshot({id}: {id: string}): Promise<string> {
+    async rollbackToSnapshot({id, _session}: {id: string; _session?: {email?: string}}): Promise<string> {
         try {
-            const meta = await this.publishService.rollbackTo(id);
+            const meta = await this.publishService.rollbackTo(id, _session?.email);
             return JSON.stringify({rollbackToSnapshot: meta});
         } catch (err) {
             return JSON.stringify({error: String((err as Error).message || err)});
@@ -199,16 +205,16 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
             return t ? JSON.stringify(t) : null;
         } catch (err) { console.error('getActiveTheme:', err); return null; }
     }
-    async saveTheme({theme}: {theme: InTheme}): Promise<string> {
-        try { return JSON.stringify({saveTheme: await this.themeService.saveTheme(theme)}); }
+    async saveTheme({theme, _session}: {theme: InTheme; _session?: {email?: string}}): Promise<string> {
+        try { return JSON.stringify({saveTheme: await this.themeService.saveTheme(theme, _session?.email)}); }
         catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
     }
-    async deleteTheme({id}: {id: string}): Promise<string> {
-        try { return JSON.stringify({deleteTheme: await this.themeService.deleteTheme(id)}); }
+    async deleteTheme({id, _session}: {id: string; _session?: {email?: string}}): Promise<string> {
+        try { return JSON.stringify({deleteTheme: await this.themeService.deleteTheme(id, _session?.email)}); }
         catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
     }
-    async setActiveTheme({id}: {id: string}): Promise<string> {
-        try { return JSON.stringify({setActiveTheme: await this.themeService.setActive(id)}); }
+    async setActiveTheme({id, _session}: {id: string; _session?: {email?: string}}): Promise<string> {
+        try { return JSON.stringify({setActiveTheme: await this.themeService.setActive(id, _session?.email)}); }
         catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
     }
 
@@ -222,16 +228,16 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
             return post ? JSON.stringify(post) : null;
         } catch (err) { console.error('getPost:', err); return null; }
     }
-    async savePost({post}: {post: InPost}): Promise<string> {
-        try { return JSON.stringify({savePost: await this.postService.save(post)}); }
+    async savePost({post, _session}: {post: InPost; _session?: {email?: string}}): Promise<string> {
+        try { return JSON.stringify({savePost: await this.postService.save(post, _session?.email)}); }
         catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
     }
-    async deletePost({id}: {id: string}): Promise<string> {
-        try { return JSON.stringify({deletePost: await this.postService.remove(id)}); }
+    async deletePost({id, _session}: {id: string; _session?: {email?: string}}): Promise<string> {
+        try { return JSON.stringify({deletePost: await this.postService.remove(id, _session?.email)}); }
         catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
     }
-    async setPostPublished({id, publish}: {id: string; publish: boolean}): Promise<string> {
-        try { return JSON.stringify({setPostPublished: await this.postService.setPublished(id, publish)}); }
+    async setPostPublished({id, publish, _session}: {id: string; publish: boolean; _session?: {email?: string}}): Promise<string> {
+        try { return JSON.stringify({setPostPublished: await this.postService.setPublished(id, publish, _session?.email)}); }
         catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
     }
 
@@ -239,8 +245,8 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
         try { return JSON.stringify(await this.footerService.get()); }
         catch (err) { console.error('getFooter:', err); return JSON.stringify({enabled: true, columns: [], bottom: ''}); }
     }
-    async saveFooter({config}: {config: IFooterConfig}): Promise<string> {
-        try { return JSON.stringify({saveFooter: await this.footerService.save(config)}); }
+    async saveFooter({config, _session}: {config: IFooterConfig; _session?: {email?: string}}): Promise<string> {
+        try { return JSON.stringify({saveFooter: await this.footerService.save(config, _session?.email)}); }
         catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
     }
 
@@ -248,8 +254,17 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
         try { return JSON.stringify(await this.siteFlagsService.get()); }
         catch (err) { console.error('getSiteFlags:', err); return JSON.stringify({blogEnabled: true}); }
     }
-    async saveSiteFlags({flags}: {flags: Partial<ISiteFlags>}): Promise<string> {
-        try { return JSON.stringify({saveSiteFlags: await this.siteFlagsService.save(flags)}); }
+    async saveSiteFlags({flags, _session}: {flags: Partial<ISiteFlags>; _session?: {email?: string}}): Promise<string> {
+        try { return JSON.stringify({saveSiteFlags: await this.siteFlagsService.save(flags, _session?.email)}); }
+        catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+
+    async getSiteSeo(): Promise<string> {
+        try { return JSON.stringify(await this.siteSeoService.get()); }
+        catch (err) { console.error('getSiteSeo:', err); return '{}'; }
+    }
+    async saveSiteSeo({seo, _session}: {seo: ISiteSeoDefaults; _session?: {email?: string}}): Promise<string> {
+        try { return JSON.stringify({saveSiteSeo: await this.siteSeoService.save(seo, _session?.email)}); }
         catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
     }
 
@@ -262,8 +277,8 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
             return null;
         }
     }
-    async addUpdateNavigationItem({pageName, sections}: { pageName: string, sections?: string[] }): Promise<string> {
-        return this.navigationService.addUpdateNavigationItem(pageName, sections);
+    async addUpdateNavigationItem({pageName, sections, _session}: { pageName: string, sections?: string[], _session?: {email?: string} }): Promise<string> {
+        return this.navigationService.addUpdateNavigationItem(pageName, sections, _session?.email);
     }
 
     getMongoDBUri(): string {

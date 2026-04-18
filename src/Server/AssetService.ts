@@ -1,7 +1,9 @@
 import {Collection} from 'mongodb';
+import guid from "../helpers/guid";
 import {ILogo} from "../Interfaces/ILogo";
 import {IImage, InImage} from "../Interfaces/IImage";
 import {IAssetService} from "./mongoConfig";
+import {auditStamp} from "./audit";
 
 export class AssetService  implements IAssetService {
     private logosDB: Collection;
@@ -16,7 +18,16 @@ export class AssetService  implements IAssetService {
 
     async getLogo(): Promise<ILogo | undefined> {
         try {
-            return await this.logosDB.findOne({}) as unknown as ILogo;
+            const doc: any = await this.logosDB.findOne({});
+            if (!doc) return undefined;
+            // Back-fill missing id/type so clients never receive `null` for the
+            // schema's scalar fields. Legacy Logos docs only had `_id` + content.
+            const {_id, ...rest} = doc;
+            return {
+                id: rest.id ?? String(_id ?? guid()),
+                type: rest.type ?? 'image',
+                content: rest.content ?? '',
+            };
         } catch (err) {
             console.error('Error getting logo:', err);
             await this.setupClient();
@@ -24,9 +35,18 @@ export class AssetService  implements IAssetService {
         }
     }
 
-    async saveLogo(content: string): Promise<string> {
+    async saveLogo(content: string, editedBy?: string): Promise<string> {
         try {
-            const result = await this.logosDB.updateOne({}, { $set: { content } }, { upsert: true });
+            // Persist id + type alongside content so the schema's scalar fields
+            // are always non-null going forward.
+            const result = await this.logosDB.updateOne(
+                {},
+                {
+                    $set: {content, type: 'image', ...auditStamp(editedBy)},
+                    $setOnInsert: {id: guid()},
+                },
+                {upsert: true},
+            );
             return JSON.stringify(result);
         } catch (err) {
             console.error('Error saving logo:', err);

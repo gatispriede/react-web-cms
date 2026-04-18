@@ -1,5 +1,5 @@
 export interface ILogo {
-    id: string
-    type: string
+    id?: string
+    type?: string
     content: string
 }

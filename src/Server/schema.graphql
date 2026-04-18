@@ -53,6 +53,7 @@ input InLanguage {
     label: String!
     symbol: String!
     default: Boolean
+    flag: String
 }
 input InUser {
     id: String
@@ -67,6 +68,7 @@ type INewLanguage {
     label: String!
     symbol: String!
     default: Boolean
+    flag: String
 }
 type IUser {
     id: String!
@@ -79,8 +81,8 @@ type IUser {
 }
 
 type ILogo {
-    id: String!
-    type: String!
+    id: String
+    type: String
     content: String!
 }
 
@@ -109,6 +111,8 @@ type ISection {
     page: String
     type: Int!
     content: [IItem]
+    editedBy: String
+    editedAt: String
 }
 type ISeo {
     description: String
@@ -129,6 +133,8 @@ type INavigation {
     page: String!
     seo: ISeo
     sections: [String]!
+    editedBy: String
+    editedAt: String
 }
 
 type ILoadData {
@@ -157,6 +163,7 @@ type QueryMongo {
     getPost(slug: String!, includeDrafts: Boolean): String
     getFooter: String!
     getSiteFlags: String!
+    getSiteSeo: String!
 }
 
 scalar JSON
@@ -187,6 +194,7 @@ type MutationMongo {
     setPostPublished(id: String!, publish: Boolean!): String!
     saveFooter(config: JSON!): String!
     saveSiteFlags(flags: JSON!): String!
+    saveSiteSeo(seo: JSON!): String!
 }
 
 

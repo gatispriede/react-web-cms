@@ -9,6 +9,7 @@ import PostApi from "../../api/PostApi";
 import {IPost} from "../../../Interfaces/IPost";
 import RevealOnScroll from "../common/RevealOnScroll";
 import {usePrefetchedPosts} from "../../lib/PostsContext";
+import {translateOrKeep} from "../../../utils/translateOrKeep";
 
 export interface IBlogFeed {
     limit: number;
@@ -32,12 +33,13 @@ export class BlogFeedContent extends ContentManager {
 
 const postApi = new PostApi();
 
-const BlogFeed = ({item}: {
+const BlogFeed = ({item, tApp}: {
     item: IItem;
     t: TFunction<"translation", undefined>;
     tApp: TFunction<string, undefined>;
 }) => {
     const c = new BlogFeedContent(EItemType.BlogFeed, item.content).data;
+    const tr = (v: string) => translateOrKeep(tApp, v);
     const prefetched = usePrefetchedPosts();
     const filterPrefetched = (list: IPost[]) => (c.tag ? list.filter(p => p.tags.includes(c.tag)) : list).slice(0, c.limit);
     const [posts, setPosts] = useState<IPost[] | null>(prefetched ? filterPrefetched(prefetched) : null);
@@ -59,7 +61,7 @@ const BlogFeed = ({item}: {
 
     return (
         <div>
-            {c.heading && <h3 style={{marginTop: 0}}>{c.heading}</h3>}
+            {c.heading && <h3 style={{marginTop: 0}}>{tr(c.heading)}</h3>}
             <div className="blog-feed">
                 {posts.map((p, i) => (
                     <RevealOnScroll key={p.id} delay={i * 60}>

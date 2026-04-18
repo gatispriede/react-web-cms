@@ -1,6 +1,13 @@
 import {resolve} from "../gqty";
 import {ITheme, InTheme} from "../../Interfaces/ITheme";
 
+// Module-level theme cache. A page navigation may touch 2–3 components that
+// each call `getActive()`; with `maxAge: 0` on the gqty cache every one of
+// them triggers its own fetch. Cache for 30s per tab and invalidate on any
+// theme mutation.
+let cachedTheme: {at: number; theme: ITheme | null} | null = null;
+const TTL_MS = 30_000;
+
 export class ThemeApi {
     async listThemes(): Promise<ITheme[]> {
         try {
@@ -13,19 +20,30 @@ export class ThemeApi {
     }
 
     async getActive(): Promise<ITheme | null> {
+        if (cachedTheme && Date.now() - cachedTheme.at < TTL_MS) {
+            return cachedTheme.theme;
+        }
         try {
             const raw = await resolve(({query}) => (query as any).mongo.getActiveTheme);
-            return raw ? JSON.parse(raw) : null;
+            const theme = raw ? JSON.parse(raw) : null;
+            cachedTheme = {at: Date.now(), theme};
+            return theme;
         } catch (err) {
             console.error('getActive theme:', err);
             return null;
         }
     }
 
+    /** Call this after any admin theme mutation so the next getActive fetches fresh. */
+    invalidateCache(): void {
+        cachedTheme = null;
+    }
+
     async saveTheme(theme: InTheme): Promise<{id?: string; error?: string}> {
         try {
             const raw = await resolve(({mutation}) => (mutation as any).mongo.saveTheme({theme}));
             const parsed = JSON.parse(raw || '{}');
+            this.invalidateCache();
             return parsed.saveTheme ?? parsed;
         } catch (err) {
             return {error: String(err)};
@@ -36,6 +54,7 @@ export class ThemeApi {
         try {
             const raw = await resolve(({mutation}) => (mutation as any).mongo.deleteTheme({id}));
             const parsed = JSON.parse(raw || '{}');
+            this.invalidateCache();
             return parsed.deleteTheme ?? parsed;
         } catch (err) {
             return {error: String(err)};
@@ -46,6 +65,7 @@ export class ThemeApi {
         try {
             const raw = await resolve(({mutation}) => (mutation as any).mongo.setActiveTheme({id}));
             const parsed = JSON.parse(raw || '{}');
+            this.invalidateCache();
             return parsed.setActiveTheme ?? parsed;
         } catch (err) {
             return {error: String(err)};
