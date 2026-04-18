@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+
+jobs:
+  test-and-typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        # `--legacy-peer-deps` matches how we install locally (antd / react peer dep chain);
+        # `--ignore-scripts` skips the bcrypt/native-compile step that doesn't work
+        # on the CI image by default. Tests mock bcrypt-heavy paths.
+        run: npm install --legacy-peer-deps --ignore-scripts --no-audit --no-fund
+
+      - name: Typecheck (frontend)
+        run: npx tsc --noEmit -p src/frontend/tsconfig.json
+
+      - name: Tests
+        run: npm test -- --reporter=dot

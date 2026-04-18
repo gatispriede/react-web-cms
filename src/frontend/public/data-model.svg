@@ -1,0 +1,275 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1300" font-family="system-ui,sans-serif">
+  <style>
+    .cls       { fill:#fffdf5; stroke:#111827; stroke-width:1.5; }
+    .cls-svc   { fill:#eff6ff; stroke:#1e3a8a; stroke-width:1.5; }
+    .cls-enum  { fill:#faf5ff; stroke:#6b21a8; stroke-width:1.5; }
+    .cls-hdr   { fill:#111827; }
+    .cls-hdr-svc { fill:#1e3a8a; }
+    .cls-hdr-enum { fill:#6b21a8; }
+    .hdr-text  { fill:#ffffff; font-size:13px; font-weight:700; }
+    .stereo    { fill:#cbd5e1; font-size:10px; font-style:italic; }
+    .field     { fill:#111827; font-size:12px; font-family:ui-monospace,monospace; }
+    .method    { fill:#15803d; font-size:12px; font-family:ui-monospace,monospace; }
+    .pk        { fill:#b91c1c; font-weight:700; }
+    .fk        { fill:#065f46; font-weight:700; }
+    .sep       { stroke:#9ca3af; stroke-width:1; }
+    .rel       { fill:none; stroke:#374151; stroke-width:1.5; }
+    .rel-dash  { fill:none; stroke:#6b7280; stroke-width:1.5; stroke-dasharray:5 3; }
+    .rel-lbl   { fill:#111827; font-size:11px; }
+    .card      { fill:#111827; font-size:11px; font-weight:600; }
+    .note      { fill:#78350f; font-size:11px; }
+    .note-bg   { fill:#fef3c7; stroke:#d97706; stroke-width:1; }
+    .h1        { fill:#111827; font-size:22px; font-weight:700; }
+    .h2        { fill:#4b5563; font-size:13px; }
+    .legend-bg { fill:#f9fafb; stroke:#d1d5db; stroke-width:1; }
+    .legend-t  { fill:#111827; font-size:11px; }
+  </style>
+
+  <defs>
+    <!-- composition (filled diamond) -->
+    <marker id="comp" viewBox="0 0 14 10" refX="13" refY="5" markerWidth="14" markerHeight="10" orient="auto">
+      <path d="M0,5 L7,0 L14,5 L7,10 z" fill="#374151"/>
+    </marker>
+    <!-- aggregation (open diamond) -->
+    <marker id="agg" viewBox="0 0 14 10" refX="13" refY="5" markerWidth="14" markerHeight="10" orient="auto">
+      <path d="M0,5 L7,0 L14,5 L7,10 z" fill="#ffffff" stroke="#374151" stroke-width="1.5"/>
+    </marker>
+    <!-- dashed reference arrow -->
+    <marker id="refarr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto">
+      <path d="M0,0 L10,5 L0,10" fill="none" stroke="#6b7280" stroke-width="1.5"/>
+    </marker>
+    <!-- dependency (solid arrow) -->
+    <marker id="deparr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto">
+      <path d="M0,0 L10,5 L0,10" fill="none" stroke="#374151" stroke-width="1.5"/>
+    </marker>
+  </defs>
+
+  <text x="40" y="36" class="h1">UML — Content graph + services</text>
+  <text x="40" y="58" class="h2">Domain model (top) · persistence services (middle) · mutation sequence (bottom)</text>
+
+  <!-- ====================== DOMAIN LAYER ====================== -->
+
+  <!-- INavigation -->
+  <g>
+    <rect x="80" y="100" width="320" height="22" class="cls-hdr"/>
+    <text x="240" y="116" text-anchor="middle" class="hdr-text">«collection» INavigation</text>
+    <rect x="80" y="122" width="320" height="178" class="cls"/>
+    <text x="92" y="142" class="field"><tspan class="pk">+ id</tspan>        : string  {guid, PK}</text>
+    <text x="92" y="160" class="field"><tspan class="pk">+ page</tspan>      : string  {unique}</text>
+    <text x="92" y="178" class="field">+ type      : "navigation"</text>
+    <text x="92" y="196" class="field"><tspan class="fk">+ sections</tspan>  : string[]</text>
+    <text x="92" y="214" class="field">+ seo       : Seo?</text>
+    <line x1="80" y1="230" x2="400" y2="230" class="sep"/>
+    <text x="92" y="250" class="method">+ addUpdateNavigationItem(page)</text>
+    <text x="92" y="268" class="method">+ updateNavigation(page, sections)</text>
+    <text x="92" y="286" class="method">+ deleteNavigationItem(page)</text>
+  </g>
+
+  <!-- ISection -->
+  <g>
+    <rect x="560" y="100" width="320" height="22" class="cls-hdr"/>
+    <text x="720" y="116" text-anchor="middle" class="hdr-text">«collection» ISection</text>
+    <rect x="560" y="122" width="320" height="178" class="cls"/>
+    <text x="572" y="142" class="field"><tspan class="pk">+ id</tspan>      : string  {guid, PK}</text>
+    <text x="572" y="160" class="field">+ type    : number  {1..10, slot count}</text>
+    <text x="572" y="178" class="field">+ page    : string  {denormalised}</text>
+    <text x="572" y="196" class="field">+ content : IItem[length=type]</text>
+    <line x1="560" y1="212" x2="880" y2="212" class="sep"/>
+    <text x="572" y="232" class="method">+ addUpdateSectionItem(section, page?)</text>
+    <text x="572" y="250" class="method">+ removeSectionItem(id)</text>
+    <text x="572" y="268" class="method">+ addRemoveItem(id, idx, Empty)</text>
+    <text x="572" y="286" class="stereo">padded with Empty up to `type`</text>
+  </g>
+
+  <!-- IItem -->
+  <g>
+    <rect x="1040" y="100" width="320" height="22" class="cls-hdr"/>
+    <text x="1200" y="116" text-anchor="middle" class="hdr-text">«value» IItem</text>
+    <rect x="1040" y="122" width="320" height="178" class="cls"/>
+    <text x="1052" y="142" class="field">+ name          : string</text>
+    <text x="1052" y="160" class="field">+ type          : EItemType</text>
+    <text x="1052" y="178" class="field">+ style         : string</text>
+    <text x="1052" y="196" class="field">+ content       : string  {JSON}</text>
+    <text x="1052" y="214" class="field">+ action        : string?</text>
+    <text x="1052" y="232" class="field">+ actionStyle   : string?</text>
+    <text x="1052" y="250" class="field">+ actionType    : EItemType?</text>
+    <text x="1052" y="268" class="field">+ actionContent : string?  {JSON}</text>
+  </g>
+
+  <!-- EItemType enum -->
+  <g>
+    <rect x="1040" y="330" width="320" height="22" class="cls-hdr-enum"/>
+    <text x="1200" y="346" text-anchor="middle" class="hdr-text">«enum» EItemType</text>
+    <rect x="1040" y="352" width="320" height="178" class="cls-enum"/>
+    <text x="1052" y="372" class="field">TEXT · RICH_TEXT · IMAGE · HERO</text>
+    <text x="1052" y="390" class="field">CAROUSEL · GALLERY · PROJECT_CARD</text>
+    <text x="1052" y="408" class="field">SKILL_PILLS · TIMELINE · SOCIAL_LINKS</text>
+    <text x="1052" y="426" class="field">BLOG_FEED · EMPTY</text>
+    <text x="1052" y="458" class="stereo">EMPTY = placeholder (no item rendered)</text>
+    <text x="1052" y="476" class="stereo">item `content` is a type-specific JSON</text>
+    <text x="1052" y="494" class="stereo">blob parsed at render.</text>
+  </g>
+
+  <!-- Navigation → Section (aggregation: sections[] is a list of ID refs) -->
+  <path d="M400,175 L440,175 L440,175 L560,175" class="rel-dash" marker-start="url(#agg)" marker-end="url(#refarr)"/>
+  <text x="460" y="165" class="rel-lbl">sections[] ↦ Section.id</text>
+  <text x="405" y="190" class="card">1</text>
+  <text x="548" y="190" class="card">0..*</text>
+
+  <!-- Section → IItem (composition: content is embedded array) -->
+  <path d="M880,175 L1040,175" class="rel" marker-start="url(#comp)"/>
+  <text x="910" y="165" class="rel-lbl">composes</text>
+  <text x="885" y="190" class="card">1</text>
+  <text x="1028" y="190" class="card">1..*</text>
+
+  <!-- IItem → EItemType dependency -->
+  <path d="M1200,300 L1200,330" class="rel-dash" marker-end="url(#refarr)"/>
+  <text x="1207" y="318" class="rel-lbl">«uses»</text>
+
+  <!-- Note on IItem -->
+  <rect x="1040" y="560" width="320" height="54" class="note-bg"/>
+  <text x="1052" y="580" class="note">Item "delete" in the admin replaces the entry</text>
+  <text x="1052" y="596" class="note">with {type:EMPTY} — content[] never shrinks,</text>
+  <text x="1052" y="610" class="note">preserving the Section.type slot layout.</text>
+
+  <!-- ====================== SERVICE LAYER ====================== -->
+
+  <text x="40" y="680" class="h1">Persistence services  ·  authz wrapper  ·  client cache</text>
+
+  <!-- NavigationService -->
+  <g>
+    <rect x="80" y="710" width="300" height="22" class="cls-hdr-svc"/>
+    <text x="230" y="726" text-anchor="middle" class="hdr-text">«service» NavigationService</text>
+    <rect x="80" y="732" width="300" height="190" class="cls-svc"/>
+    <text x="92" y="752" class="method">+ createNavigation()</text>
+    <text x="92" y="770" class="method">+ updateNavigation()  ⚠ upsert risk</text>
+    <text x="92" y="788" class="method">+ getNavigationCollection()</text>
+    <text x="92" y="806" class="method">+ getSections(ids[])</text>
+    <text x="92" y="824" class="method">+ addUpdateSectionItem()</text>
+    <text x="92" y="842" class="method">+ removeSectionItem()    ✓ cleans both sides</text>
+    <text x="92" y="860" class="method">+ deleteNavigationItem()  ⚠ leaves orphans</text>
+    <text x="92" y="878" class="method">+ replaceUpdateNavigation()</text>
+    <text x="92" y="896" class="method">+ addUpdateNavigationItem()</text>
+  </g>
+
+  <!-- PublishService -->
+  <g>
+    <rect x="420" y="710" width="300" height="22" class="cls-hdr-svc"/>
+    <text x="570" y="726" text-anchor="middle" class="hdr-text">«service» PublishService</text>
+    <rect x="420" y="732" width="300" height="190" class="cls-svc"/>
+    <text x="432" y="752" class="method">+ publishSnapshot(by?, note?)</text>
+    <text x="432" y="770" class="method">+ getActiveSnapshot()</text>
+    <text x="432" y="788" class="method">+ getActiveMeta()</text>
+    <text x="432" y="806" class="method">+ getHistory(limit)</text>
+    <text x="432" y="824" class="method">+ rollbackTo(id, by?)</text>
+    <text x="432" y="862" class="stereo">snapshots = frozen Navigation +</text>
+    <text x="432" y="878" class="stereo">Sections + Languages + Logos +</text>
+    <text x="432" y="894" class="stereo">Images + published Posts</text>
+  </g>
+
+  <!-- AuthzProxy -->
+  <g>
+    <rect x="760" y="710" width="300" height="22" class="cls-hdr-svc"/>
+    <text x="910" y="726" text-anchor="middle" class="hdr-text">«proxy» guardMethods</text>
+    <rect x="760" y="732" width="300" height="190" class="cls-svc"/>
+    <text x="772" y="752" class="field">required: Record&lt;method, UserRole&gt;</text>
+    <text x="772" y="770" class="field">capabilities: Record&lt;method, fn&gt;</text>
+    <line x1="760" y1="784" x2="1060" y2="784" class="sep"/>
+    <text x="772" y="806" class="method">+ get(target, prop): fn|throws</text>
+    <text x="772" y="840" class="stereo">wraps the Mongo connection as a</text>
+    <text x="772" y="856" class="stereo">Proxy — throws AuthzError when the</text>
+    <text x="772" y="872" class="stereo">session role is below minimum or a</text>
+    <text x="772" y="888" class="stereo">capability predicate returns false.</text>
+    <text x="772" y="904" class="stereo">Next /api/graphql only — standalone bypasses.</text>
+  </g>
+
+  <!-- gqty Cache -->
+  <g>
+    <rect x="1100" y="710" width="420" height="22" class="cls-hdr-svc"/>
+    <text x="1310" y="726" text-anchor="middle" class="hdr-text">«client» gqty Cache</text>
+    <rect x="1100" y="732" width="420" height="190" class="cls-svc"/>
+    <text x="1112" y="752" class="field">+ maxAge: number   // 0 since this session</text>
+    <text x="1112" y="770" class="field">+ staleWhileRevalidate: number   // 0</text>
+    <text x="1112" y="788" class="field">+ normalization: true</text>
+    <line x1="1100" y1="802" x2="1520" y2="802" class="sep"/>
+    <text x="1112" y="822" class="method">+ clear(): void</text>
+    <text x="1112" y="840" class="method">+ evict(...) / restore(...)</text>
+    <text x="1112" y="874" class="stereo">GQty can't invalidate string-ID arrays</text>
+    <text x="1112" y="890" class="stereo">(Navigation.sections[]) on mutations —</text>
+    <text x="1112" y="906" class="stereo">why the "popping back" bug needed maxAge:0</text>
+  </g>
+
+  <!-- Service → Domain dependency -->
+  <path d="M230,732 L230,330 L400,330" class="rel-dash" marker-end="url(#deparr)"/>
+  <text x="240" y="325" class="rel-lbl">reads/writes Navigation, Sections</text>
+
+  <path d="M570,732 L570,330 L720,330" class="rel-dash" marker-end="url(#deparr)"/>
+  <text x="580" y="325" class="rel-lbl">copies snapshot</text>
+
+  <path d="M910,732 L910,615 L380,615 L380,806" class="rel-dash" marker-end="url(#deparr)"/>
+  <text x="400" y="608" class="rel-lbl">wraps</text>
+
+  <!-- ====================== SEQUENCE DIAGRAM ====================== -->
+
+  <text x="40" y="990" class="h1">Sequence — admin deletes a section (current + post-fix behavior)</text>
+
+  <!-- lifelines -->
+  <g>
+    <rect x="100" y="1020" width="140" height="24" class="cls-hdr"/>
+    <text x="170" y="1037" text-anchor="middle" class="hdr-text">Admin UI</text>
+    <line x1="170" y1="1044" x2="170" y2="1260" stroke="#111827" stroke-width="1" stroke-dasharray="3 3"/>
+
+    <rect x="330" y="1020" width="140" height="24" class="cls-hdr"/>
+    <text x="400" y="1037" text-anchor="middle" class="hdr-text">gqty client</text>
+    <line x1="400" y1="1044" x2="400" y2="1260" stroke="#111827" stroke-width="1" stroke-dasharray="3 3"/>
+
+    <rect x="560" y="1020" width="200" height="24" class="cls-hdr-svc"/>
+    <text x="660" y="1037" text-anchor="middle" class="hdr-text">Next /api/graphql + authz</text>
+    <line x1="660" y1="1044" x2="660" y2="1260" stroke="#1e3a8a" stroke-width="1" stroke-dasharray="3 3"/>
+
+    <rect x="850" y="1020" width="200" height="24" class="cls-hdr-svc"/>
+    <text x="950" y="1037" text-anchor="middle" class="hdr-text">NavigationService</text>
+    <line x1="950" y1="1044" x2="950" y2="1260" stroke="#1e3a8a" stroke-width="1" stroke-dasharray="3 3"/>
+
+    <rect x="1140" y="1020" width="160" height="24" class="cls-hdr"/>
+    <text x="1220" y="1037" text-anchor="middle" class="hdr-text">Mongo</text>
+    <line x1="1220" y1="1044" x2="1220" y2="1260" stroke="#111827" stroke-width="1" stroke-dasharray="3 3"/>
+  </g>
+
+  <!-- messages -->
+  <g>
+    <!-- 1. user clicks Delete -->
+    <path d="M170,1080 L400,1080" class="rel" marker-end="url(#deparr)"/>
+    <text x="180" y="1073" class="rel-lbl">1. deleteSection(id)  — from DynamicTabsContent</text>
+
+    <!-- 2. gqty → apollo -->
+    <path d="M400,1110 L660,1110" class="rel" marker-end="url(#deparr)"/>
+    <text x="410" y="1103" class="rel-lbl">2. mutation removeSectionItem(id)</text>
+
+    <!-- 3. apollo → navService via guardMethods -->
+    <path d="M660,1140 L950,1140" class="rel" marker-end="url(#deparr)"/>
+    <text x="670" y="1133" class="rel-lbl">3. guardMethods → NavigationService.removeSectionItem</text>
+
+    <!-- 4. mongo delete section -->
+    <path d="M950,1170 L1220,1170" class="rel" marker-end="url(#deparr)"/>
+    <text x="960" y="1163" class="rel-lbl">4. Sections.deleteOne({id})</text>
+
+    <!-- 5. mongo pull navs -->
+    <path d="M950,1195 L1220,1195" class="rel" marker-end="url(#deparr)"/>
+    <text x="960" y="1188" class="rel-lbl">5. Navigation.updateMany $pull sections:id</text>
+
+    <!-- 6. back up -->
+    <path d="M400,1225 L170,1225" class="rel-dash" marker-end="url(#deparr)"/>
+    <text x="180" y="1218" class="rel-lbl">6. ok → invalidateCache() + refresh() → getNavigationCollection</text>
+  </g>
+
+  <!-- legend -->
+  <g>
+    <rect x="1120" y="940" width="460" height="40" class="legend-bg"/>
+    <text x="1135" y="965" class="legend-t">⚑ Legend:</text>
+    <text x="1195" y="965" class="legend-t">◆ composition</text>
+    <text x="1285" y="965" class="legend-t">◇ aggregation</text>
+    <text x="1375" y="965" class="legend-t">⋯⟶ dependency / FK</text>
+    <text x="1510" y="965" class="legend-t">→ call</text>
+  </g>
+</svg>
