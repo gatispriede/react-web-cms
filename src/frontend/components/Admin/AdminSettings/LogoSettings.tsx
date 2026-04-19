@@ -1,12 +1,14 @@
 import React, {useCallback, useEffect, useState} from "react";
 import {Alert, Button, InputNumber, Popconfirm, Space, Typography, message} from "antd";
 import {DeleteOutlined} from "../../common/icons";
-import {useTranslation} from "next-i18next";
+import {useTranslation} from "react-i18next";
 import ImageUpload from "../../ImageUpload";
 import MongoApi from "../../../api/MongoApi";
 import {PUBLIC_IMAGE_PATH} from "../../../../constants/imgPath";
 import AuditBadge from "../AuditBadge";
 import {useRefreshView} from "../../../lib/refreshBus";
+import ConflictDialog from "../../common/ConflictDialog";
+import {ConflictError, isConflictError} from "../../../lib/conflict";
 
 interface LogoState {
     src: string;
@@ -33,17 +35,20 @@ const inferLocation = (f: any): string | undefined => {
 };
 
 const AdminSettingsLogo: React.FC = () => {
-    const {t} = useTranslation('common');
+    const {t} = useTranslation();
     const [logo, setLogo] = useState<LogoState>({...DEFAULT});
+    const [version, setVersion] = useState<number | undefined>(undefined);
     const [saving, setSaving] = useState(false);
     const [loading, setLoading] = useState(false);
     const [audit, setAudit] = useState<{editedBy?: string; editedAt?: string}>({});
+    const [conflict, setConflict] = useState<{error: ConflictError<any>; retry: () => Promise<void>} | null>(null);
 
     const refresh = useCallback(async () => {
         setLoading(true);
         try {
             const raw = await mongoApi.getLogo();
             setAudit({editedBy: raw?.editedBy, editedAt: raw?.editedAt});
+            setVersion((raw as any)?.version);
             if (!raw?.content) { setLogo({...DEFAULT}); return; }
             try {
                 const parsed = JSON.parse(raw.content);
@@ -71,22 +76,57 @@ const AdminSettingsLogo: React.FC = () => {
         setLogo(prev => ({...prev, src}));
     };
 
+    const performSave = useCallback(async (payload: LogoState, expectedVersion: number | undefined, okMessage: string) => {
+        const result = await mongoApi.saveLogo(JSON.stringify(payload), expectedVersion);
+        if ((result as any).error) { message.error((result as any).error); return false; }
+        if (typeof (result as any).version === 'number') setVersion((result as any).version);
+        message.success(okMessage);
+        return true;
+    }, [t]);
+
     const save = async () => {
         setSaving(true);
         try {
-            await mongoApi.saveLogo(JSON.stringify(logo));
-            message.success(t('Logo saved'));
+            await performSave(logo, version, t('Logo saved'));
         } catch (err) {
-            message.error(String((err as Error)?.message ?? err));
+            if (isConflictError(err)) {
+                setConflict({
+                    error: err,
+                    retry: async () => {
+                        setSaving(true);
+                        try {
+                            await performSave(logo, err.currentVersion, t('Logo saved'));
+                            setConflict(null);
+                        } finally { setSaving(false); }
+                    },
+                });
+            } else {
+                message.error(String((err as Error)?.message ?? err));
+            }
         } finally { setSaving(false); }
     };
 
     const clear = async () => {
         setSaving(true);
         try {
-            await mongoApi.saveLogo(JSON.stringify({...DEFAULT}));
+            await performSave({...DEFAULT}, version, t('Logo cleared'));
             setLogo({...DEFAULT});
-            message.success(t('Logo cleared'));
+        } catch (err) {
+            if (isConflictError(err)) {
+                setConflict({
+                    error: err,
+                    retry: async () => {
+                        setSaving(true);
+                        try {
+                            await performSave({...DEFAULT}, err.currentVersion, t('Logo cleared'));
+                            setLogo({...DEFAULT});
+                            setConflict(null);
+                        } finally { setSaving(false); }
+                    },
+                });
+            } else {
+                message.error(String((err as Error)?.message ?? err));
+            }
         } finally { setSaving(false); }
     };
 
@@ -145,6 +185,24 @@ const AdminSettingsLogo: React.FC = () => {
                     <Button danger icon={<DeleteOutlined/>}>{t('Clear logo')}</Button>
                 </Popconfirm>
             </Space>
+            {conflict && (() => {
+                const peer = conflict.error.currentDoc as {editedBy?: string; editedAt?: string} | null;
+                return (
+                    <ConflictDialog
+                        open
+                        docKind={t('Logo')}
+                        peerVersion={conflict.error.currentVersion}
+                        peerEditedBy={peer?.editedBy}
+                        peerEditedAt={peer?.editedAt}
+                        onCancel={() => setConflict(null)}
+                        onTakeTheirs={async () => { setConflict(null); await refresh(); }}
+                        onKeepMine={async () => {
+                            try { await conflict.retry(); }
+                            catch (err) { message.error(String((err as Error)?.message ?? err)); setConflict(null); }
+                        }}
+                    />
+                );
+            })()}
         </div>
     );
 };

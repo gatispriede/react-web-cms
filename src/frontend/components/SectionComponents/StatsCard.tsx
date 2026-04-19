@@ -3,7 +3,7 @@ import {EItemType} from "../../../enums/EItemType";
 import {IItem} from "../../../Interfaces/IItem";
 import ContentManager from "../ContentManager";
 import {TFunction} from "i18next";
-import {translateOrKeep} from "../../../utils/translateOrKeep";
+import {InlineTranslatable} from "../common/InlineTranslatable";
 import RevealOnScroll from "../common/RevealOnScroll";
 
 export interface IStatsCardStat {
@@ -50,7 +50,7 @@ const StatsCard = ({item, tApp}: {
     tApp: TFunction<string, undefined>;
 }) => {
     const c = new StatsCardContent(EItemType.StatsCard, item.content).data;
-    const tr = (v: string) => translateOrKeep(tApp, v);
+    const tr = (v: string) => <InlineTranslatable tApp={tApp as any} source={v}/>;
 
     return (
         <RevealOnScroll className={`stats-card ${item.style ?? ''}`}>

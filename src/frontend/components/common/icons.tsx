@@ -58,6 +58,7 @@ import {
     MoveHorizontal,
     Pencil,
     Phone,
+    Image as ImageIcon,
     Plus,
     PlusCircle,
     RefreshCw,
@@ -150,6 +151,7 @@ export const LoadingOutlined: React.FC<IconBaseProps> = ({spin = true, ...p}) =>
 export const MailOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Mail} {...p}/>;
 export const MergeCellsOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Merge} {...p}/>;
 export const PhoneOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Phone} {...p}/>;
+export const PictureOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={ImageIcon} {...p}/>;
 export const PlusCircleOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={PlusCircle} {...p}/>;
 export const PlusOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Plus} {...p}/>;
 export const RedoOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Redo2} {...p}/>;

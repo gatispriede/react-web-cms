@@ -9,7 +9,7 @@ import PostApi from "../../api/PostApi";
 import {IPost} from "../../../Interfaces/IPost";
 import RevealOnScroll from "../common/RevealOnScroll";
 import {usePrefetchedPosts} from "../../lib/PostsContext";
-import {translateOrKeep} from "../../../utils/translateOrKeep";
+import {InlineTranslatable} from "../common/InlineTranslatable";
 
 export interface IBlogFeed {
     limit: number;
@@ -39,7 +39,7 @@ const BlogFeed = ({item, tApp}: {
     tApp: TFunction<string, undefined>;
 }) => {
     const c = new BlogFeedContent(EItemType.BlogFeed, item.content).data;
-    const tr = (v: string) => translateOrKeep(tApp, v);
+    const tr = (v: string) => <InlineTranslatable tApp={tApp as any} source={v}/>;
     const prefetched = usePrefetchedPosts();
     const filterPrefetched = (list: IPost[]) => (c.tag ? list.filter(p => p.tags.includes(c.tag)) : list).slice(0, c.limit);
     const [posts, setPosts] = useState<IPost[] | null>(prefetched ? filterPrefetched(prefetched) : null);

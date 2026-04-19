@@ -1,9 +1,10 @@
-import React from "react";
+import React, {useMemo} from "react";
 import {Button, Input, Space, Typography} from "antd";
 import {DeleteOutlined, PlusOutlined} from "../../common/icons";
 import {IInputContent} from "../../../../Interfaces/IInputContent";
 import {EItemType} from "../../../../enums/EItemType";
 import {IStatsCard, IStatsCardFeature, IStatsCardStat, StatsCardContent} from "../../SectionComponents/StatsCard";
+import {SortableHandleItem, SortableList, arrayMove} from "../../common/SortableList";
 
 const InputStatsCard: React.FC<IInputContent> = ({content, setContent, t}) => {
     const mgr = new StatsCardContent(EItemType.StatsCard, content);
@@ -20,12 +21,16 @@ const InputStatsCard: React.FC<IInputContent> = ({content, setContent, t}) => {
         update({stats: stats.map((s, j) => j === i ? {...s, ...patch} : s)});
     const addStat = () => update({stats: [...stats, {value: '', label: ''}]});
     const removeStat = (i: number) => update({stats: stats.filter((_, j) => j !== i)});
+    const reorderStats = (from: number, to: number) => update({stats: arrayMove(stats, from, to)});
+    const statIds = useMemo(() => stats.map((_, i) => `stat-${i}`), [stats.length]);
 
     const features: IStatsCardFeature[] = Array.isArray(data.features) ? data.features : [];
     const patchFeature = (i: number, text: string) =>
         update({features: features.map((f, j) => j === i ? {text} : f)});
     const addFeature = () => update({features: [...features, {text: ''}]});
     const removeFeature = (i: number) => update({features: features.filter((_, j) => j !== i)});
+    const reorderFeatures = (from: number, to: number) => update({features: arrayMove(features, from, to)});
+    const featureIds = useMemo(() => features.map((_, i) => `feature-${i}`), [features.length]);
 
     return (
         <div className={'admin-stats-card'} style={{display: 'flex', flexDirection: 'column', gap: 14}}>
@@ -46,9 +51,10 @@ const InputStatsCard: React.FC<IInputContent> = ({content, setContent, t}) => {
 
             <div>
                 <div style={{marginBottom: 6, fontWeight: 500}}>{t('Stats')}</div>
+                <SortableList ids={statIds} onReorder={reorderStats}>
                 <Space direction="vertical" style={{width: '100%'}} size={6}>
                     {stats.map((s, i) => (
-                        <Space key={i} align="start" style={{width: '100%'}}>
+                        <SortableHandleItem key={statIds[i]} id={statIds[i]}>
                             <Input
                                 value={s.value}
                                 onChange={e => patchStat(i, {value: e.target.value})}
@@ -62,9 +68,10 @@ const InputStatsCard: React.FC<IInputContent> = ({content, setContent, t}) => {
                                 style={{width: 260}}
                             />
                             <Button danger size="small" icon={<DeleteOutlined/>} onClick={() => removeStat(i)}/>
-                        </Space>
+                        </SortableHandleItem>
                     ))}
                 </Space>
+                </SortableList>
                 <Button type="dashed" icon={<PlusOutlined/>} onClick={addStat} block style={{marginTop: 8}}>
                     {t('Add stat')}
                 </Button>
@@ -75,9 +82,10 @@ const InputStatsCard: React.FC<IInputContent> = ({content, setContent, t}) => {
 
             <div>
                 <div style={{marginBottom: 6, fontWeight: 500}}>{t('Features (checklist)')}</div>
+                <SortableList ids={featureIds} onReorder={reorderFeatures}>
                 <Space direction="vertical" style={{width: '100%'}} size={6}>
                     {features.map((f, i) => (
-                        <Space key={i} align="start" style={{width: '100%'}}>
+                        <SortableHandleItem key={featureIds[i]} id={featureIds[i]}>
                             <Input
                                 value={f.text}
                                 onChange={e => patchFeature(i, e.target.value)}
@@ -85,9 +93,10 @@ const InputStatsCard: React.FC<IInputContent> = ({content, setContent, t}) => {
                                 style={{width: 420}}
                             />
                             <Button danger size="small" icon={<DeleteOutlined/>} onClick={() => removeFeature(i)}/>
-                        </Space>
+                        </SortableHandleItem>
                     ))}
                 </Space>
+                </SortableList>
                 <Button type="dashed" icon={<PlusOutlined/>} onClick={addFeature} block style={{marginTop: 8}}>
                     {t('Add feature')}
                 </Button>

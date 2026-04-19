@@ -6,6 +6,7 @@ import {ILogo} from "../Interfaces/ILogo";
 import {IImage, InImage} from "../Interfaces/IImage";
 import {IAssetService} from "./mongoConfig";
 import {auditStamp} from "./audit";
+import {nextVersion, requireVersion} from "./conflict";
 import {PUBLIC_IMAGE_PATH} from "../constants/imgPath";
 
 const IMAGE_EXT = /\.(jpe?g|png|gif|webp|svg|avif|bmp)$/i;
@@ -33,6 +34,7 @@ export class AssetService  implements IAssetService {
                 id: rest.id ?? String(_id ?? guid()),
                 type: rest.type ?? 'image',
                 content: rest.content ?? '',
+                version: typeof rest.version === 'number' ? rest.version : 0,
                 editedBy: rest.editedBy,
                 editedAt: rest.editedAt,
             };
@@ -43,24 +45,40 @@ export class AssetService  implements IAssetService {
         }
     }
 
-    async saveLogo(content: string, editedBy?: string): Promise<string> {
-        try {
-            // Persist id + type alongside content so the schema's scalar fields
-            // are always non-null going forward.
-            const result = await this.logosDB.updateOne(
-                {},
-                {
-                    $set: {content, type: 'image', ...auditStamp(editedBy)},
-                    $setOnInsert: {id: guid()},
-                },
-                {upsert: true},
-            );
-            return JSON.stringify(result);
-        } catch (err) {
-            console.error('Error saving logo:', err);
-            await this.setupClient();
-            return '';
-        }
+    async saveLogo(content: string, editedBy?: string, expectedVersion?: number | null): Promise<ILogo> {
+        // Conflict-aware variant: returns the new doc (with bumped version)
+        // so `runMutation` can wrap it as `{saveLogo: {...}}`. Legacy callers
+        // that pass no `expectedVersion` still bump `version` — they just
+        // don't get the conflict check.
+        const existing: any = await this.logosDB.findOne({});
+        const existingVersion = typeof existing?.version === 'number' ? existing.version : 0;
+        const current: ILogo = existing ? {
+            id: existing.id ?? String(existing._id ?? guid()),
+            type: existing.type ?? 'image',
+            content: existing.content ?? '',
+            version: existingVersion,
+            editedBy: existing.editedBy,
+            editedAt: existing.editedAt,
+        } : {content: '', version: 0};
+        requireVersion(current, existingVersion, expectedVersion, 'Logo');
+        const version = nextVersion(existingVersion);
+        await this.logosDB.updateOne(
+            {},
+            {
+                $set: {content, type: 'image', version, ...auditStamp(editedBy)},
+                $setOnInsert: {id: guid()},
+            },
+            {upsert: true},
+        );
+        const fresh: any = await this.logosDB.findOne({});
+        return {
+            id: fresh?.id ?? current.id ?? guid(),
+            type: fresh?.type ?? 'image',
+            content: fresh?.content ?? content,
+            version,
+            editedBy: fresh?.editedBy,
+            editedAt: fresh?.editedAt,
+        };
     }
 
     async saveImage(image: InImage): Promise<string> {

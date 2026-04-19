@@ -5,6 +5,9 @@ import TranslationManager from '../TranslationManager';
 import CsvImportDialog from './CsvImportDialog';
 import TranslationMetaApi from '../../../api/TranslationMetaApi';
 import {ITranslationMetaEntry, ITranslationMetaMap} from '../../../../Server/TranslationMetaService';
+import ConflictDialog from '../../common/ConflictDialog';
+import {ConflictError, isConflictError} from '../../../lib/conflict';
+import {useTranslation} from 'react-i18next';
 
 interface Row {
     key: string;
@@ -156,7 +159,10 @@ export const ContentLoaderCompare = ({translationManager, dataPromise}: {
     const [loading, setLoading] = useState(true);
     const [importOpen, setImportOpen] = useState(false);
     const [meta, setMeta] = useState<ITranslationMetaMap>({});
+    const [metaVersion, setMetaVersion] = useState<number>(0);
+    const [conflict, setConflict] = useState<{error: ConflictError<any>; retry: () => Promise<void>} | null>(null);
     const metaApi = useMemo(() => new TranslationMetaApi(), []);
+    const {t} = useTranslation();
 
     const loadAll = useCallback(async () => {
         setLoading(true);
@@ -173,11 +179,31 @@ export const ContentLoaderCompare = ({translationManager, dataPromise}: {
                 loaded[l.symbol] = await fetchLocale(l.symbol);
             }));
             setResources(loaded);
-            setMeta(await metaApi.get());
+            const current = await metaApi.get();
+            setMeta(current.value);
+            setMetaVersion(current.version);
         } finally {
             setLoading(false);
         }
     }, [translationManager, dataPromise, sourceMap, metaApi]);
+
+    const reloadMeta = useCallback(async () => {
+        const current = await metaApi.get();
+        setMeta(current.value);
+        setMetaVersion(current.version);
+    }, [metaApi]);
+
+    const performMetaSave = useCallback(async (patch: ITranslationMetaMap, expectedVersion: number | undefined) => {
+        const result = await metaApi.save(patch, expectedVersion);
+        if ((result as any)?.error) {
+            message.error(String((result as any).error));
+            await reloadMeta();
+            return false;
+        }
+        if (typeof (result as any).version === 'number') setMetaVersion((result as any).version);
+        if ((result as any).value) setMeta((result as any).value as ITranslationMetaMap);
+        return true;
+    }, [metaApi, reloadMeta]);
 
     const persistMeta = useCallback(async (key: string, entry: ITranslationMetaEntry) => {
         // Optimistic update so the row reflects the edit instantly.
@@ -192,13 +218,29 @@ export const ContentLoaderCompare = ({translationManager, dataPromise}: {
             };
             return next;
         });
-        const result = await metaApi.save({[key]: entry});
-        if ((result as any)?.error) {
-            message.error(String((result as any).error));
-            // Revert by re-fetching on failure.
-            setMeta(await metaApi.get());
+        const patch = {[key]: entry};
+        try {
+            await performMetaSave(patch, metaVersion);
+        } catch (err) {
+            if (isConflictError(err)) {
+                setConflict({
+                    error: err,
+                    retry: async () => {
+                        try {
+                            await performMetaSave(patch, err.currentVersion);
+                            setConflict(null);
+                        } catch (e) {
+                            message.error(String((e as Error)?.message ?? e));
+                            setConflict(null);
+                        }
+                    },
+                });
+            } else {
+                message.error(String((err as Error)?.message ?? err));
+                await reloadMeta();
+            }
         }
-    }, [metaApi]);
+    }, [performMetaSave, metaVersion, reloadMeta]);
 
     useEffect(() => { void loadAll(); }, [loadAll]);
 
@@ -322,6 +364,24 @@ export const ContentLoaderCompare = ({translationManager, dataPromise}: {
                 size="small"
                 scroll={{x: 'max-content'}}
             />
+            {conflict && (() => {
+                const peer = conflict.error.currentDoc as {editedBy?: string; editedAt?: string} | null;
+                return (
+                    <ConflictDialog
+                        open
+                        docKind={t('Translator notes')}
+                        peerVersion={conflict.error.currentVersion}
+                        peerEditedBy={peer?.editedBy}
+                        peerEditedAt={peer?.editedAt}
+                        onCancel={() => setConflict(null)}
+                        onTakeTheirs={async () => { setConflict(null); await reloadMeta(); }}
+                        onKeepMine={async () => {
+                            try { await conflict.retry(); }
+                            catch (err) { message.error(String((err as Error)?.message ?? err)); setConflict(null); }
+                        }}
+                    />
+                );
+            })()}
         </div>
     );
 };

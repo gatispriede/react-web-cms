@@ -1,35 +1,43 @@
 import {describe, it, expect, vi} from 'vitest';
-import {sanitizeKey, sanitizeKeyV2} from './stringFunctions';
+import {sanitizeKey} from './stringFunctions';
 import {translateOrKeep} from './translateOrKeep';
 import {htmlToBlocks} from './htmlBlocks';
 import {extractTranslationsFromHTML} from './translationsutils';
 
 describe('sanitizeKey', () => {
-    // WARNING: production regex has a latent bug — the character class closes
-    // early on an unescaped `]`, so most "special" characters aren't actually
-    // stripped. We lock in current behaviour here: "anything that fits in 30
-    // chars returns unchanged". Fixing the regex would re-key every existing
-    // translation and is deferred (see ROADMAP Debt).
-    it('caps at 30 characters', () => {
+    it('strips whitespace / punctuation / brackets / quotes', () => {
+        expect(sanitizeKey('Hello, world!')).toBe('Helloworld');
+        expect(sanitizeKey('foo [bar] (baz)?')).toBe('foobarbaz?'); // `?` isn't in the strip class — preserved on purpose
+        expect(sanitizeKey('mixed/slash.dot-hyphen_under')).toBe('mixedslashdothyphenunder');
+    });
+
+    it('returns stripped content verbatim when ≤ 30 chars', () => {
+        expect(sanitizeKey('short sentence')).toBe('shortsentence');
+        expect(sanitizeKey('a'.repeat(30))).toBe('a'.repeat(30));
+    });
+
+    it('caps at 30 chars by appending a stable hash suffix for long input', () => {
         const long = 'a'.repeat(60);
-        expect(sanitizeKey(long).length).toBe(30);
+        const out = sanitizeKey(long);
+        expect(out.length).toBe(30);
+        // Deterministic — same input gives same key every call.
+        expect(sanitizeKey(long)).toBe(out);
+    });
+
+    it('disambiguates two long strings that share the same 30-char prefix', () => {
+        // Common failure mode before the hash suffix: stripped prefix of
+        // 30 chars collides even though the full strings differ beyond
+        // that point (e.g., paragraphs copy-edited from the tail).
+        const a = 'The same opening phrase used twice for emphasis — variant A';
+        const b = 'The same opening phrase used twice for emphasis — variant B';
+        expect(sanitizeKey(a)).not.toBe(sanitizeKey(b));
+        expect(sanitizeKey(a).length).toBe(30);
+        expect(sanitizeKey(b).length).toBe(30);
     });
 
     it('returns non-string input unchanged (defensive guard)', () => {
         expect(sanitizeKey(undefined as any)).toBeUndefined();
         expect(sanitizeKey(42 as any)).toBe(42);
-    });
-});
-
-describe('sanitizeKeyV2 (correct char class)', () => {
-    it('strips the full special set that v1 fails to strip', () => {
-        expect(sanitizeKeyV2('Hello, world!')).toBe('Helloworld');
-        expect(sanitizeKeyV2('foo [bar] (baz)?')).toBe('foobarbaz?'); // `?` is not in the class — preserved
-        expect(sanitizeKeyV2('mixed/slash.dot-hyphen_under')).toBe('mixedslashdothyphenunder');
-    });
-
-    it('still caps at 30 chars', () => {
-        expect(sanitizeKeyV2('a'.repeat(60)).length).toBe(30);
     });
 });
 

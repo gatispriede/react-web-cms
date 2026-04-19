@@ -4,6 +4,7 @@ import {IItem} from "../../../Interfaces/IItem";
 import ContentManager from "../ContentManager";
 import {TFunction} from "i18next";
 import {translateOrKeep} from "../../../utils/translateOrKeep";
+import {InlineTranslatable} from "../common/InlineTranslatable";
 import RevealOnScroll from "../common/RevealOnScroll";
 
 export interface IProjectGridItem {
@@ -68,7 +69,8 @@ const ProjectGrid = ({item, tApp}: {
     tApp: TFunction<string, undefined>;
 }) => {
     const c = new ProjectGridContent(EItemType.ProjectGrid, item.content).data;
-    const tr = (v: string) => translateOrKeep(tApp, v);
+    const trStr = (v: string) => translateOrKeep(tApp, v);
+    const tr = (v: string) => <InlineTranslatable tApp={tApp as any} source={v}/>;
 
     return (
         <section className={`project-grid ${item.style ?? ''}`}>
@@ -76,7 +78,7 @@ const ProjectGrid = ({item, tApp}: {
                 <header className="project-grid__head">
                     {c.sectionNumber && <div className="project-grid__num">{tr(c.sectionNumber)}</div>}
                     {c.sectionTitle && (
-                        <h2 className="project-grid__title">{renderAccentRuns(c.sectionTitle, tr)}</h2>
+                        <h2 className="project-grid__title">{renderAccentRuns(c.sectionTitle, trStr)}</h2>
                     )}
                     {c.sectionSubtitle && (
                         <div className="project-grid__sub">{tr(c.sectionSubtitle)}</div>
@@ -100,7 +102,7 @@ const ProjectGrid = ({item, tApp}: {
                                     <h3 className="project-grid__card-title">{tr(p.title)}</h3>
                                     {p.stack && <div className="project-grid__stack">{tr(p.stack)}</div>}
                                 </div>
-                                {p.kind && <div className="project-grid__kind" dangerouslySetInnerHTML={{__html: tr(p.kind)}}/>}
+                                {p.kind && <div className="project-grid__kind" dangerouslySetInnerHTML={{__html: trStr(p.kind)}}/>}
                             </div>
                             {p.moreLabel && (
                                 <div className="project-grid__more">{tr(p.moreLabel)}</div>

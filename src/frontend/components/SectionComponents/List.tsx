@@ -3,7 +3,7 @@ import {EItemType} from "../../../enums/EItemType";
 import {IItem} from "../../../Interfaces/IItem";
 import ContentManager from "../ContentManager";
 import {TFunction} from "i18next";
-import {translateOrKeep} from "../../../utils/translateOrKeep";
+import {InlineTranslatable} from "../common/InlineTranslatable";
 import RevealOnScroll from "../common/RevealOnScroll";
 
 /**
@@ -62,7 +62,7 @@ const List = ({item, tApp}: {
     tApp: TFunction<string, undefined>;
 }) => {
     const c = new ListContent(EItemType.List, item.content).data;
-    const tr = (v: string) => translateOrKeep(tApp, v);
+    const tr = (v: string) => <InlineTranslatable tApp={tApp as any} source={v}/>;
     const style = item.style || EListStyle.Default;
     const isFacts = style === EListStyle.Facts;
     const isCases = style === EListStyle.Cases;

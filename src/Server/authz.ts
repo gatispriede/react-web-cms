@@ -149,4 +149,9 @@ export const QUERY_REQUIREMENTS: Record<string, UserRole> = {
     setupAdmin: 'admin',
     getMongoDBUri: 'admin',
     loadData: 'admin',
+    // Audit log is admin-only — diffs can include user text and actor
+    // metadata we don't want exposing to editors.
+    getAuditLog: 'admin',
+    getAuditCollections: 'admin',
+    getAuditActors: 'admin',
 };

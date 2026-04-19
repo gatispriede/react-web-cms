@@ -66,12 +66,15 @@ input InUser {
     role: String
     avatar: String
     canPublishProduction: Boolean
+    mustChangePassword: Boolean
+    preferredAdminLocale: String
 }
 type INewLanguage {
     label: String!
     symbol: String!
     default: Boolean
     flag: String
+    version: Int
     editedBy: String
     editedAt: String
 }
@@ -83,12 +86,15 @@ type IUser {
     role: String
     avatar: String
     canPublishProduction: Boolean
+    mustChangePassword: Boolean
+    preferredAdminLocale: String
 }
 
 type ILogo {
     id: String
     type: String
     content: String!
+    version: Int
     editedBy: String
     editedAt: String
 }
@@ -177,6 +183,9 @@ type QueryMongo {
     getSiteFlags: String!
     getSiteSeo: String!
     getTranslationMeta: String!
+    getAuditLog(filter: JSON): String!
+    getAuditCollections: String!
+    getAuditActors: String!
 }
 
 scalar JSON
@@ -191,8 +200,8 @@ type MutationMongo {
     deleteNavigationItem(pageName:String!): String!
     saveImage(image: InImage!): String!
     deleteImage(id: String!): String!
-    saveLogo(content: String!): String!
-    addUpdateLanguage(language: InLanguage, translations: JSON): String!
+    saveLogo(content: String!, expectedVersion: Int): String!
+    addUpdateLanguage(language: InLanguage, translations: JSON, expectedVersion: Int): String!
     deleteLanguage(language: InLanguage): String!
     addUser(user: InUser!): String!
     updateUser(user: InUser!): String!

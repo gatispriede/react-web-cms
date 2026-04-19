@@ -2,8 +2,13 @@
  * One-shot cleanup: remove legacy Navigation docs that are missing the
  * `type: 'navigation'` marker. These came from an older `updateNavigation`
  * path that upserted a bare `{page, sections}` row on first reorder.
- * The admin now filters on `type: 'navigation'` so these are invisible, but
+ * The admin filters on `type: 'navigation'` so these are invisible, but
  * they still occupy disk and show up in raw dumps.
+ *
+ * The root cause is fixed — new installs never accumulate ghosts. This
+ * script is only needed for pre-fix databases. `mongoDBConnection` logs
+ * a `[cleanup] N ghost Navigation docs detected` warning on boot so
+ * operators with legacy data know to run this.
  *
  * Usage (from repo root):
  *   npx tsx --tsconfig src/Server/tsconfig.custom.json Scripts/cleanup-ghost-navigation.ts

@@ -124,6 +124,12 @@ export class UserService implements IUserService {
             if (user.role !== undefined) set.role = user.role;
             if (user.avatar !== undefined) set.avatar = user.avatar;
             if (user.canPublishProduction !== undefined) set.canPublishProduction = Boolean(user.canPublishProduction);
+            if (user.preferredAdminLocale !== undefined) {
+                if (user.preferredAdminLocale !== 'en' && user.preferredAdminLocale !== 'lv') {
+                    throw new Error('preferredAdminLocale must be "en" or "lv"');
+                }
+                set.preferredAdminLocale = user.preferredAdminLocale;
+            }
             if (user.password) {
                 set.password = await hash(user.password, this._hashSaltRounds);
                 // Rotating the password retires the seeded-default flag. If an
@@ -185,6 +191,7 @@ export class UserService implements IUserService {
                 avatar: (d as any).avatar,
                 canPublishProduction: Boolean((d as any).canPublishProduction),
                 mustChangePassword: Boolean((d as any).mustChangePassword),
+                preferredAdminLocale: (d as any).preferredAdminLocale,
             }));
         } catch (err) {
             console.error('Error listing users:', err);

@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import {Button, Empty, Popconfirm, Space, Table, Tag, Typography, message} from 'antd';
 import {RollbackOutlined} from '../../common/icons';
-import {useTranslation} from 'next-i18next';
+import {useTranslation} from 'react-i18next';
 import {useSession} from 'next-auth/react';
 import PublishApi from '../../../api/PublishApi';
 import type {SnapshotMeta} from '../../../../Server/PublishService';
@@ -9,7 +9,7 @@ import type {SnapshotMeta} from '../../../../Server/PublishService';
 const publishApi = new PublishApi();
 
 const AdminSettingsPublishing: React.FC = () => {
-    const {t} = useTranslation('common');
+    const {t} = useTranslation();
     const {data: session} = useSession();
     const canPublish = Boolean((session?.user as any)?.canPublishProduction);
 

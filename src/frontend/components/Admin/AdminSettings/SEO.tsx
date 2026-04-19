@@ -1,18 +1,21 @@
 import React, {useCallback, useEffect, useState} from "react";
 import {Alert, Button, Col, Input, Row, Space, Typography, message} from "antd";
-import {useTranslation} from "next-i18next";
+import {useTranslation} from "react-i18next";
 import SiteSeoApi from "../../../api/SiteSeoApi";
 import {DEFAULT_SITE_SEO, ISiteSeoDefaults} from "../../../../Interfaces/ISiteSeo";
 import AuditBadge from "../AuditBadge";
 import {useRefreshView} from "../../../lib/refreshBus";
+import ConflictDialog from "../../common/ConflictDialog";
+import {ConflictError, isConflictError} from "../../../lib/conflict";
 
 const seoApi = new SiteSeoApi();
 
 const AdminSettingsSEO: React.FC = () => {
-    const {t} = useTranslation('common');
+    const {t} = useTranslation();
     const [seo, setSeo] = useState<ISiteSeoDefaults>({...DEFAULT_SITE_SEO});
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [conflict, setConflict] = useState<{error: ConflictError<any>; retry: () => Promise<void>} | null>(null);
 
     const refresh = useCallback(async () => {
         setLoading(true);
@@ -25,12 +28,35 @@ const AdminSettingsSEO: React.FC = () => {
 
     const update = (patch: Partial<ISiteSeoDefaults>) => setSeo(s => ({...s, ...patch}));
 
+    const performSave = useCallback(async (payload: ISiteSeoDefaults, expectedVersion: number | undefined) => {
+        const result = await seoApi.save(payload, expectedVersion);
+        if ((result as any).error) { message.error((result as any).error); return false; }
+        message.success(t('SEO defaults saved'));
+        if (typeof (result as any).version === 'number') {
+            setSeo(s => ({...s, version: (result as any).version}));
+        }
+        return true;
+    }, [t]);
+
     const save = async () => {
         setSaving(true);
         try {
-            const result = await seoApi.save(seo);
-            if ((result as any).error) { message.error((result as any).error); return; }
-            message.success(t('SEO defaults saved'));
+            await performSave(seo, seo.version);
+        } catch (err) {
+            if (isConflictError(err)) {
+                setConflict({
+                    error: err,
+                    retry: async () => {
+                        setSaving(true);
+                        try {
+                            await performSave(seo, err.currentVersion);
+                            setConflict(null);
+                        } finally { setSaving(false); }
+                    },
+                });
+            } else {
+                message.error(String((err as Error)?.message ?? err));
+            }
         } finally { setSaving(false); }
     };
 
@@ -114,6 +140,24 @@ const AdminSettingsSEO: React.FC = () => {
                 <Button onClick={refresh} loading={loading}>{t('Refresh')}</Button>
                 <AuditBadge editedBy={seo.editedBy} editedAt={seo.editedAt}/>
             </Space>
+            {conflict && (() => {
+                const peer = conflict.error.currentDoc as {editedBy?: string; editedAt?: string} | null;
+                return (
+                    <ConflictDialog
+                        open
+                        docKind={t('SEO defaults')}
+                        peerVersion={conflict.error.currentVersion}
+                        peerEditedBy={peer?.editedBy}
+                        peerEditedAt={peer?.editedAt}
+                        onCancel={() => setConflict(null)}
+                        onTakeTheirs={async () => { setConflict(null); await refresh(); }}
+                        onKeepMine={async () => {
+                            try { await conflict.retry(); }
+                            catch (err) { message.error(String((err as Error)?.message ?? err)); setConflict(null); }
+                        }}
+                    />
+                );
+            })()}
         </div>
     );
 };

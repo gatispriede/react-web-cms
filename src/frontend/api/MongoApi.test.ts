@@ -54,7 +54,7 @@ describe('MongoApi facade', () => {
         await api.getImages('All');
         await api.rescanDiskImages();
         expect(assetApiMock.getLogo).toHaveBeenCalledTimes(1);
-        expect(assetApiMock.saveLogo).toHaveBeenCalledWith('content-blob');
+        expect(assetApiMock.saveLogo).toHaveBeenCalledWith('content-blob', undefined);
         expect(assetApiMock.saveImage).toHaveBeenCalledWith({id: 'img1'});
         expect(assetApiMock.deleteImage).toHaveBeenCalledWith('img1');
         expect(assetApiMock.getImages).toHaveBeenCalledWith('All');
@@ -66,7 +66,7 @@ describe('MongoApi facade', () => {
         await api.saveLanguage({symbol: 'lv'} as any, {hello: 'sveiks'});
         await api.deleteTranslation({symbol: 'lv'} as any);
         expect(languageApiMock.getLanguages).toHaveBeenCalled();
-        expect(languageApiMock.saveLanguage).toHaveBeenCalledWith({symbol: 'lv'}, {hello: 'sveiks'});
+        expect(languageApiMock.saveLanguage).toHaveBeenCalledWith({symbol: 'lv'}, {hello: 'sveiks'}, undefined);
         expect(languageApiMock.deleteTranslation).toHaveBeenCalledWith({symbol: 'lv'});
     });
 

@@ -3,6 +3,7 @@ import {INewLanguage} from "../frontend/components/interfaces/INewLanguage";
 import {ILanguageService} from "./mongoConfig";
 import FileManager from "./fileManager";
 import {auditStamp} from "./audit";
+import {nextVersion, requireVersion} from "./conflict";
 
 /**
  * Translations live in two places that must stay in sync:
@@ -34,40 +35,37 @@ export class LanguageService implements ILanguageService {
         }
     }
 
-    async addUpdateLanguage({language, translations, editedBy}: { language: INewLanguage, translations: JSON, editedBy?: string }): Promise<string> {
-        try {
-            // MERGE, don't replace. The admin editor only ever sends the keys
-            // it actually displays — extracting them from the Sections graph.
-            // Anything else (admin chrome, legacy content) would be wiped
-            // every save. Merge incoming on top of the existing base.
-            //
-            // Base order: disk JSON is what i18next actually serves at
-            // runtime, so it wins over Mongo if the two have drifted (past
-            // bugs let that happen). If both are empty, the payload itself
-            // becomes the base.
-            const diskBase = language.symbol ? this.fileManager.readTranslation(language.symbol) : {};
-            const existing = await this.languagesDB.findOne({symbol: language.symbol}) as any;
-            const mongoBase = (existing?.translations as Record<string, string> | undefined) ?? {};
-            const incoming = (translations as unknown as Record<string, string>) ?? {};
-            const merged: Record<string, string> = {...mongoBase, ...diskBase, ...incoming};
-            const result = await this.languagesDB.updateOne(
-                {symbol: language.symbol},
-                {$set: {...language, translations: merged, ...auditStamp(editedBy)}},
-                {upsert: true}
-            );
-            if (language.symbol) {
-                try {
-                    this.fileManager.saveTranslation(language.symbol, merged as unknown as JSON);
-                } catch (err) {
-                    console.error('Error writing translation JSON to disk:', err);
-                }
+    async addUpdateLanguage({language, translations, editedBy, expectedVersion}: { language: INewLanguage, translations: JSON, editedBy?: string, expectedVersion?: number | null }): Promise<{symbol: string; version: number}> {
+        // MERGE, don't replace. The admin editor only ever sends the keys
+        // it actually displays — extracting them from the Sections graph.
+        // Anything else (admin chrome, legacy content) would be wiped
+        // every save. Merge incoming on top of the existing base.
+        //
+        // Base order: disk JSON is what i18next actually serves at
+        // runtime, so it wins over Mongo if the two have drifted (past
+        // bugs let that happen). If both are empty, the payload itself
+        // becomes the base.
+        const diskBase = language.symbol ? this.fileManager.readTranslation(language.symbol) : {};
+        const existing = await this.languagesDB.findOne({symbol: language.symbol}) as any;
+        const existingVersion = typeof existing?.version === 'number' ? existing.version : 0;
+        requireVersion(existing ?? {symbol: language.symbol}, existingVersion, expectedVersion, 'Language');
+        const mongoBase = (existing?.translations as Record<string, string> | undefined) ?? {};
+        const incoming = (translations as unknown as Record<string, string>) ?? {};
+        const merged: Record<string, string> = {...mongoBase, ...diskBase, ...incoming};
+        const version = nextVersion(existingVersion);
+        await this.languagesDB.updateOne(
+            {symbol: language.symbol},
+            {$set: {...language, translations: merged, version, ...auditStamp(editedBy)}},
+            {upsert: true}
+        );
+        if (language.symbol) {
+            try {
+                this.fileManager.saveTranslation(language.symbol, merged as unknown as JSON);
+            } catch (err) {
+                console.error('Error writing translation JSON to disk:', err);
             }
-            return JSON.stringify(result);
-        } catch (err) {
-            console.error('Error adding/updating language:', err);
-            await this.setupClient();
-            return '';
         }
+        return {symbol: language.symbol, version};
     }
 
     async deleteLanguage({language, deletedBy}: { language: INewLanguage, deletedBy?: string }): Promise<string> {

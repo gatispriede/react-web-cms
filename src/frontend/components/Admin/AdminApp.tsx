@@ -19,6 +19,7 @@ import {UserRole} from "../../../Interfaces/IUser";
 import AuditBadge from "./AuditBadge";
 import UndoStatusPill from "./UndoStatusPill";
 import {refreshBus} from "../../lib/refreshBus";
+import ImageRailDock from "./ImageRailDock";
 
 interface IHomeState {
     loading: boolean,
@@ -324,6 +325,7 @@ class AdminApp extends React.Component<{
                     }}>
                         <Logo admin={this.admin} t={this.props.t}/>
                         <div style={{flex: 1}}/>
+                        {this.canEditNav && <ImageRailDock/>}
                         {this.canEditNav && <UndoStatusPill t={this.props.t}/>}
                         {this.canPublish && (
                             <>

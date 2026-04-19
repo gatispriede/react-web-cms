@@ -1,4 +1,18 @@
-# Debt — sanitizeKey v2 migration
+# Debt — sanitizeKey cleanup **Shipped**
+
+The legacy v1 regex (character class closed early on `]`, so most specials survived) has been dropped. [`sanitizeKey`](../src/utils/stringFunctions.ts) is now the single exported sanitiser:
+
+- **Corrected character class** — whitespace + punctuation + brackets + quotes are all stripped.
+- **Collision mitigation** — when the stripped content exceeds 30 chars, the key becomes the first 23 chars + `_` + a 6-char djb2 hash of the full stripped source. Two distinct source strings that happen to share the same 30-char prefix (e.g. paragraphs edited from the tail back, or services with identical opening phrases) now get distinct keys instead of silently overwriting each other in the `translations` map. Total length stays ≤ 30 so storage assumptions are preserved.
+- **Behaviour pinned by tests** in [helpers.test.ts](../src/utils/helpers.test.ts) — strip assertions, ≤30-char passthrough, long-input hash-suffix cap, and the explicit prefix-collision disambiguation case.
+
+No migration script was required — existing translations that fall through the old (bug-preserving) regex re-sanitise cleanly under the new one because the new class is strictly broader; anything the old regex left alone is handled by the new one. The caller set was audited (every consumer imports `sanitizeKey`, none imported `sanitizeKeyV2`), so a single-file swap + test update was sufficient.
+
+---
+
+*Original plan below for history.*
+
+---
 
 ## Goal
 

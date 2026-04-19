@@ -8,14 +8,14 @@ import AdminSettingsFooter from "./AdminSettings/Footer";
 import AdminSettingsSEO from "./AdminSettings/SEO";
 import AdminSettingsLogo from "./AdminSettings/LogoSettings";
 import AdminSettingsLayout from "./AdminSettings/Layout";
-import {useTranslation} from "next-i18next";
+import AuditTab from "./AdminSettings/AuditTab";
+import {useTranslation} from "react-i18next";
 import {useSession} from "next-auth/react";
 import {TFunction} from "i18next";
-import Backend from 'i18next-http-backend';
 import {UserRole} from "../../../Interfaces/IUser";
 
 const getItems = (
-    t: TFunction<"common", undefined>,
+    t: TFunction<"translation", undefined>,
     role: UserRole,
 ): TabsProps['items'] => {
     const items: NonNullable<TabsProps['items']> = [];
@@ -67,13 +67,17 @@ const getItems = (
             label: t('Publishing'),
             children: <AdminSettingsPublishing/>,
         });
+        items.push({
+            key: '11',
+            label: t('Audit'),
+            children: <AuditTab/>,
+        });
     }
     return items;
 };
 
 const AdminSettings = () => {
-    const {t, i18n} = useTranslation('common')
-    i18n.use(Backend)
+    const {t} = useTranslation()
 
     const {data: session} = useSession();
     const role = ((session?.user as any)?.role ?? 'viewer') as UserRole;

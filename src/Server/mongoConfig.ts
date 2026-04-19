@@ -63,10 +63,10 @@ export interface IMongoDBConnection {
     removeUser({id}: { id: string }): Promise<string>;
     getUsers(): Promise<IUser[]>;
     getLanguages(): Promise<INewLanguage[] | string>;
-    addUpdateLanguage(input: { language: INewLanguage, translations: JSON, _session?: {email?: string} }): Promise<string>;
+    addUpdateLanguage(input: { language: INewLanguage, translations: JSON, expectedVersion?: number | null, _session?: {email?: string} }): Promise<string>;
     deleteLanguage(input: { language: INewLanguage, _session?: {email?: string} }): Promise<string>;
     getUser({email}: { email: string }): Promise<IUser | undefined>;
-    saveLogo(input: { content: string, _session?: {email?: string} }): Promise<string>;
+    saveLogo(input: { content: string, expectedVersion?: number | null, _session?: {email?: string} }): Promise<string>;
     getLogo(): Promise<ILogo | undefined>;
     deleteImage({id}: { id: string }): Promise<string>;
     saveImage({image}: { image: InImage }): Promise<string>;
@@ -97,14 +97,14 @@ export interface INavigationService {
 }
 export interface IAssetService {
     getLogo(): Promise<ILogo | undefined>;
-    saveLogo(content: string, editedBy?: string): Promise<string>;
+    saveLogo(content: string, editedBy?: string, expectedVersion?: number | null): Promise<ILogo>;
     saveImage(image: InImage): Promise<string>;
     deleteImage(id: string): Promise<string>;
     getImages(tags: string): Promise<IImage[]>;
 }
 export interface ILanguageService {
     getLanguages(): Promise<INewLanguage[]>;
-    addUpdateLanguage(input: { language: INewLanguage, translations: JSON, editedBy?: string }): Promise<string>;
+    addUpdateLanguage(input: { language: INewLanguage, translations: JSON, editedBy?: string, expectedVersion?: number | null }): Promise<{symbol: string; version: number}>;
     deleteLanguage(input: { language: INewLanguage, deletedBy?: string }): Promise<string>;
 }
 export interface IUserService {

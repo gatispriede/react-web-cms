@@ -2,6 +2,7 @@ import {resolve} from "../gqty";
 import {ILogo} from "../../Interfaces/ILogo";
 import IImage, {InImage} from "../../Interfaces/IImage";
 import {refreshBus} from "../lib/refreshBus";
+import {isConflictError, parseMutationResponse} from "../lib/conflict";
 
 export class AssetApi {
     async getLogo(): Promise<ILogo> {
@@ -12,15 +13,26 @@ export class AssetApi {
                 type: logo.type ?? undefined,
                 content: logo.content,
                 id: logo.id ?? undefined,
+                version: (logo as any).version ?? undefined,
                 editedBy: logo.editedBy ?? undefined,
                 editedAt: logo.editedAt ?? undefined,
             };
         });
     }
 
-    async saveLogo(content: string): Promise<void> {
-        await resolve(({mutation}) => mutation.mongo.saveLogo({content}));
-        refreshBus.emit('settings');
+    async saveLogo(content: string, expectedVersion?: number | null): Promise<{version?: number; error?: string}> {
+        try {
+            const raw = await resolve(({mutation}) => mutation.mongo.saveLogo({
+                content,
+                ...(expectedVersion != null ? {expectedVersion} : {}),
+            }));
+            const parsed: any = parseMutationResponse(raw);
+            refreshBus.emit('settings');
+            return parsed.saveLogo ?? parsed;
+        } catch (err) {
+            if (isConflictError(err)) throw err;
+            return {error: String(err)};
+        }
     }
 
     async saveImage(image: InImage): Promise<any> {

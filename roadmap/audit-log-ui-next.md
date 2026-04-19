@@ -1,4 +1,18 @@
-# Audit log — UI surfacing next
+# Audit log — UI surfacing **Shipped**
+
+**Chronological `AuditLog` collection live.** [`AuditService`](../src/Server/AuditService.ts) maintains append-only rows `{id, at, actor, collection, docId, op, diff?, tag?}`. Indexes: `at desc` for list, `{collection, docId, at desc}` for per-doc history, `{actor.email, at desc}` for per-editor filter, and a TTL index on `at` honouring `AUDIT_LOG_RETENTION_DAYS` (default 90). Diff payload size-capped at 10 kB — oversize writes record with `diff: null` so chronology survives bulk ops.
+
+**Emitter centralised in [`runMutation`](../src/Server/mongoDBConnection.ts).** Every conflict-aware mutation (Section, Theme, Post, Footer, SiteFlags, SiteSeo, TranslationMeta, Logo, Language) now takes an `auditTrace` callback that records `{collection, docId, op, actor.email}` after a successful write. Delete-style mutations (`deleteTheme`, `deletePost`, `deleteLanguage`, `removeSectionItem`) record directly. `publishSnapshot` + `rollbackToSnapshot` record with `tag: 'publish' | 'rollback'` so the UI can highlight them.
+
+**Admin UI** — [`<AuditTab>`](../src/frontend/components/Admin/AdminSettings/AuditTab.tsx) is a new admin-only tab under Site settings. [`AuditApi`](../src/frontend/api/AuditApi.ts) wraps the `getAuditLog` / `getAuditCollections` / `getAuditActors` GraphQL queries added to [`schema.graphql`](../src/Server/schema.graphql) + [`schema.generated.ts`](../src/frontend/gqty/schema.generated.ts). Filters: actor (dropdown seeded from `distinct`), collection (dropdown), op (create/update/delete), docId (free-text), date range. Row click opens a right-hand `<Drawer>` with the JSON diff pretty-printed. Paginated at 50/page.
+
+**Server authz** — `getAuditLog`, `getAuditCollections`, `getAuditActors` all gated at `admin` in [`authz.QUERY_REQUIREMENTS`](../src/Server/authz.ts). Editors + viewers can't see the trail; diffs can carry user text.
+
+**Scope explicitly held out of v1 (per plan)**: rollback-from-row (view-only), richer structured diff (before/after wiring per service would need separate design), per-collection field-level diff filtering.
+
+---
+
+*Original plan below.*
 
 ## Goal
 

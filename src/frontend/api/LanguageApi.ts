@@ -1,6 +1,7 @@
 import {resolve} from "../gqty";
 import {INewLanguage} from "../components/interfaces/INewLanguage";
 import {refreshBus} from "../lib/refreshBus";
+import {isConflictError, parseMutationResponse} from "../lib/conflict";
 
 export class LanguageApi {
     async getLanguages(): Promise<Record<string, INewLanguage>> {
@@ -12,6 +13,7 @@ export class LanguageApi {
                     label: l.label,
                     symbol: l.symbol,
                     flag: l.flag,
+                    version: typeof l.version === 'number' ? l.version : undefined,
                     editedBy: l.editedBy ?? undefined,
                     editedAt: l.editedAt ?? undefined,
                 }));
@@ -27,11 +29,21 @@ export class LanguageApi {
         }
     }
 
-    async saveLanguage(language: INewLanguage, translations?: any): Promise<any> {
+    async saveLanguage(language: INewLanguage, translations?: any, expectedVersion?: number | null): Promise<{symbol?: string; version?: number; error?: string}> {
         const clean = {label: language.label, symbol: language.symbol, default: language.default, flag: language.flag};
-        const r = await resolve(({mutation}) => mutation.mongo.addUpdateLanguage({language: clean, translations}));
-        refreshBus.emit('settings');
-        return r;
+        try {
+            const raw = await resolve(({mutation}) => mutation.mongo.addUpdateLanguage({
+                language: clean,
+                translations,
+                ...(expectedVersion != null ? {expectedVersion} : {}),
+            }));
+            const parsed: any = parseMutationResponse(raw);
+            refreshBus.emit('settings');
+            return parsed.addUpdateLanguage ?? parsed;
+        } catch (err) {
+            if (isConflictError(err)) throw err;
+            return {error: String(err)};
+        }
     }
 
     async deleteTranslation(language: INewLanguage): Promise<any> {

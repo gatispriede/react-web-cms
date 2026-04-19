@@ -15,6 +15,7 @@ import SiteFlagsApi from "../../api/SiteFlagsApi";
 import CommandPalette, {useCommandPaletteHotkey} from "./CommandPalette";
 import {I18nextProvider, useTranslation as useReactTranslation} from "react-i18next";
 import adminI18n, {ADMIN_LOCALES, AdminLocale, setAdminLocale} from "../../lib/adminI18n";
+import UserApi from "../../api/UserApi";
 
 export type AdminView = 'app' | 'settings' | 'languages';
 
@@ -42,6 +43,14 @@ const UserStatusBarInner = ({session, view, t: tPublic, tApp}: {
     useEffect(() => {
         void new SiteFlagsApi().get().then(f => setBlogEnabled(f.blogEnabled !== false));
     }, []);
+    // Session-backed preference wins over the localStorage fallback that
+    // `adminI18n`'s SSR init already applied — the user set it on purpose.
+    const sessionLocale = (session?.user as any)?.preferredAdminLocale;
+    useEffect(() => {
+        if ((sessionLocale === 'en' || sessionLocale === 'lv') && adminI.language !== sessionLocale) {
+            setAdminLocale(sessionLocale as AdminLocale);
+        }
+    }, [sessionLocale]); // eslint-disable-line react-hooks/exhaustive-deps
     const mustChangePassword = Boolean((session?.user as any)?.mustChangePassword);
     const currentAdminLocale = (adminI.language as AdminLocale) || 'en';
     const adminLocaleLabel = currentAdminLocale.toUpperCase();
@@ -108,7 +117,18 @@ const UserStatusBarInner = ({session, view, t: tPublic, tApp}: {
                         selectedKeys: [currentAdminLocale],
                         items: ADMIN_LOCALES.map(({code, label}) => ({
                             key: code, label: tAdmin(label),
-                            onClick: () => setAdminLocale(code),
+                            onClick: () => {
+                                setAdminLocale(code);
+                                const userId = (session?.user as any)?.id;
+                                const userEmail = session?.user?.email;
+                                if (userId && userEmail) {
+                                    void new UserApi().updateUser({
+                                        id: userId,
+                                        email: userEmail,
+                                        preferredAdminLocale: code,
+                                    });
+                                }
+                            },
                         })),
                     }}
                     placement="bottomRight"

@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {Button, Card, Col, ColorPicker, ConfigProvider, Form, Input, InputNumber, Modal, Popconfirm, Row, Space, Tag, message} from 'antd';
 import {CheckCircleFilled, CopyOutlined, DeleteOutlined, EditOutlined, PlusOutlined} from '../../common/icons';
-import {useTranslation} from 'next-i18next';
+import {useTranslation} from 'react-i18next';
 import ThemeApi from '../../../api/ThemeApi';
 import {ITheme, IThemeTokens, InTheme} from '../../../../Interfaces/ITheme';
 import AuditBadge from '../AuditBadge';
@@ -237,7 +237,7 @@ const ThemeEditor: React.FC<{
 };
 
 const AdminSettingsTheme = () => {
-    const {t} = useTranslation('common');
+    const {t} = useTranslation();
     const [themes, setThemes] = useState<ITheme[]>([]);
     const [activeId, setActiveId] = useState<string | null>(null);
     const [activeAudit, setActiveAudit] = useState<{editedBy?: string; editedAt?: string}>({});

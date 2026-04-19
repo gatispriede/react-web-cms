@@ -4,6 +4,7 @@ import {IItem} from "../../../Interfaces/IItem";
 import ContentManager from "../ContentManager";
 import {TFunction} from "i18next";
 import {translateOrKeep} from "../../../utils/translateOrKeep";
+import {InlineTranslatable} from "../common/InlineTranslatable";
 import RevealOnScroll from "../common/RevealOnScroll";
 
 export interface IHeroCta {
@@ -110,7 +111,7 @@ const LiveTime: React.FC = () => {
     return <>{time}</>;
 };
 
-const renderCta = (cta: IHeroCta | undefined, tr: (v: string) => string) => {
+const renderCta = (cta: IHeroCta | undefined, tr: (v: string) => React.ReactNode) => {
     if (!cta?.label) return null;
     const cls = `hero__cta${cta.primary ? ' hero__cta--primary' : ''}`;
     if (cta.href) return <a className={cls} href={cta.href}>{tr(cta.label)}</a>;
@@ -123,7 +124,8 @@ const Hero = ({item, tApp}: {
     tApp: TFunction<string, undefined>;
 }) => {
     const c = new HeroContent(EItemType.Hero, item.content).data;
-    const tr = (v: string) => translateOrKeep(tApp, v);
+    const trStr = (v: string) => translateOrKeep(tApp, v);
+    const tr = (v: string) => <InlineTranslatable tApp={tApp as any} source={v}/>;
     const style: React.CSSProperties = {
         backgroundImage: c.bgImage ? `linear-gradient(180deg, rgba(0,0,0,.0) 0%, rgba(0,0,0,.35) 100%), url(${c.bgImage})` : undefined,
         backgroundSize: 'cover',
@@ -144,11 +146,11 @@ const Hero = ({item, tApp}: {
                 )}
                 {c.headline && (
                     <RevealOnScroll as="h1" className="hero__headline">
-                        <span style={{color: c.accent || undefined}}>{renderAccentRuns(c.headline, tr)}</span>
+                        <span style={{color: c.accent || undefined}}>{renderAccentRuns(c.headline, trStr)}</span>
                         {c.headlineSoft && (
                             <>
                                 <br/>
-                                <span className="hero__headline-soft">{renderAccentRuns(c.headlineSoft, tr)}</span>
+                                <span className="hero__headline-soft">{renderAccentRuns(c.headlineSoft, trStr)}</span>
                             </>
                         )}
                     </RevealOnScroll>
@@ -158,18 +160,18 @@ const Hero = ({item, tApp}: {
                         {c.titles.map((t, i) => (
                             <React.Fragment key={i}>
                                 {i > 0 && <span className="hero__title-sep">/</span>}
-                                <span>{renderAccentRuns(t, tr)}</span>
+                                <span>{renderAccentRuns(t, trStr)}</span>
                             </React.Fragment>
                         ))}
                     </p>
                 ) : c.subtitle ? (
                     <RevealOnScroll as="h2" className="hero__subtitle" delay={120}>
-                        {renderAccentRuns(c.subtitle, tr)}
+                        {renderAccentRuns(c.subtitle, trStr)}
                     </RevealOnScroll>
                 ) : null}
                 {c.tagline && (
                     <RevealOnScroll as="p" className="hero__tagline" delay={220}>
-                        <em>{renderAccentRuns(c.tagline, tr)}</em>
+                        <em>{renderAccentRuns(c.tagline, trStr)}</em>
                         {c.taglineAttribution && (
                             <span className="hero__tagline-attr">&nbsp;{tr(c.taglineAttribution)}</span>
                         )}

@@ -1,5 +1,7 @@
 export type UserRole = 'viewer' | 'editor' | 'admin';
 
+export type AdminLocale = 'en' | 'lv';
+
 export interface IUser {
     id: string;
     name: string;
@@ -15,6 +17,13 @@ export interface IUser {
      * in UserStatusBar.
      */
     mustChangePassword?: boolean;
+    /**
+     * Admin chrome locale — independent of the public-site dropdown. Lets
+     * a translator flip the public site to `lv` for editing without the
+     * surrounding admin nav / dialogs also flipping. Client falls back to
+     * `localStorage.admin.locale` → browser → `en` when unset.
+     */
+    preferredAdminLocale?: AdminLocale;
 }
 
 export interface InUser {
@@ -26,4 +35,5 @@ export interface InUser {
     avatar?: string;
     canPublishProduction?: boolean;
     mustChangePassword?: boolean;
+    preferredAdminLocale?: AdminLocale;
 }

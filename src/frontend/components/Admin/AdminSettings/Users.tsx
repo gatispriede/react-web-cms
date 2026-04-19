@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect, useMemo, useState} from "react";
 import {Button, Form, Input, Modal, Popconfirm, Select, Space, Switch, Table, Tag, message} from "antd";
 import {DeleteOutlined, EditOutlined, PlusOutlined} from "../../common/icons";
-import {useTranslation} from "next-i18next";
+import {useTranslation} from "react-i18next";
 import {useSession} from "next-auth/react";
 import UserApi from "../../../api/UserApi";
 import {IUser, InUser, UserRole} from "../../../../Interfaces/IUser";
@@ -15,7 +15,7 @@ const ROLE_OPTIONS: {value: UserRole; label: string; color: string}[] = [
 const userApi = new UserApi();
 
 const AdminSettingsUsers = () => {
-    const {t} = useTranslation('common');
+    const {t} = useTranslation();
     const {data: session} = useSession();
     const currentEmail = session?.user?.email ?? '';
 

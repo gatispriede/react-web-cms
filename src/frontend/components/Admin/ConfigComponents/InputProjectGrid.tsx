@@ -1,9 +1,10 @@
-import React from "react";
+import React, {useMemo} from "react";
 import {Button, Input, Space, Typography} from "antd";
 import {DeleteOutlined, PlusOutlined} from "../../common/icons";
 import {IInputContent} from "../../../../Interfaces/IInputContent";
 import {EItemType} from "../../../../enums/EItemType";
 import {IProjectGrid, IProjectGridItem, ProjectGridContent} from "../../SectionComponents/ProjectGrid";
+import {SortableHandleItem, SortableList, arrayMove} from "../../common/SortableList";
 
 const InputProjectGrid: React.FC<IInputContent> = ({content, setContent, t}) => {
     const mgr = new ProjectGridContent(EItemType.ProjectGrid, content);
@@ -20,6 +21,8 @@ const InputProjectGrid: React.FC<IInputContent> = ({content, setContent, t}) => 
         update({items: items.map((it, j) => j === i ? {...it, ...patch} : it)});
     const addItem = () => update({items: [...items, {title: '', stack: '', kind: '', year: '', coverArt: '', coverColor: '', moreLabel: 'View engagement ↗', href: ''}]});
     const removeItem = (i: number) => update({items: items.filter((_, j) => j !== i)});
+    const reorderItems = (from: number, to: number) => update({items: arrayMove(items, from, to)});
+    const itemIds = useMemo(() => items.map((_, i) => `project-${i}`), [items.length]);
 
     return (
         <div className={'admin-project-grid'} style={{display: 'flex', flexDirection: 'column', gap: 14}}>
@@ -34,9 +37,11 @@ const InputProjectGrid: React.FC<IInputContent> = ({content, setContent, t}) => 
 
             <div>
                 <div style={{marginBottom: 6, fontWeight: 500}}>{t('Projects')}</div>
+                <SortableList ids={itemIds} onReorder={reorderItems}>
                 <Space direction="vertical" style={{width: '100%'}} size={10}>
                     {items.map((p, i) => (
-                        <div key={i} style={{border: '1px solid rgba(0,0,0,0.1)', padding: 12, borderRadius: 4}}>
+                        <SortableHandleItem key={itemIds[i]} id={itemIds[i]}>
+                        <div style={{flex: 1, border: '1px solid rgba(0,0,0,0.1)', padding: 12, borderRadius: 4}}>
                             <Space direction="vertical" style={{width: '100%'}} size={6}>
                                 <Space style={{width: '100%', justifyContent: 'space-between'}}>
                                     <Typography.Text strong>{t('Project')} #{i + 1}</Typography.Text>
@@ -56,8 +61,10 @@ const InputProjectGrid: React.FC<IInputContent> = ({content, setContent, t}) => 
                                 </Space>
                             </Space>
                         </div>
+                        </SortableHandleItem>
                     ))}
                 </Space>
+                </SortableList>
                 <Button type="dashed" icon={<PlusOutlined/>} onClick={addItem} block style={{marginTop: 10}}>
                     {t('Add project')}
                 </Button>

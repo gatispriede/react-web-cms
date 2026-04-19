@@ -11,6 +11,8 @@ import {sanitizeKey} from "../../../../utils/stringFunctions";
 import AuditBadge from "../AuditBadge";
 import {INewLanguage} from "../../interfaces/INewLanguage";
 import {useRefreshView} from "../../../lib/refreshBus";
+import ConflictDialog from "../../common/ConflictDialog";
+import {ConflictError, isConflictError} from "../../../lib/conflict";
 
 const {Header, Content, Sider} = Layout;
 
@@ -45,6 +47,7 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
         label: 'App Translations',
     }]);
     const [languages, setLanguages] = useState<Record<string, INewLanguage>>({});
+    const [conflict, setConflict] = useState<{error: ConflictError<any>; retry: () => Promise<void>} | null>(null);
 
     const refreshMenu = useCallback(async () => {
         const data = await translationManager.getLanguages();
@@ -73,6 +76,24 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
 
     const setTranslationValue = (data: any) => setTranslation(data);
 
+    const performTranslationSave = useCallback(async (expectedVersion: number | undefined) => {
+        const result = await translationManager.saveNewTranslation(
+            {label: currentLanguageName, symbol: currentLanguage},
+            translation,
+            expectedVersion,
+        );
+        if ((result as any)?.error) {
+            message.error(String((result as any).error));
+            return false;
+        }
+        await i18n.reloadResources(currentLanguage);
+        // Pull the latest languages so the next save sends the bumped version.
+        await refreshMenu();
+        setReloadNonce(n => n + 1);
+        message.success(tAdmin('Translations saved'));
+        return true;
+    }, [translationManager, currentLanguage, currentLanguageName, translation, i18n, refreshMenu, tAdmin]);
+
     const saveNewTranslation = async () => {
         if (currentLanguage === 'default') {
             message.warning(tAdmin('Select a non-default language before saving.'));
@@ -80,15 +101,24 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
         }
         setSaving(true);
         try {
-            await translationManager.saveNewTranslation(
-                {label: currentLanguageName, symbol: currentLanguage},
-                translation,
-            );
-            await i18n.reloadResources(currentLanguage);
-            setReloadNonce(n => n + 1);
-            message.success(tAdmin('Translations saved'));
+            const expected = languages[currentLanguage]?.version;
+            await performTranslationSave(expected);
         } catch (err) {
-            message.error(String((err as Error)?.message ?? err));
+            if (isConflictError(err)) {
+                setConflict({
+                    error: err,
+                    retry: async () => {
+                        setSaving(true);
+                        try {
+                            await performTranslationSave(err.currentVersion);
+                            setConflict(null);
+                        } catch (e) { message.error(String((e as Error)?.message ?? e)); setConflict(null); }
+                        finally { setSaving(false); }
+                    },
+                });
+            } else {
+                message.error(String((err as Error)?.message ?? err));
+            }
         } finally {
             setSaving(false);
         }
@@ -207,6 +237,24 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
                     </Content>
                 </Layout>
             </Layout>
+            {conflict && (() => {
+                const peer = conflict.error.currentDoc as {editedBy?: string; editedAt?: string} | null;
+                return (
+                    <ConflictDialog
+                        open
+                        docKind={tAdmin('Language')}
+                        peerVersion={conflict.error.currentVersion}
+                        peerEditedBy={peer?.editedBy}
+                        peerEditedAt={peer?.editedAt}
+                        onCancel={() => setConflict(null)}
+                        onTakeTheirs={async () => { setConflict(null); await refreshMenu(); setReloadNonce(n => n + 1); }}
+                        onKeepMine={async () => {
+                            try { await conflict.retry(); }
+                            catch (err) { message.error(String((err as Error)?.message ?? err)); setConflict(null); }
+                        }}
+                    />
+                );
+            })()}
         </div>
     );
 };

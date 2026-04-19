@@ -1,6 +1,7 @@
 import {resolve} from "../gqty";
 import {DEFAULT_SITE_SEO, ISiteSeoDefaults} from "../../Interfaces/ISiteSeo";
 import {refreshBus} from "../lib/refreshBus";
+import {isConflictError, parseMutationResponse} from "../lib/conflict";
 
 export class SiteSeoApi {
     async get(): Promise<ISiteSeoDefaults> {
@@ -13,13 +14,17 @@ export class SiteSeoApi {
         }
     }
 
-    async save(seo: ISiteSeoDefaults): Promise<ISiteSeoDefaults | {error: string}> {
+    async save(seo: ISiteSeoDefaults, expectedVersion?: number | null): Promise<ISiteSeoDefaults | {error: string}> {
         try {
-            const raw = await resolve(({mutation}) => (mutation as any).mongo.saveSiteSeo({seo}));
-            const parsed = JSON.parse(raw || '{}');
+            const raw = await resolve(({mutation}) => (mutation as any).mongo.saveSiteSeo({
+                seo,
+                ...(expectedVersion != null ? {expectedVersion} : {}),
+            }));
+            const parsed: any = parseMutationResponse(raw);
             refreshBus.emit('settings');
             return parsed.saveSiteSeo ?? parsed;
         } catch (err) {
+            if (isConflictError(err)) throw err;
             return {error: String(err)};
         }
     }

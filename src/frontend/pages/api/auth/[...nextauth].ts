@@ -67,6 +67,7 @@ export const authOptions: NextAuthOptions = {
                     role: (user as any).role ?? 'viewer',
                     canPublishProduction: Boolean((user as any).canPublishProduction),
                     mustChangePassword: Boolean((user as any).mustChangePassword),
+                    preferredAdminLocale: (user as any).preferredAdminLocale,
                 } as any;
             },
         }),
@@ -85,11 +86,12 @@ export const authOptions: NextAuthOptions = {
                     role: (session.user as any).role || (token as any).role,
                     canPublishProduction: (session.user as any).canPublishProduction ?? (token as any).canPublishProduction,
                     mustChangePassword: (session.user as any).mustChangePassword ?? (token as any).mustChangePassword,
+                    preferredAdminLocale: (session.user as any).preferredAdminLocale ?? (token as any).preferredAdminLocale,
                 }
             }
 
             if(user) {
-                const u = user as unknown as User & {role?: string; canPublishProduction?: boolean; mustChangePassword?: boolean}
+                const u = user as unknown as User & {role?: string; canPublishProduction?: boolean; mustChangePassword?: boolean; preferredAdminLocale?: 'en' | 'lv'}
                 return {
                     ...token,
                     id: u.id,
@@ -98,6 +100,7 @@ export const authOptions: NextAuthOptions = {
                     role: u.role ?? (token as any).role ?? 'viewer',
                     canPublishProduction: u.canPublishProduction ?? (token as any).canPublishProduction ?? false,
                     mustChangePassword: u.mustChangePassword ?? (token as any).mustChangePassword ?? false,
+                    preferredAdminLocale: u.preferredAdminLocale ?? (token as any).preferredAdminLocale,
                 }
             }
 
@@ -114,6 +117,7 @@ export const authOptions: NextAuthOptions = {
                     role: (token as any).role ?? 'viewer',
                     canPublishProduction: Boolean((token as any).canPublishProduction),
                     mustChangePassword: Boolean((token as any).mustChangePassword),
+                    preferredAdminLocale: (token as any).preferredAdminLocale,
                 }
             }
 

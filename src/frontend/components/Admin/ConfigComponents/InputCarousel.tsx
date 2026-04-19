@@ -7,10 +7,35 @@ import EditWrapper from "../../common/EditWrapper";
 import ImageUpload from "../../ImageUpload";
 import {CarouselContent} from "../../SectionComponents/CarouselView";
 import {PUBLIC_IMAGE_PATH} from "../../../../constants/imgPath";
+import {ImageDropPayload, useImageDrop} from "../../common/useImageDrop";
+
+const ItemDropZone: React.FC<{
+    onImage: (img: ImageDropPayload) => void;
+    children: React.ReactNode;
+}> = ({onImage, children}) => {
+    const {dropHandlers, isDragOver} = useImageDrop(onImage);
+    return (
+        <div
+            {...dropHandlers}
+            style={isDragOver ? {outline: '2px dashed var(--theme-colorPrimary, #1677ff)', outlineOffset: 2, borderRadius: 4} : undefined}
+        >
+            {children}
+        </div>
+    );
+};
 
 const InputCarousel = ({content, setContent, t}: IInputContent) => {
     const galleryContent = new CarouselContent(EItemType.Image, content);
     const data = galleryContent.data
+    const {dropHandlers: addDropHandlers, isDragOver: addDragOver} = useImageDrop((img) => {
+        galleryContent.addItem();
+        const items = galleryContent.data.items ?? [];
+        const lastIndex = items.length - 1;
+        if (lastIndex >= 0) {
+            galleryContent.setItem(lastIndex, {...items[lastIndex], src: PUBLIC_IMAGE_PATH + img.name});
+        }
+        setContent(galleryContent.stringData);
+    });
     return (
         <div className={'admin gallery-wrapper'}>
             <div className={'config-item'}>
@@ -73,6 +98,13 @@ const InputCarousel = ({content, setContent, t}: IInputContent) => {
                             })
                             setContent(galleryContent.stringData)
                         }
+                        const onDropImage = (img: ImageDropPayload) => {
+                            galleryContent.setItem(index, {
+                                ...item,
+                                src: PUBLIC_IMAGE_PATH + img.name
+                            });
+                            setContent(galleryContent.stringData);
+                        };
                         return (
                             <EditWrapper t={t} key={index} wrapperClass={'config-item-container'} admin={true} del={true}
                                          deleteAction={async () => {
@@ -81,16 +113,18 @@ const InputCarousel = ({content, setContent, t}: IInputContent) => {
                                          }}>
                                 <div key={index} className={`container text-${item.textPosition}`}>
                                     <div className={'config-item'}>
-                                        <div className={'select-image-container'}>
-                                            <ImageUpload t={t} setFile={setFile}/>
-                                        </div>
-                                        <div className={'content'}>
-                                            <Input
-                                                placeholder={'Image URL'}
-                                                value={item.src}
-                                                disabled={true}
-                                            />
-                                        </div>
+                                        <ItemDropZone onImage={onDropImage}>
+                                            <div className={'select-image-container'}>
+                                                <ImageUpload t={t} setFile={setFile}/>
+                                            </div>
+                                            <div className={'content'}>
+                                                <Input
+                                                    placeholder={'Image URL'}
+                                                    value={item.src}
+                                                    disabled={true}
+                                                />
+                                            </div>
+                                        </ItemDropZone>
                                     </div>
                                     <div className={'config-item'}>
                                         <label>{t("Description")}:</label>
@@ -116,13 +150,20 @@ const InputCarousel = ({content, setContent, t}: IInputContent) => {
                     })
                 }
             </div>
-            <div className={'add-image-container'}>
+            <div
+                className={'add-image-container'}
+                {...addDropHandlers}
+                style={addDragOver ? {outline: '2px dashed var(--theme-colorPrimary, #1677ff)', outlineOffset: 2, borderRadius: 4, padding: 8} : {padding: 8}}
+            >
                 <Button type="primary" onClick={() => {
                     galleryContent.addItem()
                     setContent(galleryContent.stringData)
                 }}>
                     {t("Add new Image")}
                 </Button>
+                <span style={{marginLeft: 12, fontSize: 11, color: '#888'}}>
+                    {t("or drag an image here")}
+                </span>
             </div>
         </div>
     )

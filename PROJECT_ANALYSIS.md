@@ -347,8 +347,8 @@ Known gaps worth addressing (see ROADMAP for current status):
 1. **Duplicated GraphQL surface** — Apollo (Next route) and `express-graphql` (standalone) both serve the same schema. Resolver map is now centralized in [graphqlResolvers.ts](src/Server/graphqlResolvers.ts) to prevent drift. Standalone binds 127.0.0.1 by default and rejects non-loopback traffic unless `STANDALONE_ALLOW_REMOTE=1` is set.
 2. **Redis all but unused** — only `getBar`. Either wire it into caching/session storage or remove to simplify the stack (and the repo name).
 3. **`[...slug].tsx` + `app.tsx`** — `app.tsx` doubles as both an internal page and the shell re-exported into `Slug`. Cleaner to have a layout + page split.
-4. **Manual GQty client patches** — `schema.generated.ts` has hand edits (`getLogo` nullability, `createDatabase` removal, `getSiteSeo`/`saveSiteSeo`, `INewLanguage.flag`, `ILogo.id`/`type` nullability, `INavigation`/`ISection` audit fields). Re-run `npm run generate-schema` against a live endpoint to regenerate cleanly.
-5. **`sanitizeKey` regex bug** — char class closes early on `]`, so most specials survive. [`sanitizeKeyV2`](src/utils/stringFunctions.ts) sits alongside with the correct class but isn't wired (migration plan in ROADMAP debt).
+4. ~~**Manual GQty client patches**~~ — **resolved**. `schema.generated.ts` regenerated cleanly via `npm run generate-schema` against the live `/api/graphql` endpoint; every previously hand-patched field (logo nullability, `getSiteSeo`/`saveSiteSeo`, `INewLanguage.flag`, `ILogo.id`/`type`, audit fields, composition fields `slots`/`overlay`/`overlayAnchor`, `IUser.preferredAdminLocale`/`mustChangePassword`) is now emitted by introspection from `schema.graphql`. Re-running the generator is a no-op.
+5. ~~**`sanitizeKey` regex bug**~~ — **resolved**. [`sanitizeKey`](src/utils/stringFunctions.ts) now uses the correct character class (v1 regex dropped) and appends a 6-char djb2 hash suffix when the stripped content exceeds 30 chars, so two long strings sharing a 30-char prefix no longer collide into the same translation key.
 
 ## Resolved (since initial analysis)
 

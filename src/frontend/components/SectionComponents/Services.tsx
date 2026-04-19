@@ -4,6 +4,7 @@ import {IItem} from "../../../Interfaces/IItem";
 import ContentManager from "../ContentManager";
 import {TFunction} from "i18next";
 import {translateOrKeep} from "../../../utils/translateOrKeep";
+import {InlineTranslatable} from "../common/InlineTranslatable";
 import RevealOnScroll from "../common/RevealOnScroll";
 
 export interface IServiceRow {
@@ -70,7 +71,11 @@ const Services = ({item, tApp}: {
     tApp: TFunction<string, undefined>;
 }) => {
     const c = new ServicesContent(EItemType.Services, item.content).data;
-    const tr = (v: string) => translateOrKeep(tApp, v);
+    // trStr: string-returning, used inside renderAccentRuns which splits on
+    // the translated value. tr: JSX-returning, wraps the string in
+    // `<InlineTranslatable>` so Alt-click editors can find it.
+    const trStr = (v: string) => translateOrKeep(tApp, v);
+    const tr = (v: string) => <InlineTranslatable tApp={tApp as any} source={v}/>;
 
     return (
         <section className={`services-module ${item.style ?? ''}`}>
@@ -78,7 +83,7 @@ const Services = ({item, tApp}: {
                 <header className="services-module__head">
                     {c.sectionNumber && <div className="services-module__num">{tr(c.sectionNumber)}</div>}
                     {c.sectionTitle && (
-                        <h2 className="services-module__title">{renderAccentRuns(c.sectionTitle, tr)}</h2>
+                        <h2 className="services-module__title">{renderAccentRuns(c.sectionTitle, trStr)}</h2>
                     )}
                     {c.sectionSubtitle && (
                         <div className="services-module__sub">{tr(c.sectionSubtitle)}</div>
@@ -92,7 +97,7 @@ const Services = ({item, tApp}: {
                             <div className="services-module__row-icon" aria-hidden>{r.iconGlyph}</div>
                         )}
                         <div className="services-module__row-num">{tr(r.number)}</div>
-                        <h3 className="services-module__row-title">{renderAccentRuns(r.title, tr)}</h3>
+                        <h3 className="services-module__row-title">{renderAccentRuns(r.title, trStr)}</h3>
                         <div className="services-module__row-desc">{tr(r.description)}</div>
                         {r.tags && r.tags.length > 0 && (
                             <div className="services-module__row-tags">

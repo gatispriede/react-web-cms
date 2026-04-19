@@ -4,6 +4,7 @@ import {IItem} from "../../../Interfaces/IItem";
 import ContentManager from "../ContentManager";
 import {TFunction} from "i18next";
 import {translateOrKeep} from "../../../utils/translateOrKeep";
+import {InlineTranslatable} from "../common/InlineTranslatable";
 import RevealOnScroll from "../common/RevealOnScroll";
 
 /**
@@ -87,13 +88,14 @@ const Manifesto = ({item, tApp}: {
     tApp: TFunction<string, undefined>;
 }) => {
     const c = new ManifestoContent(EItemType.Manifesto, item.content).data;
-    const tr = (v: string) => translateOrKeep(tApp, v);
+    const trStr = (v: string) => translateOrKeep(tApp, v);
+    const tr = (v: string) => <InlineTranslatable tApp={tApp as any} source={v}/>;
 
     return (
         <section className={`manifesto ${item.style ?? ''}`}>
             {c.body && (
                 <RevealOnScroll as="p" className="manifesto__body">
-                    {renderBody(c.body, c.chips ?? [], tr)}
+                    {renderBody(c.body, c.chips ?? [], trStr)}
                 </RevealOnScroll>
             )}
             {c.addendum && (

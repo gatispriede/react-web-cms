@@ -1,0 +1,37 @@
+// Hover affordance for inline-translation editing. Only activates when
+// the body carries `data-admin-inline-edit="true"` (set by
+// `InlineTranslationHost` when an editor-role session is active AND
+// `siteFlags.inlineTranslationEdit` is on). Without the attribute the
+// `[data-i18n-key]` spans are invisible — they add zero visual cost for
+// visitors.
+
+body[data-admin-inline-edit="true"] {
+    [data-i18n-key] {
+        position: relative;
+        transition: background-color 120ms ease, outline-color 120ms ease;
+        outline: 1px dashed transparent;
+        outline-offset: 2px;
+        cursor: text;
+
+        &:hover {
+            background-color: rgba(255, 215, 0, 0.14);
+            outline-color: rgba(200, 140, 0, 0.55);
+        }
+    }
+
+    // A subtle explainer at the bottom-right so editors know how to invoke
+    // the editor. Pure CSS, hidden when the feature isn't active.
+    &::after {
+        content: 'Inline translate: Alt-click';
+        position: fixed;
+        bottom: 6px;
+        right: 6px;
+        z-index: 9999;
+        padding: 4px 8px;
+        font: 11px/1.2 ui-monospace, monospace;
+        color: #fff;
+        background: rgba(0, 0, 0, 0.7);
+        border-radius: 4px;
+        pointer-events: none;
+    }
+}

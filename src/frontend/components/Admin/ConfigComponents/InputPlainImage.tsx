@@ -6,6 +6,7 @@ import {PlainImageContent} from "../../SectionComponents/PlainImage";
 import dynamic from 'next/dynamic'
 import ImageUpload from "../../ImageUpload";
 import {PUBLIC_IMAGE_PATH} from "../../../../constants/imgPath";
+import {useImageDrop} from "../../common/useImageDrop";
 
 const RichTextEditor = dynamic(
     () => import('../../common/RichTextEditor'),
@@ -18,8 +19,16 @@ const InputPlainImage = ({content, setContent, t}: IInputContent) => {
         plainImage.setSrc(PUBLIC_IMAGE_PATH + file.name)
         setContent(plainImage.stringData)
     }
+    const {dropHandlers, isDragOver} = useImageDrop((img) => {
+        plainImage.setSrc(PUBLIC_IMAGE_PATH + img.name);
+        setContent(plainImage.stringData);
+    });
     return (
-        <div className={'admin-image'}>
+        <div
+            className={'admin-image'}
+            {...dropHandlers}
+            style={isDragOver ? {outline: '2px dashed var(--theme-colorPrimary, #1677ff)', outlineOffset: 2, borderRadius: 4} : undefined}
+        >
             <div className={'settings'}>
                 <label>{t("Use as background image")}</label>
                 <Switch value={plainImage.data.useAsBackground} onChange={(checked) => {

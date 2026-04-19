@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect, useState} from "react";
 import {Alert, Button, Card, Col, Input, Row, Space, Switch, Typography, message} from "antd";
 import {DeleteOutlined, PlusOutlined} from "../../common/icons";
-import {useTranslation} from "next-i18next";
+import {useTranslation} from "react-i18next";
 import FooterApi from "../../../api/FooterApi";
 import {DEFAULT_FOOTER, IFooterColumn, IFooterConfig, IFooterEntry} from "../../../../Interfaces/IFooter";
 import AuditBadge from "../AuditBadge";
@@ -12,7 +12,7 @@ import {ConflictError, isConflictError} from "../../../lib/conflict";
 const footerApi = new FooterApi();
 
 const AdminSettingsFooter: React.FC = () => {
-    const {t} = useTranslation('common');
+    const {t} = useTranslation();
     const [config, setConfig] = useState<IFooterConfig>({...DEFAULT_FOOTER});
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);

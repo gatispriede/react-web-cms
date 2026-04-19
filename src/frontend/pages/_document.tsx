@@ -87,6 +87,7 @@ interface MyDocProps {
     preloadedScript?: string;
     themeSlug?: string;
     googleFontsUrl?: string;
+    selfHostFonts?: boolean;
 }
 
 class MyDocument extends Document<MyDocProps> {
@@ -94,7 +95,7 @@ class MyDocument extends Document<MyDocProps> {
         const currentLocale =
             this.props.__NEXT_DATA__.locale ??
             i18nextConfig.i18n.defaultLocale
-        const {themeCss, preloadedScript, themeSlug, googleFontsUrl} = this.props;
+        const {themeCss, preloadedScript, themeSlug, googleFontsUrl, selfHostFonts} = this.props;
         return (
             <Html lang={currentLocale}>
                 <Head>
@@ -102,9 +103,12 @@ class MyDocument extends Document<MyDocProps> {
                     {/* Fonts: bundled preset families plus whatever the active
                         theme picked via the FontPicker are loaded up front so
                         theme switches don't FOUC. URL is composed in
-                        getInitialProps from the active theme's font tokens. */}
-                    {googleFontsUrl && <link rel="preconnect" href="https://fonts.googleapis.com"/>}
-                    {googleFontsUrl && <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous"/>}
+                        getInitialProps from the active theme's font tokens.
+                        When `selfHostFonts` is on the URL points at our own
+                        proxy, so skip the preconnect hints — no reason to warm
+                        up Google's CDN if the browser is never going to hit it. */}
+                    {googleFontsUrl && !selfHostFonts && <link rel="preconnect" href="https://fonts.googleapis.com"/>}
+                    {googleFontsUrl && !selfHostFonts && <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous"/>}
                     {googleFontsUrl && <link rel="stylesheet" href={googleFontsUrl}/>}
                     {themeCss && (
                         <style data-theme-vars dangerouslySetInnerHTML={{__html: themeCss}}/>
@@ -133,6 +137,17 @@ async function loadActiveThemeTokens(): Promise<IThemeTokens | null> {
     }
 }
 
+async function loadSelfHostFontsFlag(): Promise<boolean> {
+    try {
+        const conn = getMongoConnection();
+        const flags = await conn.siteFlagsService?.get();
+        return Boolean(flags?.selfHostFonts);
+    } catch (err) {
+        console.warn('[_document] site flags fetch failed:', err);
+        return false;
+    }
+}
+
 MyDocument.getInitialProps = async (ctx: DocumentContext) => {
 
     const cache = createCache();
@@ -146,10 +161,11 @@ MyDocument.getInitialProps = async (ctx: DocumentContext) => {
             ),
         });
 
-    const [initialProps, themeTokens, preloaded] = await Promise.all([
+    const [initialProps, themeTokens, preloaded, selfHostFonts] = await Promise.all([
         Document.getInitialProps(ctx),
         loadActiveThemeTokens(),
         preloadData(),
+        loadSelfHostFontsFlag(),
     ]);
     // @ts-ignore — legacy global for any consumer that still reads it server-side
     global.preloadedData = preloaded;
@@ -163,13 +179,14 @@ MyDocument.getInitialProps = async (ctx: DocumentContext) => {
             extractFontFamily(themeTokens.fontMono),
         ]
         : [];
-    const googleFontsUrl = buildGoogleFontsUrl([...BUNDLED_FAMILIES, ...themeFamilies]) ?? undefined;
+    const googleFontsUrl = buildGoogleFontsUrl([...BUNDLED_FAMILIES, ...themeFamilies], {selfHost: selfHostFonts}) ?? undefined;
     const preloadedScript = `window.preloadedData = ${JSON.stringify(preloaded)}`;
     return {
         ...initialProps,
         themeCss,
         themeSlug,
         googleFontsUrl,
+        selfHostFonts,
         preloadedScript,
         styles: (
             <>

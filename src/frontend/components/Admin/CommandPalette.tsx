@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useState} from 'react';
 import {Modal, Input, List, Typography} from 'antd';
-import {useTranslation} from 'next-i18next';
+import {useTranslation} from 'react-i18next';
 import {i18n as globalI18n} from 'next-i18next';
 
 interface Command {
@@ -36,7 +36,7 @@ const useLang = (): string => {
  * `onHotkey` (when provided) so a parent page can toggle it.
  */
 export const CommandPalette: React.FC<Props> = ({open, onClose, extra}) => {
-    const {t} = useTranslation('common');
+    const {t} = useTranslation();
     const [filter, setFilter] = useState('');
     const [selected, setSelected] = useState(0);
     const lang = useLang();

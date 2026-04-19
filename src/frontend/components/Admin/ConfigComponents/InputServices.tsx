@@ -1,9 +1,10 @@
-import React from "react";
+import React, {useMemo} from "react";
 import {Button, Input, Space, Typography} from "antd";
 import {DeleteOutlined, PlusOutlined} from "../../common/icons";
 import {IInputContent} from "../../../../Interfaces/IInputContent";
 import {EItemType} from "../../../../enums/EItemType";
 import {IServiceRow, IServices, ServicesContent} from "../../SectionComponents/Services";
+import {SortableHandleItem, SortableList, arrayMove} from "../../common/SortableList";
 
 /**
  * Editor for the Services module. Mirrors the schema 1:1. Title supports
@@ -24,8 +25,10 @@ const InputServices: React.FC<IInputContent> = ({content, setContent, t}) => {
         update({rows: rows.map((r, j) => j === i ? {...r, ...patch} : r)});
     const addRow = () => update({rows: [...rows, {number: String(rows.length + 1).padStart(2, '0'), title: '', description: '', ctaLabel: '', ctaHref: '', iconGlyph: '', tags: []}]});
     const removeRow = (i: number) => update({rows: rows.filter((_, j) => j !== i)});
+    const reorderRows = (from: number, to: number) => update({rows: arrayMove(rows, from, to)});
     const patchTags = (i: number, value: string) =>
         patchRow(i, {tags: value.split(',').map(s => s.trim()).filter(Boolean)});
+    const rowIds = useMemo(() => rows.map((_, i) => `service-${i}`), [rows.length]);
 
     return (
         <div className={'admin-services'} style={{display: 'flex', flexDirection: 'column', gap: 14}}>
@@ -55,9 +58,11 @@ const InputServices: React.FC<IInputContent> = ({content, setContent, t}) => {
 
             <div>
                 <div style={{marginBottom: 6, fontWeight: 500}}>{t('Rows')}</div>
+                <SortableList ids={rowIds} onReorder={reorderRows}>
                 <Space direction="vertical" style={{width: '100%'}} size={10}>
                     {rows.map((r, i) => (
-                        <div key={i} style={{border: '1px solid rgba(0,0,0,0.1)', padding: 12, borderRadius: 4}}>
+                        <SortableHandleItem key={rowIds[i]} id={rowIds[i]}>
+                        <div style={{flex: 1, border: '1px solid rgba(0,0,0,0.1)', padding: 12, borderRadius: 4}}>
                             <Space direction="vertical" style={{width: '100%'}} size={6}>
                                 <Space style={{width: '100%', justifyContent: 'space-between'}}>
                                     <Input
@@ -112,8 +117,10 @@ const InputServices: React.FC<IInputContent> = ({content, setContent, t}) => {
                                 </Space>
                             </Space>
                         </div>
+                        </SortableHandleItem>
                     ))}
                 </Space>
+                </SortableList>
                 <Button type="dashed" icon={<PlusOutlined/>} onClick={addRow} block style={{marginTop: 10}}>
                     {t('Add service row')}
                 </Button>

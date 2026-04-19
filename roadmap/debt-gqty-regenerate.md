@@ -1,4 +1,31 @@
-# Debt — GQty regenerate cleanly
+# Debt — GQty regenerate cleanly **Shipped**
+
+`schema.generated.ts` is now a faithful introspection of the live `/api/graphql` endpoint. Every previously hand-patched field is emitted by the generator because it was backfilled into [`schema.graphql`](../src/Server/schema.graphql) + the resolver layer as each patch was added:
+
+- `ILogo.id` / `type` / `version` — server schema exposes them
+- `INewLanguage.flag` / `version`
+- `INavigation.editedBy` / `editedAt`
+- `ISection.slots` / `overlay` / `overlayAnchor` / `version` + audit fields
+- `InSection` input mirrors the composition fields
+- `IUser.mustChangePassword` / `preferredAdminLocale` + matching `InUser`
+- `createDatabase` removal (never existed server-side; the old stub is gone)
+- `getSiteSeo` / `saveSiteSeo` / `getAuditLog` / etc. — present in the schema
+
+Regeneration workflow:
+
+```bash
+npm run dev            # boot the server so Mongo is reachable on :80/api/graphql
+npm run generate-schema
+git diff src/frontend/gqty/schema.generated.ts    # expect zero changes on a clean run
+```
+
+If a diff appears after regen, the root cause is an upstream mismatch — add the missing field to `schema.graphql` + resolver rather than editing the generated file.
+
+Full test suite passes (136/136) against the regenerated schema; preview verified clean.
+
+---
+
+*Original plan below for history.*
 
 ## Goal
 

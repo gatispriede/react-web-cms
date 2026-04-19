@@ -1,9 +1,10 @@
-import React from "react";
+import React, {useMemo} from "react";
 import {Button, Card, Col, Collapse, Input, Row, Select, Space} from "antd";
 import {DeleteOutlined, PlusOutlined} from "../../common/icons";
 import {IInputContent} from "../../../../Interfaces/IInputContent";
 import {EItemType} from "../../../../enums/EItemType";
 import {ITimelineEntry, TimelineContent} from "../../SectionComponents/Timeline";
+import {SortableHandleItem, SortableList, arrayMove} from "../../common/SortableList";
 
 const blank: ITimelineEntry = {start: '', end: '', company: '', role: '', location: '', achievements: []};
 
@@ -20,14 +21,18 @@ const InputTimeline = ({content, setContent, t}: IInputContent) => {
     const removeEntry = (i: number) => update(entries.filter((_, j) => j !== i));
     const patchEntry = (i: number, patch: Partial<ITimelineEntry>) =>
         update(entries.map((e, j) => j === i ? {...e, ...patch} : e));
+    const reorderEntries = (from: number, to: number) => update(arrayMove(entries, from, to));
+    const entryIds = useMemo(() => entries.map((_, i) => `timeline-${i}`), [entries.length]);
 
     return (
         <div className={'timeline-editor'}>
+            <SortableList ids={entryIds} onReorder={reorderEntries}>
             <Space direction="vertical" size={12} style={{width: '100%'}}>
                 {entries.map((entry, i) => (
+                    <SortableHandleItem key={entryIds[i]} id={entryIds[i]}>
                     <Card
-                        key={i}
                         size="small"
+                        style={{flex: 1}}
                         title={`#${i + 1} ${entry.company || ''}`}
                         extra={<Button size="small" danger icon={<DeleteOutlined/>} onClick={() => removeEntry(i)}/>}
                     >
@@ -64,9 +69,11 @@ const InputTimeline = ({content, setContent, t}: IInputContent) => {
                             </Col>
                         </Row>
                     </Card>
+                    </SortableHandleItem>
                 ))}
                 <Button icon={<PlusOutlined/>} onClick={addEntry}>{t('Add entry')}</Button>
             </Space>
+            </SortableList>
         </div>
     );
 };

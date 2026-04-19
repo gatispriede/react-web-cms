@@ -27,14 +27,14 @@ class MongoApi {
     getUser = (args: { email: string }): Promise<Partial<IUser> | null> => this.userApi.getUser(args);
 
     getLogo = (): Promise<ILogo> => this.assetApi.getLogo();
-    saveLogo = (content: string): Promise<void> => this.assetApi.saveLogo(content);
+    saveLogo = (content: string, expectedVersion?: number | null): Promise<{version?: number; error?: string}> => this.assetApi.saveLogo(content, expectedVersion);
     saveImage = (image: InImage): Promise<any> => this.assetApi.saveImage(image);
     deleteImage = (id: string): Promise<any> => this.assetApi.deleteImage(id);
     getImages = (tags: string): Promise<IImage[]> => this.assetApi.getImages(tags);
     rescanDiskImages = () => this.assetApi.rescanDiskImages();
 
     getLanguages = (): Promise<Record<string, INewLanguage>> => this.languageApi.getLanguages();
-    saveLanguage = (language: INewLanguage, translations?: any) => this.languageApi.saveLanguage(language, translations);
+    saveLanguage = (language: INewLanguage, translations?: any, expectedVersion?: number | null) => this.languageApi.saveLanguage(language, translations, expectedVersion);
     deleteTranslation = (language: INewLanguage) => this.languageApi.deleteTranslation(language);
 
     createNavigation = (nav: INavigation) => this.navigationApi.createNavigation(nav);

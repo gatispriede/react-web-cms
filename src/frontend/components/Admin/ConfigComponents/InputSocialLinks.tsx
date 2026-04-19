@@ -1,9 +1,10 @@
-import React from "react";
+import React, {useMemo} from "react";
 import {Button, Col, Input, Row, Select, Space} from "antd";
 import {DeleteOutlined, PlusOutlined} from "../../common/icons";
 import {IInputContent} from "../../../../Interfaces/IInputContent";
 import {EItemType} from "../../../../enums/EItemType";
 import {ISocialLink, SocialLinksContent, SocialPlatform} from "../../SectionComponents/SocialLinks";
+import {SortableHandleItem, SortableList, arrayMove} from "../../common/SortableList";
 
 const PLATFORMS: {value: SocialPlatform; label: string}[] = [
     {value: 'github', label: 'GitHub'},
@@ -25,26 +26,32 @@ const InputSocialLinks = ({content, setContent, t}: IInputContent) => {
     const add = () => update([...links, {...blank}]);
     const remove = (i: number) => update(links.filter((_, j) => j !== i));
     const patch = (i: number, p: Partial<ISocialLink>) => update(links.map((l, j) => j === i ? {...l, ...p} : l));
+    const reorder = (from: number, to: number) => update(arrayMove(links, from, to));
+    const linkIds = useMemo(() => links.map((_, i) => `social-${i}`), [links.length]);
 
     return (
-        <Space direction="vertical" size={8} style={{width: '100%'}}>
-            {links.map((link, i) => (
-                <Row key={i} gutter={6} align="middle">
-                    <Col xs={6}>
-                        <Select
-                            style={{width: '100%'}}
-                            value={link.platform}
-                            options={PLATFORMS}
-                            onChange={v => patch(i, {platform: v})}
-                        />
-                    </Col>
-                    <Col xs={10}><Input value={link.url} onChange={e => patch(i, {url: e.target.value})} placeholder={t('URL or email')}/></Col>
-                    <Col xs={6}><Input value={link.label || ''} onChange={e => patch(i, {label: e.target.value})} placeholder={t('Label (optional)')}/></Col>
-                    <Col xs={2}><Button size="small" danger icon={<DeleteOutlined/>} onClick={() => remove(i)}/></Col>
-                </Row>
-            ))}
-            <Button icon={<PlusOutlined/>} onClick={add}>{t('Add link')}</Button>
-        </Space>
+        <SortableList ids={linkIds} onReorder={reorder}>
+            <Space direction="vertical" size={8} style={{width: '100%'}}>
+                {links.map((link, i) => (
+                    <SortableHandleItem key={linkIds[i]} id={linkIds[i]}>
+                        <Row gutter={6} align="middle" style={{flex: 1, width: '100%'}}>
+                            <Col xs={6}>
+                                <Select
+                                    style={{width: '100%'}}
+                                    value={link.platform}
+                                    options={PLATFORMS}
+                                    onChange={v => patch(i, {platform: v})}
+                                />
+                            </Col>
+                            <Col xs={10}><Input value={link.url} onChange={e => patch(i, {url: e.target.value})} placeholder={t('URL or email')}/></Col>
+                            <Col xs={6}><Input value={link.label || ''} onChange={e => patch(i, {label: e.target.value})} placeholder={t('Label (optional)')}/></Col>
+                            <Col xs={2}><Button size="small" danger icon={<DeleteOutlined/>} onClick={() => remove(i)}/></Col>
+                        </Row>
+                    </SortableHandleItem>
+                ))}
+                <Button icon={<PlusOutlined/>} onClick={add}>{t('Add link')}</Button>
+            </Space>
+        </SortableList>
     );
 };
 

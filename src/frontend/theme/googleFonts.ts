@@ -50,8 +50,16 @@ export function buildFontStack(family: string): string {
  * we can request only the variants that family actually publishes (avoids
  * 400s for nonexistent weights). Unknown families fall back to `wght@400;700`
  * so a runtime-typed value still loads something usable.
+ *
+ * When `selfHost` is true, emits the same params against our local proxy
+ * at `/api/fonts/css` instead — the proxy fetches from Google server-side
+ * and rewrites gstatic URLs in the CSS body, so the visitor's browser
+ * never talks to Google and their IP stays out of Google's logs.
  */
-export function buildGoogleFontsUrl(families: Array<string | null | undefined>): string | null {
+export function buildGoogleFontsUrl(
+    families: Array<string | null | undefined>,
+    opts: {selfHost?: boolean} = {},
+): string | null {
     const seen = new Set<string>();
     const params: string[] = [];
     for (const raw of families) {
@@ -67,5 +75,6 @@ export function buildGoogleFontsUrl(families: Array<string | null | undefined>):
         params.push(`family=${family}:wght@${weights}`);
     }
     if (params.length === 0) return null;
-    return `https://fonts.googleapis.com/css2?${params.join('&')}&display=swap`;
+    const base = opts.selfHost ? '/api/fonts/css' : 'https://fonts.googleapis.com/css2';
+    return `${base}?${params.join('&')}&display=swap`;
 }

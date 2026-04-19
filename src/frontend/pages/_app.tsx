@@ -8,6 +8,10 @@ import get from 'lodash.get';
 import { NextComponentType, NextPageContext } from 'next';
 import { AppTreeType } from 'next/dist/shared/lib/utils';
 import { Router } from 'next/router';
+import { SessionProvider } from 'next-auth/react';
+import InlineTranslationHost from '../components/common/InlineTranslationHost';
+import HighContrastAutoPick from '../components/common/HighContrastAutoPick';
+import {PresenceHost} from '../components/common/PresenceBar';
 
 export const FALLBACK_LANG = nextI18NextConfig.i18n.defaultLocale;
 export const SUPPORTED_LANGUAGES = nextI18NextConfig.i18n.locales
@@ -60,7 +64,12 @@ class App extends NextApp {
         };
 
         return (
-            <Component {...modifiedPageProps} />
+            <SessionProvider session={(pageProps as any)?.session}>
+                <Component {...modifiedPageProps} />
+                <InlineTranslationHost/>
+                <HighContrastAutoPick/>
+                <PresenceHost/>
+            </SessionProvider>
         );
     }
 }

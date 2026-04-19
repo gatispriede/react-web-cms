@@ -5,7 +5,7 @@ import {TFunction} from "i18next";
 
 const {Title, Paragraph, Text} = Typography;
 
-const BundleSettings = ({t}: { t: TFunction<"common", undefined> }) => {
+const BundleSettings = ({t}: { t: TFunction<"translation", undefined> }) => {
     const [exporting, setExporting] = useState(false);
     const [importing, setImporting] = useState(false);
     const [pendingBundle, setPendingBundle] = useState<any>(null);

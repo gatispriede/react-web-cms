@@ -1,14 +1,25 @@
-# Google Fonts picker — **Shipped (v1)**
+# Google Fonts picker — **Shipped**
 
-[`AdminSettings/FontPicker.tsx`](../src/frontend/components/Admin/AdminSettings/FontPicker.tsx) browses a hand-curated 58-family catalogue at [`src/frontend/data/google-fonts.json`](../src/frontend/data/google-fonts.json) (popular families across sans / serif / display / handwriting / monospace, Cyrillic-capable where Google publishes it). The picker writes a CSS font-family stack with category-appropriate fallbacks back to `fontDisplay` / `fontSans` / `fontMono` tokens.
+[`AdminSettings/FontPicker.tsx`](../src/frontend/components/Admin/AdminSettings/FontPicker.tsx) browses the catalogue at [`src/frontend/data/google-fonts.json`](../src/frontend/data/google-fonts.json). The picker writes a CSS font-family stack with category-appropriate fallbacks back to `fontDisplay` / `fontSans` / `fontMono` tokens.
 
 [`_document.tsx`](../src/frontend/pages/_document.tsx) extracts the active theme's family names via `extractFontFamily()`, dedupes against a `BUNDLED_FAMILIES` list (the seeded Paper / Studio / Industrial fonts kept loaded site-wide so theme switches don't FOUC), and composes a single `<link>` URL via `buildGoogleFontsUrl()` — variants come from each catalogue entry so we don't request weights a family doesn't ship.
 
-**Deferred (phase 2 / nice-to-have):**
+**Catalogue refresh — shipped.** [`Scripts/update-google-fonts.ts`](../Scripts/update-google-fonts.ts) pulls from the Google Fonts Developer API (`GOOGLE_FONTS_API_KEY` env) and rewrites the snapshot. Dry-run by default — prints added/removed family diff vs the current file; `--apply` writes. Italic + oblique variants are dropped (picker doesn't surface them separately), `regular` normalises to `400`, families with no numeric weights are skipped. Adds `_meta.totalFamilies` + ISO `updatedAt` for provenance.
 
-- `Scripts/update-google-fonts.ts` to rebuild the snapshot from the Developer API on a quarterly cadence (today's catalogue is hand-maintained).
-- Self-hosted `@fontsource` variant for GDPR-clean operation (today fonts load from `fonts.googleapis.com`, embedding visitor IPs).
-- Picker UI cap of 3 weight variants per family — currently we request whatever the catalogue entry lists (already minimal).
+**Self-hosted GDPR variant — shipped.** New `siteFlags.selfHostFonts` toggle (Site settings → Layout tab) routes Google Fonts through a pair of server-side proxies:
+
+- [`/api/fonts/css`](../src/frontend/pages/api/fonts/css.ts) — fetches `fonts.googleapis.com/css2?family=…` server-side, rewrites every embedded `fonts.gstatic.com/...` URL in the CSS body to point at our `/api/fonts/file` proxy, forwards the visitor's `User-Agent` so Google returns the right woff2 variants, caches aggressively (1-day public, 7-day SWR). Strict allowlist on query chars so it can't be coerced into fetching arbitrary URLs.
+- [`/api/fonts/file`](../src/frontend/pages/api/fonts/file.ts) — companion proxy for the individual font binaries. Only accepts URLs with host `fonts.gstatic.com` (rejected otherwise — not an open proxy), immutable-caches for one year since Google's URLs are content-addressable.
+
+`_document.tsx` reads the flag via `loadSelfHostFontsFlag()` and passes `{selfHost: true}` to `buildGoogleFontsUrl`, which emits the `/api/fonts/css?…` URL instead of the Google CDN. Preconnect hints to Google are skipped in that mode — no point warming up a CDN the browser never hits.
+
+Effect: with the flag on, a visitor's IP + `User-Agent` are seen only by our server; Google sees our server's IP once per request batch, not per visitor. No build-time `@fontsource` dependency — zero moving parts in the repo beyond the two proxy routes.
+
+**Verified**: round-tripped `Inter` CSS through the proxy (body includes `/api/fonts/file?url=…`); round-tripped a real 25 kB woff2 with `Cache-Control: public, max-age=31536000, immutable`; an off-host URL correctly 400'd (`Only fonts.gstatic.com urls are allowed`). Test suite 136/136 green.
+
+**Still deferred (nice-to-have):**
+
+- Picker UI cap of 3 weight variants per family — we already request only what the catalogue publishes, which stays minimal.
 
 ## Goal
 

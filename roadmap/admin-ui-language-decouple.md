@@ -1,6 +1,6 @@
 # Decouple admin UI language from client site language
 
-**Status:** Held by owner — do not start without explicit go-ahead.
+**Status:** Shipped (2026-04-19).
 
 ## Goal
 

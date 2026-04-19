@@ -9,6 +9,19 @@ export interface ISiteFlags {
     /** How the public site renders navigation: classic tab-per-page or a single
      *  stacked document with smooth-scroll anchors. */
     layoutMode: SiteLayoutMode;
+    /** When true, editors / admins get Alt-click inline translation editing on
+     *  public-site strings. Off by default — Alt-click bindings can interfere
+     *  with other testing flows, so editors opt in explicitly. */
+    inlineTranslationEdit?: boolean;
+    /** Auto-apply the `high-contrast` theme for visitors whose browser reports
+     *  `prefers-contrast: more` or `forced-colors: active`. Off by default so
+     *  the site owner opts into delegating their theme choice to the OS. */
+    autoHighContrast?: boolean;
+    /** When true, the public site routes Google Fonts traffic through the
+     *  `/api/fonts/{css,file}` proxy so visitor IPs never reach
+     *  `fonts.googleapis.com` / `fonts.gstatic.com`. GDPR-clean at the
+     *  cost of a small proxy hop + longer first-paint on cold cache. */
+    selfHostFonts?: boolean;
     version?: number;
     editedBy?: string;
     editedAt?: string;
@@ -17,6 +30,9 @@ export interface ISiteFlags {
 export const DEFAULT_SITE_FLAGS: ISiteFlags = {
     blogEnabled: true,
     layoutMode: 'tabs',
+    inlineTranslationEdit: false,
+    autoHighContrast: false,
+    selfHostFonts: false,
 };
 
 const KEY = 'siteFlags';
@@ -36,6 +52,15 @@ export class SiteFlagsService {
             layoutMode: (value?.layoutMode === 'scroll' || value?.layoutMode === 'tabs')
                 ? value.layoutMode
                 : DEFAULT_SITE_FLAGS.layoutMode,
+            inlineTranslationEdit: typeof value?.inlineTranslationEdit === 'boolean'
+                ? value.inlineTranslationEdit
+                : DEFAULT_SITE_FLAGS.inlineTranslationEdit,
+            autoHighContrast: typeof value?.autoHighContrast === 'boolean'
+                ? value.autoHighContrast
+                : DEFAULT_SITE_FLAGS.autoHighContrast,
+            selfHostFonts: typeof value?.selfHostFonts === 'boolean'
+                ? value.selfHostFonts
+                : DEFAULT_SITE_FLAGS.selfHostFonts,
             version: (doc as any)?.version ?? 0,
             editedBy: (doc as any)?.editedBy,
             editedAt: (doc as any)?.editedAt,
@@ -52,6 +77,15 @@ export class SiteFlagsService {
             layoutMode: (flags.layoutMode === 'scroll' || flags.layoutMode === 'tabs')
                 ? flags.layoutMode
                 : current.layoutMode,
+            inlineTranslationEdit: typeof flags.inlineTranslationEdit === 'boolean'
+                ? flags.inlineTranslationEdit
+                : current.inlineTranslationEdit,
+            autoHighContrast: typeof flags.autoHighContrast === 'boolean'
+                ? flags.autoHighContrast
+                : current.autoHighContrast,
+            selfHostFonts: typeof flags.selfHostFonts === 'boolean'
+                ? flags.selfHostFonts
+                : current.selfHostFonts,
         };
         const version = nextVersion(existingVersion);
         await this.settings.updateOne(

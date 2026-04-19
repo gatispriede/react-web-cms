@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect, useMemo, useState} from "react";
 import {Button, Drawer, Form, Input, Popconfirm, Select, Space, Switch, Table, Tag, Typography, message} from "antd";
 import {DeleteOutlined, EditOutlined, EyeOutlined, PlusOutlined} from "../../common/icons";
-import {useTranslation} from "next-i18next";
+import {useTranslation} from "react-i18next";
 import PostApi from "../../../api/PostApi";
 import SiteFlagsApi from "../../../api/SiteFlagsApi";
 import {IPost, InPost} from "../../../../Interfaces/IPost";
@@ -14,7 +14,7 @@ const postApi = new PostApi();
 const siteFlagsApi = new SiteFlagsApi();
 
 const AdminSettingsPosts: React.FC = () => {
-    const {t} = useTranslation('common');
+    const {t} = useTranslation();
     const [posts, setPosts] = useState<IPost[]>([]);
     const [loading, setLoading] = useState(false);
     const [editing, setEditing] = useState<Partial<InPost> | null>(null);

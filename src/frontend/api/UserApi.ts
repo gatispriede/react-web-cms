@@ -1,5 +1,9 @@
 import {resolve} from "../gqty";
-import {IUser, InUser} from "../../Interfaces/IUser";
+import {AdminLocale, IUser, InUser} from "../../Interfaces/IUser";
+
+function normalizeAdminLocale(value: unknown): AdminLocale | undefined {
+    return value === 'en' || value === 'lv' ? value : undefined;
+}
 
 export class UserApi {
     async getUser({email}: { email: string }): Promise<IUser | null> {
@@ -14,6 +18,8 @@ export class UserApi {
                 role: (user.role ?? 'viewer') as IUser['role'],
                 avatar: user.avatar ?? undefined,
                 canPublishProduction: Boolean((user as any).canPublishProduction),
+                mustChangePassword: Boolean((user as any).mustChangePassword),
+                preferredAdminLocale: normalizeAdminLocale((user as any).preferredAdminLocale),
             };
         });
     }
@@ -30,6 +36,8 @@ export class UserApi {
                     role: (u.role ?? 'viewer') as IUser['role'],
                     avatar: u.avatar ?? undefined,
                     canPublishProduction: Boolean(u.canPublishProduction),
+                    mustChangePassword: Boolean(u.mustChangePassword),
+                    preferredAdminLocale: normalizeAdminLocale(u.preferredAdminLocale),
                 }));
             });
         } catch (err) {
