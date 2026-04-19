@@ -1,8 +1,10 @@
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
-import {Alert, Button, Input, Space, Switch, Table, Tag, Typography} from 'antd';
-import {DownloadOutlined, SearchOutlined, UploadOutlined} from '@ant-design/icons';
+import {Alert, Button, Input, Popover, Space, Switch, Table, Tag, Tooltip, Typography, message} from 'antd';
+import {DownloadOutlined, EditOutlined, InfoCircleOutlined, SearchOutlined, UploadOutlined} from '../../common/icons';
 import TranslationManager from '../TranslationManager';
 import CsvImportDialog from './CsvImportDialog';
+import TranslationMetaApi from '../../../api/TranslationMetaApi';
+import {ITranslationMetaEntry, ITranslationMetaMap} from '../../../../Server/TranslationMetaService';
 
 interface Row {
     key: string;
@@ -29,6 +31,113 @@ const fetchLocale = async (lang: string): Promise<Record<string, string>> => {
 };
 
 /**
+ * Per-row inline editor for translator notes. Empty on both fields → row
+ * renders a subtle "add note" pencil; populated → renders the description as
+ * dimmed text with the context available via hover tooltip, and still lets
+ * the editor click through to edit.
+ */
+const MetaCell = ({entry, onSave}: {
+    entry: ITranslationMetaEntry | undefined;
+    onSave: (next: ITranslationMetaEntry) => Promise<void> | void;
+}) => {
+    const [open, setOpen] = useState(false);
+    const [description, setDescription] = useState(entry?.description ?? '');
+    const [context, setContext] = useState(entry?.context ?? '');
+
+    useEffect(() => {
+        if (open) {
+            setDescription(entry?.description ?? '');
+            setContext(entry?.context ?? '');
+        }
+    }, [open, entry?.description, entry?.context]);
+
+    const commit = async () => {
+        const nextDesc = description.trim();
+        const nextCtx = context.trim();
+        const prevDesc = entry?.description ?? '';
+        const prevCtx = entry?.context ?? '';
+        if (nextDesc !== prevDesc || nextCtx !== prevCtx) {
+            await onSave({description: nextDesc, context: nextCtx});
+        }
+        setOpen(false);
+    };
+
+    const popoverContent = (
+        <div style={{width: 300}}>
+            <div style={{marginBottom: 6, fontWeight: 500}}>Short description</div>
+            <Input
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                placeholder="e.g. 'CTA on the homepage hero'"
+                maxLength={120}
+                onPressEnter={() => { void commit(); }}
+                autoFocus
+            />
+            <div style={{margin: '10px 0 6px', fontWeight: 500}}>Longer context</div>
+            <Input.TextArea
+                value={context}
+                onChange={e => setContext(e.target.value)}
+                placeholder="Background, tone hints, where the string appears…"
+                rows={3}
+                maxLength={600}
+            />
+            <div style={{display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 10}}>
+                <Button size="small" onClick={() => setOpen(false)}>Cancel</Button>
+                <Button size="small" type="primary" onClick={() => { void commit(); }}>Save</Button>
+            </div>
+        </div>
+    );
+
+    const hasEntry = Boolean(entry?.description || entry?.context);
+    const trigger = hasEntry ? (
+        <Tooltip title={entry?.context || entry?.description}>
+            <Button
+                type="link"
+                size="small"
+                style={{padding: 0, height: 'auto', textAlign: 'left', maxWidth: '100%'}}
+                onClick={() => setOpen(true)}
+            >
+                <span style={{
+                    display: 'inline-block',
+                    maxWidth: 210,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    verticalAlign: 'bottom',
+                    color: '#555',
+                }}>
+                    {entry?.description || entry?.context}
+                </span>
+                <EditOutlined style={{marginLeft: 6, color: '#999'}}/>
+            </Button>
+        </Tooltip>
+    ) : (
+        <Button
+            type="link"
+            size="small"
+            icon={<EditOutlined/>}
+            style={{padding: 0, height: 'auto', color: '#bbb'}}
+            onClick={() => setOpen(true)}
+        >
+            Add note
+        </Button>
+    );
+
+    return (
+        <Popover
+            content={popoverContent}
+            title="Translator notes"
+            trigger="click"
+            open={open}
+            onOpenChange={setOpen}
+            destroyTooltipOnHide
+        >
+            {trigger}
+        </Popover>
+    );
+};
+
+/**
  * Side-by-side translation compare view — loads every configured language's
  * `app.json` bundle at once and renders one column per language so translators
  * can see coverage gaps across the whole site in a single pass.
@@ -46,6 +155,8 @@ export const ContentLoaderCompare = ({translationManager, dataPromise}: {
     const [missingOnly, setMissingOnly] = useState(false);
     const [loading, setLoading] = useState(true);
     const [importOpen, setImportOpen] = useState(false);
+    const [meta, setMeta] = useState<ITranslationMetaMap>({});
+    const metaApi = useMemo(() => new TranslationMetaApi(), []);
 
     const loadAll = useCallback(async () => {
         setLoading(true);
@@ -62,10 +173,32 @@ export const ContentLoaderCompare = ({translationManager, dataPromise}: {
                 loaded[l.symbol] = await fetchLocale(l.symbol);
             }));
             setResources(loaded);
+            setMeta(await metaApi.get());
         } finally {
             setLoading(false);
         }
-    }, [translationManager, dataPromise, sourceMap]);
+    }, [translationManager, dataPromise, sourceMap, metaApi]);
+
+    const persistMeta = useCallback(async (key: string, entry: ITranslationMetaEntry) => {
+        // Optimistic update so the row reflects the edit instantly.
+        setMeta(prev => {
+            const next = {...prev};
+            const description = entry.description?.trim() ?? '';
+            const context = entry.context?.trim() ?? '';
+            if (!description && !context) delete next[key];
+            else next[key] = {
+                ...(description ? {description} : {}),
+                ...(context ? {context} : {}),
+            };
+            return next;
+        });
+        const result = await metaApi.save({[key]: entry});
+        if ((result as any)?.error) {
+            message.error(String((result as any).error));
+            // Revert by re-fetching on failure.
+            setMeta(await metaApi.get());
+        }
+    }, [metaApi]);
 
     useEffect(() => { void loadAll(); }, [loadAll]);
 
@@ -111,8 +244,29 @@ export const ContentLoaderCompare = ({translationManager, dataPromise}: {
     };
 
     const columns = [
-        {title: 'Key', dataIndex: 'key', width: 240, render: (k: string) => <Typography.Text code>{k}</Typography.Text>},
-        {title: 'Source', dataIndex: 'source', width: 260, render: (s: string) => <Typography.Text>{s}</Typography.Text>},
+        {title: 'Key', dataIndex: 'key', width: 220, render: (k: string) => <Typography.Text code>{k}</Typography.Text>},
+        {title: 'Source', dataIndex: 'source', width: 240, render: (s: string) => <Typography.Text>{s}</Typography.Text>},
+        {
+            title: (
+                <Space size={4}>
+                    <span>Translator notes</span>
+                    <Tooltip title="Optional per-key description + longer context shown to translators. Not shipped to the public site.">
+                        <InfoCircleOutlined style={{color: '#999'}}/>
+                    </Tooltip>
+                </Space>
+            ),
+            key: 'meta',
+            width: 240,
+            render: (_: unknown, row: Row) => {
+                const entry = meta[row.key];
+                return (
+                    <MetaCell
+                        entry={entry}
+                        onSave={(next) => persistMeta(row.key, next)}
+                    />
+                );
+            },
+        },
         ...nonDefaultLangs.map(lang => ({
             title: lang.label ? `${lang.symbol} — ${lang.label}` : lang.symbol,
             dataIndex: ['values', lang.symbol],

@@ -1,6 +1,6 @@
 import React from "react";
 import {Button, Card, Col, Modal, Row, Segmented, Typography} from "antd";
-import {PlusCircleOutlined} from "@ant-design/icons";
+import {PlusCircleOutlined} from "../icons";
 import {TFunction} from "i18next";
 import {SECTION_TEMPLATES, SectionTemplate} from "../../itemTypes/templates";
 

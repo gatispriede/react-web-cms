@@ -34,23 +34,28 @@
   .edit-wrapper{
     width: 100%;
     position: relative;
+    // Section-level edit / delete chips. Bumped from 40px → 48px so the
+    // affordance is unambiguous at a glance — the previous size was
+    // close enough to the button's own border that admins were missing
+    // the click target on first try.
     .delete-container, .edit-container {
       display: none;
       position: absolute;
       z-index: 100;
       top: 0;
-      margin-left: calc(100% - 40px);
+      margin-left: calc(100% - 48px);
       button{
-        height: 40px;
-        width: 40px;
+        height: 48px;
+        width: 48px;
         border: 1px solid gray;
         padding: 0;
         margin: 0;
+        font-size: 18px;
       }
       .edit-button{
         margin-left: 25px;
-        width: 40px;
-        height: 20px;
+        width: 48px;
+        height: 24px;
       }
     }
     &:hover .delete-container, &:hover .edit-container{
@@ -59,17 +64,20 @@
   }
   .section-item-container{
     flex: 1 1 auto;
+    // Per-item chips. 20px was a phone-keypad-sized target; bumped to
+    // 32px so editors can hit them on a touchpad without tab-fishing.
     .delete-container, .edit-container {
       top: 0;
       display: none;
       left: 0;
       margin-left: 0;
       button{
-        height: 20px;
-        width: 20px;
+        height: 32px;
+        width: 32px;
         border: 1px solid gray;
         padding: 0;
         margin: 0;
+        font-size: 14px;
       }
     }
     &:hover .delete-container, &:hover .edit-container{

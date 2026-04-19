@@ -3,7 +3,7 @@ import {GetStaticPaths, GetStaticProps} from 'next';
 import {gqlFetch} from '../../lib/gqlFetch';
 import Link from 'next/link';
 import Head from 'next/head';
-import {ArrowLeftOutlined} from '@ant-design/icons';
+import {ArrowLeftOutlined} from '../../components/common/icons';
 import {Button, ConfigProvider, Space, Tag, Typography} from 'antd';
 import {serverSideTranslations} from 'next-i18next/serverSideTranslations';
 import {useTranslation} from 'next-i18next';

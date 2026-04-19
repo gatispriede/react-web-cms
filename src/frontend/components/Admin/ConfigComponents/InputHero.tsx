@@ -1,6 +1,6 @@
 import React from "react";
 import {Button, Checkbox, Col, Collapse, ColorPicker, Divider, Input, Row, Space} from "antd";
-import {DeleteOutlined, PlusOutlined} from "@ant-design/icons";
+import {DeleteOutlined, PlusOutlined} from "../../common/icons";
 import {IInputContent} from "../../../../Interfaces/IInputContent";
 import {EItemType} from "../../../../enums/EItemType";
 import {HeroContent, IHero, IHeroCoord, IHeroCta, IHeroMeta} from "../../SectionComponents/Hero";

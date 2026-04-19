@@ -144,16 +144,36 @@ chmod 600 .env.local
 
 > **Rotate before any `git push`**: the repo currently has `NEXTAUTH_SECRET` / Google keys committed under `src/frontend/.env` (see README note) and hardcoded Atlas credentials + admin password in `src/Server/mongoConfig.ts`. Treat these as leaked, regenerate, and move them to env vars before exposing the repo.
 
+### Admin seeding — password precedence
+
+On first `setupAdmin`, the server picks a password source in this order:
+
+1. `ADMIN_PASSWORD_HASH` — pre-computed bcrypt hash. Used verbatim. No flag set, no artefact written.
+2. `ADMIN_DEFAULT_PASSWORD` — plain-text. Hashed once, then the admin user is flagged `mustChangePassword: true` so the UI nags until it's rotated.
+3. **Neither set → the server generates a 144-bit password, bcrypt-hashes it, and writes the plain value to `var/admin-initial-password.txt` (mode `0600`).** If the process is interactive (TTY), a one-shot banner also prints to stdout. The admin is flagged `mustChangePassword: true`.
+
+The generated-password path is the preferred production flow: no plain-text env var sits in deploy config, and the artefact is read once then deleted by the operator after first login.
+
+> **Never regenerate**: if `var/admin-initial-password.txt` exists but the admin user was deleted, boot fails with a clear message. Restore the user or remove the file manually — the server refuses to silently re-seed and invalidate credentials someone may still have.
+
 Install + seed admin:
 
 ```bash
 yarn --frozen-lockfile
 
-# One-off seeding — starts graphql, hits /api/setup, kills it
+# One-off seeding — starts graphql, hits /api/setup, kills it.
+# If no ADMIN_* env is set, the generated password lands in
+# var/admin-initial-password.txt on this box. Read it, log in, rotate it.
 pm2 start "npm run standalone-graphql" --name gql-seed -- --production
 sleep 5
 curl -fsS http://localhost/api/setup
 pm2 stop gql-seed && pm2 delete gql-seed
+
+# If you used the generate-from-nothing path:
+cat var/admin-initial-password.txt
+# Log in with that, immediately set a new password in Site settings → Users,
+# then delete the artefact:
+rm var/admin-initial-password.txt
 ```
 
 ---

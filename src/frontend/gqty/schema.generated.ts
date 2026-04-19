@@ -166,6 +166,7 @@ export const generatedSchema = {
     slots: { __type: "[Int]" },
     overlay: { __type: "Boolean" },
     overlayAnchor: { __type: "String" },
+    version: { __type: "Int" },
     editedBy: { __type: "String" },
     editedAt: { __type: "String" },
   },
@@ -272,7 +273,7 @@ export const generatedSchema = {
     },
     addUpdateSectionItem: {
       __type: "String!",
-      __args: { pageName: "String", section: "InSection!" },
+      __args: { pageName: "String", section: "InSection!", expectedVersion: "Int" },
     },
     createNavigation: {
       __type: "String!",
@@ -297,15 +298,16 @@ export const generatedSchema = {
     },
     publishSnapshot: { __type: "String!", __args: { note: "String" } },
     rollbackToSnapshot: { __type: "String!", __args: { id: "String!" } },
-    saveTheme: { __type: "String!", __args: { theme: "JSON!" } },
+    saveTheme: { __type: "String!", __args: { theme: "JSON!", expectedVersion: "Int" } },
     deleteTheme: { __type: "String!", __args: { id: "String!" } },
     setActiveTheme: { __type: "String!", __args: { id: "String!" } },
-    savePost: { __type: "String!", __args: { post: "JSON!" } },
+    savePost: { __type: "String!", __args: { post: "JSON!", expectedVersion: "Int" } },
     deletePost: { __type: "String!", __args: { id: "String!" } },
     setPostPublished: { __type: "String!", __args: { id: "String!", publish: "Boolean!" } },
-    saveFooter: { __type: "String!", __args: { config: "JSON!" } },
-    saveSiteFlags: { __type: "String!", __args: { flags: "JSON!" } },
-    saveSiteSeo: { __type: "String!", __args: { seo: "JSON!" } },
+    saveFooter: { __type: "String!", __args: { config: "JSON!", expectedVersion: "Int" } },
+    saveSiteFlags: { __type: "String!", __args: { flags: "JSON!", expectedVersion: "Int" } },
+    saveSiteSeo: { __type: "String!", __args: { seo: "JSON!", expectedVersion: "Int" } },
+    saveTranslationMeta: { __type: "String!", __args: { meta: "JSON!", expectedVersion: "Int" } },
   },
   QueryMongo: {
     __typename: { __type: "String!" },
@@ -329,6 +331,7 @@ export const generatedSchema = {
     getFooter: { __type: "String!" },
     getSiteFlags: { __type: "String!" },
     getSiteSeo: { __type: "String!" },
+    getTranslationMeta: { __type: "String!" },
   },
   mutation: {
     __typename: { __type: "String!" },
@@ -413,6 +416,7 @@ export interface ISection {
   slots?: Maybe<Array<Maybe<ScalarsEnums["Int"]>>>;
   overlay?: Maybe<ScalarsEnums["Boolean"]>;
   overlayAnchor?: Maybe<ScalarsEnums["String"]>;
+  version?: Maybe<ScalarsEnums["Int"]>;
   editedBy?: Maybe<ScalarsEnums["String"]>;
   editedAt?: Maybe<ScalarsEnums["String"]>;
 }
@@ -456,6 +460,7 @@ export interface MutationMongo {
   addUpdateSectionItem: (args: {
     pageName?: Maybe<ScalarsEnums["String"]>;
     section: InSection;
+    expectedVersion?: Maybe<ScalarsEnums["Int"]>;
   }) => ScalarsEnums["String"];
   createNavigation: (args: {
     navigation: InNavigation;
@@ -487,13 +492,14 @@ export interface MutationMongo {
   removeUser: (args: { id: ScalarsEnums["String"] }) => ScalarsEnums["String"];
   publishSnapshot: (args?: { note?: Maybe<ScalarsEnums["String"]> }) => ScalarsEnums["String"];
   rollbackToSnapshot: (args: { id: ScalarsEnums["String"] }) => ScalarsEnums["String"];
-  savePost: (args: { post: unknown }) => ScalarsEnums["String"];
+  savePost: (args: { post: unknown; expectedVersion?: Maybe<ScalarsEnums["Int"]> }) => ScalarsEnums["String"];
   deletePost: (args: { id: ScalarsEnums["String"] }) => ScalarsEnums["String"];
   setPostPublished: (args: { id: ScalarsEnums["String"]; publish: ScalarsEnums["Boolean"] }) => ScalarsEnums["String"];
-  saveFooter: (args: { config: unknown }) => ScalarsEnums["String"];
-  saveSiteFlags: (args: { flags: unknown }) => ScalarsEnums["String"];
-  saveSiteSeo: (args: { seo: unknown }) => ScalarsEnums["String"];
-  saveTheme: (args: { theme: unknown }) => ScalarsEnums["String"];
+  saveFooter: (args: { config: unknown; expectedVersion?: Maybe<ScalarsEnums["Int"]> }) => ScalarsEnums["String"];
+  saveSiteFlags: (args: { flags: unknown; expectedVersion?: Maybe<ScalarsEnums["Int"]> }) => ScalarsEnums["String"];
+  saveSiteSeo: (args: { seo: unknown; expectedVersion?: Maybe<ScalarsEnums["Int"]> }) => ScalarsEnums["String"];
+  saveTranslationMeta: (args: { meta: unknown; expectedVersion?: Maybe<ScalarsEnums["Int"]> }) => ScalarsEnums["String"];
+  saveTheme: (args: { theme: unknown; expectedVersion?: Maybe<ScalarsEnums["Int"]> }) => ScalarsEnums["String"];
   deleteTheme: (args: { id: ScalarsEnums["String"] }) => ScalarsEnums["String"];
   setActiveTheme: (args: { id: ScalarsEnums["String"] }) => ScalarsEnums["String"];
 }
@@ -532,6 +538,7 @@ export interface QueryMongo {
   getFooter: ScalarsEnums["String"];
   getSiteFlags: ScalarsEnums["String"];
   getSiteSeo: ScalarsEnums["String"];
+  getTranslationMeta: ScalarsEnums["String"];
 }
 
 export interface Mutation {

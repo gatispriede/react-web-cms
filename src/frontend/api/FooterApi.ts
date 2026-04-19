@@ -1,6 +1,7 @@
 import {resolve} from "../gqty";
 import {DEFAULT_FOOTER, IFooterConfig} from "../../Interfaces/IFooter";
 import {refreshBus} from "../lib/refreshBus";
+import {isConflictError, parseMutationResponse} from "../lib/conflict";
 
 export class FooterApi {
     async get(): Promise<IFooterConfig> {
@@ -13,13 +14,17 @@ export class FooterApi {
         }
     }
 
-    async save(config: IFooterConfig): Promise<{ok?: boolean; error?: string}> {
+    async save(config: IFooterConfig, expectedVersion?: number | null): Promise<{ok?: boolean; version?: number; error?: string}> {
         try {
-            const raw = await resolve(({mutation}) => (mutation as any).mongo.saveFooter({config}));
-            const parsed = JSON.parse(raw || '{}');
+            const raw = await resolve(({mutation}) => (mutation as any).mongo.saveFooter({
+                config,
+                ...(expectedVersion != null ? {expectedVersion} : {}),
+            }));
+            const parsed: any = parseMutationResponse(raw);
             refreshBus.emit('settings');
             return parsed.saveFooter ?? parsed;
         } catch (err) {
+            if (isConflictError(err)) throw err;
             return {error: String(err)};
         }
     }

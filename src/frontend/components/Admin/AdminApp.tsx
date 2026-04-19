@@ -1,7 +1,7 @@
 import React from 'react'
 import {resolve} from "../../gqty";
 import {Button, ConfigProvider, Layout, Menu, Popconfirm, Spin, Switch, Tag, message, theme as antdTheme} from 'antd';
-import {BulbFilled, BulbOutlined, CloseOutlined, CloudUploadOutlined, PlusOutlined} from "@ant-design/icons";
+import {BulbFilled, BulbOutlined, CloseOutlined, CloudUploadOutlined, EditOutlined, PlusOutlined} from "../common/icons";
 import PublishApi from "../../api/PublishApi";
 import AddNewDialogNavigation from "../common/Dialogs/AddNewDialogNavigation";
 import DynamicTabsContent from "../DynamicTabsContent";
@@ -13,7 +13,6 @@ import {IMongo} from "../../../Interfaces/IMongo";
 import MongoApi from '../../api/MongoApi';
 import Logo from "../common/Logo";
 import {Session} from "next-auth";
-import {EditOutlined} from "@ant-design/icons";
 import {INavigation} from "../../../Interfaces/INavigation";
 import {TFunction} from "i18next";
 import {UserRole} from "../../../Interfaces/IUser";

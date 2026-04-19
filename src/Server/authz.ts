@@ -68,6 +68,7 @@ export const SESSION_INJECTED_METHODS: ReadonlySet<string> = new Set([
     'saveFooter',
     'saveSiteFlags',
     'saveSiteSeo',
+    'saveTranslationMeta',
     'saveLogo',
     'addUpdateLanguage',
     'deleteLanguage',
@@ -140,6 +141,7 @@ export const MUTATION_REQUIREMENTS: Record<string, UserRole> = {
     saveFooter: 'editor',
     saveSiteFlags: 'admin',
     saveSiteSeo: 'editor',
+    saveTranslationMeta: 'editor',
 };
 
 export const QUERY_REQUIREMENTS: Record<string, UserRole> = {

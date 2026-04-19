@@ -13,10 +13,11 @@
 @use "Common/Reveal";
 @use "Common/SiteFooter";
 
-// Editorial theme overrides (scoped via `body[data-theme-name=…]`)
+// Editorial theme overrides (scoped via `[data-theme-name=…]` — see THEMING.md)
 @use "Themes/Paper";
 @use "Themes/Studio";
 @use "Themes/Industrial";
+@use "Themes/HighContrast";
 
 // Per-module public renderers (one file per item type)
 @use "Components/PlainImage";
@@ -60,13 +61,31 @@
 }
 
 // Admin-only per-section strip (overlay segmented control + audit badge).
-// Hidden by default, fades in on hover / keyboard focus so the rendered
-// page stays uncluttered and matches the pattern used for merge/split chips.
-.section-admin-wrap { position: relative; }
+// Floated above the section instead of consuming flow height — previously
+// it sat in-flow with `opacity: 0` which still pushed every section down
+// by ~30 px on every page even when invisible. Now it absolutely
+// positions to the top-right outside the section box and fades in on
+// hover / keyboard focus, so the rendered page is unaffected when not
+// being interacted with.
+.section-admin-wrap {
+  position: relative;
+  // Reserve a small breathing strip above each section that the floated
+  // strip (top: -32px) can overlap into when revealed — avoids covering
+  // the section's own first-line content while still keeping the strip
+  // visually attached to the section it controls.
+  margin-top: 8px;
+}
 .section-admin-strip {
+  position: absolute;
+  top: -32px;
+  right: 0;
+  z-index: 5;
   opacity: 0;
   pointer-events: none;
   transition: opacity 120ms ease;
+  background: var(--theme-colorBgBase, var(--background, #fff));
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 .section-admin-wrap:hover > .section-admin-strip,
 .section-admin-wrap:focus-within > .section-admin-strip {

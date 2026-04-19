@@ -3,7 +3,7 @@
 
    Every theme gets the layout "for free"; editorial flourishes (mono caps,
    paper dashed rules, ink-2 values, accent hover on links) are layered on
-   top in `Themes/Paper.scss` behind `body[data-theme-name="paper"]`.
+   top in `Themes/Paper.scss` behind `[data-theme-name="paper"]`.
 
    Layouts, in order:
      - `.list-module.default .list-module__items` — key · value rows with

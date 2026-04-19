@@ -1,7 +1,7 @@
 import EditWrapper from "./common/EditWrapper";
 import React from "react";
 import {Button, Tooltip, message} from "antd";
-import {ColumnWidthOutlined, MergeCellsOutlined, SplitCellsOutlined} from "@ant-design/icons";
+import {ColumnWidthOutlined, MergeCellsOutlined, SplitCellsOutlined} from "./common/icons";
 import {ISection} from "../../Interfaces/ISection";
 import {EItemType} from "../../enums/EItemType";
 import ContentType from "./common/ContentType";

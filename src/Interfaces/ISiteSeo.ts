@@ -15,6 +15,8 @@ export interface ISiteSeoDefaults {
     defaultAuthor?: string;
     /** Default locale for og:locale if not overridden. */
     defaultLocale?: string;
+    /** Optimistic-concurrency counter — see `src/Server/conflict.ts`. */
+    version?: number;
     editedBy?: string;
     editedAt?: string;
 }

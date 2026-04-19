@@ -1,6 +1,7 @@
 import {resolve} from "../gqty";
 import {IPost, InPost} from "../../Interfaces/IPost";
 import {refreshBus} from "../lib/refreshBus";
+import {isConflictError, parseMutationResponse} from "../lib/conflict";
 
 export class PostApi {
     async list({includeDrafts = false, limit = 50}: {includeDrafts?: boolean; limit?: number} = {}): Promise<IPost[]> {
@@ -23,13 +24,19 @@ export class PostApi {
         }
     }
 
-    async save(post: InPost): Promise<{id?: string; error?: string}> {
+    async save(post: InPost, expectedVersion?: number | null): Promise<{id?: string; version?: number; error?: string}> {
         try {
-            const raw = await resolve(({mutation}) => (mutation as any).mongo.savePost({post}));
-            const parsed = JSON.parse(raw || '{}');
+            const raw = await resolve(({mutation}) => (mutation as any).mongo.savePost({
+                post,
+                ...(expectedVersion != null ? {expectedVersion} : {}),
+            }));
+            const parsed: any = parseMutationResponse(raw);
             refreshBus.emit('settings');
             return parsed.savePost ?? parsed;
-        } catch (err) { return {error: String(err)}; }
+        } catch (err) {
+            if (isConflictError(err)) throw err;
+            return {error: String(err)};
+        }
     }
 
     async remove(id: string): Promise<{id?: string; deleted?: number; error?: string}> {

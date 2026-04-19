@@ -11,6 +11,8 @@ export interface IPost {
     body: string;
     createdAt: string;
     updatedAt: string;
+    /** Optimistic-concurrency counter — see `src/Server/conflict.ts`. */
+    version?: number;
     editedBy?: string;
     editedAt?: string;
 }

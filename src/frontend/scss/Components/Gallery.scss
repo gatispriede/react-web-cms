@@ -1,3 +1,31 @@
+// Defensive base for the horizontal-scroll variants (`marquee`, `logo-wall`,
+// `hazard-strip`). Earlier these only worked when the active theme was
+// Studio (which scoped `overflow: hidden` + the marquee animation under
+// `[data-theme-name="studio"]`). On other themes the JSX still emitted
+// the duplicated item list (count × 2 to seam-loop the animation) but
+// nothing clipped it, so the cards spilled past the viewport's right
+// edge. Hoisting the clip here so any theme can render the variant
+// safely; theme-scoped rules still own the animation + per-card
+// dimensions.
+.gallery-wrapper.gallery-wrapper-app {
+  &.marquee,
+  &.logo-wall,
+  &.hazard-strip {
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+    .gallery-wrapper-images {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 18px;
+      width: max-content;
+    }
+    .container {
+      flex-shrink: 0;
+    }
+  }
+}
+
 .gallery-wrapper{
   flex-wrap: wrap;
   &.admin{

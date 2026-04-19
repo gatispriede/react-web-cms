@@ -42,7 +42,7 @@ export function applyThemeCssVars(tokens: IThemeTokens | null | undefined): void
         const v = tokens[token];
         if (typeof v === 'number') root.style.setProperty(name, `${v}${unit}`);
     }
-    // Theme slug — drives `body[data-theme-name="<slug>"]` scoping for SCSS
+    // Theme slug — drives `[data-theme-name="<slug>"]` scoping for SCSS
     // overrides. Unset when not provided so other presets don't inherit.
     const slug = typeof tokens.themeSlug === 'string' ? tokens.themeSlug : '';
     if (typeof document.body !== 'undefined') {

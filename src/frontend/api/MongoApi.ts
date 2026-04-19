@@ -31,6 +31,7 @@ class MongoApi {
     saveImage = (image: InImage): Promise<any> => this.assetApi.saveImage(image);
     deleteImage = (id: string): Promise<any> => this.assetApi.deleteImage(id);
     getImages = (tags: string): Promise<IImage[]> => this.assetApi.getImages(tags);
+    rescanDiskImages = () => this.assetApi.rescanDiskImages();
 
     getLanguages = (): Promise<Record<string, INewLanguage>> => this.languageApi.getLanguages();
     saveLanguage = (language: INewLanguage, translations?: any) => this.languageApi.saveLanguage(language, translations);

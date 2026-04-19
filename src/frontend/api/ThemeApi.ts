@@ -1,6 +1,7 @@
 import {resolve} from "../gqty";
 import {ITheme, InTheme} from "../../Interfaces/ITheme";
 import {refreshBus} from "../lib/refreshBus";
+import {isConflictError, parseMutationResponse} from "../lib/conflict";
 
 // Module-level theme cache. A page navigation may touch 2–3 components that
 // each call `getActive()`; with `maxAge: 0` on the gqty cache every one of
@@ -40,14 +41,22 @@ export class ThemeApi {
         cachedTheme = null;
     }
 
-    async saveTheme(theme: InTheme): Promise<{id?: string; error?: string}> {
+    async saveTheme(theme: InTheme, expectedVersion?: number | null): Promise<{id?: string; version?: number; error?: string}> {
         try {
-            const raw = await resolve(({mutation}) => (mutation as any).mongo.saveTheme({theme}));
-            const parsed = JSON.parse(raw || '{}');
+            const raw = await resolve(({mutation}) => (mutation as any).mongo.saveTheme({
+                theme,
+                ...(expectedVersion != null ? {expectedVersion} : {}),
+            }));
+            // parseMutationResponse throws ConflictError on the conflict shape; the
+            // editor catches that and surfaces a `<ConflictDialog>`. Any other
+            // server error still falls through to the `{error}` shape so existing
+            // toast handlers keep working.
+            const parsed: any = parseMutationResponse(raw);
             this.invalidateCache();
             refreshBus.emit('settings');
             return parsed.saveTheme ?? parsed;
         } catch (err) {
+            if (isConflictError(err)) throw err;
             return {error: String(err)};
         }
     }

@@ -57,6 +57,17 @@ Both surfaces call `ThemeApi.getActive()` on mount. The difference is what they 
 2. Use `var(--theme-colorTextBase, inherit)` for text, `var(--theme-colorPrimary)` for accents, `var(--theme-borderRadius, 0)` for corners.
 3. Nest the rules under `.dynamic-content` (already done via `global.scss` — new modules just need to be imported and nested similarly).
 
+## Theme-slug scoping contract (Paper / Studio / Industrial)
+
+Editorial themes that go beyond token values and restyle specific modules (Paper, Studio, Industrial) live at `src/frontend/scss/Themes/<Name>.scss`. Each such file wraps its entire ruleset under `[data-theme-name="<slug>"]`.
+
+**Rules for authors:**
+
+- Use `[data-theme-name="foo"]` — **never** `body[data-theme-name="foo"]`. The `body` ancestor breaks the Theme-picker preview cards, which wrap the mini page in a `<div data-theme-name="foo">` and can't elevate that attribute to body. Selectors without the `body` constraint still match the production body just fine.
+- The slug must be the `themeSlug` value on the preset in `ThemeService.PRESETS` and the `themeSlug` field on any custom theme built from it.
+- Runtime continues to set `document.body.dataset.themeName = slug` for the public site. Preview cards set the attribute on their own wrapper `<div>`.
+- Portal overlays (dropdowns, popovers, etc.) mount under `<body>`, so they still pick up the theme-name scoping in production. Previews don't render portal overlays, so there's nothing to reconcile on that side.
+
 ## Adding a new themable token
 
 1. Extend `IThemeTokens` in `src/Interfaces/ITheme.ts`.
@@ -64,6 +75,30 @@ Both surfaces call `ThemeApi.getActive()` on mount. The difference is what they 
 3. Add the mapping in `applyThemeCssVars.ts` (pick a `--theme-*` name).
 4. Reference it from the relevant module SCSS.
 5. Surface a control in `AdminSettings/Theme.tsx` (ColorPicker or InputNumber).
+
+## Accessibility themes
+
+The `High contrast` preset (slug `high-contrast`) targets WCAG AAA (21:1 white-on-black for body, 19.56:1 for the safety-yellow accent). Its SCSS file at [`scss/Themes/HighContrast.scss`](src/frontend/scss/Themes/HighContrast.scss) layers the non-token rules a palette alone cannot deliver:
+
+- Persistent `:focus-visible` outline (2px yellow, 2px offset) overrides any module-level `outline: 0` reset.
+- Links underlined by default (2px, 3px offset) — never colour-only state.
+- `border-width` bumped to 2px on rules / dividers / form fields so they survive zoom + low-vision rendering.
+- AntD tag fills swapped from light tints to solid ink-on-bg pairs.
+- `@media (forced-colors: active)` block surrenders our palette to the OS while preserving structural cues (underlines, outline thickness).
+
+When adding a new a11y-graded preset: keep ink/bg above 7:1 (WCAG AAA body), pick a single high-contrast accent that survives on both bg colours used (test with the WebAIM contrast checker), and never rely on hue alone for state — pair colour with shape (underline, border, outline).
+
+**Deferred:** `prefers-contrast: more` / `forced-colors: active` auto-pick via a `SiteFlags.autoHighContrast` flag — see `roadmap/high-contrast-theme.md` for the design.
+
+## Picking fonts (Google Fonts)
+
+[`AdminSettings/FontPicker.tsx`](src/frontend/components/Admin/AdminSettings/FontPicker.tsx) browses a hand-curated catalogue at [`src/frontend/data/google-fonts.json`](src/frontend/data/google-fonts.json) and writes a CSS font-family stack (with category-appropriate fallbacks) back to the `fontDisplay` / `fontSans` / `fontMono` token of the editing theme.
+
+[`_document.tsx`](src/frontend/pages/_document.tsx) reads the **active** theme's font tokens, extracts the leading family name from each stack via `extractFontFamily()`, dedupes against a `BUNDLED_FAMILIES` list (the seeded Paper / Studio / Industrial fonts — kept loaded site-wide so theme switches don't FOUC), and composes a single `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?…">` tag via `buildGoogleFontsUrl()`. Per-family weight requests come from each catalogue entry's `variants` array, so we don't 404 on weights a family doesn't ship.
+
+Adding a family to the catalogue: append an entry to `google-fonts.json` with `{family, category, variants, subsets}`. A future `Scripts/update-google-fonts.ts` will rebuild the file from the Developer API; for now it's a manual list.
+
+**Privacy:** embedding Google Fonts sends visitor IPs to Google. If GDPR review flags this, we fall back to self-hosted via `@fontsource` (deferred — see `roadmap/google-fonts-picker.md`).
 
 ## Do not
 

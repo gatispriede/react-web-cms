@@ -1,6 +1,6 @@
 import React, {useMemo, useState} from 'react';
 import {Alert, Button, Input, Modal, Select, Space, Typography, message} from 'antd';
-import {UploadOutlined} from '@ant-design/icons';
+import {UploadOutlined} from '../../common/icons';
 import {parseCsv, translationsFromCsv} from '../../../../utils/csvTranslations';
 import TranslationManager from '../TranslationManager';
 

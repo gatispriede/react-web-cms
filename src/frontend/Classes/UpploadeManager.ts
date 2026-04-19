@@ -71,7 +71,10 @@ class UpploadManager {
                 }, 25)
                 const formData = new FormData()
                 formData.append('file', file)
-                formData.append('tags', JSON.stringify(this.tags.length ? this.tags : ['All']))
+                // Every uploaded image is tagged 'All' so it surfaces in
+                // the default picker view regardless of custom tags.
+                const tagsOut = this.tags.includes('All') ? this.tags : ['All', ...this.tags]
+                formData.append('tags', JSON.stringify(tagsOut.length ? tagsOut : ['All']))
                 try {
                     const response = await fetch('/api/upload', {method: 'POST', body: formData})
                     const body = await response.json().catch(() => ({}))

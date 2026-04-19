@@ -1,6 +1,6 @@
 import React from "react";
 import {Button, Input, Space, Typography} from "antd";
-import {DeleteOutlined, PlusOutlined} from "@ant-design/icons";
+import {DeleteOutlined, PlusOutlined} from "../../common/icons";
 import {IInputContent} from "../../../../Interfaces/IInputContent";
 import {EItemType} from "../../../../enums/EItemType";
 import {IServiceRow, IServices, ServicesContent} from "../../SectionComponents/Services";

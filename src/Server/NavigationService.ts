@@ -6,6 +6,7 @@ import {InSection} from "../Interfaces/IMongo";
 import {INavigationService} from "./mongoConfig";
 import {validateSectionInput} from "../utils/contentSchemas";
 import {auditStamp} from "./audit";
+import {nextVersion, requireVersion} from "./conflict";
 
 export class NavigationService implements INavigationService{
     private navigationDB: Collection;
@@ -94,16 +95,16 @@ export class NavigationService implements INavigationService{
         }
     }
 
-    async addUpdateSectionItem(item: { section: InSection, pageName?: string, editedBy?: string }): Promise<string> {
+    async addUpdateSectionItem(item: { section: InSection, pageName?: string, editedBy?: string, expectedVersion?: number | null }): Promise<string> {
+        const check = validateSectionInput(item.section);
+        if (!check.valid) {
+            return JSON.stringify({error: `Invalid section: ${check.error}`});
+        }
+        const now = new Date().toISOString();
+        const audit = {editedAt: now, ...(item.editedBy ? {editedBy: item.editedBy} : {})};
         try {
-            const check = validateSectionInput(item.section);
-            if (!check.valid) {
-                return JSON.stringify({error: `Invalid section: ${check.error}`});
-            }
-            const now = new Date().toISOString();
-            const audit = {editedAt: now, ...(item.editedBy ? {editedBy: item.editedBy} : {})};
             if (!item.section.id) {
-                const newSection = {...item.section, id: guid(), ...audit};
+                const newSection = {...item.section, id: guid(), version: 1, ...audit};
                 await this.sectionsDB.insertOne(newSection);
                 if (item.pageName) {
                     const nav = await this.navigationDB.findOne({type: 'navigation', page: item.pageName});
@@ -116,14 +117,25 @@ export class NavigationService implements INavigationService{
                         );
                     }
                 }
-                return JSON.stringify({createSection: {id: newSection.id}});
+                return JSON.stringify({createSection: {id: newSection.id, version: 1}});
             }
+            const existing = await this.sectionsDB.findOne({id: item.section.id});
+            if (!existing) {
+                return JSON.stringify({error: `Section ${item.section.id} not found`});
+            }
+            const existingVersion = (existing as any)?.version as number | undefined;
+            requireVersion(existing, existingVersion, item.expectedVersion, `Section ${item.section.id}`);
+            const version = nextVersion(existingVersion);
             await this.sectionsDB.updateOne(
                 {id: item.section.id},
-                {$set: {...item.section, ...audit}}
+                {$set: {...item.section, version, ...audit}}
             );
-            return JSON.stringify({updateSection: {id: item.section.id}});
+            return JSON.stringify({updateSection: {id: item.section.id, version}});
         } catch (err) {
+            // ConflictError carries `.conflict === true` — the mongoDBConnection
+            // wrapper detects it and serialises the JSON response. Other
+            // errors fall through to the generic error path.
+            if ((err as {conflict?: boolean})?.conflict) throw err;
             console.error('Error adding/updating section item:', err);
             await this.setupClient();
             return '';

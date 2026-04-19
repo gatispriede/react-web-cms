@@ -5,7 +5,6 @@ const {tsconfigPath} = loadCustomBuildParams()
 const nextConfig = {
     transpilePackages: [
         //
-        "react-drag-reorder",
         "@glidejs",
         // antd & deps
         "@ant-design",

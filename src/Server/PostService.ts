@@ -1,6 +1,7 @@
 import {Collection, Db} from 'mongodb';
 import guid from '../helpers/guid';
 import {IPost, InPost} from '../Interfaces/IPost';
+import {nextVersion, requireVersion} from './conflict';
 
 const slugify = (s: string) =>
     (s || '').toLowerCase()
@@ -39,7 +40,7 @@ export class PostService {
         return doc ? this.normalize(doc) : null;
     }
 
-    async save(post: InPost, editedBy?: string): Promise<{id: string}> {
+    async save(post: InPost, editedBy?: string, expectedVersion?: number | null): Promise<{id: string; version: number}> {
         const title = (post.title || '').trim();
         if (!title) throw new Error('title is required');
         const now = new Date().toISOString();
@@ -51,7 +52,10 @@ export class PostService {
         if (post.id) {
             const existing = await this.posts.findOne({id: post.id});
             if (!existing) throw new Error('post not found');
-            const update: Partial<IPost> & {editedBy?: string} = {
+            const existingVersion = (existing as any).version as number | undefined;
+            requireVersion(existing, existingVersion, expectedVersion, `Post "${title}"`);
+            const version = nextVersion(existingVersion);
+            const update: Partial<IPost> & {editedBy?: string; version?: number} = {
                 slug,
                 title,
                 excerpt: post.excerpt ?? '',
@@ -61,16 +65,17 @@ export class PostService {
                 draft: post.draft ?? (existing as any).draft ?? false,
                 body: post.body ?? '',
                 updatedAt: now,
+                version,
             };
             if (editedBy) update.editedBy = editedBy;
             if (post.publishedAt !== undefined) update.publishedAt = post.publishedAt;
             if (update.draft === false && !(existing as any).publishedAt) update.publishedAt = now;
             await this.posts.updateOne({id: post.id}, {$set: update});
-            return {id: post.id};
+            return {id: post.id, version};
         }
         const id = guid();
         const draft = post.draft ?? false;
-        const doc: IPost & {editedBy?: string} = {
+        const doc: IPost & {editedBy?: string; version?: number} = {
             id,
             slug,
             title,
@@ -83,10 +88,11 @@ export class PostService {
             body: post.body ?? '',
             createdAt: now,
             updatedAt: now,
+            version: 1,
             ...(editedBy ? {editedBy} : {}),
         };
         await this.posts.insertOne(doc as any);
-        return {id};
+        return {id, version: 1};
     }
 
     async remove(id: string, deletedBy?: string): Promise<{id: string; deleted: number; deletedBy?: string}> {
@@ -118,6 +124,7 @@ export class PostService {
             body: d.body ?? '',
             createdAt: d.createdAt ?? '',
             updatedAt: d.updatedAt ?? '',
+            version: d.version ?? 0,
             editedBy: d.editedBy,
             editedAt: d.editedAt ?? d.updatedAt,
         };

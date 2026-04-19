@@ -5,7 +5,7 @@ import ContentManager from "../ContentManager";
 import {TFunction} from "i18next";
 import {translateOrKeep} from "../../../utils/translateOrKeep";
 import RevealOnScroll from "../common/RevealOnScroll";
-import {GithubOutlined, LinkedinOutlined, MailOutlined, PhoneOutlined, TwitterOutlined, GlobalOutlined, YoutubeOutlined} from "@ant-design/icons";
+import {GithubOutlined, LinkedinOutlined, MailOutlined, PhoneOutlined, TwitterOutlined, GlobalOutlined, YoutubeOutlined} from "../common/icons";
 
 export type SocialPlatform = 'github' | 'linkedin' | 'email' | 'phone' | 'twitter' | 'website' | 'youtube' | 'other';
 

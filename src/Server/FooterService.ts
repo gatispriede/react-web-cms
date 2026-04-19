@@ -1,6 +1,7 @@
 import {Collection, Db} from 'mongodb';
 import {DEFAULT_FOOTER, IFooterConfig} from '../Interfaces/IFooter';
 import {auditStamp} from './audit';
+import {nextVersion, requireVersion} from './conflict';
 
 const KEY = 'footer';
 
@@ -18,12 +19,16 @@ export class FooterService {
             enabled: value?.enabled ?? DEFAULT_FOOTER.enabled,
             columns: Array.isArray(value?.columns) ? value!.columns : DEFAULT_FOOTER.columns,
             bottom: value?.bottom ?? DEFAULT_FOOTER.bottom,
+            version: (doc as any)?.version ?? 0,
             editedBy: (doc as any)?.editedBy,
             editedAt: (doc as any)?.editedAt,
         };
     }
 
-    async save(config: IFooterConfig, editedBy?: string): Promise<{ok: true}> {
+    async save(config: IFooterConfig, editedBy?: string, expectedVersion?: number | null): Promise<{ok: true; version: number}> {
+        const existing = await this.settings.findOne({key: KEY});
+        const existingVersion = (existing as any)?.version as number | undefined;
+        requireVersion(await this.get(), existingVersion, expectedVersion, 'Footer');
         const sanitized: IFooterConfig = {
             enabled: Boolean(config.enabled),
             bottom: typeof config.bottom === 'string' ? config.bottom.slice(0, 500) : undefined,
@@ -37,11 +42,12 @@ export class FooterService {
                     })),
                 })),
         };
+        const version = nextVersion(existingVersion);
         await this.settings.updateOne(
             {key: KEY},
-            {$set: {key: KEY, value: sanitized, ...auditStamp(editedBy)}},
+            {$set: {key: KEY, value: sanitized, version, ...auditStamp(editedBy)}},
             {upsert: true},
         );
-        return {ok: true};
+        return {ok: true, version};
     }
 }

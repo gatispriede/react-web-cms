@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useMemo, useState} from "react";
 import {Button, Form, Input, Modal, Popconfirm, Select, Space, Switch, Table, Tag, message} from "antd";
-import {DeleteOutlined, EditOutlined, PlusOutlined} from "@ant-design/icons";
+import {DeleteOutlined, EditOutlined, PlusOutlined} from "../../common/icons";
 import {useTranslation} from "next-i18next";
 import {useSession} from "next-auth/react";
 import UserApi from "../../../api/UserApi";
@@ -42,8 +42,6 @@ const AdminSettingsUsers = () => {
 
     const openCreate = () => {
         setEditing({role: 'viewer', canPublishProduction: false});
-        form.resetFields();
-        form.setFieldsValue({role: 'viewer', canPublishProduction: false});
     };
 
     const openEdit = (user: IUser) => {
@@ -54,14 +52,28 @@ const AdminSettingsUsers = () => {
             role: user.role,
             canPublishProduction: user.canPublishProduction,
         });
-        form.resetFields();
-        form.setFieldsValue({
-            email: user.email,
-            name: user.name,
-            role: user.role ?? 'viewer',
-            canPublishProduction: Boolean(user.canPublishProduction),
-        });
     };
+
+    // Modal is `preserve={false}`, which unmounts the inner Form when
+    // closed — so calling `form.setFieldsValue(...)` inside the open*
+    // handlers above used to no-op on the **first** open of an edit
+    // session (form not yet mounted), then succeed on the second open
+    // because the previously-mounted instance was still around. Effect
+    // runs after the Form is in the tree, so the values land every time.
+    useEffect(() => {
+        if (editing === null) return;
+        form.resetFields();
+        if (editing.id) {
+            form.setFieldsValue({
+                email: editing.email ?? '',
+                name: editing.name ?? '',
+                role: editing.role ?? 'viewer',
+                canPublishProduction: Boolean(editing.canPublishProduction),
+            });
+        } else {
+            form.setFieldsValue({role: 'viewer', canPublishProduction: false});
+        }
+    }, [editing, form]);
 
     const close = () => {
         setEditing(null);

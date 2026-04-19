@@ -1,6 +1,6 @@
 import React from 'react';
 import {Button, Space, Tag, Tooltip} from 'antd';
-import {RedoOutlined, UndoOutlined} from '@ant-design/icons';
+import {RedoOutlined, UndoOutlined} from '../common/icons';
 import {TFunction} from 'i18next';
 import {undoStack, useUndoHotkey, useUndoStack} from '../../lib/undoStack';
 

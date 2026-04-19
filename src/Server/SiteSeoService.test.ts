@@ -26,7 +26,11 @@ beforeEach(() => {
 describe('SiteSeoService', () => {
     it('get returns empty defaults when no doc exists', async () => {
         const seo = await service.get();
-        expect(seo).toEqual({});
+        // version starts at 0 for unsaved docs (optimistic-concurrency baseline);
+        // every other field stays undefined so callers see the empty-defaults shape.
+        expect(seo.version).toBe(0);
+        const {version: _v, editedAt: _a, editedBy: _b, ...rest} = seo;
+        expect(Object.values(rest).every(v => v === undefined)).toBe(true);
     });
 
     it('save persists fields and get reads them back', async () => {

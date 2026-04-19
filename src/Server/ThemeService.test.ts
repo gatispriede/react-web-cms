@@ -26,13 +26,19 @@ beforeEach(async () => {
 });
 
 describe('ThemeService', () => {
-    it('seedIfEmpty seeds four presets and makes the first active', async () => {
+    it('seedIfEmpty seeds the preset list and makes the first preset active', async () => {
         await service.seedIfEmpty();
         const list = await service.getThemes();
-        expect(list).toHaveLength(4);
+        // Preset list is curated in ThemeService.PRESETS — covers editorial
+        // themes (Industrial / Studio / Paper), the colour-only basics
+        // (Classic / Ocean / Forest / Midnight), and the High contrast a11y
+        // preset. Assertion is "every seeded row is a preset" rather than a
+        // hard count so adding a preset doesn't require updating this test.
+        expect(list.length).toBeGreaterThanOrEqual(8);
         expect(list.every(t => t.custom === false)).toBe(true);
         const active = await service.getActive();
-        expect(active?.name).toBe('Classic');
+        expect(active?.name).toBe('Industrial');
+        expect(list.some(t => t.name === 'High contrast')).toBe(true);
     });
 
     it('saveTheme inserts custom themes and setActive switches them', async () => {

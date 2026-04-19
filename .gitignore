@@ -45,6 +45,9 @@ IP.ts
 /mongo_data
 /src/frontend/public/LogFiles
 
+# generated first-boot admin credentials (see src/Server/initialPassword.ts)
+/var/
+
 # env / secrets
 .env
 .env.*

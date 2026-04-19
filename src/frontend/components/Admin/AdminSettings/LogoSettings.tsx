@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useState} from "react";
 import {Alert, Button, InputNumber, Popconfirm, Space, Typography, message} from "antd";
-import {DeleteOutlined} from "@ant-design/icons";
+import {DeleteOutlined} from "../../common/icons";
 import {useTranslation} from "next-i18next";
 import ImageUpload from "../../ImageUpload";
 import MongoApi from "../../../api/MongoApi";

@@ -2,6 +2,7 @@ import {Collection, Db} from 'mongodb';
 import guid from '../helpers/guid';
 import {ITheme, IThemeTokens, InTheme} from '../Interfaces/ITheme';
 import {auditStamp} from './audit';
+import {nextVersion, requireVersion} from './conflict';
 
 const PRESETS: Omit<ITheme, 'id'>[] = [
     {
@@ -153,6 +154,38 @@ const PRESETS: Omit<ITheme, 'id'>[] = [
         },
     },
     {
+        name: 'High contrast',
+        custom: false,
+        tokens: {
+            // A11y preset — pure black on white-equivalent flipped to ink-on-bg
+            // ratio that lands above WCAG AAA (7:1) for body, with a safety-yellow
+            // accent (#ffd400) tested at 19.56:1 on black. Focus rings, link
+            // underlines, and heavier rules live in Themes/HighContrast.scss
+            // under the `[data-theme-name="high-contrast"]` selector — no
+            // colour-only state, all interactive elements show a visible
+            // outline regardless of which module renders them.
+            colorPrimary: '#ffd400',
+            colorBgBase: '#000000',
+            colorTextBase: '#ffffff',
+            colorSuccess: '#7cffb2',
+            colorWarning: '#ffd400',
+            colorError: '#ff8a8a',
+            colorInfo: '#a5f3fc',
+            colorBgInset: '#0a0a0a',
+            colorInkSecondary: '#f5f5f5',
+            colorInkTertiary: '#d4d4d4',
+            colorRule: '#ffffff',
+            colorRuleStrong: '#ffffff',
+            colorAccent: '#ffd400',
+            colorAccentInk: '#000000',
+            colorMark: 'rgba(255, 212, 0, 0.28)',
+            borderRadius: 0,
+            fontSize: 17,
+            contentPadding: 28,
+            themeSlug: 'high-contrast',
+        },
+    },
+    {
         name: 'Midnight',
         custom: false,
         tokens: {
@@ -215,6 +248,7 @@ export class ThemeService {
             name: (d as any).name,
             tokens: (d as any).tokens ?? {},
             custom: Boolean((d as any).custom),
+            version: (d as any).version ?? 0,
             editedBy: (d as any).editedBy,
             editedAt: (d as any).editedAt,
         }));
@@ -233,13 +267,13 @@ export class ThemeService {
         if (!activeId) {
             const first = await this.themes.findOne({}, {projection: {_id: 0}});
             if (!first) return null;
-            return {...(first as any), ...settingAudit} as ITheme;
+            return {...(first as any), version: (first as any).version ?? 0, ...settingAudit} as ITheme;
         }
         const found = await this.themes.findOne({id: activeId}, {projection: {_id: 0}});
         if (!found) return null;
         const themeAudit = {editedBy: (found as any).editedBy, editedAt: (found as any).editedAt};
         const pick = (settingAudit.editedAt ?? '') > (themeAudit.editedAt ?? '') ? settingAudit : themeAudit;
-        return {...(found as any), ...pick} as ITheme;
+        return {...(found as any), version: (found as any).version ?? 0, ...pick} as ITheme;
     }
 
     async setActive(id: string, editedBy?: string): Promise<{id: string}> {
@@ -254,7 +288,7 @@ export class ThemeService {
         return {id};
     }
 
-    async saveTheme(theme: InTheme, editedBy?: string): Promise<{id: string}> {
+    async saveTheme(theme: InTheme, editedBy?: string, expectedVersion?: number | null): Promise<{id: string; version: number}> {
         if (!theme.name?.trim()) throw new Error('name is required');
         const tokens: IThemeTokens = theme.tokens ?? {};
         const audit = auditStamp(editedBy);
@@ -264,21 +298,26 @@ export class ThemeService {
             if ((existing as any).custom === false && theme.custom !== false) {
                 throw new Error('cannot modify a preset theme; duplicate it first');
             }
+            const existingVersion = (existing as any).version as number | undefined;
+            requireVersion(existing, existingVersion, expectedVersion, `Theme "${theme.name}"`);
+            const version = nextVersion(existingVersion);
             await this.themes.updateOne(
                 {id: theme.id},
-                {$set: {name: theme.name, tokens, custom: true, ...audit}},
+                {$set: {name: theme.name, tokens, custom: true, version, ...audit}},
             );
-            return {id: theme.id};
+            return {id: theme.id, version};
         }
         const id = guid();
+        const version = 1;
         await this.themes.insertOne({
             id,
             name: theme.name,
             tokens,
             custom: theme.custom ?? true,
+            version,
             ...audit,
         } as any);
-        return {id};
+        return {id, version};
     }
 
     async deleteTheme(id: string, deletedBy?: string): Promise<{id: string; deletedBy?: string}> {

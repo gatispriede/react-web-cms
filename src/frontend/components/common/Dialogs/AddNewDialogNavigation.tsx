@@ -1,6 +1,6 @@
 import React from "react";
 import {Button, Input, Modal} from "antd";
-import {DownOutlined, UpOutlined} from "@ant-design/icons";
+import {DownOutlined, UpOutlined} from "../icons";
 import MongoApi from "../../../api/MongoApi";
 import {ISeo} from "../../../../Interfaces/ISeo";
 import {INavigation} from "../../../../Interfaces/INavigation";

@@ -1,12 +1,14 @@
 import React, {useCallback, useEffect, useMemo, useState} from "react";
 import {Button, Drawer, Form, Input, Popconfirm, Select, Space, Switch, Table, Tag, Typography, message} from "antd";
-import {DeleteOutlined, EditOutlined, EyeOutlined, PlusOutlined} from "@ant-design/icons";
+import {DeleteOutlined, EditOutlined, EyeOutlined, PlusOutlined} from "../../common/icons";
 import {useTranslation} from "next-i18next";
 import PostApi from "../../../api/PostApi";
 import SiteFlagsApi from "../../../api/SiteFlagsApi";
 import {IPost, InPost} from "../../../../Interfaces/IPost";
 import AuditBadge from "../AuditBadge";
 import {useRefreshView} from "../../../lib/refreshBus";
+import ConflictDialog from "../../common/ConflictDialog";
+import {ConflictError, isConflictError} from "../../../lib/conflict";
 
 const postApi = new PostApi();
 const siteFlagsApi = new SiteFlagsApi();
@@ -16,6 +18,8 @@ const AdminSettingsPosts: React.FC = () => {
     const [posts, setPosts] = useState<IPost[]>([]);
     const [loading, setLoading] = useState(false);
     const [editing, setEditing] = useState<Partial<InPost> | null>(null);
+    const [editingVersion, setEditingVersion] = useState<number | undefined>(undefined);
+    const [conflict, setConflict] = useState<{error: ConflictError<any>; retry: () => Promise<void>} | null>(null);
     const [saving, setSaving] = useState(false);
     const [blogEnabled, setBlogEnabled] = useState(true);
     const [form] = Form.useForm();
@@ -51,50 +55,86 @@ const AdminSettingsPosts: React.FC = () => {
 
     const openCreate = () => {
         setEditing({draft: true, tags: []});
-        form.resetFields();
-        form.setFieldsValue({draft: true, tags: []});
+        setEditingVersion(undefined);
     };
 
     const openEdit = (post: IPost) => {
         setEditing(post);
-        form.resetFields();
-        form.setFieldsValue({
-            title: post.title,
-            slug: post.slug,
-            excerpt: post.excerpt,
-            coverImage: post.coverImage,
-            tags: post.tags,
-            author: post.author,
-            body: post.body,
-            draft: post.draft,
-        });
+        setEditingVersion(typeof post.version === 'number' ? post.version : 0);
     };
+
+    // Drawer is `destroyOnClose`, so the inner Form re-mounts on every
+    // open. `setFieldsValue` invoked synchronously inside open* handlers
+    // used to no-op on the first edit click of a session because the
+    // form hadn't mounted yet. Effect runs after the Form is in the
+    // tree, so values land on first open too.
+    useEffect(() => {
+        if (editing === null) return;
+        form.resetFields();
+        if (editing.id) {
+            form.setFieldsValue({
+                title: editing.title ?? '',
+                slug: editing.slug ?? '',
+                excerpt: editing.excerpt ?? '',
+                coverImage: editing.coverImage ?? '',
+                tags: editing.tags ?? [],
+                author: editing.author ?? '',
+                body: editing.body ?? '',
+                draft: editing.draft ?? false,
+            });
+        } else {
+            form.setFieldsValue({draft: true, tags: []});
+        }
+    }, [editing, form]);
 
     const close = () => {
         setEditing(null);
+        setEditingVersion(undefined);
         form.resetFields();
     };
 
+    const performSave = useCallback(async (payload: InPost, expectedVersion: number | undefined) => {
+        const result = await postApi.save(payload, expectedVersion);
+        if (result.error) { message.error(result.error); return false; }
+        message.success(payload.id ? t('Post updated') : t('Post created'));
+        close();
+        await refresh();
+        return true;
+    }, [refresh, t]);
+
     const save = async () => {
         const values = await form.validateFields();
+        const payload: InPost = {
+            id: editing?.id,
+            title: values.title,
+            slug: values.slug,
+            excerpt: values.excerpt,
+            coverImage: values.coverImage,
+            tags: values.tags ?? [],
+            author: values.author,
+            body: values.body,
+            draft: values.draft ?? false,
+        };
         setSaving(true);
         try {
-            const payload: InPost = {
-                id: editing?.id,
-                title: values.title,
-                slug: values.slug,
-                excerpt: values.excerpt,
-                coverImage: values.coverImage,
-                tags: values.tags ?? [],
-                author: values.author,
-                body: values.body,
-                draft: values.draft ?? false,
-            };
-            const result = await postApi.save(payload);
-            if (result.error) { message.error(result.error); return; }
-            message.success(editing?.id ? t('Post updated') : t('Post created'));
-            close();
-            await refresh();
+            await performSave(payload, editingVersion);
+        } catch (err) {
+            if (isConflictError(err)) {
+                setConflict({
+                    error: err,
+                    retry: async () => {
+                        setSaving(true);
+                        try {
+                            await performSave(payload, err.currentVersion);
+                            setConflict(null);
+                        } finally {
+                            setSaving(false);
+                        }
+                    },
+                });
+            } else {
+                message.error(String((err as Error)?.message ?? err));
+            }
         } finally {
             setSaving(false);
         }
@@ -241,6 +281,28 @@ const AdminSettingsPosts: React.FC = () => {
                     </Form.Item>
                 </Form>
             </Drawer>
+            {conflict && (() => {
+                const peer = conflict.error.currentDoc as {editedBy?: string; editedAt?: string; title?: string} | null;
+                return (
+                    <ConflictDialog
+                        open
+                        docKind={t('Post')}
+                        peerVersion={conflict.error.currentVersion}
+                        peerEditedBy={peer?.editedBy}
+                        peerEditedAt={peer?.editedAt}
+                        onCancel={() => setConflict(null)}
+                        onTakeTheirs={async () => {
+                            setConflict(null);
+                            close();
+                            await refresh();
+                        }}
+                        onKeepMine={async () => {
+                            try { await conflict.retry(); }
+                            catch (err) { message.error(String((err as Error)?.message ?? err)); setConflict(null); }
+                        }}
+                    />
+                );
+            })()}
         </div>
     );
 };

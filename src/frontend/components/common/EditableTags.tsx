@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {PlusOutlined} from '@ant-design/icons';
+import {PlusOutlined} from './icons';
 import type {InputRef} from 'antd';
 import {Flex, Input, Tag, theme, Tooltip} from 'antd';
 

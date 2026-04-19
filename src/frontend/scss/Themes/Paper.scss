@@ -1,14 +1,15 @@
 /* ==========================================================================
    Paper — editorial magazine theme.
 
-   Scoped under `body[data-theme-name="paper"]`. All tokens come in via CSS
-   variables set by the preset — see `ThemeService.PRESETS` + the extended
-   `applyThemeCssVars` map. Styles below target the *existing* module classes
-   (hero__eyebrow, timeline__detail, skill-pills__matrix, …) so content stays
-   data-driven; only the look changes.
+   Scoped under `[data-theme-name="paper"]` (any ancestor — `body` in
+   production, a `<div>` wrapper in the Theme-picker preview card). All tokens
+   come in via CSS variables set by the preset — see `ThemeService.PRESETS` +
+   the extended `applyThemeCssVars` map. Styles below target the *existing*
+   module classes (hero__eyebrow, timeline__detail, skill-pills__matrix, …)
+   so content stays data-driven; only the look changes.
    ========================================================================== */
 
-body[data-theme-name="paper"] {
+[data-theme-name="paper"] {
   font-family: var(--font-sans, 'Inter Tight', system-ui, sans-serif);
   font-size: var(--theme-fontSize, 15px);
   line-height: 1.55;
@@ -748,7 +749,7 @@ body[data-theme-name="paper"] {
 
   /* ===== AntD portal overlays (Dropdown / Select / Popover) =======
      These render through ReactDOM portals directly under <body>, so
-     the `body[data-theme-name="paper"]` ancestor selector still wins.
+     the `[data-theme-name="paper"]` ancestor selector still wins.
      Explicitly pin backgrounds + borders so AntD's derived bg tokens
      (`colorBgElevated`) can't fall back to transparent/black when a
      custom preset doesn't redefine them. */

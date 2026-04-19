@@ -45,6 +45,11 @@ const uploadForm = (next: { (req: any, res: any): void; (arg0: any, arg1: any): 
                 const existingFile = fs.existsSync(`src/frontend/public/images/${fileTargetName}`);
                 if(!existingFile){
                     fs.renameSync(file.filepath, path.join(process.cwd(), 'src/frontend/', `public/images/${fileTargetName}`));
+                    const rawTags = (() => {
+                        try { return JSON.parse(fields.tags) } catch { return [] }
+                    })();
+                    const tags = Array.isArray(rawTags) ? rawTags.filter(Boolean) : [];
+                    const withAll = tags.includes('All') ? tags : ['All', ...tags];
                     const image: InImage = {
                         created: new Date().toDateString(),
                         id: guid(),
@@ -52,7 +57,7 @@ const uploadForm = (next: { (req: any, res: any): void; (arg0: any, arg1: any): 
                         name: fileTargetName,
                         size: file.size,
                         type: file.mimetype,
-                        tags: JSON.parse(fields.tags)
+                        tags: withAll
                     }
                     // Call the service directly — going through the frontend
                     // gqty client from an API route doesn't forward the caller's

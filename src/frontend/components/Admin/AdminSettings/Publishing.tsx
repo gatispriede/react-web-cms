@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import {Button, Empty, Popconfirm, Space, Table, Tag, Typography, message} from 'antd';
-import {RollbackOutlined} from '@ant-design/icons';
+import {RollbackOutlined} from '../../common/icons';
 import {useTranslation} from 'next-i18next';
 import {useSession} from 'next-auth/react';
 import PublishApi from '../../../api/PublishApi';

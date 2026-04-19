@@ -1,13 +1,14 @@
 /* ==========================================================================
    Studio — Fraunces + Geist warm-palette agency theme (design-v2).
 
-   Scoped under `body[data-theme-name="studio"]`. Tokens come in via CSS
-   variables set by `ThemeService.Studio` + `applyThemeCssVars`; this file
-   only wires layout + typography and adds the accent-italic emphasis
-   helper class consumed by Hero / Services titles.
+   Scoped under `[data-theme-name="studio"]` (any ancestor — `body` in
+   production, a `<div>` wrapper in the Theme-picker preview card). Tokens
+   come in via CSS variables set by `ThemeService.Studio` + `applyThemeCssVars`;
+   this file only wires layout + typography and adds the accent-italic
+   emphasis helper class consumed by Hero / Services titles.
    ========================================================================== */
 
-body[data-theme-name="studio"] {
+[data-theme-name="studio"] {
   font-family: var(--font-sans, 'Geist', system-ui, sans-serif);
   font-size: var(--theme-fontSize, 16px);
   line-height: 1.55;

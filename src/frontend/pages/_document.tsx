@@ -12,6 +12,17 @@ import i18nextConfig from '../../../next-i18next.config.js'
 import {buildThemeCssVarsRule} from '../theme/themeCssVarsString';
 import {getMongoConnection} from '../../Server/mongoDBConnection';
 import {IThemeTokens} from '../../Interfaces/ITheme';
+import {buildGoogleFontsUrl, extractFontFamily} from '../theme/googleFonts';
+
+// Bundled families come from the seeded preset themes (Paper / Studio /
+// Industrial). They stay loaded on every page even when a different theme
+// is active so an editor activating "Studio" mid-session doesn't FOUC its
+// way out of the previous theme's typography.
+const BUNDLED_FAMILIES = [
+    'Instrument Serif', 'JetBrains Mono', 'Inter Tight',
+    'Fraunces', 'Geist Mono', 'Geist',
+    'Barlow Condensed', 'Barlow',
+];
 
 // import {unstable_cache} from "next/cache";
 
@@ -75,6 +86,7 @@ interface MyDocProps {
     themeCss?: string;
     preloadedScript?: string;
     themeSlug?: string;
+    googleFontsUrl?: string;
 }
 
 class MyDocument extends Document<MyDocProps> {
@@ -82,22 +94,18 @@ class MyDocument extends Document<MyDocProps> {
         const currentLocale =
             this.props.__NEXT_DATA__.locale ??
             i18nextConfig.i18n.defaultLocale
-        const {themeCss, preloadedScript, themeSlug} = this.props;
+        const {themeCss, preloadedScript, themeSlug, googleFontsUrl} = this.props;
         return (
             <Html lang={currentLocale}>
                 <Head>
                     <meta charSet="utf-8" />
-                    {/* All themes' fonts are loaded up front so theme switches
-                        don't flash unstyled text:
-                          • Paper → Instrument Serif · JetBrains Mono · Inter Tight
-                          • Studio → Fraunces · Geist · Geist Mono
-                          • Industrial → Barlow Condensed · Barlow (JetBrains Mono shared) */}
-                    <link rel="preconnect" href="https://fonts.googleapis.com"/>
-                    <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous"/>
-                    <link
-                        rel="stylesheet"
-                        href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&family=Inter+Tight:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Geist+Mono:wght@400;500&family=Geist:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700;800;900&family=Barlow:wght@400;500;600;700&display=swap"
-                    />
+                    {/* Fonts: bundled preset families plus whatever the active
+                        theme picked via the FontPicker are loaded up front so
+                        theme switches don't FOUC. URL is composed in
+                        getInitialProps from the active theme's font tokens. */}
+                    {googleFontsUrl && <link rel="preconnect" href="https://fonts.googleapis.com"/>}
+                    {googleFontsUrl && <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous"/>}
+                    {googleFontsUrl && <link rel="stylesheet" href={googleFontsUrl}/>}
                     {themeCss && (
                         <style data-theme-vars dangerouslySetInnerHTML={{__html: themeCss}}/>
                     )}
@@ -148,11 +156,20 @@ MyDocument.getInitialProps = async (ctx: DocumentContext) => {
     const style = extractStyle(cache, true);
     const themeCss = buildThemeCssVarsRule(themeTokens);
     const themeSlug = typeof themeTokens?.themeSlug === 'string' ? themeTokens.themeSlug : undefined;
+    const themeFamilies = themeTokens
+        ? [
+            extractFontFamily(themeTokens.fontDisplay),
+            extractFontFamily(themeTokens.fontSans),
+            extractFontFamily(themeTokens.fontMono),
+        ]
+        : [];
+    const googleFontsUrl = buildGoogleFontsUrl([...BUNDLED_FAMILIES, ...themeFamilies]) ?? undefined;
     const preloadedScript = `window.preloadedData = ${JSON.stringify(preloaded)}`;
     return {
         ...initialProps,
         themeCss,
         themeSlug,
+        googleFontsUrl,
         preloadedScript,
         styles: (
             <>

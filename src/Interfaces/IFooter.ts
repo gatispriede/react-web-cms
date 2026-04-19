@@ -12,6 +12,8 @@ export interface IFooterConfig {
     enabled: boolean;
     columns: IFooterColumn[];
     bottom?: string;
+    /** Optimistic-concurrency counter — see `src/Server/conflict.ts`. */
+    version?: number;
     editedBy?: string;
     editedAt?: string;
 }

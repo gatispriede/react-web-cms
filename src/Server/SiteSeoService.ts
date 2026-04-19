@@ -1,6 +1,7 @@
 import {Collection, Db} from 'mongodb';
 import {DEFAULT_SITE_SEO, ISiteSeoDefaults} from '../Interfaces/ISiteSeo';
 import {auditStamp} from './audit';
+import {nextVersion, requireVersion} from './conflict';
 
 const KEY = 'siteSeo';
 
@@ -19,12 +20,16 @@ export class SiteSeoService {
         const value = (doc as any)?.value as ISiteSeoDefaults | undefined;
         return {
             ...(value ?? DEFAULT_SITE_SEO),
+            version: (doc as any)?.version ?? 0,
             editedBy: (doc as any)?.editedBy,
             editedAt: (doc as any)?.editedAt,
         };
     }
 
-    async save(seo: ISiteSeoDefaults, editedBy?: string): Promise<ISiteSeoDefaults> {
+    async save(seo: ISiteSeoDefaults, editedBy?: string, expectedVersion?: number | null): Promise<ISiteSeoDefaults> {
+        const existing = await this.settings.findOne({key: KEY});
+        const existingVersion = (existing as any)?.version as number | undefined;
+        requireVersion(await this.get(), existingVersion, expectedVersion, 'Site SEO');
         const sanitized: ISiteSeoDefaults = {
             siteName: clip(seo.siteName, 120),
             defaultDescription: clip(seo.defaultDescription, 500),
@@ -35,11 +40,12 @@ export class SiteSeoService {
             defaultAuthor: clip(seo.defaultAuthor, 120),
             defaultLocale: clip(seo.defaultLocale, 12),
         };
+        const version = nextVersion(existingVersion);
         await this.settings.updateOne(
             {key: KEY},
-            {$set: {key: KEY, value: sanitized, ...auditStamp(editedBy)}},
+            {$set: {key: KEY, value: sanitized, version, ...auditStamp(editedBy)}},
             {upsert: true},
         );
-        return sanitized;
+        return {...sanitized, version};
     }
 }

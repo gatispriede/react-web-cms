@@ -108,6 +108,80 @@ const DIAGRAMS: Partial<Record<EItemType, React.ReactNode>> = {
             ))}
         </Wrap>
     ),
+    [EItemType.List]: (
+        <Wrap>
+            {[10, 18, 26].map((y, i) => (
+                <g key={i}>
+                    <rect x="6" y={y} width="14" height="2" fill={fill} opacity={.6}/>
+                    <rect x="24" y={y} width="34" height="2" fill={fill} opacity={.4}/>
+                </g>
+            ))}
+            <line x1="6" y1="14" x2="58" y2="14" stroke={stroke} strokeOpacity={.2}/>
+            <line x1="6" y1="22" x2="58" y2="22" stroke={stroke} strokeOpacity={.2}/>
+            <line x1="6" y1="30" x2="58" y2="30" stroke={stroke} strokeOpacity={.2}/>
+        </Wrap>
+    ),
+    [EItemType.Services]: (
+        <Wrap>
+            <rect x="6" y="6" width="14" height="3" fill={fill} opacity={.6}/>
+            {[[6, 14], [22, 14], [38, 14], [6, 26], [22, 26], [38, 26]].map(([x, y], i) => (
+                <g key={i}>
+                    <rect x={x} y={y} width="14" height="8" fill={softFill} stroke={stroke} strokeOpacity={.35}/>
+                    <rect x={x + 1.5} y={y + 2} width="6" height="1.5" fill={fill}/>
+                    <rect x={x + 1.5} y={y + 5} width="10" height="1" fill={fill} opacity={.45}/>
+                </g>
+            ))}
+        </Wrap>
+    ),
+    [EItemType.Testimonials]: (
+        <Wrap>
+            <text x="8" y="14" fontSize="9" fill={fill} opacity={.55} fontFamily="serif">&ldquo;</text>
+            <rect x="14" y="10" width="42" height="2" fill={fill} opacity={.6}/>
+            <rect x="14" y="14" width="36" height="2" fill={fill} opacity={.45}/>
+            <rect x="14" y="18" width="40" height="2" fill={fill} opacity={.45}/>
+            <circle cx="14" cy="30" r="3" fill={softFill} stroke={stroke} strokeOpacity={.4}/>
+            <rect x="20" y="28" width="14" height="2" fill={fill} opacity={.6}/>
+            <rect x="20" y="32" width="22" height="1.5" fill={fill} opacity={.4}/>
+        </Wrap>
+    ),
+    [EItemType.StatsCard]: (
+        <Wrap>
+            <rect x="6" y="6" width="10" height="2" fill={fill} opacity={.6}/>
+            <rect x="6" y="11" width="22" height="3" fill={fill}/>
+            {[[6, 18], [22, 18], [38, 18]].map(([x, y], i) => (
+                <g key={i}>
+                    <rect x={x} y={y} width="14" height="6" fill={softFill} stroke={stroke} strokeOpacity={.4}/>
+                    <rect x={x + 1.5} y={y + 1.5} width="6" height="2" fill={fill}/>
+                    <rect x={x + 1.5} y={y + 4} width="10" height="1" fill={fill} opacity={.4}/>
+                </g>
+            ))}
+            <line x1="6" y1="28" x2="58" y2="28" stroke={stroke} strokeOpacity={.2}/>
+            <rect x="6" y="31" width="22" height="2" fill={fill} opacity={.5}/>
+        </Wrap>
+    ),
+    [EItemType.ProjectGrid]: (
+        <Wrap>
+            <rect x="6" y="5" width="10" height="2" fill={fill} opacity={.6}/>
+            <rect x="6" y="9" width="22" height="3" fill={fill}/>
+            {[[6, 16], [24, 16], [42, 16], [6, 26], [24, 26], [42, 26]].map(([x, y], i) => (
+                <g key={i}>
+                    <rect x={x} y={y} width="14" height="8" fill={softFill} stroke={stroke} strokeOpacity={.35}/>
+                </g>
+            ))}
+        </Wrap>
+    ),
+    [EItemType.Manifesto]: (
+        <Wrap>
+            <rect x="6" y="6" width="2" height="28" fill={fill} opacity={.5}/>
+            <rect x="12" y="8" width="46" height="3" fill={fill}/>
+            <rect x="12" y="14" width="42" height="2" fill={fill} opacity={.6}/>
+            <rect x="12" y="18" width="48" height="2" fill={fill} opacity={.6}/>
+            <rect x="12" y="22" width="40" height="2" fill={fill} opacity={.6}/>
+            <rect x="12" y="28" width="6" height="3" rx="1.5" fill={fill} opacity={.4}/>
+            <rect x="20" y="28" width="8" height="3" rx="1.5" fill={fill} opacity={.4}/>
+            <rect x="30" y="28" width="6" height="3" rx="1.5" fill={fill} opacity={.4}/>
+        </Wrap>
+    ),
 };
 
 const TypeDiagram: React.FC<{type: string | EItemType}> = ({type}) => {

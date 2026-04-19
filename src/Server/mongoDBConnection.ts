@@ -21,6 +21,8 @@ import {IFooterConfig} from '../Interfaces/IFooter';
 import {ISiteFlags, SiteFlagsService} from './SiteFlagsService';
 import {SiteSeoService} from './SiteSeoService';
 import {ISiteSeoDefaults} from '../Interfaces/ISiteSeo';
+import {ITranslationMetaMap, TranslationMetaService} from './TranslationMetaService';
+import {ConflictError, isConflictError, serialiseConflict} from './conflict';
 import {
     defaultSettings,
     ILoadData,
@@ -28,6 +30,26 @@ import {
     ISettings,
     IUserService
 } from "./mongoConfig";
+
+/**
+ * Run a mutation that might throw a `ConflictError` and serialise the result
+ * to JSON the GraphQL `String!` mutation contract expects. ConflictError
+ * becomes `{conflict: true, currentVersion, currentDoc, message}`; other
+ * errors become `{error: …}`. Frontend API wrappers detect the `.conflict`
+ * key and surface a `ConflictError` to the caller via
+ * `src/frontend/lib/conflict.ts`.
+ */
+async function runMutation<T>(action: string, fn: () => Promise<T>): Promise<string> {
+    try {
+        const result = await fn();
+        return JSON.stringify({[action]: result});
+    } catch (err) {
+        if (isConflictError(err)) {
+            return serialiseConflict(err as ConflictError<unknown>);
+        }
+        return JSON.stringify({error: String((err as Error).message || err)});
+    }
+}
 
 // const server = process.env.NODE_SERVER_PORT ? 'mongodb' : 'localhost';
 
@@ -57,6 +79,7 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
     public footerService!: FooterService;
     public siteFlagsService!: SiteFlagsService;
     public siteSeoService!: SiteSeoService;
+    public translationMetaService!: TranslationMetaService;
 
     constructor() {
         this._settings.mongoDBDatabaseUrl = `mongodb+srv://${this._settings.mongodbUser}:${this._settings.mongodbPassword}@${this._settings.mongoDBClusterUrl}`;
@@ -98,6 +121,7 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
             this.footerService = new FooterService(this.db);
             this.siteFlagsService = new SiteFlagsService(this.db);
             this.siteSeoService = new SiteSeoService(this.db);
+            this.translationMetaService = new TranslationMetaService(this.db);
 
             if (!MongoDBConnection.adminSeeded) {
                 MongoDBConnection.adminSeeded = true;
@@ -141,7 +165,14 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
     async updateNavigation({ page, sections, _session }: { page: string, sections: string[], _session?: {email?: string} }): Promise<string> { return this.navigationService.updateNavigation(page, sections, _session?.email); }
     async getNavigationCollection() { return this.navigationService.getNavigationCollection(); }
     async getSections({ ids }: { ids: string[] }) { return this.navigationService.getSections(ids); }
-    async addUpdateSectionItem({ section, pageName, _session }: { section: ISection, pageName?: string, _session?: {email?: string} }): Promise<string> { return this.navigationService.addUpdateSectionItem({ section: section as unknown as InSection, pageName, editedBy: _session?.email }); }
+    async addUpdateSectionItem({ section, pageName, expectedVersion, _session }: { section: ISection, pageName?: string, expectedVersion?: number | null, _session?: {email?: string} }): Promise<string> {
+        try {
+            return await this.navigationService.addUpdateSectionItem({ section: section as unknown as InSection, pageName, editedBy: _session?.email, expectedVersion });
+        } catch (err) {
+            if (isConflictError(err)) return serialiseConflict(err as ConflictError<unknown>);
+            throw err;
+        }
+    }
     async removeSectionItem({ id }: { id: string, _session?: {email?: string} }): Promise<string> { return this.navigationService.removeSectionItem(id); }
 
     async loadData(): Promise<ILoadData[]> {
@@ -205,9 +236,8 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
             return t ? JSON.stringify(t) : null;
         } catch (err) { console.error('getActiveTheme:', err); return null; }
     }
-    async saveTheme({theme, _session}: {theme: InTheme; _session?: {email?: string}}): Promise<string> {
-        try { return JSON.stringify({saveTheme: await this.themeService.saveTheme(theme, _session?.email)}); }
-        catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    async saveTheme({theme, expectedVersion, _session}: {theme: InTheme; expectedVersion?: number | null; _session?: {email?: string}}): Promise<string> {
+        return runMutation('saveTheme', () => this.themeService.saveTheme(theme, _session?.email, expectedVersion));
     }
     async deleteTheme({id, _session}: {id: string; _session?: {email?: string}}): Promise<string> {
         try { return JSON.stringify({deleteTheme: await this.themeService.deleteTheme(id, _session?.email)}); }
@@ -228,9 +258,8 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
             return post ? JSON.stringify(post) : null;
         } catch (err) { console.error('getPost:', err); return null; }
     }
-    async savePost({post, _session}: {post: InPost; _session?: {email?: string}}): Promise<string> {
-        try { return JSON.stringify({savePost: await this.postService.save(post, _session?.email)}); }
-        catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    async savePost({post, expectedVersion, _session}: {post: InPost; expectedVersion?: number | null; _session?: {email?: string}}): Promise<string> {
+        return runMutation('savePost', () => this.postService.save(post, _session?.email, expectedVersion));
     }
     async deletePost({id, _session}: {id: string; _session?: {email?: string}}): Promise<string> {
         try { return JSON.stringify({deletePost: await this.postService.remove(id, _session?.email)}); }
@@ -245,27 +274,32 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
         try { return JSON.stringify(await this.footerService.get()); }
         catch (err) { console.error('getFooter:', err); return JSON.stringify({enabled: true, columns: [], bottom: ''}); }
     }
-    async saveFooter({config, _session}: {config: IFooterConfig; _session?: {email?: string}}): Promise<string> {
-        try { return JSON.stringify({saveFooter: await this.footerService.save(config, _session?.email)}); }
-        catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    async saveFooter({config, expectedVersion, _session}: {config: IFooterConfig; expectedVersion?: number | null; _session?: {email?: string}}): Promise<string> {
+        return runMutation('saveFooter', () => this.footerService.save(config, _session?.email, expectedVersion));
     }
 
     async getSiteFlags(): Promise<string> {
         try { return JSON.stringify(await this.siteFlagsService.get()); }
         catch (err) { console.error('getSiteFlags:', err); return JSON.stringify({blogEnabled: true}); }
     }
-    async saveSiteFlags({flags, _session}: {flags: Partial<ISiteFlags>; _session?: {email?: string}}): Promise<string> {
-        try { return JSON.stringify({saveSiteFlags: await this.siteFlagsService.save(flags, _session?.email)}); }
-        catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    async saveSiteFlags({flags, expectedVersion, _session}: {flags: Partial<ISiteFlags>; expectedVersion?: number | null; _session?: {email?: string}}): Promise<string> {
+        return runMutation('saveSiteFlags', () => this.siteFlagsService.save(flags, _session?.email, expectedVersion));
     }
 
     async getSiteSeo(): Promise<string> {
         try { return JSON.stringify(await this.siteSeoService.get()); }
         catch (err) { console.error('getSiteSeo:', err); return '{}'; }
     }
-    async saveSiteSeo({seo, _session}: {seo: ISiteSeoDefaults; _session?: {email?: string}}): Promise<string> {
-        try { return JSON.stringify({saveSiteSeo: await this.siteSeoService.save(seo, _session?.email)}); }
-        catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    async saveSiteSeo({seo, expectedVersion, _session}: {seo: ISiteSeoDefaults; expectedVersion?: number | null; _session?: {email?: string}}): Promise<string> {
+        return runMutation('saveSiteSeo', () => this.siteSeoService.save(seo, _session?.email, expectedVersion));
+    }
+
+    async getTranslationMeta(): Promise<string> {
+        try { return JSON.stringify(await this.translationMetaService.get()); }
+        catch (err) { console.error('getTranslationMeta:', err); return '{}'; }
+    }
+    async saveTranslationMeta({meta, expectedVersion, _session}: {meta: ITranslationMetaMap; expectedVersion?: number | null; _session?: {email?: string}}): Promise<string> {
+        return runMutation('saveTranslationMeta', () => this.translationMetaService.save(meta, _session?.email, expectedVersion));
     }
 
     async getPublishedMeta(): Promise<string | null> {

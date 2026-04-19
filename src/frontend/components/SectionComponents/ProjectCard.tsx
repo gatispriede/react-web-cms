@@ -1,6 +1,6 @@
 import React from "react";
 import {Button, Card, Space, Tag} from "antd";
-import {ExportOutlined, GithubOutlined, LinkOutlined} from "@ant-design/icons";
+import {ExportOutlined, GithubOutlined, LinkOutlined} from "../common/icons";
 import {EItemType} from "../../../enums/EItemType";
 import {IItem} from "../../../Interfaces/IItem";
 import ContentManager from "../ContentManager";

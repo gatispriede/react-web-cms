@@ -28,4 +28,11 @@ export interface ISection {
     overlay?: boolean
     /** Overlay anchor — defaults to `top-left`. `fill` stretches over the host. */
     overlayAnchor?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' | 'fill'
+    /** Optimistic-concurrency counter — bumped server-side on each save.
+     *  Frontend stashes this at read-time and sends it back as
+     *  `expectedVersion` on save; server rejects with a `ConflictError`
+     *  if a peer has bumped past us. See `src/Server/conflict.ts`. */
+    version?: number
+    editedBy?: string
+    editedAt?: string
 }

@@ -5,6 +5,7 @@ import {IItem} from "../../Interfaces/IItem";
 import {IPage} from "../../Interfaces/IPage";
 import {IConfigSectionAddRemove} from "../../Interfaces/IConfigSectionAddRemove";
 import {refreshBus} from "../lib/refreshBus";
+import {parseMutationResponse} from "../lib/conflict";
 
 /**
  * Strip audit / server-only fields before sending a section back through
@@ -51,6 +52,7 @@ export class SectionApi {
                 slots: Array.isArray((item as any).slots) ? (item as any).slots as number[] : undefined,
                 overlay: typeof (item as any).overlay === 'boolean' ? (item as any).overlay : undefined,
                 overlayAnchor: typeof (item as any).overlayAnchor === 'string' ? (item as any).overlayAnchor : undefined,
+                version: typeof (item as any).version === 'number' ? (item as any).version : 0,
                 editedBy: (item as any).editedBy,
                 editedAt: (item as any).editedAt,
                 content: item.content.map((c: IItem) => ({
@@ -135,10 +137,25 @@ export class SectionApi {
         if (section.content) {
             section.content = section.content.map((it: IItem) => ({...it, style: it.style || 'default'}));
         }
+        // Stash the version we read from the server. The mutation rejects
+        // with `ConflictError` if the on-disk row has moved past us — caller
+        // catches and surfaces a `ConflictDialog`. Pass it via `as any`
+        // because the GQty `addUpdateSectionItem` arg type was patched to
+        // include `expectedVersion` (see schema.generated.ts) but TS may
+        // resolve through `MutationMongo` from `IMongo.ts`.
+        const expectedVersion = typeof section.version === 'number' ? section.version : undefined;
         const r = await resolve(({mutation}) =>
-            mutation.mongo.addUpdateSectionItem({section: toInSection(section)}));
+            (mutation.mongo.addUpdateSectionItem as (args: any) => string)({
+                section: toInSection(section),
+                ...(expectedVersion !== undefined ? {expectedVersion} : {}),
+            }));
         invalidateCache();
         refreshBus.emit('content');
+        // Surface the bumped version back into local state so subsequent
+        // edits stay conflict-aware. Throws ConflictError on conflict.
+        const parsed = parseMutationResponse<{updateSection?: {version?: number}; createSection?: {version?: number}}>(r);
+        const bumped = parsed?.updateSection?.version ?? parsed?.createSection?.version;
+        if (typeof bumped === 'number') section.version = bumped;
         return r;
     }
 }

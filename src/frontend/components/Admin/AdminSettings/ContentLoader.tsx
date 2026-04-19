@@ -1,7 +1,7 @@
 import TranslationManager from "../TranslationManager";
 import React, {use, useEffect, useMemo, useState} from "react";
 import {Input, Space, Switch, Table, Tag, Typography} from "antd";
-import {SearchOutlined} from "@ant-design/icons";
+import {SearchOutlined} from "../../common/icons";
 import {sanitizeKey} from "../../../../utils/stringFunctions";
 
 interface TranslationRow {

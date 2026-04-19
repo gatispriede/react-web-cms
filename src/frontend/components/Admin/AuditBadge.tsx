@@ -1,6 +1,6 @@
 import React from 'react';
 import {Tooltip, Typography} from 'antd';
-import {ClockCircleOutlined} from '@ant-design/icons';
+import {ClockCircleOutlined} from '../common/icons';
 
 const formatRelative = (iso: string): string => {
     const t = new Date(iso).getTime();

@@ -1,6 +1,6 @@
 import React from 'react';
 import {Typography, Tooltip} from 'antd';
-import {CheckCircleFilled, CloseCircleFilled, LoadingOutlined, EditOutlined} from '@ant-design/icons';
+import {CheckCircleFilled, CloseCircleFilled, LoadingOutlined, EditOutlined} from '../common/icons';
 import type {AutosaveStatus as Status} from '../../lib/useAutosave';
 
 /** Small inline pill that reads an `AutosaveStatus` and shows the right colour/icon/text. */

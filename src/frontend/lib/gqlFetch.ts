@@ -87,6 +87,7 @@ const SECTIONS_QUERY = `query($ids:[String]){
   mongo {
     getSections(ids: $ids) {
       id page type
+      slots overlay overlayAnchor version
       content { name type style content action actionStyle actionType actionContent }
     }
   }

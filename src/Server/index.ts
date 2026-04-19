@@ -1,7 +1,7 @@
 // @ts-ignore
 import express from 'express';
-import {graphqlHTTP} from 'express-graphql';
-import {makeExecutableSchema} from 'graphql-tools';
+import {createHandler} from 'graphql-http/lib/use/express';
+import {makeExecutableSchema} from '@graphql-tools/schema';
 // @ts-ignore
 import cors from "cors";
 import {readFileSync} from 'fs';
@@ -39,14 +39,14 @@ app.use((req: any, res: any, next: () => void) => {
     next();
 });
 
-app.use(
-    '/',
-    cors(),
-    graphqlHTTP({
-        schema: makeExecutableSchema({typeDefs, resolvers: standaloneResolvers}),
-        graphiql: true,
-    }),
-);
+// Migrated off the deprecated `express-graphql` (which pinned graphql@<=15)
+// to `graphql-http` so the project can ship graphql@16 without
+// `--legacy-peer-deps`. `graphql-http` doesn't bundle GraphiQL — the
+// admin GUI debugging surface is the Apollo Server route, not this
+// standalone process. Standalone is build-time + Docker-internal only.
+const schema = makeExecutableSchema({typeDefs, resolvers: standaloneResolvers});
+app.use(express.json());
+app.all('/', cors(), createHandler({schema}));
 
 const server = http.createServer(app);
 server.listen(port, bindHost, () => console.log(`Server running at http://${bindHost}:${port}`));

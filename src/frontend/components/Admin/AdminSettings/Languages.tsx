@@ -1,7 +1,7 @@
 import TranslationManager from "../TranslationManager";
 import {Button, Layout, Menu, Segmented, Spin, message} from 'antd';
 import React, {Suspense, useCallback, useEffect, useMemo, useState} from "react";
-import {LoadingOutlined, PlusCircleOutlined} from "@ant-design/icons";
+import {LoadingOutlined, PlusCircleOutlined} from "../../common/icons";
 import {ContentLoader} from "./ContentLoader";
 import {ContentLoaderCompare} from "./ContentLoaderCompare";
 import {TFunction} from "i18next";

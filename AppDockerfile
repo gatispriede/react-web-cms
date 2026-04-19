@@ -23,6 +23,11 @@ RUN npm i -g sass
 WORKDIR /app
 # Yarn cache ensurance
 
+# Location for runtime-generated secrets (e.g. first-boot admin password).
+# Permissions are tightened at write-time in initialPassword.ts; the dir is
+# created here so the node user can write without elevating.
+RUN mkdir -p /app/var && chmod 700 /app/var
+
 # Copy the rest of the source files into the image.
 COPY ./IP.ts /IP.ts
 COPY ./yarn.lock ./yarn.lock

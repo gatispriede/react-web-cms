@@ -1,11 +1,13 @@
 import React, {useCallback, useEffect, useState} from "react";
 import {Alert, Button, Card, Col, Input, Row, Space, Switch, Typography, message} from "antd";
-import {DeleteOutlined, PlusOutlined} from "@ant-design/icons";
+import {DeleteOutlined, PlusOutlined} from "../../common/icons";
 import {useTranslation} from "next-i18next";
 import FooterApi from "../../../api/FooterApi";
 import {DEFAULT_FOOTER, IFooterColumn, IFooterConfig, IFooterEntry} from "../../../../Interfaces/IFooter";
 import AuditBadge from "../AuditBadge";
 import {useRefreshView} from "../../../lib/refreshBus";
+import ConflictDialog from "../../common/ConflictDialog";
+import {ConflictError, isConflictError} from "../../../lib/conflict";
 
 const footerApi = new FooterApi();
 
@@ -14,6 +16,7 @@ const AdminSettingsFooter: React.FC = () => {
     const [config, setConfig] = useState<IFooterConfig>({...DEFAULT_FOOTER});
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [conflict, setConflict] = useState<{error: ConflictError<any>; retry: () => Promise<void>} | null>(null);
 
     const refresh = useCallback(async () => {
         setLoading(true);
@@ -37,12 +40,36 @@ const AdminSettingsFooter: React.FC = () => {
     const patchEntry = (i: number, j: number, patch: Partial<IFooterEntry>) =>
         patchColumn(i, {entries: config.columns[i].entries.map((e, k) => k === j ? {...e, ...patch} : e)});
 
+    const performSave = useCallback(async (cfg: IFooterConfig, expectedVersion: number | undefined) => {
+        const result = await footerApi.save(cfg, expectedVersion);
+        if ((result as any).error) { message.error((result as any).error); return false; }
+        message.success(t('Footer saved'));
+        // Adopt the bumped version into local state so subsequent saves stay aligned.
+        if (typeof (result as any).version === 'number') {
+            setConfig(c => ({...c, version: (result as any).version}));
+        }
+        return true;
+    }, [t]);
+
     const save = async () => {
         setSaving(true);
         try {
-            const result = await footerApi.save(config);
-            if ((result as any).error) { message.error((result as any).error); return; }
-            message.success(t('Footer saved'));
+            await performSave(config, config.version);
+        } catch (err) {
+            if (isConflictError(err)) {
+                setConflict({
+                    error: err,
+                    retry: async () => {
+                        setSaving(true);
+                        try {
+                            await performSave(config, err.currentVersion);
+                            setConflict(null);
+                        } finally { setSaving(false); }
+                    },
+                });
+            } else {
+                message.error(String((err as Error)?.message ?? err));
+            }
         } finally { setSaving(false); }
     };
 
@@ -117,6 +144,27 @@ const AdminSettingsFooter: React.FC = () => {
                     style={{marginTop: 6}}
                 />
             </div>
+            {conflict && (() => {
+                const peer = conflict.error.currentDoc as {editedBy?: string; editedAt?: string} | null;
+                return (
+                    <ConflictDialog
+                        open
+                        docKind={t('Footer')}
+                        peerVersion={conflict.error.currentVersion}
+                        peerEditedBy={peer?.editedBy}
+                        peerEditedAt={peer?.editedAt}
+                        onCancel={() => setConflict(null)}
+                        onTakeTheirs={async () => {
+                            setConflict(null);
+                            await refresh();
+                        }}
+                        onKeepMine={async () => {
+                            try { await conflict.retry(); }
+                            catch (err) { message.error(String((err as Error)?.message ?? err)); setConflict(null); }
+                        }}
+                    />
+                );
+            })()}
         </div>
     );
 };

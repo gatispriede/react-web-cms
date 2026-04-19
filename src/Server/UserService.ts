@@ -3,6 +3,12 @@ import guid from "../helpers/guid";
 import {IUser, InUser} from "../Interfaces/IUser";
 import {hash} from "bcrypt";
 import {IUserService} from "./mongoConfig";
+import {
+    generatePassword,
+    hasInitialPasswordArtefact,
+    staleArtefactError,
+    writeInitialPasswordArtefact,
+} from "./initialPassword";
 
 const PUBLIC_FIELDS = {_id: 0} as const;
 
@@ -33,27 +39,51 @@ export class UserService implements IUserService {
                 }
                 return existing;
             }
+
+            // No admin exists. Before we seed a new one, guard against the
+            // "file on disk but user gone" foot-gun: re-seeding would silently
+            // invalidate whatever credentials an operator thinks they have.
+            if (!this._adminPasswordHash && !this._adminPassword && hasInitialPasswordArtefact()) {
+                throw staleArtefactError();
+            }
+
             // Decide which password hash to store on the freshly-seeded admin.
-            // Precedence: ADMIN_PASSWORD_HASH (pre-computed) > hash(ADMIN_DEFAULT_PASSWORD) > abort.
+            // Precedence: ADMIN_PASSWORD_HASH (pre-computed)
+            //           > hash(ADMIN_DEFAULT_PASSWORD)
+            //           > generate fresh + write protected artefact.
             let passwordHash = this._adminPasswordHash;
+            let mustChangePassword = false;
             if (!passwordHash && this._adminPassword) {
                 passwordHash = await hash(this._adminPassword, this._hashSaltRounds);
+                // The env-supplied default is still a "shared seed" — flag it so
+                // the admin is nudged to rotate on first login.
+                mustChangePassword = true;
             }
             if (!passwordHash) {
-                console.warn('[setupAdmin] skipped: neither ADMIN_PASSWORD_HASH nor ADMIN_DEFAULT_PASSWORD is set in env. Set one and restart to seed the admin user.');
-                return undefined;
+                const generated = generatePassword();
+                passwordHash = await hash(generated, this._hashSaltRounds);
+                writeInitialPasswordArtefact(generated);
+                mustChangePassword = true;
             }
+
             const newAdmin: IUser = {
                 id: guid(),
                 name: this._adminName,
                 email: process.env.ADMIN_EMAIL ?? 'admin@admin.com',
                 password: passwordHash,
                 role: 'admin',
+                mustChangePassword,
             } as IUser;
             await this.usersDB.insertOne(newAdmin as any);
             return newAdmin;
         } catch (err) {
-            console.error('Error getting user:', err);
+            console.error('Error seeding admin user:', err);
+            // A stale-artefact error is a real blocker — propagate so the caller
+            // can refuse to proceed instead of treating it like a transient
+            // Mongo hiccup.
+            if (err instanceof Error && err.message.includes('initial-password artefact')) {
+                throw err;
+            }
             await this.setupClient();
             return undefined;
         }
@@ -75,6 +105,7 @@ export class UserService implements IUserService {
                 role: user.role ?? 'viewer',
                 avatar: user.avatar,
                 canPublishProduction: Boolean(user.canPublishProduction),
+                mustChangePassword: Boolean(user.mustChangePassword),
             };
             await this.usersDB.insertOne(doc as any);
             return JSON.stringify({createUser: {id: doc.id}});
@@ -93,7 +124,14 @@ export class UserService implements IUserService {
             if (user.role !== undefined) set.role = user.role;
             if (user.avatar !== undefined) set.avatar = user.avatar;
             if (user.canPublishProduction !== undefined) set.canPublishProduction = Boolean(user.canPublishProduction);
-            if (user.password) set.password = await hash(user.password, this._hashSaltRounds);
+            if (user.password) {
+                set.password = await hash(user.password, this._hashSaltRounds);
+                // Rotating the password retires the seeded-default flag. If an
+                // admin explicitly passes `mustChangePassword` in the same
+                // call it still wins (handled below).
+                set.mustChangePassword = false;
+            }
+            if (user.mustChangePassword !== undefined) set.mustChangePassword = Boolean(user.mustChangePassword);
 
             if (Object.keys(set).length === 0) {
                 return JSON.stringify({updateUser: {id: user.id, noop: true}});
@@ -146,6 +184,7 @@ export class UserService implements IUserService {
                 role: (d as any).role ?? 'viewer',
                 avatar: (d as any).avatar,
                 canPublishProduction: Boolean((d as any).canPublishProduction),
+                mustChangePassword: Boolean((d as any).mustChangePassword),
             }));
         } catch (err) {
             console.error('Error listing users:', err);

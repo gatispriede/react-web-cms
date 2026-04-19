@@ -1,6 +1,8 @@
 import React from "react";
 import {Button, Empty, Segmented, Space, Tooltip, message} from "antd";
 import EditWrapper from "./common/EditWrapper";
+import ConflictDialog from "./common/ConflictDialog";
+import {ConflictError, isConflictError} from "../lib/conflict";
 import {SECTION_TEMPLATES} from "./itemTypes/templates";
 import SectionErrorBoundary from "./common/SectionErrorBoundary";
 import AddNewSection from "./common/Dialogs/AddNewSection";
@@ -32,6 +34,12 @@ interface SContent {
     sections: ISection[],
     page: string,
     state: string,
+    /** Pending optimistic-concurrency conflict — populated by editor saves
+     *  that throw `ConflictError`. The `<ConflictDialog>` modal reads this
+     *  + offers Take-theirs / Keep-mine resolution. `retry()` re-issues the
+     *  same edit with `expectedVersion = err.currentVersion` so the second
+     *  attempt clears the version check. */
+    conflict?: {error: ConflictError<any>; sectionId: string; retry: () => Promise<void>},
 }
 
 class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
@@ -309,7 +317,31 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
                                     style: EStyle.Default,
                                     content: '',
                                 };
-                                await this.MongoApi.addRemoveSectionItem(sectionId, config, this.state.sections);
+                                try {
+                                    await this.MongoApi.addRemoveSectionItem(sectionId, config, this.state.sections);
+                                } catch (err) {
+                                    if (isConflictError(err)) {
+                                        // Stash the conflict so the dialog can offer take-theirs vs
+                                        // keep-mine. Keep-mine retries by adopting the server's
+                                        // bumped version; the SectionApi reads `section.version`
+                                        // so updating it locally is enough.
+                                        this.setState({
+                                            conflict: {
+                                                error: err,
+                                                sectionId,
+                                                retry: async () => {
+                                                    const sec = this.state.sections.find(s => s.id === sectionId);
+                                                    if (sec) sec.version = err.currentVersion;
+                                                    await this.MongoApi.addRemoveSectionItem(sectionId, config, this.state.sections);
+                                                    this.setState({state: guid(), conflict: undefined});
+                                                    await this.refresh();
+                                                },
+                                            },
+                                        });
+                                        return;
+                                    }
+                                    throw err;
+                                }
                                 this.setState({state: guid()});
                                 const isDelete = config.type === EItemType.Empty;
                                 const wasEmpty = previousItem?.type === EItemType.Empty || !previousItem;
@@ -398,6 +430,31 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
                     />
                 </div>
                 }
+                {this.state.conflict && (() => {
+                    const c = this.state.conflict;
+                    const peer = c.error.currentDoc as {editedBy?: string; editedAt?: string} | null;
+                    return (
+                        <ConflictDialog
+                            open
+                            docKind={this.props.t('Section')}
+                            peerVersion={c.error.currentVersion}
+                            peerEditedBy={peer?.editedBy}
+                            peerEditedAt={peer?.editedAt}
+                            onCancel={() => this.setState({conflict: undefined})}
+                            onTakeTheirs={async () => {
+                                this.setState({conflict: undefined});
+                                await this.refresh();
+                            }}
+                            onKeepMine={async () => {
+                                try { await c.retry(); }
+                                catch (err) {
+                                    message.error(String((err as Error)?.message ?? err));
+                                    this.setState({conflict: undefined});
+                                }
+                            }}
+                        />
+                    );
+                })()}
             </div>
         )
     }

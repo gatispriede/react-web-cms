@@ -1,5 +1,5 @@
 import {Button, Drawer, Select, Space, Tabs} from "antd";
-import {EditOutlined, PlusCircleOutlined} from "@ant-design/icons";
+import {EditOutlined, PlusCircleOutlined} from "../icons";
 import React from "react";
 import {ISection} from "../../../../Interfaces/ISection";
 import {ContentSection} from "../ContentSection";

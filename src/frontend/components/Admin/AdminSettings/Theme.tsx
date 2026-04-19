@@ -1,11 +1,15 @@
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {Button, Card, Col, ColorPicker, ConfigProvider, Form, Input, InputNumber, Modal, Popconfirm, Row, Space, Tag, message} from 'antd';
-import {CheckCircleFilled, CopyOutlined, DeleteOutlined, EditOutlined, PlusOutlined} from '@ant-design/icons';
+import {CheckCircleFilled, CopyOutlined, DeleteOutlined, EditOutlined, PlusOutlined} from '../../common/icons';
 import {useTranslation} from 'next-i18next';
 import ThemeApi from '../../../api/ThemeApi';
 import {ITheme, IThemeTokens, InTheme} from '../../../../Interfaces/ITheme';
 import AuditBadge from '../AuditBadge';
 import {useRefreshView} from '../../../lib/refreshBus';
+import ThemePreviewFrame from './ThemePreviewFrame';
+import FontPicker, {FontPickerSlot} from './FontPicker';
+import ConflictDialog from '../../common/ConflictDialog';
+import {ConflictError, isConflictError} from '../../../lib/conflict';
 
 const themeApi = new ThemeApi();
 
@@ -60,12 +64,15 @@ const ThemeCard: React.FC<{
             </Space>
         }
     >
-        <div style={{display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap'}}>
+        <div style={{marginBottom: 10}}>
+            <ThemePreviewFrame tokens={theme.tokens} themeName={theme.name} width={260}/>
+        </div>
+        <div style={{display: 'flex', gap: 4, marginBottom: 8, flexWrap: 'wrap'}}>
             {COLOR_TOKENS.slice(0, 4).map(({key, label}) => (
                 <div key={key} title={label} style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: 4,
+                    width: 18,
+                    height: 18,
+                    borderRadius: 3,
                     background: (theme.tokens?.[key] as string) ?? '#ccc',
                     border: '1px solid #eee',
                 }}/>
@@ -99,11 +106,18 @@ const ThemeEditor: React.FC<{
     saving: boolean;
 }> = ({initial, onCancel, onSave, t, saving}) => {
     const [draft, setDraft] = useState<InTheme>(initial);
+    const [pickerSlot, setPickerSlot] = useState<FontPickerSlot | null>(null);
 
     const setToken = (key: keyof IThemeTokens, value: string | number) =>
         setDraft(d => ({...d, tokens: {...d.tokens, [key]: value}}));
 
     const previewConfig = useMemo(() => ({token: draft.tokens as any}), [draft.tokens]);
+
+    const FONT_SLOTS: {slot: FontPickerSlot; tokenKey: 'fontDisplay' | 'fontSans' | 'fontMono'; label: string}[] = [
+        {slot: 'display', tokenKey: 'fontDisplay', label: t('Display')},
+        {slot: 'sans', tokenKey: 'fontSans', label: t('Body')},
+        {slot: 'mono', tokenKey: 'fontMono', label: t('Mono')},
+    ];
 
     return (
         <Modal
@@ -166,6 +180,31 @@ const ThemeEditor: React.FC<{
                     </Col>
                 </Row>
                 <div style={{marginTop: 12, borderTop: '1px solid #eee', paddingTop: 12}}>
+                    <div style={{fontWeight: 500, marginBottom: 8}}>{t('Fonts')}</div>
+                    <Space direction="vertical" size={6} style={{width: '100%'}}>
+                        {FONT_SLOTS.map(({slot, tokenKey, label}) => {
+                            const stack = draft.tokens[tokenKey] as string | undefined;
+                            return (
+                                <div key={slot} style={{display: 'flex', alignItems: 'center', gap: 10}}>
+                                    <span style={{minWidth: 70, fontSize: 12, color: '#555'}}>{label}</span>
+                                    <span style={{
+                                        flex: 1,
+                                        fontFamily: stack || 'inherit',
+                                        fontSize: 14,
+                                        color: stack ? '#1f1f1f' : '#aaa',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap',
+                                    }}>
+                                        {stack ? 'The quick brown fox' : t('System default')}
+                                    </span>
+                                    <Button size="small" onClick={() => setPickerSlot(slot)}>{t('Pick…')}</Button>
+                                </div>
+                            );
+                        })}
+                    </Space>
+                </div>
+                <div style={{marginTop: 12, borderTop: '1px solid #eee', paddingTop: 12}}>
                     <div style={{fontWeight: 500, marginBottom: 8}}>{t('Preview')}</div>
                     <ConfigProvider theme={previewConfig}>
                         <Space wrap>
@@ -179,6 +218,20 @@ const ThemeEditor: React.FC<{
                     </ConfigProvider>
                 </div>
             </Form>
+            <FontPicker
+                open={pickerSlot !== null}
+                slot={pickerSlot ?? 'display'}
+                currentStack={pickerSlot
+                    ? draft.tokens[pickerSlot === 'sans' ? 'fontSans' : pickerSlot === 'mono' ? 'fontMono' : 'fontDisplay'] as string | undefined
+                    : undefined}
+                onCancel={() => setPickerSlot(null)}
+                onPick={(stack) => {
+                    if (!pickerSlot) return;
+                    const tokenKey = pickerSlot === 'sans' ? 'fontSans' : pickerSlot === 'mono' ? 'fontMono' : 'fontDisplay';
+                    setToken(tokenKey, stack);
+                    setPickerSlot(null);
+                }}
+            />
         </Modal>
     );
 };
@@ -190,7 +243,13 @@ const AdminSettingsTheme = () => {
     const [activeAudit, setActiveAudit] = useState<{editedBy?: string; editedAt?: string}>({});
     const [loading, setLoading] = useState(false);
     const [editing, setEditing] = useState<InTheme | null>(null);
+    /** Server-side `version` at the time the editor opened — sent as
+     *  `expectedVersion` so the next save catches a peer's concurrent
+     *  edit. `undefined` for a brand-new theme that hasn't been saved
+     *  yet (no version to check against). */
+    const [editingVersion, setEditingVersion] = useState<number | undefined>(undefined);
     const [saving, setSaving] = useState(false);
+    const [conflict, setConflict] = useState<{error: ConflictError<any>; retry: () => Promise<void>} | null>(null);
 
     const refresh = useCallback(async () => {
         setLoading(true);
@@ -225,30 +284,59 @@ const AdminSettingsTheme = () => {
     };
 
     const duplicate = (theme: ITheme) => {
+        // Duplicate writes a brand-new theme — no expectedVersion baseline yet.
         setEditing({
             name: `${theme.name} ${t('(copy)')}`,
             tokens: {...theme.tokens},
             custom: true,
         });
+        setEditingVersion(undefined);
     };
 
     const edit = (theme: ITheme) => {
         setEditing({id: theme.id, name: theme.name, tokens: {...theme.tokens}, custom: true});
+        setEditingVersion(typeof theme.version === 'number' ? theme.version : 0);
     };
 
     const createBlank = () => {
         setEditing({name: t('New theme'), tokens: {...BLANK_TOKENS}, custom: true});
+        setEditingVersion(undefined);
     };
+
+    const performSave = useCallback(async (draft: InTheme, expectedVersion: number | undefined) => {
+        const result = await themeApi.saveTheme(draft, expectedVersion);
+        if (result.error) { message.error(result.error); return false; }
+        message.success(t('Theme saved'));
+        setEditing(null);
+        setEditingVersion(undefined);
+        await refresh();
+        return true;
+    }, [refresh, t]);
 
     const save = async (draft: InTheme) => {
         if (!draft.name.trim()) { message.error(t('Name is required')); return; }
         setSaving(true);
         try {
-            const result = await themeApi.saveTheme(draft);
-            if (result.error) { message.error(result.error); return; }
-            message.success(t('Theme saved'));
-            setEditing(null);
-            await refresh();
+            await performSave(draft, editingVersion);
+        } catch (err) {
+            if (isConflictError(err)) {
+                // Stash the conflict so the dialog can offer take-theirs vs
+                // keep-mine. Keep-mine retries with the bumped version baseline.
+                setConflict({
+                    error: err,
+                    retry: async () => {
+                        setSaving(true);
+                        try {
+                            await performSave(draft, err.currentVersion);
+                            setConflict(null);
+                        } finally {
+                            setSaving(false);
+                        }
+                    },
+                });
+            } else {
+                message.error(String((err as Error)?.message ?? err));
+            }
         } finally {
             setSaving(false);
         }
@@ -279,12 +367,35 @@ const AdminSettingsTheme = () => {
             {editing && (
                 <ThemeEditor
                     initial={editing}
-                    onCancel={() => setEditing(null)}
+                    onCancel={() => { setEditing(null); setEditingVersion(undefined); }}
                     onSave={save}
                     t={t}
                     saving={saving}
                 />
             )}
+            {conflict && (() => {
+                const peer = conflict.error.currentDoc as {editedBy?: string; editedAt?: string; name?: string} | null;
+                return (
+                    <ConflictDialog
+                        open
+                        docKind={t('Theme')}
+                        peerVersion={conflict.error.currentVersion}
+                        peerEditedBy={peer?.editedBy}
+                        peerEditedAt={peer?.editedAt}
+                        onCancel={() => setConflict(null)}
+                        onTakeTheirs={async () => {
+                            setConflict(null);
+                            setEditing(null);
+                            setEditingVersion(undefined);
+                            await refresh();
+                        }}
+                        onKeepMine={async () => {
+                            try { await conflict.retry(); }
+                            catch (err) { message.error(String((err as Error)?.message ?? err)); setConflict(null); }
+                        }}
+                    />
+                );
+            })()}
         </div>
     );
 };

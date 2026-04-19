@@ -1,5 +1,5 @@
 import {Button, message, Popconfirm, Space, Typography} from "antd";
-import {DownloadOutlined, UploadOutlined} from "@ant-design/icons";
+import {DownloadOutlined, UploadOutlined} from "../../common/icons";
 import React, {useRef, useState} from "react";
 import {TFunction} from "i18next";
 

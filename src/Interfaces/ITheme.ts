@@ -33,7 +33,7 @@ export interface IThemeTokens {
     fontMono?: string;
     /** Sans (body). */
     fontSans?: string;
-    /** Machine-readable slug for SCSS theme-scoping (`body[data-theme-name="<slug>"]`). */
+    /** Machine-readable slug for SCSS theme-scoping (`[data-theme-name="<slug>"]` — set on body in production, on the preview wrapper in Theme cards). */
     themeSlug?: string;
     [key: string]: string | number | undefined;
 }
@@ -43,6 +43,8 @@ export interface ITheme {
     name: string;
     tokens: IThemeTokens;
     custom: boolean;
+    /** Optimistic-concurrency counter — see `src/Server/conflict.ts`. */
+    version?: number;
     editedBy?: string;
     editedAt?: string;
 }

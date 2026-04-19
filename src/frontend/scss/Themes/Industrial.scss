@@ -1,12 +1,13 @@
 /* ==========================================================================
    Industrial — heavy uppercase hi-vis construction theme (design-v4).
 
-   Scoped under `body[data-theme-name="industrial"]`. Dark bg (`--bg`
-   = #0F1419), hi-vis yellow accent, Barlow Condensed 800/900 headlines,
-   hazard stripe at the hero bottom, lit + outlined emphasis runs.
+   Scoped under `[data-theme-name="industrial"]` (any ancestor — `body` in
+   production, a `<div>` wrapper in the Theme-picker preview card). Dark bg
+   (`--bg` = #0F1419), hi-vis yellow accent, Barlow Condensed 800/900
+   headlines, hazard stripe at the hero bottom, lit + outlined emphasis runs.
    ========================================================================== */
 
-body[data-theme-name="industrial"] {
+[data-theme-name="industrial"] {
   font-family: var(--font-sans, 'Barlow', system-ui, sans-serif);
   font-size: var(--theme-fontSize, 16px);
   line-height: 1.55;

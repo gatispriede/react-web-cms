@@ -66,6 +66,7 @@ export const authOptions: NextAuthOptions = {
                     password: user.password,
                     role: (user as any).role ?? 'viewer',
                     canPublishProduction: Boolean((user as any).canPublishProduction),
+                    mustChangePassword: Boolean((user as any).mustChangePassword),
                 } as any;
             },
         }),
@@ -83,11 +84,12 @@ export const authOptions: NextAuthOptions = {
                     avatarUrl: session.user.avatarUrl || (token as any).avatarUrl,
                     role: (session.user as any).role || (token as any).role,
                     canPublishProduction: (session.user as any).canPublishProduction ?? (token as any).canPublishProduction,
+                    mustChangePassword: (session.user as any).mustChangePassword ?? (token as any).mustChangePassword,
                 }
             }
 
             if(user) {
-                const u = user as unknown as User & {role?: string; canPublishProduction?: boolean}
+                const u = user as unknown as User & {role?: string; canPublishProduction?: boolean; mustChangePassword?: boolean}
                 return {
                     ...token,
                     id: u.id,
@@ -95,6 +97,7 @@ export const authOptions: NextAuthOptions = {
                     email: u.email,
                     role: u.role ?? (token as any).role ?? 'viewer',
                     canPublishProduction: u.canPublishProduction ?? (token as any).canPublishProduction ?? false,
+                    mustChangePassword: u.mustChangePassword ?? (token as any).mustChangePassword ?? false,
                 }
             }
 
@@ -110,6 +113,7 @@ export const authOptions: NextAuthOptions = {
                     email: token.email,
                     role: (token as any).role ?? 'viewer',
                     canPublishProduction: Boolean((token as any).canPublishProduction),
+                    mustChangePassword: Boolean((token as any).mustChangePassword),
                 }
             }
 

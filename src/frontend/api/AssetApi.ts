@@ -35,6 +35,13 @@ export class AssetApi {
         return r;
     }
 
+    async rescanDiskImages(): Promise<{added: number; skipped: number; total: number}> {
+        const res = await fetch('/api/rescan-images', {method: 'POST'});
+        const body = await res.json().catch(() => ({}));
+        refreshBus.emit('assets');
+        return {added: body?.added ?? 0, skipped: body?.skipped ?? 0, total: body?.total ?? 0};
+    }
+
     async getImages(tags: string): Promise<IImage[]> {
         return await resolve(({query}) => {
             return query.mongo.getImages({tags}).map(image => ({

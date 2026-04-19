@@ -1,0 +1,140 @@
+/* ==========================================================================
+   High contrast — WCAG AAA-ready a11y preset.
+
+   Scoped under `[data-theme-name="high-contrast"]` (no `body` ancestor — see
+   THEMING.md scoping contract). Tokens come in via CSS variables set by
+   `ThemeService."High contrast"` + `applyThemeCssVars`; this file layers the
+   non-token rules a colour palette alone cannot deliver: persistent focus
+   rings, underlined links, 2px rules, and outline-on-state for every
+   interactive element so users never have to read colour to read state.
+
+   Key acceptance bullets from roadmap/high-contrast-theme.md:
+     • body text contrast ≥ 7:1 (white-on-black is 21:1 — passes AAA easily)
+     • every interactive element has a visible focus ring (yellow, 2px offset)
+     • links are distinguishable without colour (underline by default)
+     • no outline suppression — `outline: 0` is overridden everywhere
+   ========================================================================== */
+
+[data-theme-name="high-contrast"] {
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-size: var(--theme-fontSize, 17px);
+  line-height: 1.6;
+  color: var(--ink, #fff);
+  background: var(--theme-colorBgBase, var(--background, #000));
+  -webkit-font-smoothing: antialiased;
+
+  // ---- Links --------------------------------------------------------------
+  // Always underlined — never colour-only. Hover swaps to the accent ink so
+  // the underline + ink pair stays distinguishable from inert text.
+  a,
+  .ant-typography a,
+  .dynamic-content a {
+    color: var(--theme-colorInfo, #a5f3fc);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+
+    &:hover,
+    &:active {
+      color: var(--accent, #ffd400);
+      text-decoration-color: var(--accent, #ffd400);
+    }
+  }
+
+  // ---- Focus ring ---------------------------------------------------------
+  // Applied broadly — buttons, links, inputs, draggable handles, every
+  // tabbable surface. `outline-offset` lifts the ring off dense controls so
+  // it stays visible against busy backgrounds. !important is intentional:
+  // shrugs off ant-design's `outline: 0` resets and any module SCSS that
+  // muted focus for aesthetic reasons.
+  *:focus-visible {
+    outline: 2px solid var(--accent, #ffd400) !important;
+    outline-offset: 2px !important;
+    box-shadow: none !important;
+  }
+
+  // Keyboard-only focus inside AntD controls — the lib uses an inset
+  // box-shadow which doesn't read as a ring. Replace it with our outline.
+  .ant-btn:focus-visible,
+  .ant-input:focus-visible,
+  .ant-input-affix-wrapper:focus-visible,
+  .ant-select:focus-visible .ant-select-selector,
+  .ant-tabs-tab:focus-visible {
+    outline: 2px solid var(--accent, #ffd400) !important;
+    outline-offset: 2px !important;
+    box-shadow: none !important;
+  }
+
+  // ---- Rules / borders ----------------------------------------------------
+  // Bumped from 1px to 2px so they survive zoom + low-vision rendering.
+  hr,
+  .site-tabs,
+  .ant-divider,
+  .dynamic-content hr {
+    border-color: var(--rule, #fff);
+    border-width: 2px;
+  }
+
+  // ---- Buttons ------------------------------------------------------------
+  // Outline buttons keep a 2px border so the affordance reads even when the
+  // accent fill is suppressed by forced-colors mode.
+  .ant-btn {
+    border-width: 2px;
+    font-weight: 600;
+  }
+  .ant-btn-primary {
+    background: var(--accent, #ffd400);
+    color: var(--accent-ink, #000);
+    border-color: var(--accent, #ffd400);
+
+    &:hover,
+    &:focus {
+      background: var(--accent, #ffd400);
+      color: var(--accent-ink, #000);
+      filter: brightness(0.92);
+    }
+  }
+
+  // ---- Form fields --------------------------------------------------------
+  .ant-input,
+  .ant-input-affix-wrapper,
+  .ant-select-selector,
+  .ant-picker {
+    border-width: 2px !important;
+    border-color: var(--rule, #fff) !important;
+    background: var(--theme-colorBgBase, #000) !important;
+    color: var(--ink, #fff) !important;
+  }
+
+  // ---- Selection ----------------------------------------------------------
+  // High-contrast selection so highlighted text stays legible.
+  ::selection {
+    background: var(--accent, #ffd400);
+    color: var(--accent-ink, #000);
+  }
+
+  // ---- Tags / badges ------------------------------------------------------
+  // Default AntD tags use light-tint backgrounds which fail at HC contrast.
+  // Force solid foreground/background pairing.
+  .ant-tag {
+    border-width: 2px;
+    border-color: var(--ink, #fff);
+    background: var(--theme-colorBgInset, #0a0a0a);
+    color: var(--ink, #fff);
+  }
+
+  // ---- Forced-colors (Windows High Contrast) ------------------------------
+  // When the OS forces its own palette, surrender our colours and let the
+  // system's chosen pair through, but keep structural cues (underlines,
+  // outline width) which forced-colors alone won't enforce.
+  @media (forced-colors: active) {
+    a {
+      text-decoration: underline;
+      text-decoration-thickness: 2px;
+    }
+    *:focus-visible {
+      outline: 2px solid CanvasText !important;
+      outline-offset: 2px !important;
+    }
+  }
+}

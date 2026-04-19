@@ -1,9 +1,10 @@
-import React from "react";
+import React, {useMemo} from "react";
 import {Button, Input, Space} from "antd";
-import {DeleteOutlined, PlusOutlined} from "@ant-design/icons";
+import {DeleteOutlined, PlusOutlined} from "../../common/icons";
 import {IInputContent} from "../../../../Interfaces/IInputContent";
 import {EItemType} from "../../../../enums/EItemType";
 import {IList, IListItem, ListContent} from "../../SectionComponents/List";
+import {SortableHandleItem, SortableList, arrayMove} from "../../common/SortableList";
 
 /**
  * Editor for the `List` module. Mirrors the data shape 1:1:
@@ -32,6 +33,13 @@ const InputList: React.FC<IInputContent> = ({content, setContent, t}) => {
 
     const addItem = () => commit({...data, items: [...data.items, {label: '', value: '', href: ''}]});
     const removeItem = (index: number) => commit({...data, items: data.items.filter((_, i) => i !== index)});
+    const reorderItems = (from: number, to: number) =>
+        commit({...data, items: arrayMove(data.items, from, to)});
+
+    // Stable per-item ids — `${index}` is fine because the `<DndContext>`
+    // re-mounts when the list length changes, so a delete-then-rerender
+    // doesn't smear the active drag state across rows.
+    const itemIds = useMemo(() => data.items.map((_, i) => `list-${i}`), [data.items.length]);
 
     return (
         <div className={'admin-list'} style={{display: 'flex', flexDirection: 'column', gap: 12}}>
@@ -46,31 +54,33 @@ const InputList: React.FC<IInputContent> = ({content, setContent, t}) => {
 
             <div>
                 <div style={{marginBottom: 6}}>{t('Items')}</div>
-                <Space direction="vertical" style={{width: '100%'}}>
-                    {data.items.map((it, i) => (
-                        <Space key={i} align="start" style={{width: '100%', gap: 6}}>
-                            <Input
-                                value={it.label}
-                                onChange={e => patchItem(i, {label: e.target.value})}
-                                placeholder="Label (E-mail)"
-                                style={{width: 140}}
-                            />
-                            <Input
-                                value={it.value ?? ''}
-                                onChange={e => patchItem(i, {value: e.target.value})}
-                                placeholder="Value (you@example.com)"
-                                style={{flex: 1, minWidth: 180}}
-                            />
-                            <Input
-                                value={it.href ?? ''}
-                                onChange={e => patchItem(i, {href: e.target.value})}
-                                placeholder="Link (optional)"
-                                style={{width: 180}}
-                            />
-                            <Button danger size="small" icon={<DeleteOutlined/>} onClick={() => removeItem(i)}/>
-                        </Space>
-                    ))}
-                </Space>
+                <SortableList ids={itemIds} onReorder={reorderItems}>
+                    <Space direction="vertical" style={{width: '100%'}}>
+                        {data.items.map((it, i) => (
+                            <SortableHandleItem key={itemIds[i]} id={itemIds[i]}>
+                                <Input
+                                    value={it.label}
+                                    onChange={e => patchItem(i, {label: e.target.value})}
+                                    placeholder="Label (E-mail)"
+                                    style={{width: 140}}
+                                />
+                                <Input
+                                    value={it.value ?? ''}
+                                    onChange={e => patchItem(i, {value: e.target.value})}
+                                    placeholder="Value (you@example.com)"
+                                    style={{flex: 1, minWidth: 180}}
+                                />
+                                <Input
+                                    value={it.href ?? ''}
+                                    onChange={e => patchItem(i, {href: e.target.value})}
+                                    placeholder="Link (optional)"
+                                    style={{width: 180}}
+                                />
+                                <Button danger size="small" icon={<DeleteOutlined/>} onClick={() => removeItem(i)}/>
+                            </SortableHandleItem>
+                        ))}
+                    </Space>
+                </SortableList>
             </div>
 
             <Button type="dashed" icon={<PlusOutlined/>} onClick={addItem} block>
