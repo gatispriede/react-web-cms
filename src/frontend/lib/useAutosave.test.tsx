@@ -31,12 +31,15 @@ describe('useAutosave', () => {
         );
         act(() => { bus.markDirty('first'); });
         act(() => { bus.markDirty('second'); });
-        await waitFor(() => expect(saver).toHaveBeenCalledTimes(1));
+        // Wait for the terminal status — `saved` may show up on a different
+        // microtask boundary than the saver's call resolution depending on
+        // React's batching strategy. Asserting on a snapshot of `statuses`
+        // immediately after `waitFor(saver)` raced the next render under
+        // React 19 + RTL 16 and lost.
+        await waitFor(() => expect(statuses).toContain('saved'));
+        expect(saver).toHaveBeenCalledTimes(1);
         expect(saver).toHaveBeenCalledWith('second');
-        // Status goes dirty then saved; the `saving` step may collapse in
-        // React's batched renders when the saver resolves synchronously.
         expect(statuses).toContain('dirty');
-        expect(statuses).toContain('saved');
     });
 
     it('surfaces saver errors as status=error + message', async () => {
