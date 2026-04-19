@@ -1,0 +1,294 @@
+{
+  "manifest": {
+    "version": 1,
+    "exportedAt": "2026-04-19T00:00:00.000Z",
+    "app": "redis-node-js-cloud",
+    "note": "Paper theme content — Home / Capability matrix / Career record / Dossier appendix. Designed to pair with the Paper preset and single-page scroll layout."
+  },
+  "site": {
+    "siteFlags": {
+      "blogEnabled": false,
+      "layoutMode": "scroll"
+    },
+    "activeThemeId": "paper-preset-v1",
+    "themes": [
+      {
+        "id": "paper-preset-v1",
+        "name": "Paper",
+        "custom": false,
+        "tokens": {
+          "colorPrimary": "#c65a2a",
+          "colorBgBase": "#f7f3e8",
+          "colorTextBase": "#1f1b15",
+          "colorSuccess": "#52c41a",
+          "colorWarning": "#faad14",
+          "colorError": "#ff4d4f",
+          "colorInfo": "#1f3a8a",
+          "colorBgInset": "oklch(0.945 0.012 82)",
+          "colorInkSecondary": "oklch(0.36 0.01 60)",
+          "colorInkTertiary": "oklch(0.55 0.008 60)",
+          "colorRule": "oklch(0.82 0.012 70)",
+          "colorRuleStrong": "oklch(0.62 0.012 60)",
+          "colorAccent": "oklch(0.58 0.17 35)",
+          "colorAccentInk": "oklch(0.98 0.008 85)",
+          "colorMark": "oklch(0.58 0.17 35 / 0.14)",
+          "fontDisplay": "'Instrument Serif', ui-serif, Georgia, serif",
+          "fontMono": "'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace",
+          "fontSans": "'Inter Tight', system-ui, -apple-system, 'Segoe UI', sans-serif",
+          "borderRadius": 0,
+          "fontSize": 15,
+          "contentPadding": 28,
+          "themeSlug": "paper"
+        }
+      }
+    ],
+    "navigation": [
+      {
+        "id": "paper-nav-home",
+        "type": "navigation",
+        "page": "Home",
+        "seo": {
+          "description": "Gatis Priede — Digital Solutions Architect · Senior JavaScript Engineer. Portfolio dossier.",
+          "keywords": ["portfolio", "engineer", "architect"],
+          "viewport": "width=device-width,initial-scale=1",
+          "charSet": "utf-8",
+          "url": "",
+          "image": "",
+          "image_alt": "",
+          "author": "Gatis Priede",
+          "locale": "en"
+        },
+        "sections": ["paper-sec-hero"]
+      },
+      {
+        "id": "paper-nav-matrix",
+        "type": "navigation",
+        "page": "Capability matrix",
+        "seo": {
+          "description": "Self-reported capability matrix, 0–10 scale.",
+          "keywords": ["skills"],
+          "viewport": "width=device-width,initial-scale=1",
+          "charSet": "utf-8",
+          "url": "",
+          "image": "",
+          "image_alt": "",
+          "author": "Gatis Priede",
+          "locale": "en"
+        },
+        "sections": ["paper-sec-matrix-head", "paper-sec-matrix-core", "paper-sec-matrix-lead", "paper-sec-matrix-platforms"]
+      },
+      {
+        "id": "paper-nav-career",
+        "type": "navigation",
+        "page": "Career record",
+        "seo": {
+          "description": "Career record — 2013 to present.",
+          "keywords": ["career"],
+          "viewport": "width=device-width,initial-scale=1",
+          "charSet": "utf-8",
+          "url": "",
+          "image": "",
+          "image_alt": "",
+          "author": "Gatis Priede",
+          "locale": "en"
+        },
+        "sections": ["paper-sec-career-head", "paper-sec-career-timeline"]
+      },
+      {
+        "id": "paper-nav-dossier",
+        "type": "navigation",
+        "page": "Dossier appendix",
+        "seo": {
+          "description": "Education, contact and signals.",
+          "keywords": ["contact", "education"],
+          "viewport": "width=device-width,initial-scale=1",
+          "charSet": "utf-8",
+          "url": "",
+          "image": "",
+          "image_alt": "",
+          "author": "Gatis Priede",
+          "locale": "en"
+        },
+        "sections": ["paper-sec-dossier-head", "paper-sec-dossier-grid"]
+      }
+    ],
+    "sections": [
+      {
+        "id": "paper-sec-hero",
+        "type": 1,
+        "page": "Home",
+        "content": [
+          {
+            "type": "HERO",
+            "style": "editorial",
+            "content": "{\"eyebrow\":\"DOSSIER № 001 / SIGULDA, LATVIA / EST. 2009\",\"headline\":\"Gatis\",\"headlineSoft\":\"Priede.\",\"titles\":[\"Digital Solutions Architect\",\"Senior JavaScript Engineer\",\"Consultant\"],\"subtitle\":\"\",\"tagline\":\"Everything is possible.\",\"taglineAttribution\":\"— personal motto\",\"bgImage\":\"\",\"accent\":\"\",\"portraitLabel\":\"GP\",\"ctaPrimary\":{\"label\":\"View work ↘\",\"href\":\"#career-record\",\"primary\":true},\"ctaSecondary\":{\"label\":\"Get in touch\",\"href\":\"mailto:Gatiss.Priede@gmail.com\"},\"meta\":[{\"label\":\"Based\",\"value\":\"Sigulda, Latvia\"},{\"label\":\"Years\",\"value\":\"15+ in digital\"},{\"label\":\"Mode\",\"value\":\"Remote / Hybrid\"},{\"label\":\"Stack\",\"value\":\"JS · React · Next · Node · 3D\"}],\"coords\":[{\"label\":\"LAT\",\"value\":\"57.15°N\"},{\"label\":\"LON\",\"value\":\"24.85°E\"},{\"label\":\"ELEV\",\"value\":\"102 m\"},{\"label\":\"LOCAL\",\"value\":\"—\",\"liveTime\":true},{\"label\":\"UPDATED\",\"value\":\"2026.04\"}]}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}"
+          }
+        ]
+      },
+      {
+        "id": "paper-sec-matrix-head",
+        "type": 1,
+        "page": "Capability matrix",
+        "content": [
+          {
+            "type": "RICH_TEXT",
+            "style": "default",
+            "content": "{\"value\":\"<h2>§ 01 · Capability matrix</h2><p><em>Self-reported · 0–10 scale</em></p>\"}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}"
+          }
+        ]
+      },
+      {
+        "id": "paper-sec-matrix-core",
+        "type": 1,
+        "page": "Capability matrix",
+        "content": [
+          {
+            "type": "SKILL_PILLS",
+            "style": "matrix",
+            "content": "{\"category\":\"Core delivery\",\"categoryMeta\":\"08 entries\",\"items\":[{\"label\":\"JavaScript / TypeScript\",\"score\":9.8,\"featured\":true},{\"label\":\"React · Next.js · SSR / SPA\",\"score\":9.5,\"featured\":true},{\"label\":\"Node.js & backend architecture\",\"score\":9.0},{\"label\":\"GraphQL · REST · data layer\",\"score\":8.5},{\"label\":\"UI / UX · responsive · fluid\",\"score\":8.8},{\"label\":\"3D & WebGL · SciChart · large data\",\"score\":8.0},{\"label\":\"Test-driven development\",\"score\":8.2},{\"label\":\"CI/CD · Docker · HAProxy\",\"score\":7.8}]}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}"
+          }
+        ]
+      },
+      {
+        "id": "paper-sec-matrix-lead",
+        "type": 1,
+        "page": "Capability matrix",
+        "content": [
+          {
+            "type": "SKILL_PILLS",
+            "style": "matrix",
+            "content": "{\"category\":\"Leadership & management\",\"categoryMeta\":\"06 entries\",\"items\":[{\"label\":\"Agile / Scrum · team lead\",\"score\":9.0},{\"label\":\"Project & resource management\",\"score\":8.5},{\"label\":\"Stakeholder & client engagement\",\"score\":8.8},{\"label\":\"Architecture & strategic planning\",\"score\":8.2},{\"label\":\"Mentoring & BA management\",\"score\":8.0},{\"label\":\"Cross-country remote delivery (11+)\",\"score\":7.5}]}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}"
+          }
+        ]
+      },
+      {
+        "id": "paper-sec-matrix-platforms",
+        "type": 1,
+        "page": "Capability matrix",
+        "content": [
+          {
+            "type": "RICH_TEXT",
+            "style": "default",
+            "content": "{\"value\":\"<h4>Platforms · tooling · other</h4><dl><dt>Cloud</dt><dd>AWS · Azure · Docker · multi-cloud</dd><dt>Data</dt><dd>MongoDB · Redis · Elastic · MySQL · CouchDB</dd><dt>Languages</dt><dd>JS/TS · Python · PHP · Java · Go · C++ · C#</dd><dt>Build &amp; test</dt><dd>Webpack · Babel · Vite · Vitest · Mocha · Jasmine</dd><dt>Libraries</dt><dd>Material UI · D3 · Handlebars · i18next · Bootstrap</dd><dt>In pursuit</dt><dd>AI · quantum · VR · robotics</dd></dl>\"}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}"
+          }
+        ]
+      },
+      {
+        "id": "paper-sec-career-head",
+        "type": 1,
+        "page": "Career record",
+        "content": [
+          {
+            "type": "RICH_TEXT",
+            "style": "default",
+            "content": "{\"value\":\"<h2>§ 02 · Career record</h2><p><em>2013 — present · 05 entries</em></p>\"}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}"
+          }
+        ]
+      },
+      {
+        "id": "paper-sec-career-timeline",
+        "type": 1,
+        "page": "Career record",
+        "content": [
+          {
+            "type": "TIMELINE",
+            "style": "editorial",
+            "content": "{\"entries\":[{\"start\":\"2024\",\"end\":\"PRESENT\",\"location\":\"UK / USA · REMOTE\",\"company\":\"SciChart\",\"domain\":\"scichart.com\",\"role\":\"Consultant / Senior Software Engineer\",\"contractType\":\"Contract\",\"experience\":[\"Customer engagement & stakeholder management\",\"Architecture solutions, product ownership\",\"3D / 2D browser tech · large data rendering\",\"Software development & consulting\"],\"achievements\":[\"Extensive AI knowledge and production usage\",\"Custom architecture — JavaScript written in C# style\"],\"quote\":\"Thinking out of the box while shipping stable, performant code.\"},{\"start\":\"2019\",\"end\":\"2023\",\"location\":\"LATVIA, RIGA\",\"company\":\"Sapiens\",\"domain\":\"sapiens.com\",\"role\":\"Project Manager / Senior Software Engineer\",\"contractType\":\"Permanent\",\"experience\":[\"Customer engagement & architecture solutions\",\"Technical project management · DevOps\",\"Resource & BA management\",\"Stakeholder and client management\"],\"achievements\":[\"Remote delivery across 11+ countries\",\"Delivered 3 projects, participated in several others\"]},{\"start\":\"2017\",\"end\":\"2019\",\"location\":\"LATVIA, RIGA\",\"company\":\"SIA Booking Group\",\"domain\":\"bookinggroup.com\",\"role\":\"Senior Software Engineer\",\"contractType\":\"Permanent\",\"experience\":[\"Application architecture · team lead\",\"Sysops & DevOps\"],\"achievements\":[\"Migration from Drupal to React\",\"Built a new application from scratch\"]},{\"start\":\"2015\",\"end\":\"2017\",\"location\":\"NEWCASTLE, UK\",\"company\":\"Performance Horizon\",\"domain\":\"partnerize.com\",\"role\":\"Senior Front-end Developer\",\"contractType\":\"Permanent\",\"experience\":[\"UX / UI / Design\",\"Architecture design · React migration\"],\"achievements\":[\"Custom solution standardisation\",\"Backbone → React migration\",\"Best-practice introduction · team morale\"]},{\"start\":\"2013\",\"end\":\"2014\",\"location\":\"RIGA, LATVIA\",\"company\":\"Accenture\",\"domain\":\"accenture.com\",\"role\":\"Analyst Web Developer\",\"contractType\":\"Permanent · Riga Delivery Center\",\"experience\":[\"Web software development · UI / UX\",\"Scrum master · team leading · agile\"],\"achievements\":[\"Grew as a professional in web UI / UX\"]}]}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}"
+          }
+        ]
+      },
+      {
+        "id": "paper-sec-dossier-head",
+        "type": 1,
+        "page": "Dossier appendix",
+        "content": [
+          {
+            "type": "RICH_TEXT",
+            "style": "default",
+            "content": "{\"value\":\"<h2>§ 03 · Dossier appendix</h2><p><em>Education · contact · signals</em></p>\"}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}"
+          }
+        ]
+      },
+      {
+        "id": "paper-sec-dossier-grid",
+        "type": 3,
+        "page": "Dossier appendix",
+        "slots": [1, 1, 1],
+        "content": [
+          {
+            "type": "TIMELINE",
+            "style": "minimal",
+            "content": "{\"entries\":[{\"start\":\"2014\",\"end\":\"2015\",\"company\":\"University of Latvia\",\"role\":\"Programming Scientist — Quantum Computers\",\"achievements\":[\"Paused: will return when a real-world app runs on a quantum computer.\"]},{\"start\":\"2009\",\"end\":\"2013\",\"company\":\"Vidzemes augstskola · UAS\",\"role\":\"Programmer — computer & network architecture, project management, functional & OO programming\"},{\"start\":\"CERTIFICATE\",\"end\":\"\",\"company\":\"Microsoft\",\"role\":\"Installing & configuring Windows 7 client\"}]}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}"
+          },
+          {
+            "type": "LIST",
+            "style": "facts",
+            "content": "{\"title\":\"Contact\",\"items\":[{\"label\":\"E-mail\",\"value\":\"Gatiss.Priede@gmail.com\",\"href\":\"mailto:Gatiss.Priede@gmail.com\"},{\"label\":\"Phone\",\"value\":\"+371 270 320 99\"},{\"label\":\"LinkedIn\",\"value\":\"in/gatis-priede ↗\",\"href\":\"https://www.linkedin.com/in/gatis-priede-11169a56/\"},{\"label\":\"Location\",\"value\":\"Sigulda, Latvia · EET\"},{\"label\":\"Mode\",\"value\":\"Remote / Hybrid, Full-time\"},{\"label\":\"Driving\",\"value\":\"B category\"}]}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}"
+          },
+          {
+            "type": "LIST",
+            "style": "facts",
+            "content": "{\"title\":\"Signals & interests\",\"items\":[{\"label\":\"Traits\",\"value\":\"Accuracy · logical · intuitive · flexible · optimistic\"},{\"label\":\"Preferred\",\"value\":\"Clean, high-performant code · TDD · SSR · SPA\"},{\"label\":\"Watching\",\"value\":\"AI · quantum · VR · robotics · RPA\"},{\"label\":\"Interests\",\"value\":\"DIY builds · winter sports · table games · music · science · space & time\"},{\"label\":\"OS\",\"value\":\"Windows 11\"}]}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}"
+          }
+        ]
+      }
+    ],
+    "languages": [
+      {"label": "English", "symbol": "en", "default": true, "flag": "🇬🇧"},
+      {"label": "Latviešu", "symbol": "lv", "flag": "🇱🇻"}
+    ],
+    "logo": null,
+    "images": [],
+    "posts": [],
+    "footer": {
+      "enabled": false,
+      "columns": [],
+      "bottom": "© 2026 · Gatis Priede · Everything is possible."
+    }
+  },
+  "assets": {}
+}

@@ -3,6 +3,8 @@ import {Alert, Button, Col, Input, Row, Space, Typography, message} from "antd";
 import {useTranslation} from "next-i18next";
 import SiteSeoApi from "../../../api/SiteSeoApi";
 import {DEFAULT_SITE_SEO, ISiteSeoDefaults} from "../../../../Interfaces/ISiteSeo";
+import AuditBadge from "../AuditBadge";
+import {useRefreshView} from "../../../lib/refreshBus";
 
 const seoApi = new SiteSeoApi();
 
@@ -19,6 +21,7 @@ const AdminSettingsSEO: React.FC = () => {
     }, []);
 
     useEffect(() => { void refresh(); }, [refresh]);
+    useRefreshView(refresh, 'settings');
 
     const update = (patch: Partial<ISiteSeoDefaults>) => setSeo(s => ({...s, ...patch}));
 
@@ -106,9 +109,10 @@ const AdminSettingsSEO: React.FC = () => {
                     />
                 </Col>
             </Row>
-            <Space style={{marginTop: 24}}>
+            <Space style={{marginTop: 24}} align="center">
                 <Button type="primary" onClick={save} loading={saving}>{t('Save')}</Button>
                 <Button onClick={refresh} loading={loading}>{t('Refresh')}</Button>
+                <AuditBadge editedBy={seo.editedBy} editedAt={seo.editedAt}/>
             </Space>
         </div>
     );

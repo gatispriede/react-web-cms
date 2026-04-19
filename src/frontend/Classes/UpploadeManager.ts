@@ -60,43 +60,32 @@ class UpploadManager {
             call: this._buttonRef,
             value: this._defaultImgUrl,
             uploader: async (file, updateProgress) => {
-                return new Promise(resolve => {
-                    const resultFile = file as File
-                    try {
-                        this.fileName = resultFile.name
-                        this.file = resultFile;
-                        this._setFile(resultFile)
-                        setTimeout(() => resolve(window.URL.createObjectURL(file)), 2750);
+                const resultFile = file as File
+                this.fileName = resultFile.name
+                this.file = resultFile
 
-                        let progress = 0;
-                        const interval = setInterval(() => {
-                            if (progress > 99) clearInterval(interval);
-                            if (updateProgress) updateProgress(progress++);
-                        }, 25);
-                        const formData = new FormData()
-                        formData.append('file', file)
-                        formData.append('tags', JSON.stringify(this.tags.length ? this.tags : ['All']))
-                        try {
-                            fetch('/api/upload', {
-                                method: 'POST',
-                                body: formData
-                            })
-                                .then(response => response.json())
-                                .then(response => {
-                                    if (response.error) {
-                                        this.setError(response.error)
-                                    }
-                                })
-                                .catch(error => {
-                                    this.setError(error)
-                                });
-                        } catch (e) {
-                            console.error('File upload error:', e)
-                        }
-                    } catch (e) {
-                        console.error('File upload error:', e)
-                    }
-                })
+                let progress = 0
+                const interval = setInterval(() => {
+                    if (progress > 99) clearInterval(interval)
+                    if (updateProgress) updateProgress(progress++)
+                }, 25)
+                const formData = new FormData()
+                formData.append('file', file)
+                formData.append('tags', JSON.stringify(this.tags.length ? this.tags : ['All']))
+                try {
+                    const response = await fetch('/api/upload', {method: 'POST', body: formData})
+                    const body = await response.json().catch(() => ({}))
+                    if (body?.error) this.setError(body.error)
+                } catch (error: any) {
+                    this.setError(String(error?.message ?? error))
+                } finally {
+                    clearInterval(interval)
+                    if (updateProgress) updateProgress(100)
+                }
+                // Fire the consumer callback AFTER the /api/upload response
+                // lands, so gallery refresh can see the new DB row.
+                this._setFile(resultFile)
+                return window.URL.createObjectURL(file)
             }
 
         });

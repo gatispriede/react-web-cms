@@ -1,0 +1,791 @@
+/* ==========================================================================
+   Paper — editorial magazine theme.
+
+   Scoped under `body[data-theme-name="paper"]`. All tokens come in via CSS
+   variables set by the preset — see `ThemeService.PRESETS` + the extended
+   `applyThemeCssVars` map. Styles below target the *existing* module classes
+   (hero__eyebrow, timeline__detail, skill-pills__matrix, …) so content stays
+   data-driven; only the look changes.
+   ========================================================================== */
+
+body[data-theme-name="paper"] {
+  font-family: var(--font-sans, 'Inter Tight', system-ui, sans-serif);
+  font-size: var(--theme-fontSize, 15px);
+  line-height: 1.55;
+  color: var(--ink);
+  background: var(--theme-colorBgBase, var(--background));
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+
+  .mono { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
+  .serif { font-family: var(--font-display); font-weight: 400; }
+
+  /* ===== Public site chrome ======================================= */
+  .site-tabs {
+    border-bottom: 1px solid var(--ink);
+
+    .ant-tabs-nav {
+      background: var(--theme-colorBgBase, #fff);
+      padding-inline: 28px;
+
+      &::before { border: 0; }
+
+      .ant-tabs-tab {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        padding: 16px 6px;
+
+        + .ant-tabs-tab { margin-left: 20px; }
+
+        .navigation-item, .ant-tabs-tab-btn a {
+          text-transform: uppercase;
+          color: var(--ink-2);
+          text-decoration: none;
+        }
+
+        &.ant-tabs-tab-active .ant-tabs-tab-btn,
+        &.ant-tabs-tab-active .navigation-item {
+          color: var(--accent) !important;
+        }
+      }
+
+      .ant-tabs-ink-bar { background: var(--accent); height: 2px; }
+    }
+  }
+
+  .scroll-nav-link {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--ink-2);
+    opacity: 1;
+    font-weight: 400;
+    transition: color 180ms ease;
+
+    &:hover { color: var(--accent); }
+    &.is-active { color: var(--ink); font-weight: 500; }
+    &.is-active::before { content: '◆ '; color: var(--accent); }
+  }
+
+  /* ===== Content wrapper ========================================== */
+  .dynamic-content {
+    max-width: 1280px;
+    padding-inline: 28px;
+
+    > * + * { margin-top: 64px; }
+  }
+
+  /* ===== HERO ===================================================== */
+  .hero {
+    padding: 56px 0 40px;
+    border-bottom: 1px solid var(--ink);
+    position: relative;
+
+    &.hero--has-portrait {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: start;
+
+      @media (max-width: 900px) {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+  .hero__main {
+    position: relative;
+  }
+  .hero__eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+
+    .hero__eyebrow-bullet { color: var(--accent); }
+  }
+  .hero__headline {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(64px, 9vw, 128px);
+    line-height: 0.92;
+    letter-spacing: -0.01em;
+    margin: 14px 0 12px;
+    color: var(--ink);
+
+    .hero__headline-soft {
+      font-style: italic;
+      color: var(--ink-2);
+    }
+  }
+  .hero__titles {
+    font-family: var(--font-sans);
+    font-size: 16px;
+    color: var(--ink-2);
+    margin: 0 0 18px;
+    display: flex; flex-wrap: wrap; gap: 8px 14px;
+
+    .hero__title-sep { color: var(--rule-strong); }
+  }
+  .hero__subtitle {
+    font-family: var(--font-sans);
+    font-size: 16px;
+    color: var(--ink-2);
+    margin: 0 0 18px;
+  }
+  .hero__tagline {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-top: 8px;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 22px;
+    color: var(--ink);
+    position: relative;
+
+    em {
+      font-style: italic;
+      position: relative;
+      padding: 0 2px;
+
+      &::before { content: '“'; position: absolute; left: -14px; top: -4px; color: var(--accent); font-size: 30px; }
+      &::after  { content: '”'; color: var(--accent); margin-left: 2px; }
+    }
+    .hero__tagline-attr {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      font-style: normal;
+    }
+  }
+  .hero__cta-row {
+    display: inline-flex; gap: 10px; margin-top: 18px;
+  }
+  .hero__cta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 10px 16px;
+    border: 1px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: background 150ms, color 150ms;
+
+    &:hover { background: var(--ink); color: var(--theme-colorBgBase); }
+  }
+  .hero__cta--primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+
+    &:hover { background: var(--ink); border-color: var(--ink); color: var(--theme-colorBgBase); }
+  }
+  .hero__portrait {
+    position: relative;
+    aspect-ratio: 4/5;
+    width: 100%;
+    max-width: 420px;
+    justify-self: end;
+    border: 1px solid var(--ink);
+    background:
+      repeating-linear-gradient(45deg,
+        color-mix(in oklch, var(--ink) 7%, transparent) 0 1px,
+        transparent 1px 10px),
+      var(--bg-inset);
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 14px;
+
+    @media (max-width: 900px) { justify-self: stretch; max-width: 100%; }
+
+    > img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover;
+    }
+  }
+  .hero__portrait-corner {
+    position: absolute;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--ink-3);
+    letter-spacing: 0.1em;
+
+    &--tl { top: 8px; left: 10px; }
+    &--tr { top: 8px; right: 10px; }
+    &--br { bottom: 8px; right: 10px; }
+  }
+  .hero__portrait-label {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-family: var(--font-display);
+    font-size: 88px;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+  }
+  .hero__meta {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px 16px;
+    padding-top: 28px;
+    border-top: 1px solid var(--rule);
+    margin-top: 8px;
+
+    > div { display: grid; grid-template-columns: 1fr; gap: 2px; }
+
+    dt { margin: 0; color: var(--ink-3); font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; }
+    dd { margin: 0; color: var(--ink-2); font-size: 13px; }
+
+    @media (max-width: 900px) { grid-template-columns: repeat(2, 1fr); }
+  }
+  .hero__coords {
+    grid-column: 1 / -1;
+    display: flex; gap: 24px; justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-top: 24px;
+    border-top: 1px solid var(--rule);
+    flex-wrap: wrap;
+
+    b { color: var(--ink); font-weight: 500; }
+  }
+
+  /* ===== SKILL PILLS ============================================= */
+  .skill-pills {
+    padding: 28px 0;
+    border-bottom: 1px dashed var(--rule);
+
+    &:last-child { border-bottom: 0; }
+  }
+  .skill-pills__category {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 12px;
+    display: flex; justify-content: space-between; align-items: baseline;
+
+    .skill-pills__category-meta { color: var(--ink-2); }
+  }
+  .skill-pills__matrix {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .skill-pills__row {
+    display: grid;
+    grid-template-columns: 1fr 120px 40px;
+    gap: 16px;
+    align-items: center;
+    padding: 9px 0;
+    border-top: 1px dashed var(--rule);
+    font-size: 14px;
+
+    &:first-of-type { border-top: 1px solid var(--ink); }
+
+    .skill-pills__label { color: var(--ink); }
+    .skill-pills__bar {
+      height: 4px;
+      background: var(--bg-inset);
+      border: 1px solid var(--rule);
+      position: relative;
+      overflow: hidden;
+
+      &::after {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: var(--skill-pills-w, 70%);
+        background: var(--ink);
+        transform-origin: left;
+        transform: scaleX(0);
+        animation: fillBar 1.1s cubic-bezier(.2,.8,.2,1) forwards;
+        animation-delay: var(--skill-pills-d, 0s);
+      }
+    }
+    &[data-featured="1"] .skill-pills__bar::after { background: var(--accent); }
+    .skill-pills__score {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--ink-3);
+      text-align: right;
+    }
+  }
+  /* Classic pill mode gets a slightly sharper editorial look */
+  .skill-pills__list {
+    display: flex; flex-wrap: wrap; gap: 6px;
+
+    .ant-tag {
+      background: transparent;
+      border: 1px solid var(--rule-strong);
+      color: var(--ink);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 0;
+    }
+  }
+  @keyframes fillBar { to { transform: scaleX(1); } }
+
+  /* ===== TIMELINE ================================================ */
+  .timeline {
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+  }
+  .timeline__entry {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 24px;
+    padding: 22px 0;
+    border-top: 1px dashed var(--rule);
+
+    &:first-child { border-top: 0; }
+
+    @media (max-width: 900px) {
+      grid-template-columns: 1fr;
+    }
+  }
+  .timeline__when {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink-2);
+    letter-spacing: 0.06em;
+    padding-top: 4px;
+  }
+  .timeline__location {
+    display: block;
+    color: var(--ink-3);
+    font-size: 10px;
+    margin-top: 4px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .timeline__who {
+    font-family: var(--font-display);
+    font-size: 30px;
+    font-weight: 400;
+    margin: 0 0 4px;
+    letter-spacing: -0.005em;
+  }
+  .timeline__domain {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink-3);
+    letter-spacing: 0.08em;
+    margin-left: 10px;
+    vertical-align: middle;
+  }
+  .timeline__role {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--ink-2);
+
+    b { color: var(--ink); font-weight: 500; }
+  }
+  .timeline__detail { padding-top: 14px; }
+  .timeline__detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 32px;
+    border-top: 1px solid var(--rule);
+    padding-top: 16px;
+
+    @media (max-width: 900px) { grid-template-columns: 1fr; }
+
+    h5 {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin: 0 0 8px;
+    }
+    ul { margin: 0 0 14px; padding: 0; list-style: none; }
+    li {
+      font-size: 14px;
+      color: var(--ink-2);
+      padding: 4px 0 4px 16px;
+      position: relative;
+
+      &::before { content: '—'; position: absolute; left: 0; color: var(--accent); }
+    }
+  }
+  .timeline__quote {
+    grid-column: 1 / -1;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 18px;
+    color: var(--ink);
+    padding: 14px 0 4px;
+    border-top: 1px dashed var(--rule);
+    margin-top: 6px;
+  }
+
+  /* ===== RICHTEXT — dossier facts + education ==================== */
+  .rich-text {
+    h2 {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: 40px;
+      letter-spacing: -0.01em;
+      border-bottom: 1px solid var(--ink);
+      padding-bottom: 10px;
+      margin: 0 0 24px;
+    }
+    h4 {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin: 0 0 18px;
+    }
+
+    /* A key/value "facts" table rendered as <dl> inside RichText. */
+    dl {
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: 90px 1fr;
+      gap: 0;
+      row-gap: 0;
+    }
+    dt {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      padding: 8px 0;
+      border-top: 1px dashed var(--rule);
+
+      &:first-of-type { border-top: 1px solid var(--rule-strong); }
+    }
+    dd {
+      margin: 0;
+      padding: 8px 0;
+      color: var(--ink-2);
+      font-size: 13px;
+      border-top: 1px dashed var(--rule);
+
+      &:first-of-type { border-top: 1px solid var(--rule-strong); }
+    }
+    a { color: inherit; border-bottom: 1px solid var(--rule-strong); text-decoration: none; }
+    a:hover { color: var(--accent); border-color: var(--accent); }
+
+    /* Education items via <h3 class="edu-yr"> / <p class="edu-inst"> etc. markup */
+    h3 {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 400;
+      margin: 18px 0 4px;
+      line-height: 1.15;
+    }
+  }
+
+  /* ===== PLAINTEXT — used as "§ 01 · Capability matrix" section head ==== */
+  .plain-text {
+    h1, h2 {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: 40px;
+      letter-spacing: -0.01em;
+      border-bottom: 1px solid var(--ink);
+      padding-bottom: 10px;
+      margin: 0 0 24px;
+    }
+  }
+
+  /* ===== Section column dividers ===============================
+     Per-item style value `bordered` adds the editorial vertical ruler
+     between columns in a multi-col section (e.g. 33/33/33 dossier grid).
+     The divider sits on the right edge and the content on each side
+     gets symmetric inner padding so the rule isn't flush against text.
+     `:last-child` drops the rule so the last column has no trailing line. */
+  .section {
+    .section-item-container.style-bordered {
+      padding: 0 28px;
+      border-right: 1px solid var(--rule);
+
+      &:first-child { padding-left: 0; }
+      &:last-child { border-right: 0; padding-right: 0; }
+    }
+  }
+
+  /* ===== LIST MODULE =========================================
+     Editorial facts-table treatment. Matches the `.footer-grid` layout
+     from the design — mono-caps label (110px column), value to the right
+     in ink-2, dashed hairline between rows, strong rule above the first
+     row. Title sits above with an 18px bottom margin and no border. */
+  .list-module {
+    color: var(--ink);
+
+    &__title {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin: 0 0 18px;
+    }
+
+    // Default (bulleted) layout — a stack of label · value rows.
+    &.default &__items {
+      margin: 0; padding: 0; list-style: none;
+
+      li {
+        display: grid;
+        grid-template-columns: 110px 1fr;
+        gap: 12px;
+        padding: 8px 0;
+        border-top: 1px dashed var(--rule);
+        font-size: 13px;
+        color: var(--ink-2);
+        align-items: baseline;
+
+        &:first-child { border-top: 1px solid var(--rule-strong); }
+      }
+      .list-module__label {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-3);
+        padding-top: 2px;
+      }
+      .list-module__value {
+        color: var(--ink-2);
+      }
+      .list-module__value a {
+        color: var(--ink-2);
+        border-bottom: 1px solid var(--rule-strong);
+        text-decoration: none;
+
+        &:hover { color: var(--accent); border-color: var(--accent); }
+      }
+    }
+
+    // Editorial "facts" layout — mono caps key left, value right, dashed rule
+    // between rows, border-strong on the top rule. Matches the Dossier
+    // Contact / Signals panels in the design. `> div` wraps each row because
+    // wrapping <dt>+<dd> inside a <div> keeps grid-row coherent (plain
+    // <dl> children would each take their own grid slot).
+    &.facts &__facts {
+      margin: 0;
+      padding: 0;
+      display: block;
+    }
+    &.facts &__facts-row {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      column-gap: 12px;
+      padding: 8px 0;
+      border-top: 1px dashed var(--rule);
+      font-size: 13px;
+      align-items: baseline;
+
+      &:first-child { border-top: 1px solid var(--rule-strong); }
+
+      dt {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-3);
+        padding-top: 2px;
+      }
+      dd {
+        margin: 0;
+        color: var(--ink-2);
+
+        a {
+          // Explicit colour (not `inherit`) because `a` inherits fine on
+          // text nodes but not when a higher-specificity theme / browser
+          // default (e.g. `-webkit-link`) re-applies a root link colour.
+          color: var(--ink-2);
+          border-bottom: 1px solid var(--rule-strong);
+          text-decoration: none;
+          transition: color 120ms ease, border-color 120ms ease;
+
+          &:hover,
+          &:focus-visible {
+            color: var(--accent);
+            border-color: var(--accent);
+          }
+        }
+      }
+    }
+
+    // Inline layout — comma-separated pill-ish chips used for dense lists
+    // (not used by Dossier but available for other pages).
+    &.inline &__items {
+      margin: 0; padding: 0; list-style: none;
+      display: flex; flex-wrap: wrap; gap: 12px;
+
+      li { display: inline-flex; gap: 6px; font-size: 13px; color: var(--ink-2); }
+      .list-module__label {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-3);
+      }
+    }
+  }
+
+  /* ===== TIMELINE · minimal style =================================
+     Collapses the left period column and reformats the body so the year
+     + company + role stack vertically like Dossier Education entries. */
+  .timeline.minimal {
+    border-top: 0;
+    border-bottom: 0;
+
+    .timeline__entry {
+      grid-template-columns: 1fr;
+      border-top: 0;
+      padding: 12px 0 22px;
+    }
+    .timeline__when {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ink-3);
+      padding-top: 0;
+      margin-bottom: 4px;
+    }
+    .timeline__location { display: none; }
+    .timeline__who {
+      font-size: 22px;
+      margin: 2px 0 4px;
+      line-height: 1.15;
+    }
+    .timeline__role {
+      font-size: 13px;
+      color: var(--ink-2);
+    }
+    .timeline__detail { padding-top: 8px; }
+    .timeline__detail-grid {
+      display: block;
+      border-top: 0;
+      padding-top: 0;
+
+      h5 { display: none; }
+      ul { margin-top: 4px; }
+      li {
+        padding-left: 12px;
+        font-size: 12px;
+        color: var(--ink-3);
+        font-style: italic;
+        border-left: 2px solid var(--accent);
+
+        &::before { content: ''; }
+      }
+    }
+    .timeline__quote { display: none; }
+  }
+
+  /* ===== SOCIAL LINKS ========================================== */
+  .social-links, .SocialLinks {
+    display: flex; flex-wrap: wrap; gap: 10px; padding: 16px 0;
+
+    a, .link {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 10px 16px;
+      border: 1px solid var(--ink);
+      color: var(--ink);
+      text-decoration: none;
+      transition: background 120ms ease, color 120ms ease;
+
+      &:hover { background: var(--ink); color: var(--theme-colorBgBase); }
+    }
+  }
+
+  /* ===== AntD control tweaks ==================================== */
+  .ant-btn {
+    border-radius: 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .ant-btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+
+    &:hover:not(:disabled) {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: var(--theme-colorBgBase);
+    }
+  }
+
+  /* ===== Language pill dropdown ================================ */
+  .language-dropdown {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1px solid var(--rule-strong);
+    padding: 3px 8px;
+    border-radius: 999px;
+  }
+
+  /* ===== AntD portal overlays (Dropdown / Select / Popover) =======
+     These render through ReactDOM portals directly under <body>, so
+     the `body[data-theme-name="paper"]` ancestor selector still wins.
+     Explicitly pin backgrounds + borders so AntD's derived bg tokens
+     (`colorBgElevated`) can't fall back to transparent/black when a
+     custom preset doesn't redefine them. */
+  .ant-dropdown,
+  .ant-select-dropdown,
+  .ant-picker-dropdown,
+  .ant-cascader-dropdown,
+  .ant-popover {
+    .ant-dropdown-menu,
+    .ant-select-selection-item,
+    .rc-virtual-list,
+    .ant-popover-inner {
+      background: var(--theme-colorBgBase, #f6f5ef);
+      color: var(--ink, #1f1d19);
+      border: 1px solid var(--ink, #1f1d19);
+      border-radius: 0;
+      box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.08);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+    }
+    .ant-dropdown-menu-item,
+    .ant-select-item {
+      padding: 8px 12px;
+      border-radius: 0;
+      color: var(--ink, #1f1d19);
+
+      &:hover,
+      &-active {
+        background: var(--mark, rgba(198, 90, 42, 0.14));
+        color: var(--accent, #c65a2a);
+      }
+
+      &-selected {
+        background: var(--ink, #1f1d19) !important;
+        color: var(--theme-colorBgBase, #f6f5ef) !important;
+      }
+    }
+  }
+}

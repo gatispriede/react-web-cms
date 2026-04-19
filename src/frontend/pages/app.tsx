@@ -25,6 +25,8 @@ import SiteFooter from "../components/common/SiteFooter";
 import {DEFAULT_FOOTER, IFooterConfig} from "../../Interfaces/IFooter";
 import type {InitialPageData} from "../lib/gqlFetch";
 import {PostsProvider} from "../lib/PostsContext";
+import {refreshBus} from "../lib/refreshBus";
+import ScrollNav from "../components/common/ScrollNav";
 
 interface IHomeState {
     loading: boolean,
@@ -85,6 +87,8 @@ class App extends React.Component<IHomeProps> {
         }
     }
 
+    private refreshUnsub?: () => void;
+
     componentDidMount() {
         if (this.props.initialData?.themeTokens) {
             applyThemeCssVars(this.props.initialData.themeTokens);
@@ -104,6 +108,18 @@ class App extends React.Component<IHomeProps> {
                 } catch { /* noop */ }
             })();
         }
+        this.refreshUnsub = refreshBus.subscribe(() => this.refreshView());
+    }
+
+    componentWillUnmount() {
+        this.refreshUnsub?.();
+    }
+
+    /** Full re-fetch for the public shell. Typically triggered from the admin
+     *  preview tab, when a mutation in an admin window is reflected in an
+     *  already-open preview window via shared bus inside the same tab. */
+    refreshView = async (): Promise<void> => {
+        await this.initialize();
     }
 
     buildStateFromInitialData(data: InitialPageData): IHomeState {
@@ -385,18 +401,13 @@ class App extends React.Component<IHomeProps> {
                             <>
                                 <header className="site-tabs" style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px'}}>
                                     <Logo t={this.props.t} admin={false}/>
-                                    <nav aria-label="Site navigation" style={{display: 'flex', gap: 12}}>
-                                        {this.state.tabProps.map(tp => (
-                                            <a
-                                                key={tp.key}
-                                                href={`#${tp.page.replace(/\s+/g, '-').toLowerCase()}`}
-                                                className="scroll-nav-link"
-                                                style={{textTransform: 'uppercase', textDecoration: 'none'}}
-                                            >
-                                                {this.props.t(sanitizeKey(tp.page))}
-                                            </a>
-                                        ))}
-                                    </nav>
+                                    <ScrollNav
+                                        links={this.state.tabProps.map(tp => ({
+                                            key: tp.key,
+                                            slug: tp.page.replace(/\s+/g, '-').toLowerCase(),
+                                            label: this.props.t(sanitizeKey(tp.page)),
+                                        }))}
+                                    />
                                     {items.length > 1 && (
                                         <Dropdown className="language-dropdown" menu={{items}}>
                                             <Typography.Link>
@@ -415,7 +426,7 @@ class App extends React.Component<IHomeProps> {
                                         </Dropdown>
                                     )}
                                 </header>
-                                <main style={{scrollBehavior: 'smooth'}}>
+                                <main style={{scrollBehavior: typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}}>
                                     {this.state.tabProps.map(tp => (
                                         <section
                                             key={tp.key}

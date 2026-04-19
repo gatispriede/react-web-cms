@@ -1,6 +1,7 @@
 import {resolve} from "../gqty";
 import {ILogo} from "../../Interfaces/ILogo";
 import IImage, {InImage} from "../../Interfaces/IImage";
+import {refreshBus} from "../lib/refreshBus";
 
 export class AssetApi {
     async getLogo(): Promise<ILogo> {
@@ -11,20 +12,27 @@ export class AssetApi {
                 type: logo.type ?? undefined,
                 content: logo.content,
                 id: logo.id ?? undefined,
+                editedBy: logo.editedBy ?? undefined,
+                editedAt: logo.editedAt ?? undefined,
             };
         });
     }
 
     async saveLogo(content: string): Promise<void> {
         await resolve(({mutation}) => mutation.mongo.saveLogo({content}));
+        refreshBus.emit('settings');
     }
 
     async saveImage(image: InImage): Promise<any> {
-        return await resolve(({mutation}) => mutation.mongo.saveImage({image}));
+        const r = await resolve(({mutation}) => mutation.mongo.saveImage({image}));
+        refreshBus.emit('assets');
+        return r;
     }
 
     async deleteImage(id: string): Promise<any> {
-        return await resolve(({mutation}) => mutation.mongo.deleteImage({id}));
+        const r = await resolve(({mutation}) => mutation.mongo.deleteImage({id}));
+        refreshBus.emit('assets');
+        return r;
     }
 
     async getImages(tags: string): Promise<IImage[]> {

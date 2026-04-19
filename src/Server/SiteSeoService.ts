@@ -17,7 +17,11 @@ export class SiteSeoService {
     async get(): Promise<ISiteSeoDefaults> {
         const doc = await this.settings.findOne({key: KEY});
         const value = (doc as any)?.value as ISiteSeoDefaults | undefined;
-        return value ?? {...DEFAULT_SITE_SEO};
+        return {
+            ...(value ?? DEFAULT_SITE_SEO),
+            editedBy: (doc as any)?.editedBy,
+            editedAt: (doc as any)?.editedAt,
+        };
     }
 
     async save(seo: ISiteSeoDefaults, editedBy?: string): Promise<ISiteSeoDefaults> {

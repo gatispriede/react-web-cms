@@ -11,6 +11,8 @@ export interface IPost {
     body: string;
     createdAt: string;
     updatedAt: string;
+    editedBy?: string;
+    editedAt?: string;
 }
 
 export interface InPost {

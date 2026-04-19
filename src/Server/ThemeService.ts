@@ -5,6 +5,106 @@ import {auditStamp} from './audit';
 
 const PRESETS: Omit<ITheme, 'id'>[] = [
     {
+        name: 'Industrial',
+        custom: false,
+        tokens: {
+            // Industrial preset from design-v4 — hi-vis yellow on dark
+            // graphite, heavy Barlow Condensed uppercase. `colorAccent`
+            // is the safety-yellow #FFC400; `colorAccentInk` is the near-
+            // black bg so yellow-bg chips stay readable.
+            colorPrimary: '#FFC400',
+            colorBgBase: '#0F1419',
+            colorTextBase: '#F3F1EC',
+            colorSuccess: '#52c41a',
+            colorWarning: '#FF6B2C',
+            colorError: '#ff4d4f',
+            colorInfo: '#4A9EFF',
+            colorBgInset: '#171D24',
+            colorInkSecondary: '#B7BCC2',
+            colorInkTertiary: '#6E7680',
+            colorRule: '#2B333C',
+            colorRuleStrong: '#3F4750',
+            colorAccent: '#FFC400',
+            colorAccentInk: '#0F1419',
+            colorMark: 'rgba(255, 196, 0, 0.16)',
+            fontDisplay: `'Barlow Condensed', 'Barlow', system-ui, sans-serif`,
+            fontMono: `'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace`,
+            fontSans: `'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif`,
+            borderRadius: 2,
+            fontSize: 16,
+            contentPadding: 28,
+            themeSlug: 'industrial',
+        },
+    },
+    {
+        name: 'Studio',
+        custom: false,
+        tokens: {
+            // Studio preset from design-v2 — warm forest palette + ember
+            // accent + Fraunces display / Geist sans & mono. Italic accent
+            // emphasis on key words is a render-level opt-in (see `Hero`
+            // runs + `SvcTitle`), not a token.
+            colorPrimary: '#C24B1E',
+            colorBgBase: '#E8E3D3',
+            colorTextBase: '#13201A',
+            colorSuccess: '#52c41a',
+            colorWarning: '#faad14',
+            colorError: '#ff4d4f',
+            colorInfo: '#1E5A6B',
+            colorBgInset: '#DDD7C2',
+            colorInkSecondary: '#2C3A30',
+            colorInkTertiary: '#5A6559',
+            colorRule: '#B5B49B',
+            colorRuleStrong: '#8A8A73',
+            colorAccent: '#C24B1E',
+            colorAccentInk: '#F5F0E6',
+            colorMark: 'rgba(194, 75, 30, 0.12)',
+            fontDisplay: `'Fraunces', 'Times New Roman', serif`,
+            fontMono: `'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace`,
+            fontSans: `'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif`,
+            borderRadius: 2,
+            fontSize: 16,
+            contentPadding: 32,
+            themeSlug: 'studio',
+        },
+    },
+    {
+        name: 'Paper',
+        custom: false,
+        tokens: {
+            // Editorial portfolio look from the Claude Design handoff.
+            // Standard AntD tokens use hex equivalents so AntD's colour math
+            // (alpha blends, hover / border derivation, dropdown menu bg, …)
+            // keeps working. The oklch originals still reach the DOM via the
+            // extended CSS-var tokens below; imperceptible visual diff.
+            colorPrimary: '#c65a2a',
+            // Warmer cream — matches `oklch(0.97 0.008 85)` more faithfully
+            // than a cool #f6f5ef. The oklch source is on the CSS-var pipe so
+            // any native-oklch consumer can read the exact value via --bg.
+            colorBgBase: '#f7f3e8',
+            colorTextBase: '#1f1b15',
+            colorSuccess: '#52c41a',
+            colorWarning: '#faad14',
+            colorError: '#ff4d4f',
+            colorInfo: '#1f3a8a',
+            colorBgInset: 'oklch(0.945 0.012 82)',
+            colorInkSecondary: 'oklch(0.36 0.01 60)',
+            colorInkTertiary: 'oklch(0.55 0.008 60)',
+            colorRule: 'oklch(0.82 0.012 70)',
+            colorRuleStrong: 'oklch(0.62 0.012 60)',
+            colorAccent: 'oklch(0.58 0.17 35)',
+            colorAccentInk: 'oklch(0.98 0.008 85)',
+            colorMark: 'oklch(0.58 0.17 35 / 0.14)',
+            fontDisplay: `'Instrument Serif', ui-serif, Georgia, serif`,
+            fontMono: `'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace`,
+            fontSans: `'Inter Tight', system-ui, -apple-system, 'Segoe UI', sans-serif`,
+            borderRadius: 0,
+            fontSize: 15,
+            contentPadding: 28,
+            themeSlug: 'paper',
+        },
+    },
+    {
         name: 'Classic',
         custom: false,
         tokens: {
@@ -87,10 +187,21 @@ export class ThemeService {
         ThemeService.seeded = true;
         try {
             const count = await this.themes.estimatedDocumentCount();
-            if (count > 0) return;
-            const docs: ITheme[] = PRESETS.map(p => ({id: guid(), ...p}));
-            await this.themes.insertMany(docs as any);
-            await this.setActive(docs[0].id);
+            if (count === 0) {
+                const docs: ITheme[] = PRESETS.map(p => ({id: guid(), ...p}));
+                await this.themes.insertMany(docs as any);
+                await this.setActive(docs[0].id);
+                return;
+            }
+            // Collection already seeded: upsert any preset names that are
+            // missing so existing installations pick up new presets after a
+            // deploy. Customised themes (`custom: true`) are never touched.
+            for (const preset of PRESETS) {
+                const existing = await this.themes.findOne({name: preset.name, custom: false});
+                if (!existing) {
+                    await this.themes.insertOne({id: guid(), ...preset} as any);
+                }
+            }
         } catch (err) {
             ThemeService.seeded = false;
             console.error('[theme] Failed to seed presets:', err);
@@ -104,18 +215,31 @@ export class ThemeService {
             name: (d as any).name,
             tokens: (d as any).tokens ?? {},
             custom: Boolean((d as any).custom),
+            editedBy: (d as any).editedBy,
+            editedAt: (d as any).editedAt,
         }));
     }
 
     async getActive(): Promise<ITheme | null> {
         const setting = await this.settings.findOne({key: ACTIVE_KEY});
         const activeId = (setting as any)?.value;
+        // Prefer the setting-level audit (latest activation / delete-reassign)
+        // over the theme doc's own save-time stamp — the tab badge reflects
+        // what the admin touched most recently, which includes theme switches.
+        const settingAudit = {
+            editedBy: (setting as any)?.editedBy,
+            editedAt: (setting as any)?.editedAt,
+        };
         if (!activeId) {
             const first = await this.themes.findOne({}, {projection: {_id: 0}});
-            return first as unknown as ITheme | null;
+            if (!first) return null;
+            return {...(first as any), ...settingAudit} as ITheme;
         }
         const found = await this.themes.findOne({id: activeId}, {projection: {_id: 0}});
-        return found as unknown as ITheme | null;
+        if (!found) return null;
+        const themeAudit = {editedBy: (found as any).editedBy, editedAt: (found as any).editedAt};
+        const pick = (settingAudit.editedAt ?? '') > (themeAudit.editedAt ?? '') ? settingAudit : themeAudit;
+        return {...(found as any), ...pick} as ITheme;
     }
 
     async setActive(id: string, editedBy?: string): Promise<{id: string}> {

@@ -1,5 +1,6 @@
 import React from "react";
-import {Input, Modal} from "antd";
+import {Button, Input, Modal} from "antd";
+import {DownOutlined, UpOutlined} from "@ant-design/icons";
 import MongoApi from "../../../api/MongoApi";
 import {ISeo} from "../../../../Interfaces/ISeo";
 import {INavigation} from "../../../../Interfaces/INavigation";
@@ -19,6 +20,7 @@ interface ISate {
     newNavigationName: string,
     activeNavigation: INavigation
     seo: ISeo
+    seoExpanded: boolean
 }
 
 class AddNewDialogNavigation extends React.Component<IProps, {}> {
@@ -35,6 +37,10 @@ class AddNewDialogNavigation extends React.Component<IProps, {}> {
             seo: {}
         },
         seo: {},
+        // SEO fields start collapsed — editors usually just want to name the
+        // page and set content, SEO can be filled later. When editing an
+        // existing page that already has values we auto-expand below.
+        seoExpanded: false,
     }
     inEditMode: boolean = false
     private MongoApi: MongoApi = new MongoApi()
@@ -53,10 +59,14 @@ class AddNewDialogNavigation extends React.Component<IProps, {}> {
             this.inEditMode = true
             if ("id" in this.props.activeNavigation) {
                 if (this.state.activeNavigation.id !== this.props.activeNavigation.id) {
+                    // SEO stays collapsed even when the existing page already has
+                    // values — the editor must click "Show more options" to view
+                    // / edit them. Keeps the primary flow focused on the page name.
                     this.setState({
                         activeNavigation: this.props.activeNavigation,
-                        seo: this.props.activeNavigation.seo ? this.props.activeNavigation.seo : {},
-                        newNavigationName: this.props.activeNavigation.page
+                        seo: this.props.activeNavigation.seo ?? {},
+                        newNavigationName: this.props.activeNavigation.page,
+                        seoExpanded: false,
                     })
                 }
             }
@@ -122,24 +132,39 @@ class AddNewDialogNavigation extends React.Component<IProps, {}> {
                     </div>
                     <hr/>
                     <div className={'page-seo'}>
-                        <h1>{this.props.t("SEO fields")}</h1>
-                        {
-                            this.seoFields.map((field: string, index: number) => (
-                                <div key={index} className={'seo-config'}>
-                                    <label>{this.props.t(field.toLocaleUpperCase())}</label>
-                                    <Input value={(seo as any)[field]}
-                                           onChange={(input) => {
-                                               this.setState({
-                                                   seo: {
-                                                       ...this.state.seo,
-                                                       [field]: input.target.value
-                                                   }
-                                               })
-                                           }}
-                                    />
-                                </div>
-                            ))
-                        }
+                        <Button
+                            type="link"
+                            size="small"
+                            icon={this.state.seoExpanded ? <UpOutlined/> : <DownOutlined/>}
+                            onClick={() => this.setState({seoExpanded: !this.state.seoExpanded})}
+                            style={{padding: 0}}
+                        >
+                            {this.state.seoExpanded
+                                ? this.props.t('Hide SEO fields')
+                                : this.props.t('Show more options · SEO fields')}
+                        </Button>
+                        {this.state.seoExpanded && (
+                            <div style={{marginTop: 12}}>
+                                <h3 style={{margin: '0 0 8px'}}>{this.props.t("SEO fields")}</h3>
+                                {
+                                    this.seoFields.map((field: string, index: number) => (
+                                        <div key={index} className={'seo-config'}>
+                                            <label>{this.props.t(field.toLocaleUpperCase())}</label>
+                                            <Input value={(seo as any)[field]}
+                                                   onChange={(input) => {
+                                                       this.setState({
+                                                           seo: {
+                                                               ...this.state.seo,
+                                                               [field]: input.target.value
+                                                           }
+                                                       })
+                                                   }}
+                                            />
+                                        </div>
+                                    ))
+                                }
+                            </div>
+                        )}
                     </div>
                 </Modal>
             </>

@@ -4,6 +4,8 @@ import {CheckCircleFilled, CopyOutlined, DeleteOutlined, EditOutlined, PlusOutli
 import {useTranslation} from 'next-i18next';
 import ThemeApi from '../../../api/ThemeApi';
 import {ITheme, IThemeTokens, InTheme} from '../../../../Interfaces/ITheme';
+import AuditBadge from '../AuditBadge';
+import {useRefreshView} from '../../../lib/refreshBus';
 
 const themeApi = new ThemeApi();
 
@@ -185,6 +187,7 @@ const AdminSettingsTheme = () => {
     const {t} = useTranslation('common');
     const [themes, setThemes] = useState<ITheme[]>([]);
     const [activeId, setActiveId] = useState<string | null>(null);
+    const [activeAudit, setActiveAudit] = useState<{editedBy?: string; editedAt?: string}>({});
     const [loading, setLoading] = useState(false);
     const [editing, setEditing] = useState<InTheme | null>(null);
     const [saving, setSaving] = useState(false);
@@ -198,12 +201,14 @@ const AdminSettingsTheme = () => {
             ]);
             setThemes(list);
             setActiveId(active?.id ?? null);
+            setActiveAudit({editedBy: active?.editedBy, editedAt: active?.editedAt});
         } finally {
             setLoading(false);
         }
     }, []);
 
     useEffect(() => { void refresh(); }, [refresh]);
+    useRefreshView(refresh, 'settings');
 
     const activate = async (id: string) => {
         const result = await themeApi.setActive(id);
@@ -251,9 +256,10 @@ const AdminSettingsTheme = () => {
 
     return (
         <div style={{padding: 16}}>
-            <Space style={{marginBottom: 16}}>
+            <Space style={{marginBottom: 16}} align="center">
                 <Button type="primary" icon={<PlusOutlined/>} onClick={createBlank}>{t('New theme')}</Button>
                 <Button onClick={refresh} loading={loading}>{t('Refresh')}</Button>
+                <AuditBadge editedBy={activeAudit.editedBy} editedAt={activeAudit.editedAt}/>
             </Space>
             <Row gutter={[12, 12]}>
                 {themes.map(theme => (

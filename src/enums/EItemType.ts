@@ -10,6 +10,12 @@ export enum EItemType {
     Timeline = "TIMELINE",
     SocialLinks = "SOCIAL_LINKS",
     BlogFeed = "BLOG_FEED",
+    List = "LIST",
+    Services = "SERVICES",
+    Testimonials = "TESTIMONIALS",
+    StatsCard = "STATS_CARD",
+    ProjectGrid = "PROJECT_GRID",
+    Manifesto = "MANIFESTO",
     Empty = 'EMPTY',
 }
 export default EItemType

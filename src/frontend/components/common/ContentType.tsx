@@ -9,7 +9,7 @@ const ContentType = (props: IContentTypeProps) => {
     const def = getItemTypeDefinition(props.item.type);
     if (!def) return null;
     const {Display} = def;
-    return <Display t={props.t} tApp={props.tApp} item={props.item}/>;
+    return <Display t={props.t} tApp={props.tApp} item={props.item} admin={props.admin}/>;
 };
 
 export default ContentType;

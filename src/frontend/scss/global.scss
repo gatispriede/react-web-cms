@@ -13,6 +13,11 @@
 @use "Common/Reveal";
 @use "Common/SiteFooter";
 
+// Editorial theme overrides (scoped via `body[data-theme-name=…]`)
+@use "Themes/Paper";
+@use "Themes/Studio";
+@use "Themes/Industrial";
+
 // Per-module public renderers (one file per item type)
 @use "Components/PlainImage";
 @use "Components/PlainText";
@@ -25,8 +30,105 @@
 @use "Components/Timeline";
 @use "Components/SocialLinks";
 @use "Components/BlogFeed";
+@use "Components/List";
 
 @use 'app';
+
+// Drag-and-drop reorder — native HTML5 DnD with a visible placeholder gap
+// at the drop target so admins can tell where the dragged section will land.
+.dnd-list { display: block; }
+.dnd-item {
+  transition: transform 180ms cubic-bezier(.2, .8, .2, 1), opacity 120ms ease;
+
+  &.is-dragging {
+    opacity: 0.4;
+    transform: scale(0.995);
+  }
+}
+.section-drop-indicator {
+  display: block;
+  height: 48px;
+  margin: 12px 0;
+  border-radius: 6px;
+  background: color-mix(in oklch, var(--theme-colorPrimary, var(--accent, #c65a2a)) 22%, transparent);
+  border: 2px dashed var(--theme-colorPrimary, var(--accent, #c65a2a));
+  animation: dndPulse 900ms ease-in-out infinite alternate;
+}
+@keyframes dndPulse {
+  from { opacity: 0.55; }
+  to   { opacity: 1; }
+}
+
+// Admin-only per-section strip (overlay segmented control + audit badge).
+// Hidden by default, fades in on hover / keyboard focus so the rendered
+// page stays uncluttered and matches the pattern used for merge/split chips.
+.section-admin-wrap { position: relative; }
+.section-admin-strip {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+}
+.section-admin-wrap:hover > .section-admin-strip,
+.section-admin-wrap:focus-within > .section-admin-strip {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+// Section-overlay anchors — a `section.overlay: true` section renders inside
+// the previous host with absolute positioning, pinned to the named anchor.
+// The host wrapper carries `position: relative`.
+.section-host { position: relative; }
+.section-overlay {
+  position: absolute;
+  z-index: 2;
+  max-width: 50%;
+  pointer-events: auto;
+
+  &--top-left { top: 16px; left: 16px; }
+  &--top-right { top: 16px; right: 16px; }
+  &--bottom-left { bottom: 16px; left: 16px; }
+  &--bottom-right { bottom: 16px; right: 16px; }
+  &--center {
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 80%;
+  }
+  &--fill { inset: 0; max-width: none; }
+}
+
+// Admin sidebar menu items need to grow past AntD's default 40px row height
+// because we stack the page name + a small AuditBadge underneath it. Let the
+// .ant-menu-item auto-fit, and keep the actions block pinned right.
+.ant-menu-inline .ant-menu-item {
+  &:has(.admin-sider-item) {
+    height: auto;
+    line-height: 1.2;
+    padding-block: 10px;
+  }
+  .admin-sider-item {
+    width: 100%;
+  }
+  .admin-sider-actions .ant-btn {
+    pointer-events: auto;
+  }
+}
+
+// Admin-only merge / split chips on each section item. Hidden until the
+// admin hovers the item, then fade in so the content preview stays clean.
+.section-item-container {
+  position: relative;
+
+  &:hover .slot-merge-btn,
+  &:hover .slot-split-btn,
+  &:hover .slot-span-badge {
+    opacity: 1 !important;
+  }
+  &:focus-within .slot-merge-btn,
+  &:focus-within .slot-split-btn {
+    opacity: 1 !important;
+  }
+}
+
 
 .skip-to-content {
   position: absolute;

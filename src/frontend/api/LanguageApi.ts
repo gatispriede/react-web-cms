@@ -1,5 +1,6 @@
 import {resolve} from "../gqty";
 import {INewLanguage} from "../components/interfaces/INewLanguage";
+import {refreshBus} from "../lib/refreshBus";
 
 export class LanguageApi {
     async getLanguages(): Promise<Record<string, INewLanguage>> {
@@ -11,6 +12,8 @@ export class LanguageApi {
                     label: l.label,
                     symbol: l.symbol,
                     flag: l.flag,
+                    editedBy: l.editedBy ?? undefined,
+                    editedAt: l.editedAt ?? undefined,
                 }));
             });
             const byKey: Record<string, INewLanguage> = {};
@@ -25,11 +28,17 @@ export class LanguageApi {
     }
 
     async saveLanguage(language: INewLanguage, translations?: any): Promise<any> {
-        return await resolve(({mutation}) => mutation.mongo.addUpdateLanguage({language, translations}));
+        const clean = {label: language.label, symbol: language.symbol, default: language.default, flag: language.flag};
+        const r = await resolve(({mutation}) => mutation.mongo.addUpdateLanguage({language: clean, translations}));
+        refreshBus.emit('settings');
+        return r;
     }
 
     async deleteTranslation(language: INewLanguage): Promise<any> {
-        return await resolve(({mutation}) => mutation.mongo.deleteLanguage({language}));
+        const clean = {label: language.label, symbol: language.symbol, default: language.default, flag: language.flag};
+        const r = await resolve(({mutation}) => mutation.mongo.deleteLanguage({language: clean}));
+        refreshBus.emit('settings');
+        return r;
     }
 }
 

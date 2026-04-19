@@ -1,5 +1,7 @@
 import EditWrapper from "./common/EditWrapper";
 import React from "react";
+import {Button, Tooltip, message} from "antd";
+import {ColumnWidthOutlined, MergeCellsOutlined, SplitCellsOutlined} from "@ant-design/icons";
 import {ISection} from "../../Interfaces/ISection";
 import {EItemType} from "../../enums/EItemType";
 import ContentType from "./common/ContentType";
@@ -9,6 +11,9 @@ import ActionDialog from "./common/Dialogs/ActionDialog";
 import {EStyle} from "../../enums/EStyle";
 import {IItem} from "../../Interfaces/IItem";
 import {TFunction} from "i18next";
+import {refreshBus} from "../lib/refreshBus";
+import MongoApi from "../api/MongoApi";
+import {undoStack} from "../lib/undoStack";
 
 interface IPropsSectionContent {
     section: ISection,
@@ -25,6 +30,21 @@ interface IStateSectionContent {
     refresh: () => Promise<void>;
 }
 
+/**
+ * Normalise a section's slot layout. An explicit `slots` array (sum of spans
+ * per column) is returned as-is after length + sum checks; otherwise we fall
+ * back to `[1, 1, …]` of length `section.type` (classic even layout).
+ */
+function resolveSlots(section: ISection): number[] {
+    const fallback = Array(Math.max(1, section.type)).fill(1);
+    const raw = section.slots;
+    if (!Array.isArray(raw) || raw.length === 0) return fallback;
+    if (raw.some(s => typeof s !== 'number' || s < 1)) return fallback;
+    const sum = raw.reduce((a, b) => a + b, 0);
+    if (sum !== section.type) return fallback;
+    return [...raw];
+}
+
 class SectionContent extends React.Component<IPropsSectionContent> {
     state: IStateSectionContent = {
         actionDialogOpen: false,
@@ -39,6 +59,8 @@ class SectionContent extends React.Component<IPropsSectionContent> {
     }
     admin: boolean = false;
     addRemoveSectionItem: (sectionId: string, config: IConfigSectionAddRemove) => Promise<void>
+    private refreshUnsub?: () => void;
+    private mongoApi = new MongoApi();
 
     constructor(props: IPropsSectionContent) {
         super(props);
@@ -47,25 +69,137 @@ class SectionContent extends React.Component<IPropsSectionContent> {
         this.admin = props.admin;
     }
 
+    componentDidMount() {
+        this.refreshUnsub = refreshBus.subscribe(() => this.refreshView(), 'content');
+    }
+
+    componentWillUnmount() {
+        this.refreshUnsub?.();
+    }
+
+    /** Ask the parent (DynamicTabsContent) to re-fetch — the section list
+     *  lives there, so mutations surface to this view through props. */
+    refreshView = async (): Promise<void> => {
+        await this.props.refresh();
+    }
+
+    componentDidUpdate(prevProps: IPropsSectionContent) {
+        if (prevProps.section !== this.props.section) {
+            this.setState({section: this.props.section});
+        }
+    }
+
+    /**
+     * Persist a new slots layout for this section. `newSlots` must sum to
+     * `section.type` and match `newContent.length`. Used by merge / split
+     * buttons below.
+     */
+    private async saveSlots(newSlots: number[], newContent: IItem[]): Promise<void> {
+        const section = this.state.section;
+        if (!section.id) return;
+        const before = {slots: section.slots ? [...section.slots] : undefined, content: [...section.content]};
+        // Optimistic update — the grid flips immediately, the server catches
+        // up via the mutation below and the refreshBus emit inside SectionApi.
+        this.setState({section: {...section, slots: newSlots, content: newContent}});
+        try {
+            await this.mongoApi.addSectionToPage(
+                {section: {...section, slots: newSlots, content: newContent} as any},
+                [{...section, slots: newSlots, content: newContent}] as any,
+            );
+        } catch (err) {
+            console.error('saveSlots failed, rolling back:', err);
+            this.setState({section: {...section, slots: before.slots, content: before.content}});
+            message.error(this.props.t('Column merge failed — reverted.'));
+            return;
+        }
+        undoStack.push({
+            label: this.props.t('Merged columns'),
+            undo: async () => {
+                await this.mongoApi.addSectionToPage(
+                    {section: {...section, slots: before.slots, content: before.content} as any},
+                    [{...section, slots: before.slots, content: before.content}] as any,
+                );
+                await this.refreshView();
+            },
+            redo: async () => {
+                await this.mongoApi.addSectionToPage(
+                    {section: {...section, slots: newSlots, content: newContent} as any},
+                    [{...section, slots: newSlots, content: newContent}] as any,
+                );
+                await this.refreshView();
+            },
+        });
+    }
+
+    /**
+     * Merge slot `index` with slot `index + 1`. The left item's content is
+     * preserved and its span doubles; the right item is dropped.
+     */
+    mergeWithNext = async (index: number): Promise<void> => {
+        const section = this.state.section;
+        const slots = resolveSlots(section);
+        if (index < 0 || index >= slots.length - 1) return;
+        const newSlots = [
+            ...slots.slice(0, index),
+            slots[index] + slots[index + 1],
+            ...slots.slice(index + 2),
+        ];
+        const newContent = [
+            ...section.content.slice(0, index),
+            section.content[index],
+            ...section.content.slice(index + 2),
+        ];
+        await this.saveSlots(newSlots, newContent);
+    }
+
+    /** Undo a merge — split the slot back into single-unit columns, padding
+     *  the freed slots with Empty items. */
+    splitSlot = async (index: number): Promise<void> => {
+        const section = this.state.section;
+        const slots = resolveSlots(section);
+        if (index < 0 || index >= slots.length) return;
+        const span = slots[index];
+        if (span <= 1) return;
+        const emptyItem = {type: EItemType.Empty, style: EStyle.Default, content: '{}'} as unknown as IItem;
+        const newSlots = [
+            ...slots.slice(0, index),
+            ...Array(span).fill(1),
+            ...slots.slice(index + 1),
+        ];
+        const newContent = [
+            ...section.content.slice(0, index),
+            section.content[index],
+            ...Array(span - 1).fill(emptyItem),
+            ...section.content.slice(index + 1),
+        ];
+        await this.saveSlots(newSlots, newContent);
+    }
+
     render() {
+        const section = this.state.section;
+        const slots = resolveSlots(section);
+        const totalUnits = slots.reduce((a, b) => a + b, 0);
+        const gridStyle: React.CSSProperties = {
+            display: 'grid',
+            gridTemplateColumns: `repeat(${totalUnits}, 1fr)`,
+            gap: 16,
+        };
         return (
-            <div className={'section'}>
+            <div className={'section'} style={gridStyle}>
                 {
-                    this.state.section.content.map((item: IItem, id: number) => {
-                        const layoutClass = [
-                            'width-100',
-                            'width-100',
-                            'width-50',
-                            'width-33',
-                            'width-25',
-                        ]
-                        const style = {
-                            height: '100%'
-                        }
-                        const sectionId = this.state.section.id ? this.state.section.id : ''
+                    section.content.map((item: IItem, id: number) => {
+                        const span = slots[id] ?? 1;
+                        const style: React.CSSProperties = {
+                            height: '100%',
+                            gridColumn: `span ${span}`,
+                            position: 'relative',
+                        };
+                        const sectionId = section.id ? section.id : '';
+                        const isLast = id === slots.length - 1;
+                        const styleClass = item.style ? `style-${String(item.style).replace(/\s+/g, '-')}` : '';
                         return (
                             <div key={id}
-                                 className={`section-item-container ${item.type} ${layoutClass[this.state.section.type]}`}
+                                 className={`section-item-container ${item.type} span-${span} ${styleClass}`}
                                  style={style}>
                                 <EditWrapper
                                     t={this.props.t}
@@ -124,6 +258,74 @@ class SectionContent extends React.Component<IPropsSectionContent> {
                                         }
                                     </div>
                                 </EditWrapper>
+                                {/* Admin-only merge / split chips. Merge sits on the right edge of
+                                    every slot except the last; split sits on the left edge of every
+                                    merged (span > 1) slot. */}
+                                {this.admin && !isLast && (
+                                    <Tooltip title={this.props.t('Merge with next column')}>
+                                        <Button
+                                            className="slot-merge-btn"
+                                            size="small"
+                                            shape="circle"
+                                            icon={<MergeCellsOutlined/>}
+                                            onClick={(e) => { e.stopPropagation(); void this.mergeWithNext(id); }}
+                                            style={{
+                                                position: 'absolute',
+                                                top: '50%',
+                                                right: -14,
+                                                transform: 'translateY(-50%)',
+                                                zIndex: 3,
+                                                opacity: 0,
+                                                transition: 'opacity 160ms ease',
+                                            }}
+                                            aria-label={this.props.t('Merge with next column')}
+                                        />
+                                    </Tooltip>
+                                )}
+                                {this.admin && span > 1 && (
+                                    <Tooltip title={this.props.t('Split merged columns')}>
+                                        <Button
+                                            className="slot-split-btn"
+                                            size="small"
+                                            shape="circle"
+                                            icon={<SplitCellsOutlined/>}
+                                            onClick={(e) => { e.stopPropagation(); void this.splitSlot(id); }}
+                                            style={{
+                                                position: 'absolute',
+                                                top: 6,
+                                                right: 6,
+                                                zIndex: 3,
+                                                opacity: 0,
+                                                transition: 'opacity 160ms ease',
+                                            }}
+                                            aria-label={this.props.t('Split merged columns')}
+                                        />
+                                    </Tooltip>
+                                )}
+                                {this.admin && span > 1 && (
+                                    <div
+                                        className="slot-span-badge"
+                                        aria-hidden
+                                        style={{
+                                            position: 'absolute',
+                                            top: 6,
+                                            left: 6,
+                                            zIndex: 3,
+                                            padding: '2px 6px',
+                                            background: 'rgba(0,0,0,0.7)',
+                                            color: '#fff',
+                                            fontSize: 10,
+                                            fontFamily: 'monospace',
+                                            letterSpacing: 0.5,
+                                            pointerEvents: 'none',
+                                            opacity: 0,
+                                            transition: 'opacity 160ms ease',
+                                        }}
+                                    >
+                                        <ColumnWidthOutlined style={{marginRight: 4}}/>
+                                        {span}/{totalUnits}
+                                    </div>
+                                )}
                             </div>
                         )
                     })

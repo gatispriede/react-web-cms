@@ -5,6 +5,8 @@ import {useTranslation} from "next-i18next";
 import PostApi from "../../../api/PostApi";
 import SiteFlagsApi from "../../../api/SiteFlagsApi";
 import {IPost, InPost} from "../../../../Interfaces/IPost";
+import AuditBadge from "../AuditBadge";
+import {useRefreshView} from "../../../lib/refreshBus";
 
 const postApi = new PostApi();
 const siteFlagsApi = new SiteFlagsApi();
@@ -33,6 +35,7 @@ const AdminSettingsPosts: React.FC = () => {
     }, []);
 
     useEffect(() => { void refresh(); }, [refresh]);
+    useRefreshView(refresh, 'settings');
 
     const toggleBlog = async (on: boolean) => {
         const prev = blogEnabled;
@@ -111,6 +114,15 @@ const AdminSettingsPosts: React.FC = () => {
         await refresh();
     };
 
+    const latestAudit = useMemo(() => {
+        let best: {editedBy?: string; editedAt?: string} = {};
+        for (const p of posts) {
+            const at = p.editedAt ?? p.updatedAt;
+            if (at && (!best.editedAt || at > best.editedAt)) best = {editedBy: p.editedBy, editedAt: at};
+        }
+        return best;
+    }, [posts]);
+
     const columns = useMemo(() => [
         {
             title: t('Title'),
@@ -178,6 +190,7 @@ const AdminSettingsPosts: React.FC = () => {
             <Space style={{marginBottom: 16}} align="center" wrap>
                 <Button type="primary" icon={<PlusOutlined/>} onClick={openCreate}>{t('New post')}</Button>
                 <Button onClick={refresh} loading={loading}>{t('Refresh')}</Button>
+                <AuditBadge editedBy={latestAudit.editedBy} editedAt={latestAudit.editedAt}/>
                 <Space>
                     <Switch checked={blogEnabled} onChange={toggleBlog}/>
                     <Typography.Text>

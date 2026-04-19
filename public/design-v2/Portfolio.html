@@ -1,0 +1,1170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Gatis Priede — Digital Solutions Architect</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script>
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "theme": "paper",
+  "accent": "rust",
+  "showGrid": false
+}/*EDITMODE-END*/;
+</script>
+
+<style>
+  :root {
+    /* Paper theme (default) */
+    --bg: oklch(0.97 0.008 85);
+    --bg-inset: oklch(0.945 0.012 82);
+    --ink: oklch(0.18 0.012 60);
+    --ink-2: oklch(0.36 0.01 60);
+    --ink-3: oklch(0.55 0.008 60);
+    --rule: oklch(0.82 0.012 70);
+    --rule-strong: oklch(0.62 0.012 60);
+    --accent: oklch(0.58 0.17 35);          /* rust */
+    --accent-ink: oklch(0.98 0.008 85);
+    --mark: oklch(0.58 0.17 35 / 0.14);
+
+    --font-display: 'Instrument Serif', ui-serif, Georgia, serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    --font-sans: 'Inter Tight', system-ui, -apple-system, Segoe UI, sans-serif;
+  }
+
+  /* accent swaps */
+  [data-accent="rust"]   { --accent: oklch(0.58 0.17 35); --mark: oklch(0.58 0.17 35 / 0.14); }
+  [data-accent="ink"]    { --accent: oklch(0.24 0.02 260); --mark: oklch(0.24 0.02 260 / 0.10); }
+  [data-accent="olive"]  { --accent: oklch(0.52 0.11 120); --mark: oklch(0.52 0.11 120 / 0.14); }
+  [data-accent="cobalt"] { --accent: oklch(0.48 0.16 255); --mark: oklch(0.48 0.16 255 / 0.14); }
+
+  /* theme swaps */
+  [data-theme="graphite"] {
+    --bg: oklch(0.20 0.008 260);
+    --bg-inset: oklch(0.23 0.01 260);
+    --ink: oklch(0.96 0.008 85);
+    --ink-2: oklch(0.80 0.008 80);
+    --ink-3: oklch(0.62 0.008 80);
+    --rule: oklch(0.34 0.012 260);
+    --rule-strong: oklch(0.55 0.012 260);
+  }
+  [data-theme="bone"] {
+    --bg: oklch(0.985 0.004 80);
+    --bg-inset: oklch(0.96 0.006 80);
+    --ink: oklch(0.15 0.008 60);
+    --ink-2: oklch(0.34 0.008 60);
+    --ink-3: oklch(0.55 0.006 60);
+    --rule: oklch(0.85 0.008 70);
+    --rule-strong: oklch(0.65 0.008 60);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "ss01","cv11";
+  }
+
+  /* Optional grid overlay (tweakable) */
+  body.show-grid::before {
+    content: "";
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(to right, color-mix(in oklch, var(--ink) 6%, transparent) 1px, transparent 1px);
+    background-size: calc(100% / 12) 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .mono { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
+  .serif { font-family: var(--font-display); font-weight: 400; }
+  .hairline { border: 0; border-top: 1px solid var(--rule); margin: 0; }
+  .thick { border: 0; border-top: 1px solid var(--ink); margin: 0; }
+
+  /* ========== TOP BAR ========== */
+  .topbar {
+    position: sticky; top: 0; z-index: 20;
+    background: var(--bg);
+    border-bottom: 1px solid var(--ink);
+  }
+  .topbar-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 10px 28px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 24px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .topbar-left { display:flex; gap: 18px; align-items: center; color: var(--ink-2); }
+  .topbar-center { color: var(--ink); font-weight: 500; }
+  .topbar-right { display:flex; gap: 18px; justify-content: flex-end; align-items: center; color: var(--ink-2); }
+  .topbar a { color: inherit; text-decoration: none; }
+  .topbar a:hover { color: var(--accent); }
+  .dot { width:6px; height:6px; border-radius: 50%; background: var(--accent); display: inline-block; vertical-align: middle; margin-right: 8px; animation: pulse 2.4s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+
+  .lang-pill {
+    border: 1px solid var(--rule-strong);
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    cursor: pointer;
+    background: transparent;
+    color: var(--ink-2);
+    font-family: var(--font-mono);
+    letter-spacing: 0.1em;
+  }
+  .lang-pill[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+  /* ========== LAYOUT ========== */
+  .page {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 28px 120px;
+    position: relative;
+  }
+
+  /* ========== HERO ========== */
+  .hero {
+    padding: 56px 0 40px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    border-bottom: 1px solid var(--ink);
+    position: relative;
+  }
+  .hero-meta { display: grid; grid-template-columns: 96px 1fr; gap: 8px 16px; align-content: start; }
+  .hero-meta dt { margin: 0; color: var(--ink-3); font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; padding-top: 4px; }
+  .hero-meta dd { margin: 0; color: var(--ink-2); font-size: 13px; padding-top: 2px; }
+  .hero-meta dd a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--rule-strong); }
+  .hero-meta dd a:hover { color: var(--accent); border-color: var(--accent); }
+
+  .nameblock { position: relative; }
+  .eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); }
+  .eyebrow .bullet { color: var(--accent); }
+
+  h1.name {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(64px, 9vw, 128px);
+    line-height: 0.92;
+    letter-spacing: -0.01em;
+    margin: 14px 0 12px;
+    color: var(--ink);
+  }
+  h1.name .soft { font-style: italic; color: var(--ink-2); }
+
+  .titles {
+    font-family: var(--font-sans);
+    font-size: 16px;
+    color: var(--ink-2);
+    margin: 0 0 18px;
+    display: flex; flex-wrap: wrap; gap: 8px 14px;
+  }
+  .titles .sep { color: var(--rule-strong); }
+
+  .motto {
+    display: inline-flex; align-items: baseline; gap: 12px;
+    margin-top: 8px;
+  }
+  .motto .q {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 22px;
+    color: var(--ink);
+    position: relative;
+    padding: 0 2px;
+  }
+  .motto .q::before { content:"“"; position: absolute; left: -14px; top: -4px; color: var(--accent); font-size: 30px; }
+  .motto .q::after { content:"”"; color: var(--accent); margin-left: 2px; }
+  .motto .by { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+
+  /* Portrait placeholder */
+  .portrait {
+    position: relative;
+    aspect-ratio: 4/5;
+    max-width: 360px;
+    justify-self: end;
+    border: 1px solid var(--ink);
+    background:
+      repeating-linear-gradient(
+        45deg,
+        color-mix(in oklch, var(--ink) 7%, transparent) 0 1px,
+        transparent 1px 10px
+      ),
+      var(--bg-inset);
+    display:flex; align-items:flex-end; justify-content: space-between;
+    padding: 14px;
+  }
+  .portrait .tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    background: var(--bg);
+    padding: 4px 8px;
+    border: 1px solid var(--rule-strong);
+  }
+  .portrait .corner {
+    position: absolute;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--ink-3);
+    letter-spacing: 0.1em;
+  }
+  .portrait .corner.tl { top: 8px; left: 10px; }
+  .portrait .corner.tr { top: 8px; right: 10px; }
+  .portrait .corner.br { bottom: 8px; right: 10px; }
+  .portrait .mono-label {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    font-family: var(--font-display);
+    font-size: 88px;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+  }
+
+  /* Hero ticker (coordinates row) */
+  .coords {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 24px;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-top: 24px;
+    border-top: 1px solid var(--rule);
+  }
+  .coords span b { color: var(--ink); font-weight: 500; }
+
+  /* ========== SECTION HEADER ========== */
+  .section {
+    padding: 64px 0 0;
+  }
+  .section-head {
+    display: grid;
+    grid-template-columns: 96px 1fr auto;
+    gap: 24px;
+    align-items: baseline;
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 10px;
+  }
+  .section-num { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; color: var(--ink-3); }
+  .section-title { font-family: var(--font-display); font-size: 40px; margin: 0; font-weight: 400; letter-spacing: -0.01em; }
+  .section-sub { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+
+  /* ========== SKILLS ========== */
+  .skills {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 0;
+    border-bottom: 1px solid var(--ink);
+  }
+  .skills-left { border-right: 1px solid var(--rule); padding: 28px 32px 28px 0; }
+  .skills-right { padding: 28px 0 28px 32px; }
+
+  .skill-group { margin-bottom: 28px; }
+  .skill-group:last-child { margin-bottom: 0; }
+  .skill-group h4 {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 12px;
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .skill-group h4 .count { color: var(--ink-2); }
+
+  .skill-row {
+    display: grid;
+    grid-template-columns: 1fr 120px 40px;
+    gap: 16px;
+    align-items: center;
+    padding: 9px 0;
+    border-top: 1px dashed var(--rule);
+    font-size: 14px;
+  }
+  .skill-row:first-of-type { border-top: 1px solid var(--ink); }
+  .skill-row .label { color: var(--ink); }
+  .skill-row .bar {
+    height: 4px;
+    background: var(--bg-inset);
+    border: 1px solid var(--rule);
+    position: relative;
+    overflow: hidden;
+  }
+  .skill-row .bar::after {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--w, 70%);
+    background: var(--ink);
+    transform-origin: left;
+    transform: scaleX(0);
+    animation: fillBar 1.1s cubic-bezier(.2,.8,.2,1) forwards;
+    animation-delay: var(--d, 0s);
+  }
+  .skill-row[data-featured="1"] .bar::after { background: var(--accent); }
+  .skill-row .n { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); text-align: right; }
+  @keyframes fillBar { to { transform: scaleX(1); } }
+
+  .lang-table { width: 100%; border-collapse: collapse; }
+  .lang-table th {
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 500;
+    padding: 8px 6px;
+    border-bottom: 1px solid var(--ink);
+  }
+  .lang-table td {
+    padding: 11px 6px;
+    border-bottom: 1px dashed var(--rule);
+    font-size: 14px;
+    vertical-align: middle;
+  }
+  .lang-table td.lv { font-family: var(--font-display); font-size: 17px; }
+  .dotrow { display:inline-flex; gap: 3px; }
+  .dotrow i {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--rule);
+    display: inline-block;
+  }
+  .dotrow i.on { background: var(--ink); }
+  .dotrow i.accent { background: var(--accent); }
+
+  /* ========== TIMELINE ========== */
+  .timeline {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    border-bottom: 1px solid var(--ink);
+  }
+  .tl-filter {
+    padding: 28px 24px 28px 0;
+    border-right: 1px solid var(--rule);
+    position: sticky;
+    top: 60px;
+    align-self: start;
+  }
+  .tl-filter h5 {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 12px;
+  }
+  .tl-years {
+    font-family: var(--font-display);
+    font-size: 28px;
+    line-height: 1.1;
+    color: var(--ink);
+  }
+  .tl-years .accent { color: var(--accent); }
+  .tl-scale {
+    margin-top: 22px;
+    position: relative;
+    height: 180px;
+    border-left: 1px solid var(--ink);
+    padding-left: 12px;
+  }
+  .tl-scale .tick {
+    position: absolute;
+    left: -5px;
+    width: 10px; height: 1px;
+    background: var(--ink);
+  }
+  .tl-scale .tick span {
+    position: absolute;
+    left: 14px; top: -7px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--ink-3);
+    white-space: nowrap;
+  }
+  .tl-scale .tick.now { background: var(--accent); }
+  .tl-scale .tick.now span { color: var(--accent); font-weight: 600; }
+
+  .tl-list { padding: 28px 0 28px 32px; }
+
+  .tl-entry {
+    display: grid;
+    grid-template-columns: 140px 1fr auto;
+    gap: 24px;
+    padding: 22px 0;
+    border-top: 1px dashed var(--rule);
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .tl-entry:first-child { border-top: 1px solid var(--ink); }
+  .tl-entry:hover { background: var(--mark); }
+  .tl-entry .period {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink-2);
+    letter-spacing: 0.06em;
+    padding-top: 4px;
+  }
+  .tl-entry .period .loc { display: block; color: var(--ink-3); font-size: 10px; margin-top: 4px; letter-spacing: 0.1em; }
+  .tl-entry .body h3 {
+    font-family: var(--font-display);
+    font-size: 30px;
+    font-weight: 400;
+    margin: 0 0 4px;
+    letter-spacing: -0.005em;
+  }
+  .tl-entry .body h3 .domain {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink-3);
+    letter-spacing: 0.08em;
+    margin-left: 10px;
+    vertical-align: middle;
+  }
+  .tl-entry .body .role {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--ink-2);
+  }
+  .tl-entry .body .role b { color: var(--ink); font-weight: 500; }
+  .tl-entry .arrow {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    color: var(--ink-3);
+    transition: transform 0.25s, color 0.2s;
+    padding-top: 2px;
+  }
+  .tl-entry:hover .arrow, .tl-entry[aria-expanded="true"] .arrow { color: var(--accent); transform: rotate(45deg); }
+
+  .tl-detail {
+    grid-column: 2 / 4;
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height .45s cubic-bezier(.2,.8,.2,1), padding .3s;
+    padding: 0;
+  }
+  .tl-entry[aria-expanded="true"] .tl-detail { max-height: 800px; padding-top: 14px; }
+
+  .tl-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 32px;
+    border-top: 1px solid var(--rule);
+    padding-top: 16px;
+  }
+  .tl-detail h5 {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 8px;
+  }
+  .tl-detail ul { margin: 0 0 14px; padding: 0; list-style: none; }
+  .tl-detail li {
+    font-size: 14px;
+    color: var(--ink-2);
+    padding: 4px 0 4px 16px;
+    position: relative;
+  }
+  .tl-detail li::before {
+    content: "—";
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+  }
+  .tl-detail .quote {
+    grid-column: 1 / -1;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 18px;
+    color: var(--ink);
+    padding: 14px 0 4px;
+    border-top: 1px dashed var(--rule);
+    margin-top: 6px;
+  }
+
+  /* ========== EDUCATION + META ========== */
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1fr;
+    gap: 0;
+    border-bottom: 1px solid var(--ink);
+  }
+  .footer-grid > div { padding: 28px; border-right: 1px solid var(--rule); }
+  .footer-grid > div:first-child { padding-left: 0; }
+  .footer-grid > div:last-child { border-right: 0; padding-right: 0; }
+  .footer-grid h4 {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 18px;
+  }
+  .edu-item { margin-bottom: 22px; }
+  .edu-item .yr { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); }
+  .edu-item .inst { font-family: var(--font-display); font-size: 22px; margin: 2px 0 4px; line-height: 1.15; }
+  .edu-item .spec { font-size: 13px; color: var(--ink-2); }
+  .edu-item .note {
+    font-size: 12px;
+    color: var(--ink-3);
+    font-style: italic;
+    margin-top: 6px;
+    padding-left: 12px;
+    border-left: 2px solid var(--accent);
+  }
+
+  .facts { list-style: none; margin:0; padding:0; }
+  .facts li {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 10px;
+    padding: 8px 0;
+    border-top: 1px dashed var(--rule);
+    font-size: 13px;
+  }
+  .facts li:first-child { border-top: 1px solid var(--rule-strong); }
+  .facts li span.k { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); padding-top: 2px; }
+  .facts li span.v { color: var(--ink-2); }
+
+  /* Footer */
+  .footer {
+    padding: 44px 0 0;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: baseline;
+    gap: 24px;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .footer .mid { font-family: var(--font-display); font-size: 20px; color: var(--ink); text-transform: none; letter-spacing: 0; font-style: italic; }
+  .footer .right { text-align: right; }
+
+  /* CTA */
+  .cta-row {
+    display: inline-flex;
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .btn {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 10px 16px;
+    border: 1px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: background 0.15s, color 0.15s;
+  }
+  .btn:hover { background: var(--ink); color: var(--bg); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn.primary:hover { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+  .btn .arr { font-family: var(--font-mono); }
+
+  /* Tweaks panel */
+  #tweaks {
+    position: fixed;
+    right: 20px; bottom: 20px;
+    z-index: 50;
+    width: 240px;
+    background: var(--bg);
+    border: 1px solid var(--ink);
+    padding: 14px 16px 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+    display: none;
+    box-shadow: 4px 4px 0 var(--ink);
+  }
+  #tweaks h6 {
+    margin: 0 0 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--ink-3);
+    font-size: 10px;
+    display: flex; justify-content: space-between;
+  }
+  .tw-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .tw-chip {
+    border: 1px solid var(--rule-strong);
+    background: transparent;
+    color: var(--ink-2);
+    padding: 5px 9px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .tw-chip[aria-pressed="true"] {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+  .tw-chip .sw {
+    display: inline-block;
+    width: 10px; height: 10px;
+    background: var(--c);
+    margin-right: 6px;
+    vertical-align: -1px;
+    border: 1px solid var(--ink);
+  }
+  .tw-label { font-size: 9px; color: var(--ink-3); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6px; }
+
+  /* small screens */
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; }
+    .portrait { justify-self: stretch; max-width: 100%; }
+    .skills { grid-template-columns: 1fr; }
+    .skills-left { border-right: 0; border-bottom: 1px solid var(--rule); padding: 20px 0; }
+    .skills-right { padding: 20px 0; }
+    .timeline { grid-template-columns: 1fr; }
+    .tl-filter { position: static; border-right: 0; border-bottom: 1px solid var(--rule); padding: 20px 0; }
+    .tl-list { padding: 20px 0; }
+    .tl-entry { grid-template-columns: 1fr auto; }
+    .tl-entry .period { grid-column: 1 / -1; }
+    .footer-grid { grid-template-columns: 1fr; }
+    .footer-grid > div { border-right: 0; border-bottom: 1px solid var(--rule); padding: 22px 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ TOP BAR ============ -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="topbar-left">
+      <span><span class="dot"></span>Available · Remote / Hybrid</span>
+    </div>
+    <div class="topbar-center">
+      GATIS&nbsp;PRIEDE&nbsp;·&nbsp;PORTFOLIO&nbsp;·&nbsp;MMXXVI
+    </div>
+    <div class="topbar-right">
+      <a href="#work">Work</a>
+      <a href="#skills">Stack</a>
+      <a href="#contact">Contact</a>
+      <span style="display:inline-flex; gap:4px;">
+        <button class="lang-pill" aria-pressed="true" data-lang="en">EN</button>
+        <button class="lang-pill" aria-pressed="false" data-lang="lv">LV</button>
+      </span>
+    </div>
+  </div>
+</header>
+
+<div class="page">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <div class="nameblock">
+      <div class="eyebrow"><span class="bullet">◆</span>&nbsp;&nbsp;DOSSIER № 001 / SIGULDA, LATVIA / EST. 2009</div>
+      <h1 class="name">Gatis<br/><span class="soft">Priede.</span></h1>
+      <p class="titles">
+        <span>Digital Solutions Architect</span>
+        <span class="sep">/</span>
+        <span>Senior JavaScript Engineer</span>
+        <span class="sep">/</span>
+        <span>Consultant</span>
+      </p>
+      <div class="motto">
+        <span class="q">Everything is possible.</span>
+        <span class="by">— personal motto</span>
+      </div>
+
+      <div class="cta-row">
+        <a href="#work" class="btn primary">View work <span class="arr">↘</span></a>
+        <a href="mailto:Gatiss.Priede@gmail.com" class="btn">Get in touch</a>
+      </div>
+    </div>
+
+    <div class="portrait" aria-label="Portrait placeholder">
+      <span class="corner tl">+</span>
+      <span class="corner tr">+</span>
+      <span class="corner br">4:5 · PORTRAIT</span>
+      <span class="mono-label">GP</span>
+      <span class="tag">// PLACEHOLDER — DROP PHOTO HERE</span>
+      <span class="tag" style="margin-left:auto">56°N · 24°E</span>
+    </div>
+
+    <dl class="hero-meta" style="grid-column: 1 / -1; grid-template-columns: repeat(4, 1fr); padding-top: 28px; border-top: 1px solid var(--rule); margin-top: 8px;">
+      <div><dt>Based</dt><dd>Sigulda, Latvia</dd></div>
+      <div><dt>Years</dt><dd>15+ in digital</dd></div>
+      <div><dt>Mode</dt><dd>Remote &nbsp;/&nbsp; Hybrid</dd></div>
+      <div><dt>Stack</dt><dd>JS · React · Next · Node · 3D</dd></div>
+    </dl>
+
+    <div class="coords">
+      <span>LAT&nbsp;<b>57.15°N</b></span>
+      <span>LON&nbsp;<b>24.85°E</b></span>
+      <span>ELEV&nbsp;<b>102 m</b></span>
+      <span>LOCAL&nbsp;<b id="ts">—</b></span>
+      <span>UPDATED&nbsp;<b>2026.04</b></span>
+    </div>
+  </section>
+
+  <!-- ============ SKILLS ============ -->
+  <section class="section" id="skills">
+    <div class="section-head">
+      <div class="section-num">§ 01</div>
+      <h2 class="section-title">Capability matrix</h2>
+      <div class="section-sub">Self-reported · 0–10 scale</div>
+    </div>
+
+    <div class="skills">
+      <div class="skills-left">
+        <div class="skill-group">
+          <h4><span>Core delivery</span><span class="count">08 entries</span></h4>
+          <div class="skill-row" data-featured="1" style="--w:98%; --d:.05s"><span class="label">JavaScript / TypeScript</span><span class="bar"></span><span class="n">9.8</span></div>
+          <div class="skill-row" data-featured="1" style="--w:95%; --d:.10s"><span class="label">React · Next.js · SSR / SPA</span><span class="bar"></span><span class="n">9.5</span></div>
+          <div class="skill-row" style="--w:90%; --d:.15s"><span class="label">Node.js &amp; backend architecture</span><span class="bar"></span><span class="n">9.0</span></div>
+          <div class="skill-row" style="--w:85%; --d:.20s"><span class="label">GraphQL · REST · data layer</span><span class="bar"></span><span class="n">8.5</span></div>
+          <div class="skill-row" style="--w:88%; --d:.25s"><span class="label">UI / UX · responsive · fluid</span><span class="bar"></span><span class="n">8.8</span></div>
+          <div class="skill-row" style="--w:80%; --d:.30s"><span class="label">3D &amp; WebGL · SciChart · large data</span><span class="bar"></span><span class="n">8.0</span></div>
+          <div class="skill-row" style="--w:82%; --d:.35s"><span class="label">Test-driven development</span><span class="bar"></span><span class="n">8.2</span></div>
+          <div class="skill-row" style="--w:78%; --d:.40s"><span class="label">CI/CD · Docker · HAProxy</span><span class="bar"></span><span class="n">7.8</span></div>
+        </div>
+
+        <div class="skill-group">
+          <h4><span>Leadership &amp; management</span><span class="count">06 entries</span></h4>
+          <div class="skill-row" style="--w:90%; --d:.05s"><span class="label">Agile / Scrum · team lead</span><span class="bar"></span><span class="n">9.0</span></div>
+          <div class="skill-row" style="--w:85%; --d:.10s"><span class="label">Project &amp; resource management</span><span class="bar"></span><span class="n">8.5</span></div>
+          <div class="skill-row" style="--w:88%; --d:.15s"><span class="label">Stakeholder &amp; client engagement</span><span class="bar"></span><span class="n">8.8</span></div>
+          <div class="skill-row" style="--w:82%; --d:.20s"><span class="label">Architecture &amp; strategic planning</span><span class="bar"></span><span class="n">8.2</span></div>
+          <div class="skill-row" style="--w:80%; --d:.25s"><span class="label">Mentoring &amp; BA management</span><span class="bar"></span><span class="n">8.0</span></div>
+          <div class="skill-row" style="--w:75%; --d:.30s"><span class="label">Cross-country remote delivery (11+)</span><span class="bar"></span><span class="n">7.5</span></div>
+        </div>
+
+        <div class="skill-group">
+          <h4><span>Platforms · tooling · other</span><span class="count">grouped</span></h4>
+          <div style="columns: 2; gap: 32px; column-rule: 1px dashed var(--rule); font-size: 13px; color: var(--ink-2); line-height: 1.9;">
+            <div><em style="color:var(--ink-3); font-style:normal; font-family:var(--font-mono); font-size:10px; letter-spacing:0.12em; text-transform:uppercase;">Cloud</em><br/>AWS · Azure · Docker · multi-cloud</div>
+            <div><em style="color:var(--ink-3); font-style:normal; font-family:var(--font-mono); font-size:10px; letter-spacing:0.12em; text-transform:uppercase;">Data</em><br/>MongoDB · Redis · Elastic · MySQL · CouchDB</div>
+            <div><em style="color:var(--ink-3); font-style:normal; font-family:var(--font-mono); font-size:10px; letter-spacing:0.12em; text-transform:uppercase;">Languages</em><br/>JS/TS · Python · PHP · Java · Go · C++ · C#</div>
+            <div><em style="color:var(--ink-3); font-style:normal; font-family:var(--font-mono); font-size:10px; letter-spacing:0.12em; text-transform:uppercase;">Build &amp; test</em><br/>Webpack · Babel · Vite · Vitest · Mocha · Jasmine</div>
+            <div><em style="color:var(--ink-3); font-style:normal; font-family:var(--font-mono); font-size:10px; letter-spacing:0.12em; text-transform:uppercase;">Libraries</em><br/>Material UI · D3 · Handlebars · i18next · Bootstrap</div>
+            <div><em style="color:var(--ink-3); font-style:normal; font-family:var(--font-mono); font-size:10px; letter-spacing:0.12em; text-transform:uppercase;">In pursuit</em><br/>AI · quantum · VR · robotics</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="skills-right">
+        <div style="margin-bottom: 28px;">
+          <div class="mono" style="margin-bottom: 10px;">Languages</div>
+          <table class="lang-table">
+            <thead><tr><th style="width:34%">Language</th><th>Spoken</th><th>Written</th></tr></thead>
+            <tbody>
+              <tr><td class="lv">Latvian</td><td><span class="dotrow" data-n="10" data-t="10"></span></td><td><span class="dotrow" data-n="10" data-t="10"></span></td></tr>
+              <tr><td class="lv">English</td><td><span class="dotrow" data-n="9" data-t="10"></span></td><td><span class="dotrow" data-n="9" data-t="10"></span></td></tr>
+              <tr><td class="lv">German</td><td><span class="dotrow" data-n="3" data-t="10"></span></td><td><span class="dotrow" data-n="4" data-t="10"></span></td></tr>
+              <tr><td class="lv">Russian</td><td><span class="dotrow" data-n="4" data-t="10"></span></td><td><span class="dotrow" data-n="2" data-t="10"></span></td></tr>
+              <tr><td class="lv">Greek</td><td><span class="dotrow" data-n="2" data-t="10"></span></td><td><span class="dotrow" data-n="2" data-t="10"></span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div>
+          <div class="mono" style="margin-bottom: 10px;">Own work</div>
+          <div style="border-top: 1px solid var(--rule-strong); padding: 12px 0; border-bottom: 1px dashed var(--rule);">
+            <div class="serif" style="font-size: 20px;">JF</div>
+            <div style="font-size: 12px; color: var(--ink-3);">JS framework / library — all-in-one JS, HTML, style</div>
+            <a href="https://github.com/gatispriede/JF" style="font-family: var(--font-mono); font-size: 10px; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase;">github.com/gatispriede/JF ↗</a>
+          </div>
+          <div style="padding: 12px 0; border-bottom: 1px dashed var(--rule);">
+            <div class="serif" style="font-size: 20px;">LegalStableSure</div>
+            <div style="font-size: 12px; color: var(--ink-3);">Mobile app — live</div>
+            <a href="https://legalstablesure.com/" style="font-family: var(--font-mono); font-size: 10px; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase;">legalstablesure.com ↗</a>
+          </div>
+          <div style="padding: 12px 0;">
+            <div class="serif" style="font-size: 20px;">JS-based CMS</div>
+            <div style="font-size: 12px; color: var(--ink-3);">In development</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ WORK / TIMELINE ============ -->
+  <section class="section" id="work">
+    <div class="section-head">
+      <div class="section-num">§ 02</div>
+      <h2 class="section-title">Career record</h2>
+      <div class="section-sub">2013 — present · 05 entries</div>
+    </div>
+
+    <div class="timeline">
+      <div class="tl-filter">
+        <h5>Scope</h5>
+        <div class="tl-years"><span class="accent">13</span> years<br/>on record</div>
+        <div class="tl-scale" id="scale">
+          <!-- ticks inserted by JS -->
+        </div>
+      </div>
+
+      <div class="tl-list" id="tl-list">
+
+        <article class="tl-entry" aria-expanded="true" data-from="2024" data-to="2026">
+          <div class="period">2024 — PRESENT<span class="loc">UK / USA · REMOTE</span></div>
+          <div class="body">
+            <h3>SciChart <span class="domain">scichart.com</span></h3>
+            <div class="role"><b>Consultant / Senior Software Engineer</b> · Contract</div>
+            <div class="tl-detail">
+              <div class="tl-detail-grid">
+                <div>
+                  <h5>Experience in</h5>
+                  <ul>
+                    <li>Customer engagement &amp; stakeholder management</li>
+                    <li>Architecture solutions, product ownership</li>
+                    <li>3D / 2D browser tech · large data rendering</li>
+                    <li>Software development &amp; consulting</li>
+                  </ul>
+                </div>
+                <div>
+                  <h5>Key achievements</h5>
+                  <ul>
+                    <li>Extensive AI knowledge and production usage</li>
+                    <li>Custom architecture — JavaScript written in C# style</li>
+                  </ul>
+                </div>
+                <div class="quote">“Thinking out of the box while shipping stable, performant code.”</div>
+              </div>
+            </div>
+          </div>
+          <span class="arrow">+</span>
+        </article>
+
+        <article class="tl-entry" data-from="2019" data-to="2023">
+          <div class="period">2019 — 2023<span class="loc">LATVIA, RIGA</span></div>
+          <div class="body">
+            <h3>Sapiens <span class="domain">sapiens.com</span></h3>
+            <div class="role"><b>Project Manager / Senior Software Engineer</b> · Permanent</div>
+            <div class="tl-detail">
+              <div class="tl-detail-grid">
+                <div>
+                  <h5>Experience in</h5>
+                  <ul>
+                    <li>Customer engagement &amp; architecture solutions</li>
+                    <li>Technical project management · DevOps</li>
+                    <li>Resource &amp; BA management</li>
+                    <li>Stakeholder and client management</li>
+                  </ul>
+                </div>
+                <div>
+                  <h5>Key achievements</h5>
+                  <ul>
+                    <li>Remote delivery across 11+ countries</li>
+                    <li>Delivered 3 projects, participated in several others</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          <span class="arrow">+</span>
+        </article>
+
+        <article class="tl-entry" data-from="2017" data-to="2019">
+          <div class="period">2017 — 2019<span class="loc">LATVIA, RIGA</span></div>
+          <div class="body">
+            <h3>SIA Booking Group <span class="domain">bookinggroup.com</span></h3>
+            <div class="role"><b>Senior Software Engineer</b> · Permanent</div>
+            <div class="tl-detail">
+              <div class="tl-detail-grid">
+                <div>
+                  <h5>Experience in</h5>
+                  <ul>
+                    <li>Application architecture · team lead</li>
+                    <li>Sysops &amp; DevOps</li>
+                  </ul>
+                </div>
+                <div>
+                  <h5>Key achievements</h5>
+                  <ul>
+                    <li>Migration from Drupal to React</li>
+                    <li>Built a new application from scratch</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          <span class="arrow">+</span>
+        </article>
+
+        <article class="tl-entry" data-from="2015" data-to="2017">
+          <div class="period">2015 — 2017<span class="loc">NEWCASTLE, UK</span></div>
+          <div class="body">
+            <h3>Performance Horizon <span class="domain">partnerize.com</span></h3>
+            <div class="role"><b>Senior Front-end Developer</b> · Permanent</div>
+            <div class="tl-detail">
+              <div class="tl-detail-grid">
+                <div>
+                  <h5>Experience in</h5>
+                  <ul>
+                    <li>UX / UI / Design</li>
+                    <li>Architecture design · React migration</li>
+                  </ul>
+                </div>
+                <div>
+                  <h5>Key achievements</h5>
+                  <ul>
+                    <li>Custom solution standardisation</li>
+                    <li>Backbone → React migration</li>
+                    <li>Best-practice introduction · team morale</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          <span class="arrow">+</span>
+        </article>
+
+        <article class="tl-entry" data-from="2013" data-to="2014">
+          <div class="period">2013 — 2014<span class="loc">RIGA, LATVIA</span></div>
+          <div class="body">
+            <h3>Accenture <span class="domain">accenture.com</span></h3>
+            <div class="role"><b>Analyst Web Developer</b> · Permanent · Riga Delivery Center</div>
+            <div class="tl-detail">
+              <div class="tl-detail-grid">
+                <div>
+                  <h5>Experience in</h5>
+                  <ul>
+                    <li>Web software development · UI / UX</li>
+                    <li>Scrum master · team leading · agile</li>
+                  </ul>
+                </div>
+                <div>
+                  <h5>Key achievements</h5>
+                  <ul>
+                    <li>Grew as a professional in web UI / UX</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          <span class="arrow">+</span>
+        </article>
+
+      </div>
+    </div>
+
+    <p style="font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.08em; margin: 14px 0 0;">
+      ↳ earlier experience available on request.
+    </p>
+  </section>
+
+  <!-- ============ FOOTER / EDU / META ============ -->
+  <section class="section" id="contact">
+    <div class="section-head">
+      <div class="section-num">§ 03</div>
+      <h2 class="section-title">Dossier appendix</h2>
+      <div class="section-sub">Education · contact · signals</div>
+    </div>
+
+    <div class="footer-grid">
+      <div>
+        <h4>Education</h4>
+        <div class="edu-item">
+          <div class="yr">2014 — 2015</div>
+          <div class="inst">University of Latvia</div>
+          <div class="spec">Programming Scientist — Quantum Computers</div>
+          <div class="note">Paused: will return when a real-world app runs on a quantum computer.</div>
+        </div>
+        <div class="edu-item">
+          <div class="yr">2009 — 2013</div>
+          <div class="inst">Vidzemes augstskola · UAS</div>
+          <div class="spec">Programmer — computer &amp; network architecture, project management, functional &amp; OO programming</div>
+        </div>
+        <div class="edu-item">
+          <div class="yr">CERTIFICATE</div>
+          <div class="spec">Microsoft — installing &amp; configuring Windows 7 client</div>
+        </div>
+      </div>
+
+      <div>
+        <h4>Contact</h4>
+        <ul class="facts">
+          <li><span class="k">E-mail</span><span class="v"><a href="mailto:Gatiss.Priede@gmail.com" style="color:inherit; border-bottom:1px solid var(--rule-strong); text-decoration:none;">Gatiss.Priede@gmail.com</a></span></li>
+          <li><span class="k">Phone</span><span class="v">+371 270 320 99</span></li>
+          <li><span class="k">LinkedIn</span><span class="v"><a href="https://www.linkedin.com/in/gatis-priede-11169a56/" style="color:inherit; border-bottom:1px solid var(--rule-strong); text-decoration:none;">in/gatis-priede ↗</a></span></li>
+          <li><span class="k">Location</span><span class="v">Sigulda, Latvia · EET</span></li>
+          <li><span class="k">Mode</span><span class="v">Remote / Hybrid, Full-time</span></li>
+          <li><span class="k">Driving</span><span class="v">B category</span></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4>Signals &amp; interests</h4>
+        <ul class="facts">
+          <li><span class="k">Traits</span><span class="v">Accuracy · logical · intuitive · flexible · optimistic</span></li>
+          <li><span class="k">Preferred</span><span class="v">Clean, high-performant code · TDD · SSR · SPA</span></li>
+          <li><span class="k">Watching</span><span class="v">AI · quantum · VR · robotics · RPA</span></li>
+          <li><span class="k">Interests</span><span class="v">DIY builds · winter sports · table games · music · science · space &amp; time</span></li>
+          <li><span class="k">OS</span><span class="v">Windows 11</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>© 2026 · Gatis Priede · All rights reserved</div>
+      <div class="mid">Everything is possible.</div>
+      <div class="right">Design · Gatis Priede Studio · v2026.04</div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ============ TWEAKS ============ -->
+<aside id="tweaks" aria-hidden="true">
+  <h6><span>Tweaks</span><span id="tw-close" style="cursor:pointer; color:var(--ink-2);">×</span></h6>
+
+  <div class="tw-label">Theme</div>
+  <div class="tw-row" data-tw="theme">
+    <button class="tw-chip" data-v="paper" aria-pressed="true">Paper</button>
+    <button class="tw-chip" data-v="bone">Bone</button>
+    <button class="tw-chip" data-v="graphite">Graphite</button>
+  </div>
+
+  <div class="tw-label">Accent</div>
+  <div class="tw-row" data-tw="accent">
+    <button class="tw-chip" data-v="rust" aria-pressed="true" style="--c: oklch(0.58 0.17 35);"><span class="sw"></span>Rust</button>
+    <button class="tw-chip" data-v="ink" style="--c: oklch(0.24 0.02 260);"><span class="sw"></span>Ink</button>
+    <button class="tw-chip" data-v="olive" style="--c: oklch(0.52 0.11 120);"><span class="sw"></span>Olive</button>
+    <button class="tw-chip" data-v="cobalt" style="--c: oklch(0.48 0.16 255);"><span class="sw"></span>Cobalt</button>
+  </div>
+
+  <div class="tw-label">Layout grid</div>
+  <div class="tw-row" data-tw="showGrid">
+    <button class="tw-chip" data-v="false" aria-pressed="true">Off</button>
+    <button class="tw-chip" data-v="true">Show 12-col</button>
+  </div>
+</aside>
+
+<script>
+  // ==== Language dot rows ====
+  document.querySelectorAll('.dotrow').forEach(el => {
+    const n = +el.dataset.n, t = +el.dataset.t;
+    let html = '';
+    for (let i=0;i<t;i++) html += `<i class="${i<n?'on':''}${i===n-1?' accent':''}"></i>`;
+    el.innerHTML = html;
+  });
+
+  // ==== Timeline ticks ====
+  (function(){
+    const scale = document.getElementById('scale');
+    if (!scale) return;
+    const years = [2013, 2015, 2017, 2019, 2021, 2024, 2026];
+    const minY = 2013, maxY = 2026;
+    years.forEach(y => {
+      const pct = ((y - minY) / (maxY - minY)) * 100;
+      const tick = document.createElement('div');
+      tick.className = 'tick' + (y===2026 ? ' now' : '');
+      tick.style.top = pct + '%';
+      tick.innerHTML = `<span>${y}${y===2026 ? ' · now' : ''}</span>`;
+      scale.appendChild(tick);
+    });
+  })();
+
+  // ==== Expand/collapse entries ====
+  document.querySelectorAll('.tl-entry').forEach(el => {
+    el.addEventListener('click', () => {
+      const open = el.getAttribute('aria-expanded') === 'true';
+      el.setAttribute('aria-expanded', open ? 'false' : 'true');
+    });
+  });
+
+  // ==== Local time ticker ====
+  function updateTime() {
+    const d = new Date();
+    const opts = { timeZone: 'Europe/Riga', hour:'2-digit', minute:'2-digit', hour12:false };
+    const t = d.toLocaleTimeString('en-GB', opts);
+    const el = document.getElementById('ts');
+    if (el) el.textContent = t + ' EET';
+  }
+  updateTime(); setInterval(updateTime, 30000);
+
+  // ==== Language pill toggle (visual only — CMS hooks handle the actual translation) ====
+  document.querySelectorAll('[data-lang]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-lang]').forEach(b => b.setAttribute('aria-pressed','false'));
+      btn.setAttribute('aria-pressed','true');
+    });
+  });
+
+  // ==== Tweaks: state + wiring ====
+  const state = Object.assign({}, TWEAK_DEFAULTS);
+
+  function applyState() {
+    document.documentElement.setAttribute('data-theme', state.theme);
+    document.documentElement.setAttribute('data-accent', state.accent);
+    document.body.classList.toggle('show-grid', state.showGrid === true || state.showGrid === 'true');
+
+    document.querySelectorAll('#tweaks [data-tw]').forEach(row => {
+      const key = row.dataset.tw;
+      row.querySelectorAll('.tw-chip').forEach(chip => {
+        const v = chip.dataset.v;
+        const on = String(state[key]) === v;
+        chip.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+    });
+  }
+  applyState();
+
+  document.querySelectorAll('#tweaks [data-tw]').forEach(row => {
+    const key = row.dataset.tw;
+    row.querySelectorAll('.tw-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        let v = chip.dataset.v;
+        if (v === 'true') v = true; else if (v === 'false') v = false;
+        state[key] = v;
+        applyState();
+        try {
+          window.parent.postMessage({type:'__edit_mode_set_keys', edits:{[key]: v}}, '*');
+        } catch(e){}
+      });
+    });
+  });
+
+  window.addEventListener('message', (e) => {
+    const msg = e.data || {};
+    if (msg.type === '__activate_edit_mode') {
+      document.getElementById('tweaks').style.display = 'block';
+    } else if (msg.type === '__deactivate_edit_mode') {
+      document.getElementById('tweaks').style.display = 'none';
+    }
+  });
+  document.getElementById('tw-close').addEventListener('click', () => {
+    document.getElementById('tweaks').style.display = 'none';
+  });
+
+  window.parent.postMessage({type:'__edit_mode_available'}, '*');
+</script>
+
+</body>
+</html>

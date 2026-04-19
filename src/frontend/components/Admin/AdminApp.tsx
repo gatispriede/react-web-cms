@@ -1,7 +1,7 @@
 import React from 'react'
 import {resolve} from "../../gqty";
-import {Button, ConfigProvider, Popconfirm, Spin, Switch, Tabs, Tag, message, theme as antdTheme} from 'antd';
-import {BulbFilled, BulbOutlined, CloudUploadOutlined} from "@ant-design/icons";
+import {Button, ConfigProvider, Layout, Menu, Popconfirm, Spin, Switch, Tag, message, theme as antdTheme} from 'antd';
+import {BulbFilled, BulbOutlined, CloseOutlined, CloudUploadOutlined, PlusOutlined} from "@ant-design/icons";
 import PublishApi from "../../api/PublishApi";
 import AddNewDialogNavigation from "../common/Dialogs/AddNewDialogNavigation";
 import DynamicTabsContent from "../DynamicTabsContent";
@@ -13,14 +13,13 @@ import {IMongo} from "../../../Interfaces/IMongo";
 import MongoApi from '../../api/MongoApi';
 import Logo from "../common/Logo";
 import {Session} from "next-auth";
-import EditWrapper from "../common/EditWrapper";
 import {EditOutlined} from "@ant-design/icons";
 import {INavigation} from "../../../Interfaces/INavigation";
 import {TFunction} from "i18next";
 import {UserRole} from "../../../Interfaces/IUser";
 import AuditBadge from "./AuditBadge";
-
-type TargetKey = React.MouseEvent | React.KeyboardEvent | string;
+import UndoStatusPill from "./UndoStatusPill";
+import {refreshBus} from "../../lib/refreshBus";
 
 interface IHomeState {
     loading: boolean,
@@ -32,6 +31,7 @@ interface IHomeState {
     publishedAt?: string,
     publishing?: boolean,
     darkMode: boolean,
+    siderCollapsed: boolean,
 }
 
 class AdminApp extends React.Component<{
@@ -62,6 +62,7 @@ class AdminApp extends React.Component<{
         tabProps: [],
         activeTab: '0',
         darkMode: false,
+        siderCollapsed: typeof window !== 'undefined' && window.localStorage.getItem('admin.sider.collapsed') === '1',
     }
 
     constructor(props: { session: any, t: TFunction<"translation", undefined>, tApp: TFunction<"translation", undefined> }) {
@@ -93,6 +94,8 @@ class AdminApp extends React.Component<{
             this.setState({publishing: false});
         }
     };
+    private refreshUnsub?: () => void;
+
     componentDidMount() {
         void this.initialize()
         void this.loadPublishedMeta()
@@ -101,6 +104,18 @@ class AdminApp extends React.Component<{
             const saved = window.localStorage.getItem('admin.darkMode');
             if (saved === '1') this.setState({darkMode: true});
         }
+        this.refreshUnsub = refreshBus.subscribe(() => this.refreshView());
+    }
+
+    componentWillUnmount() {
+        this.refreshUnsub?.();
+    }
+
+    /** Called by the RefreshBus on any content mutation. Re-fetches nav + theme. */
+    refreshView = async (): Promise<void> => {
+        await this.initialize();
+        await this.loadThemeVars();
+        await this.loadPublishedMeta();
     }
 
     toggleDarkMode = (on: boolean) => {
@@ -115,22 +130,32 @@ class AdminApp extends React.Component<{
         if (active?.tokens) applyThemeCssVars(active.tokens);
     };
 
-    onEdit = async (targetKey: TargetKey, action: 'add' | 'remove') => {
+    openAdd = () => {
         if (!this.canEditNav) return;
-        if (action === 'add') {
-            this.setState({addNewDialogOpen: true, activeNavigation: {}})
-        } else {
-            let page
-            const newItems = this.state.tabProps.filter((item) => {
-                if (item.key === targetKey) {
-                    page = item.page
-                }
-                return item.key !== targetKey
-            });
-            if (page) {
-                await this.MongoApi.deleteNavigation(page)
-                this.setState({tabProps: newItems, activeTab: 1, loading: false})
-            }
+        this.setState({addNewDialogOpen: true, activeNavigation: {page: '', sections: [], type: '', id: '', seo: undefined}});
+    }
+
+    openEdit = (pageIndex: number) => {
+        if (!this.canEditNav) return;
+        const page = this.state.pages[pageIndex];
+        if (!page) return;
+        this.setState({activeNavigation: page as any, addNewDialogOpen: true});
+    }
+
+    deletePage = async (key: string) => {
+        if (!this.canEditNav) return;
+        const target = this.state.tabProps.find(t => t.key === key);
+        if (!target) return;
+        const newItems = this.state.tabProps.filter(t => t.key !== key);
+        await this.MongoApi.deleteNavigation(target.page);
+        const nextActive = newItems[0]?.key ?? '0';
+        this.setState({tabProps: newItems, activeTab: nextActive, loading: false});
+    }
+
+    toggleSider = (collapsed: boolean) => {
+        this.setState({siderCollapsed: collapsed});
+        if (typeof window !== 'undefined') {
+            window.localStorage.setItem('admin.sider.collapsed', collapsed ? '1' : '0');
         }
     }
 
@@ -142,6 +167,7 @@ class AdminApp extends React.Component<{
             tabProps: this.state.tabProps,
             activeTab: this.state.activeTab,
             darkMode: this.state.darkMode,
+            siderCollapsed: this.state.siderCollapsed,
             activeNavigation: {
                 id: '',
                 page: '',
@@ -190,33 +216,14 @@ class AdminApp extends React.Component<{
                     newTabsState.push({
                         key: id,
                         page: pages[id].page,
-                        label:
-                            <div className={'navigation-container'} style={{display: 'flex', alignItems: 'center', gap: 10}}>
-                                <EditWrapper t={this.props.t} edit={true} editContent={<div>
-                                    <Button onClick={() => {
-                                        const pageIndex: number = parseInt(id);
-                                        if (this.state.pages.length > 0) {
-                                            const page = pages[pageIndex]
-                                            this.setState({
-                                                activeNavigation: page,
-                                                addNewDialogOpen: true
-                                            })
-                                        }
-
-                                    }}><EditOutlined/></Button>
-                                </div>} admin={this.admin}>
-                                    {pages[id].page}
-                                </EditWrapper>
-                                {this.admin && (
-                                    <AuditBadge
-                                        compact
-                                        editedBy={(pages[id] as any).editedBy}
-                                        editedAt={(pages[id] as any).editedAt}
-                                    />
-                                )}
-                            </div>,
+                        editedBy: (pages[id] as any).editedBy,
+                        editedAt: (pages[id] as any).editedAt,
+                        // Key by page name so React remounts `DynamicTabsContent` when the
+                        // admin switches pages in the sidebar — the class stores
+                        // `sections` on mount and never re-syncs from props.
                         children: (
                             <DynamicTabsContent
+                                key={`page-${pages[id].page}`}
                                 t={this.props.t}
                                 tApp={this.props.tApp}
                                 page={pages[id].page}
@@ -239,15 +246,108 @@ class AdminApp extends React.Component<{
         this.setState(newState)
     }
 
+    renderMenuItems() {
+        // Layout: page name + (below) audit badge stacked on the left, edit /
+        // delete actions pinned to the right and always visible. Previously
+        // the audit pill shared the row with the actions and pushed them out
+        // of the menu-item's content box — making "Delete page" unreachable
+        // once a badge was present.
+        return this.state.tabProps.map((tp: any) => ({
+            key: tp.key,
+            label: (
+                <div className="admin-sider-item" style={{
+                    display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'space-between',
+                }}>
+                    <div style={{flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2}}>
+                        <span style={{
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            textTransform: 'uppercase',
+                            display: 'block',
+                            lineHeight: 1.3,
+                        }}>
+                            {tp.page}
+                        </span>
+                        {!this.state.siderCollapsed && this.admin && tp.editedAt && (
+                            <span style={{lineHeight: 1.1, fontSize: 10, opacity: 0.75, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
+                                <AuditBadge compact editedBy={tp.editedBy} editedAt={tp.editedAt}/>
+                            </span>
+                        )}
+                    </div>
+                    {!this.state.siderCollapsed && this.canEditNav && (
+                        <span
+                            className="admin-sider-actions"
+                            style={{display: 'inline-flex', gap: 2, flex: '0 0 auto'}}
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <Button
+                                size="small"
+                                type="text"
+                                icon={<EditOutlined/>}
+                                onClick={e => { e.stopPropagation(); this.openEdit(Number(tp.key)); }}
+                                aria-label={this.props.t('Edit page')}
+                            />
+                            <Popconfirm
+                                title={this.props.t('Delete page?')}
+                                okText={this.props.t('Delete')}
+                                cancelText={this.props.t('Cancel')}
+                                okButtonProps={{danger: true}}
+                                onConfirm={() => this.deletePage(tp.key)}
+                            >
+                                <Button
+                                    size="small"
+                                    type="text"
+                                    danger
+                                    icon={<CloseOutlined/>}
+                                    onClick={e => e.stopPropagation()}
+                                    aria-label={this.props.t('Delete page')}
+                                />
+                            </Popconfirm>
+                        </span>
+                    )}
+                </div>
+            ),
+        }));
+    }
+
     render() {
+        const activeChildren = this.state.tabProps.find(t => t.key === this.state.activeTab)?.children
+            ?? this.state.tabProps[0]?.children;
         return (
             <ConfigProvider theme={{
                 ...staticTheme,
                 algorithm: this.state.darkMode ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
             }}>
                 <Spin spinning={this.state.loading}>
-                    <Logo admin={this.admin} t={this.props.t}/>
-                    <div style={{display: 'flex', alignItems: 'center', gap: 8, padding: '0 16px 8px', justifyContent: 'flex-end'}}>
+                    <div className="admin-app-header" style={{
+                        display: 'flex', alignItems: 'center', gap: 12, padding: '8px 16px', flexWrap: 'wrap',
+                    }}>
+                        <Logo admin={this.admin} t={this.props.t}/>
+                        <div style={{flex: 1}}/>
+                        {this.canEditNav && <UndoStatusPill t={this.props.t}/>}
+                        {this.canPublish && (
+                            <>
+                                <Popconfirm
+                                    title={this.props.t('Publish to production?')}
+                                    description={this.props.t('This copies the current draft to the live published snapshot.')}
+                                    okText={this.props.t('Publish')}
+                                    cancelText={this.props.t('Cancel')}
+                                    onConfirm={this.publish}
+                                >
+                                    <Button type="primary" icon={<CloudUploadOutlined/>} loading={this.state.publishing}>
+                                        {this.props.t('Publish')}
+                                    </Button>
+                                </Popconfirm>
+                                {this.state.publishedAt ? (
+                                    <Tag color="green">
+                                        {this.props.t('Last published')}: {new Date(this.state.publishedAt).toLocaleString()}
+                                    </Tag>
+                                ) : (
+                                    <Tag>{this.props.t('No published snapshot yet')}</Tag>
+                                )}
+                            </>
+                        )}
                         <Switch
                             checked={this.state.darkMode}
                             onChange={this.toggleDarkMode}
@@ -255,28 +355,6 @@ class AdminApp extends React.Component<{
                             unCheckedChildren={<BulbOutlined/>}
                         />
                     </div>
-                    {this.canPublish && (
-                        <div style={{display: 'flex', alignItems: 'center', gap: 8, padding: '0 16px 8px'}}>
-                            <Popconfirm
-                                title={this.props.t('Publish to production?')}
-                                description={this.props.t('This copies the current draft to the live published snapshot.')}
-                                okText={this.props.t('Publish')}
-                                cancelText={this.props.t('Cancel')}
-                                onConfirm={this.publish}
-                            >
-                                <Button type="primary" icon={<CloudUploadOutlined/>} loading={this.state.publishing}>
-                                    {this.props.t('Publish')}
-                                </Button>
-                            </Popconfirm>
-                            {this.state.publishedAt ? (
-                                <Tag color="green">
-                                    {this.props.t('Last published')}: {new Date(this.state.publishedAt).toLocaleString()}
-                                </Tag>
-                            ) : (
-                                <Tag>{this.props.t('No published snapshot yet')}</Tag>
-                            )}
-                        </div>
-                    )}
                     <AddNewDialogNavigation
                         t={this.props.t}
                         close={() => {
@@ -288,22 +366,44 @@ class AdminApp extends React.Component<{
                             await this.initialize()
                         }}
                     />
-                    <Tabs
-                        key={'tabs'}
-                        type={this.canEditNav ? "editable-card" : "card"}
-                        tabBarStyle={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            textTransform: "uppercase"
-                        }}
-                        onEdit={this.onEdit}
-                        onChange={(value) => {
-                            this.setState({activeTab: value})
-                        }}
-                        activeKey={this.state.activeTab}
-                        defaultActiveKey={"0"}
-                        items={this.state.tabProps}
-                    />
+                    <Layout style={{background: 'transparent'}}>
+                        <Layout.Sider
+                            collapsible
+                            collapsed={this.state.siderCollapsed}
+                            onCollapse={this.toggleSider}
+                            breakpoint="md"
+                            width={240}
+                            theme={this.state.darkMode ? 'dark' : 'light'}
+                            style={{borderRight: '1px solid rgba(0,0,0,0.06)', minHeight: '70vh'}}
+                        >
+                            <Menu
+                                mode="inline"
+                                theme={this.state.darkMode ? 'dark' : 'light'}
+                                selectedKeys={[this.state.activeTab]}
+                                onClick={({key}) => this.setState({activeTab: key})}
+                                items={this.renderMenuItems()}
+                                style={{borderInlineEnd: 'none'}}
+                            />
+                            {this.canEditNav && (
+                                <div style={{padding: 12, textAlign: 'center'}}>
+                                    <Button
+                                        type="dashed"
+                                        icon={<PlusOutlined/>}
+                                        onClick={this.openAdd}
+                                        block={!this.state.siderCollapsed}
+                                    >
+                                        {!this.state.siderCollapsed && this.props.t('New page')}
+                                    </Button>
+                                </div>
+                            )}
+                        </Layout.Sider>
+                        <Layout.Content
+                            key={this.state.activeTab}
+                            style={{padding: 16, minHeight: '70vh'}}
+                        >
+                            {activeChildren}
+                        </Layout.Content>
+                    </Layout>
                 </Spin>
             </ConfigProvider>
         );

@@ -45,7 +45,7 @@ class MongoApi {
     loadSections = (pageName: string, pages: IPage[]): Promise<ISection[]> =>
         this.sectionApi.loadSections(pageName, pages);
     deleteSection = (sectionId: string): Promise<string> => this.sectionApi.deleteSection(sectionId);
-    addSectionToPage = (item: { section: InSection }, sections: ISection[]) =>
+    addSectionToPage = (item: { section: InSection; pageName?: string }, sections: ISection[]) =>
         this.sectionApi.addSectionToPage(item, sections);
     addRemoveSectionItem = (
         sectionId: string | undefined,

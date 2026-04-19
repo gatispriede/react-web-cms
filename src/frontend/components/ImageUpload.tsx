@@ -7,6 +7,7 @@ import MongoApi from "../api/MongoApi";
 import EditWrapper from "./common/EditWrapper";
 import {TFunction} from "i18next";
 import IImage from "../../Interfaces/IImage";
+import {useRefreshView} from "../lib/refreshBus";
 
 const ImageUpload = ({setFile, t}: { setFile: (file: File) => void, t: TFunction<"translation", undefined> }) => {
 
@@ -21,8 +22,13 @@ const ImageUpload = ({setFile, t}: { setFile: (file: File) => void, t: TFunction
     const [images, setImages] = useState<IImage[]>([])
     const [searchTag, setSearchTag] = useState('All')
 
-    const cb = (inputFile: File) => {
+    const cb = async (inputFile: File) => {
         setFile(inputFile)
+        // Newly uploaded file — refresh the gallery list so the next open
+        // (or the side grid rendered right below) sees it without a manual
+        // reload. `UpploadManager` now awaits the /api/upload round-trip
+        // before calling us, so the row is already in Mongo.
+        try { await loadImages() } catch { /* noop */ }
         setDialogOpen(false)
     }
     const setError = (err: string) => {
@@ -47,6 +53,7 @@ const ImageUpload = ({setFile, t}: { setFile: (file: File) => void, t: TFunction
             void loadImages()
         }
     }, [window, imageRef.current, buttonRef.current, dialogOpen])
+    useRefreshView(loadImages, 'assets');
 
     return (
         <div>

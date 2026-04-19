@@ -1,5 +1,6 @@
 import {resolve} from "../gqty";
 import {DEFAULT_FOOTER, IFooterConfig} from "../../Interfaces/IFooter";
+import {refreshBus} from "../lib/refreshBus";
 
 export class FooterApi {
     async get(): Promise<IFooterConfig> {
@@ -16,6 +17,7 @@ export class FooterApi {
         try {
             const raw = await resolve(({mutation}) => (mutation as any).mongo.saveFooter({config}));
             const parsed = JSON.parse(raw || '{}');
+            refreshBus.emit('settings');
             return parsed.saveFooter ?? parsed;
         } catch (err) {
             return {error: String(err)};

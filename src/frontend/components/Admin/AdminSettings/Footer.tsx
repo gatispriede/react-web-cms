@@ -4,6 +4,8 @@ import {DeleteOutlined, PlusOutlined} from "@ant-design/icons";
 import {useTranslation} from "next-i18next";
 import FooterApi from "../../../api/FooterApi";
 import {DEFAULT_FOOTER, IFooterColumn, IFooterConfig, IFooterEntry} from "../../../../Interfaces/IFooter";
+import AuditBadge from "../AuditBadge";
+import {useRefreshView} from "../../../lib/refreshBus";
 
 const footerApi = new FooterApi();
 
@@ -20,6 +22,7 @@ const AdminSettingsFooter: React.FC = () => {
     }, []);
 
     useEffect(() => { void refresh(); }, [refresh]);
+    useRefreshView(refresh, 'settings');
 
     const update = (patch: Partial<IFooterConfig>) => setConfig(c => ({...c, ...patch}));
 
@@ -51,11 +54,12 @@ const AdminSettingsFooter: React.FC = () => {
                 style={{marginBottom: 16}}
                 message={t('Columns with these titles are auto-generated: Site (your pages) and Writing (blog). You can override by adding a column with the same title.')}
             />
-            <Space style={{marginBottom: 16}}>
+            <Space style={{marginBottom: 16}} align="center">
                 <Switch checked={config.enabled} onChange={v => update({enabled: v})}/>
                 <span>{config.enabled ? t('Footer visible') : t('Footer hidden')}</span>
                 <Button type="primary" onClick={save} loading={saving}>{t('Save')}</Button>
                 <Button onClick={refresh} loading={loading}>{t('Refresh')}</Button>
+                <AuditBadge editedBy={config.editedBy} editedAt={config.editedAt}/>
             </Space>
             <Row gutter={[12, 12]}>
                 {config.columns.map((col, i) => (

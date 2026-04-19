@@ -5,6 +5,8 @@ import {useTranslation} from "next-i18next";
 import ImageUpload from "../../ImageUpload";
 import MongoApi from "../../../api/MongoApi";
 import {PUBLIC_IMAGE_PATH} from "../../../../constants/imgPath";
+import AuditBadge from "../AuditBadge";
+import {useRefreshView} from "../../../lib/refreshBus";
 
 interface LogoState {
     src: string;
@@ -35,11 +37,13 @@ const AdminSettingsLogo: React.FC = () => {
     const [logo, setLogo] = useState<LogoState>({...DEFAULT});
     const [saving, setSaving] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [audit, setAudit] = useState<{editedBy?: string; editedAt?: string}>({});
 
     const refresh = useCallback(async () => {
         setLoading(true);
         try {
             const raw = await mongoApi.getLogo();
+            setAudit({editedBy: raw?.editedBy, editedAt: raw?.editedAt});
             if (!raw?.content) { setLogo({...DEFAULT}); return; }
             try {
                 const parsed = JSON.parse(raw.content);
@@ -53,6 +57,7 @@ const AdminSettingsLogo: React.FC = () => {
     }, []);
 
     useEffect(() => { void refresh(); }, [refresh]);
+    useRefreshView(refresh, 'settings');
 
     // ImageUpload calls this with either a raw File (fresh upload) or an
     // IImage (gallery select). Either way, update the preview immediately so
@@ -93,6 +98,10 @@ const AdminSettingsLogo: React.FC = () => {
                 style={{marginBottom: 16}}
                 message={t('The logo appears at the far left of the public site header, next to the navigation. Choose an image then press Save.')}
             />
+
+            <div style={{marginBottom: 12}}>
+                <AuditBadge editedBy={audit.editedBy} editedAt={audit.editedAt}/>
+            </div>
 
             <Space align="start" size={32} style={{marginBottom: 24, flexWrap: 'wrap'}}>
                 <div>

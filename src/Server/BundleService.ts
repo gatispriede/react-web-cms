@@ -22,6 +22,12 @@ export interface SiteBundle {
         themes?: any[];
         activeThemeId?: string | null;
         posts?: any[];
+        /** Layout mode + blog toggle. Imported via SiteSettings key 'siteFlags'. */
+        siteFlags?: {blogEnabled?: boolean; layoutMode?: 'tabs' | 'scroll'};
+        /** Footer config. Imported via SiteSettings key 'footer'. */
+        footer?: any;
+        /** Site-wide SEO defaults. Imported via SiteSettings key 'siteSeo'. */
+        siteSeo?: any;
     };
     /** filename -> data URI. Omitted entries are expected to be 3rd-party URLs still in `site`. */
     assets: Record<string, string>;
@@ -77,7 +83,7 @@ export class BundleService {
     }
 
     async export(): Promise<SiteBundle> {
-        const [navigation, sections, languages, images, logos, themes, activeSetting, posts] = await Promise.all([
+        const [navigation, sections, languages, images, logos, themes, activeSetting, posts, flagsSetting, footerSetting, siteSeoSetting] = await Promise.all([
             this.col('Navigation').find({}).toArray(),
             this.col('Sections').find({}).toArray(),
             this.col('Languages').find({}).toArray(),
@@ -86,6 +92,9 @@ export class BundleService {
             this.col('Themes').find({}).toArray(),
             this.col('SiteSettings').findOne({key: 'activeThemeId'}),
             this.col('Posts').find({}).toArray(),
+            this.col('SiteSettings').findOne({key: 'siteFlags'}),
+            this.col('SiteSettings').findOne({key: 'footer'}),
+            this.col('SiteSettings').findOne({key: 'siteSeo'}),
         ]);
 
         const site = stripMongoIds({
@@ -97,6 +106,9 @@ export class BundleService {
             themes,
             activeThemeId: (activeSetting as any)?.value ?? null,
             posts,
+            siteFlags: (flagsSetting as any)?.value ?? undefined,
+            footer: (footerSetting as any)?.value ?? undefined,
+            siteSeo: (siteSeoSetting as any)?.value ?? undefined,
         });
 
         const localAssets = new Set<string>();
@@ -220,6 +232,22 @@ export class BundleService {
                 await settings.deleteOne({key: 'activeThemeId'});
             }
         }
+        // Extended settings — siteFlags, footer, siteSeo travel with the bundle
+        // so a "theme+content" import flips layoutMode + footer + SEO defaults
+        // atomically (same as activeThemeId above). Each one is opt-in: an
+        // importer without these keys leaves the existing settings alone.
+        const putSetting = async (key: string, value: any) => {
+            const settings = this.col('SiteSettings');
+            if (value === null || value === undefined) return;
+            await settings.updateOne(
+                {key},
+                {$set: {key, value}},
+                {upsert: true},
+            );
+        };
+        if (bundle.site.siteFlags !== undefined) await putSetting('siteFlags', bundle.site.siteFlags);
+        if (bundle.site.footer !== undefined) await putSetting('footer', bundle.site.footer);
+        if (bundle.site.siteSeo !== undefined) await putSetting('siteSeo', bundle.site.siteSeo);
 
         return {restored, assets: assetsWritten, skippedAssets};
     }

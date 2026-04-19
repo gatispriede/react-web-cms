@@ -43,5 +43,16 @@
   "Type a command…": "Type a command…",
   "No matching commands": "No matching commands",
   "Logo": "Logo",
-  "Layout": "Layout"
+  "Layout": "Layout",
+  "New page": "New page",
+  "Nothing to undo": "Nothing to undo",
+  "Undo": "Undo",
+  "Redo": "Redo",
+  "Publish to production?": "Publish to production?",
+  "This copies the current draft to the live published snapshot": {
+    "": "This copies the current draft to the live published snapshot."
+  },
+  "Publish": "Publish",
+  "No published snapshot yet": "No published snapshot yet",
+  "Show more options · SEO fields": "Show more options · SEO fields"
 }

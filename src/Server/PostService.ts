@@ -118,6 +118,8 @@ export class PostService {
             body: d.body ?? '',
             createdAt: d.createdAt ?? '',
             updatedAt: d.updatedAt ?? '',
+            editedBy: d.editedBy,
+            editedAt: d.editedAt ?? d.updatedAt,
         };
     }
 }

@@ -85,10 +85,11 @@ export class PlainImageContent extends ContentManager {
 
 }
 
-const PlainImage = ({item, t: _t, tApp}: {
+const PlainImage = ({item, t: _t, tApp, admin}: {
     item: IItem,
     t: TFunction<"translation", undefined>,
-    tApp: TFunction<string, undefined>
+    tApp: TFunction<string, undefined>,
+    admin?: boolean,
 }) => {
     const plainImage = new PlainImageContent(EItemType.Image, item.content);
     const preview = plainImage.data.preview ? plainImage.data.preview : typeof item.action !== "string"
@@ -135,8 +136,43 @@ const PlainImage = ({item, t: _t, tApp}: {
                         marginTop: `${plainImage.data.offsetX}px`,
                         backgroundImage: backgroundProperty,
                         backgroundSize: plainImage.data.imgWidth,
-                        height: minHeight
-                    }} />
+                        height: minHeight,
+                        position: 'relative',
+                    }}>
+                        {admin && plainImage.data.src && (
+                            <div
+                                title={`/${plainImage.data.src}`}
+                                style={{
+                                    position: 'absolute',
+                                    top: 8,
+                                    left: 8,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 8,
+                                    padding: '4px 8px 4px 4px',
+                                    background: 'rgba(0,0,0,0.65)',
+                                    color: '#fff',
+                                    borderRadius: 6,
+                                    fontSize: 11,
+                                    lineHeight: 1.2,
+                                    maxWidth: 'min(480px, 90%)',
+                                    boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
+                                }}
+                            >
+                                <img
+                                    src={`/${plainImage.data.src}`}
+                                    alt=""
+                                    style={{width: 28, height: 28, objectFit: 'cover', borderRadius: 4, flex: '0 0 auto'}}
+                                />
+                                <span style={{display: 'flex', flexDirection: 'column', gap: 2, overflow: 'hidden'}}>
+                                    <span style={{opacity: 0.75, textTransform: 'uppercase', letterSpacing: 0.3}}>Background image</span>
+                                    <span style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
+                                        {plainImage.data.src}
+                                    </span>
+                                </span>
+                            </div>
+                        )}
+                    </div>
                     :
                     <div className={`plain-image ${item.style}`}>
                         <Image {...imgProperties}/>

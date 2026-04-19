@@ -12,6 +12,8 @@ export interface IFooterConfig {
     enabled: boolean;
     columns: IFooterColumn[];
     bottom?: string;
+    editedBy?: string;
+    editedAt?: string;
 }
 
 export const DEFAULT_FOOTER: IFooterConfig = {

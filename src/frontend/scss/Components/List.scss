@@ -1,0 +1,195 @@
+/* ==========================================================================
+   List module — theme-agnostic base styles.
+
+   Every theme gets the layout "for free"; editorial flourishes (mono caps,
+   paper dashed rules, ink-2 values, accent hover on links) are layered on
+   top in `Themes/Paper.scss` behind `body[data-theme-name="paper"]`.
+
+   Layouts, in order:
+     - `.list-module.default .list-module__items` — key · value rows with
+       soft horizontal rules between them.
+     - `.list-module.facts .list-module__facts` — definition-list variant
+       used for Dossier Contact / Signals panels.
+     - `.list-module.inline .list-module__items` — flow of compact chips.
+   ========================================================================== */
+
+.list-module {
+  font-size: 14px;
+  line-height: 1.5;
+
+  &__title {
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-3, #6b6b6b);
+    margin: 0 0 14px;
+  }
+
+  // Default — inline label + value rows on one line, thin rule between.
+  &.default .list-module__items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    li {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 12px;
+      padding: 8px 0;
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+      align-items: baseline;
+
+      &:first-child { border-top: 1px solid rgba(0, 0, 0, 0.18); }
+    }
+    .list-module__label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--ink-3, #888);
+    }
+    .list-module__value {
+      color: var(--ink-2, #2b2b2b);
+    }
+    .list-module__value a {
+      color: inherit;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 2px;
+
+      &:hover { color: var(--accent, var(--theme-colorPrimary, #1677ff)); }
+    }
+  }
+
+  // Facts — the editorial key/value table. <dl> wrapper holds one <div>
+  // per row so the grid tracks line up cleanly.
+  &.facts .list-module__facts {
+    margin: 0;
+    padding: 0;
+  }
+  &.facts .list-module__facts-row {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    column-gap: 12px;
+    padding: 8px 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    align-items: baseline;
+
+    &:first-child { border-top: 1px solid rgba(0, 0, 0, 0.18); }
+
+    dt {
+      margin: 0;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--ink-3, #888);
+      padding-top: 2px;
+    }
+    dd {
+      margin: 0;
+      color: var(--ink-2, #2b2b2b);
+
+      a {
+        color: inherit;
+        text-decoration: underline;
+        text-decoration-thickness: 1px;
+        text-underline-offset: 2px;
+        transition: color 120ms ease;
+
+        &:hover,
+        &:focus-visible { color: var(--accent, var(--theme-colorPrimary, #1677ff)); }
+      }
+    }
+  }
+
+  // Cases — 2-col project card grid with big accent year column.
+  &.cases .list-module__cases {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+
+    @media (max-width: 900px) { grid-template-columns: 1fr; }
+  }
+  &.cases .list-module__case {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 24px;
+    padding: 28px;
+    background: rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    align-items: start;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.2s;
+
+    &:hover { border-color: var(--accent, var(--theme-colorPrimary, #1677ff)); }
+  }
+  &.cases .list-module__case-prefix-main {
+    font-size: 40px;
+    line-height: 1;
+    font-weight: 700;
+    color: var(--accent, var(--theme-colorPrimary, #1677ff));
+  }
+  &.cases .list-module__case-prefix-sub {
+    font-size: 11px;
+    color: rgba(0, 0, 0, 0.5);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  &.cases .list-module__case-title {
+    font-size: 22px;
+    margin: 0 0 6px;
+    text-transform: uppercase;
+    line-height: 1.1;
+  }
+  &.cases .list-module__case-meta {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(0, 0, 0, 0.55);
+    margin-bottom: 10px;
+  }
+  &.cases .list-module__case-desc {
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0 0 10px;
+    color: var(--ink-2, #2b2b2b);
+  }
+  &.cases .list-module__case-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  &.cases .list-module__case-tag {
+    font-size: 10px;
+    padding: 3px 7px;
+    background: rgba(0, 0, 0, 0.06);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  // Inline — compact chip flow, no rules.
+  &.inline .list-module__items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    li {
+      display: inline-flex;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--ink-2, #2b2b2b);
+    }
+    .list-module__label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--ink-3, #888);
+    }
+  }
+}

@@ -2,6 +2,8 @@ import React, {useCallback, useEffect, useState} from "react";
 import {Alert, Card, Radio, Space, Typography, message} from "antd";
 import {useTranslation} from "next-i18next";
 import SiteFlagsApi from "../../../api/SiteFlagsApi";
+import AuditBadge from "../AuditBadge";
+import {useRefreshView} from "../../../lib/refreshBus";
 
 const siteFlagsApi = new SiteFlagsApi();
 
@@ -14,16 +16,19 @@ const AdminSettingsLayout: React.FC = () => {
     const {t} = useTranslation('common');
     const [mode, setMode] = useState<'tabs' | 'scroll'>('tabs');
     const [loading, setLoading] = useState(false);
+    const [audit, setAudit] = useState<{editedBy?: string; editedAt?: string}>({});
 
     const refresh = useCallback(async () => {
         setLoading(true);
         try {
             const flags = await siteFlagsApi.get();
             setMode((flags as any).layoutMode === 'scroll' ? 'scroll' : 'tabs');
+            setAudit({editedBy: (flags as any).editedBy, editedAt: (flags as any).editedAt});
         } finally { setLoading(false); }
     }, []);
 
     useEffect(() => { void refresh(); }, [refresh]);
+    useRefreshView(refresh, 'settings');
 
     const change = async (next: 'tabs' | 'scroll') => {
         const prev = mode;
@@ -45,6 +50,9 @@ const AdminSettingsLayout: React.FC = () => {
                 style={{marginBottom: 16}}
                 message={t('Pick how visitors move between pages. Both modes share the same content — only the render differs.')}
             />
+            <div style={{marginBottom: 12}}>
+                <AuditBadge editedBy={audit.editedBy} editedAt={audit.editedAt}/>
+            </div>
             <Radio.Group value={mode} onChange={e => change(e.target.value)} disabled={loading} style={{width: '100%'}}>
                 <Space direction="vertical" style={{width: '100%'}}>
                     <Card hoverable style={{border: mode === 'tabs' ? '2px solid var(--theme-colorPrimary, #1677ff)' : undefined}}>

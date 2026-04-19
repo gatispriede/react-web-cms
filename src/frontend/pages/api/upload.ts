@@ -1,10 +1,11 @@
 import * as Formidable from 'formidable';
 import fs from "fs";
 import path from "node:path";
-import MongoApi from "../../api/MongoApi";
 import guid from "../../../helpers/guid";
 import {PUBLIC_IMAGE_PATH} from "../../../constants/imgPath";
-import IImage, {InImage} from "../../../Interfaces/IImage";
+import {InImage} from "../../../Interfaces/IImage";
+import {getMongoConnection} from "../../../Server/mongoDBConnection";
+import {ROLE_RANK, sessionFromReq} from "../../../Server/authz";
 
 export const config = {
     api: {
@@ -12,11 +13,13 @@ export const config = {
     }
 };
 
-const mongoApi = new MongoApi()
-
 const uploadForm = (next: { (req: any, res: any): void; (arg0: any, arg1: any): unknown; }) => (req: any, res: any) => {
-    return new Promise(async (resolve, reject) => {
+    return new Promise(async (resolve) => {
         try {
+            const session = await sessionFromReq(req, res);
+            if (ROLE_RANK[session.role] < ROLE_RANK.editor) {
+                return resolve(res.status(403).json({error: 'editor role required'}));
+            }
             const form = new Formidable.IncomingForm({
                 multiples: false,
                 keepExtensions: true,
@@ -39,7 +42,7 @@ const uploadForm = (next: { (req: any, res: any): void; (arg0: any, arg1: any): 
                 }
                 const file = files.file[0]
                 const fileTargetName = file.originalFilename.replace(' ','_')
-                const existingFile = fs.existsSync(`src/frontend/public/images/${file.originalFilename}`);
+                const existingFile = fs.existsSync(`src/frontend/public/images/${fileTargetName}`);
                 if(!existingFile){
                     fs.renameSync(file.filepath, path.join(process.cwd(), 'src/frontend/', `public/images/${fileTargetName}`));
                     const image: InImage = {
@@ -51,8 +54,11 @@ const uploadForm = (next: { (req: any, res: any): void; (arg0: any, arg1: any): 
                         type: file.mimetype,
                         tags: JSON.parse(fields.tags)
                     }
-                    await mongoApi.saveImage(image)
-                    req.form = {fields, files};
+                    // Call the service directly — going through the frontend
+                    // gqty client from an API route doesn't forward the caller's
+                    // session cookie, so authz would reject it as 'viewer'.
+                    await getMongoConnection().assetService.saveImage(image);
+                    req.form = {fields, files, image};
                     return resolve(next(req, res));
                 }else{
                     fs.unlinkSync(file.filepath);

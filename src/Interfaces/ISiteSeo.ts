@@ -15,6 +15,8 @@ export interface ISiteSeoDefaults {
     defaultAuthor?: string;
     /** Default locale for og:locale if not overridden. */
     defaultLocale?: string;
+    editedBy?: string;
+    editedAt?: string;
 }
 
 export const DEFAULT_SITE_SEO: ISiteSeoDefaults = {};

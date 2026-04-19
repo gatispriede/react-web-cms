@@ -26,6 +26,12 @@ export interface InSection {
     type: number
     page: string
     content: InItem[]
+    /** Column spans per item; see ISection.slots for semantics. */
+    slots?: number[]
+    /** Overlay flag — render this section absolutely on top of the previous. */
+    overlay?: boolean
+    /** Overlay anchor — `top-left` | `top-right` | `bottom-left` | `bottom-right` | `center` | `fill`. */
+    overlayAnchor?: string
 }
 
 export interface MutationMongo {

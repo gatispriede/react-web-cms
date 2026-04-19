@@ -318,6 +318,91 @@ class TranslationManager {
                             console.warn('Error while extracting translations for section', section.id, err);
                         }
                         break;
+                    case EItemType.List:
+                        try {
+                            const c: {title?: string; items?: {label?: string; value?: string}[]} = JSON.parse(innerContent.content);
+                            if (c.title) this.defaultTranslations[sanitizeKey(c.title)] = c.title;
+                            for (const li of c.items ?? []) {
+                                if (li?.label) this.defaultTranslations[sanitizeKey(li.label)] = li.label;
+                                if (li?.value) this.defaultTranslations[sanitizeKey(li.value)] = li.value;
+                            }
+                        } catch (err) {
+                            console.warn('Error while extracting translations for section', section.id, err);
+                        }
+                        break;
+                    case EItemType.Services:
+                        try {
+                            const c: {sectionNumber?: string; sectionTitle?: string; sectionSubtitle?: string; rows?: {number?: string; title?: string; description?: string; ctaLabel?: string}[]} = JSON.parse(innerContent.content);
+                            for (const v of [c.sectionNumber, c.sectionTitle, c.sectionSubtitle]) {
+                                if (typeof v === 'string' && v) this.defaultTranslations[sanitizeKey(v)] = v;
+                            }
+                            for (const r of c.rows ?? []) {
+                                for (const v of [r.number, r.title, r.description, r.ctaLabel]) {
+                                    if (typeof v === 'string' && v) this.defaultTranslations[sanitizeKey(v)] = v;
+                                }
+                            }
+                        } catch (err) {
+                            console.warn('Error while extracting translations for section', section.id, err);
+                        }
+                        break;
+                    case EItemType.Testimonials:
+                        try {
+                            const c: {sectionTitle?: string; sectionSubtitle?: string; items?: {quote?: string; name?: string; role?: string}[]} = JSON.parse(innerContent.content);
+                            for (const v of [c.sectionTitle, c.sectionSubtitle]) {
+                                if (typeof v === 'string' && v) this.defaultTranslations[sanitizeKey(v)] = v;
+                            }
+                            for (const q of c.items ?? []) {
+                                for (const v of [q.quote, q.name, q.role]) {
+                                    if (typeof v === 'string' && v) this.defaultTranslations[sanitizeKey(v)] = v;
+                                }
+                            }
+                        } catch (err) {
+                            console.warn('Error while extracting translations for section', section.id, err);
+                        }
+                        break;
+                    case EItemType.ProjectGrid:
+                        try {
+                            const c: {sectionNumber?: string; sectionTitle?: string; sectionSubtitle?: string; items?: {title?: string; stack?: string; kind?: string; year?: string; moreLabel?: string}[]} = JSON.parse(innerContent.content);
+                            for (const v of [c.sectionNumber, c.sectionTitle, c.sectionSubtitle]) {
+                                if (typeof v === 'string' && v) this.defaultTranslations[sanitizeKey(v)] = v;
+                            }
+                            for (const p of c.items ?? []) {
+                                for (const v of [p.title, p.stack, p.kind, p.year, p.moreLabel]) {
+                                    if (typeof v === 'string' && v) this.defaultTranslations[sanitizeKey(v)] = v;
+                                }
+                            }
+                        } catch (err) {
+                            console.warn('Error while extracting translations for section', section.id, err);
+                        }
+                        break;
+                    case EItemType.Manifesto:
+                        try {
+                            const c: {body?: string; addendum?: string} = JSON.parse(innerContent.content);
+                            for (const v of [c.body, c.addendum]) {
+                                if (typeof v === 'string' && v) this.defaultTranslations[sanitizeKey(v)] = v;
+                            }
+                        } catch (err) {
+                            console.warn('Error while extracting translations for section', section.id, err);
+                        }
+                        break;
+                    case EItemType.StatsCard:
+                        try {
+                            const c: {tag?: string; title?: string; stats?: {value?: string; label?: string}[]; features?: {text?: string}[]} = JSON.parse(innerContent.content);
+                            for (const v of [c.tag, c.title]) {
+                                if (typeof v === 'string' && v) this.defaultTranslations[sanitizeKey(v)] = v;
+                            }
+                            for (const s of c.stats ?? []) {
+                                for (const v of [s.value, s.label]) {
+                                    if (typeof v === 'string' && v) this.defaultTranslations[sanitizeKey(v)] = v;
+                                }
+                            }
+                            for (const f of c.features ?? []) {
+                                if (typeof f?.text === 'string' && f.text) this.defaultTranslations[sanitizeKey(f.text)] = f.text;
+                            }
+                        } catch (err) {
+                            console.warn('Error while extracting translations for section', section.id, err);
+                        }
+                        break;
                     case EItemType.Empty:
                         break;
                     default:

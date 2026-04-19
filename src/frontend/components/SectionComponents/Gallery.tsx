@@ -24,7 +24,15 @@ export interface IGallery {
 }
 
 export enum EGalleryStyle {
-    Default = "default"
+    Default = "default",
+    /** Infinite horizontal scroll strip (design-v2 marquee).
+     *  Pauses on hover; duplicates items once via CSS to hide the wrap-seam. */
+    Marquee = "marquee",
+    /** Logo-wall variant — same marquee animation, no image text captions. */
+    LogoWall = "logo-wall",
+    /** Thin top-bar hazard-strip ticker (design-v4 Industrial) — accent-bg,
+     *  uppercase labels with bullet dots. Uses the `text` field; `src` ignored. */
+    HazardStrip = "hazard-strip",
 }
 
 export class GalleryContent extends ContentManager {
@@ -86,12 +94,18 @@ const Gallery = ({item, t: _t, tApp}: {
     const gallery = new GalleryContent(EItemType.Image, item.content);
     gallery.setDisablePreview(item.action !== "onClick");
     const data = gallery.data
+    // Marquee/logo-wall/hazard-strip styles duplicate the item list so the
+    // CSS scroll animation can loop seamlessly — the duplicate is
+    // aria-hidden so screen readers don't announce every item twice.
+    const isMarquee = item.style === 'marquee' || item.style === 'logo-wall' || item.style === 'hazard-strip';
+    const renderedItems = isMarquee ? [...data.items, ...data.items] : data.items;
     return (
         <div className={`gallery-wrapper gallery-wrapper-app ${item.style}`}>
             <div className={'gallery-wrapper-images'}>
                 <Image.PreviewGroup>
                     {
-                        data.items.map((item: IGalleryItem, index: number) => {
+                        renderedItems.map((item: IGalleryItem, index: number) => {
+                            const isClone = isMarquee && index >= data.items.length;
                             const imgProperties: {
                                 preview: boolean;
                                 src: string;
@@ -110,7 +124,11 @@ const Gallery = ({item, t: _t, tApp}: {
                                 imgProperties.height = item.imgHeight
                             }
                             return (
-                                <div key={index} className={`container text-${item.textPosition}`}>
+                                <div
+                                    key={index}
+                                    className={`container text-${item.textPosition}`}
+                                    aria-hidden={isClone ? true : undefined}
+                                >
                                     <div className={'image'}>
                                         <Image {...imgProperties}/>
                                     </div>

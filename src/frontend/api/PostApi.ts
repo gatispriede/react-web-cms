@@ -1,5 +1,6 @@
 import {resolve} from "../gqty";
 import {IPost, InPost} from "../../Interfaces/IPost";
+import {refreshBus} from "../lib/refreshBus";
 
 export class PostApi {
     async list({includeDrafts = false, limit = 50}: {includeDrafts?: boolean; limit?: number} = {}): Promise<IPost[]> {
@@ -26,6 +27,7 @@ export class PostApi {
         try {
             const raw = await resolve(({mutation}) => (mutation as any).mongo.savePost({post}));
             const parsed = JSON.parse(raw || '{}');
+            refreshBus.emit('settings');
             return parsed.savePost ?? parsed;
         } catch (err) { return {error: String(err)}; }
     }
@@ -34,6 +36,7 @@ export class PostApi {
         try {
             const raw = await resolve(({mutation}) => (mutation as any).mongo.deletePost({id}));
             const parsed = JSON.parse(raw || '{}');
+            refreshBus.emit('settings');
             return parsed.deletePost ?? parsed;
         } catch (err) { return {error: String(err)}; }
     }
@@ -42,6 +45,7 @@ export class PostApi {
         try {
             const raw = await resolve(({mutation}) => (mutation as any).mongo.setPostPublished({id, publish}));
             const parsed = JSON.parse(raw || '{}');
+            refreshBus.emit('settings');
             return parsed.setPostPublished ?? parsed;
         } catch (err) { return {error: String(err)}; }
     }

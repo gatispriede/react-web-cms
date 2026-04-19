@@ -73,7 +73,20 @@ export class NavigationService implements INavigationService{
     async getSections(sectionIds: string[]): Promise<ISection[]> {
         try {
             const docs = await this.sectionsDB.find({ id: { $in: sectionIds } }).toArray();
-            return docs.map(doc => doc as unknown as ISection);
+            // `$in` returns documents in Mongo's natural / insertion order,
+            // not in the order requested. Re-sort by the caller's list so
+            // the Navigation.sections array (which is the source of truth
+            // for page layout + reorder operations) round-trips correctly.
+            // Without this, dragging a section into a new position briefly
+            // shows the new layout, then snaps back when the next refresh
+            // reads sections back in insertion order.
+            const order = new Map(sectionIds.map((id, i) => [id, i]));
+            const ordered = docs.slice().sort((a: any, b: any) => {
+                const ia = order.get(a.id as string) ?? Number.MAX_SAFE_INTEGER;
+                const ib = order.get(b.id as string) ?? Number.MAX_SAFE_INTEGER;
+                return ia - ib;
+            });
+            return ordered.map(doc => doc as unknown as ISection);
         } catch (err) {
             console.error('Error getting sections:', err);
             await this.setupClient();

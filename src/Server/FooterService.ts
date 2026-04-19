@@ -18,6 +18,8 @@ export class FooterService {
             enabled: value?.enabled ?? DEFAULT_FOOTER.enabled,
             columns: Array.isArray(value?.columns) ? value!.columns : DEFAULT_FOOTER.columns,
             bottom: value?.bottom ?? DEFAULT_FOOTER.bottom,
+            editedBy: (doc as any)?.editedBy,
+            editedAt: (doc as any)?.editedAt,
         };
     }
 

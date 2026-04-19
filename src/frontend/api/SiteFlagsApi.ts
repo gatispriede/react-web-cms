@@ -1,5 +1,6 @@
 import {resolve} from "../gqty";
 import {DEFAULT_SITE_FLAGS, ISiteFlags} from "../../Server/SiteFlagsService";
+import {refreshBus} from "../lib/refreshBus";
 
 export class SiteFlagsApi {
     async get(): Promise<ISiteFlags> {
@@ -16,6 +17,7 @@ export class SiteFlagsApi {
         try {
             const raw = await resolve(({mutation}) => (mutation as any).mongo.saveSiteFlags({flags}));
             const parsed = JSON.parse(raw || '{}');
+            refreshBus.emit('settings');
             return parsed.saveSiteFlags ?? parsed;
         } catch (err) {
             return {error: String(err)};

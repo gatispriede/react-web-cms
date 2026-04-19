@@ -1,9 +1,10 @@
-import {Button, Modal, Select, Tabs} from "antd";
+import {Button, Drawer, Select, Space, Tabs} from "antd";
 import {EditOutlined, PlusCircleOutlined} from "@ant-design/icons";
 import React from "react";
 import {ISection} from "../../../../Interfaces/ISection";
 import {ContentSection} from "../ContentSection";
-import PreviewDialog from "./PreviewDialog";
+import ContentType from "../ContentType";
+import ActionDialog from "./ActionDialog";
 import {EItemType} from "../../../../enums/EItemType";
 import {IConfigSectionAddRemove} from "../../../../Interfaces/IConfigSectionAddRemove";
 import {IItem} from "../../../../Interfaces/IItem";
@@ -25,6 +26,7 @@ interface IAddNewSectionItemProps {
 class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
     state = {
         dialogOpen: false,
+        actionPreviewOpen: false,
         selected: EItemType.Text,
         action: 'none',
         content: '{}',
@@ -277,25 +279,72 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                         </Button>
                     </div>
                 }
-                <Modal width={'90%'} open={this.state.dialogOpen}
-                       footer={(_, {OkBtn, CancelBtn}) => (
-                           <>
-                               <CancelBtn/>
-                               <PreviewDialog t={this.props.t} tApp={this.props.tApp} item={item}/>
-                               <OkBtn/>
-                           </>
-                       )}
-                       onCancel={() => {
-                           this.setState({dialogOpen: false})
-                       }}
-                       onOk={async () => {
-                           await this.addSectionItem()
-                           this.setState({dialogOpen: false})
-                       }}
+                <Drawer
+                    width={'90%'}
+                    open={this.state.dialogOpen}
+                    title={this.props.loadItem ? this.props.t('Edit content') : this.props.t('Add content')}
+                    onClose={() => this.setState({dialogOpen: false})}
+                    destroyOnClose
+                    extra={
+                        <Space>
+                            <Button onClick={() => this.setState({dialogOpen: false})}>
+                                {this.props.t('Cancel')}
+                            </Button>
+                            <Button
+                                type="primary"
+                                onClick={async () => {
+                                    await this.addSectionItem();
+                                    this.setState({dialogOpen: false});
+                                }}
+                            >
+                                {this.props.t('Save')}
+                            </Button>
+                        </Space>
+                    }
                 >
-                    <Tabs tabPosition={'left'} defaultActiveKey="1" items={tabContent}/>
-
-                </Modal>
+                    <div style={{display: 'grid', gridTemplateColumns: 'minmax(360px, 1fr) minmax(320px, 1fr)', gap: 24, alignItems: 'start'}}>
+                        <div>
+                            <Tabs tabPosition={'left'} defaultActiveKey="1" items={tabContent}/>
+                        </div>
+                        <div
+                            style={{
+                                position: 'sticky',
+                                top: 0,
+                                borderLeft: '1px solid rgba(0,0,0,0.06)',
+                                paddingLeft: 16,
+                            }}
+                        >
+                            <div style={{fontWeight: 500, marginBottom: 8, textTransform: 'uppercase', fontSize: 12, opacity: 0.65}}>
+                                {this.props.t('Live preview')}
+                            </div>
+                            {/*
+                              Key the preview tree by every field that drives how the item
+                              renders. When `style` flips, ContentType/Display would otherwise
+                              diff onto the same instance and could hold stale className /
+                              children — remounting sidesteps that reliably across every
+                              module type. Cheap (preview only, no network).
+                            */}
+                            <div
+                                key={`preview-${this.state.selected}-${this.state.style}-${this.state.action}-${this.state.actionStyle}`}
+                                className={`content-wrapper ${item.action === 'onClick' ? 'action-enabled' : ''}`}
+                                onClick={() => {
+                                    if (item.action === 'onClick' && !this.state.actionPreviewOpen) {
+                                        this.setState({actionPreviewOpen: true});
+                                    }
+                                }}
+                            >
+                                <ContentType t={this.props.t} tApp={this.props.tApp} admin={false} item={item} addButton={''}/>
+                                <ActionDialog
+                                    t={this.props.t}
+                                    tApp={this.props.tApp}
+                                    item={item}
+                                    open={this.state.actionPreviewOpen}
+                                    close={() => this.setState({actionPreviewOpen: false})}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </Drawer>
             </>
         )
     }

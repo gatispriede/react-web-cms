@@ -74,6 +74,7 @@ const preloadData = async () => {
 interface MyDocProps {
     themeCss?: string;
     preloadedScript?: string;
+    themeSlug?: string;
 }
 
 class MyDocument extends Document<MyDocProps> {
@@ -81,11 +82,22 @@ class MyDocument extends Document<MyDocProps> {
         const currentLocale =
             this.props.__NEXT_DATA__.locale ??
             i18nextConfig.i18n.defaultLocale
-        const {themeCss, preloadedScript} = this.props;
+        const {themeCss, preloadedScript, themeSlug} = this.props;
         return (
             <Html lang={currentLocale}>
                 <Head>
                     <meta charSet="utf-8" />
+                    {/* All themes' fonts are loaded up front so theme switches
+                        don't flash unstyled text:
+                          • Paper → Instrument Serif · JetBrains Mono · Inter Tight
+                          • Studio → Fraunces · Geist · Geist Mono
+                          • Industrial → Barlow Condensed · Barlow (JetBrains Mono shared) */}
+                    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+                    <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous"/>
+                    <link
+                        rel="stylesheet"
+                        href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&family=Inter+Tight:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Geist+Mono:wght@400;500&family=Geist:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700;800;900&family=Barlow:wght@400;500;600;700&display=swap"
+                    />
                     {themeCss && (
                         <style data-theme-vars dangerouslySetInnerHTML={{__html: themeCss}}/>
                     )}
@@ -93,7 +105,7 @@ class MyDocument extends Document<MyDocProps> {
                         <script dangerouslySetInnerHTML={{__html: preloadedScript}}/>
                     )}
                 </Head>
-                <body>
+                <body {...(themeSlug ? {'data-theme-name': themeSlug} : {})}>
                 <Main/>
                 <NextScript/>
                 </body>
@@ -135,10 +147,12 @@ MyDocument.getInitialProps = async (ctx: DocumentContext) => {
     global.preloadedData = preloaded;
     const style = extractStyle(cache, true);
     const themeCss = buildThemeCssVarsRule(themeTokens);
+    const themeSlug = typeof themeTokens?.themeSlug === 'string' ? themeTokens.themeSlug : undefined;
     const preloadedScript = `window.preloadedData = ${JSON.stringify(preloaded)}`;
     return {
         ...initialProps,
         themeCss,
+        themeSlug,
         preloadedScript,
         styles: (
             <>

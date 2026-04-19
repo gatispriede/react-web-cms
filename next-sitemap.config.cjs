@@ -9,39 +9,46 @@ module.exports = {
     sourceDir: "src/frontend/.next",
     outDir: "src/frontend/public/images",
     additionalPaths: async (config) => {
-        const result = []
-        const pages = await fetch(`${domain}/api/graphql?query=query%7B%0A%20%20mongo%7B%0A%20%20%20%20getNavigationCollection%7B%0A%20%20%20%20%20%20page%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D`)
-            .then(response => {
-                return response.json()
-            }).then(response => {
-                try {
-                    const rez = response
-                    return rez.data.mongo.getNavigationCollection;
-                }catch (error) {
-                    console.error(error)
-                }
-                return []
-            });
+        // Sitemap content depends on the site layout mode: in "tabs" mode
+        // every nav page is its own URL so we emit one entry per page; in
+        // "scroll" mode all pages stack on `/`, so we only emit the root
+        // (URL fragments aren't valid sitemap locs). Legacy `/<slug>` routes
+        // in scroll mode redirect client-side to `/#<slug>` — see
+        // `src/frontend/pages/[...slug].tsx`.
+        const query = `{ mongo { getNavigationCollection { page } getSiteFlags } }`;
+        const resp = await fetch(`${domain}/api/graphql`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({query}),
+        }).then(r => r.json()).catch((err) => { console.error(err); return null; });
+        const pages = resp?.data?.mongo?.getNavigationCollection ?? [];
+        let layoutMode = 'tabs';
+        try {
+            const flags = JSON.parse(resp?.data?.mongo?.getSiteFlags || '{}');
+            if (flags.layoutMode === 'scroll') layoutMode = 'scroll';
+        } catch { /* noop */ }
 
-        pages.map((page) => {
-            result.push({
-                loc: "/" + page.page,
+        const alternateRefs = [
+            {href: `${domain}/en/`, hreflang: 'en'},
+            {href: `${domain}/lv/`, hreflang: 'lv'},
+        ];
+        const lastmod = new Date().toISOString();
+
+        if (layoutMode === 'scroll') {
+            return [{
+                loc: '/',
                 changefreq: 'daily',
-                priority: 0.7,
-                lastmod: new Date().toISOString(),
-                alternateRefs: [
-                    {
-                        href: `${domain}/en/`,
-                        hreflang: 'en',
-                    },
-                    {
-                        href: `${domain}/lv/`,
-                        hreflang: 'lv',
-                    },
-                ],
-            })
-            }
-        )
-        return result
+                priority: 0.8,
+                lastmod,
+                alternateRefs,
+            }];
+        }
+        return pages.map((page) => ({
+            loc: '/' + page.page,
+            changefreq: 'daily',
+            priority: 0.7,
+            lastmod,
+            alternateRefs,
+        }));
     }
 };

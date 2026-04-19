@@ -8,6 +8,8 @@ export interface ISiteFlags {
     /** How the public site renders navigation: classic tab-per-page or a single
      *  stacked document with smooth-scroll anchors. */
     layoutMode: SiteLayoutMode;
+    editedBy?: string;
+    editedAt?: string;
 }
 
 export const DEFAULT_SITE_FLAGS: ISiteFlags = {
@@ -32,6 +34,8 @@ export class SiteFlagsService {
             layoutMode: (value?.layoutMode === 'scroll' || value?.layoutMode === 'tabs')
                 ? value.layoutMode
                 : DEFAULT_SITE_FLAGS.layoutMode,
+            editedBy: (doc as any)?.editedBy,
+            editedAt: (doc as any)?.editedAt,
         };
     }
 

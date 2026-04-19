@@ -8,6 +8,9 @@ import {TFunction} from "i18next";
 import AddNewLanguageDialog from "./AddNewLanguageDialog";
 import {useTranslation} from "next-i18next";
 import {sanitizeKey} from "../../../../utils/stringFunctions";
+import AuditBadge from "../AuditBadge";
+import {INewLanguage} from "../../interfaces/INewLanguage";
+import {useRefreshView} from "../../../lib/refreshBus";
 
 const {Header, Content, Sider} = Layout;
 
@@ -41,9 +44,11 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
         key: 'default',
         label: 'App Translations',
     }]);
+    const [languages, setLanguages] = useState<Record<string, INewLanguage>>({});
 
     const refreshMenu = useCallback(async () => {
         const data = await translationManager.getLanguages();
+        setLanguages(data);
         const items: MenuItem[] = [{key: 'default', label: tAdmin('App Translations'), name: 'App Translations'}];
         for (const id in data) {
             if (data[id].default) continue;
@@ -64,6 +69,7 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
     }, [translationManager, tAdmin, i18n.language]);
 
     useEffect(() => { void refreshMenu(); }, [refreshMenu]);
+    useRefreshView(refreshMenu, 'settings');
 
     const setTranslationValue = (data: any) => setTranslation(data);
 
@@ -175,6 +181,12 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
                                     <Button danger type="primary" loading={saving} onClick={deleteTranslation} disabled={currentLanguage === 'default'}>
                                         {tAdmin('Delete')}
                                     </Button>
+                                    {currentLanguage !== 'default' && (
+                                        <AuditBadge
+                                            editedBy={languages[currentLanguage]?.editedBy}
+                                            editedAt={languages[currentLanguage]?.editedAt}
+                                        />
+                                    )}
                                 </>
                             )}
                         </div>

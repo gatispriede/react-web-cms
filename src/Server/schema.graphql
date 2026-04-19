@@ -3,6 +3,9 @@ input InSection {
     type: Int!
     page: String!
     content: [InItem]
+    slots: [Int]
+    overlay: Boolean
+    overlayAnchor: String
 }
 
 input InItem {
@@ -69,6 +72,8 @@ type INewLanguage {
     symbol: String!
     default: Boolean
     flag: String
+    editedBy: String
+    editedAt: String
 }
 type IUser {
     id: String!
@@ -84,6 +89,8 @@ type ILogo {
     id: String
     type: String
     content: String!
+    editedBy: String
+    editedAt: String
 }
 
 type IImage {
@@ -111,6 +118,9 @@ type ISection {
     page: String
     type: Int!
     content: [IItem]
+    slots: [Int]
+    overlay: Boolean
+    overlayAnchor: String
     editedBy: String
     editedAt: String
 }

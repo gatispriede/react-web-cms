@@ -2,7 +2,7 @@
 
 ## Overview
 
-Despite the name, this is a **Next.js 15 / React 19 CMS** backed by **MongoDB** (Redis is present but nearly unused). It ships a developer-portfolio-ready content model: admins compose multilingual pages from 11 reusable item types (Text / RichText / Image / Gallery / Carousel / Hero / ProjectCard / SkillPills / Timeline / SocialLinks / BlogFeed), manage a blog (`Posts` collection + `/blog` + `/blog/[slug]` routes), swap AntD themes (with live preview and CSS-variable scoping so only content modules are themed — admin chrome stays static), publish versioned snapshots (with rollback), toggle a `blogEnabled` flag, and customise a site-wide footer that auto-generates columns from navigation + blog.
+Despite the name, this is a **Next.js 15 / React 19 CMS** backed by **MongoDB** (Redis is present but nearly unused). It ships a developer-portfolio-ready content model: admins compose multilingual pages from **17 reusable item types** (Text / RichText / Image / Gallery / Carousel / Hero / ProjectCard / SkillPills / Timeline / SocialLinks / BlogFeed / **List** / **Services** / **Testimonials** / **StatsCard** / **ProjectGrid** / **Manifesto**), manage a blog (`Posts` collection + `/blog` + `/blog/[slug]` routes), swap AntD themes (with live preview and CSS-variable scoping so only content modules are themed — admin chrome stays static), publish versioned snapshots (with rollback), toggle a `blogEnabled` flag, and customise a site-wide footer that auto-generates columns from navigation + blog. Sections compose via **column-slot merges** (e.g. 66/33 from a 3-col layout) and **absolute-positioned overlays** pinned to six anchor points, both editable inline from the admin chrome.
 
 - **Framework:** Next.js 15 (pages router, Turbopack in dev), React 19, TypeScript 5
 - **UI:** Ant Design v5 + custom SCSS; CKEditor 5 is the sole rich-text editor (draft-js + deps removed); IntersectionObserver-based reveal animations; flag-aware language dropdown
@@ -10,7 +10,7 @@ Despite the name, this is a **Next.js 15 / React 19 CMS** backed by **MongoDB** 
 - **Data:** MongoDB 7 — collections: `Navigation`, `Sections`, `Images`, `Logos`, `Users`, `Languages`, `Themes`, `SiteSettings` (holds footer / flags / SEO / activeThemeId), `PublishedSnapshots`, `Posts`. Redis still present but nearly unused
 - **Auth:** NextAuth (Credentials + optional Google), bcrypt password hashing, JWT sessions carrying `role` + `canPublishProduction`; rate-limited sign-in + same-origin guard on `/api/import`
 - **i18n:** `next-i18next`, language detection via `@unly/universal-language-detector`, table editor (single-locale + side-by-side compare) with CSV export/import and merge-on-save so untouched keys aren't wiped
-- **Theming:** 4 seeded presets + custom themes; `_document.tsx getInitialProps` emits CSS vars inline so first paint already has the active theme
+- **Theming:** 7 seeded presets — 4 colour-only (Classic / Ocean / Forest / Midnight) + 3 editorial bundles that restyle every module (**Paper** — Instrument Serif / Inter Tight / JetBrains Mono; **Studio** — Fraunces / Geist; **Industrial** — Barlow Condensed / JetBrains Mono hi-vis yellow on graphite). Editorial presets carry a `themeSlug` token that sets `body[data-theme-name="<slug>"]`, scoping module SCSS to the active theme. `_document.tsx getInitialProps` emits CSS vars inline so first paint already has the active theme.
 - **Public layout:** tabs mode (each nav item is its own page) or single-page scroll mode (all pages stacked as `<section id>` anchors), toggled via site flag
 - **Audit:** every content-edit mutation (Nav, Section, Theme, Post, Footer, SiteFlags, SiteSeo, Logo, Language) stamps `editedBy` + `editedAt`; publish/rollback stamp `publishedBy` / `rolledBackFrom`
 - **Tests:** Vitest + `mongodb-memory-server` + Testing Library — 110 passing tests; CI runs typecheck + `npm test` on every PR ([.github/workflows/ci.yml](.github/workflows/ci.yml))
@@ -153,11 +153,45 @@ Default admin (see [mongoDBConnection.ts:27-29](src/Server/mongoDBConnection.ts:
 ## Admin panel
 
 - [pages/admin.tsx](src/frontend/pages/admin.tsx), [pages/admin/settings.tsx](src/frontend/pages/admin/settings.tsx), and [pages/admin/languages.tsx](src/frontend/pages/admin/languages.tsx) — require login; [UserStatusBar.tsx](src/frontend/components/Admin/UserStatusBar.tsx) picks the active view.
-- [AdminApp.tsx](src/frontend/components/Admin/AdminApp.tsx) — page tabs carry inline [`AuditBadge`](src/frontend/components/Admin/AuditBadge.tsx) ("last edited by X · 2m ago"); Publish button gated on `canPublishProduction`; Cmd/Ctrl-K palette via [CommandPalette.tsx](src/frontend/components/Admin/CommandPalette.tsx).
+- [AdminApp.tsx](src/frontend/components/Admin/AdminApp.tsx) — page tabs carry inline [`AuditBadge`](src/frontend/components/Admin/AuditBadge.tsx) ("last edited by X · 2m ago"), also rendered on every settings tab (Theme/Logo/Posts/Footer/Layout/SEO/Languages); Publish button gated on `canPublishProduction`; Cmd/Ctrl-K palette via [CommandPalette.tsx](src/frontend/components/Admin/CommandPalette.tsx).
 - [components/Admin/ConfigComponents/](src/frontend/components/Admin/ConfigComponents/) — per-section-type editors (`InputHero`, `InputProjectCard`, `InputSkillPills`, `InputTimeline`, `InputSocialLinks`, `InputBlogFeed`, plus the Carousel/Gallery/Image/PlainText/RichText editors).
 - [components/common/Dialogs/](src/frontend/components/common/Dialogs/) — modals for navigation entries, sections, section items, logo, preview.
 - [AdminSettings/](src/frontend/components/Admin/AdminSettings/) — `Users`, `Theme`, `Logo`, `SEO`, `Posts`, `Footer`, `Bundle`, `Publishing`, `Layout` (tabs/scroll toggle). `Languages` has its own route.
 - [lib/useAutosave.ts](src/frontend/lib/useAutosave.ts) + [AutosaveStatus.tsx](src/frontend/components/Admin/AutosaveStatus.tsx) — debounced save hook + status pill, ready to wire into forms.
+
+### Style per item (per-module theming hook)
+
+Every content item — regardless of type — carries a free-form `style` field in addition to its `type` + `content`. The editor surfaces it as a third tab in the Edit-content drawer ("Style"), next to "Content" and "Action": a dropdown of the values declared in each type's `styleEnum` (see [itemTypes/registry.ts](src/frontend/components/itemTypes/registry.ts)) plus a second dropdown for the action component's style when an action is configured.
+
+Intended as the **per-module theming slot** — editors pick a named variant; themes and section-level SCSS use `.<module>.<style>` selectors to apply custom borders, backgrounds, typography, or layout tweaks. Each preset bundles its own `styleEnum` so admins only see valid options. A few examples:
+
+- `SkillPills.matrix` — swaps the tag-pill render for an animated capability-matrix bar (used by the Paper theme).
+- `Timeline.editorial` / `.alternating` — picks between the paper-style two-column detail grid and an alternating left/right layout.
+- `PlainImage.default` vs. a theme's custom value — controls framing / aspect handling.
+
+Adding a new style variant: append the enum value in the relevant `SectionComponents/<Type>.tsx`, then hook it in SCSS (global or theme-scoped via `body[data-theme-name="<slug>"] .<module>.<variant>`). No schema changes needed — `style` is already a first-class string on every `IItem`.
+
+### Section composition — slots, overlay, reorder
+
+Sections aren't just stacked rows. Admins can compose them three ways, all editable inline:
+
+- **Column slot merges** — a section with `type: 3` (three 33% columns) can split into `slots: [2, 1]` → 66/33, `[1, 2]` → 33/66, etc. Same story for `type: 4` (any permutation that sums to 4). Hover a section to reveal the **merge-with-next** (◀) / **split** (▶) chips on each slot edge; merging keeps the left item and drops the right, splitting inserts empty slots. Stored as `ISection.slots: number[]`; validated server-side (`sum(slots) === type` + `slots.length === content.length`). See [SectionContent.tsx](src/frontend/components/SectionContent.tsx) for the grid render + chip placement.
+- **Overlay + anchor** — any section can be flagged `overlay: true` with `overlayAnchor` = `top-left | top-right | bottom-left | bottom-right | center | fill`. The section drops out of block flow and renders as an absolute-positioned child of the previous non-overlay ("host") section. [DynamicTabsContent.renderGroupedSections](src/frontend/components/DynamicTabsContent.tsx) groups consecutive overlay sections under their host; the host gets `position: relative` via `.section-host`; CSS anchors live in [scss/global.scss](src/frontend/scss/global.scss) (`.section-overlay--<anchor>`). Admin chrome carries a hover-revealed segmented control per section (`Off / ◤ ◥ ◣ ◢ / ✦ / ▣`) that mutates these fields through the existing `addUpdateSectionItem` mutation, with undo ticket support.
+- **Reorder (native HTML5 DnD)** — [DraggableWrapper](src/frontend/components/common/DraggableWrapper.tsx) renders a pulsing accent-bordered 48px placeholder at the exact drop slot during a drag; the dragged section itself fades to 40% opacity with a tiny scale-down. Target position updates are `requestAnimationFrame`-throttled so adjacent-section hover doesn't flicker. On drop, `NavigationService.getSections` re-sorts the `$in`-fetched docs by the caller's id order so the new layout sticks through the refresh.
+
+### Action per item (interaction hook)
+
+Every item also carries an **Action** section — the second tab in the Edit-content drawer — which configures what happens when the item is interacted with (currently "No action" / "On click"; more triggers planned, e.g. hover, scroll-into-view, intersection-observer reveal, keyboard shortcut).
+
+When an action is configured the editor picks:
+- `action` — the trigger (`none` / `onClick` / future additions).
+- `actionType` — the item type of the content that the action surfaces. **Any** registered module can be used as an action target: click an image → pop open a Gallery; click a text → slide in a RichText; click a button → reveal a BlogFeed preview. Same registry, same editor, so "an action is just another module hanging off a trigger".
+- `actionContent` — the full content JSON for that nested module, edited inline via the same editor as the outer module.
+- `actionStyle` — **separate style slot** for the action component, exposed as the second dropdown on the "Style" tab ("Please select style for action component"). Lets editors tune the triggered module independently of its standalone appearance — e.g. a Gallery used as an inline block gets one treatment, the same Gallery used as an onClick overlay gets another.
+
+Runtime: [ContentType](src/frontend/components/common/ContentType.tsx) renders the outer module; when the parent wrapper observes an action-enabled class (`content-wrapper.action-enabled`) and the trigger fires, an `ActionDialog` (or equivalent surface) mounts the inner module using the stored `actionType` + `actionContent` + `actionStyle`. The action-component style is what the triggered module uses — its own regular `style` field is ignored in this context, so a Gallery rendered via an action follows `actionStyle`, not `style`.
+
+Adding a new action trigger: extend the trigger enum in [ConfigComponents](src/frontend/components/Admin/ConfigComponents/), wire the corresponding DOM handler on the render path in [ContentType](src/frontend/components/common/ContentType.tsx) (or a sibling wrapper), and — if the trigger needs its own CSS-driven state — scope styles through the `actionStyle` the editor picks.
 
 ## Scripts ([package.json](package.json))
 
@@ -200,6 +234,113 @@ Entire site (navigation, sections, languages, logo, images metadata, + reference
 - **HTML sanitization** — [sanitizeHtml](src/utils/sanitize.ts) is applied to `RichText` before `innerHTML` assignment. Strips `<script>`/`<iframe>`/`<style>` tags, inline event handlers, and `javascript:`/`data:`/`vbscript:` URLs on `href`/`src`/`action`. Upgrade path: DOMPurify.
 - **Bundle import validation** — see above.
 - **Defensive parsing** — translation utils guard against non-string content (`typeof html !== 'string'`); `MongoApi.getLogo` returns a safe empty shape when null.
+
+## Asset / image pipeline
+
+High-level — one picture of where an image lives:
+
+```mermaid
+flowchart LR
+    Admin([Admin browser])
+    NextApp[/"Next.js app\n(upload + gqty + gallery)"/]
+    Disk[("Filesystem\npublic/images/")]
+    MongoDB[("MongoDB\nImages + Logos")]
+
+    Admin -- "upload / pick" --> NextApp
+    NextApp -- "binary" --> Disk
+    NextApp -- "metadata\n(+ audit stamps)" --> MongoDB
+    Disk -- "static GET /api/<file>" --> Admin
+    MongoDB -- "getImages list" --> Admin
+
+    style Admin fill:#f4f7ff,stroke:#6b86d6
+    style NextApp fill:#fff6e6,stroke:#c29b00
+    style Disk fill:#eef,stroke:#66a
+    style MongoDB fill:#eef,stroke:#66a
+```
+
+Zoomed in:
+
+```mermaid
+flowchart LR
+    subgraph Browser
+      Widget[Uppload widget]
+      Gallery[Gallery picker]
+      Input["InputPlainImage /\nLogoSettings"]
+    end
+    subgraph NextServer [Next.js server]
+      Upload["/api/upload\n(Formidable + session guard)"]
+      Apollo["/api/graphql\n(Apollo + authz proxy)"]
+    end
+    subgraph Services [Server services]
+      Asset["AssetService\nsaveImage / getImages /\ndeleteImage / saveLogo"]
+    end
+    Disk[("public/images/<file>")]
+    Mongo[("Mongo: Images,\nLogos")]
+
+    Widget -- "POST multipart file + tags" --> Upload
+    Upload -- "fs.renameSync temp → images" --> Disk
+    Upload -- "direct call (server-side,\nno session cookie to forward)" --> Asset
+    Widget -- "setFile(File) after upload" --> Input
+    Gallery -- "setFile(IImage) picked" --> Input
+
+    Input -- "setContent('{src: api/<name>, …}')" --> Input
+    Gallery -- "query mongo.getImages(tags)" --> Apollo
+    Apollo -- "guardMethods(session)" --> Asset
+    Asset -- "insertOne / find / updateOne" --> Mongo
+    Disk -.-> Gallery
+
+    classDef svc fill:#eef,stroke:#66a;
+    class Asset svc;
+```
+
+```mermaid
+sequenceDiagram
+    participant U as Admin (browser)
+    participant UP as Uppload widget
+    participant API as /api/upload
+    participant SVC as AssetService
+    participant FS as public/images
+    participant DB as Mongo.Images
+
+    U->>UP: drop / pick file
+    UP->>UP: compress → webp
+    UP->>API: POST multipart (file, tags)
+    API->>API: sessionFromReq → role ≥ editor?
+    alt file name not on disk
+        API->>FS: renameSync(temp, images/<sanitised>)
+        API->>SVC: saveImage(image)
+        SVC->>DB: insertOne
+        API-->>U: 200 {image}
+    else collision
+        API->>FS: unlink(temp)
+        API-->>U: 200 {error: "Image already exists…"}
+    end
+    U->>API: (later) open gallery
+    API->>SVC: getImages(tags)
+    SVC->>DB: find({tags: /tag/i})
+    DB-->>U: IImage[]
+```
+
+Images and the single logo are served as static files from `src/frontend/public/images/` and catalogued in the `Images` collection. Two entry points touch them:
+
+- **`POST /api/upload`** ([pages/api/upload.ts](src/frontend/pages/api/upload.ts)) — multipart upload. Formidable parses into `public/temp/`, then the handler renames the file into `public/images/<originalFilename with spaces→underscores>`. If a file with that target name already exists on disk, the temp file is deleted and a `{error: "Image already exists..."}` response is returned. On success, `AssetService.saveImage` is called **directly** (not via the GraphQL gateway) to insert the metadata doc `{id, name, location: "api/<name>", size, type, tags, created}`. Response: `{fields, files, image}`.
+  - Why direct? The upload API runs server-side; fetching `/api/graphql` from there does not forward the caller's NextAuth cookie, so the mutation would hit [authz.ts](src/Server/authz.ts) as `role: 'viewer'` and `saveImage` (requires `editor`) would 403. Files would land on disk while the DB insert silently failed.
+  - The upload endpoint itself guards on `sessionFromReq` and rejects anyone below `editor`.
+- **`POST /api/graphql → saveImage / deleteImage / getImages`** — used by the browser gallery for listing and deletion. Goes through the authz proxy → `AssetService`.
+
+Client side:
+
+- **[ImageUpload.tsx](src/frontend/components/ImageUpload.tsx)** — wrapping the Uppload widget. Two paths converge into the same `setFile(file)` callback: (1) a freshly uploaded `File` from the widget (after Uppload calls `_setFile` from its `uploader` function in [UpploadeManager.ts](src/frontend/Classes/UpploadeManager.ts), which also `fetch('/api/upload')`s the same binary), and (2) a gallery-picked `IImage` from the list. Callers (`InputPlainImage`, `LogoSettings`) reconstruct the public path as `PUBLIC_IMAGE_PATH + file.name` (i.e. `api/<name>`).
+- **Gallery refresh** — `loadImages()` re-runs on `dialogOpen` changes only. Newly uploaded images appear the next time the picker is opened; no live push.
+- **Tags** — `UpploadManager` defaults to `['All']`; the client POSTs `tags` as JSON. `AssetService.getImages` queries `{tags: {$regex: tags, $options: 'i'}}`, which Mongo applies element-wise across each doc's `tags` array. Searching "All" matches uploads that retained the default tag.
+
+Logo (`Logos` collection, single doc) flows through `AssetService.saveLogo / getLogo` via GraphQL (session-aware authz applies), stamping `editedBy` + `editedAt` like other settings docs.
+
+Known gaps worth addressing (see ROADMAP for current status):
+
+- Disk-existence check compares against `originalFilename` including spaces but the stored file uses underscores — so re-uploading the same filename with spaces repeatedly would bypass the "already exists" short-circuit.
+- `UpploadManager.setTags` assigns to a local `upploadManager` variable re-declared on every render of `ImageUpload`, so user-edited tags may not reach the instance bound at mount time.
+- `setFile` is invoked synchronously when Uppload's `uploader` resolves, but the actual HTTP upload fetch is fire-and-forget inside the same function — if it fails mid-flight the disk file exists without a DB row.
 
 ## Notable issues / smells (remaining)
 

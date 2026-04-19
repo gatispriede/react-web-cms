@@ -135,6 +135,8 @@ export const generatedSchema = {
     content: { __type: "String!" },
     id: { __type: "String" },
     type: { __type: "String" },
+    editedBy: { __type: "String" },
+    editedAt: { __type: "String" },
   },
   INavigation: {
     __typename: { __type: "String!" },
@@ -152,6 +154,8 @@ export const generatedSchema = {
     label: { __type: "String!" },
     symbol: { __type: "String!" },
     flag: { __type: "String" },
+    editedBy: { __type: "String" },
+    editedAt: { __type: "String" },
   },
   ISection: {
     __typename: { __type: "String!" },
@@ -159,6 +163,9 @@ export const generatedSchema = {
     id: { __type: "String" },
     page: { __type: "String" },
     type: { __type: "Int!" },
+    slots: { __type: "[Int]" },
+    overlay: { __type: "Boolean" },
+    overlayAnchor: { __type: "String" },
     editedBy: { __type: "String" },
     editedAt: { __type: "String" },
   },
@@ -224,6 +231,9 @@ export const generatedSchema = {
     id: { __type: "String" },
     page: { __type: "String!" },
     type: { __type: "Int!" },
+    slots: { __type: "[Int]" },
+    overlay: { __type: "Boolean" },
+    overlayAnchor: { __type: "String" },
   },
   InSeo: {
     author: { __type: "String" },
@@ -369,6 +379,8 @@ export interface ILogo {
   content: ScalarsEnums["String"];
   id?: Maybe<ScalarsEnums["String"]>;
   type?: Maybe<ScalarsEnums["String"]>;
+  editedBy?: Maybe<ScalarsEnums["String"]>;
+  editedAt?: Maybe<ScalarsEnums["String"]>;
 }
 
 export interface INavigation {
@@ -388,6 +400,8 @@ export interface INewLanguage {
   label: ScalarsEnums["String"];
   symbol: ScalarsEnums["String"];
   flag?: Maybe<ScalarsEnums["String"]>;
+  editedBy?: Maybe<ScalarsEnums["String"]>;
+  editedAt?: Maybe<ScalarsEnums["String"]>;
 }
 
 export interface ISection {
@@ -396,6 +410,9 @@ export interface ISection {
   id?: Maybe<ScalarsEnums["String"]>;
   page?: Maybe<ScalarsEnums["String"]>;
   type: ScalarsEnums["Int"];
+  slots?: Maybe<Array<Maybe<ScalarsEnums["Int"]>>>;
+  overlay?: Maybe<ScalarsEnums["Boolean"]>;
+  overlayAnchor?: Maybe<ScalarsEnums["String"]>;
   editedBy?: Maybe<ScalarsEnums["String"]>;
   editedAt?: Maybe<ScalarsEnums["String"]>;
 }

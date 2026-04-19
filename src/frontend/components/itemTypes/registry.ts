@@ -21,6 +21,12 @@ import SkillPills, {ESkillPillsStyle} from "../SectionComponents/SkillPills";
 import Timeline, {ETimelineStyle} from "../SectionComponents/Timeline";
 import SocialLinks, {ESocialLinksStyle} from "../SectionComponents/SocialLinks";
 import BlogFeed, {EBlogFeedStyle} from "../SectionComponents/BlogFeed";
+import List, {EListStyle} from "../SectionComponents/List";
+import Services, {EServicesStyle} from "../SectionComponents/Services";
+import Testimonials, {ETestimonialsStyle} from "../SectionComponents/Testimonials";
+import StatsCard, {EStatsCardStyle} from "../SectionComponents/StatsCard";
+import ProjectGrid, {EProjectGridStyle} from "../SectionComponents/ProjectGrid";
+import Manifesto, {EManifestoStyle} from "../SectionComponents/Manifesto";
 
 import InputPlainText from "../Admin/ConfigComponents/InputPlainText";
 import InputRichText from "../Admin/ConfigComponents/InputRichText";
@@ -33,13 +39,19 @@ import InputSkillPills from "../Admin/ConfigComponents/InputSkillPills";
 import InputTimeline from "../Admin/ConfigComponents/InputTimeline";
 import InputSocialLinks from "../Admin/ConfigComponents/InputSocialLinks";
 import InputBlogFeed from "../Admin/ConfigComponents/InputBlogFeed";
+import InputList from "../Admin/ConfigComponents/InputList";
+import InputServices from "../Admin/ConfigComponents/InputServices";
+import InputTestimonials from "../Admin/ConfigComponents/InputTestimonials";
+import InputStatsCard from "../Admin/ConfigComponents/InputStatsCard";
+import InputProjectGrid from "../Admin/ConfigComponents/InputProjectGrid";
+import InputManifesto from "../Admin/ConfigComponents/InputManifesto";
 
 export interface ItemTypeDefinition {
     key: EItemType;
     /** Translation key — passed through `t(labelKey)` in menus. */
     labelKey: string;
     /** Public-site renderer. */
-    Display: React.ComponentType<{item: IItem; t: TFunction<"translation", undefined>; tApp: TFunction<string, undefined>}>;
+    Display: React.ComponentType<{item: IItem; t: TFunction<"translation", undefined>; tApp: TFunction<string, undefined>; admin?: boolean}>;
     /** Admin editor. */
     Editor: React.ComponentType<{
         t: TFunction<"translation", undefined>;
@@ -140,6 +152,54 @@ const entries: ItemTypeDefinition[] = [
         Editor: InputBlogFeed,
         styleEnum: EBlogFeedStyle as unknown as Record<string, string>,
         defaultContent: '{"limit":6,"tag":"","heading":""}',
+    },
+    {
+        key: EItemType.List,
+        labelKey: "List",
+        Display: List,
+        Editor: InputList,
+        styleEnum: EListStyle as unknown as Record<string, string>,
+        defaultContent: '{"title":"","items":[]}',
+    },
+    {
+        key: EItemType.Services,
+        labelKey: "Services",
+        Display: Services,
+        Editor: InputServices,
+        styleEnum: EServicesStyle as unknown as Record<string, string>,
+        defaultContent: '{"sectionNumber":"","sectionTitle":"","sectionSubtitle":"","rows":[]}',
+    },
+    {
+        key: EItemType.Testimonials,
+        labelKey: "Testimonials",
+        Display: Testimonials,
+        Editor: InputTestimonials,
+        styleEnum: ETestimonialsStyle as unknown as Record<string, string>,
+        defaultContent: '{"sectionTitle":"","sectionSubtitle":"","items":[]}',
+    },
+    {
+        key: EItemType.StatsCard,
+        labelKey: "Stats card",
+        Display: StatsCard,
+        Editor: InputStatsCard,
+        styleEnum: EStatsCardStyle as unknown as Record<string, string>,
+        defaultContent: '{"tag":"","title":"","stats":[],"features":[]}',
+    },
+    {
+        key: EItemType.ProjectGrid,
+        labelKey: "Project grid",
+        Display: ProjectGrid,
+        Editor: InputProjectGrid,
+        styleEnum: EProjectGridStyle as unknown as Record<string, string>,
+        defaultContent: '{"sectionNumber":"","sectionTitle":"","sectionSubtitle":"","items":[]}',
+    },
+    {
+        key: EItemType.Manifesto,
+        labelKey: "Manifesto",
+        Display: Manifesto,
+        Editor: InputManifesto,
+        styleEnum: EManifestoStyle as unknown as Record<string, string>,
+        defaultContent: '{"body":"","addendum":"","chips":[]}',
     },
 ];
 

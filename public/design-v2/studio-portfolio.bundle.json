@@ -1,0 +1,242 @@
+{
+  "manifest": {
+    "version": 1,
+    "exportedAt": "2026-04-19T00:00:00.000Z",
+    "app": "redis-node-js-cloud",
+    "note": "Studio theme content (design-v2). Pairs with the Studio preset + single-page scroll layout. Uses *asterisks* in Hero / Services / Testimonials titles for italic-accent emphasis."
+  },
+  "site": {
+    "siteFlags": {
+      "blogEnabled": false,
+      "layoutMode": "scroll"
+    },
+    "activeThemeId": "studio-preset-v1",
+    "themes": [
+      {
+        "id": "studio-preset-v1",
+        "name": "Studio",
+        "custom": false,
+        "tokens": {
+          "colorPrimary": "#C24B1E",
+          "colorBgBase": "#E8E3D3",
+          "colorTextBase": "#13201A",
+          "colorSuccess": "#52c41a",
+          "colorWarning": "#faad14",
+          "colorError": "#ff4d4f",
+          "colorInfo": "#1E5A6B",
+          "colorBgInset": "#DDD7C2",
+          "colorInkSecondary": "#2C3A30",
+          "colorInkTertiary": "#5A6559",
+          "colorRule": "#B5B49B",
+          "colorRuleStrong": "#8A8A73",
+          "colorAccent": "#C24B1E",
+          "colorAccentInk": "#F5F0E6",
+          "colorMark": "rgba(194, 75, 30, 0.12)",
+          "fontDisplay": "'Fraunces', 'Times New Roman', serif",
+          "fontMono": "'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace",
+          "fontSans": "'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif",
+          "borderRadius": 2,
+          "fontSize": 16,
+          "contentPadding": 32,
+          "themeSlug": "studio"
+        }
+      }
+    ],
+    "navigation": [
+      {
+        "id": "studio-nav-home",
+        "type": "navigation",
+        "page": "Home",
+        "seo": {"description": "Gatis Priede — studio for digital architecture.", "keywords": ["portfolio"], "viewport": "width=device-width,initial-scale=1", "charSet": "utf-8", "url": "", "image": "", "image_alt": "", "author": "Gatis Priede", "locale": "en"},
+        "sections": ["studio-sec-hero", "studio-sec-marquee"]
+      },
+      {
+        "id": "studio-nav-work",
+        "type": "navigation",
+        "page": "Work",
+        "seo": {"description": "Curated engagements.", "keywords": ["work"], "viewport": "width=device-width,initial-scale=1", "charSet": "utf-8", "url": "", "image": "", "image_alt": "", "author": "Gatis Priede", "locale": "en"},
+        "sections": ["studio-sec-work"]
+      },
+      {
+        "id": "studio-nav-services",
+        "type": "navigation",
+        "page": "What I do",
+        "seo": {"description": "Four practices, one studio.", "keywords": ["services"], "viewport": "width=device-width,initial-scale=1", "charSet": "utf-8", "url": "", "image": "", "image_alt": "", "author": "Gatis Priede", "locale": "en"},
+        "sections": ["studio-sec-services"]
+      },
+      {
+        "id": "studio-nav-voices",
+        "type": "navigation",
+        "page": "Voices",
+        "seo": {"description": "Testimonials & logo wall.", "keywords": ["testimonials"], "viewport": "width=device-width,initial-scale=1", "charSet": "utf-8", "url": "", "image": "", "image_alt": "", "author": "Gatis Priede", "locale": "en"},
+        "sections": ["studio-sec-voices", "studio-sec-logowall"]
+      },
+      {
+        "id": "studio-nav-contact",
+        "type": "navigation",
+        "page": "Contact",
+        "seo": {"description": "Get in touch.", "keywords": ["contact"], "viewport": "width=device-width,initial-scale=1", "charSet": "utf-8", "url": "", "image": "", "image_alt": "", "author": "Gatis Priede", "locale": "en"},
+        "sections": ["studio-sec-contact", "studio-sec-contact-facts"]
+      }
+    ],
+    "sections": [
+      {
+        "id": "studio-sec-hero",
+        "type": 1,
+        "page": "Home",
+        "content": [
+          {
+            "type": "HERO",
+            "style": "editorial",
+            "content": "{\"eyebrow\":\"DIGITAL SOLUTIONS ARCHITECT · SIGULDA · REMOTE WORLDWIDE\",\"headline\":\"Let's build *intelligent*\",\"headlineSoft\":\"*systems.*\",\"titles\":[\"15+ YEARS SHIPPED\",\"REMOTE · LATVIA\",\"2009 — PRESENT\"],\"subtitle\":\"I craft software that truly connects with the people using it. Call on the studio for architecture, engineering and consulting that tells your product's story and honours its individual spirit.\",\"tagline\":\"\",\"bgImage\":\"\",\"accent\":\"\",\"portraitLabel\":\"GP\",\"ctaPrimary\":{\"label\":\"Start a conversation →\",\"href\":\"#contact\",\"primary\":true},\"ctaSecondary\":{\"label\":\"See the work\",\"href\":\"#work\"},\"meta\":[{\"label\":\"Based\",\"value\":\"Sigulda, Latvia\"},{\"label\":\"Mode\",\"value\":\"Remote / Hybrid\"},{\"label\":\"Years\",\"value\":\"15+ in digital\"},{\"label\":\"Stack\",\"value\":\"JS · TS · React · Node · 3D\"}]}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}"
+          }
+        ]
+      },
+      {
+        "id": "studio-sec-marquee",
+        "type": 1,
+        "page": "Home",
+        "content": [
+          {
+            "type": "GALLERY",
+            "style": "marquee",
+            "content": "{\"items\":[{\"alt\":\"SciChart · 3D\",\"src\":\"\",\"text\":\"// SciChart · 3D\",\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":false,\"height\":220,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Sapiens · Remote\",\"src\":\"\",\"text\":\"// Sapiens · Remote\",\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":false,\"height\":220,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Booking Group\",\"src\":\"\",\"text\":\"// Booking Group\",\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":false,\"height\":220,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Ember\",\"src\":\"\",\"text\":\"// Ember\",\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":false,\"height\":220,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Accenture\",\"src\":\"\",\"text\":\"// Accenture\",\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":false,\"height\":220,\"textPosition\":\"BOTTOM\"},{\"alt\":\"JF Framework\",\"src\":\"\",\"text\":\"// JF Framework\",\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":false,\"height\":220,\"textPosition\":\"BOTTOM\"},{\"alt\":\"AI · Cloud\",\"src\":\"\",\"text\":\"// AI · Cloud\",\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":false,\"height\":220,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Code\",\"src\":\"\",\"text\":\"// Code\",\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":false,\"height\":220,\"textPosition\":\"BOTTOM\"}],\"disablePreview\":true}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}"
+          }
+        ]
+      },
+      {
+        "id": "studio-sec-work",
+        "type": 1,
+        "page": "Work",
+        "content": [
+          {
+            "type": "TIMELINE",
+            "style": "editorial",
+            "content": "{\"entries\":[{\"start\":\"2024\",\"end\":\"PRESENT\",\"location\":\"UK / USA · REMOTE\",\"company\":\"SciChart\",\"domain\":\"scichart.com\",\"role\":\"Consultant / Senior Software Engineer\",\"contractType\":\"Contract\",\"experience\":[\"3D / 2D browser charts\",\"Large data rendering\",\"Architecture consulting\"],\"achievements\":[\"Custom architecture — JavaScript written in C# style\",\"Extensive AI knowledge and production usage\"],\"quote\":\"Thinking out of the box while shipping stable, performant code.\"},{\"start\":\"2019\",\"end\":\"2023\",\"location\":\"LATVIA, RIGA\",\"company\":\"Sapiens\",\"domain\":\"sapiens.com\",\"role\":\"Project Manager / Senior Software Engineer\",\"contractType\":\"Permanent\",\"experience\":[\"Technical project management · DevOps\",\"Resource & BA management\"],\"achievements\":[\"Delivered 3 projects\",\"Remote delivery across 11+ countries\"]},{\"start\":\"2017\",\"end\":\"2019\",\"location\":\"LATVIA, RIGA\",\"company\":\"SIA Booking Group\",\"domain\":\"bookinggroup.com\",\"role\":\"Senior Software Engineer\",\"contractType\":\"Permanent\",\"experience\":[\"Application architecture · team lead\"],\"achievements\":[\"Migration from Drupal to React\",\"Built a new application from scratch\"]},{\"start\":\"2015\",\"end\":\"2017\",\"location\":\"NEWCASTLE, UK\",\"company\":\"Performance Horizon\",\"domain\":\"partnerize.com\",\"role\":\"Senior Front-end Developer\",\"contractType\":\"Permanent\",\"experience\":[\"UX / UI / design\",\"Architecture design\"],\"achievements\":[\"Backbone → React migration\",\"Standardisation · best practice · team morale\"]},{\"start\":\"2013\",\"end\":\"2014\",\"location\":\"RIGA, LATVIA\",\"company\":\"Accenture Riga\",\"domain\":\"accenture.com\",\"role\":\"Analyst Web Developer\",\"contractType\":\"Permanent · Riga Delivery Center\",\"experience\":[\"Web software development · UI / UX\",\"Scrum master · team leading · agile\"],\"achievements\":[\"Grew as a professional in web UI / UX\"]}]}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}"
+          }
+        ]
+      },
+      {
+        "id": "studio-sec-services",
+        "type": 1,
+        "page": "What I do",
+        "content": [
+          {
+            "type": "SERVICES",
+            "style": "numbered",
+            "content": "{\"sectionNumber\":\"§ 03\",\"sectionTitle\":\"What I *do.*\",\"sectionSubtitle\":\"Four practices, one studio. Hire me end-to-end, or as a specialist alongside your team.\",\"rows\":[{\"number\":\"01\",\"title\":\"Solutions *architecture*\",\"description\":\"Cloud and on-prem systems designed to last. Migrations, strategy, and architecture decisions made with clarity.\",\"ctaLabel\":\"Find out more\",\"ctaHref\":\"#contact\"},{\"number\":\"02\",\"title\":\"Senior *engineering*\",\"description\":\"Hands-on JavaScript/TypeScript delivery — React, Next, Node, GraphQL. TDD, SSR, SPA, the works.\",\"ctaLabel\":\"Find out more\",\"ctaHref\":\"#contact\"},{\"number\":\"03\",\"title\":\"3D & *data-dense* UI\",\"description\":\"WebGL, SciChart, visualisations handling enormous datasets without breaking a sweat or a framerate.\",\"ctaLabel\":\"Find out more\",\"ctaHref\":\"#contact\"},{\"number\":\"04\",\"title\":\"Consulting & *mentoring*\",\"description\":\"Working alongside teams and founders — advisory, code review, stakeholder management, and raising the bar.\",\"ctaLabel\":\"Find out more\",\"ctaHref\":\"#contact\"}]}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}"
+          }
+        ]
+      },
+      {
+        "id": "studio-sec-voices",
+        "type": 1,
+        "page": "Voices",
+        "content": [
+          {
+            "type": "TESTIMONIALS",
+            "style": "cards",
+            "content": "{\"sectionTitle\":\"Stories worth *shipping.*\",\"sectionSubtitle\":\"The most rewarding part of building software is seeing what it enables. A few words from the people I've shipped with.\",\"items\":[{\"quote\":\"Delivered architecture that reads like C# in the browser — disciplined, testable, and thoughtful. A rare combination.\",\"name\":\"Andrew Burnett-Thompson\",\"role\":\"Founder · SciChart\",\"avatarInitial\":\"A\"},{\"quote\":\"Led remote delivery across eleven countries without a beat missed. Equal parts engineer, diplomat, and therapist.\",\"name\":\"Sapiens team lead\",\"role\":\"Insurance platforms\",\"avatarInitial\":\"S\"},{\"quote\":\"Took us from Drupal into a modern React stack in one piece — morale up, velocity up, bug count down.\",\"name\":\"Booking Group engineering\",\"role\":\"Travel tech · Riga\",\"avatarInitial\":\"B\"}]}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}"
+          }
+        ]
+      },
+      {
+        "id": "studio-sec-logowall",
+        "type": 1,
+        "page": "Voices",
+        "content": [
+          {
+            "type": "GALLERY",
+            "style": "logo-wall",
+            "content": "{\"items\":[{\"alt\":\"SciChart\",\"src\":\"\",\"text\":\"SciChart\",\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":false,\"height\":0,\"textPosition\":\"BOTTOM\"},{\"alt\":\"SAPIENS\",\"src\":\"\",\"text\":\"SAPIENS\",\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":false,\"height\":0,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Accenture\",\"src\":\"\",\"text\":\"Accenture\",\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":false,\"height\":0,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Performance Horizon\",\"src\":\"\",\"text\":\"Performance Horizon\",\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":false,\"height\":0,\"textPosition\":\"BOTTOM\"},{\"alt\":\"BOOKING GROUP\",\"src\":\"\",\"text\":\"BOOKING GROUP\",\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":false,\"height\":0,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Microsoft\",\"src\":\"\",\"text\":\"Microsoft\",\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":false,\"height\":0,\"textPosition\":\"BOTTOM\"},{\"alt\":\"AWS\",\"src\":\"\",\"text\":\"AWS\",\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":false,\"height\":0,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Azure\",\"src\":\"\",\"text\":\"Azure\",\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":false,\"height\":0,\"textPosition\":\"BOTTOM\"},{\"alt\":\"MongoDB\",\"src\":\"\",\"text\":\"MongoDB\",\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":false,\"height\":0,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Redis\",\"src\":\"\",\"text\":\"Redis\",\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":false,\"height\":0,\"textPosition\":\"BOTTOM\"}],\"disablePreview\":true}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}"
+          }
+        ]
+      },
+      {
+        "id": "studio-sec-contact",
+        "type": 1,
+        "page": "Contact",
+        "content": [
+          {
+            "type": "HERO",
+            "style": "centered",
+            "content": "{\"eyebrow\":\"\",\"headline\":\"Everything\",\"headlineSoft\":\"*is possible.*\",\"subtitle\":\"\",\"tagline\":\"\",\"bgImage\":\"\",\"accent\":\"\",\"ctaPrimary\":{\"label\":\"Start a conversation →\",\"href\":\"mailto:Gatiss.Priede@gmail.com\",\"primary\":true},\"ctaSecondary\":{\"label\":\"LinkedIn ↗\",\"href\":\"https://www.linkedin.com/in/gatis-priede-11169a56/\"}}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}"
+          }
+        ]
+      },
+      {
+        "id": "studio-sec-contact-facts",
+        "type": 2,
+        "page": "Contact",
+        "slots": [1, 1],
+        "content": [
+          {
+            "type": "LIST",
+            "style": "facts",
+            "content": "{\"title\":\"Reach the studio\",\"items\":[{\"label\":\"E-mail\",\"value\":\"Gatiss.Priede@gmail.com\",\"href\":\"mailto:Gatiss.Priede@gmail.com\"},{\"label\":\"Phone\",\"value\":\"+371 270 320 99\"},{\"label\":\"LinkedIn\",\"value\":\"in/gatis-priede ↗\",\"href\":\"https://www.linkedin.com/in/gatis-priede-11169a56/\"},{\"label\":\"GitHub\",\"value\":\"gatispriede/JF ↗\",\"href\":\"https://github.com/gatispriede/JF\"}]}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}"
+          },
+          {
+            "type": "LIST",
+            "style": "facts",
+            "content": "{\"title\":\"Studio details\",\"items\":[{\"label\":\"Based\",\"value\":\"Sigulda, Latvia · EET\"},{\"label\":\"Mode\",\"value\":\"Remote / Hybrid, Full-time\"},{\"label\":\"Driving\",\"value\":\"B category\"},{\"label\":\"Languages\",\"value\":\"EN · LV · DE · RU · EL\"}]}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}"
+          }
+        ]
+      }
+    ],
+    "languages": [
+      {"label": "English", "symbol": "en", "default": true, "flag": "🇬🇧"},
+      {"label": "Latviešu", "symbol": "lv", "flag": "🇱🇻"}
+    ],
+    "logo": null,
+    "images": [],
+    "posts": [],
+    "footer": {
+      "enabled": true,
+      "columns": [
+        {"title": "Studio", "entries": [{"label": "Speak with me", "url": "mailto:Gatiss.Priede@gmail.com"}]},
+        {"title": "Connect", "entries": [
+          {"label": "LinkedIn ↗", "url": "https://www.linkedin.com/in/gatis-priede-11169a56/"},
+          {"label": "GitHub ↗", "url": "https://github.com/gatispriede/JF"}
+        ]}
+      ],
+      "bottom": "© 2026 · Gatis Priede Studio · v2026.04"
+    }
+  },
+  "assets": {}
+}

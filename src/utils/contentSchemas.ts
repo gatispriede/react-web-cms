@@ -98,10 +98,93 @@ const validateProjectCard = (c: any): ValidationResult => {
 const validateSkillPills = (c: any): ValidationResult => {
     if (!isObject(c)) return {valid: false, error: 'SkillPills content must be an object'};
     if (c.category !== undefined && !isString(c.category)) return {valid: false, error: 'SkillPills.category must be a string'};
+    if (c.categoryMeta !== undefined && !isString(c.categoryMeta)) return {valid: false, error: 'SkillPills.categoryMeta must be a string'};
     if (c.items !== undefined) {
         if (!Array.isArray(c.items)) return {valid: false, error: 'SkillPills.items must be an array'};
-        if (c.items.some((t: unknown) => !isString(t))) return {valid: false, error: 'SkillPills.items entries must be strings'};
         if (c.items.length > 100) return {valid: false, error: 'SkillPills.items exceeds 100 entries'};
+        for (let i = 0; i < c.items.length; i++) {
+            const it = c.items[i];
+            // Legacy form: plain string labels.
+            if (isString(it)) continue;
+            // New form (matrix mode): `{label, score?, featured?}`.
+            if (!isObject(it)) return {valid: false, error: `SkillPills.items[${i}] must be a string or object`};
+            if (!isString(it.label)) return {valid: false, error: `SkillPills.items[${i}].label must be a string`};
+            if (it.score !== undefined && (typeof it.score !== 'number' || it.score < 0 || it.score > 10)) {
+                return {valid: false, error: `SkillPills.items[${i}].score must be a number 0–10`};
+            }
+            if (it.featured !== undefined && typeof it.featured !== 'boolean') {
+                return {valid: false, error: `SkillPills.items[${i}].featured must be boolean`};
+            }
+            if (it.category !== undefined && !isString(it.category)) {
+                return {valid: false, error: `SkillPills.items[${i}].category must be a string`};
+            }
+        }
+    }
+    return {valid: true};
+};
+
+const validateProjectGrid = (c: any): ValidationResult => {
+    if (!isObject(c)) return {valid: false, error: 'ProjectGrid content must be an object'};
+    for (const f of ['sectionNumber', 'sectionTitle', 'sectionSubtitle'] as const) {
+        if (c[f] !== undefined && !isString(c[f])) return {valid: false, error: `ProjectGrid.${f} must be a string`};
+    }
+    if (c.items !== undefined) {
+        if (!Array.isArray(c.items)) return {valid: false, error: 'ProjectGrid.items must be an array'};
+        if (c.items.length > 50) return {valid: false, error: 'ProjectGrid.items exceeds 50 entries'};
+        for (let i = 0; i < c.items.length; i++) {
+            const it = c.items[i];
+            if (!isObject(it)) return {valid: false, error: `ProjectGrid.items[${i}] must be an object`};
+            for (const f of ['title', 'stack', 'kind', 'year', 'coverArt', 'coverColor', 'moreLabel', 'href'] as const) {
+                if (it[f] !== undefined && !isString(it[f])) return {valid: false, error: `ProjectGrid.items[${i}].${f} must be a string`};
+            }
+        }
+    }
+    return {valid: true};
+};
+
+const validateManifesto = (c: any): ValidationResult => {
+    if (!isObject(c)) return {valid: false, error: 'Manifesto content must be an object'};
+    for (const f of ['body', 'addendum'] as const) {
+        if (c[f] !== undefined && !isString(c[f])) return {valid: false, error: `Manifesto.${f} must be a string`};
+    }
+    if (c.chips !== undefined) {
+        if (!Array.isArray(c.chips)) return {valid: false, error: 'Manifesto.chips must be an array'};
+        if (c.chips.length > 40) return {valid: false, error: 'Manifesto.chips exceeds 40 entries'};
+        for (let i = 0; i < c.chips.length; i++) {
+            const ch = c.chips[i];
+            if (!isObject(ch)) return {valid: false, error: `Manifesto.chips[${i}] must be an object`};
+            for (const f of ['key', 'thumb', 'color'] as const) {
+                if (ch[f] !== undefined && !isString(ch[f])) return {valid: false, error: `Manifesto.chips[${i}].${f} must be a string`};
+            }
+        }
+    }
+    return {valid: true};
+};
+
+const validateStatsCard = (c: any): ValidationResult => {
+    if (!isObject(c)) return {valid: false, error: 'StatsCard content must be an object'};
+    for (const f of ['tag', 'title'] as const) {
+        if (c[f] !== undefined && !isString(c[f])) return {valid: false, error: `StatsCard.${f} must be a string`};
+    }
+    if (c.stats !== undefined) {
+        if (!Array.isArray(c.stats)) return {valid: false, error: 'StatsCard.stats must be an array'};
+        if (c.stats.length > 20) return {valid: false, error: 'StatsCard.stats exceeds 20 entries'};
+        for (let i = 0; i < c.stats.length; i++) {
+            const s = c.stats[i];
+            if (!isObject(s)) return {valid: false, error: `StatsCard.stats[${i}] must be an object`};
+            for (const f of ['value', 'label'] as const) {
+                if (s[f] !== undefined && !isString(s[f])) return {valid: false, error: `StatsCard.stats[${i}].${f} must be a string`};
+            }
+        }
+    }
+    if (c.features !== undefined) {
+        if (!Array.isArray(c.features)) return {valid: false, error: 'StatsCard.features must be an array'};
+        if (c.features.length > 30) return {valid: false, error: 'StatsCard.features exceeds 30 entries'};
+        for (let i = 0; i < c.features.length; i++) {
+            const f = c.features[i];
+            if (!isObject(f)) return {valid: false, error: `StatsCard.features[${i}] must be an object`};
+            if (f.text !== undefined && !isString(f.text)) return {valid: false, error: `StatsCard.features[${i}].text must be a string`};
+        }
     }
     return {valid: true};
 };
@@ -139,6 +222,72 @@ const validateSocialLinks = (c: any): ValidationResult => {
     return {valid: true};
 };
 
+const validateServices = (c: any): ValidationResult => {
+    if (!isObject(c)) return {valid: false, error: 'Services content must be an object'};
+    for (const f of ['sectionNumber', 'sectionTitle', 'sectionSubtitle'] as const) {
+        if (c[f] !== undefined && !isString(c[f])) return {valid: false, error: `Services.${f} must be a string`};
+    }
+    if (c.rows !== undefined) {
+        if (!Array.isArray(c.rows)) return {valid: false, error: 'Services.rows must be an array'};
+        if (c.rows.length > 50) return {valid: false, error: 'Services.rows exceeds 50 entries'};
+        for (let i = 0; i < c.rows.length; i++) {
+            const r = c.rows[i];
+            if (!isObject(r)) return {valid: false, error: `Services.rows[${i}] must be an object`};
+            for (const f of ['number', 'title', 'description', 'ctaLabel', 'ctaHref', 'iconGlyph'] as const) {
+                if (r[f] !== undefined && !isString(r[f])) return {valid: false, error: `Services.rows[${i}].${f} must be a string`};
+            }
+            if (r.tags !== undefined) {
+                if (!Array.isArray(r.tags)) return {valid: false, error: `Services.rows[${i}].tags must be an array`};
+                if (r.tags.some((t: unknown) => !isString(t))) return {valid: false, error: `Services.rows[${i}].tags entries must be strings`};
+            }
+        }
+    }
+    return {valid: true};
+};
+
+const validateTestimonials = (c: any): ValidationResult => {
+    if (!isObject(c)) return {valid: false, error: 'Testimonials content must be an object'};
+    for (const f of ['sectionTitle', 'sectionSubtitle'] as const) {
+        if (c[f] !== undefined && !isString(c[f])) return {valid: false, error: `Testimonials.${f} must be a string`};
+    }
+    if (c.items !== undefined) {
+        if (!Array.isArray(c.items)) return {valid: false, error: 'Testimonials.items must be an array'};
+        if (c.items.length > 50) return {valid: false, error: 'Testimonials.items exceeds 50 entries'};
+        for (let i = 0; i < c.items.length; i++) {
+            const it = c.items[i];
+            if (!isObject(it)) return {valid: false, error: `Testimonials.items[${i}] must be an object`};
+            for (const f of ['quote', 'name', 'role', 'avatarInitial'] as const) {
+                if (it[f] !== undefined && !isString(it[f])) return {valid: false, error: `Testimonials.items[${i}].${f} must be a string`};
+            }
+        }
+    }
+    return {valid: true};
+};
+
+const validateList = (c: any): ValidationResult => {
+    if (!isObject(c)) return {valid: false, error: 'List content must be an object'};
+    if (c.title !== undefined && !isString(c.title)) return {valid: false, error: 'List.title must be a string'};
+    if (c.items !== undefined) {
+        if (!Array.isArray(c.items)) return {valid: false, error: 'List.items must be an array'};
+        if (c.items.length > 200) return {valid: false, error: 'List.items exceeds 200 entries'};
+        for (let i = 0; i < c.items.length; i++) {
+            const it = c.items[i];
+            if (!isObject(it)) return {valid: false, error: `List.items[${i}] must be an object`};
+            if (!isString(it.label)) return {valid: false, error: `List.items[${i}].label must be a string`};
+            // Extended fields (optional) used by the `cases` style — plain
+            // strings each; tags are `string[]`.
+            for (const f of ['value', 'href', 'prefix', 'prefixSub', 'meta'] as const) {
+                if (it[f] !== undefined && !isString(it[f])) return {valid: false, error: `List.items[${i}].${f} must be a string`};
+            }
+            if (it.tags !== undefined) {
+                if (!Array.isArray(it.tags)) return {valid: false, error: `List.items[${i}].tags must be an array`};
+                if (it.tags.some((t: unknown) => !isString(t))) return {valid: false, error: `List.items[${i}].tags entries must be strings`};
+            }
+        }
+    }
+    return {valid: true};
+};
+
 const validateBlogFeed = (c: any): ValidationResult => {
     if (!isObject(c)) return {valid: false, error: 'BlogFeed content must be an object'};
     if (c.limit !== undefined && (typeof c.limit !== 'number' || c.limit < 1 || c.limit > 24)) {
@@ -161,6 +310,12 @@ const VALIDATORS: Record<string, (c: any) => ValidationResult> = {
     [EItemType.Timeline]: validateTimeline,
     [EItemType.SocialLinks]: validateSocialLinks,
     [EItemType.BlogFeed]: validateBlogFeed,
+    [EItemType.List]: validateList,
+    [EItemType.Services]: validateServices,
+    [EItemType.Testimonials]: validateTestimonials,
+    [EItemType.StatsCard]: validateStatsCard,
+    [EItemType.ProjectGrid]: validateProjectGrid,
+    [EItemType.Manifesto]: validateManifesto,
     [EItemType.Empty]: () => ({valid: true}),
 };
 
@@ -197,6 +352,29 @@ export function validateSectionInput(section: any): ValidationResult {
             if (!isObject(item)) return {valid: false, error: `section.content[${i}] must be an object`};
             const result = validateItemContent(item.type as string, item.content);
             if (!result.valid) return {valid: false, error: `section.content[${i}]: ${result.error}`};
+        }
+    }
+    if (section.slots !== undefined) {
+        if (!Array.isArray(section.slots)) return {valid: false, error: 'section.slots must be an array'};
+        if (section.slots.some((s: unknown) => typeof s !== 'number' || !Number.isInteger(s) || s < 1 || s > 10)) {
+            return {valid: false, error: 'section.slots entries must be positive integers ≤ 10'};
+        }
+        const sum = section.slots.reduce((a: number, b: number) => a + b, 0);
+        if (sum !== section.type) {
+            return {valid: false, error: `section.slots must sum to section.type (${section.type}); got ${sum}`};
+        }
+        if (Array.isArray(section.content) && section.content.length !== section.slots.length) {
+            return {valid: false, error: `section.slots length must match section.content length`};
+        }
+    }
+    if (section.overlay !== undefined && typeof section.overlay !== 'boolean') {
+        return {valid: false, error: 'section.overlay must be boolean'};
+    }
+    if (section.overlayAnchor !== undefined) {
+        if (!isString(section.overlayAnchor)) return {valid: false, error: 'section.overlayAnchor must be a string'};
+        const allowed = ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'center', 'fill'];
+        if (!allowed.includes(section.overlayAnchor)) {
+            return {valid: false, error: `section.overlayAnchor must be one of: ${allowed.join(', ')}`};
         }
     }
     return {valid: true};

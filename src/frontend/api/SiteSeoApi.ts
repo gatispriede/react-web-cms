@@ -1,5 +1,6 @@
 import {resolve} from "../gqty";
 import {DEFAULT_SITE_SEO, ISiteSeoDefaults} from "../../Interfaces/ISiteSeo";
+import {refreshBus} from "../lib/refreshBus";
 
 export class SiteSeoApi {
     async get(): Promise<ISiteSeoDefaults> {
@@ -16,6 +17,7 @@ export class SiteSeoApi {
         try {
             const raw = await resolve(({mutation}) => (mutation as any).mongo.saveSiteSeo({seo}));
             const parsed = JSON.parse(raw || '{}');
+            refreshBus.emit('settings');
             return parsed.saveSiteSeo ?? parsed;
         } catch (err) {
             return {error: String(err)};

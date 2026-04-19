@@ -27,6 +27,8 @@ export class AssetService  implements IAssetService {
                 id: rest.id ?? String(_id ?? guid()),
                 type: rest.type ?? 'image',
                 content: rest.content ?? '',
+                editedBy: rest.editedBy,
+                editedAt: rest.editedAt,
             };
         } catch (err) {
             console.error('Error getting logo:', err);

@@ -1,5 +1,6 @@
 import {resolve} from "../gqty";
 import {ITheme, InTheme} from "../../Interfaces/ITheme";
+import {refreshBus} from "../lib/refreshBus";
 
 // Module-level theme cache. A page navigation may touch 2–3 components that
 // each call `getActive()`; with `maxAge: 0` on the gqty cache every one of
@@ -44,6 +45,7 @@ export class ThemeApi {
             const raw = await resolve(({mutation}) => (mutation as any).mongo.saveTheme({theme}));
             const parsed = JSON.parse(raw || '{}');
             this.invalidateCache();
+            refreshBus.emit('settings');
             return parsed.saveTheme ?? parsed;
         } catch (err) {
             return {error: String(err)};
@@ -55,6 +57,7 @@ export class ThemeApi {
             const raw = await resolve(({mutation}) => (mutation as any).mongo.deleteTheme({id}));
             const parsed = JSON.parse(raw || '{}');
             this.invalidateCache();
+            refreshBus.emit('settings');
             return parsed.deleteTheme ?? parsed;
         } catch (err) {
             return {error: String(err)};
@@ -66,6 +69,7 @@ export class ThemeApi {
             const raw = await resolve(({mutation}) => (mutation as any).mongo.setActiveTheme({id}));
             const parsed = JSON.parse(raw || '{}');
             this.invalidateCache();
+            refreshBus.emit('settings');
             return parsed.setActiveTheme ?? parsed;
         } catch (err) {
             return {error: String(err)};
