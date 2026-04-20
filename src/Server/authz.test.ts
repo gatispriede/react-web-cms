@@ -1,7 +1,7 @@
 import {describe, it, expect, vi} from 'vitest';
 vi.mock('bcrypt');
 vi.mock('next-auth/next', () => ({getServerSession: vi.fn()}));
-vi.mock('../frontend/pages/api/auth/[...nextauth]', () => ({authOptions: {}}));
+vi.mock('../frontend/pages/api/auth/authOptions', () => ({authOptions: {}}));
 import {guardMethods, MUTATION_REQUIREMENTS, MUTATION_CAPABILITIES, AuthzError} from './authz';
 
 const makeTarget = () => ({

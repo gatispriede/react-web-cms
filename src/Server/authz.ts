@@ -1,5 +1,5 @@
 import {getServerSession} from 'next-auth/next';
-import {authOptions} from '../frontend/pages/api/auth/[...nextauth]';
+import {authOptions} from '../frontend/pages/api/auth/authOptions';
 import {UserRole} from '../Interfaces/IUser';
 
 export const ROLE_RANK: Record<UserRole, number> = {viewer: 0, editor: 1, admin: 2};
