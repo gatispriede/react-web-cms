@@ -55,7 +55,8 @@ IP.ts
 src/frontend/.env
 
 # TLS certs / keys — localhost dev or otherwise, never commit private keys
-certificates/
+certificates/*
+!certificates/.gitkeep
 **/*.pem
 **/*.key
 **/*.crt
