@@ -66,9 +66,9 @@ services:
       - front-end
       - back-end
     ports:
-      - 80:80
+      - "127.0.0.1:3080:80"
     expose:
-      - 80
+      - 3080
 networks:
   front-end:
   db:
