@@ -16,7 +16,7 @@ const userApi = new UserApi();
 
 const AdminSettingsUsers = () => {
     const {t} = useTranslation();
-    const {data: session} = useSession();
+    const {data: session, update: updateSession} = useSession();
     const currentEmail = session?.user?.email ?? '';
 
     const [users, setUsers] = useState<IUser[]>([]);
@@ -98,6 +98,11 @@ const AdminSettingsUsers = () => {
             if (result.error) {
                 message.error(result.error);
                 return;
+            }
+            // If the current user changed their own password, refresh the JWT
+            // so mustChangePassword clears immediately without re-login.
+            if (editing?.id && values.password && editing.email === currentEmail) {
+                await updateSession({user: {mustChangePassword: false}});
             }
             message.success(editing?.id ? t('User updated') : t('User created'));
             close();
