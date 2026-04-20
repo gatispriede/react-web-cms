@@ -55,6 +55,16 @@ class App extends NextApp {
         return { ...appProps };
     }
 
+    componentDidMount() {
+        // Unregister any stale Service Workers — they cache 404 HTML responses
+        // for image URLs and serve them back after the images are uploaded.
+        if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(regs => {
+                regs.forEach(r => r.unregister());
+            });
+        }
+    }
+
     render() {
         const { Component, pageProps, router, err } = this.props;
         const modifiedPageProps = {
