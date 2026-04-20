@@ -16,10 +16,12 @@ import {
 
 // import IP from '../../../IP'
 const node_port = process.env.BUILD_PORT || 80;
-const serverIP = node_port !== 80 ? 'server' : 'localhost';
-const port = '' + node_port
+const isDocker = node_port !== 80 && node_port !== '80';
+const serverIP = isDocker ? 'server' : 'localhost';
+const port = '' + node_port;
 const serverAddress = `http://${serverIP}:${port}`;
-const fetchUrl = `${serverAddress}/api/graphql`
+// Standalone Docker server handles GraphQL at /; Next.js API route at /api/graphql
+const fetchUrl = isDocker ? `${serverAddress}/` : `${serverAddress}/api/graphql`;
 
 const queryFetcher: QueryFetcher = async function (
   { query, variables, operationName },
