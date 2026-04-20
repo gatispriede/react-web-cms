@@ -1,5 +1,5 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
-import {rateLimit, clientIp, sweepRateLimit} from './_rateLimit';
+import {rateLimit, clientIp, sweepRateLimit} from '../../../pages/api/_rateLimit';
 
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => { vi.useRealTimers(); sweepRateLimit(Date.now() + 10_000_000); });

@@ -56,10 +56,10 @@ jobs:
             git pull origin master
 
             echo "==> Rebuilding and restarting containers"
-            docker compose -f compose.yaml -f compose.prod.yaml up --build -d
+            docker compose -f compose.yaml up --build -d
 
             echo "==> Waiting for containers to become healthy"
             sleep 10
-            docker compose -f compose.yaml -f compose.prod.yaml ps
+            docker compose -f compose.yaml ps
 
             echo "==> Deploy complete"
