@@ -2,6 +2,8 @@ import fs from 'fs/promises';
 import path from 'node:path';
 import type {Collection, Db} from 'mongodb';
 import {validateSectionInput} from '../utils/contentSchemas';
+import {PRESETS} from './ThemeService';
+import guid from '../helpers/guid';
 
 const PUBLIC_IMAGES_DIR = path.join(process.cwd(), 'src/frontend/public/images');
 const IMAGE_PATH_PREFIX = 'api/';
@@ -216,6 +218,18 @@ export class BundleService {
         await put('Logos', bundle.site.logo ? [bundle.site.logo] : []);
         if (bundle.site.themes !== undefined) {
             await put('Themes', bundle.site.themes);
+        }
+        // If the bundle left the Themes collection empty (e.g. a pre-themes
+        // export), seed the built-in presets so the site is never theme-less.
+        const themeCount = await this.col('Themes').estimatedDocumentCount();
+        if (themeCount === 0) {
+            const seedDocs = PRESETS.map(p => ({id: guid(), ...p}));
+            await this.col('Themes').insertMany(seedDocs as any);
+            await this.col('SiteSettings').updateOne(
+                {key: 'activeThemeId'},
+                {$set: {key: 'activeThemeId', value: seedDocs[0].id}},
+                {upsert: true},
+            );
         }
         if (bundle.site.posts !== undefined) {
             await put('Posts', bundle.site.posts);

@@ -4,7 +4,7 @@ import {ITheme, IThemeTokens, InTheme} from '../Interfaces/ITheme';
 import {auditStamp} from './audit';
 import {nextVersion, requireVersion} from './conflict';
 
-const PRESETS: Omit<ITheme, 'id'>[] = [
+export const PRESETS: Omit<ITheme, 'id'>[] = [
     {
         name: 'Industrial',
         custom: false,
@@ -135,6 +135,37 @@ const PRESETS: Omit<ITheme, 'id'>[] = [
             borderRadius: 8,
             fontSize: 16,
             contentPadding: 24,
+        },
+    },
+    {
+        name: 'Brandappart',
+        custom: false,
+        tokens: {
+            // design-v6 Brandappart — parchment palette + sea accent +
+            // Instrument Serif display. Rounded 18px cards distinguish it
+            // visually from Studio (same palette, sharp corners).
+            colorPrimary: '#1E5A6B',
+            colorBgBase: '#E8E3D3',
+            colorTextBase: '#13201A',
+            colorSuccess: '#52c41a',
+            colorWarning: '#faad14',
+            colorError: '#ff4d4f',
+            colorInfo: '#C24B1E',
+            colorBgInset: '#DDD7C2',
+            colorInkSecondary: '#2C3A30',
+            colorInkTertiary: '#6B7C75',
+            colorRule: '#B5B49B',
+            colorRuleStrong: '#8A8A73',
+            colorAccent: '#1E5A6B',
+            colorAccentInk: '#F4F1EA',
+            colorMark: 'rgba(30, 90, 107, 0.12)',
+            fontDisplay: `'Instrument Serif', 'Times New Roman', serif`,
+            fontMono: `'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace`,
+            fontSans: `'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif`,
+            borderRadius: 18,
+            fontSize: 16,
+            contentPadding: 32,
+            themeSlug: 'studio',
         },
     },
     {
