@@ -32,6 +32,8 @@ services:
       mongodb: {
         condition: service_started
       }
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
     healthcheck:
@@ -59,6 +61,8 @@ services:
     build:
       context: .
       dockerfile: AppDockerfile
+    env_file:
+      - .env
     environment:
       - BUILD_PORT=3000
     networks:
