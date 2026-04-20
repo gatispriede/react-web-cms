@@ -5,6 +5,8 @@
 
 /src/frontend/public/images
 /src/frontend/public/temp
+/uploads/images/*
+!/uploads/images/.gitkeep
 
 /.cache
 

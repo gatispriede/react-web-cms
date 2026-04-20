@@ -65,6 +65,8 @@ services:
       - .env
     environment:
       - BUILD_PORT=3000
+    volumes:
+      - ./uploads/images:/app/src/frontend/public/images
     networks:
       - db
       - front-end
