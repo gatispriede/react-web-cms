@@ -1,6 +1,9 @@
 import NextAuth from "next-auth/next";
-import GoogleProvider from "next-auth/providers/google";
-import CredentialsProvider from 'next-auth/providers/credentials';
+import _GoogleProvider from "next-auth/providers/google";
+import _CredentialsProvider from 'next-auth/providers/credentials';
+// ESM/CJS interop: tsx may wrap CJS default exports under .default
+const GoogleProvider: typeof _GoogleProvider = (_GoogleProvider as any).default ?? _GoogleProvider;
+const CredentialsProvider: typeof _CredentialsProvider = (_CredentialsProvider as any).default ?? _CredentialsProvider;
 import { compare } from "bcrypt";
 import {NextAuthOptions, User} from "next-auth";
 import MongoApi from "../../../api/MongoApi";
