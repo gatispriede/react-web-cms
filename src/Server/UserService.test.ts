@@ -1,4 +1,5 @@
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
+import {afterAll, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
+vi.mock('bcrypt');
 import {MongoMemoryServer} from 'mongodb-memory-server';
 import {MongoClient, Db, Collection} from 'mongodb';
 import {UserService} from './UserService';
