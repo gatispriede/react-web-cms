@@ -105,7 +105,7 @@ interface AdapterProps extends IconBaseProps {
 
 const SPIN_STYLE: CSSProperties = {animation: 'lucide-spin 1s linear infinite'};
 
-const IconBase: React.FC<AdapterProps> = ({component: Cmp, size = 16, spin, filled, style, className, ...rest}) => {
+const IconBase: React.FC<AdapterProps> = ({component: Cmp, size = 16, spin, filled, style, className, strokeWidth: _sw, ...rest}) => {
     if (spin) ensureSpinKeyframes();
     const merged: CSSProperties = {
         verticalAlign: '-0.125em',

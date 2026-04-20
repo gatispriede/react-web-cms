@@ -65,7 +65,7 @@ async function runMutation<T>(
                 const trace = typeof auditTrace === 'function' ? auditTrace(result) : auditTrace;
                 if (trace) {
                     const service = getMongoConnection().auditService;
-                    if (service) void service.record(trace);
+                    if (service) void service.record({...trace, actor: trace.actor ?? {}});
                 }
             } catch (err) {
                 // Audit must not block the mutation response.

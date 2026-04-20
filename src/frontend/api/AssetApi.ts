@@ -11,7 +11,7 @@ export class AssetApi {
             if (!logo) return {type: '', content: '', id: ''};
             return {
                 type: logo.type ?? undefined,
-                content: logo.content,
+                content: logo.content ?? '',
                 id: logo.id ?? undefined,
                 version: (logo as any).version ?? undefined,
                 editedBy: logo.editedBy ?? undefined,
@@ -57,13 +57,13 @@ export class AssetApi {
     async getImages(tags: string): Promise<IImage[]> {
         return await resolve(({query}) => {
             return query.mongo.getImages({tags}).map(image => ({
-                created: image.created,
-                id: image.id,
-                location: image.location,
-                name: image.name,
-                size: image.size,
-                tags: image.tags,
-                type: image.type,
+                created: image.created ?? '',
+                id: image.id ?? '',
+                location: image.location ?? '',
+                name: image.name ?? '',
+                size: image.size ?? 0,
+                tags: image.tags ?? [],
+                type: image.type ?? '',
             }));
         });
     }

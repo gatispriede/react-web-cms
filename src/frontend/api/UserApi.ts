@@ -11,10 +11,10 @@ export class UserApi {
             const user = query.mongo.getUser({email});
             if (!user) return null;
             return {
-                id: user.id,
+                id: user.id ?? '',
                 name: user.name ?? '',
-                email: user.email,
-                password: user.password,
+                email: user.email ?? '',
+                password: user.password ?? '',
                 role: (user.role ?? 'viewer') as IUser['role'],
                 avatar: user.avatar ?? undefined,
                 canPublishProduction: Boolean((user as any).canPublishProduction),

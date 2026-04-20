@@ -49,8 +49,8 @@ class TranslationManager {
     async saveNewLanguage(language: INewLanguage){
         return await this.MongoApi.saveLanguage(language)
     }
-    async saveNewTranslation(language: INewLanguage, translations: any){
-        return await this.MongoApi.saveLanguage(language,translations)
+    async saveNewTranslation(language: INewLanguage, translations: any, expectedVersion?: number){
+        return await this.MongoApi.saveLanguage(language, translations, expectedVersion)
     }
     async deleteTranslation(language: INewLanguage){
         return await this.MongoApi.deleteTranslation(language)

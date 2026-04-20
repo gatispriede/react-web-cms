@@ -23,14 +23,15 @@ type TFn = (key: string) => string;
 export const InlineTranslatable: React.FC<{
     tApp: TFn | undefined;
     source: string;
-    as?: keyof JSX.IntrinsicElements;
+    as?: keyof React.JSX.IntrinsicElements;
 }> = ({tApp, source, as: Tag = 'span'}) => {
     const text = translateOrKeep(tApp, source ?? '');
     const key = sanitizeKey(source ?? '');
     // Don't tag empty strings — they'd collect into a single key that no one
     // could usefully edit.
     if (!key) return <>{text}</>;
-    return <Tag data-i18n-key={key} data-i18n-source={source}>{text}</Tag>;
+    const T = Tag as React.ElementType;
+    return <T data-i18n-key={key} data-i18n-source={source}>{text}</T>;
 };
 
 /**
