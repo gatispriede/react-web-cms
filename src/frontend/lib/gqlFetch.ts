@@ -11,11 +11,13 @@ import {DEFAULT_FOOTER, IFooterConfig} from '../../Interfaces/IFooter';
 import {IPost} from '../../Interfaces/IPost';
 import {IThemeTokens} from '../../Interfaces/ITheme';
 
+// In Docker the standalone GraphQL server is at http://server:<BUILD_PORT>/
+// (root path). In local dev there's no BUILD_PORT and Next.js handles GraphQL
+// at /api/graphql via its own Apollo route.
+const _bp = process.env.BUILD_PORT;
 const RESOLVED_ENDPOINT: string =
     process.env.GRAPHQL_ENDPOINT
-    || (process.env.BUILD_PORT
-        ? `http://localhost:${process.env.BUILD_PORT}/api/graphql`
-        : 'http://localhost/api/graphql');
+    || (_bp ? `http://server:${_bp}/` : 'http://localhost/api/graphql');
 
 export async function gqlFetch<T>(query: string, variables?: Record<string, unknown>): Promise<T | null> {
     try {

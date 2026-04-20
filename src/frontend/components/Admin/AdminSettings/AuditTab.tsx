@@ -55,23 +55,24 @@ const AuditTab: React.FC = () => {
         offset,
     }), [actor, collection, op, docIdFilter, dateRange, offset]);
 
+    // Load filter options once on mount.
+    useEffect(() => {
+        void Promise.all([auditApi.listCollections(), auditApi.listActors()])
+            .then(([cols, acts]) => { setCollections(cols); setActors(acts); })
+            .catch(() => {});
+    }, []);
+
     const refresh = useCallback(async () => {
         setLoading(true);
         try {
-            const [p, cols, acts] = await Promise.all([
-                auditApi.list(filter),
-                collections.length === 0 ? auditApi.listCollections() : Promise.resolve(collections),
-                actors.length === 0 ? auditApi.listActors() : Promise.resolve(actors),
-            ]);
+            const p = await auditApi.list(filter);
             setPage(p);
-            if (!collections.length) setCollections(cols);
-            if (!actors.length) setActors(acts);
         } catch (err) {
             message.error(String((err as Error)?.message ?? err));
         } finally {
             setLoading(false);
         }
-    }, [filter, collections, actors]);
+    }, [filter]);
 
     useEffect(() => { void refresh(); }, [refresh]);
     useRefreshView(refresh, 'settings');
