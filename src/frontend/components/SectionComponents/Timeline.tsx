@@ -3,6 +3,7 @@ import {EItemType} from "../../../enums/EItemType";
 import {IItem} from "../../../Interfaces/IItem";
 import ContentManager from "../ContentManager";
 import {TFunction} from "i18next";
+import {translateOrKeep} from "../../../utils/translateOrKeep";
 import {InlineTranslatable} from "../common/InlineTranslatable";
 import RevealOnScroll from "../common/RevealOnScroll";
 
@@ -22,6 +23,10 @@ export interface ITimelineEntry {
     achievements?: string[];
     /** Optional pull-quote at the bottom of the detail panel. */
     quote?: string;
+    /** Heading for the experience list. Falls back to a translated default. */
+    experienceTitle?: string;
+    /** Heading for the achievements list. Falls back to a translated default. */
+    achievementsTitle?: string;
 }
 
 export interface ITimeline {
@@ -56,6 +61,7 @@ const Timeline = ({item, tApp}: {
 }) => {
     const c = new TimelineContent(EItemType.Timeline, item.content).data;
     const tr = (v: string) => <InlineTranslatable tApp={tApp as any} source={v}/>;
+    const trStr = (v: string) => translateOrKeep(tApp, v);
 
     return (
         <div className={`timeline ${item.style ?? ''}`}>
@@ -74,7 +80,7 @@ const Timeline = ({item, tApp}: {
                         <div className="timeline__body">
                             <h3 className="timeline__who">
                                 {tr(e.company)}
-                                {e.domain && <span className="timeline__domain">{e.domain}</span>}
+                                {e.domain && <> <span className="timeline__domain">{e.domain}</span></>}
                             </h3>
                             <div className="timeline__role">
                                 <b>{tr(e.role)}</b>
@@ -86,7 +92,7 @@ const Timeline = ({item, tApp}: {
                                     <div className="timeline__detail-grid">
                                         {e.experience && e.experience.length > 0 && (
                                             <div>
-                                                <h5>Experience in</h5>
+                                                <h5>{tr(e.experienceTitle && e.experienceTitle.trim() ? e.experienceTitle : trStr('Experience in'))}</h5>
                                                 <ul>
                                                     {e.experience.map((x, j) => <li key={j}>{tr(x)}</li>)}
                                                 </ul>
@@ -94,7 +100,7 @@ const Timeline = ({item, tApp}: {
                                         )}
                                         {e.achievements && e.achievements.length > 0 && (
                                             <div>
-                                                <h5>Key achievements</h5>
+                                                <h5>{tr(e.achievementsTitle && e.achievementsTitle.trim() ? e.achievementsTitle : trStr('Key achievements'))}</h5>
                                                 <ul>
                                                     {e.achievements.map((a, j) => <li key={j}>{tr(a)}</li>)}
                                                 </ul>

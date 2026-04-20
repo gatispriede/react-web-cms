@@ -33,6 +33,7 @@ function toInSection(section: ISection): InSection {
             actionStyle: it.actionStyle,
             actionType: it.actionType,
             actionContent: it.actionContent,
+            animation: it.animation,
         })),
         ...(Array.isArray(section.slots) ? {slots: section.slots} : {}),
         ...(typeof section.overlay === 'boolean' ? {overlay: section.overlay} : {}),
@@ -64,6 +65,7 @@ export class SectionApi {
                     actionStyle: c.actionStyle,
                     actionType: c.actionType,
                     actionContent: c.actionContent,
+                    animation: c.animation,
                 })),
             }));
         });
@@ -133,6 +135,7 @@ export class SectionApi {
             actionStyle: config.actionStyle,
             actionType: config.actionType,
             actionContent: config.actionContent,
+            animation: config.animation,
         };
         if (section.content) {
             section.content = section.content.map((it: IItem) => ({...it, style: it.style || 'default'}));

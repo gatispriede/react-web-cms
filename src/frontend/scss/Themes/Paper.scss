@@ -736,7 +736,10 @@
     }
   }
 
-  /* ===== Language pill dropdown ================================ */
+  /* ===== Language selector (flat, v5 design) =====================
+     The pill-rounded variant was an early v2 look; v5 calls for the
+     angular, unradiused editorial treatment consistent with buttons
+     and `.hero__cta` elsewhere. */
   .language-dropdown {
     font-family: var(--font-mono);
     font-size: 11px;
@@ -744,7 +747,29 @@
     text-transform: uppercase;
     border: 1px solid var(--rule-strong);
     padding: 3px 8px;
-    border-radius: 999px;
+    border-radius: 0;
+  }
+
+  /* ===== Top-bar vertical separators (design-v5) =================
+     Dashed vertical hairline between the left cluster (logo + mobile
+     nav trigger) and the right cluster (language + future login).
+     Kept theme-scoped so Industrial / HighContrast can opt out if
+     their aesthetic calls for something different. */
+  .site-tabs-left-cluster > * + * {
+    border-left: 1px dashed var(--rule);
+    padding-left: 10px;
+    margin-left: 2px;
+  }
+  .language-dropdown {
+    border-left: 1px dashed var(--rule);
+    padding-left: 12px;
+    margin-left: 2px;
+  }
+  .mobile-nav-trigger {
+    border-left: 1px dashed var(--rule) !important; /* out-specify the module default border */
+    border-top: 0 !important;
+    border-right: 0 !important;
+    border-bottom: 0 !important;
   }
 
   /* ===== AntD portal overlays (Dropdown / Select / Popover) =======

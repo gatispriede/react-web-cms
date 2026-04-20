@@ -142,13 +142,42 @@ const SortableItem: React.FC<{id: string; children: React.ReactNode}> = ({id, ch
         // of starting a native page-scroll that would compete with our sensor.
         touchAction: 'none',
     };
+    // Guard listeners so they only act when the event originates from the
+    // wrapper itself (or non-editable descendants). The AntD edit Drawer
+    // portals its DOM elsewhere, but React's synthetic events still bubble
+    // through the React tree — so a Space press inside a Hero headline
+    // `<Input>` was reaching dnd-kit's KeyboardSensor, which treats Space
+    // as "grab the item" and `preventDefault`s it. Net effect: space key
+    // never reaches text inputs anywhere inside a sortable section.
+    const isFormElement = (target: EventTarget | null): boolean => {
+        const el = target as HTMLElement | null;
+        if (!el) return false;
+        const tag = el.tagName?.toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || tag === 'select') return true;
+        if (el.isContentEditable) return true;
+        // AntD selects / autocompletes render their actual focusable node as
+        // a div with `role="combobox"` or `role="textbox"`; treat those as
+        // form elements too so the handler yields on typing.
+        const role = el.getAttribute?.('role');
+        if (role === 'combobox' || role === 'textbox' || role === 'searchbox') return true;
+        return false;
+    };
+    const guardedListeners = listeners ? Object.fromEntries(
+        Object.entries(listeners).map(([name, handler]) => [
+            name,
+            (e: any) => {
+                if (isFormElement(e?.target)) return;
+                (handler as (ev: any) => void)(e);
+            },
+        ]),
+    ) : undefined;
     return (
         <div
             ref={setNodeRef}
             style={style}
             className={`dnd-item${isDragging ? ' is-dragging' : ''}`}
             {...attributes}
-            {...listeners}
+            {...guardedListeners}
         >
             {children}
         </div>

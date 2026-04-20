@@ -120,9 +120,13 @@
     align-items: start;
     text-decoration: none;
     color: inherit;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, background-color 0.2s, transform 0.2s;
 
-    &:hover { border-color: var(--accent, var(--theme-colorPrimary, #1677ff)); }
+    &:hover {
+      border-color: var(--hover-accent-border);
+      background-color: var(--hover-accent-bg);
+      transform: translateY(-2px);
+    }
   }
   &.cases .list-module__case-prefix-main {
     font-size: 40px;

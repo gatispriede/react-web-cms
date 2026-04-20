@@ -19,9 +19,21 @@
     gap: 8px;
 
     .ant-tag {
-      transition: transform 180ms ease, background 180ms ease;
-      &:hover { transform: translateY(-2px); }
+      transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+      &:hover {
+        transform: translateY(-2px);
+        background: var(--hover-accent-bg);
+        border-color: var(--hover-accent-border);
+      }
     }
+  }
+
+  // Matrix-mode rows also get a hover tint — subtler than Services since
+  // rows are tighter packed. No padding-inline shift so the scored bar
+  // doesn't jump as users run down the list.
+  &__row {
+    transition: background-color 180ms ease;
+    &:hover { background-color: var(--hover-accent-bg); }
   }
 
   // style=compact → auto-scrolling marquee (studio-style logo row)

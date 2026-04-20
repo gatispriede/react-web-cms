@@ -19,6 +19,7 @@ export interface InItem {
     actionStyle?: string;
     actionType?: EItemType
     actionContent?: string
+    animation?: string
 }
 
 export interface InSection {

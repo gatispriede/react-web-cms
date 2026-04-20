@@ -1,0 +1,133 @@
+/* ==========================================================================
+   ProjectGrid — theme-agnostic base styles.
+
+   Per-theme files layer richer treatments on top.
+   ========================================================================== */
+
+.project-grid {
+  color: var(--ink, var(--theme-colorTextBase, inherit));
+
+  &__head {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 24px;
+    align-items: end;
+    margin-bottom: 28px;
+
+    @media (max-width: 900px) { grid-template-columns: 1fr; gap: 8px; }
+  }
+  &__num {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3, var(--theme-colorInkTertiary, #888));
+  }
+  &__title {
+    font-family: var(--font-display, var(--font-sans, system-ui, sans-serif));
+    font-weight: 400;
+    font-size: clamp(28px, 4vw, 48px);
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  &__sub {
+    font-family: var(--font-sans, system-ui, sans-serif);
+    font-size: 14px;
+    color: var(--ink-2, var(--theme-colorInkSecondary, #555));
+    max-width: 34ch;
+    text-align: right;
+
+    @media (max-width: 900px) { text-align: left; }
+  }
+
+  &__items {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+
+    @media (max-width: 900px) { grid-template-columns: 1fr; }
+  }
+  &__item {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    border: 1px solid var(--rule, rgba(0, 0, 0, 0.1));
+    border-radius: var(--theme-borderRadius, 4px);
+    overflow: hidden;
+    transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease;
+
+    &:hover {
+      border-color: var(--hover-accent-border);
+      background-color: var(--hover-accent-bg);
+      transform: translateY(-2px);
+    }
+  }
+  &__cover {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    background: var(--bg-inset, var(--theme-colorBgInset, rgba(0, 0, 0, 0.05)));
+    display: grid;
+    place-items: center;
+  }
+  &__year {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3, var(--theme-colorInkTertiary, #888));
+    background: var(--theme-colorBgBase, rgba(255, 255, 255, 0.85));
+    padding: 3px 8px;
+  }
+  &__art {
+    font-family: var(--font-display, var(--font-sans, system-ui, sans-serif));
+    font-weight: 500;
+    font-size: clamp(48px, 8vw, 96px);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary, #1677ff)));
+    opacity: 0.9;
+  }
+  &__meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+  &__card-title {
+    font-family: var(--font-display, var(--font-sans, system-ui, sans-serif));
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 1.2;
+    margin: 0;
+  }
+  &__stack {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3, var(--theme-colorInkTertiary, #888));
+    margin-top: 4px;
+  }
+  &__kind {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3, var(--theme-colorInkTertiary, #888));
+    text-align: right;
+    line-height: 1.3;
+  }
+  &__more {
+    padding: 0 16px 14px;
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary, #1677ff)));
+  }
+}

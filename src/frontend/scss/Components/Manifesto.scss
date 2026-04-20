@@ -1,0 +1,104 @@
+/* ==========================================================================
+   Manifesto — theme-agnostic base styles.
+   ========================================================================== */
+
+.manifesto {
+  color: var(--ink, var(--theme-colorTextBase, inherit));
+  padding: 12px 0;
+
+  &__body {
+    font-family: var(--font-display, var(--font-sans, system-ui, sans-serif));
+    font-weight: 400;
+    font-size: clamp(22px, 2.6vw, 32px);
+    line-height: 1.35;
+    max-width: 30ch;
+    margin: 0 0 18px;
+  }
+  &__addendum {
+    font-family: var(--font-sans, system-ui, sans-serif);
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--ink-2, var(--theme-colorInkSecondary, #555));
+    max-width: 56ch;
+    margin: 0;
+  }
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    padding: 3px 12px 3px 3px;
+    background: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+    color: var(--bg, var(--theme-colorBgBase, #fff));
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 0.48em;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    vertical-align: middle;
+    transform: translateY(-0.1em);
+    margin: 0 3px;
+  }
+  &__chip-thumb {
+    display: inline-grid;
+    place-items: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    margin-right: 8px;
+    border-radius: 999px;
+    background: var(--bg, var(--theme-colorBgBase, rgba(255,255,255,0.15)));
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink, var(--theme-colorTextBase, inherit));
+    flex-shrink: 0;
+  }
+
+  /* ---- accent style: accent-colour band (fills section content width) ---- */
+  &.accent {
+    background: var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary, #1677ff)));
+    color: var(--accent-ink, var(--theme-colorAccentInk, #fff));
+    padding: 80px 40px;
+    border-radius: var(--theme-borderRadius, 0);
+
+    .manifesto__body {
+      font-size: clamp(26px, 3.6vw, 56px);
+      max-width: none;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 40px;
+    }
+
+    .manifesto__addendum {
+      color: var(--accent-ink, #fff);
+      opacity: 0.8;
+      border-top: 1px solid color-mix(in srgb, var(--accent-ink, #fff) 24%, transparent);
+      padding-top: 28px;
+      max-width: 56ch;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    // em-accent global rule gives color: var(--accent) which is the same
+    // as the section background — force it to stay readable.
+    .em-accent {
+      color: inherit;
+      font-style: italic;
+    }
+
+    .manifesto__chip {
+      background: var(--accent-ink, var(--theme-colorAccentInk, #fff));
+      color: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+      border-color: transparent;
+      // Fix font-size: base chip uses 0.48em of the large body — pin to abs size
+      font-size: 13px;
+    }
+
+    .manifesto__chip-thumb {
+      background: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+      color: var(--accent-ink, var(--theme-colorAccentInk, #fff));
+    }
+  }
+}

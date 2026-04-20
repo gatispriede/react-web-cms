@@ -1,0 +1,93 @@
+// Scroll-triggered enter animations for section module items.
+// Elements receive `data-anim="<name>"` and start invisible.
+// The IntersectionObserver (animateOnScroll.ts) adds `.anim-in` when they
+// enter the viewport, which triggers the CSS animation.
+// Admin mode disables all motion so editors always see content.
+
+$easing-snap:   cubic-bezier(0.16, 1, 0.3, 1);
+$easing-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+$duration:      0.72s;
+
+// --- keyframes ---
+
+@keyframes sc-fade-up {
+  from { opacity: 0; transform: translateY(44px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sc-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes sc-zoom-in {
+  from { opacity: 0; transform: scale(0.91); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes sc-slide-left {
+  from { opacity: 0; transform: translateX(64px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes sc-slide-right {
+  from { opacity: 0; transform: translateX(-64px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+// --- base hidden state (all animated items start invisible) ---
+
+[data-anim] {
+  opacity: 0;
+  will-change: opacity, transform;
+}
+
+// --- per-animation entry states ---
+
+[data-anim="fade-up"]    { transform: translateY(44px); }
+[data-anim="zoom-in"]    { transform: scale(0.91); }
+[data-anim="slide-left"] { transform: translateX(64px); }
+[data-anim="slide-right"]{ transform: translateX(-64px); }
+
+// --- triggered state (.anim-in added by observer) ---
+// --anim-delay is set inline per item (index × 110 ms stagger from SectionContent)
+
+[data-anim="fade-up"].anim-in {
+  animation: sc-fade-up $duration $easing-snap var(--anim-delay, 0ms) forwards;
+}
+
+[data-anim="fade-in"].anim-in {
+  animation: sc-fade-in $duration $easing-smooth var(--anim-delay, 0ms) forwards;
+}
+
+[data-anim="zoom-in"].anim-in {
+  animation: sc-zoom-in $duration $easing-snap var(--anim-delay, 0ms) forwards;
+}
+
+[data-anim="slide-left"].anim-in {
+  animation: sc-slide-left $duration $easing-snap var(--anim-delay, 0ms) forwards;
+}
+
+[data-anim="slide-right"].anim-in {
+  animation: sc-slide-right $duration $easing-snap var(--anim-delay, 0ms) forwards;
+}
+
+// --- admin mode: always visible, no motion ---
+
+.admin-mode [data-anim],
+[data-admin="true"] [data-anim] {
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
+  will-change: auto;
+}
+
+// --- respect reduced-motion preference ---
+
+@media (prefers-reduced-motion: reduce) {
+  [data-anim] {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+}

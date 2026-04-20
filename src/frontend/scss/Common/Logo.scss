@@ -1,0 +1,33 @@
+/* ==========================================================================
+   Logo — the public-site wordmark slot. Theme-agnostic structural rules
+   live here; per-theme accents (borders, dashed inset, typography) layer
+   in via `[data-theme-name="…"] .logo-mark` rules inside `scss/Themes/*`.
+
+   When no real logo image is uploaded, [`Logo.tsx`](../../components/common/
+   Logo.tsx) renders `<span class="logo-mark">◆</span>` so the top-bar left
+   slot always has visible weight — otherwise the layout collapses to nothing.
+   ========================================================================== */
+
+.logo-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--ink, var(--theme-colorTextBase, currentColor));
+  color: var(--ink, var(--theme-colorTextBase, inherit));
+  background: var(--theme-colorBgBase, var(--bg, transparent));
+  font-family: var(--font-display, var(--font-sans, system-ui, sans-serif));
+  font-size: 18px;
+  line-height: 1;
+  position: relative;
+
+  /* Dashed inset border — matches design-v5's wordmark-mark::after */
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    border: 1px dashed var(--rule-strong, var(--rule, rgba(0, 0, 0, 0.3)));
+    opacity: 0.6;
+    pointer-events: none;
+  }
+}

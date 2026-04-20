@@ -9,4 +9,5 @@ export interface IConfigSectionAddRemove {
     actionStyle?: string,
     actionType?: EItemType,
     actionContent?: string,
+    animation?: string,
 }

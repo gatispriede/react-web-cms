@@ -51,6 +51,23 @@ Tracked separately under [production/](production/) so the two streams can be sc
 | 11 | [architecture-docs-page.md](architecture-docs-page.md) | M | **Shipped (v1)** — `docs/architecture/` with index + 4 new docs; in-app renderer deferred |
 | 12 | [multi-admin-conflict-mitigation.md](multi-admin-conflict-mitigation.md) | L | **Layer 1 + 2 shipped across all editable surfaces (incl. Logo + Language)**. Layer 3 (soft lock) deferred unless needed |
 
+### New issue backlog (2026-04-20)
+
+Sprint 1 shipped: N3 (admin language selector drives building area), N4 (admin URL prefix + translations), N5 (hero subtitle / CTA / portrait-label), N8 (overlay parity — closed, not a bug), N9 (timeline polish), N10 + N12 (Services + Testimonials base styles extracted), N11 (space-key bug — dnd-kit KeyboardSensor was grabbing space from inputs inside sortable sections). See `git log` 2026-04-20.
+
+| # | Item | Size | Notes |
+|---|------|------|-------|
+| N1 | [logo-theme-integration.md](logo-theme-integration.md) | M | Logo poorly integrated in every theme, especially single-page layout |
+| N2 | [admin-right-menu-overlap.md](admin-right-menu-overlap.md) | M | Right-side admin rail overlays content; blocks edits |
+| N6 | [image-selector-unification.md](image-selector-unification.md) | M | Unified image picker across every module |
+| N7 | [module-style-section-reload.md](module-style-section-reload.md) | M | **Partial** — base SCSS fallbacks shipped. Style-section respect + preview live-reload still queued |
+| N13 | [gallery-text-only-mode.md](gallery-text-only-mode.md) | S–M | Gallery text-only mode, no broken image placeholders |
+| N14 | [module-selection-dialog.md](module-selection-dialog.md) | M | Replace inline module picker with a dialog/popup |
+| N15 | [folder-structure-reorg.md](folder-structure-reorg.md) | XL | Maintenance-oriented reorg; awaits user guidelines before starting |
+| N16 | [accept-existing-translation.md](accept-existing-translation.md) | S | **Partial** — inline editor + Languages table checkboxes shipped. Compare-view polish + hash-based invalidation deferred |
+| N17 | [design-v5-bundle-rework.md](design-v5-bundle-rework.md) | M | **Draft scaffold shipped** — v1 clone with ID remap landed; content rework + v5-specific enhancements pending |
+| N18 | [public-site-mobile-topbar.md](public-site-mobile-topbar.md) | M | Adopt v5's mobile topbar treatment (logo + nav + language) into the live site |
+
 ### Debt
 
 | # | Item | Size | Notes |

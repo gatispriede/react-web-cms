@@ -1,0 +1,112 @@
+/* ==========================================================================
+   Testimonials — theme-agnostic base styles.
+
+   Per-theme files layer richer treatments on top. Without this base, themes
+   that don't own Testimonials styling rendered the module as unstyled DOM.
+   ========================================================================== */
+
+.testimonials-module {
+  color: var(--ink, var(--theme-colorTextBase, inherit));
+
+  &__head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    align-items: end;
+    margin-bottom: 40px;
+
+    @media (max-width: 900px) { grid-template-columns: 1fr; gap: 12px; }
+  }
+  &__title {
+    font-family: var(--font-display, var(--font-sans, system-ui, sans-serif));
+    font-weight: 400;
+    font-size: clamp(28px, 4vw, 48px);
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0;
+    max-width: 16ch;
+  }
+  &__sub {
+    font-family: var(--font-sans, system-ui, sans-serif);
+    font-size: 15px;
+    color: var(--ink-2, var(--theme-colorInkSecondary, #555));
+    line-height: 1.5;
+    max-width: 36ch;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+
+    @media (max-width: 1100px) { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 700px) { grid-template-columns: 1fr; }
+  }
+  &__card {
+    padding: 22px;
+    background: var(--bg-inset, var(--theme-colorBgInset, rgba(0, 0, 0, 0.04)));
+    border: 1px solid var(--rule, rgba(0, 0, 0, 0.08));
+    border-radius: var(--theme-borderRadius, 4px);
+    position: relative;
+    transition: border-color 180ms ease, transform 180ms ease;
+
+    &:hover {
+      border-color: var(--hover-accent-border);
+      background: var(--hover-accent-bg);
+      transform: translateY(-2px);
+    }
+
+    &::before {
+      content: "“";
+      font-family: var(--font-display, var(--font-sans, system-ui, sans-serif));
+      font-style: italic;
+      font-size: 56px;
+      line-height: 1;
+      color: var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary, #1677ff)));
+      position: absolute;
+      top: 6px;
+      left: 14px;
+    }
+  }
+  &__quote {
+    margin: 28px 0 18px;
+    font-family: var(--font-display, var(--font-sans, system-ui, sans-serif));
+    font-weight: 400;
+    font-size: 17px;
+    line-height: 1.4;
+    color: var(--ink, var(--theme-colorTextBase, inherit));
+  }
+  &__who {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-top: 1px solid var(--rule, rgba(0, 0, 0, 0.08));
+    padding-top: 12px;
+  }
+  &__avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    background: var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary, #1677ff)));
+    color: var(--accent-ink, var(--theme-colorAccentInk, #fff));
+    display: grid;
+    place-items: center;
+    font-family: var(--font-display, var(--font-sans, system-ui, sans-serif));
+    font-style: italic;
+    font-size: 15px;
+    flex: 0 0 auto;
+  }
+  &__name {
+    font-family: var(--font-sans, system-ui, sans-serif);
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--ink, var(--theme-colorTextBase, inherit));
+  }
+  &__role {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3, var(--theme-colorInkTertiary, #888));
+  }
+}

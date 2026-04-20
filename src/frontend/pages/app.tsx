@@ -17,6 +17,7 @@ import Head from 'next/head'
 import {i18n, TFunction} from "i18next";
 import {INavigation} from "../gqty/schema.generated";
 import {sanitizeKey} from "../../utils/stringFunctions";
+import {translateOrKeep} from "../../utils/translateOrKeep";
 import PublishApi from "../api/PublishApi";
 import PostApi from "../api/PostApi";
 import FooterApi from "../api/FooterApi";
@@ -27,6 +28,7 @@ import type {InitialPageData} from "../lib/gqlFetch";
 import {PostsProvider} from "../lib/PostsContext";
 import {refreshBus} from "../lib/refreshBus";
 import ScrollNav from "../components/common/ScrollNav";
+import MobileNav, {MobileNavLink} from "../components/common/MobileNav";
 
 interface IHomeState {
     loading: boolean,
@@ -135,7 +137,7 @@ class App extends React.Component<IHomeProps> {
             label: (
                 <Link className={'navigation-item'}
                       href={p.page.replace(/ /g, '-').toLowerCase()}>
-                    {this.props.t(sanitizeKey(p.page))}
+                    {translateOrKeep(this.props.t, p.page)}
                 </Link>
             ),
             children: (
@@ -268,7 +270,7 @@ class App extends React.Component<IHomeProps> {
                         seo: pages[id].seo,
                         label: (
                             <Link className={'navigation-item'}
-                                  href={pages[id].page.replace(/ /g, '-').toLowerCase()}>{this.props.t(sanitizeKey(pages[id].page))}</Link>
+                                  href={pages[id].page.replace(/ /g, '-').toLowerCase()}>{translateOrKeep(this.props.t, pages[id].page)}</Link>
                         ),
                         children:
                             <DynamicTabsContent
@@ -405,8 +407,21 @@ class App extends React.Component<IHomeProps> {
                                         links={this.state.tabProps.map(tp => ({
                                             key: tp.key,
                                             slug: tp.page.replace(/\s+/g, '-').toLowerCase(),
-                                            label: this.props.t(sanitizeKey(tp.page)),
+                                            label: translateOrKeep(this.props.t, tp.page),
                                         }))}
+                                    />
+                                    <MobileNav
+                                        links={this.state.tabProps.map<MobileNavLink>(tp => ({
+                                            key: tp.key,
+                                            href: `#${tp.page.replace(/\s+/g, '-').toLowerCase()}`,
+                                            label: translateOrKeep(this.props.t, tp.page),
+                                        }))}
+                                        activeKey={this.state.activeTab}
+                                        onNavigate={(link) => {
+                                            const slug = link.href.replace(/^#/, '');
+                                            const el = document.getElementById(slug);
+                                            if (el) el.scrollIntoView({behavior: 'smooth', block: 'start'});
+                                        }}
                                     />
                                     {items.length > 1 && (
                                         <Dropdown className="language-dropdown" menu={{items}}>
@@ -447,7 +462,26 @@ class App extends React.Component<IHomeProps> {
                                 defaultActiveKey={"0"}
                                 items={this.state.tabProps}
                                 tabBarExtraContent={{
-                                    left: <Logo t={this.props.t} admin={false}/>,
+                                    left: (
+                                        <div className="site-tabs-left-cluster">
+                                            <Logo t={this.props.t} admin={false}/>
+                                            <MobileNav
+                                                links={this.state.tabProps.map<MobileNavLink>(tp => ({
+                                                    key: tp.key,
+                                                    href: `/${tp.page.replace(/\s+/g, '-').toLowerCase()}`,
+                                                    label: translateOrKeep(this.props.t, tp.page),
+                                                }))}
+                                                activeKey={"" + activeKey}
+                                                onNavigate={(link) => {
+                                                    // Delegate to the Tabs onChange so AntD updates its own
+                                                    // active-tab state + URL stays in sync with the rest of
+                                                    // the app. Using the tab's key (not slug) keeps parity.
+                                                    this.setState({activeTab: link.key});
+                                                    if (typeof window !== 'undefined') window.location.assign(link.href);
+                                                }}
+                                            />
+                                        </div>
+                                    ),
                                     right: items.length > 1 ? (
                                         <Dropdown className="language-dropdown" menu={{items}}>
                                             <Typography.Link>

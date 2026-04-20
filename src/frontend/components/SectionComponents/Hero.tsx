@@ -155,7 +155,7 @@ const Hero = ({item, tApp}: {
                         )}
                     </RevealOnScroll>
                 )}
-                {(c.titles && c.titles.length > 0) ? (
+                {c.titles && c.titles.length > 0 && (
                     <p className="hero__titles">
                         {c.titles.map((t, i) => (
                             <React.Fragment key={i}>
@@ -164,11 +164,12 @@ const Hero = ({item, tApp}: {
                             </React.Fragment>
                         ))}
                     </p>
-                ) : c.subtitle ? (
+                )}
+                {c.subtitle && (
                     <RevealOnScroll as="h2" className="hero__subtitle" delay={120}>
                         {renderAccentRuns(c.subtitle, trStr)}
                     </RevealOnScroll>
-                ) : null}
+                )}
                 {c.tagline && (
                     <RevealOnScroll as="p" className="hero__tagline" delay={220}>
                         <em>{renderAccentRuns(c.tagline, trStr)}</em>

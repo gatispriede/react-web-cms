@@ -43,9 +43,9 @@ export const CommandPalette: React.FC<Props> = ({open, onClose, extra}) => {
 
     const commands = useMemo<Command[]>(() => {
         const list: Command[] = [
-            {id: 'app', label: t('App building'), hint: `/${lang}/admin`, action: () => navigate(`/${lang}/admin`)},
-            {id: 'settings', label: t('Site settings'), hint: `/${lang}/admin/settings`, action: () => navigate(`/${lang}/admin/settings`)},
-            {id: 'languages', label: t('Languages'), hint: `/${lang}/admin/languages`, action: () => navigate(`/${lang}/admin/languages`)},
+            {id: 'app', label: t('App building'), hint: `/admin`, action: () => navigate(`/admin`)},
+            {id: 'settings', label: t('Site settings'), hint: `/admin/settings`, action: () => navigate(`/admin/settings`)},
+            {id: 'languages', label: t('Languages'), hint: `/admin/languages`, action: () => navigate(`/admin/languages`)},
             {id: 'preview', label: t('Preview site'), hint: `/${lang}`, action: () => openNew(`/${lang}`)},
             {id: 'blog', label: t('Open blog'), hint: `/${lang}/blog`, action: () => openNew(`/${lang}/blog`)},
         ];

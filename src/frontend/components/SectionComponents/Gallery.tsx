@@ -5,7 +5,6 @@ import {Image} from "antd";
 import {IItem} from "../../../Interfaces/IItem";
 import {ETextPosition} from "../../../enums/ETextPosition";
 import {TFunction} from "i18next";
-import {sanitizeKey} from "../../../utils/stringFunctions";
 
 export interface IGalleryItem {
     alt: string;
@@ -113,7 +112,7 @@ const Gallery = ({item, t: _t, tApp}: {
                                 width?: string;
                                 height?: string;
                             } = {
-                                preview: data.disablePreview ? false : item.preview,
+                                preview: (data.disablePreview || isClone) ? false : item.preview,
                                 src: '/' + item.src,
                                 alt: item.alt
                             }
@@ -132,9 +131,11 @@ const Gallery = ({item, t: _t, tApp}: {
                                     <div className={'image'}>
                                         <Image {...imgProperties}/>
                                     </div>
-                                    <div className={'text'}>
-                                        <p>{tApp(sanitizeKey(item.text))}</p>
-                                    </div>
+                                    {item.text && (
+                                        <div className={'text'}>
+                                            <p>{item.text}</p>
+                                        </div>
+                                    )}
                                 </div>
                             )
                         })

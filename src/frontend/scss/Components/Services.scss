@@ -1,0 +1,212 @@
+/* ==========================================================================
+   Services — theme-agnostic base styles.
+
+   Per-theme files (Studio, Industrial, …) layer richer treatments on top via
+   higher-specificity `[data-theme-name="…"] .services-module { … }` rules.
+   Without this base, themes that don't own Services styling (Paper,
+   HighContrast) rendered the module as unstyled DOM.
+   ========================================================================== */
+
+.services-module {
+  color: var(--ink, var(--theme-colorTextBase, inherit));
+
+  &__head {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 24px;
+    align-items: end;
+    margin-bottom: 32px;
+
+    @media (max-width: 900px) {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+  }
+  &__num {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3, var(--theme-colorInkTertiary, #888));
+  }
+  &__title {
+    font-family: var(--font-display, var(--font-sans, system-ui, sans-serif));
+    font-weight: 400;
+    font-size: clamp(28px, 4vw, 48px);
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  &__sub {
+    font-family: var(--font-sans, system-ui, sans-serif);
+    font-size: 14px;
+    color: var(--ink-2, var(--theme-colorInkSecondary, #555));
+    max-width: 32ch;
+    text-align: right;
+
+    @media (max-width: 900px) { text-align: left; }
+  }
+
+  &__rows { display: block; }
+  &__row {
+    display: grid;
+    grid-template-columns: 60px 1fr 1.2fr auto;
+    gap: 20px;
+    align-items: start;
+    padding: 20px 0;
+    border-top: 1px solid var(--rule, rgba(0, 0, 0, 0.12));
+    transition: background-color 180ms ease, padding-inline 180ms ease;
+
+    &:last-child { border-bottom: 1px solid var(--rule, rgba(0, 0, 0, 0.12)); }
+
+    &:hover {
+      background-color: var(--hover-accent-bg);
+      padding-inline: 16px;
+    }
+
+    @media (max-width: 900px) {
+      grid-template-columns: auto 1fr;
+      gap: 8px;
+
+      .services-module__row-desc,
+      .services-module__row-cta,
+      .services-module__row-tags { grid-column: 2; }
+    }
+  }
+  &__row-num {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--ink-3, var(--theme-colorInkTertiary, #888));
+  }
+  &__row-title {
+    font-family: var(--font-display, var(--font-sans, system-ui, sans-serif));
+    font-weight: 500;
+    font-size: clamp(18px, 2.2vw, 26px);
+    line-height: 1.15;
+    margin: 0;
+  }
+  &__row-desc {
+    font-family: var(--font-sans, system-ui, sans-serif);
+    font-size: 14px;
+    color: var(--ink-2, var(--theme-colorInkSecondary, #555));
+    line-height: 1.55;
+    max-width: 48ch;
+  }
+  &__row-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--rule-strong, var(--rule, rgba(0, 0, 0, 0.3)));
+    font-size: 16px;
+  }
+  &__row-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  &__tag {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border: 1px solid var(--rule-strong, var(--rule, rgba(0, 0, 0, 0.3)));
+    color: var(--ink-2, var(--theme-colorInkSecondary, #555));
+  }
+  &__row-cta {
+    justify-self: end;
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary, #1677ff)));
+
+    a {
+      color: inherit;
+      text-decoration: none;
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+    }
+  }
+  &__arr {
+    display: inline-block;
+    transition: transform 0.2s;
+  }
+  &__row:hover &__arr { transform: translateX(4px); }
+
+  /* ---- cards style (design-v6 Brandappart 3-col card grid) ---- */
+  &.cards {
+    .services-module__rows {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+
+      @media (max-width: 900px) { grid-template-columns: 1fr 1fr; }
+      @media (max-width: 540px) { grid-template-columns: 1fr; }
+    }
+
+    .services-module__row {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 28px 32px;
+      background: var(--theme-colorAccentInk, var(--theme-colorBgInset, #f5f5f5));
+      border: 1px solid var(--rule, var(--theme-colorRule, rgba(0,0,0,0.12)));
+      border-top: 1px solid var(--rule, var(--theme-colorRule, rgba(0,0,0,0.12)));
+      border-radius: var(--theme-borderRadius, 4px);
+      min-height: 220px;
+      cursor: default;
+      transition: background 260ms ease, color 260ms ease, border-color 260ms ease, transform 260ms ease;
+
+      &:last-child { border-bottom: 1px solid var(--rule, var(--theme-colorRule, rgba(0,0,0,0.12))); }
+
+      &:hover {
+        background: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+        color: var(--bg, var(--theme-colorBgBase, #fff));
+        border-color: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+        transform: translateY(-4px);
+        padding-inline: 32px;
+
+        // Title, em-accent, desc and CTA all need explicit colour overrides —
+        // Studio theme sets color: var(--ink) on the root which some elements
+        // pick up directly rather than inheriting from the row hover colour.
+        .services-module__row-title { color: var(--bg, var(--theme-colorBgBase, #fff)); }
+        .em-accent { color: var(--bg, var(--theme-colorBgBase, #fff)); font-style: italic; }
+        .services-module__row-num { color: var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary))); opacity: 0.7; }
+        .services-module__row-desc { color: var(--bg, var(--theme-colorBgBase, #fff)); opacity: 0.75; }
+        .services-module__row-cta,
+        .services-module__row-cta a { color: var(--bg, var(--theme-colorBgBase, #fff)); opacity: 0.65; }
+        .services-module__arr { transform: translateX(4px); }
+      }
+    }
+
+    .services-module__row-num {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+    }
+
+    .services-module__row-title {
+      font-size: clamp(20px, 2.4vw, 28px);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    .services-module__row-desc {
+      font-size: 14px;
+      max-width: none;
+      line-height: 1.5;
+      opacity: 0.8;
+    }
+
+    .services-module__row-cta {
+      margin-top: auto;
+      justify-self: unset;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  }
+}

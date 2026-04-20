@@ -17,4 +17,18 @@
   --theme-borderRadius: 6px;
   --theme-fontSize: 16px;
   --theme-contentPadding: 24px;
+
+  // `--hover-accent-bg` is the translucent accent used for interactive
+  // hover states across modules (Services rows, Timeline entries, Gallery
+  // items, SkillPills rows, List cases, BlogFeed cards). Derives from the
+  // theme accent so it re-tints automatically when a theme overrides
+  // `--accent` / `--theme-colorAccent`. Themes can also override
+  // `--hover-accent-bg` directly if they want a different mix (e.g.
+  // HighContrast could flip to a solid inverse).
+  --hover-accent-bg: color-mix(
+    in oklch,
+    var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary, currentColor))) 6%,
+    transparent
+  );
+  --hover-accent-border: var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary, currentColor)));
 }

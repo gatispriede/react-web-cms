@@ -9,6 +9,7 @@ import {EItemType} from "../../../../enums/EItemType";
 import {IConfigSectionAddRemove} from "../../../../Interfaces/IConfigSectionAddRemove";
 import {IItem} from "../../../../Interfaces/IItem";
 import {EStyle} from "../../../../enums/EStyle";
+import {EAnimation} from "../../../../enums/EAnimation";
 import {TFunction} from "i18next";
 import {itemTypeList, styleEnumFor} from "../../itemTypes/registry";
 import TypeDiagram from "../../itemTypes/TypeDiagram";
@@ -46,6 +47,11 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                 value: EStyle.Default,
             }
         ],
+        animation: EAnimation.None,
+        animationOptions: Object.entries(EAnimation).map(([key, value]) => ({
+            label: key,
+            value,
+        })),
         actionSelectOptions: [
             {
                 label: this.props.t("No action"),
@@ -92,6 +98,7 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                 selected: item.type,
                 content: item.content,
                 style: item.style ? item.style : 'default',
+                animation: (item.animation as EAnimation) || EAnimation.None,
                 action: item.action || 'none',
                 actionType: item.actionType || EItemType.Text,
                 actionStyle: item.actionStyle || 'default',
@@ -207,6 +214,14 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                     onSelect={(e) => {
                         this.setState({style: e})
                     }}/>
+            <hr/>
+            <label>{this.props.t("Animation")}: </label>
+            <Select
+                variant={'filled'}
+                value={this.state.animation}
+                options={this.state.animationOptions}
+                onSelect={(e: EAnimation) => this.setState({animation: e})}
+            />
             {
                 this.state.action &&
                 <div>
@@ -232,6 +247,7 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                 actionStyle: this.state.actionStyle,
                 actionType: this.state.actionType,
                 actionContent: this.state.actionContent,
+                animation: this.state.animation,
             }
         )
 

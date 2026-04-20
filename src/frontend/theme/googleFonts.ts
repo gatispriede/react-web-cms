@@ -70,9 +70,31 @@ export function buildGoogleFontsUrl(
         const meta = GOOGLE_FAMILY_INDEX.get(key);
         const variants = meta?.variants?.length ? meta.variants : ['400', '700'];
         const family = (meta?.family ?? raw).replace(/\s+/g, '+');
-        // css2 wants weights ascending; sort numerically so 400 < 500 < 700.
-        const weights = [...variants].sort((a, b) => parseInt(a, 10) - parseInt(b, 10)).join(';');
-        params.push(`family=${family}:wght@${weights}`);
+
+        const italicWeights = variants
+            .filter(v => v.endsWith('italic'))
+            .map(v => parseInt(v, 10))
+            .filter(n => !isNaN(n))
+            .sort((a, b) => a - b);
+        const uprightWeights = variants
+            .filter(v => !v.endsWith('italic'))
+            .map(v => parseInt(v, 10))
+            .filter(n => !isNaN(n))
+            .sort((a, b) => a - b);
+
+        if (italicWeights.length > 0) {
+            // Google Fonts CSS2: ital,wght axis pairs — 0=upright, 1=italic.
+            // Pairs must be sorted first by ital then by wght.
+            const pairs = [
+                ...uprightWeights.map(w => `0,${w}`),
+                ...italicWeights.map(w => `1,${w}`),
+            ].join(';');
+            params.push(`family=${family}:ital,wght@${pairs}`);
+        } else {
+            // Upright-only — simpler wght@ form.
+            const weights = uprightWeights.join(';');
+            params.push(`family=${family}:wght@${weights}`);
+        }
     }
     if (params.length === 0) return null;
     const base = opts.selfHost ? '/api/fonts/css' : 'https://fonts.googleapis.com/css2';

@@ -15,6 +15,7 @@
   &__entry {
     position: relative;
     padding: 0 0 32px 20px;
+    transition: background-color 180ms ease;
 
     &::before {
       content: "";
@@ -24,6 +25,10 @@
       border-radius: 50%;
       background: var(--theme-colorPrimary);
       box-shadow: 0 0 0 4px color-mix(in srgb, var(--theme-colorPrimary, #1677ff) 15%, transparent);
+    }
+
+    &:hover {
+      background-color: var(--hover-accent-bg);
     }
   }
 

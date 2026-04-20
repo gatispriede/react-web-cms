@@ -35,6 +35,8 @@ export enum EServicesStyle {
     Numbered = "numbered",
     /** 3-col card grid with icon + tags (design-v4 Industrial). */
     Grid = "grid",
+    /** 3-col card grid with serif title + hover-invert (design-v6 Brandappart). */
+    Cards = "cards",
 }
 
 const defaults: IServices = {rows: []};

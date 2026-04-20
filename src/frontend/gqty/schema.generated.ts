@@ -49,6 +49,7 @@ export interface InItem {
   actionContent?: InputMaybe<Scalars["String"]["input"]>;
   actionStyle?: InputMaybe<Scalars["String"]["input"]>;
   actionType?: InputMaybe<Scalars["String"]["input"]>;
+  animation?: InputMaybe<Scalars["String"]["input"]>;
   content: Scalars["String"]["input"];
   name?: InputMaybe<Scalars["String"]["input"]>;
   style: Scalars["String"]["input"];
@@ -134,6 +135,7 @@ export const generatedSchema = {
     actionContent: { __type: "String" },
     actionStyle: { __type: "String" },
     actionType: { __type: "String" },
+    animation: { __type: "String" },
     content: { __type: "String!" },
     name: { __type: "String" },
     style: { __type: "String" },
@@ -227,6 +229,7 @@ export const generatedSchema = {
     actionContent: { __type: "String" },
     actionStyle: { __type: "String" },
     actionType: { __type: "String" },
+    animation: { __type: "String" },
     content: { __type: "String!" },
     name: { __type: "String" },
     style: { __type: "String!" },
@@ -426,6 +429,7 @@ export interface IItem {
   actionContent?: Maybe<Scalars["String"]["output"]>;
   actionStyle?: Maybe<Scalars["String"]["output"]>;
   actionType?: Maybe<Scalars["String"]["output"]>;
+  animation?: Maybe<Scalars["String"]["output"]>;
   content?: Scalars["String"]["output"];
   name?: Maybe<Scalars["String"]["output"]>;
   style?: Maybe<Scalars["String"]["output"]>;

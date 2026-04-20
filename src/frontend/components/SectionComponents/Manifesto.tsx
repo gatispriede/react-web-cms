@@ -36,6 +36,8 @@ export interface IManifesto {
 
 export enum EManifestoStyle {
     Default = "default",
+    /** Full-width accent-coloured band — teal/primary bg, accent-ink text (design-v6 Brandappart). */
+    Accent = "accent",
 }
 
 const defaults: IManifesto = {body: '', addendum: '', chips: []};

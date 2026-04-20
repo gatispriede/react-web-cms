@@ -1,6 +1,20 @@
 
 .carousel-wrapper{
   color: var(--theme-colorTextBase, #151313);
+  width: 100%;
+  overflow: hidden;
+
+  // Ensure slick internals never exceed the container width
+  .slick-slider,
+  .slick-list,
+  .slick-track { width: 100%; }
+
+  img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+  }
 
   display:flex;
   //flex-shrink: 0;

@@ -13,6 +13,15 @@ export interface ITranslationMetaEntry {
     description?: string;
     /** Longer explanation surfaced in a tooltip / expanded row. */
     context?: string;
+    /**
+     * Language symbols (e.g. `['lv', 'ru']`) where the translator has
+     * explicitly accepted the source string verbatim — "no translation
+     * needed" for numbers, proper nouns, single-word technical terms. Keeps
+     * the coverage audit from flagging these as missing. Not set when the
+     * translator *types* the source in; only set when they tick the
+     * "Same as source" checkbox.
+     */
+    acceptedSources?: string[];
 }
 
 export type ITranslationMetaMap = Record<string, ITranslationMetaEntry>;
@@ -53,12 +62,16 @@ export class TranslationMetaService {
             if (!entry) { delete merged[k]; continue; }
             const description = entry.description?.trim();
             const context = entry.context?.trim();
-            if (!description && !context) {
+            const accepted = Array.isArray(entry.acceptedSources)
+                ? Array.from(new Set(entry.acceptedSources.filter(s => typeof s === 'string' && s.length > 0)))
+                : undefined;
+            if (!description && !context && (!accepted || accepted.length === 0)) {
                 delete merged[k];
             } else {
                 merged[k] = {
                     ...(description ? {description} : {}),
                     ...(context ? {context} : {}),
+                    ...(accepted && accepted.length > 0 ? {acceptedSources: accepted} : {}),
                 };
             }
         }

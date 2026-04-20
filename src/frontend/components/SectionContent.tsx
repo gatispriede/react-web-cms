@@ -14,6 +14,7 @@ import {TFunction} from "i18next";
 import {refreshBus} from "../lib/refreshBus";
 import MongoApi from "../api/MongoApi";
 import {undoStack} from "../lib/undoStack";
+import {setupAnimations} from "../lib/animateOnScroll";
 
 interface IPropsSectionContent {
     section: ISection,
@@ -71,6 +72,7 @@ class SectionContent extends React.Component<IPropsSectionContent> {
 
     componentDidMount() {
         this.refreshUnsub = refreshBus.subscribe(() => this.refreshView(), 'content');
+        if (!this.admin) setupAnimations();
     }
 
     componentWillUnmount() {
@@ -87,6 +89,7 @@ class SectionContent extends React.Component<IPropsSectionContent> {
         if (prevProps.section !== this.props.section) {
             this.setState({section: this.props.section});
         }
+        if (!this.admin) setupAnimations();
     }
 
     /**
@@ -179,10 +182,16 @@ class SectionContent extends React.Component<IPropsSectionContent> {
         const section = this.state.section;
         const slots = resolveSlots(section);
         const totalUnits = slots.reduce((a, b) => a + b, 0);
+        // Column count travels through a CSS var so the SCSS mobile rules in
+        // `.section` (global.scss) can collapse multi-column layouts to 1fr
+        // on narrow viewports — an inline `grid-template-columns` would
+        // out-specify any media query short of `!important`. Desktop still
+        // uses `repeat(var(--section-cols, …), 1fr)`.
         const gridStyle: React.CSSProperties = {
             display: 'grid',
-            gridTemplateColumns: `repeat(${totalUnits}, 1fr)`,
+            gridTemplateColumns: `repeat(var(--section-cols, ${totalUnits}), 1fr)`,
             gap: 16,
+            ['--section-cols' as any]: totalUnits,
         };
         return (
             <div className={'section'} style={gridStyle}>
@@ -191,16 +200,28 @@ class SectionContent extends React.Component<IPropsSectionContent> {
                         const span = slots[id] ?? 1;
                         const style: React.CSSProperties = {
                             height: '100%',
+                            // `gridColumn` intentionally omits a var so items with
+                            // `span 2` / `span 3` still claim the right number of
+                            // columns at desktop. The mobile SCSS rule below
+                            // overrides `grid-column` + flips the layout to a
+                            // single-column stack.
                             gridColumn: `span ${span}`,
                             position: 'relative',
                         };
                         const sectionId = section.id ? section.id : '';
                         const isLast = id === slots.length - 1;
                         const styleClass = item.style ? `style-${String(item.style).replace(/\s+/g, '-')}` : '';
+                        const animAttr = !this.admin && item.animation && item.animation !== 'none'
+                            ? item.animation
+                            : undefined;
+                        const animStyle: React.CSSProperties = animAttr
+                            ? {...style, '--anim-delay': `${id * 110}ms`} as React.CSSProperties
+                            : style;
                         return (
                             <div key={id}
                                  className={`section-item-container ${item.type} span-${span} ${styleClass}`}
-                                 style={style}>
+                                 style={animStyle}
+                                 {...(animAttr ? {'data-anim': animAttr} : {})}>
                                 <EditWrapper
                                     t={this.props.t}
                                     admin={this.admin}

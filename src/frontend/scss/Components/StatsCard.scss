@@ -1,0 +1,86 @@
+/* ==========================================================================
+   StatsCard — theme-agnostic base styles.
+   ========================================================================== */
+
+.stats-card {
+  color: var(--ink, var(--theme-colorTextBase, inherit));
+  background: var(--bg-inset, var(--theme-colorBgInset, rgba(0, 0, 0, 0.04)));
+  border: 1px solid var(--rule, rgba(0, 0, 0, 0.1));
+  border-radius: var(--theme-borderRadius, 4px);
+  padding: 20px 24px;
+  transition: border-color 180ms ease, background-color 180ms ease, transform 180ms ease;
+
+  &:hover {
+    border-color: var(--hover-accent-border);
+    background-color: var(--hover-accent-bg);
+    transform: translateY(-2px);
+  }
+
+  &__tag {
+    display: inline-block;
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3, var(--theme-colorInkTertiary, #888));
+    padding: 3px 8px;
+    border: 1px solid var(--rule-strong, var(--rule, rgba(0, 0, 0, 0.2)));
+    margin-bottom: 12px;
+  }
+  &__title {
+    font-family: var(--font-display, var(--font-sans, system-ui, sans-serif));
+    font-weight: 500;
+    font-size: clamp(20px, 2vw, 24px);
+    line-height: 1.2;
+    margin: 0 0 16px;
+  }
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px 24px;
+    margin-bottom: 16px;
+
+    @media (max-width: 500px) { grid-template-columns: 1fr; }
+  }
+  &__stat { display: block; }
+  &__n {
+    font-family: var(--font-display, var(--font-sans, system-ui, sans-serif));
+    font-weight: 500;
+    font-size: clamp(24px, 3.2vw, 36px);
+    line-height: 1;
+    color: var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary, #1677ff)));
+    margin-bottom: 4px;
+  }
+  &__l {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3, var(--theme-colorInkTertiary, #888));
+  }
+  &__features {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      font-family: var(--font-sans, system-ui, sans-serif);
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--ink-2, var(--theme-colorInkSecondary, #555));
+      padding: 6px 0 6px 22px;
+      position: relative;
+      border-top: 1px dashed var(--rule, rgba(0, 0, 0, 0.08));
+
+      &:first-child { border-top: 1px solid var(--rule-strong, var(--rule, rgba(0, 0, 0, 0.2))); }
+
+      &::before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary, #1677ff)));
+        font-weight: 700;
+      }
+    }
+  }
+}

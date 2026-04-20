@@ -1,0 +1,187 @@
+/* ==========================================================================
+   MobileNav — hamburger-style collapsible navigation for the public site
+   top bar on narrow viewports. Rendered by [MobileNav.tsx](../../components/
+   common/MobileNav.tsx). Pairs with the `.site-tabs` media rules in
+   `global.scss` that hide the desktop tab/scroll nav at `≤ 720 px`.
+
+   Theme-agnostic: everything drives off CSS vars (`--ink`, `--rule`, …)
+   so Paper / Studio / Industrial / HighContrast all pick up the same
+   structural rules and only layer in their own accents.
+   ========================================================================== */
+
+.mobile-nav-root {
+  display: none; // hidden by default — shows via @media below.
+  position: relative;
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+
+/* Shared chrome for the top-bar pill pair — mobile nav trigger + language
+   selector. `!important` on the layout-critical properties because both
+   targets are deeply-styled inputs: `.mobile-nav-trigger` is a `<button>`
+   with browser defaults, and `.language-dropdown` is an AntD
+   `<Typography.Link>` (anchor) which AntD wraps in `.ant-typography`
+   rules. Without these overrides the pair drift apart visually in every
+   theme. */
+.mobile-nav-trigger,
+.language-dropdown {
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 10px 18px !important;
+  color: var(--ink, var(--theme-colorTextBase, inherit)) !important;
+  background: transparent !important;
+  border: 1px solid var(--rule-strong, var(--rule, rgba(0, 0, 0, 0.25))) !important;
+  border-radius: 0 !important;
+  font-family: var(--font-mono, ui-monospace, monospace) !important;
+  font-size: 12px !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  line-height: 1 !important;
+  min-height: 38px !important;
+  text-decoration: none !important; // AntD Typography.Link underline + visited state
+  transition: background 150ms ease, color 150ms ease !important;
+
+  &:hover,
+  &[aria-expanded="true"] {
+    background: var(--ink, currentColor) !important;
+    color: var(--theme-colorBgBase, var(--bg, #fff)) !important;
+  }
+}
+/* Nav-trigger text and language-selector text share the same typography so
+   the pair reads as a unit. Both inherit the pill's mono 12px / uppercase /
+   0.08em letter-spacing from the parent rule above; only overflow handling
+   differs. */
+.mobile-nav-trigger-label {
+  font: inherit; // lock mono + 12px from parent instead of re-declaring
+  letter-spacing: inherit;
+  text-transform: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+.language-dropdown .lang-label {
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+}
+.mobile-nav-trigger-caret {
+  font-size: 10px;
+  opacity: 0.7;
+  transition: transform 180ms ease;
+}
+.mobile-nav-trigger[aria-expanded="true"] .mobile-nav-trigger-caret {
+  transform: rotate(180deg);
+}
+
+.mobile-nav-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 100;
+  min-width: 260px;
+  background: var(--theme-colorBgBase, var(--bg, #fff));
+  border: 1px solid var(--ink, currentColor);
+  box-shadow: 4px 4px 0 var(--ink, rgba(0, 0, 0, 0.12));
+  padding: 4px 0;
+  animation: mobileNavIn 160ms ease-out;
+}
+@keyframes mobileNavIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
+.mobile-nav-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  color: var(--ink, var(--theme-colorTextBase, inherit));
+  text-decoration: none;
+  border-bottom: 1px dashed var(--rule, rgba(0, 0, 0, 0.1));
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: color 120ms ease;
+
+  &:last-child { border-bottom: 0; }
+  &:hover,
+  &.is-active {
+    color: var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary, inherit)));
+  }
+}
+.mobile-nav-item-num {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--ink-3, var(--theme-colorInkTertiary, rgba(0, 0, 0, 0.45)));
+  font-weight: 400;
+}
+
+/* --- Mobile activation breakpoint -----------------------------------------
+   Reveal the hamburger trigger + hide the desktop tab/scroll nav. Matches
+   v5 design's 980 px breakpoint (see `public/design-v5/Portfolio.html`):
+   between 720 and 980 px the horizontal tab list starts wrapping its
+   labels into two lines — we want the hamburger to take over before that
+   looks broken. Keep symmetrical with the paired rule that hides the
+   desktop nav-wrap at the same breakpoint so the two never co-exist. */
+@media (max-width: 980px) {
+  .mobile-nav-root {
+    display: inline-flex;
+  }
+  // Hide the AntD Tabs nav wrap (tab-list) and the ScrollNav inline list so
+  // the hamburger is the single entry point on narrow viewports.
+  .site-tabs > .ant-tabs-nav .ant-tabs-nav-wrap {
+    display: none !important;
+  }
+  .site-tabs .scroll-nav {
+    display: none !important;
+  }
+  // Tighten the left cluster gap so the logo + hamburger sit closer.
+  .site-tabs-left-cluster {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* --- Left-aligned mobile top bar ---------------------------------------
+     On mobile the design calls for a single left-aligned cluster: logo +
+     (flag + lock future-slot) + Home-▾ trigger + language picker all packed
+     next to each other, instead of the desktop "[logo] [nav] [lang]"
+     distributed-across-the-bar pattern. Override both layout modes. */
+
+  // Scroll-mode: the header is a plain flex row declared inline in
+  // `pages/app.tsx` with `justify-content: space-between`. Inline style
+  // wins over normal CSS, so we force `flex-start` with `!important`.
+  header.site-tabs {
+    justify-content: flex-start !important;
+    gap: 6px;
+  }
+
+  // Tabs-mode: AntD splits extras into `extra-content:first-child` (left)
+  // and `extra-content:last-child` (right). Push the right block onto the
+  // left by zero-ing the `margin-left: auto` it uses on desktop — it then
+  // sits directly after the tab-list (which is hidden above), adjacent
+  // to the left cluster.
+  .site-tabs > .ant-tabs-nav {
+    .ant-tabs-extra-content:first-child,
+    .ant-tabs-extra-content:last-child {
+      margin-left: 0 !important;
+    }
+    .ant-tabs-nav-wrap {
+      // Collapse the empty tab-list slot so the right-extra sits next to
+      // the left-extra without a giant gap between them.
+      flex: 0 0 auto;
+    }
+  }
+}
+
+/* Hide the left-cluster wrapper on desktop — it only exists as a layout
+   helper for the mobile affordance. */
+.site-tabs-left-cluster {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}

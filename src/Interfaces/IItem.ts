@@ -9,4 +9,5 @@ export interface IItem {
     actionStyle?: string;
     actionType?: EItemType
     actionContent?: string
+    animation?: string
 }

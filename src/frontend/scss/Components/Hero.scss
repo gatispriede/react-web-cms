@@ -1,15 +1,67 @@
-// Hero module — rendered on public pages only.
-// Admin edits it through [InputHero.tsx] which is pure AntD inputs and
-// needs no dedicated admin stylesheet.
+/* ==========================================================================
+   Hero — theme-agnostic base styles.
 
+   Per-theme files (Paper / Studio / Industrial) layer richer editorial
+   treatments on top via higher-specificity `[data-theme-name="…"] .hero`.
+   Without these base rules, non-Paper themes lost portrait positioning,
+   CTA row layout, the titles separator, the coords strip, etc.
+
+   Admin edits via [InputHero.tsx] — pure AntD inputs, no admin stylesheet.
+   ========================================================================== */
+
+/* Hero is a flat content block — no background of its own (v5 reference ships
+   the hero with just a `border-bottom` rule and lets the body/theme background
+   show through). An `is-fullbleed` modifier is still applied when a
+   `bgImage` is configured so the image can stretch edge-to-edge. */
 .hero {
-  padding: 80px 24px;
+  padding: 64px 0 40px;
   text-align: left;
   position: relative;
-  background-color: color-mix(in srgb, var(--theme-colorPrimary, #1677ff) 6%, transparent);
+  border-bottom: 1px solid var(--ink, var(--theme-colorTextBase, rgba(0, 0, 0, 0.2)));
 
   &.centered { text-align: center; }
-  &.compact { padding: 32px 16px; background: none; }
+  &.compact { padding: 32px 0; }
+
+  /* When a bg image is configured, the component already tags itself with
+     `is-fullbleed` + inline `background-image` style. Provide the padding
+     so the overlaid text doesn't sit flush to the viewport edge. */
+  &.is-fullbleed {
+    padding-inline: 24px;
+  }
+
+  @media (max-width: 720px) {
+    padding: 40px 0 32px;
+  }
+
+  // Two-column layout when portrait tile is present.
+  &--has-portrait {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: start;
+
+    @media (max-width: 900px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__main {
+    position: relative;
+    min-width: 0;
+  }
+
+  &__eyebrow {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3, var(--theme-colorInkTertiary, #888));
+    margin-bottom: 14px;
+
+    .hero__eyebrow-bullet {
+      color: var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary, #1677ff)));
+    }
+  }
 
   &__headline {
     font-size: clamp(2.5rem, 6vw, 5rem);
@@ -17,7 +69,29 @@
     line-height: 1.03;
     letter-spacing: -0.025em;
     margin: 0 0 16px;
+
+    .hero__headline-soft {
+      font-style: italic;
+      font-weight: 400;
+      color: var(--ink-2, var(--theme-colorInkSecondary, inherit));
+    }
   }
+
+  &__titles {
+    font-family: var(--font-sans, system-ui, sans-serif);
+    font-size: clamp(14px, 1.8vw, 18px);
+    color: var(--ink-2, var(--theme-colorInkSecondary, #555));
+    margin: 0 0 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+
+    .hero__title-sep {
+      color: var(--rule-strong, var(--rule, rgba(0, 0, 0, 0.25)));
+      opacity: 0.8;
+    }
+  }
+
   &__subtitle {
     font-size: clamp(1.15rem, 2.2vw, 1.6rem);
     font-weight: 500;
@@ -30,9 +104,163 @@
     margin-left: auto;
     margin-right: auto;
   }
+
   &__tagline {
     font-size: 1.05rem;
-    opacity: .68;
+    opacity: .82;
     font-style: italic;
+    margin: 8px 0 18px;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+
+    .hero__tagline-attr {
+      font-family: var(--font-mono, ui-monospace, monospace);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-3, var(--theme-colorInkTertiary, #888));
+      font-style: normal;
+    }
+  }
+
+  // CTA row — always in-flow, wraps on narrow viewports.
+  &__cta-row {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  &__cta {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 10px 16px;
+    border: 1px solid var(--ink, var(--theme-colorTextBase, currentColor));
+    background: transparent;
+    color: var(--ink, var(--theme-colorTextBase, inherit));
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 150ms ease, color 150ms ease;
+
+    &:hover {
+      background: var(--ink, var(--theme-colorTextBase, #000));
+      color: var(--theme-colorBgBase, #fff);
+    }
+  }
+  &__cta--primary {
+    background: var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary, #1677ff)));
+    border-color: var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary, #1677ff)));
+    color: var(--accent-ink, var(--theme-colorAccentInk, #fff));
+
+    &:hover {
+      background: var(--ink, var(--theme-colorTextBase, #000));
+      border-color: var(--ink, var(--theme-colorTextBase, #000));
+      color: var(--theme-colorBgBase, #fff);
+    }
+  }
+
+  // Portrait tile — positioned relative so absolute corners + centered label
+  // work regardless of active theme.
+  &__portrait {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    width: 100%;
+    max-width: 420px;
+    justify-self: end;
+    border: 1px solid var(--ink, var(--theme-colorTextBase, rgba(0, 0, 0, 0.4)));
+    background: var(--bg-inset, var(--theme-colorBgInset, rgba(0, 0, 0, 0.04)));
+
+    @media (max-width: 900px) {
+      justify-self: stretch;
+      max-width: 100%;
+    }
+
+    > img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+  &__portrait-corner {
+    position: absolute;
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--ink-3, var(--theme-colorInkTertiary, #888));
+
+    &--tl { top: 8px; left: 10px; }
+    &--tr { top: 8px; right: 10px; }
+    &--br { bottom: 8px; right: 10px; }
+  }
+  &__portrait-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--font-display, var(--font-sans, system-ui, sans-serif));
+    font-weight: 500;
+    font-size: clamp(56px, 8vw, 96px);
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--ink, var(--theme-colorTextBase, inherit));
+  }
+
+  &__meta {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px 16px;
+    padding-top: 24px;
+    margin-top: 8px;
+    border-top: 1px solid var(--rule, rgba(0, 0, 0, 0.1));
+
+    > div {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2px;
+    }
+    dt {
+      margin: 0;
+      font-family: var(--font-mono, ui-monospace, monospace);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-3, var(--theme-colorInkTertiary, #888));
+    }
+    dd {
+      margin: 0;
+      color: var(--ink-2, var(--theme-colorInkSecondary, inherit));
+      font-size: 13px;
+    }
+
+    @media (max-width: 900px) { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  &__coords {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 24px;
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3, var(--theme-colorInkTertiary, #888));
+    padding-top: 20px;
+    margin-top: 20px;
+    border-top: 1px solid var(--rule, rgba(0, 0, 0, 0.1));
+
+    b {
+      color: var(--ink, var(--theme-colorTextBase, inherit));
+      font-weight: 500;
+    }
   }
 }

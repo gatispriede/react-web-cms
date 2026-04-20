@@ -13,6 +13,9 @@
 // Cross-cutting primitives
 @use "Common/Reveal";
 @use "Common/SiteFooter";
+@use "Common/MobileNav";
+@use "Common/Logo";
+@use "Common/Animations";
 
 // Editorial theme overrides (scoped via `[data-theme-name=…]` — see THEMING.md)
 @use "Themes/Paper";
@@ -33,8 +36,22 @@
 @use "Components/SocialLinks";
 @use "Components/BlogFeed";
 @use "Components/List";
+@use "Components/Services";
+@use "Components/Testimonials";
+@use "Components/ProjectGrid";
+@use "Components/Manifesto";
+@use "Components/StatsCard";
 
 @use 'app';
+
+// Shared accent-italic helper used by Hero / Services / Testimonials /
+// ProjectGrid / Manifesto render helpers (`*word*` markup). Individual themes
+// may override colour + weight; this is the base fallback so modules retain
+// emphasis runs in themes that don't own the class.
+.em-accent {
+  font-style: italic;
+  color: var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary, inherit)));
+}
 
 // Drag-and-drop reorder — native HTML5 DnD with a visible placeholder gap
 // at the drop target so admins can tell where the dragged section will land.
@@ -59,6 +76,22 @@
 @keyframes dndPulse {
   from { opacity: 0.55; }
   to   { opacity: 1; }
+}
+
+// Multi-column sections (33/33/33, 66/33, 50/50 etc.) collapse to a single
+// column on narrow viewports. The `.section` inline style sets
+// `grid-template-columns: repeat(var(--section-cols, N), 1fr)` — we override
+// `--section-cols` via @media so the inline declaration re-evaluates to 1.
+// Each child was laid out with `grid-column: span <n>` for desktop; `span 1`
+// on a 1-col grid still keeps each item one full row. Span > 1 collapses too
+// since there's only one column, so every item stacks vertically.
+@media (max-width: 720px) {
+  .section {
+    --section-cols: 1;
+  }
+  .section > .section-item-container {
+    grid-column: 1 / -1 !important;
+  }
 }
 
 // Admin-only per-section strip (overlay segmented control + audit badge).
@@ -137,6 +170,10 @@
 // admin hovers the item, then fade in so the content preview stays clean.
 .section-item-container {
   position: relative;
+  // Prevents grid items from expanding past their track when children (e.g.
+  // marquee gallery with width:max-content) are intrinsically wider than 1fr.
+  min-width: 0;
+  overflow: hidden;
 
   &:hover .slot-merge-btn,
   &:hover .slot-split-btn,
@@ -181,6 +218,19 @@ body{
     margin: 0 auto;
     padding-inline: var(--theme-contentPadding, 24px);
 
+    // Themes set `--theme-contentPadding` as high as 32 px for desktop
+    // breathing room; on phones that's ~17 % of a 375 px viewport, so cap
+    // the inline padding at mobile widths regardless of theme choice.
+    // `!important` because per-theme rules (`[data-theme-name="studio"]
+    // .dynamic-content`) have higher specificity than `body .dynamic-content`
+    // and would otherwise win at narrow viewports too.
+    @media (max-width: 720px) {
+      padding-inline: 16px !important;
+    }
+    @media (max-width: 460px) {
+      padding-inline: 12px !important;
+    }
+
     // Per-section vertical rhythm — designer-pass breathing room
     > * + * {
       margin-top: 56px;
@@ -212,13 +262,25 @@ body{
       border-radius: var(--theme-borderRadius, 0);
     }
   }
-  .logo{
-    position: absolute;
-    top: 10px;
-    left: 10%;
-    height: 40px;
+  // `.logo` is always a flex container so the wordmark (real `<img>` when a
+  // logo is uploaded, `<span class="logo-mark">` fallback otherwise) sits
+  // neatly inside the top bar. Previous implementation was `position:
+  // absolute` pinned to the viewport — legacy from a different layout
+  // pattern — which popped the element out of flow and collided with the
+  // adjacent MobileNav / language picker whenever a real logo was loaded.
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
     cursor: pointer;
     z-index: 2;
+
+    img {
+      height: 40px;
+      width: auto;
+      max-width: 180px;
+      display: block;
+    }
   }
 
   // Public-site tab bar: [Logo + Nav items] grouped centre-ish, [Language
@@ -255,6 +317,62 @@ body{
       }
       .ant-tabs-extra-content:last-child {
         margin-left: auto;
+      }
+    }
+
+    // Mobile topbar: compact the chrome so logo + scrollable nav + lang
+    // dropdown fit a phone-width viewport without the nav words squishing
+    // together (mirroring design-v5's approach — see
+    // `public/design-v5/Portfolio.html` reference media queries).
+    @media (max-width: 720px) {
+      > .ant-tabs-nav {
+        padding-inline: 12px;
+        column-gap: 8px;
+
+        .ant-tabs-extra-content {
+          min-height: 52px;
+        }
+        .ant-tabs-extra-content:first-child {
+          // Let the logo sit flush-left — otherwise the `margin-left: auto`
+          // from the desktop rule pushes the whole topbar off-centre on
+          // narrow screens.
+          margin-left: 0;
+          .logo {
+            min-height: 32px;
+            height: 32px;
+          }
+        }
+
+        .ant-tabs-nav-wrap {
+          // AntD Tabs has an internal `ant-tabs-nav-operations` affordance
+          // for overflow (the `…` more button). Shrinking the wrap lets that
+          // kick in instead of letting the nav items collide.
+          flex: 1 1 0;
+          min-width: 0;
+          overflow-x: auto;
+          scrollbar-width: none;
+          &::-webkit-scrollbar { display: none; }
+        }
+
+        // Tighter spacing between tab items — keeps labels visibly distinct
+        // even when three or four compete for 320 px of usable width.
+        .ant-tabs-tab {
+          padding: 12px 8px;
+          + .ant-tabs-tab { margin-left: 0; }
+        }
+        .navigation-item {
+          font-size: 12px;
+          letter-spacing: 0;
+        }
+      }
+    }
+
+    @media (max-width: 460px) {
+      > .ant-tabs-nav {
+        padding-inline: 10px;
+
+        .ant-tabs-tab { padding: 12px 6px; }
+        .navigation-item { font-size: 11px; }
       }
     }
   }

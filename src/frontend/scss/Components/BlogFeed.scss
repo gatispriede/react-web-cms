@@ -6,10 +6,12 @@
   gap: 16px;
 
   .blog-card {
-    transition: transform 300ms ease, box-shadow 300ms ease;
+    transition: transform 300ms ease, box-shadow 300ms ease, border-color 300ms ease, background-color 300ms ease;
     &:hover {
       transform: translateY(-4px);
       box-shadow: 0 12px 28px rgba(0,0,0,.1);
+      border-color: var(--hover-accent-border);
+      background-color: var(--hover-accent-bg);
     }
   }
 }

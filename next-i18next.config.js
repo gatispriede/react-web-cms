@@ -12,6 +12,12 @@ module.exports = {
     // https://www.i18next.com/overview/configuration-options#logging
     debug: isDev,
     i18n: {
+        // Auto-redirect based on `Accept-Language` is disabled because it racey
+        // with `/admin` (the admin surface lives outside the locale-prefix
+        // scheme and the user drives admin language via `preferredAdminLocale`
+        // / the admin dropdown, not the URL). Public site locale is still user-
+        // selectable via the `.language-dropdown`.
+        localeDetection: false,
         defaultLocale: 'lv',
         locales: [
             // "aa",

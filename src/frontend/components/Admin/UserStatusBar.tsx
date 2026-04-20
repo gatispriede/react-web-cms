@@ -27,14 +27,19 @@ export type AdminView = 'app' | 'settings' | 'languages';
  * `tApp` props passed in from the SSR loader; that mixed state is
  * acceptable for now (chrome stable, body strings TBD migration).
  */
-const UserStatusBarInner = ({session, view, t: tPublic, tApp}: {
+const UserStatusBarInner = ({session, view, tApp}: {
     session: Session,
     view: AdminView,
+    /** Public-site `t` is no longer forwarded into the admin tree — it ignored
+     *  the admin-language selector. The admin chrome / field labels now use
+     *  `tAdmin` (from `adminI18n`); user content still uses `tApp`. */
     t: TFunction<"translation", undefined>,
     tApp: TFunction<string, undefined>
 }) => {
     const {t: tAdmin, i18n: adminI} = useReactTranslation();
-    let lang = i18n?.language !== 'default' ? i18n?.language : 'en'
+    // resolvedLanguage is set by i18next to the actual detected locale, never
+    // 'default' — safer than falling back to a hardcoded language code.
+    let lang = i18n?.resolvedLanguage ?? (i18n?.language !== 'default' ? i18n?.language : null) ?? 'lv'
     const [blogEnabled, setBlogEnabled] = useState(true);
     const [paletteOpen, setPaletteOpen] = useState(false);
     useCommandPaletteHotkey(setPaletteOpen);
@@ -67,7 +72,7 @@ const UserStatusBarInner = ({session, view, t: tPublic, tApp}: {
                     description={
                         <span>
                             {tAdmin("Open")}{' '}
-                            <a href={`/${lang}/admin/settings`}>{tAdmin("Site settings → Users")}</a>{' '}
+                            <a href={`/admin/settings`}>{tAdmin("Site settings → Users")}</a>{' '}
                             {tAdmin("and set a new password to clear this warning.")}
                         </span>
                     }
@@ -79,19 +84,19 @@ const UserStatusBarInner = ({session, view, t: tPublic, tApp}: {
                 </div>
                 <Button
                     type={view === 'app' ? "primary" : "link"}
-                    href={`/${lang}/admin`}
+                    href={`/admin`}
                 >
                     {tAdmin("App building")}
                 </Button>
                 <Button
                     type={view === 'settings' ? "primary" : "link"}
-                    href={`/${lang}/admin/settings`}
+                    href={`/admin/settings`}
                 >
                     {tAdmin("Site settings")}
                 </Button>
                 <Button
                     type={view === 'languages' ? "primary" : "link"}
-                    href={`/${lang}/admin/languages`}
+                    href={`/admin/languages`}
                 >
                     {tAdmin("Languages")}
                 </Button>
@@ -142,7 +147,15 @@ const UserStatusBarInner = ({session, view, t: tPublic, tApp}: {
                 <Button type={"link"} href={'#'} onClick={() => signOut()}>{tAdmin("Sign out")}</Button>
             </nav>
             <main id="admin-main" aria-label={tAdmin("Admin workspace")}>
-                {view === 'app' && <AdminApp t={tPublic} tApp={tApp} session={session}/>}
+                {/*
+                  AdminApp + its descendant editors (Input*, AddNewSectionItem, section picker)
+                  treat their `t` prop as the admin-chrome translator (field labels, buttons,
+                  dialog titles) and `tApp` as the public-site translator for user content.
+                  Pass `tAdmin` (from the dedicated `adminI18n` instance) so the admin-language
+                  selector actually drives those labels; the public-site `t` is never
+                  forwarded in here because it would ignore the admin-locale toggle.
+                */}
+                {view === 'app' && <AdminApp t={tAdmin as TFunction<"translation", undefined>} tApp={tApp} session={session}/>}
                 {view === 'settings' && <AdminSettings/>}
                 {view === 'languages' && (
                     <AdminSettingsLanguages

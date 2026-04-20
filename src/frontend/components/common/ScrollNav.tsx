@@ -70,7 +70,7 @@ export const ScrollNav: React.FC<{links: ScrollNavLink[]}> = ({links}) => {
     };
 
     return (
-        <nav aria-label="Site navigation" style={{display: 'flex', gap: 12}}>
+        <nav className="scroll-nav" aria-label="Site navigation" style={{display: 'flex', gap: 12}}>
             {links.map(l => {
                 const isActive = l.slug === activeSlug;
                 return (

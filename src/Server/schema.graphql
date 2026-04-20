@@ -17,6 +17,7 @@ input InItem {
     actionStyle: String
     actionType: String
     actionContent: String
+    animation: String
 }
 
 input InImage {
@@ -118,6 +119,7 @@ type IItem {
     actionStyle: String
     actionType: String
     actionContent: String
+    animation: String
 }
 type ISection {
     id: String

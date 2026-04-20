@@ -53,13 +53,21 @@ class Logo extends Component<ILogoProps> {
     }
 
     render() {
+        // When no logo is uploaded we still want a visible wordmark — otherwise
+        // the top-bar left slot collapses to zero width and the layout looks
+        // unanchored (see design-v5 reference, which ships a bordered "◆" mark
+        // as the default). `.logo-mark` is styled module-level in
+        // `scss/Common/Logo.scss` so every theme picks up the same structural
+        // rules and only layers in its own accents.
         return (
             <Link href={this.admin ? '#' : '/'} className={'logo'} onClick={() => {
                 if (this.admin && !this.state.open) {
                     this.setState({open: true})
                 }
             }}>
-                {this.state.logo.src ? <img alt={this.state.logo.src} src={`/${this.state.logo.src}`} height={this.state.logo.height}/> : ''}
+                {this.state.logo.src
+                    ? <img alt={this.state.logo.src} src={`/${this.state.logo.src}`} height={this.state.logo.height}/>
+                    : <span className="logo-mark" aria-hidden>◆</span>}
                 <LogoEditDialog t={this.props.t} key={`logo-${this.state.open}`} open={this.state.open}
                                 setOpen={(file: File | false): void => {
                                     if (file) {
