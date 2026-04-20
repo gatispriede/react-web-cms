@@ -1,0 +1,477 @@
+{
+  "manifest": {
+    "version": 1,
+    "exportedAt": "2026-04-20T00:00:00.000Z",
+    "app": "redis-node-js-cloud",
+    "note": "SkyClimber Brandappart — HTML dizaina satura struktūra. Jaunais hero teksts, detalizēti servisu bloki ar attēliem, citātu banda, bagātāki kontaktu dati."
+  },
+  "site": {
+    "siteFlags": {
+      "blogEnabled": false,
+      "layoutMode": "scroll"
+    },
+    "activeThemeId": "brandappart-preset-v1",
+    "themes": [
+      {
+        "id": "brandappart-preset-v1",
+        "name": "Brandappart",
+        "custom": false,
+        "tokens": {
+          "colorPrimary": "#1E5A6B",
+          "colorBgBase": "#E8E3D3",
+          "colorTextBase": "#13201A",
+          "colorSuccess": "#52c41a",
+          "colorWarning": "#faad14",
+          "colorError": "#ff4d4f",
+          "colorInfo": "#C24B1E",
+          "colorBgInset": "#DDD7C2",
+          "colorInkSecondary": "#2C3A30",
+          "colorInkTertiary": "#6B7C75",
+          "colorRule": "#B5B49B",
+          "colorRuleStrong": "#8A8A73",
+          "colorAccent": "#1E5A6B",
+          "colorAccentInk": "#F4F1EA",
+          "colorMark": "rgba(30, 90, 107, 0.12)",
+          "fontDisplay": "'Instrument Serif', 'Times New Roman', serif",
+          "fontMono": "'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace",
+          "fontSans": "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif",
+          "borderRadius": 18,
+          "fontSize": 16,
+          "contentPadding": 32,
+          "themeSlug": "studio"
+        }
+      }
+    ],
+    "navigation": [
+      {
+        "id": "sc7-nav-sakums",
+        "type": "navigation",
+        "page": "Sākums",
+        "seo": {
+          "description": "SkyClimber — strādājam augstumos, kur citi nespēj sasniegt. Virves piekļuves pakalpojumi visā Latvijā.",
+          "keywords": ["industriālais alpīnisms", "virves piekļuve", "augstuma darbi", "SkyClimber"],
+          "viewport": "width=device-width,initial-scale=1",
+          "charSet": "utf-8",
+          "url": "",
+          "image": "",
+          "image_alt": "",
+          "author": "SkyClimber",
+          "locale": "lv"
+        },
+        "sections": ["sc7-sec-hero", "sc7-sec-marquee"]
+      },
+      {
+        "id": "sc7-nav-pakalpojumi",
+        "type": "navigation",
+        "page": "Pakalpojumi",
+        "seo": {
+          "description": "SkyClimber pakalpojumi — fasādes, jumta darbi, logu mazgāšana, krāsošana, koku zāģēšana, metāla montāža.",
+          "keywords": ["fasādes darbi", "jumta darbi", "logu mazgāšana", "koku zāģēšana", "metāla montāža"],
+          "viewport": "width=device-width,initial-scale=1",
+          "charSet": "utf-8",
+          "url": "",
+          "image": "",
+          "image_alt": "",
+          "author": "SkyClimber",
+          "locale": "lv"
+        },
+        "sections": ["sc7-sec-manifesto", "sc7-sec-services", "sc7-sec-fasades", "sc7-sec-jumta", "sc7-sec-logu", "sc7-sec-krasosana", "sc7-sec-koki", "sc7-sec-metala", "sc7-sec-quote"]
+      },
+      {
+        "id": "sc7-nav-galerija",
+        "type": "navigation",
+        "page": "Galerija",
+        "seo": {
+          "description": "SkyClimber darbu galerija — augstuma darbu un industriālā alpīnisma fotogrāfijas.",
+          "keywords": ["galerija", "darbu piemēri", "augstuma darbi foto"],
+          "viewport": "width=device-width,initial-scale=1",
+          "charSet": "utf-8",
+          "url": "",
+          "image": "",
+          "image_alt": "",
+          "author": "SkyClimber",
+          "locale": "lv"
+        },
+        "sections": ["sc7-sec-gallery"]
+      },
+      {
+        "id": "sc7-nav-kontakti",
+        "type": "navigation",
+        "page": "Kontakti",
+        "seo": {
+          "description": "Sazinieties ar SkyClimber — atbildēsim darba dienās 24h laikā. Bezmaksas objekta apskate un tāme.",
+          "keywords": ["kontakti", "sazināties", "SkyClimber"],
+          "viewport": "width=device-width,initial-scale=1",
+          "charSet": "utf-8",
+          "url": "",
+          "image": "",
+          "image_alt": "",
+          "author": "SkyClimber",
+          "locale": "lv"
+        },
+        "sections": ["sc7-sec-contact", "sc7-sec-contact-facts"]
+      }
+    ],
+    "sections": [
+      {
+        "id": "sc7-sec-hero",
+        "type": 1,
+        "page": "Sākums",
+        "content": [
+          {
+            "type": "HERO",
+            "style": "editorial",
+            "content": "{\"eyebrow\":\"RŪPNIECISKAIS ALPĪNISMS · LATVIJA · KOPŠ 2014\",\"headline\":\"Strādājam\",\"headlineSoft\":\"augstumos — kur citi nespēj *sasniegt.*\",\"titles\":[\"PRECĪZI\",\"DROŠI\",\"PROFESIONĀLI\"],\"subtitle\":\"Rūpnieciskais alpīnisms un virves piekļuves pakalpojumi visā Latvijā — precīzi, droši, bez dārgiem sastatnēm.\",\"tagline\":\"\",\"bgImage\":\"\",\"accent\":\"\",\"portraitLabel\":\"SC\",\"ctaPrimary\":{\"label\":\"Skatīt pakalpojumus →\",\"href\":\"#pakalpojumi\",\"primary\":true},\"ctaSecondary\":{\"label\":\"Sazināties ↗\",\"href\":\"#kontakti\"},\"meta\":[{\"label\":\"Metode\",\"value\":\"Virves piekļuve\"},{\"label\":\"Pieredze\",\"value\":\"10+ gadi\"},{\"label\":\"Teritorija\",\"value\":\"Visa Latvija\"},{\"label\":\"Sertifikāts\",\"value\":\"Augstuma darbi\"}]}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}",
+            "animation": "fade-up"
+          }
+        ]
+      },
+      {
+        "id": "sc7-sec-marquee",
+        "type": 1,
+        "page": "Sākums",
+        "content": [
+          {
+            "type": "GALLERY",
+            "style": "marquee",
+            "content": "{\"items\":[{\"alt\":\"Augstuma darbi\",\"src\":\"design-v2/assets/img/alpinisms/1.jpeg\",\"text\":\"// Virves piekļuve\",\"height\":220,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":false,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Fasādes darbi\",\"src\":\"design-v2/assets/img/alpinisms/krasosana/1.jpeg\",\"text\":\"// Krāsošana\",\"height\":220,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":false,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Fasādes apstrāde\",\"src\":\"design-v2/assets/img/alpinisms/fasades/1.jpeg\",\"text\":\"// Fasādes darbi\",\"height\":220,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":false,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Jumta darbi\",\"src\":\"design-v2/assets/img/alpinisms/jumta/1.jpeg\",\"text\":\"// Jumta darbi\",\"height\":220,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":false,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Logu mazgāšana\",\"src\":\"design-v2/assets/img/alpinisms/logu/1.jpeg\",\"text\":\"// Logu mazgāšana\",\"height\":220,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":false,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Metāla montāža\",\"src\":\"design-v2/assets/img/alpinisms/metala/1.jpeg\",\"text\":\"// Metāla montāža\",\"height\":220,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":false,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Alpīnisms 2\",\"src\":\"design-v2/assets/img/alpinisms/2.jpeg\",\"text\":\"// Profesionāli\",\"height\":220,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":false,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Metāls 2\",\"src\":\"design-v2/assets/img/alpinisms/metala/2.jpeg\",\"text\":\"// Montāža\",\"height\":220,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":false,\"textPosition\":\"BOTTOM\"}],\"disablePreview\":true}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}",
+            "animation": "fade-in"
+          }
+        ]
+      },
+      {
+        "id": "sc7-sec-manifesto",
+        "type": 1,
+        "page": "Pakalpojumi",
+        "content": [
+          {
+            "type": "MANIFESTO",
+            "style": "accent",
+            "content": "{\"body\":\"Mēs strādājam *augstumos* — ar {{chip:virve:VIRVES PIEKĻUVE}} tehnoloģiju un {{chip:alpin:ALPĪNISMA}} prasmi — kur citas metodes *nespēj sasniegt.*\",\"addendum\":\"SkyClimber komanda — sertificēti augstuma darbu speciālisti ar 10+ gadu pieredzi rūpnieciskajā alpīnismā. Strādājam ar jebkura augstuma un sarežģītības objektiem, no dzīvojamiem namiem līdz rūpnieciskām būvēm.\",\"chips\":[{\"key\":\"virve\",\"thumb\":\"VPK\",\"color\":\"#7FB7C4\"},{\"key\":\"alpin\",\"thumb\":\"SC\",\"color\":\"#2C3A30\"}]}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}",
+            "animation": "fade-up"
+          }
+        ]
+      },
+      {
+        "id": "sc7-sec-services",
+        "type": 1,
+        "page": "Pakalpojumi",
+        "content": [
+          {
+            "type": "SERVICES",
+            "style": "cards",
+            "content": "{\"sectionNumber\":\"§ 02\",\"sectionTitle\":\"Mūsu *pakalpojumi.*\",\"sectionSubtitle\":\"06 pakalpojumi — virves piekļuves metodes ļauj veikt darbus jebkurā augstumā, ātri un bez sastatņu izmaksām.\",\"rows\":[{\"number\":\"01\",\"title\":\"Fasādes *darbi*\",\"description\":\"Ēku fasāžu tīrīšana, mazgāšana un labošana, izmantojot virves piekļuves metodes.\",\"ctaLabel\":\"Uzzināt vairāk\",\"ctaHref\":\"#pakalpojumi\"},{\"number\":\"02\",\"title\":\"Jumta *darbi*\",\"description\":\"Droša jumta pārbaude, remonts un apkope bez dārgiem sastatnēm.\",\"ctaLabel\":\"Uzzināt vairāk\",\"ctaHref\":\"#pakalpojumi\"},{\"number\":\"03\",\"title\":\"Logu *mazgāšana*\",\"description\":\"Augstceltņu un grūti pieejamu logu profesionāla mazgāšana bez traipiem.\",\"ctaLabel\":\"Uzzināt vairāk\",\"ctaHref\":\"#pakalpojumi\"},{\"number\":\"04\",\"title\":\"Krāsošana un *apkope*\",\"description\":\"Ēku ārsienu krāsošana un aizsargpārklājumu uzklāšana ilgmūžīgam rezultātam.\",\"ctaLabel\":\"Uzzināt vairāk\",\"ctaHref\":\"#pakalpojumi\"},{\"number\":\"05\",\"title\":\"Koku *zāģēšana*\",\"description\":\"Bīstamu vai grūti pieejamu koku zāģēšana arborista metodēs.\",\"ctaLabel\":\"Uzzināt vairāk\",\"ctaHref\":\"#pakalpojumi\"},{\"number\":\"06\",\"title\":\"Metāla *montāža*\",\"description\":\"Metāla konstrukciju uzstādīšana, savienošana un apkope augstumā.\",\"ctaLabel\":\"Uzzināt vairāk\",\"ctaHref\":\"#pakalpojumi\"}]}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}",
+            "animation": "fade-up"
+          }
+        ]
+      },
+      {
+        "id": "sc7-sec-fasades",
+        "type": 2,
+        "page": "Pakalpojumi",
+        "slots": [1, 1],
+        "content": [
+          {
+            "type": "IMAGE",
+            "style": "default",
+            "content": "{\"src\":\"design-v2/assets/img/alpinisms/fasades/3.jpeg\",\"alt\":\"Fasādes darbi\",\"description\":\"\",\"height\":520,\"useAsBackground\":false,\"imageFixed\":false,\"useGradiant\":false,\"offsetX\":0,\"imgWidth\":\"100%\",\"imgHeight\":\"\",\"preview\":true}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}",
+            "animation": "slide-right"
+          },
+          {
+            "type": "LIST",
+            "style": "facts",
+            "content": "{\"title\":\"Fasādes darbi\",\"items\":[{\"label\":\"Apraksts\",\"value\":\"Profesionāla ēku fasāžu tīrīšana, mazgāšana un labošana, izmantojot virves piekļuves metodes.\"},{\"label\":\"Mazgāšana\",\"value\":\"Fasāžu mazgāšana un tīrīšana\"},{\"label\":\"Hermetizācija\",\"value\":\"Šuvju hermetizācija un labošana\"},{\"label\":\"Siltumizolācija\",\"value\":\"Siltumizolācijas uzstādīšana\"},{\"label\":\"Diagnostika\",\"value\":\"Ēkas apskate un diagnostika\"}]}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}",
+            "animation": "slide-left"
+          }
+        ]
+      },
+      {
+        "id": "sc7-sec-jumta",
+        "type": 2,
+        "page": "Pakalpojumi",
+        "slots": [1, 1],
+        "content": [
+          {
+            "type": "LIST",
+            "style": "facts",
+            "content": "{\"title\":\"Jumta darbi\",\"items\":[{\"label\":\"Apraksts\",\"value\":\"Droša jumta pārbaude, remonts un apkope bez dārgiem sastatnēm.\"},{\"label\":\"Segums\",\"value\":\"Jumta seguma pārbaude un remonts\"},{\"label\":\"Notekūdeņi\",\"value\":\"Notekūdeņu sistēmu tīrīšana\"},{\"label\":\"Ziemas darbi\",\"value\":\"Sniega un ledus noņemšana\"},{\"label\":\"Iekārtas\",\"value\":\"Antenas un iekārtu uzstādīšana\"}]}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}",
+            "animation": "slide-right"
+          },
+          {
+            "type": "IMAGE",
+            "style": "default",
+            "content": "{\"src\":\"design-v2/assets/img/alpinisms/jumta/4.jpeg\",\"alt\":\"Jumta darbi\",\"description\":\"\",\"height\":520,\"useAsBackground\":false,\"imageFixed\":false,\"useGradiant\":false,\"offsetX\":0,\"imgWidth\":\"100%\",\"imgHeight\":\"\",\"preview\":true}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}",
+            "animation": "slide-left"
+          }
+        ]
+      },
+      {
+        "id": "sc7-sec-logu",
+        "type": 2,
+        "page": "Pakalpojumi",
+        "slots": [1, 1],
+        "content": [
+          {
+            "type": "IMAGE",
+            "style": "default",
+            "content": "{\"src\":\"design-v2/assets/img/alpinisms/logu/2.jpeg\",\"alt\":\"Logu mazgāšana\",\"description\":\"\",\"height\":520,\"useAsBackground\":false,\"imageFixed\":false,\"useGradiant\":false,\"offsetX\":0,\"imgWidth\":\"100%\",\"imgHeight\":\"\",\"preview\":true}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}",
+            "animation": "slide-right"
+          },
+          {
+            "type": "LIST",
+            "style": "facts",
+            "content": "{\"title\":\"Logu mazgāšana\",\"items\":[{\"label\":\"Apraksts\",\"value\":\"Augstceltņu un grūti pieejamu logu profesionāla mazgāšana virves piekļuves metodē — bez traipiem.\"},{\"label\":\"Stiklojums\",\"value\":\"Logu un stiklojumu mazgāšana\"},{\"label\":\"Paneļi\",\"value\":\"Fasāžu stikla paneļu tīrīšana\"},{\"label\":\"Jumtiņi\",\"value\":\"Jumta jumtiņu un gaismas lūku mazgāšana\"},{\"label\":\"Apkope\",\"value\":\"Regulāra apkopes plānošana\"}]}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}",
+            "animation": "slide-left"
+          }
+        ]
+      },
+      {
+        "id": "sc7-sec-krasosana",
+        "type": 2,
+        "page": "Pakalpojumi",
+        "slots": [1, 1],
+        "content": [
+          {
+            "type": "LIST",
+            "style": "facts",
+            "content": "{\"title\":\"Krāsošana un uzturēšana\",\"items\":[{\"label\":\"Apraksts\",\"value\":\"Ēku ārsienu krāsošana un aizsargpārklājumu uzklāšana. Ilgmūžīgs rezultāts ar augstvērtīgām krāsām.\"},{\"label\":\"Krāsošana\",\"value\":\"Ārsienu un fasāžu krāsošana\"},{\"label\":\"Pretkorozija\",\"value\":\"Pretkorozijas pārklājumi\"},{\"label\":\"Graffiti\",\"value\":\"Graffiti noņemšana\"},{\"label\":\"Metāls\",\"value\":\"Aizsargkrāsu uzklāšana metālam\"}]}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}",
+            "animation": "slide-right"
+          },
+          {
+            "type": "IMAGE",
+            "style": "default",
+            "content": "{\"src\":\"design-v2/assets/img/alpinisms/krasosana/1.jpeg\",\"alt\":\"Krāsošana un apkope\",\"description\":\"\",\"height\":520,\"useAsBackground\":false,\"imageFixed\":false,\"useGradiant\":false,\"offsetX\":0,\"imgWidth\":\"100%\",\"imgHeight\":\"\",\"preview\":true}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}",
+            "animation": "slide-left"
+          }
+        ]
+      },
+      {
+        "id": "sc7-sec-koki",
+        "type": 2,
+        "page": "Pakalpojumi",
+        "slots": [1, 1],
+        "content": [
+          {
+            "type": "IMAGE",
+            "style": "default",
+            "content": "{\"src\":\"design-v2/assets/img/alpinisms/4.jpeg\",\"alt\":\"Koku zāģēšana\",\"description\":\"\",\"height\":520,\"useAsBackground\":false,\"imageFixed\":false,\"useGradiant\":false,\"offsetX\":0,\"imgWidth\":\"100%\",\"imgHeight\":\"\",\"preview\":true}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}",
+            "animation": "slide-right"
+          },
+          {
+            "type": "LIST",
+            "style": "facts",
+            "content": "{\"title\":\"Koku zāģēšana\",\"items\":[{\"label\":\"Apraksts\",\"value\":\"Bīstamu vai grūti pieejamu koku zāģēšana un apzāģēšana arborista metodēs — droši un saudzīgi.\"},{\"label\":\"Nozāģēšana\",\"value\":\"Koku nozāģēšana pa daļām\"},{\"label\":\"Apzāģēšana\",\"value\":\"Sausu zaru apzāģēšana\"},{\"label\":\"Avārija\",\"value\":\"Avārijas darbi vētras bojājumu gadījumā\"},{\"label\":\"Savākšana\",\"value\":\"Koku fragmentu savākšana un izvešana\"}]}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}",
+            "animation": "slide-left"
+          }
+        ]
+      },
+      {
+        "id": "sc7-sec-metala",
+        "type": 2,
+        "page": "Pakalpojumi",
+        "slots": [1, 1],
+        "content": [
+          {
+            "type": "LIST",
+            "style": "facts",
+            "content": "{\"title\":\"Metāla konstrukciju montāža\",\"items\":[{\"label\":\"Apraksts\",\"value\":\"Metāla elementu uzstādīšana, savienošana un apkope augstumā — no aizsargtīkliem līdz nesošām konstrukcijām.\"},{\"label\":\"Montāža\",\"value\":\"Metāla balstu un stiprinājumu montāža\"},{\"label\":\"Tīkli\",\"value\":\"Aizsarg- un drošības tīklu uzstādīšana\"},{\"label\":\"Pārbaude\",\"value\":\"Konstrukciju pārbaude un apkope\"},{\"label\":\"Nomaiņa\",\"value\":\"Korozijas skarto elementu nomaiņa\"}]}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}",
+            "animation": "slide-right"
+          },
+          {
+            "type": "IMAGE",
+            "style": "default",
+            "content": "{\"src\":\"design-v2/assets/img/alpinisms/metala/3.jpeg\",\"alt\":\"Metāla montāža\",\"description\":\"\",\"height\":520,\"useAsBackground\":false,\"imageFixed\":false,\"useGradiant\":false,\"offsetX\":0,\"imgWidth\":\"100%\",\"imgHeight\":\"\",\"preview\":true}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}",
+            "animation": "slide-left"
+          }
+        ]
+      },
+      {
+        "id": "sc7-sec-quote",
+        "type": 1,
+        "page": "Pakalpojumi",
+        "content": [
+          {
+            "type": "MANIFESTO",
+            "style": "default",
+            "content": "{\"body\":\"\\\"Ķirurģiska precizitāte *augstumā* — bez sastatnēm, bez liekas dramatikas.\\\"\",\"addendum\":\"— SkyClimber manifests, 2026\",\"chips\":[]}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}",
+            "animation": "fade-up"
+          }
+        ]
+      },
+      {
+        "id": "sc7-sec-gallery",
+        "type": 1,
+        "page": "Galerija",
+        "content": [
+          {
+            "type": "GALLERY",
+            "style": "default",
+            "content": "{\"items\":[{\"alt\":\"Augstuma darbi 1\",\"src\":\"design-v2/assets/img/alpinisms/1.jpeg\",\"text\":\"Industriālais alpīnisms\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Augstuma darbi 2\",\"src\":\"design-v2/assets/img/alpinisms/2.jpeg\",\"text\":\"Virves piekļuve\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Augstuma darbi 3\",\"src\":\"design-v2/assets/img/alpinisms/3.jpeg\",\"text\":\"Profesionāli speciālisti\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Augstuma darbi 4\",\"src\":\"design-v2/assets/img/alpinisms/4.jpeg\",\"text\":\"Augstas ēkas darbi\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Augstuma darbi 5\",\"src\":\"design-v2/assets/img/alpinisms/5.jpeg\",\"text\":\"Droša darba vide\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Augstuma darbi 6\",\"src\":\"design-v2/assets/img/alpinisms/6.jpeg\",\"text\":\"Modernās tehnoloģijas\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Krāsošana 1\",\"src\":\"design-v2/assets/img/alpinisms/krasosana/1.jpeg\",\"text\":\"Metāla krāsošana\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Krāsošana 2\",\"src\":\"design-v2/assets/img/alpinisms/krasosana/2.jpeg\",\"text\":\"Krāsošana augstumos\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Krāsošana 5\",\"src\":\"design-v2/assets/img/alpinisms/krasosana/5.jpeg\",\"text\":\"Pretrūsas apstrāde\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Fasādes 1\",\"src\":\"design-v2/assets/img/alpinisms/fasades/1.jpeg\",\"text\":\"Fasāžu darbi\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Fasādes 3\",\"src\":\"design-v2/assets/img/alpinisms/fasades/3.jpeg\",\"text\":\"Paneļu blīvēšana\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Fasādes 6\",\"src\":\"design-v2/assets/img/alpinisms/fasades/6.jpeg\",\"text\":\"Fasāžu restaurācija\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Fasādes 11\",\"src\":\"design-v2/assets/img/alpinisms/fasades/11.jpeg\",\"text\":\"Ēkas fasāde\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Fasādes 12\",\"src\":\"design-v2/assets/img/alpinisms/fasades/12.jpeg\",\"text\":\"Fasāžu apkope\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Fasādes 16\",\"src\":\"design-v2/assets/img/alpinisms/fasades/16.jpeg\",\"text\":\"Augstuma fasāžu darbi\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Fasādes 17\",\"src\":\"design-v2/assets/img/alpinisms/fasades/17.jpeg\",\"text\":\"Fasāžu tīrīšana\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Jumts 1\",\"src\":\"design-v2/assets/img/alpinisms/jumta/1.jpeg\",\"text\":\"Jumta darbi\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Jumts 4\",\"src\":\"design-v2/assets/img/alpinisms/jumta/4.jpeg\",\"text\":\"Jumta tīrīšana\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Jumts 6\",\"src\":\"design-v2/assets/img/alpinisms/jumta/6.jpeg\",\"text\":\"Jumta restaurācija\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Jumts 7\",\"src\":\"design-v2/assets/img/alpinisms/jumta/7.jpeg\",\"text\":\"Jumta krāsošana\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Jumts 10\",\"src\":\"design-v2/assets/img/alpinisms/jumta/10.jpeg\",\"text\":\"Tekņu attīrīšana\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Jumts 11\",\"src\":\"design-v2/assets/img/alpinisms/jumta/11.jpeg\",\"text\":\"Jumta hidroizolācija\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Logi 1\",\"src\":\"design-v2/assets/img/alpinisms/logu/1.jpeg\",\"text\":\"Logu mazgāšana\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Logi 2\",\"src\":\"design-v2/assets/img/alpinisms/logu/2.jpeg\",\"text\":\"Stikla fasādes tīrīšana\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Metāls 1\",\"src\":\"design-v2/assets/img/alpinisms/metala/1.jpeg\",\"text\":\"Metāla montāža\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Metāls 2\",\"src\":\"design-v2/assets/img/alpinisms/metala/2.jpeg\",\"text\":\"Konstrukciju uzstādīšana\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Metāls 3\",\"src\":\"design-v2/assets/img/alpinisms/metala/3.jpeg\",\"text\":\"Ventilācijas sistēmas\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Metāls 4\",\"src\":\"design-v2/assets/img/alpinisms/metala/4.jpeg\",\"text\":\"Augstuma montāža\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Metāls 6\",\"src\":\"design-v2/assets/img/alpinisms/metala/6.jpeg\",\"text\":\"Metāla demontāža\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Metāls 8\",\"src\":\"design-v2/assets/img/alpinisms/metala/8.jpeg\",\"text\":\"Antenu uzstādīšana\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Metāls 9\",\"src\":\"design-v2/assets/img/alpinisms/metala/9.jpeg\",\"text\":\"Rūpnieciskā montāža\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Metāls 11\",\"src\":\"design-v2/assets/img/alpinisms/metala/11.jpeg\",\"text\":\"Konstrukciju apkope\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Metāls 12\",\"src\":\"design-v2/assets/img/alpinisms/metala/12.jpeg\",\"text\":\"Metāla struktūras\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"},{\"alt\":\"Metāls 14\",\"src\":\"design-v2/assets/img/alpinisms/metala/14.jpeg\",\"text\":\"Profesionāla montāža\",\"height\":320,\"imgWidth\":\"\",\"imgHeight\":\"\",\"preview\":true,\"textPosition\":\"BOTTOM\"}],\"disablePreview\":false}",
+            "action": "onClick",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}",
+            "animation": "zoom-in"
+          }
+        ]
+      },
+      {
+        "id": "sc7-sec-contact",
+        "type": 1,
+        "page": "Kontakti",
+        "content": [
+          {
+            "type": "HERO",
+            "style": "centered",
+            "content": "{\"eyebrow\":\"\",\"headline\":\"Gatavi\",\"headlineSoft\":\"*sākt?*\",\"subtitle\":\"Atstājiet ziņu vai zvaniet — atbildēsim darba dienās 24h laikā. Bezmaksas objekta apskate un tāme.\",\"tagline\":\"\",\"bgImage\":\"\",\"accent\":\"\",\"ctaPrimary\":{\"label\":\"Rakstīt e-pastu →\",\"href\":\"mailto:info@skyclimber.lv\",\"primary\":true},\"ctaSecondary\":{\"label\":\"Zvanīt ↗\",\"href\":\"tel:+37129566585\"}}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}",
+            "animation": "fade-in"
+          }
+        ]
+      },
+      {
+        "id": "sc7-sec-contact-facts",
+        "type": 2,
+        "page": "Kontakti",
+        "slots": [1, 1],
+        "content": [
+          {
+            "type": "LIST",
+            "style": "facts",
+            "content": "{\"title\":\"Sazināties\",\"items\":[{\"label\":\"Telefons\",\"value\":\"+371 29 566 585\",\"href\":\"tel:+37129566585\"},{\"label\":\"E-pasts\",\"value\":\"info@skyclimber.lv\",\"href\":\"mailto:info@skyclimber.lv\"},{\"label\":\"Adrese\",\"value\":\"Rīga, Latvija\"},{\"label\":\"Darba laiks\",\"value\":\"P–Pk 8:00–18:00\"},{\"label\":\"Licences\",\"value\":\"Augstuma darbu sertifikāts\"}]}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}",
+            "animation": "fade-up"
+          },
+          {
+            "type": "LIST",
+            "style": "facts",
+            "content": "{\"title\":\"Uzņēmuma informācija\",\"items\":[{\"label\":\"Darbības zona\",\"value\":\"Visa Latvija\"},{\"label\":\"Nozare\",\"value\":\"Industriālais alpīnisms\"},{\"label\":\"Metode\",\"value\":\"Virves piekļuve\"},{\"label\":\"Pieredze\",\"value\":\"10+ gadi augstumā\"},{\"label\":\"Valodas\",\"value\":\"LV · EN · RU\"}]}",
+            "action": "none",
+            "actionType": "TEXT",
+            "actionStyle": "default",
+            "actionContent": "{}",
+            "animation": "fade-up"
+          }
+        ]
+      }
+    ],
+    "languages": [
+      {"label": "Latviešu", "symbol": "lv", "default": true, "flag": "🇱🇻"}
+    ],
+    "logo": null,
+    "images": [],
+    "posts": [],
+    "footer": {
+      "enabled": true,
+      "columns": [
+        {
+          "title": "SkyClimber",
+          "entries": [
+            {"label": "SkyClimber — sertificēti augstuma darbu speciālisti ar 10+ gadu pieredzi.", "url": ""}
+          ]
+        },
+        {
+          "title": "Navigācija",
+          "entries": [
+            {"label": "Sākums", "url": "#sakums"},
+            {"label": "Pakalpojumi", "url": "#pakalpojumi"},
+            {"label": "Galerija", "url": "#galerija"},
+            {"label": "Kontakti", "url": "#kontakti"}
+          ]
+        },
+        {
+          "title": "Kontakti",
+          "entries": [
+            {"label": "info@skyclimber.lv", "url": "mailto:info@skyclimber.lv"},
+            {"label": "+371 29 566 585", "url": "tel:+37129566585"},
+            {"label": "Rīga, Latvija", "url": "#kontakti"}
+          ]
+        },
+        {
+          "title": "Sekot",
+          "entries": [
+            {"label": "Facebook ↗", "url": "#"},
+            {"label": "Instagram ↗", "url": "#"},
+            {"label": "LinkedIn ↗", "url": "#"}
+          ]
+        }
+      ],
+      "bottom": "© 2026 · SkyClimber · Strādājam augstumos visā Latvijā"
+    }
+  },
+  "assets": {}
+}

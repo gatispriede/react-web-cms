@@ -77,3 +77,16 @@ desktop.ini
 # local Claude state — keep launch.json (shared), ignore per-user settings
 .claude/settings.local.json
 /public/Gatis Priede CV.md
+
+# design reference assets — HTML mockups, screenshots, uploaded images (large binaries)
+public/design-v2/assets/
+public/design-v2/skyclimber.bundle.json
+public/design-v5/*.html
+public/design-v5/responsive-test.html
+public/design-v5/screenshots/
+public/design-v5/uploads/
+public/design-v6/*.html
+public/design-v6/responsive-test.html
+public/design-v6/screenshots/
+public/design-v6/uploads/
+src/frontend/public/design-v2/
