@@ -17,11 +17,14 @@ import {
 // import IP from '../../../IP'
 const node_port = process.env.BUILD_PORT || 80;
 const isDocker = node_port !== 80 && node_port !== '80';
-const serverIP = isDocker ? 'server' : 'localhost';
-const port = '' + node_port;
-const serverAddress = `http://${serverIP}:${port}`;
-// Standalone Docker server handles GraphQL at /; Next.js API route at /api/graphql
-const fetchUrl = isDocker ? `${serverAddress}/` : `${serverAddress}/api/graphql`;
+// Browser requests use a relative URL so they go through the public host.
+// SSR requests use the Docker-internal address directly.
+const isBrowser = typeof window !== 'undefined';
+const fetchUrl = isBrowser
+    ? '/api/graphql'
+    : isDocker
+        ? `http://server:${node_port}/`
+        : `http://localhost:${node_port}/api/graphql`;
 
 const queryFetcher: QueryFetcher = async function (
   { query, variables, operationName },

@@ -28,7 +28,7 @@ const validateRichText = (content: any): ValidationResult => {
     return {valid: true};
 };
 
-const IMAGE_PATH = /^(api\/|\/api\/|https?:\/\/)/i;
+const IMAGE_PATH = /^(api\/|\/api\/|https?:\/\/|data:image\/|[^:]*$)/i;
 const validateImagePath = (src: unknown, field: string): ValidationResult => {
     if (!src) return {valid: true};
     if (!isString(src)) return {valid: false, error: `${field} must be a string`};

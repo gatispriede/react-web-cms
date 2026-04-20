@@ -44,7 +44,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const summary = await connection.bundleService.import(bundle);
         return res.status(200).json({ok: true, ...summary});
     } catch (err) {
+        const msg = String(err);
+        const isValidation = msg.startsWith('Error: Invalid bundle') || msg.startsWith('Error: Unsupported bundle');
         console.error('[api/import] error:', err);
-        return res.status(500).json({error: String(err)});
+        return res.status(isValidation ? 400 : 500).json({error: msg});
     }
 }

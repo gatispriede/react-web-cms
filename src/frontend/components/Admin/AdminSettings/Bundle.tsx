@@ -1,6 +1,6 @@
-import {Button, message, Popconfirm, Space, Typography} from "antd";
+import {Button, message, Popconfirm, Progress, Space, Typography} from "antd";
 import {DownloadOutlined, UploadOutlined} from "../../common/icons";
-import React, {useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {TFunction} from "i18next";
 
 const {Title, Paragraph, Text} = Typography;
@@ -8,8 +8,14 @@ const {Title, Paragraph, Text} = Typography;
 const BundleSettings = ({t}: { t: TFunction<"translation", undefined> }) => {
     const [exporting, setExporting] = useState(false);
     const [importing, setImporting] = useState(false);
+    const [importProgress, setImportProgress] = useState<number | null>(null);
+    const progressTimer = useRef<ReturnType<typeof setInterval> | null>(null);
     const [pendingBundle, setPendingBundle] = useState<any>(null);
     const fileRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        return () => { if (progressTimer.current) clearInterval(progressTimer.current); };
+    }, []);
 
     const doExport = async () => {
         setExporting(true);
@@ -52,6 +58,15 @@ const BundleSettings = ({t}: { t: TFunction<"translation", undefined> }) => {
     const doImport = async () => {
         if (!pendingBundle) return;
         setImporting(true);
+        setImportProgress(5);
+
+        // Advance the bar up to 85% while the server processes; final 15% on success.
+        let current = 5;
+        progressTimer.current = setInterval(() => {
+            current = Math.min(current + Math.random() * 6 + 2, 85);
+            setImportProgress(Math.round(current));
+        }, 600);
+
         try {
             const res = await fetch('/api/import', {
                 method: 'POST',
@@ -60,6 +75,9 @@ const BundleSettings = ({t}: { t: TFunction<"translation", undefined> }) => {
             });
             const data = await res.json();
             if (!res.ok || data.error) throw new Error(data.error || `Import failed: ${res.status}`);
+            clearInterval(progressTimer.current!);
+            progressTimer.current = null;
+            setImportProgress(100);
             message.success(`${t('Import complete')} — ${JSON.stringify(data.restored)}, assets: ${data.assets}`);
             if (Array.isArray(data.skippedAssets) && data.skippedAssets.length) {
                 message.warning(`${t('Skipped assets')}: ${data.skippedAssets.join(', ')}`);
@@ -68,6 +86,8 @@ const BundleSettings = ({t}: { t: TFunction<"translation", undefined> }) => {
             if (fileRef.current) fileRef.current.value = '';
             setTimeout(() => window.location.reload(), 1500);
         } catch (err) {
+            if (progressTimer.current) { clearInterval(progressTimer.current); progressTimer.current = null; }
+            setImportProgress(null);
             message.error(t('Import failed') + ': ' + String(err));
         } finally {
             setImporting(false);
@@ -90,36 +110,45 @@ const BundleSettings = ({t}: { t: TFunction<"translation", undefined> }) => {
                     {t('Restore a previously exported bundle.')}{' '}
                     <Text type="danger">{t('This replaces ALL site data and overwrites files in public/images.')}</Text>
                 </Paragraph>
-                <Space>
-                    <input
-                        ref={fileRef}
-                        type="file"
-                        accept="application/json,.json"
-                        onChange={(e) => {
-                            const f = e.target.files?.[0];
-                            if (f) void handleFile(f);
-                        }}
-                    />
-                    <Popconfirm
-                        title={t('Replace all site data?')}
-                        description={t('This cannot be undone. Export first if unsure.')}
-                        okText={t('Import')}
-                        okButtonProps={{danger: true}}
-                        cancelText={t('Cancel')}
-                        disabled={!pendingBundle || importing}
-                        onConfirm={doImport}
-                    >
-                        <Button
-                            danger
-                            icon={<UploadOutlined/>}
-                            loading={importing}
-                            disabled={!pendingBundle}
+                <Space direction="vertical" style={{width: '100%'}}>
+                    <Space>
+                        <input
+                            ref={fileRef}
+                            type="file"
+                            accept="application/json,.json"
+                            onChange={(e) => {
+                                const f = e.target.files?.[0];
+                                if (f) void handleFile(f);
+                            }}
+                        />
+                        <Popconfirm
+                            title={t('Replace all site data?')}
+                            description={t('This cannot be undone. Export first if unsure.')}
+                            okText={t('Import')}
+                            okButtonProps={{danger: true}}
+                            cancelText={t('Cancel')}
+                            disabled={!pendingBundle || importing}
+                            onConfirm={doImport}
                         >
-                            {pendingBundle
-                                ? `${t('Apply')} (v${pendingBundle.manifest?.version}, ${Object.keys(pendingBundle.assets ?? {}).length} ${t('assets')})`
-                                : t('Choose a file first')}
-                        </Button>
-                    </Popconfirm>
+                            <Button
+                                danger
+                                icon={<UploadOutlined/>}
+                                loading={importing}
+                                disabled={!pendingBundle}
+                            >
+                                {pendingBundle
+                                    ? `${t('Apply')} (v${pendingBundle.manifest?.version}, ${Object.keys(pendingBundle.assets ?? {}).length} ${t('assets')})`
+                                    : t('Choose a file first')}
+                            </Button>
+                        </Popconfirm>
+                    </Space>
+                    {importProgress !== null && (
+                        <Progress
+                            percent={importProgress}
+                            status={importProgress === 100 ? 'success' : 'active'}
+                            style={{maxWidth: 400}}
+                        />
+                    )}
                 </Space>
             </div>
         </Space>
