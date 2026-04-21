@@ -14,19 +14,26 @@ For someone seeing the codebase for the first time:
 6. [`publishing.md`](publishing.md) — snapshots, rollback, bundle export/import, draft posts, optimistic-concurrency `version` field.
 7. [`../../THEMING.md`](../../THEMING.md) — admin chrome vs. module output, `[data-theme-name]` scoping contract, fonts pipeline, accessibility themes.
 8. [`../../DEPLOY.md`](../../DEPLOY.md) — Docker compose stack, env vars, MongoDB seed, boot order.
+9. [`admin-systems.md`](admin-systems.md) — admin i18n, inline translation editing, icon system, DnD architecture, Google Fonts proxy.
 
 ## At-a-glance index
 
 | Doc | What it covers | Status |
 |---|---|---|
 | [`overview.md`](overview.md) | Three-paragraph "what is this and what does it do" | New |
-| [`data-model.md`](data-model.md) | Collections, relationships, `editedBy` / `editedAt` / `version` audit triplet | New |
+| [`data-model.md`](data-model.md) | Collections (incl. AuditLog + Presence), relationships, `editedBy` / `editedAt` / `version` audit triplet | New |
 | [`request-lifecycle.md`](request-lifecycle.md) | Public-page render path + admin-mutation path with caching layers | New |
 | [`auth-roles.md`](auth-roles.md) | NextAuth, role gating, first-boot admin password, `authz` Proxy | New |
 | [`publishing.md`](publishing.md) | Snapshots, rollback, bundle export/import, drafts, version conflicts | New |
+| [`module-interfaces.md`](module-interfaces.md) | Content JSON shapes for all 17 item types | New |
+| [`admin-systems.md`](admin-systems.md) | Admin i18n, inline translation, icon system, DnD split, Google Fonts proxy | New |
 | [`../../PROJECT_ANALYSIS.md`](../../PROJECT_ANALYSIS.md) | Tech stack · file structure · runtime topology · 17 item types · admin panel · 7 themes · scripts | Canonical |
 | [`../../THEMING.md`](../../THEMING.md) | Chrome / module split · CSS-var pipeline · scoping contract · fonts · a11y themes | Canonical |
 | [`../../DEPLOY.md`](../../DEPLOY.md) | Docker compose · env vars · MongoDB Atlas vs. local | Canonical |
+
+## Feature docs
+
+User-facing features are documented in [`../features/`](../features/). Each file covers what the feature does, how to find the code, and operational notes — without duplicating the technical internals that live here.
 
 The "Canonical" docs stay at the repo root because dozens of other files (`ROADMAP.md`, roadmap items, SCSS file headers) link to them. Moving them would rot every cross-link. Treat this directory as the **front door**; the root files are the **rooms**.
 
@@ -34,7 +41,7 @@ The "Canonical" docs stay at the repo root because dozens of other files (`ROADM
 
 - [`../../src/frontend/public/data-model.svg`](../../src/frontend/public/data-model.svg) — UML of the Mongo collections.
 
-Sequence + topology diagrams (request lifecycle, deployment containers) are deferred — see `roadmap/architecture-docs-page.md` for the Mermaid pipeline + in-app `/admin/help` viewer that would render them. Until that ships, the textual `request-lifecycle.md` carries the same information in ASCII steps.
+Sequence + topology diagrams (request lifecycle, deployment containers) are deferred. Until they ship, the textual `request-lifecycle.md` carries the same information in ASCII steps.
 
 ## Maintenance
 

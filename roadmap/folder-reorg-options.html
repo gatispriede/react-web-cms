@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Folder reorg — architecture options</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1f232c;
+    --ink: #e7ecf3;
+    --muted: #9aa4b2;
+    --accent: #7cc4ff;
+    --accent-2: #ffd479;
+    --good: #7ee787;
+    --warn: #f0b85a;
+    --bad: #ff8e8e;
+    --rule: #2a2f3a;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif; }
+  header { padding: 32px 40px 8px; border-bottom: 1px solid var(--rule); }
+  header h1 { margin: 0 0 6px; font-size: 26px; letter-spacing: -0.01em; }
+  header p { margin: 0; color: var(--muted); font-size: 14px; }
+  main { display: grid; grid-template-columns: repeat(auto-fit, minmax(520px, 1fr)); gap: 20px; padding: 28px 40px 48px; }
+  .card { background: var(--panel); border: 1px solid var(--rule); border-radius: 12px; padding: 22px 24px 24px; display: flex; flex-direction: column; gap: 12px; }
+  .card h2 { margin: 0; font-size: 18px; display: flex; align-items: baseline; gap: 10px; }
+  .card h2 .tag { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: var(--panel-2); color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
+  .card h2 .tag.light { color: var(--good); border: 1px solid color-mix(in srgb, var(--good) 30%, transparent); }
+  .card h2 .tag.mid   { color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); }
+  .card h2 .tag.heavy { color: var(--warn); border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent); }
+  .card h2 .tag.xheavy { color: var(--bad); border: 1px solid color-mix(in srgb, var(--bad) 30%, transparent); }
+  .sub { color: var(--muted); font-size: 13px; margin-top: -4px; }
+  pre.tree {
+    background: var(--panel-2);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font: 12.5px/1.55 var(--mono);
+    overflow-x: auto;
+    margin: 0;
+    color: #d6def0;
+  }
+  pre.tree .dir { color: var(--accent); }
+  pre.tree .keep { color: var(--good); }
+  pre.tree .note { color: var(--muted); }
+  pre.tree .new { color: var(--accent-2); }
+  .row { display: grid; grid-template-columns: 90px 1fr; gap: 10px; font-size: 13px; }
+  .row + .row { border-top: 1px dashed var(--rule); padding-top: 10px; }
+  .row strong { color: var(--muted); font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; font-size: 11px; padding-top: 2px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; padding: 0 40px 16px; color: var(--muted); font-size: 12px; }
+  .legend span::before { content: "■"; margin-right: 6px; font-size: 14px; vertical-align: -1px; }
+  .legend .dir::before { color: var(--accent); }
+  .legend .new::before { color: var(--accent-2); }
+  .legend .keep::before { color: var(--good); }
+  .legend .note::before { color: var(--muted); }
+  footer { padding: 18px 40px 40px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--rule); }
+  footer b { color: var(--ink); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Folder reorg — four architecture options</h1>
+  <p>Lightest → heaviest reorganisation. Each keeps the build green; they differ in how much config you're willing to touch.</p>
+</header>
+<div class="legend">
+  <span class="dir">directory</span>
+  <span class="new">new/renamed</span>
+  <span class="keep">unchanged convention-bound path</span>
+  <span class="note">comment</span>
+</div>
+
+<main>
+
+<!-- OPTION A -->
+<section class="card">
+  <h2>Option A — Minimal <span class="tag light">No config changes</span></h2>
+  <div class="sub">Reorganise only <code>src/frontend/components/</code>. Server, Interfaces, enums, Api at root are untouched.</div>
+<pre class="tree">
+<span class="dir">src/</span>
+├── <span class="keep">Api/                    </span> <span class="note"># untouched</span>
+├── <span class="keep">Interfaces/             </span> <span class="note"># untouched</span>
+├── <span class="keep">Server/                 </span> <span class="note"># untouched</span>
+├── <span class="keep">enums/ constants/ …     </span> <span class="note"># untouched</span>
+└── <span class="dir">frontend/</span>
+    ├── <span class="keep">pages/ public/ gqty/  </span> <span class="note"># Next convention — untouched</span>
+    └── <span class="dir">components/</span>
+        ├── <span class="new">admin/              </span> <span class="note"># AdminApp, settings, config inputs</span>
+        ├── <span class="new">public/             </span> <span class="note"># public-site only (Logo, top-bar…)</span>
+        ├── <span class="new">sections/           </span> <span class="note"># per-module folders</span>
+        │   └── <span class="new">hero/</span>
+        │       ├── Hero.tsx
+        │       ├── Hero.editor.tsx
+        │       ├── Hero.scss
+        │       └── index.ts
+        ├── <span class="new">shared/             </span> <span class="note"># ContentManager, SectionContent, wrappers</span>
+        └── <span class="new">ui/                 </span> <span class="note"># dialogs, Logo, RichTextEditor</span>
+</pre>
+  <div class="row"><strong>Cost</strong><span>~1 focused day. One subtree moves, no config touched.</span></div>
+  <div class="row"><strong>Trade-off</strong><span>Root-level sprawl (Server, Api, Interfaces, enums) remains.</span></div>
+  <div class="row"><strong>Good for</strong><span>Fastest legibility win; stepping-stone toward Option C later.</span></div>
+</section>
+
+<!-- OPTION B -->
+<section class="card">
+  <h2>Option B — features / ui / lib split <span class="tag mid">Frontend-only rewire</span></h2>
+  <div class="sub">Standard "features / ui / lib" layout inside <code>src/frontend/</code>. Next-convention dirs stay put.</div>
+<pre class="tree">
+<span class="dir">src/frontend/</span>
+├── <span class="keep">pages/ public/ next.config.js </span> <span class="note"># Next convention — untouched</span>
+├── <span class="new">app/            </span> <span class="note"># AppShell, providers</span>
+├── <span class="new">features/</span>
+│   ├── <span class="new">admin/        </span> <span class="note"># AdminApp + settings tabs</span>
+│   ├── <span class="new">auth/         </span>
+│   ├── <span class="new">sections/     </span> <span class="note"># per-module folders</span>
+│   └── <span class="new">site/         </span> <span class="note"># public shell, top-bar, mobile nav</span>
+├── <span class="new">ui/             </span> <span class="note"># shared AntD compositions, Logo, dialogs</span>
+├── <span class="new">lib/            </span> <span class="note"># i18n, theme engine, gqty glue</span>
+├── <span class="new">api/            </span> <span class="note"># domain gateways (Mongo/User/Asset…)</span>
+└── <span class="new">styles/         </span> <span class="note"># scss tokens + globals</span>
+</pre>
+  <div class="row"><strong>Cost</strong><span>~2 days: bulk <code>git mv</code> + import-path rewrite across frontend.</span></div>
+  <div class="row"><strong>Trade-off</strong><span>Server + shared types at root still untouched (handle separately).</span></div>
+  <div class="row"><strong>Good for</strong><span>Readers who recognise "features/ui/lib" instantly. No Next config risk.</span></div>
+</section>
+
+<!-- OPTION C -->
+<section class="card">
+  <h2>Option C — Single <code>/app</code> tree <span class="tag heavy">Whole-repo reshape</span></h2>
+  <div class="sub">Everything the <b>running product</b> needs under <code>app/</code>; everything that <b>ships</b> it under <code>infra/</code>; writing under <code>docs/</code>.</div>
+<pre class="tree">
+<span class="new">app/                       </span> <span class="note"># the running product</span>
+├── <span class="new">web/                     </span> <span class="note"># Next.js project (was src/frontend/)</span>
+│   ├── <span class="keep">pages/ public/ next.config.js</span>
+│   ├── features/ ui/ lib/ api/ <span class="note"># Option B's internals</span>
+│   └── styles/
+├── <span class="new">server/                  </span> <span class="note"># standalone GraphQL (was src/Server/)</span>
+│   ├── routes/
+│   ├── services/           <span class="note"># UserService, NavigationService…</span>
+│   ├── infra/              <span class="note"># mongo/redis connection, fileManager</span>
+│   └── schema.graphql
+└── <span class="new">shared/                  </span> <span class="note"># types + enums used by both</span>
+    ├── interfaces/
+    ├── enums/ constants/
+    └── api-dto/            <span class="note"># was src/Api/</span>
+
+<span class="new">infra/                     </span> <span class="note"># deployment</span>
+├── docker/                 <span class="note"># Dockerfiles, compose.yaml</span>
+├── scripts/                <span class="note"># was Scripts/</span>
+└── certificates/
+
+<span class="new">docs/                      </span> <span class="note"># ROADMAP, THEMING, roadmap/</span>
+<span class="keep">package.json next-env.d.ts </span> <span class="note"># forced at root</span>
+</pre>
+  <div class="row"><strong>Cost</strong><span>~half a day of config + ~1 day rewire: Dockerfiles, compose.yaml, gqty.config.ts, i18next config, server entrypoint paths.</span></div>
+  <div class="row"><strong>Trade-off</strong><span>Biggest diff. Every import path inside the repo shifts.</span></div>
+  <div class="row"><strong>Good for</strong><span>Self-explanatory top level: <i>code / deployment / writing</i>. Newcomer never needs a map.</span></div>
+</section>
+
+<!-- OPTION D -->
+<section class="card">
+  <h2>Option D — Monorepo with <code>packages/</code> <span class="tag xheavy">Workspace tooling</span></h2>
+  <div class="sub">npm workspaces enforce layer boundaries at <i>compile time</i>. <code>web</code> cannot import <code>server</code> because workspaces only expose <code>shared-*</code>.</div>
+<pre class="tree">
+<span class="new">packages/</span>
+├── <span class="new">web/             </span> <span class="note"># Next.js frontend, own package.json</span>
+├── <span class="new">server/          </span> <span class="note"># GraphQL backend, own package.json</span>
+├── <span class="new">shared-types/    </span> <span class="note"># Interfaces, enums, DTOs</span>
+└── <span class="new">shared-utils/    </span> <span class="note"># helpers used by both sides</span>
+
+<span class="new">infra/ docs/</span>
+<span class="keep">package.json   </span> <span class="note"># root workspace manifest</span>
+</pre>
+  <div class="row"><strong>Cost</strong><span>~3–5 days: separate package.json per package, <code>workspaces</code> field, tsconfig paths, CI updates. Sets up for future pnpm / Turborepo.</span></div>
+  <div class="row"><strong>Trade-off</strong><span>Biggest lift. Overkill unless a third surface (mobile, separate admin SPA) is joining.</span></div>
+  <div class="row"><strong>Good for</strong><span>Hard architectural enforcement — layer violations become compile errors.</span></div>
+</section>
+
+</main>
+
+<footer>
+  <p><b>Pragmatic path:</b> <b>Option A</b> this week (zero config risk, fastest legibility gain), then <b>Option C</b> later as a single follow-up PR. Option A's tree fits inside Option C cleanly, so no work is wasted. Skip D unless a second app/package is imminent.</p>
+  <p style="margin-top: 6px;"><b>Open the file:</b> <code>roadmap/folder-reorg-options.html</code></p>
+</footer>
+</body>
+</html>

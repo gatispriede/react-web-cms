@@ -815,3 +815,10 @@
     }
   }
 }
+
+/* Paper logo — small inline, ink-coloured to pair with the serif wordmark. */
+[data-theme-name="paper"] .logo {
+  --logo-height: 32px;
+  --logo-gap: 8px;
+  --logo-ink: var(--ink);
+}

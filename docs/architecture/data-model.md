@@ -41,9 +41,33 @@ Every doc that the admin can mutate carries three optional fields layered by [`a
 | `editedAt` | `auditStamp()` — ISO8601 timestamp | Same badge — "2m ago" relative time |
 | `version` | `nextVersion(existingVersion)` — integer that monotonically increases per save | Optimistic-concurrency check on next save (see [`auth-roles.md`](auth-roles.md) and [`publishing.md`](publishing.md)) |
 
-The `version` integer is **opt-in per write**: callers that pass `expectedVersion` to a save method get a `ConflictError` if the doc moved past them; callers that omit it apply the write unconditionally (legacy path during the rollout). New docs start at `version: 1`. See `roadmap/multi-admin-conflict-mitigation.md` for the full rationale.
+The `version` integer is **opt-in per write**: callers that pass `expectedVersion` to a save method get a `ConflictError` if the doc moved past them; callers that omit it apply the write unconditionally (legacy path during the rollout). New docs start at `version: 1`. See [`admin-systems.md`](admin-systems.md) and [`auth-roles.md`](auth-roles.md) for implementation details.
 
 Snapshots and bundles add `publishedBy` / `rolledBackFrom` — see [`publishing.md`](publishing.md).
+
+## Additional collections
+
+Two more collections are maintained outside the main content graph:
+
+| Collection | Purpose | Owned by |
+|---|---|---|
+| `AuditLog` | Append-only event log — `{id, at, actor, collection, docId, op, diff?, tag?}` | `AuditLogService` |
+| `Presence` | Short-lived heartbeat docs — `{userId, docId, name, avatar, updatedAt}` with 45 s TTL | `/api/presence` route |
+
+### `AuditLog` details
+
+- **Indexes:** `at desc` (list page), `{collection, docId, at desc}` (per-doc history), `{actor.email, at desc}` (per-editor filter), TTL on `at`.
+- **Diff payload** size-capped at 10 kB; oversized writes record `diff: null` rather than truncating.
+- **Tags:** `publish` and `rollback` ops include `tag` for snapshot events.
+- Every conflict-aware mutation takes an `auditTrace` callback; the emitter lives in `runMutation`.
+- Paginated at 50/page in the admin Audit tab; reads gated at `admin` role.
+
+### `Presence` details
+
+- Editors post a heartbeat every 15 s to `/api/presence` (`{docId, userId}`).
+- Server upserts by `{userId, docId}` and keeps a 45 s TTL index on `updatedAt`.
+- UI polls every 15 s and renders stacked avatars of other editors on the same `docId` via `<PresenceHost>` mounted at `_app` level.
+- No writes to Mongo beyond the heartbeat; Presence docs are purely transient.
 
 ## Section composition
 

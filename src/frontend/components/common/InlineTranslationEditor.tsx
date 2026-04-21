@@ -4,6 +4,7 @@ import LanguageApi from '../../api/LanguageApi';
 import TranslationMetaApi from '../../api/TranslationMetaApi';
 import {i18n as nextI18n} from 'next-i18next';
 import type {INewLanguage} from '../interfaces/INewLanguage';
+import {hashSource} from '../../../Server/TranslationMetaService';
 
 /**
  * Floating Alt-click translation editor. Listens once at document level for
@@ -116,7 +117,14 @@ export const InlineTranslationEditor: React.FC = () => {
                     ? next.length !== prev.length
                     : next.length !== prev.length;
                 if (changed) {
-                    await metaApi.current.save({[state.key]: {...existing, acceptedSources: next}}, version);
+                    const hash = next.length > 0 ? hashSource(state.source) : undefined;
+                    await metaApi.current.save({
+                        [state.key]: {
+                            ...existing,
+                            acceptedSources: next,
+                            ...(hash ? {acceptedSourceHash: hash} : {}),
+                        },
+                    }, version);
                 }
             } catch (metaErr) {
                 // Audit flag is a soft nice-to-have; the translation itself
@@ -140,6 +148,10 @@ export const InlineTranslationEditor: React.FC = () => {
         if (!state) return;
         const onKey = (e: KeyboardEvent) => {
             if (e.key === 'Escape') close();
+            if (e.altKey && e.key === '=') {
+                e.preventDefault();
+                setState(s => s ? {...s, acceptedSource: !s.acceptedSource, value: !s.acceptedSource ? s.source : s.value} : s);
+            }
         };
         document.addEventListener('keydown', onKey);
         return () => document.removeEventListener('keydown', onKey);

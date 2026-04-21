@@ -137,4 +137,31 @@
       outline-offset: 2px !important;
     }
   }
+
+  /* ===== Top-bar vertical separators =================================
+     2px solid ink — matches HC's heavier border weight throughout. */
+  .site-tabs-left-cluster > * + * {
+    border-left: 2px solid var(--ink);
+    padding-left: 10px;
+    margin-left: 2px;
+  }
+  .language-dropdown {
+    border-left: 2px solid var(--ink);
+    padding-left: 12px;
+    margin-left: 2px;
+  }
+  .mobile-nav-trigger {
+    border-left: 2px solid var(--ink) !important;
+    border-top: 0 !important;
+    border-right: 0 !important;
+    border-bottom: 0 !important;
+  }
+}
+
+/* HighContrast logo — accent-ink on bg so the mark reads as a first-class
+   UI element, not a muted brand glyph. */
+[data-theme-name="high-contrast"] .logo {
+  --logo-height: 40px;
+  --logo-gap: 12px;
+  --logo-ink: var(--accent, var(--ink));
 }

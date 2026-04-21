@@ -280,20 +280,23 @@ const ImageUpload = ({setFile, t}: { setFile: (file: File) => void, t: TFunction
                             })}
                         </div>
 
-                        {previewSrc && (
-                            <AntImage
-                                style={{display: 'none'}}
-                                src={previewSrc}
-                                preview={{
-                                    visible: true,
-                                    src: previewSrc,
-                                    onVisibleChange: (v) => { if (!v) setPreviewSrc(null) },
-                                }}
-                            />
-                        )}
                     </div>
                 </div>
             </Modal>
+            {/* Preview portal lives OUTSIDE the selection Modal so AntD's
+                preview overlay stacks above everything (rendering it inside
+                left the Modal header visible as a thin strip on top). */}
+            {previewSrc && (
+                <AntImage
+                    style={{display: 'none'}}
+                    src={previewSrc}
+                    preview={{
+                        visible: true,
+                        src: previewSrc,
+                        onVisibleChange: (v) => { if (!v) setPreviewSrc(null) },
+                    }}
+                />
+            )}
         </div>
     )
 }

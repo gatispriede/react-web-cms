@@ -373,7 +373,26 @@ body{
 
         .ant-tabs-tab { padding: 12px 6px; }
         .navigation-item { font-size: 11px; }
+
+        // At the narrowest widths, constrain uploaded wordmark logos so a wide
+        // image doesn't push the nav/language picker off-screen.
+        .logo img { max-width: 100px; }
       }
+    }
+  }
+
+  // Language dropdown viewport pinning — on very narrow screens the popup can
+  // overflow the right edge of the viewport. `.lang-popup` is set as the
+  // overlayClassName on both Dropdown instances in app.tsx so we can target
+  // the portal element without affecting other dropdowns.
+  @media (max-width: 460px) {
+    .lang-popup.ant-dropdown {
+      position: fixed !important;
+      left: 12px !important;
+      right: 12px !important;
+      width: auto !important;
+      max-width: calc(100vw - 24px) !important;
+      top: auto !important;
     }
   }
 
@@ -413,5 +432,13 @@ body{
   }
   .ant-select-selector{
     min-width: 150px;
+  }
+}
+// When the image rail is docked open, offset the admin canvas so the fixed
+// 260px panel doesn't cover editable fields. `admin-rail-open` is toggled
+// on `document.body` by `ImageRailDock.tsx`.
+body.admin-rail-open {
+  .ant-layout-content {
+    padding-right: calc(16px + 260px) !important;
   }
 }

@@ -785,4 +785,30 @@
       &-selected { background: var(--accent) !important; color: var(--accent-ink) !important; }
     }
   }
+
+  /* ===== Top-bar vertical separators =================================
+     Accent-coloured left border — reinforces Industrial's bold grid lines. */
+  .site-tabs-left-cluster > * + * {
+    border-left: 2px solid var(--accent);
+    padding-left: 10px;
+    margin-left: 2px;
+  }
+  .language-dropdown {
+    border-left: 2px solid var(--accent);
+    padding-left: 12px;
+    margin-left: 2px;
+  }
+  .mobile-nav-trigger {
+    border-left: 2px solid var(--accent) !important;
+    border-top: 0 !important;
+    border-right: 0 !important;
+    border-bottom: 0 !important;
+  }
+}
+
+/* Industrial logo — chunkier mark, accent-ink to carry the hazard palette. */
+[data-theme-name="industrial"] .logo {
+  --logo-height: 42px;
+  --logo-gap: 10px;
+  --logo-ink: var(--accent, var(--ink));
 }

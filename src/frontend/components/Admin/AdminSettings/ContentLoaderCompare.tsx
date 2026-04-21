@@ -4,7 +4,7 @@ import {DownloadOutlined, EditOutlined, InfoCircleOutlined, SearchOutlined, Uplo
 import TranslationManager from '../TranslationManager';
 import CsvImportDialog from './CsvImportDialog';
 import TranslationMetaApi from '../../../api/TranslationMetaApi';
-import {ITranslationMetaEntry, ITranslationMetaMap} from '../../../../Server/TranslationMetaService';
+import {ITranslationMetaEntry, ITranslationMetaMap, hashSource} from '../../../../Server/TranslationMetaService';
 import ConflictDialog from '../../common/ConflictDialog';
 import {ConflictError, isConflictError} from '../../../lib/conflict';
 import {useTranslation} from 'react-i18next';
@@ -15,6 +15,10 @@ interface Row {
     /** locale → translation value (empty string if missing) */
     values: Record<string, string>;
     missing: string[];
+    /** Langs where the translator accepted this key as "same as source" and the hash is still current. */
+    accepted: string[];
+    /** Langs that were accepted but the source has since changed — show "needs review". */
+    staleAccepted: string[];
 }
 
 interface LanguageEntry {
@@ -250,18 +254,31 @@ export const ContentLoaderCompare = ({translationManager, dataPromise}: {
         const lower = filter.trim().toLowerCase();
         return Object.entries(sourceMap)
             .map(([key, source]) => {
+                const entry = meta[key];
+                const storedHash = entry?.acceptedSourceHash;
+                const hashStale = Boolean(storedHash && storedHash !== hashSource(source));
+                const rawAccepted = entry?.acceptedSources ?? [];
                 const values: Record<string, string> = {};
                 const missing: string[] = [];
+                const accepted: string[] = [];
+                const staleAccepted: string[] = [];
                 for (const lang of nonDefaultLangs) {
                     const v = resources[lang.symbol]?.[key];
-                    if (!v || v === key) missing.push(lang.symbol);
+                    const wasAccepted = rawAccepted.includes(lang.symbol);
+                    if (wasAccepted && hashStale) {
+                        staleAccepted.push(lang.symbol);
+                    } else if (wasAccepted) {
+                        accepted.push(lang.symbol);
+                    } else if (!v || v === key) {
+                        missing.push(lang.symbol);
+                    }
                     values[lang.symbol] = v ?? '';
                 }
-                return {key, source, values, missing};
+                return {key, source, values, missing, accepted, staleAccepted};
             })
             .filter(r => !lower || r.key.toLowerCase().includes(lower) || r.source?.toLowerCase().includes(lower))
-            .filter(r => !missingOnly || r.missing.length > 0);
-    }, [sourceMap, nonDefaultLangs, resources, filter, missingOnly]);
+            .filter(r => !missingOnly || r.missing.length > 0 || r.staleAccepted.length > 0);
+    }, [sourceMap, nonDefaultLangs, resources, filter, missingOnly, meta]);
 
     const downloadCsv = () => {
         const header = ['key', 'source', ...nonDefaultLangs.map(l => l.symbol)];
@@ -313,11 +330,16 @@ export const ContentLoaderCompare = ({translationManager, dataPromise}: {
             title: lang.label ? `${lang.symbol} — ${lang.label}` : lang.symbol,
             dataIndex: ['values', lang.symbol],
             key: lang.symbol,
-            render: (v: string, row: Row) => (
-                row.missing.includes(lang.symbol)
-                    ? <Tag color="orange">missing</Tag>
-                    : <Typography.Text>{v}</Typography.Text>
-            ),
+            render: (v: string, row: Row) => {
+                if (row.staleAccepted.includes(lang.symbol)) {
+                    return <Tooltip title="Source string changed since this was accepted — please re-review"><Tag color="gold">needs review</Tag></Tooltip>;
+                }
+                if (row.accepted.includes(lang.symbol)) {
+                    return <Tooltip title="Accepted as-is — same as source string"><Tag color="blue" style={{opacity: 0.7}}>accepted</Tag></Tooltip>;
+                }
+                if (row.missing.includes(lang.symbol)) return <Tag color="orange">missing</Tag>;
+                return <Typography.Text>{v}</Typography.Text>;
+            },
         })),
     ];
 

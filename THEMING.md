@@ -100,6 +100,20 @@ Adding a family to the catalogue: append an entry to `google-fonts.json` with `{
 
 **Privacy:** embedding Google Fonts sends visitor IPs to Google. If GDPR review flags this, we fall back to self-hosted via `@fontsource` (deferred — see `roadmap/google-fonts-picker.md`).
 
+## Logo tokens
+
+The public-site logo slot is themeable via three CSS variables (defined on `.logo` in [`scss/Common/Logo.scss`](src/frontend/scss/Common/Logo.scss)):
+
+| Token | Default | Purpose |
+|---|---|---|
+| `--logo-height` | `40px` | Max height of the uploaded `<img>` and the `.logo-mark` fallback box. |
+| `--logo-ink` | `var(--ink)` | Colour of the fallback mark border/glyph. SVG logos authored with `fill="currentColor"` inherit this via the `.logo` anchor's `color`. |
+| `--logo-gap` | `12px` | Inline gap between the logo and adjacent top-bar content. |
+
+Each theme overrides in `scss/Themes/<Name>.scss` — e.g. Paper uses a small inline mark (32px, `--ink`), Studio a standalone 48px, Industrial a 42px accent-coloured mark, HighContrast 40px in accent.
+
+**Colour-mode caveat:** `<img src>` logos (PNG/JPG, or SVGs served with rasterised fills) will **not** recolour via `--logo-ink`. To get theme-aware recolouring, upload an SVG with `fill="currentColor"` on its strokes/paths. A baseline `@media (max-width: 480px)` rule in `Logo.scss` shrinks `--logo-height` to `28px`; themes can narrow further if needed.
+
 ## Do not
 
 - Do **not** wrap admin chrome in the active-theme `ConfigProvider`. This is what caused the "+" button and edit controls to disappear when a low-contrast theme was active.

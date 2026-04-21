@@ -424,7 +424,7 @@ class App extends React.Component<IHomeProps> {
                                         }}
                                     />
                                     {items.length > 1 && (
-                                        <Dropdown className="language-dropdown" menu={{items}}>
+                                        <Dropdown className="language-dropdown" overlayClassName="lang-popup" menu={{items}}>
                                             <Typography.Link>
                                                 <Space size={6}>
                                                     {activeLang?.flag
@@ -483,7 +483,7 @@ class App extends React.Component<IHomeProps> {
                                         </div>
                                     ),
                                     right: items.length > 1 ? (
-                                        <Dropdown className="language-dropdown" menu={{items}}>
+                                        <Dropdown className="language-dropdown" overlayClassName="lang-popup" menu={{items}}>
                                             <Typography.Link>
                                                 <Space size={6}>
                                                     {activeLang?.flag

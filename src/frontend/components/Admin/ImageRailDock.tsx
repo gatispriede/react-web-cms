@@ -1,15 +1,25 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {Button, Tooltip} from 'antd';
 import {PictureOutlined} from '../common/icons';
 import ImageRail, {useImageRailState} from './ImageRail';
 
+const RAIL_OPEN_CLASS = 'admin-rail-open';
+
 /**
  * Header button + rail mount. Keeps the state hook in a functional
  * component so `AdminApp` (class) can stay hook-free. Rail itself is
- * `position: fixed`, so rendering it here doesn't affect layout flow.
+ * `position: fixed`; when open we add `admin-rail-open` to `document.body`
+ * so SCSS can offset `Layout.Content` to prevent the rail from covering
+ * the editing surface.
  */
 const ImageRailDock: React.FC = () => {
     const [open, setOpen] = useImageRailState();
+
+    useEffect(() => {
+        document.body.classList.toggle(RAIL_OPEN_CLASS, open);
+        return () => document.body.classList.remove(RAIL_OPEN_CLASS);
+    }, [open]);
+
     return (
         <>
             <Tooltip title={open ? 'Hide image library' : 'Show image library (drag images onto modules)'}>

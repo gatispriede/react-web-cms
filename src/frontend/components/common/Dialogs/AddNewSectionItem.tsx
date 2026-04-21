@@ -11,8 +11,9 @@ import {IItem} from "../../../../Interfaces/IItem";
 import {EStyle} from "../../../../enums/EStyle";
 import {EAnimation} from "../../../../enums/EAnimation";
 import {TFunction} from "i18next";
-import {itemTypeList, styleEnumFor} from "../../itemTypes/registry";
+import {getItemTypeDefinition, itemTypeList, styleEnumFor} from "../../itemTypes/registry";
 import TypeDiagram from "../../itemTypes/TypeDiagram";
+import ModulePickerDialog from "../../Admin/ModulePicker/ModulePickerDialog";
 
 interface IAddNewSectionItemProps {
     addSectionItem: (sectionId: string, config: IConfigSectionAddRemove) => void,
@@ -27,6 +28,7 @@ interface IAddNewSectionItemProps {
 class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
     state = {
         dialogOpen: false,
+        pickerTarget: null as null | 'content' | 'action',
         actionPreviewOpen: false,
         selected: EItemType.Text,
         action: 'none',
@@ -107,46 +109,35 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
         }
     }
 
-    setActiveOptionState(selectedModule: EItemType, style?: string) {
+    setActiveOptionState(selectedModule: EItemType, style?: string, resetContent = false) {
         const styleEnum = styleEnumFor(selectedModule);
-        this.setState({
+        const patch: any = {
             style: style ? style : (styleEnum.Default ?? EStyle.Default),
             styleOptions: Object.keys(styleEnum).map((key: string) => ({
                 label: key,
                 value: styleEnum[key],
             })),
             selected: selectedModule
-        });
+        };
+        if (resetContent) {
+            const def = getItemTypeDefinition(selectedModule);
+            patch.content = def?.defaultContent ?? '{}';
+        }
+        this.setState(patch);
     }
 
     generateContentSection() {
-        const typeOptionRender = (opt: {data: {label: string; value: string}}) => (
-            <div style={{display: 'flex', alignItems: 'center', gap: 10, padding: '4px 0', color: 'inherit'}}>
-                <TypeDiagram type={opt.data.value}/>
-                <span>{opt.data.label}</span>
-            </div>
-        );
-        const currentDiagramType = this.activeOption()?.value;
+        const currentDef = getItemTypeDefinition(this.state.selected);
         return <div>
             <h4>{this.props.t("Content configuration")}</h4>
             <label>{this.props.t("Please select content type")}: </label>
-            <Select
-                variant={'filled'}
-                value={this.activeOption()?.value}
-                options={this.state.selectOptions}
-                style={{minWidth: 280}}
-                optionRender={typeOptionRender as any}
-                labelRender={(labelInfo) => (
-                    <div style={{display: 'flex', alignItems: 'center', gap: 8}}>
-                        {currentDiagramType && <TypeDiagram type={currentDiagramType}/>}
-                        <span>{labelInfo.label}</span>
-                    </div>
-                )}
-                onSelect={(e: EItemType) => {
-                    this.setActiveOptionState(e)
-                }}
-                listHeight={360}
-            />
+            <Button
+                onClick={() => this.setState({pickerTarget: 'content'})}
+                style={{display: 'inline-flex', alignItems: 'center', gap: 8, height: 'auto', padding: '6px 12px'}}
+            >
+                <TypeDiagram type={this.state.selected}/>
+                <span>{currentDef ? this.props.t(currentDef.labelKey) : this.state.selected}</span>
+            </Button>
             <hr/>
             <ContentSection t={this.props.t} content={this.state.content} selected={this.state.selected}
                             setContent={(value: string) => {
@@ -172,28 +163,18 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                 <div>
                     <h4>{this.props.t("Content configuration")}</h4>
                     <label>{this.props.t("Please select content type")}: </label>
-                    <Select
-                        variant={'filled'}
-                        value={this.state.actionType}
-                        options={this.state.selectOptions}
-                        style={{minWidth: 280}}
-                        optionRender={((opt: {data: {label: string; value: string}}) => (
-                            <div style={{display: 'flex', alignItems: 'center', gap: 10, padding: '4px 0'}}>
-                                <TypeDiagram type={opt.data.value}/>
-                                <span>{opt.data.label}</span>
-                            </div>
-                        )) as any}
-                        labelRender={(info) => (
-                            <div style={{display: 'flex', alignItems: 'center', gap: 8}}>
+                    {(() => {
+                        const currentActionDef = getItemTypeDefinition(this.state.actionType);
+                        return (
+                            <Button
+                                onClick={() => this.setState({pickerTarget: 'action'})}
+                                style={{display: 'inline-flex', alignItems: 'center', gap: 8, height: 'auto', padding: '6px 12px'}}
+                            >
                                 <TypeDiagram type={this.state.actionType}/>
-                                <span>{info.label}</span>
-                            </div>
-                        )}
-                        onSelect={(e: EItemType) => {
-                            this.setState({actionType: e})
-                        }}
-                        listHeight={360}
-                    />
+                                <span>{currentActionDef ? this.props.t(currentActionDef.labelKey) : this.state.actionType}</span>
+                            </Button>
+                        );
+                    })()}
                     <hr/>
                     <ContentSection t={this.props.t} content={this.state.actionContent} selected={this.state.actionType}
                                     setContent={(value: string) => {
@@ -361,6 +342,31 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                         </div>
                     </div>
                 </Drawer>
+                <ModulePickerDialog
+                    open={this.state.pickerTarget !== null}
+                    onClose={() => this.setState({pickerTarget: null})}
+                    t={this.props.t}
+                    current={this.state.pickerTarget === 'action' ? this.state.actionType : this.state.selected}
+                    onSelect={(type) => {
+                        if (this.state.pickerTarget === 'action') {
+                            if (type !== this.state.actionType) {
+                                const def = getItemTypeDefinition(type);
+                                const styleEnum = styleEnumFor(type);
+                                this.setState({
+                                    actionType: type,
+                                    actionContent: def?.defaultContent ?? '{}',
+                                    actionStyle: styleEnum.Default ?? EStyle.Default,
+                                    actionStyleOptions: Object.entries(styleEnum).map(([_, v]) => ({
+                                        label: v as string,
+                                        value: v as string,
+                                    })),
+                                });
+                            }
+                        } else {
+                            this.setActiveOptionState(type, undefined, type !== this.state.selected);
+                        }
+                    }}
+                />
             </>
         )
     }

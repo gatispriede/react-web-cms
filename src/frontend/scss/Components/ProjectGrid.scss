@@ -130,4 +130,37 @@
     text-transform: uppercase;
     color: var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary, #1677ff)));
   }
+
+  /* ---- studio style — gradient accent covers + oversized art letters ---- */
+  &.studio {
+    .project-grid__items {
+      gap: 28px;
+    }
+
+    .project-grid__item {
+      border-radius: max(var(--theme-borderRadius, 4px), 6px);
+      overflow: hidden;
+    }
+
+    .project-grid__cover {
+      aspect-ratio: 16 / 9;
+      background: linear-gradient(
+        135deg,
+        var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary, #1677ff))) 0%,
+        color-mix(in srgb, var(--accent, #1677ff) 40%, transparent) 100%
+      );
+    }
+
+    .project-grid__art {
+      font-size: clamp(72px, 10vw, 128px);
+      color: var(--bg, var(--theme-colorBgBase, #fff));
+      opacity: 0.55;
+      mix-blend-mode: overlay;
+    }
+
+    .project-grid__year {
+      background: transparent;
+      color: var(--bg, rgba(255, 255, 255, 0.75));
+    }
+  }
 }

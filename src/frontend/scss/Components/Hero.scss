@@ -263,4 +263,44 @@
       font-weight: 500;
     }
   }
+
+  /* ---- editorial style — magazine-spread hero, oversized headline ---- */
+  &.editorial {
+    padding: 80px 0 56px;
+    border-bottom: 2px solid var(--ink, var(--theme-colorTextBase, rgba(0, 0, 0, 0.9)));
+
+    .hero__eyebrow {
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      margin-bottom: 28px;
+    }
+
+    .hero__headline {
+      font-size: clamp(3.2rem, 9vw, 7.5rem);
+      font-weight: 400;
+      letter-spacing: -0.03em;
+      line-height: 1.0;
+      margin-bottom: 28px;
+    }
+
+    .hero__subtitle {
+      font-size: clamp(1rem, 1.6vw, 1.25rem);
+      font-weight: 400;
+      opacity: 0.7;
+      max-width: 52ch;
+    }
+
+    .hero__cta-row {
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid var(--rule, rgba(0, 0, 0, 0.12));
+      width: 100%;
+    }
+
+    @media (max-width: 720px) {
+      padding: 48px 0 36px;
+
+      .hero__headline { line-height: 1.02; }
+    }
+  }
 }

@@ -97,50 +97,53 @@ const Gallery = ({item, t: _t, tApp}: {
     // CSS scroll animation can loop seamlessly — the duplicate is
     // aria-hidden so screen readers don't announce every item twice.
     const isMarquee = item.style === 'marquee' || item.style === 'logo-wall' || item.style === 'hazard-strip';
-    const renderedItems = isMarquee ? [...data.items, ...data.items] : data.items;
+    // Only originals go into PreviewGroup — marquee clones render as plain
+    // <img> tags outside the group so the preview counter stays at N/N (not
+    // 2N/2N) and the nav doesn't double-step through duplicates.
+    const renderTile = (galleryItem: IGalleryItem, index: number, isClone: boolean) => {
+        const hasImage = Boolean(galleryItem.src);
+        const imgStyle: React.CSSProperties = {};
+        if (galleryItem.imgWidth) imgStyle.width = galleryItem.imgWidth;
+        if (galleryItem.imgHeight) imgStyle.height = galleryItem.imgHeight;
+        return (
+            <div
+                key={`${isClone ? 'c' : 'o'}-${index}`}
+                className={`container text-${galleryItem.textPosition}${hasImage ? '' : ' gallery-tile--text'}`}
+                aria-hidden={isClone ? true : undefined}
+            >
+                {hasImage && (
+                    <div className={'image'}>
+                        {isClone ? (
+                            <img src={'/' + galleryItem.src} alt={galleryItem.alt} style={imgStyle}/>
+                        ) : (
+                            <Image
+                                preview={data.disablePreview ? false : galleryItem.preview}
+                                src={'/' + galleryItem.src}
+                                alt={galleryItem.alt}
+                                width={galleryItem.imgWidth || undefined}
+                                height={galleryItem.imgHeight || undefined}
+                            />
+                        )}
+                    </div>
+                )}
+                {galleryItem.text && (
+                    <div className={'text'}>
+                        <p>{galleryItem.text}</p>
+                    </div>
+                )}
+            </div>
+        );
+    };
     return (
-        <div className={`gallery-wrapper gallery-wrapper-app ${item.style}`}>
+        <div
+            className={`gallery-wrapper gallery-wrapper-app ${item.style}`}
+            onClick={e => e.stopPropagation()}
+        >
             <div className={'gallery-wrapper-images'}>
                 <Image.PreviewGroup>
-                    {
-                        renderedItems.map((item: IGalleryItem, index: number) => {
-                            const isClone = isMarquee && index >= data.items.length;
-                            const imgProperties: {
-                                preview: boolean;
-                                src: string;
-                                alt: string;
-                                width?: string;
-                                height?: string;
-                            } = {
-                                preview: (data.disablePreview || isClone) ? false : item.preview,
-                                src: '/' + item.src,
-                                alt: item.alt
-                            }
-                            if(item.imgWidth && item.imgWidth.length > 0){
-                                imgProperties.width = item.imgWidth
-                            }
-                            if(item.imgHeight && item.imgHeight.length > 0){
-                                imgProperties.height = item.imgHeight
-                            }
-                            return (
-                                <div
-                                    key={index}
-                                    className={`container text-${item.textPosition}`}
-                                    aria-hidden={isClone ? true : undefined}
-                                >
-                                    <div className={'image'}>
-                                        <Image {...imgProperties}/>
-                                    </div>
-                                    {item.text && (
-                                        <div className={'text'}>
-                                            <p>{item.text}</p>
-                                        </div>
-                                    )}
-                                </div>
-                            )
-                        })
-                    }
+                    {data.items.map((it, i) => renderTile(it, i, false))}
                 </Image.PreviewGroup>
+                {isMarquee && data.items.map((it, i) => renderTile(it, i, true))}
             </div>
         </div>
     )

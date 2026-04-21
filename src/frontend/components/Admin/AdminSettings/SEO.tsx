@@ -1,6 +1,7 @@
 import React, {useCallback, useEffect, useState} from "react";
 import {Alert, Button, Col, Input, Row, Space, Typography, message} from "antd";
 import {useTranslation} from "react-i18next";
+import ImageUrlInput from "../../common/ImageUrlInput";
 import SiteSeoApi from "../../../api/SiteSeoApi";
 import {DEFAULT_SITE_SEO, ISiteSeoDefaults} from "../../../../Interfaces/ISiteSeo";
 import AuditBadge from "../AuditBadge";
@@ -112,9 +113,10 @@ const AdminSettingsSEO: React.FC = () => {
                 </Col>
                 <Col xs={24} md={12}>
                     <Typography.Text strong>{t('Default og:image URL')}</Typography.Text>
-                    <Input
+                    <ImageUrlInput
+                        t={t}
                         value={seo.defaultImage ?? ''}
-                        onChange={e => update({defaultImage: e.target.value})}
+                        onChange={v => update({defaultImage: v})}
                         placeholder="api/og-default.png or https://…"
                     />
                 </Col>

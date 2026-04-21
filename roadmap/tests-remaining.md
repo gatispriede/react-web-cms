@@ -14,6 +14,20 @@ Total this pass: **+25 tests, 23 test files / 135 tests** in the green build.
 - Per-section-type snapshots — ~6 h to do all 17 item types properly without snapshot rot.
 - API route integration via `supertest` or direct Next handler invocation (`/api/setup` idempotency, `/api/export`+`/api/import` round-trip, `/api/rescan-images` no-op behaviour) — ~4–6 h plus `mongodb-memory-server` global setup wiring.
 
+## Implementation plan
+
+`mongodb-memory-server` is already used in server tests. 8 frontend test files exist. The infra is ready — just need the test files.
+
+1. **`LoginBtn` test** (`src/frontend/components/Auth/login-btn.test.tsx`) — mock `next-auth/react` at the module level (`vi.mock('next-auth/react')`). Test three states: `{ status: 'loading' }` (renders loading indicator), `{ status: 'unauthenticated' }` (renders login button), `{ status: 'authenticated', data: { user: {...} } }` (renders user name + logout button). ~1–2 h.
+2. **Section snapshot tests** — pick 6 representative types: `Hero`, `Gallery`, `Timeline`, `Services`, `RichText`, `SocialLinks`. For each, create `*.test.tsx` with `@vitest-environment jsdom`. Render with `@testing-library/react` and assert structural elements (headings present, item count, no broken img tags) — not pixel snapshots. ~4–6 h total.
+3. **API integration tests** — use `mongodb-memory-server` global setup (already in `vitest.config.ts` for server tests). Call Next.js route handlers directly (import handler, call with mock `req`/`res`). Tests:
+   - `/api/setup` — run twice, assert only one admin user in DB
+   - `/api/export` — assert returned JSON has `manifest`, `site`, `assets` keys
+   - `/api/import` → `/api/export` round-trip — shapes match
+   - `/api/rescan-images` — seed DB without an image file record, run, assert record created; run again, assert count unchanged
+   - ~4–6 h total.
+4. **CI caching** — add `mongodb-memory-server` binary path to CI cache key (GitHub Actions `actions/cache` with `~/.cache/mongodb-binaries`).
+
 ## Goal
 
 Close the two test gaps left after the autosave / helpers / translate-or-keep passes landed:

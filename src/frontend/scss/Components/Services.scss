@@ -137,6 +137,95 @@
   }
   &__row:hover &__arr { transform: translateX(4px); }
 
+  /* ---- numbered style (design-v2 "What I do" — large ordinal numbers) ---- */
+  &.numbered {
+    .services-module__rows { display: block; }
+
+    .services-module__row {
+      grid-template-columns: 72px 1fr;
+      gap: 28px;
+      align-items: start;
+
+      @media (max-width: 900px) {
+        grid-template-columns: 56px 1fr;
+        gap: 16px;
+      }
+    }
+
+    .services-module__row-num {
+      font-family: var(--font-display, var(--font-sans, system-ui, sans-serif));
+      font-size: clamp(32px, 4vw, 48px);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      color: var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary, #1677ff)));
+    }
+
+    .services-module__row-icon { display: none; }
+    .services-module__row-tags { display: none; }
+    .services-module__row-cta { grid-column: 2; }
+
+    .services-module__row-desc { max-width: 60ch; }
+  }
+
+  /* ---- grid style (design-v4 Industrial — 3-col icon + tags card grid) ---- */
+  &.grid {
+    .services-module__rows {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+
+      @media (max-width: 900px) { grid-template-columns: 1fr 1fr; }
+      @media (max-width: 540px) { grid-template-columns: 1fr; }
+    }
+
+    .services-module__row {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 24px 20px;
+      background: var(--bg-inset, var(--theme-colorBgInset, rgba(0, 0, 0, 0.04)));
+      border: 1px solid var(--rule, rgba(0, 0, 0, 0.1));
+      border-radius: var(--theme-borderRadius, 4px);
+      min-height: 180px;
+      cursor: default;
+      transition: background 220ms ease, border-color 220ms ease, transform 220ms ease;
+
+      &:last-child { border-bottom: 1px solid var(--rule, rgba(0, 0, 0, 0.1)); }
+
+      &:hover {
+        background-color: var(--hover-accent-bg);
+        border-color: var(--hover-accent-border);
+        transform: translateY(-2px);
+        padding-inline: 20px;
+      }
+    }
+
+    .services-module__row-icon {
+      display: inline-grid;
+      width: 40px;
+      height: 40px;
+      font-size: 18px;
+    }
+
+    .services-module__row-num { display: none; }
+
+    .services-module__row-title {
+      font-size: clamp(16px, 2vw, 20px);
+    }
+
+    .services-module__row-desc {
+      font-size: 13px;
+      max-width: none;
+      flex: 1;
+    }
+
+    .services-module__row-cta {
+      margin-top: auto;
+      justify-self: unset;
+    }
+  }
+
   /* ---- cards style (design-v6 Brandappart 3-col card grid) ---- */
   &.cards {
     .services-module__rows {

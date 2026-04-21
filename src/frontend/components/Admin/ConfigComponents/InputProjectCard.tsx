@@ -1,5 +1,6 @@
 import React from "react";
 import {Col, Collapse, Input, Row, Select} from "antd";
+import ImageUrlInput from "../../common/ImageUrlInput";
 import {IInputContent} from "../../../../Interfaces/IInputContent";
 import {EItemType} from "../../../../enums/EItemType";
 import {IProjectCard, IProjectLink, ProjectCardContent} from "../../SectionComponents/ProjectCard";
@@ -25,7 +26,12 @@ const InputProjectCard = ({content, setContent, t}: IInputContent) => {
                 </Col>
                 <Col xs={24} md={8}>
                     <label>{t('Cover image URL')}</label>
-                    <Input value={data.image} onChange={e => update('image', e.target.value)} placeholder="api/project.jpg"/>
+                    <ImageUrlInput
+                        t={t}
+                        value={data.image}
+                        onChange={v => update('image', v)}
+                        placeholder="api/project.jpg"
+                    />
                 </Col>
                 <Col xs={24}>
                     <label>{t('Short description')}</label>

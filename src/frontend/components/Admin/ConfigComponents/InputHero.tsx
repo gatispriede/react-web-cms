@@ -1,5 +1,6 @@
 import React from "react";
 import {Button, Checkbox, Col, Collapse, ColorPicker, Divider, Input, Row, Space} from "antd";
+import ImageUrlInput from "../../common/ImageUrlInput";
 import {DeleteOutlined, PlusOutlined} from "../../common/icons";
 import {IInputContent} from "../../../../Interfaces/IInputContent";
 import {EItemType} from "../../../../enums/EItemType";
@@ -193,9 +194,10 @@ const InputHero = ({content, setContent, t}: IInputContent) => {
                                 </Col>
                                 <Col xs={12}>
                                     <label>{t('Portrait image URL (overrides placeholder)')}</label>
-                                    <Input
+                                    <ImageUrlInput
+                                        t={t}
                                         value={data.portraitImage ?? ''}
-                                        onChange={e => update('portraitImage', e.target.value)}
+                                        onChange={v => update('portraitImage', v)}
                                         placeholder="api/portrait.jpg"
                                     />
                                 </Col>
@@ -272,7 +274,12 @@ const InputHero = ({content, setContent, t}: IInputContent) => {
                             <Row gutter={[12, 8]}>
                                 <Col xs={16}>
                                     <label>{t('Background image URL')}</label>
-                                    <Input value={data.bgImage} onChange={e => update('bgImage', e.target.value)} placeholder="api/hero.jpg or https://…"/>
+                                    <ImageUrlInput
+                                        t={t}
+                                        value={data.bgImage}
+                                        onChange={v => update('bgImage', v)}
+                                        placeholder="api/hero.jpg or https://…"
+                                    />
                                 </Col>
                                 <Col xs={8}>
                                     <label>{t('Accent color')}</label>

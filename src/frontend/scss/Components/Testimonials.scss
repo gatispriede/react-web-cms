@@ -109,4 +109,12 @@
     text-transform: uppercase;
     color: var(--ink-3, var(--theme-colorInkTertiary, #888));
   }
+
+  /* ---- cards style — explicit variant anchor (base is already a card grid;
+     adds accent top-border to each card) ---- */
+  &.cards {
+    .testimonials-module__card {
+      border-top: 2px solid var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary, #1677ff)));
+    }
+  }
 }

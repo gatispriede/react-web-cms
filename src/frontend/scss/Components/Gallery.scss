@@ -176,3 +176,27 @@
     }
   }
 }
+
+
+// Text-only tile — rendered when a gallery item has no `src`. Omits the image
+// slot entirely; stronger typography fills the space instead. Works in any
+// gallery style variant that supports `.container`.
+.gallery-tile--text {
+  .text {
+    padding: 16px;
+    font-size: 1.05em;
+    line-height: 1.55;
+    font-weight: 500;
+
+    p {
+      margin: 0;
+    }
+  }
+
+  // Remove any aspect-ratio or min-height that image-bearing tiles apply
+  // so the tile sizes to its text content instead.
+  &.container {
+    aspect-ratio: unset;
+    min-height: unset;
+  }
+}

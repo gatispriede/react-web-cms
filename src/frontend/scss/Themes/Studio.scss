@@ -794,4 +794,31 @@
       color: #fff !important;
     }
   }
+
+  /* ===== Top-bar vertical separators =================================
+     Solid hairlines — matches Studio's clean, unadorned aesthetic. */
+  .site-tabs-left-cluster > * + * {
+    border-left: 1px solid var(--rule);
+    padding-left: 10px;
+    margin-left: 2px;
+  }
+  .language-dropdown {
+    border-left: 1px solid var(--rule);
+    padding-left: 12px;
+    margin-left: 2px;
+  }
+  .mobile-nav-trigger {
+    border-left: 1px solid var(--rule) !important;
+    border-top: 0 !important;
+    border-right: 0 !important;
+    border-bottom: 0 !important;
+  }
+}
+
+/* Studio logo — larger, standalone mark; tighter gap so the wordmark
+   breathes next to the heavy nav links. */
+[data-theme-name="studio"] .logo {
+  --logo-height: 48px;
+  --logo-gap: 14px;
+  --logo-ink: var(--ink);
 }

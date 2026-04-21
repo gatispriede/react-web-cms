@@ -46,10 +46,16 @@ import InputStatsCard from "../Admin/ConfigComponents/InputStatsCard";
 import InputProjectGrid from "../Admin/ConfigComponents/InputProjectGrid";
 import InputManifesto from "../Admin/ConfigComponents/InputManifesto";
 
+export type ItemCategory = 'hero' | 'media' | 'content' | 'cta';
+
 export interface ItemTypeDefinition {
     key: EItemType;
     /** Translation key — passed through `t(labelKey)` in menus. */
     labelKey: string;
+    /** Translation key — one-line module description shown in the picker dialog. */
+    descriptionKey: string;
+    /** Category bucket — drives the picker dialog's filter chips. */
+    category: ItemCategory;
     /** Public-site renderer. */
     Display: React.ComponentType<{item: IItem; t: TFunction<"translation", undefined>; tApp: TFunction<string, undefined>; admin?: boolean}>;
     /** Admin editor. */
@@ -68,6 +74,8 @@ const entries: ItemTypeDefinition[] = [
     {
         key: EItemType.Text,
         labelKey: "Simple Text",
+        descriptionKey: "Plain paragraph with inline style only.",
+        category: 'content',
         Display: PlainText,
         Editor: InputPlainText,
         styleEnum: EPlainTextStyle as unknown as Record<string, string>,
@@ -76,6 +84,8 @@ const entries: ItemTypeDefinition[] = [
     {
         key: EItemType.RichText,
         labelKey: "Rich text",
+        descriptionKey: "HTML body with italic-accent runs and headings.",
+        category: 'content',
         Display: RichText,
         Editor: InputRichText,
         styleEnum: ERichTextStyle as unknown as Record<string, string>,
@@ -84,6 +94,8 @@ const entries: ItemTypeDefinition[] = [
     {
         key: EItemType.Image,
         labelKey: "Image",
+        descriptionKey: "Single image with optional caption.",
+        category: 'media',
         Display: PlainImage,
         Editor: InputPlainImage,
         styleEnum: EImageStyle as unknown as Record<string, string>,
@@ -92,6 +104,8 @@ const entries: ItemTypeDefinition[] = [
     {
         key: EItemType.Gallery,
         labelKey: "Gallery",
+        descriptionKey: "Image grid with optional text-only tiles.",
+        category: 'media',
         Display: Gallery,
         Editor: InputGallery,
         styleEnum: EGalleryStyle as unknown as Record<string, string>,
@@ -100,6 +114,8 @@ const entries: ItemTypeDefinition[] = [
     {
         key: EItemType.Carousel,
         labelKey: "Carousel",
+        descriptionKey: "Horizontally scrollable image strip.",
+        category: 'media',
         Display: CarouselView,
         Editor: InputCarousel,
         styleEnum: ECarouselStyle as unknown as Record<string, string>,
@@ -108,6 +124,8 @@ const entries: ItemTypeDefinition[] = [
     {
         key: EItemType.Hero,
         labelKey: "Hero",
+        descriptionKey: "Full-bleed header with headline, subtitle, CTA.",
+        category: 'hero',
         Display: Hero,
         Editor: InputHero,
         styleEnum: EHeroStyle as unknown as Record<string, string>,
@@ -116,6 +134,8 @@ const entries: ItemTypeDefinition[] = [
     {
         key: EItemType.ProjectCard,
         labelKey: "Project card",
+        descriptionKey: "Single featured project with cover and tags.",
+        category: 'content',
         Display: ProjectCard,
         Editor: InputProjectCard,
         styleEnum: EProjectCardStyle as unknown as Record<string, string>,
@@ -124,6 +144,8 @@ const entries: ItemTypeDefinition[] = [
     {
         key: EItemType.SkillPills,
         labelKey: "Skill pills",
+        descriptionKey: "Tag cloud or matrix of skills.",
+        category: 'content',
         Display: SkillPills,
         Editor: InputSkillPills,
         styleEnum: ESkillPillsStyle as unknown as Record<string, string>,
@@ -132,6 +154,8 @@ const entries: ItemTypeDefinition[] = [
     {
         key: EItemType.Timeline,
         labelKey: "Timeline",
+        descriptionKey: "Vertical or horizontal milestone list.",
+        category: 'content',
         Display: Timeline,
         Editor: InputTimeline,
         styleEnum: ETimelineStyle as unknown as Record<string, string>,
@@ -140,6 +164,8 @@ const entries: ItemTypeDefinition[] = [
     {
         key: EItemType.SocialLinks,
         labelKey: "Social links",
+        descriptionKey: "Row of icon links to external profiles.",
+        category: 'cta',
         Display: SocialLinks,
         Editor: InputSocialLinks,
         styleEnum: ESocialLinksStyle as unknown as Record<string, string>,
@@ -148,6 +174,8 @@ const entries: ItemTypeDefinition[] = [
     {
         key: EItemType.BlogFeed,
         labelKey: "Blog feed",
+        descriptionKey: "Latest posts pulled from the Posts collection.",
+        category: 'content',
         Display: BlogFeed,
         Editor: InputBlogFeed,
         styleEnum: EBlogFeedStyle as unknown as Record<string, string>,
@@ -156,6 +184,8 @@ const entries: ItemTypeDefinition[] = [
     {
         key: EItemType.List,
         labelKey: "List",
+        descriptionKey: "Bullet or numbered list, optional meta fields.",
+        category: 'content',
         Display: List,
         Editor: InputList,
         styleEnum: EListStyle as unknown as Record<string, string>,
@@ -164,6 +194,8 @@ const entries: ItemTypeDefinition[] = [
     {
         key: EItemType.Services,
         labelKey: "Services",
+        descriptionKey: "Icon + heading + body cards grouped by row.",
+        category: 'content',
         Display: Services,
         Editor: InputServices,
         styleEnum: EServicesStyle as unknown as Record<string, string>,
@@ -172,6 +204,8 @@ const entries: ItemTypeDefinition[] = [
     {
         key: EItemType.Testimonials,
         labelKey: "Testimonials",
+        descriptionKey: "Quote cards with avatar and attribution.",
+        category: 'content',
         Display: Testimonials,
         Editor: InputTestimonials,
         styleEnum: ETestimonialsStyle as unknown as Record<string, string>,
@@ -180,6 +214,8 @@ const entries: ItemTypeDefinition[] = [
     {
         key: EItemType.StatsCard,
         labelKey: "Stats card",
+        descriptionKey: "Metric / number callout with feature list.",
+        category: 'content',
         Display: StatsCard,
         Editor: InputStatsCard,
         styleEnum: EStatsCardStyle as unknown as Record<string, string>,
@@ -188,6 +224,8 @@ const entries: ItemTypeDefinition[] = [
     {
         key: EItemType.ProjectGrid,
         labelKey: "Project grid",
+        descriptionKey: "Card grid with image, title, tags per item.",
+        category: 'content',
         Display: ProjectGrid,
         Editor: InputProjectGrid,
         styleEnum: EProjectGridStyle as unknown as Record<string, string>,
@@ -196,6 +234,8 @@ const entries: ItemTypeDefinition[] = [
     {
         key: EItemType.Manifesto,
         labelKey: "Manifesto",
+        descriptionKey: "Full-width editorial block with chip footer.",
+        category: 'hero',
         Display: Manifesto,
         Editor: InputManifesto,
         styleEnum: EManifestoStyle as unknown as Record<string, string>,

@@ -83,4 +83,32 @@
       }
     }
   }
+
+  /* ---- panel style (Industrial) — dark background, accent left rule ---- */
+  &.panel {
+    background: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+    color: var(--bg, var(--theme-colorBgBase, #fff));
+    border-color: transparent;
+    border-left: 4px solid var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary, #1677ff)));
+
+    &:hover {
+      background: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+      filter: brightness(1.12);
+      transform: translateY(-2px);
+    }
+
+    .stats-card__tag {
+      color: rgba(255, 255, 255, 0.55);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .stats-card__title { color: var(--bg, var(--theme-colorBgBase, #fff)); }
+    .stats-card__n { color: var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary, #1677ff))); }
+    .stats-card__l { color: rgba(255, 255, 255, 0.5); }
+    .stats-card__features li {
+      color: rgba(255, 255, 255, 0.72);
+      border-top-color: rgba(255, 255, 255, 0.1);
+      &:first-child { border-top-color: rgba(255, 255, 255, 0.22); }
+      &::before { color: var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary, #1677ff))); }
+    }
+  }
 }

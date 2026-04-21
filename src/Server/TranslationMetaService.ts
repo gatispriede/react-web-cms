@@ -3,6 +3,19 @@ import {auditStamp} from './audit';
 import {nextVersion, requireVersion} from './conflict';
 
 /**
+ * djb2 hash of a source string — short enough to embed in a Mongo doc.
+ * Used to detect when the source string has changed after a translator
+ * accepted it, so stale acceptances can be surfaced as "needs review".
+ */
+export function hashSource(source: string): string {
+    let h = 5381;
+    for (let i = 0; i < source.length; i++) {
+        h = ((h << 5) + h) ^ source.charCodeAt(i);
+    }
+    return (h >>> 0).toString(36);
+}
+
+/**
  * Per-key translator hints stored alongside translation values. The `key`
  * space is the sanitised-key space the translation Compare view already
  * uses — flat, source-language-neutral. Context is NOT per language; we
@@ -22,6 +35,13 @@ export interface ITranslationMetaEntry {
      * "Same as source" checkbox.
      */
     acceptedSources?: string[];
+    /**
+     * djb2 hash of the source string at the time of acceptance. If the
+     * source string later changes, this hash will no longer match and all
+     * `acceptedSources` entries for the key are treated as stale ("needs
+     * review") until the translator re-accepts.
+     */
+    acceptedSourceHash?: string;
 }
 
 export type ITranslationMetaMap = Record<string, ITranslationMetaEntry>;
@@ -65,6 +85,7 @@ export class TranslationMetaService {
             const accepted = Array.isArray(entry.acceptedSources)
                 ? Array.from(new Set(entry.acceptedSources.filter(s => typeof s === 'string' && s.length > 0)))
                 : undefined;
+            const hash = typeof entry.acceptedSourceHash === 'string' ? entry.acceptedSourceHash : undefined;
             if (!description && !context && (!accepted || accepted.length === 0)) {
                 delete merged[k];
             } else {
@@ -72,6 +93,7 @@ export class TranslationMetaService {
                     ...(description ? {description} : {}),
                     ...(context ? {context} : {}),
                     ...(accepted && accepted.length > 0 ? {acceptedSources: accepted} : {}),
+                    ...(accepted && accepted.length > 0 && hash ? {acceptedSourceHash: hash} : {}),
                 };
             }
         }

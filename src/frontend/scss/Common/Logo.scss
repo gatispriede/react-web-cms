@@ -1,23 +1,49 @@
 /* ==========================================================================
    Logo — the public-site wordmark slot. Theme-agnostic structural rules
    live here; per-theme accents (borders, dashed inset, typography) layer
-   in via `[data-theme-name="…"] .logo-mark` rules inside `scss/Themes/*`.
+   in via `[data-theme-name="…"] .logo` rules inside `scss/Themes/*`.
+
+   Token contract (see THEMING.md):
+   - `--logo-height` — max render height of the uploaded <img> and the
+     `.logo-mark` fallback box.
+   - `--logo-ink`   — colour for the `.logo-mark` border + glyph; SVG logos
+     inherit via `currentColor` on the `.logo` anchor.
+   - `--logo-gap`   — inline gap when the logo sits next to other top-bar
+     content (mobile nav trigger, first tab, etc.).
 
    When no real logo image is uploaded, [`Logo.tsx`](../../components/common/
    Logo.tsx) renders `<span class="logo-mark">◆</span>` so the top-bar left
    slot always has visible weight — otherwise the layout collapses to nothing.
    ========================================================================== */
 
+.logo {
+  --logo-height: 40px;
+  --logo-ink: var(--ink, var(--theme-colorTextBase, currentColor));
+  --logo-gap: 12px;
+
+  display: inline-flex;
+  align-items: center;
+  gap: var(--logo-gap);
+  /* SVG logos authored with `fill="currentColor"` pick up the theme ink. */
+  color: var(--logo-ink);
+
+  img {
+    max-height: var(--logo-height);
+    width: auto;
+    display: block;
+  }
+}
+
 .logo-mark {
   display: inline-grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--ink, var(--theme-colorTextBase, currentColor));
-  color: var(--ink, var(--theme-colorTextBase, inherit));
+  width: var(--logo-height, 32px);
+  height: var(--logo-height, 32px);
+  border: 1px solid var(--logo-ink, var(--ink, var(--theme-colorTextBase, currentColor)));
+  color: var(--logo-ink, var(--ink, var(--theme-colorTextBase, inherit)));
   background: var(--theme-colorBgBase, var(--bg, transparent));
   font-family: var(--font-display, var(--font-sans, system-ui, sans-serif));
-  font-size: 18px;
+  font-size: calc(var(--logo-height, 32px) * 0.56);
   line-height: 1;
   position: relative;
 
@@ -30,4 +56,9 @@
     opacity: 0.6;
     pointer-events: none;
   }
+}
+
+/* Baseline small-screen shrink — themes may override further. */
+@media (max-width: 480px) {
+  .logo { --logo-height: 28px; --logo-gap: 8px; }
 }

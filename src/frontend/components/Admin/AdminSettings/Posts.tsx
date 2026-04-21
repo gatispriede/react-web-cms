@@ -2,6 +2,7 @@ import React, {useCallback, useEffect, useMemo, useState} from "react";
 import {Button, Drawer, Form, Input, Popconfirm, Select, Space, Switch, Table, Tag, Typography, message} from "antd";
 import {DeleteOutlined, EditOutlined, EyeOutlined, PlusOutlined} from "../../common/icons";
 import {useTranslation} from "react-i18next";
+import ImageUrlInput from "../../common/ImageUrlInput";
 import PostApi from "../../../api/PostApi";
 import SiteFlagsApi from "../../../api/SiteFlagsApi";
 import {IPost, InPost} from "../../../../Interfaces/IPost";
@@ -265,7 +266,7 @@ const AdminSettingsPosts: React.FC = () => {
                         <Input.TextArea rows={2}/>
                     </Form.Item>
                     <Form.Item name="coverImage" label={t('Cover image URL')}>
-                        <Input placeholder="api/cover.jpg"/>
+                        <ImageUrlInput t={t} placeholder="api/cover.jpg"/>
                     </Form.Item>
                     <Form.Item name="author" label={t('Author')}>
                         <Input/>
