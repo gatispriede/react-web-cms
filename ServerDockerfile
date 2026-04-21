@@ -21,7 +21,7 @@ WORKDIR /app
 # Runtime-generated secrets (first-boot admin password). Tight perms set at
 # write-time in initialPassword.ts; directory created up-front so the node
 # user can write without root.
-RUN mkdir -p /app/var && chmod 700 /app/var
+RUN mkdir -p /app/var && chown node:node /app/var && chmod 700 /app/var
 
 # Copy the rest of the source files into the image.
 COPY ./IP.ts /IP.ts
