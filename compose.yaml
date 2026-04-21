@@ -74,11 +74,33 @@ services:
       - db
       - front-end
       - back-end
-    ports:
-      - "127.0.0.1:3080:80"
     expose:
-      - 3080
+      - 80
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy
+    restart: unless-stopped
+    depends_on:
+      app: { condition: service_started }
+    environment:
+      # Site address for the Caddyfile. Set DOMAIN in .env per droplet
+      # (e.g. DOMAIN=skyclimber.pro). Falls back to :80 so the proxy still
+      # works without a domain — useful when DNS isn't wired up yet.
+      - DOMAIN=${DOMAIN:-:80}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"  # HTTP/3
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - front-end
 networks:
   front-end:
   db:
   back-end:
+volumes:
+  caddy_data:
+  caddy_config:
