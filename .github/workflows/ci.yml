@@ -5,6 +5,8 @@ on:
     branches: [master]
   push:
     branches: [master]
+  # Adds a "Run workflow" button in the Actions tab for manual re-runs.
+  workflow_dispatch:
 
 jobs:
   test-and-typecheck:
@@ -78,6 +80,15 @@ jobs:
             if ! docker compose version >/dev/null 2>&1; then
               apt-get update -y
               apt-get install -y docker-compose-plugin
+            fi
+
+            # fail2ban protects sshd from the constant scanner flood that
+            # otherwise saturates MaxStartups and blocks legit SSH logins.
+            if ! command -v fail2ban-client >/dev/null 2>&1; then
+              echo "==> Installing fail2ban"
+              apt-get update -y
+              apt-get install -y fail2ban
+              systemctl enable --now fail2ban
             fi
 
             if [ ! -d "$APP_DIR/.git" ]; then
