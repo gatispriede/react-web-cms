@@ -34,32 +34,98 @@ jobs:
         run: npm test -- --reporter=dot
 
   deploy:
-    name: Deploy to DigitalOcean
+    name: Deploy to ${{ matrix.name }}
     runs-on: ubuntu-latest
     needs: test-and-typecheck
     # Only deploy on direct pushes to master, not on PRs
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    timeout-minutes: 20
+    timeout-minutes: 30
+    strategy:
+      # Keep deploying to the healthy droplet even if the other one fails.
+      fail-fast: false
+      matrix:
+        include:
+          # Original droplet (funisimo.pro) — re-enable once we're ready to
+          # deploy to both. Reserved IP: 139.59.205.140.
+          # - name: droplet-1
+          #   host: ${{ secrets.DEPLOY_HOST_1 }}
+          #   env_file: ${{ secrets.DEPLOY_ENV_FILE_1 }}
+          - name: droplet-2
+            host: ${{ secrets.DEPLOY_HOST_2 }}
+            env_file: ${{ secrets.DEPLOY_ENV_FILE_2 }}
+    env:
+      DEPLOY_ENV_FILE: ${{ matrix.env_file }}
 
     steps:
+      - name: Skip if host/env not configured
+        if: matrix.host == '' || matrix.env_file == ''
+        run: |
+          echo "::warning::Skipping ${{ matrix.name }} — DEPLOY_HOST_* or DEPLOY_ENV_FILE_* secret is empty."
+          exit 0
+
       - name: Deploy via SSH
+        if: matrix.host != '' && matrix.env_file != ''
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: 46.101.220.131
+          host: ${{ matrix.host }}
           username: root
           key: ${{ secrets.DEPLOY_SSH_KEY }}
+          # Per-droplet .env contents (different domains → different NEXTAUTH_URL etc.)
+          envs: DEPLOY_ENV_FILE
+          script_stop: true
           script: |
             set -euo pipefail
-            cd /opt/cms
 
+            REPO_URL="https://github.com/${{ github.repository }}.git"
+            APP_DIR="/opt/cms"
+            BRANCH="master"
+
+            # Bootstrap steps below are idempotent — no-ops on subsequent deploys.
+
+            if ! command -v git >/dev/null 2>&1 || ! command -v curl >/dev/null 2>&1; then
+              echo "==> Installing base packages"
+              apt-get update -y
+              apt-get install -y git curl ca-certificates
+            fi
+
+            if ! command -v docker >/dev/null 2>&1; then
+              echo "==> Installing Docker"
+              curl -fsSL https://get.docker.com | sh
+              systemctl enable --now docker
+            fi
+            if ! docker compose version >/dev/null 2>&1; then
+              apt-get update -y
+              apt-get install -y docker-compose-plugin
+            fi
+
+            if [ ! -d "$APP_DIR/.git" ]; then
+              echo "==> Cloning repo to $APP_DIR"
+              mkdir -p "$(dirname "$APP_DIR")"
+              git clone --branch "$BRANCH" "$REPO_URL" "$APP_DIR"
+            fi
+
+            cd "$APP_DIR"
             echo "==> Pulling latest code"
-            git pull origin master
+            git fetch origin "$BRANCH"
+            # reset --hard leaves gitignored paths alone, so uploads/* survives.
+            git reset --hard "origin/$BRANCH"
+
+            # Bind-mounted in compose.yaml; ensure they exist so docker doesn't
+            # auto-create them with surprising ownership.
+            mkdir -p uploads/images uploads/design-v2
+
+            if [ -z "${DEPLOY_ENV_FILE:-}" ]; then
+              echo "DEPLOY_ENV_FILE secret is empty; aborting" >&2
+              exit 1
+            fi
+            umask 077
+            printf '%s\n' "$DEPLOY_ENV_FILE" > .env
 
             echo "==> Rebuilding and restarting containers"
             docker compose -f compose.yaml up --build -d
 
             echo "==> Waiting for containers to become healthy"
-            sleep 10
+            sleep 15
             docker compose -f compose.yaml ps
 
             echo "==> Deploy complete"
