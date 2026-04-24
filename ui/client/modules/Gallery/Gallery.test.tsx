@@ -54,6 +54,44 @@ describe('Gallery render', () => {
         expect(hidden).toHaveLength(2);
     });
 
+    it('aspect-ratio lock: wrapper carries data-aspect-ratio when set; "free" and undefined both omit it', () => {
+        const locked: IGallery = {...fixture, aspectRatio: '16:9'};
+        const {container: lockedC} = render(
+            <Gallery item={{type: EItemType.Image, content: JSON.stringify(locked), style: 'default'}} t={t} tApp={t}/>,
+        );
+        expect(lockedC.querySelector('.gallery-wrapper')?.getAttribute('data-aspect-ratio')).toBe('16:9');
+
+        const free: IGallery = {...fixture, aspectRatio: 'free'};
+        const {container: freeC} = render(
+            <Gallery item={{type: EItemType.Image, content: JSON.stringify(free), style: 'default'}} t={t} tApp={t}/>,
+        );
+        expect(freeC.querySelector('.gallery-wrapper')?.getAttribute('data-aspect-ratio')).toBeNull();
+    });
+
+    it('per-tile href: wraps the tile in an anchor, clones stay as plain divs', () => {
+        const withHref: IGallery = {
+            disablePreview: true,
+            items: [
+                {src: 'images/a.jpg', alt: 'A', height: 0, preview: true, text: 'Caption A', imgWidth: '', imgHeight: '', textPosition: ETextPosition.Bottom, href: '/blog/a'},
+            ],
+        };
+        const {container} = render(
+            <Gallery item={{type: EItemType.Image, content: JSON.stringify(withHref), style: 'default'}} t={t} tApp={t}/>,
+        );
+        const anchor = container.querySelector('a.gallery-tile--link');
+        expect(anchor).not.toBeNull();
+        expect(anchor?.getAttribute('href')).toBe('/blog/a');
+    });
+
+    it('masonry style: renders all items; no marquee duplication', () => {
+        const {container} = render(
+            <Gallery item={{type: EItemType.Image, content: JSON.stringify(fixture), style: 'masonry'}} t={t} tApp={t}/>,
+        );
+        const tiles = container.querySelectorAll('.gallery-wrapper-images .container');
+        expect(tiles).toHaveLength(2);
+        expect(container.querySelectorAll('[aria-hidden="true"]')).toHaveLength(0);
+    });
+
     it('empty items: renders gallery wrapper with zero tiles', () => {
         const empty: IGallery = {disablePreview: false, items: []};
         const {container} = render(

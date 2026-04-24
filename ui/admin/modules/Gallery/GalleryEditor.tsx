@@ -1,8 +1,9 @@
-import {Button, Input} from "antd";
+import {Button, Input, Select, Space, Typography} from "antd";
 import React from "react";
 import {IInputContent} from "@interfaces/IInputContent";
 import {EItemType} from "@enums/EItemType";
 import {GalleryContent, IGalleryItem} from "@client/modules/Gallery";
+import {GALLERY_ASPECT_RATIOS, GalleryAspectRatio} from "@client/modules/Gallery/Gallery.types";
 import EditWrapper from "@client/lib/EditWrapper";
 import ImageUpload from "@admin/lib/ImageUpload";
 import {PUBLIC_IMAGE_PATH} from "@utils/imgPath";
@@ -44,8 +45,26 @@ const GalleryEditor = ({content, setContent, t}: IInputContent) => {
         setContent(galleryContent.stringData);
     });
 
+    const totalItems = data.items?.length ?? 0;
+
     return (
         <div className={'gallery-wrapper admin'}>
+            {/* Gallery-level controls — currently the aspect-ratio lock (C6).
+                Sits above the item list so operators see the uniform-crop
+                promise before they start populating. `free` means no lock
+                and keeps historical per-style defaults. */}
+            <Space style={{margin: '0 16px 12px 16px', flexWrap: 'wrap'}} align="center">
+                <Typography.Text strong>{t('Aspect ratio')}</Typography.Text>
+                <Select<GalleryAspectRatio>
+                    value={(data.aspectRatio ?? 'free')}
+                    style={{minWidth: 120}}
+                    onChange={(v) => {
+                        galleryContent.setAspectRatio(v);
+                        setContent(galleryContent.stringData);
+                    }}
+                    options={GALLERY_ASPECT_RATIOS.map((r) => ({value: r, label: r}))}
+                />
+            </Space>
             <div className={'images-container'}>
                 {
                     data.items && data.items.map((item: IGalleryItem, index) => {
@@ -133,6 +152,45 @@ const GalleryEditor = ({content, setContent, t}: IInputContent) => {
                                             />
                                         </div>
                                     </div>
+                                    <div className={'config-item'}>
+                                        <label>{t("Link (optional)")}</label>
+                                        <div className={'content'}>
+                                            <Input
+                                                placeholder={'https://…'}
+                                                value={item.href ?? ''}
+                                                onChange={({target: {value}}) => {
+                                                    galleryContent.setItem(index, {
+                                                        ...item,
+                                                        href: value || undefined,
+                                                    })
+                                                    setContent(galleryContent.stringData)
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                    {/* Reorder — simple up/down swap. Buttons are
+                                        keyboard-focusable, so Tab + Enter moves
+                                        tiles without a pointer. */}
+                                    <Space style={{padding: '0 8px 8px'}}>
+                                        <Button
+                                            size="small"
+                                            disabled={index === 0}
+                                            aria-label={t('Move up')}
+                                            onClick={() => {
+                                                galleryContent.moveItem(index, index - 1);
+                                                setContent(galleryContent.stringData);
+                                            }}
+                                        >↑ {t('Up')}</Button>
+                                        <Button
+                                            size="small"
+                                            disabled={index >= totalItems - 1}
+                                            aria-label={t('Move down')}
+                                            onClick={() => {
+                                                galleryContent.moveItem(index, index + 1);
+                                                setContent(galleryContent.stringData);
+                                            }}
+                                        >↓ {t('Down')}</Button>
+                                    </Space>
                                     <hr/>
 
                                 </div>

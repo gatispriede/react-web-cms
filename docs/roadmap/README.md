@@ -52,7 +52,7 @@ Tracked separately under [production/](production/) so the two streams can be sc
 | C3 | [bulk-image-upload-with-ratio.md](bulk-image-upload-with-ratio.md) | L | Multi-file upload + per-batch ratio crop |
 | C4 | [drag-drop-images-modules.md](drag-drop-images-modules.md) | M | OS file + URL drops onto any image module |
 | C5 | [picker-improvements.md](picker-improvements.md) | M | Show-more panel, persistent ~100×60 preview box, filter/sort |
-| C6 | [gallery-improvements.md](gallery-improvements.md) | L | Aspect-ratio lock, reorder, lightbox, Masonry style |
+| C6 | [gallery-improvements.md](gallery-improvements.md) | L | **Shipped (2026-04-24, partial)** — aspect-ratio lock, Masonry style, per-tile `href`, up/down reorder; custom lightbox + drag-reorder deferred |
 | C7 | [logo-style-options.md](logo-style-options.md) | S | **Shipped (2026-04-24)** — site-wide Logo `style` field + `.logo--{default,bordered,framed,circle}` SCSS + admin Style select; tokens fall back to theme so presets unchanged |
 | C8 | [module-transparency-style.md](module-transparency-style.md) | S | **Shipped (2026-04-24)** — `transparent` flag on `ISection` + `.is-transparent` renderer rule + admin Switch with contrast hint |
 | C9 | [production-caching.md](production-caching.md) | L | ISR + on-demand revalidation + Caddy SWR + DataLoader |

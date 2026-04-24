@@ -1,5 +1,20 @@
 # Gallery module improvements
 
+> **Shipped (2026-04-24, partial)** — aspect-ratio lock (`free / 1:1 / 4:3 /
+> 3:2 / 16:9`) applies uniformly across every tile via `[data-aspect-ratio]`
+> SCSS + `object-fit: cover`. New `EGalleryStyle.Masonry` uses CSS columns
+> (no JS) and degrades cleanly to 2/1 columns at narrow viewports. Per-tile
+> `href` wraps the tile in an anchor (`gallery-tile--link`, colour-neutral).
+> Admin gets a gallery-level ratio Select + per-item Link input + simple Up/
+> Down reorder buttons (keyboard-accessible via Tab + Enter). Lightbox still
+> uses AntD's `Image.PreviewGroup` (arrow keys + ESC free); dedicated custom
+> lightbox deferred. `dnd-kit` drag-reorder deferred — up/down buttons cover
+> keyboard parity and avoid a new dependency.
+>
+> **Deferred (still queued):** custom lightbox with swipe nav, mouse drag-to-
+> reorder (spike once C3 bulk upload lands — many users will populate via
+> bulk then never touch reorder).
+
 ## Goal
 
 Make the Gallery module first-class for client photo reels — responsive,

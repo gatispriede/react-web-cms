@@ -58,6 +58,18 @@ export class GalleryContent extends ContentManager {
     setDisablePreview(value: boolean) {
         this._parsedContent.disablePreview = value
     }
+
+    setAspectRatio(value: IGallery['aspectRatio']) {
+        this._parsedContent.aspectRatio = value;
+    }
+
+    /** Swap two items in place — used by admin "move up / move down" buttons. */
+    moveItem(from: number, to: number) {
+        const items = this._parsedContent.items ?? [];
+        if (from < 0 || to < 0 || from >= items.length || to >= items.length || from === to) return;
+        const [moved] = items.splice(from, 1);
+        items.splice(to, 0, moved);
+    }
 }
 
 const Gallery = ({item, t: _t, tApp}: {
@@ -72,6 +84,10 @@ const Gallery = ({item, t: _t, tApp}: {
     // CSS scroll animation can loop seamlessly — the duplicate is
     // aria-hidden so screen readers don't announce every item twice.
     const isMarquee = item.style === 'marquee' || item.style === 'logo-wall' || item.style === 'hazard-strip';
+    // Per-gallery aspect-ratio lock (C6). `free` — or missing — keeps the
+    // historical default-style 3:2 ratio baked into the .default SCSS; any
+    // explicit value overrides via `[data-aspect-ratio]` rules in Gallery.scss.
+    const aspectRatio = data.aspectRatio && data.aspectRatio !== 'free' ? data.aspectRatio : undefined;
     // Only originals go into PreviewGroup — marquee clones render as plain
     // <img> tags outside the group so the preview counter stays at N/N (not
     // 2N/2N) and the nav doesn't double-step through duplicates.
@@ -80,12 +96,8 @@ const Gallery = ({item, t: _t, tApp}: {
         const imgStyle: React.CSSProperties = {};
         if (galleryItem.imgWidth) imgStyle.width = galleryItem.imgWidth;
         if (galleryItem.imgHeight) imgStyle.height = galleryItem.imgHeight;
-        return (
-            <div
-                key={`${isClone ? 'c' : 'o'}-${index}`}
-                className={`container text-${galleryItem.textPosition}${hasImage ? '' : ' gallery-tile--text'}`}
-                aria-hidden={isClone ? true : undefined}
-            >
+        const inner = (
+            <>
                 {hasImage && (
                     <div className={'image'}>
                         {isClone ? (
@@ -106,12 +118,42 @@ const Gallery = ({item, t: _t, tApp}: {
                         <p>{galleryItem.text}</p>
                     </div>
                 )}
+            </>
+        );
+        const containerClass = `container text-${galleryItem.textPosition}${hasImage ? '' : ' gallery-tile--text'}`;
+        // A per-tile `href` wraps the whole tile in an anchor — the image
+        // preview click is suppressed so the nav wins. Clones never link;
+        // they exist purely to visually seam the marquee loop.
+        if (galleryItem.href && !isClone) {
+            return (
+                <a
+                    key={`o-${index}`}
+                    className={`${containerClass} gallery-tile--link`}
+                    href={galleryItem.href}
+                    onClick={(e) => {
+                        // Don't intercept clicks on the <Image> preview trigger —
+                        // honour the anchor navigation instead.
+                        e.stopPropagation();
+                    }}
+                >
+                    {inner}
+                </a>
+            );
+        }
+        return (
+            <div
+                key={`${isClone ? 'c' : 'o'}-${index}`}
+                className={containerClass}
+                aria-hidden={isClone ? true : undefined}
+            >
+                {inner}
             </div>
         );
     };
     return (
         <div
             className={`gallery-wrapper gallery-wrapper-app ${item.style}`}
+            data-aspect-ratio={aspectRatio}
             onClick={e => e.stopPropagation()}
         >
             <div className={'gallery-wrapper-images'}>

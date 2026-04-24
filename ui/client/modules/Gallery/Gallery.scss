@@ -178,6 +178,64 @@
 }
 
 
+/* --------------------------------------------------------------------------
+   C6 — per-gallery aspect-ratio lock. When `data.aspectRatio` is set to
+   anything other than `free`, every image tile's `.image` box is forced to
+   the chosen ratio and the `<img>` covers it. Applies across all style
+   variants (default / masonry / marquee) so mixed phone shots land
+   uniformly without per-item width/height config.
+   -------------------------------------------------------------------------- */
+.gallery-wrapper.gallery-wrapper-app {
+  &[data-aspect-ratio="1:1"]  .container .image { aspect-ratio: 1 / 1; }
+  &[data-aspect-ratio="4:3"]  .container .image { aspect-ratio: 4 / 3; }
+  &[data-aspect-ratio="3:2"]  .container .image { aspect-ratio: 3 / 2; }
+  &[data-aspect-ratio="16:9"] .container .image { aspect-ratio: 16 / 9; }
+
+  &[data-aspect-ratio] .container .image {
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+    .ant-image { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  }
+
+  /* Masonry — CSS columns keep the simple baseline (no JS layout). Tiles
+     stay intact across column breaks via `break-inside: avoid`. Pairs well
+     with `aspect-ratio: free` + varied natural sizes; still renders fine
+     when a ratio is locked (uniform bricks instead of staggered).         */
+  &.masonry {
+    .gallery-wrapper-images {
+      column-count: 3;
+      column-gap: 12px;
+      display: block;
+    }
+    .container {
+      break-inside: avoid;
+      margin: 0 0 12px 0;
+      display: block;
+      border-radius: 4px;
+      overflow: hidden;
+      background: var(--theme-colorBgInset, #e4dfc9);
+    }
+    .container .image { width: 100%; }
+    .container .image img { width: 100%; height: auto; display: block; }
+  }
+
+  /* Tile anchor variant — preserves tile visuals; strips default link colour. */
+  .gallery-tile--link {
+    color: inherit;
+    text-decoration: none;
+    &:hover { text-decoration: none; }
+  }
+}
+
+@media (max-width: 960px) {
+  .gallery-wrapper-app.masonry .gallery-wrapper-images { column-count: 2; }
+}
+@media (max-width: 540px) {
+  .gallery-wrapper-app.masonry .gallery-wrapper-images { column-count: 1; }
+}
+
 // Text-only tile — rendered when a gallery item has no `src`. Omits the image
 // slot entirely; stronger typography fills the space instead. Works in any
 // gallery style variant that supports `.container`.
