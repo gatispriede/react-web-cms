@@ -92,6 +92,29 @@ jobs:
               systemctl enable --now fail2ban
             fi
 
+            # The pre-Caddy architecture installed nginx on the host to
+            # reverse-proxy 80/443 → 127.0.0.1:3080. That's incompatible
+            # with the `caddy` container which expects to own 80/443
+            # itself. If nginx.service is present it silently wins the
+            # port binding and every request returns `nginx` 502s.
+            if systemctl list-unit-files 2>/dev/null | grep -q '^nginx\.service'; then
+              echo "==> Disabling legacy host nginx (Caddy owns 80/443 now)"
+              systemctl stop nginx 2>/dev/null || true
+              systemctl disable nginx 2>/dev/null || true
+              systemctl mask nginx 2>/dev/null || true
+            fi
+
+            # Raise sshd's unauth queue so scanner flood doesn't evict
+            # GHA's handshake. Default (10:30:100) gets saturated on an
+            # exposed droplet within ~15 min of boot.
+            if ! grep -q '^MaxStartups 100:30:200' /etc/ssh/sshd_config; then
+              echo "==> Hardening sshd against MaxStartups eviction"
+              sed -i 's|^#*MaxStartups.*|MaxStartups 100:30:200|' /etc/ssh/sshd_config
+              sed -i 's|^#*LoginGraceTime.*|LoginGraceTime 60|' /etc/ssh/sshd_config
+              # reload (not restart) — keeps the current session alive
+              systemctl reload ssh 2>/dev/null || systemctl reload sshd 2>/dev/null || true
+            fi
+
             if [ ! -d "$APP_DIR/.git" ]; then
               echo "==> Cloning repo to $APP_DIR"
               mkdir -p "$(dirname "$APP_DIR")"
@@ -119,6 +142,14 @@ jobs:
               exit 1
             fi
 
+            echo "==> Bringing up stack (mongo + server + caddy if not already running)"
+            # First pass: start everything that's not running (no build).
+            # Covers the case where nginx was just evicted and Caddy has
+            # never claimed :80/:443, or mongo/server died since last deploy.
+            # Compose is a no-op for services already healthy.
+            export DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1
+            docker compose -f infra/compose.yaml --env-file .env up -d --no-build mongodb server caddy || true
+
             echo "==> Rebuilding and restarting app (zero-downtime)"
             # `--no-deps app` leaves mongodb / server / caddy running
             # untouched, so TLS doesn't blip and the DB connection pool
@@ -126,7 +157,6 @@ jobs:
             # port 80 until the new `app` is healthy, then Docker
             # swaps them. BuildKit picks up layer cache from the prior
             # build automatically on the same host.
-            export DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1
             docker compose -f infra/compose.yaml --env-file .env up --no-deps --build -d app
 
             echo "==> Waiting for app to report healthy"

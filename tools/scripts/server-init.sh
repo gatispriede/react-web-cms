@@ -81,6 +81,13 @@ ufw allow 443/tcp  comment "HTTPS"
 ufw --force enable
 
 # ─── 7. Nginx + SSL ──────────────────────────────────────────────────────────
+# NOTE: This section predates the Caddy-in-container architecture.
+# New deployments let the `caddy` compose service own 80/443 directly
+# (with automatic Let's Encrypt). This block is kept for historical
+# droplets; if Docker Compose is being used with Caddy, leave DOMAIN
+# unset when running server-init and it falls through to the no-domain
+# branch that doesn't touch nginx configuration. Better yet, skip
+# server-init entirely on Caddy-based hosts.
 echo "=== [7/7] Nginx ==="
 
 # Write Nginx config (HTTP only initially; certbot upgrades to HTTPS)
