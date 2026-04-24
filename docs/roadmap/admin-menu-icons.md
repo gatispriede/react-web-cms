@@ -1,5 +1,14 @@
 # Admin menu icons — main menu + submenus
 
+> **Shipped (2026-04-24)** — icons on every main-nav button (`UserStatusBar`),
+> every settings tab (`AdminSettings`), and a generic `FileOutlined` on every
+> page sidebar row (`AdminApp`). 17 new icons added to `@client/lib/icons`
+> (Layout, Setting, Logout, User, BgColors, Appstore, Audit, FileText, Read,
+> History, File, plus a handful already present via C10/C4 prep). Footer tab
+> reuses `FileTextOutlined` — lucide has no clean "align-bottom" match and the
+> document-style icon reads as "editable copy" consistently alongside SEO/Posts.
+
+
 ## Goal
 
 Every item in the admin shell — main nav bar, settings tabs, page sidebar —

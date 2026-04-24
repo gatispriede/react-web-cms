@@ -57,7 +57,7 @@ Tracked separately under [production/](production/) so the two streams can be sc
 | C8 | [module-transparency-style.md](module-transparency-style.md) | S | **Shipped (2026-04-24)** — `transparent` flag on `ISection` + `.is-transparent` renderer rule + admin Switch with contrast hint |
 | C9 | [production-caching.md](production-caching.md) | L | ISR + on-demand revalidation + Caddy SWR + DataLoader |
 | C10 | [admin-modules-preview-page.md](admin-modules-preview-page.md) | M | Admin page rendering every module × every style × theme switcher — catch regressions before ship |
-| C11 | [admin-menu-icons.md](admin-menu-icons.md) | S | Icons on every admin main-menu + settings-tab + sidebar row, reusing `@client/lib/icons` |
+| C11 | [admin-menu-icons.md](admin-menu-icons.md) | S | **Shipped (2026-04-24)** — icons on every main-nav button + settings tab + sidebar row; adapter extended with 11 new lucide mappings |
 | BUG | [client-report-2026-04-24.md](client-report-2026-04-24.md) | S×3 | Client-flagged: (1) Hero text overflow on narrow viewport, (2) Hero text contrast, (3) Services module — can't add new item |
 
 ### Reference docs

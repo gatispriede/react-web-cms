@@ -1,5 +1,13 @@
 import {Alert, Button, Dropdown, Space} from "antd";
-import {ThunderboltOutlined} from "@client/lib/icons";
+import {
+    EyeOutlined,
+    FileTextOutlined,
+    GlobalOutlined,
+    LayoutOutlined,
+    LogoutOutlined,
+    SettingOutlined,
+    ThunderboltOutlined,
+} from "@client/lib/icons";
 import AdminApp from "./AdminApp";
 import React, {useEffect, useState} from "react";
 import {Session} from "next-auth";
@@ -85,29 +93,32 @@ const UserStatusBarInner = ({session, view, tApp}: {
                 <Button
                     type={view === 'app' ? "primary" : "link"}
                     href={`/admin`}
+                    icon={<LayoutOutlined/>}
                 >
                     {tAdmin("App building")}
                 </Button>
                 <Button
                     type={view === 'settings' ? "primary" : "link"}
                     href={`/admin/settings`}
+                    icon={<SettingOutlined/>}
                 >
                     {tAdmin("Site settings")}
                 </Button>
                 <Button
                     type={view === 'languages' ? "primary" : "link"}
                     href={`/admin/languages`}
+                    icon={<GlobalOutlined/>}
                 >
                     {tAdmin("Languages")}
                 </Button>
-                <Button type={"link"} onClick={(e) => {
+                <Button type={"link"} icon={<EyeOutlined/>} onClick={(e) => {
                     e.preventDefault();
                     if (typeof window !== 'undefined') {
                         window.open(`/${lang}`, '_blank', 'noopener,noreferrer');
                     }
                 }}>{tAdmin("Preview")}</Button>
                 {blogEnabled && (
-                    <Button type={"link"} onClick={(e) => {
+                    <Button type={"link"} icon={<FileTextOutlined/>} onClick={(e) => {
                         e.preventDefault();
                         if (typeof window !== 'undefined') {
                             window.open(`/${lang}/blog`, '_blank', 'noopener,noreferrer');
@@ -144,7 +155,7 @@ const UserStatusBarInner = ({session, view, tApp}: {
                         </Space>
                     </Button>
                 </Dropdown>
-                <Button type={"link"} href={'#'} onClick={() => signOut()}>{tAdmin("Sign out")}</Button>
+                <Button type={"link"} icon={<LogoutOutlined/>} href={'#'} onClick={() => signOut()}>{tAdmin("Sign out")}</Button>
             </nav>
             <main id="admin-main" aria-label={tAdmin("Admin workspace")}>
                 {/*

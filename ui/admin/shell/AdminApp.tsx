@@ -1,7 +1,7 @@
 import React from 'react'
 import {resolve} from "@services/api/generated";
 import {Button, ConfigProvider, Layout, Menu, Popconfirm, Spin, Switch, Tag, message, theme as antdTheme} from 'antd';
-import {BulbFilled, BulbOutlined, CloseOutlined, CloudUploadOutlined, EditOutlined, PlusOutlined} from "@client/lib/icons";
+import {BulbFilled, BulbOutlined, CloseOutlined, CloudUploadOutlined, EditOutlined, FileOutlined, PlusOutlined} from "@client/lib/icons";
 import PublishApi from "@services/api/client/PublishApi";
 import AddNewDialogNavigation from "@admin/features/Navigation/AddNewDialogNavigation";
 import DynamicTabsContent from "@client/lib/DynamicTabsContent";
@@ -264,10 +264,15 @@ class AdminApp extends React.Component<{
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap',
                             textTransform: 'uppercase',
-                            display: 'block',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
                             lineHeight: 1.3,
                         }}>
-                            {tp.page}
+                            {/* Generic per-page icon. A future per-page `iconName`
+                                (set via the navigation editor) would slot in here. */}
+                            <FileOutlined aria-hidden="true" style={{flex: '0 0 auto', opacity: 0.7}}/>
+                            <span style={{overflow: 'hidden', textOverflow: 'ellipsis'}}>{tp.page}</span>
                         </span>
                         {!this.state.siderCollapsed && this.admin && tp.editedAt && (
                             <span style={{lineHeight: 1.1, fontSize: 10, opacity: 0.75, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
