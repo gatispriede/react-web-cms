@@ -40,8 +40,11 @@ services:
       mongodb: {
         condition: service_started
       }
+    # `../.env` — compose is in `infra/`, so a plain `.env` would resolve
+    # to `infra/.env`. Droplet writes `.env` at the repo root via the
+    # deploy script and server-init, same convention as mongo_data/uploads.
     env_file:
-      - .env
+      - ../.env
     environment:
       - NODE_ENV=production
     healthcheck:
@@ -70,7 +73,7 @@ services:
       context: ..
       dockerfile: infra/AppDockerfile
     env_file:
-      - .env
+      - ../.env
     environment:
       - BUILD_PORT=3000
     volumes:

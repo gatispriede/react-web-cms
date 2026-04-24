@@ -169,7 +169,7 @@ echo "         NEXTAUTH_URL  (https://yourdomain.com)"
 fi
 echo ""
 echo "    2. Start the stack:"
-echo "         docker compose -f $APP_DIR/infra/compose.yaml up --build -d"
+echo "         docker compose -f $APP_DIR/infra/compose.yaml --env-file $APP_DIR/.env up --build -d"
 echo ""
 echo "  After first start, GitHub Actions handles all future deploys."
 echo "================================================================"

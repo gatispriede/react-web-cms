@@ -127,7 +127,7 @@ jobs:
             # swaps them. BuildKit picks up layer cache from the prior
             # build automatically on the same host.
             export DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1
-            docker compose -f infra/compose.yaml up --no-deps --build -d app
+            docker compose -f infra/compose.yaml --env-file .env up --no-deps --build -d app
 
             echo "==> Waiting for app to report healthy"
             # Poll the compose healthcheck (defined in compose.yaml) for
@@ -143,7 +143,7 @@ jobs:
               fi
               if [ "$i" = "36" ]; then
                 echo "!! app failed to become healthy within 3 minutes" >&2
-                docker compose -f infra/compose.yaml logs --tail=200 app >&2 || true
+                docker compose -f infra/compose.yaml --env-file .env logs --tail=200 app >&2 || true
                 exit 1
               fi
               sleep 5
@@ -159,5 +159,5 @@ jobs:
               exit 1
             fi
 
-            docker compose -f infra/compose.yaml ps
+            docker compose -f infra/compose.yaml --env-file .env ps
             echo "==> Deploy complete"
