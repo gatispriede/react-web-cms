@@ -142,13 +142,37 @@ jobs:
               exit 1
             fi
 
+            # Pre-refactor deploys ran compose from /opt/cms/ so the
+            # default project name was `cms`. Post-refactor we run from
+            # /opt/cms/infra/, which would default to `infra`. Pin `-p cms`
+            # everywhere so compose adopts the existing containers instead
+            # of colliding on their globally-unique `container_name:`.
+            #
+            # One-time reconciliation: if any of our containers still
+            # carry a mismatched compose-project label (from a historic
+            # `docker run` or a plain compose call without -p), remove
+            # them so the next `up -d` can re-create them under the
+            # correct project. Named volumes (caddy_data for Let's
+            # Encrypt, and the bind-mounted mongo_data / uploads) survive
+            # container removal.
+            for c in mongodb server front caddy; do
+              if ! docker inspect "$c" >/dev/null 2>&1; then
+                continue   # container doesn't exist, nothing to reconcile
+              fi
+              proj=$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project"}}' "$c" 2>/dev/null || echo "")
+              if [ "$proj" != "cms" ]; then
+                echo "==> Evicting stale container '$c' (project='$proj', expected 'cms')"
+                docker rm -f "$c" >/dev/null 2>&1 || true
+              fi
+            done
+
             echo "==> Bringing up stack (mongo + server + caddy if not already running)"
             # First pass: start everything that's not running (no build).
             # Covers the case where nginx was just evicted and Caddy has
             # never claimed :80/:443, or mongo/server died since last deploy.
             # Compose is a no-op for services already healthy.
             export DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1
-            docker compose -f infra/compose.yaml --env-file .env up -d --no-build mongodb server caddy || true
+            docker compose -p cms -f infra/compose.yaml --env-file .env up -d --no-build mongodb server caddy || true
 
             echo "==> Rebuilding and restarting app (zero-downtime)"
             # `--no-deps app` leaves mongodb / server / caddy running
@@ -157,7 +181,7 @@ jobs:
             # port 80 until the new `app` is healthy, then Docker
             # swaps them. BuildKit picks up layer cache from the prior
             # build automatically on the same host.
-            docker compose -f infra/compose.yaml --env-file .env up --no-deps --build -d app
+            docker compose -p cms -f infra/compose.yaml --env-file .env up --no-deps --build -d app
 
             echo "==> Waiting for app to report healthy"
             # Poll the compose healthcheck (defined in compose.yaml) for
@@ -173,7 +197,7 @@ jobs:
               fi
               if [ "$i" = "36" ]; then
                 echo "!! app failed to become healthy within 3 minutes" >&2
-                docker compose -f infra/compose.yaml --env-file .env logs --tail=200 app >&2 || true
+                docker compose -p cms -f infra/compose.yaml --env-file .env logs --tail=200 app >&2 || true
                 exit 1
               fi
               sleep 5
@@ -189,5 +213,5 @@ jobs:
               exit 1
             fi
 
-            docker compose -f infra/compose.yaml --env-file .env ps
+            docker compose -p cms -f infra/compose.yaml --env-file .env ps
             echo "==> Deploy complete"
