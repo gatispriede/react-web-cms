@@ -1,6 +1,7 @@
 import {resolve} from "@services/api/generated";
 import {DEFAULT_SITE_SEO, ISiteSeoDefaults} from "@interfaces/ISiteSeo";
 import {refreshBus} from "@client/lib/refreshBus";
+import {triggerRevalidate} from "@client/lib/triggerRevalidate";
 import {isConflictError, parseMutationResponse} from "@client/lib/conflict";
 
 export class SiteSeoApi {
@@ -22,6 +23,8 @@ export class SiteSeoApi {
             }));
             const parsed: any = parseMutationResponse(raw);
             refreshBus.emit('settings');
+            // Default SEO meta is baked into every public page HTML head.
+            triggerRevalidate({scope: 'all'});
             return parsed.saveSiteSeo ?? parsed;
         } catch (err) {
             if (isConflictError(err)) throw err;

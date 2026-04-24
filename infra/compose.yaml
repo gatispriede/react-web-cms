@@ -18,7 +18,12 @@ services:
       timeout: 10s
       retries: 5
     volumes:
-      - ./mongo_data:/data/db
+      # Bind mounts here use `../` because compose.yaml lives in
+      # `infra/` (post-refactor) but the droplet still keeps persistent
+      # state (mongo data, user uploads) at the repo root
+      # `/opt/cms/{mongo_data,uploads}/`. Resolving `.` to the compose-
+      # file directory would orphan that data.
+      - ../mongo_data:/data/db
     # No public `ports:` mapping — Mongo must only be reachable from the
     # `server` container over the internal `db` network. Publishing 27017
     # to the host exposed it to the internet (DO security scan flagged it).
@@ -69,14 +74,31 @@ services:
     environment:
       - BUILD_PORT=3000
     volumes:
-      - ./uploads/images:/app/ui/client/public/images
-      - ./uploads/design-v2:/app/ui/client/public/design-v2
+      - ../uploads/images:/app/ui/client/public/images
+      # Per-site theme/design bundles. `bundles` is the generic name;
+      # `design-v2` is kept as a back-compat mount because existing DB
+      # content on funisimo.pro (and eventually skyclimber.pro) still
+      # references `/design-v2/*` URLs.
+      - ../uploads/bundles:/app/ui/client/public/bundles
+      - ../uploads/design-v2:/app/ui/client/public/design-v2
     networks:
       - db
       - front-end
       - back-end
     expose:
       - 80
+    healthcheck:
+      # Next serves a 200 on `/` once static generation has warmed up.
+      # The smoke check in CI + the zero-downtime `up --no-deps app`
+      # rely on this reporting `healthy` before Caddy starts reverse-
+      # proxying again. `start_period` is generous because a cold-boot
+      # build on the small droplet needs a minute or two to warm the
+      # ISR cache.
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:80/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 90s
   caddy:
     image: caddy:2-alpine
     container_name: caddy
@@ -93,12 +115,13 @@ services:
       - "443:443"
       - "443:443/udp"  # HTTP/3
     volumes:
+      # Caddyfile + maintenance page sit alongside compose.yaml in
+      # `infra/`, so plain `./` paths are correct for these.
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      # Upload folders are bind-mounted read-only so Caddy can serve them
-      # directly via file_server, bypassing Next.js. This avoids the event-
-      # loop-blocking fs.readFileSync that the /api/[name].ts and
-      # /api/media/[...path].ts routes used to do on every image request.
-      - ./uploads:/srv/uploads:ro
+      - ./maintenance:/srv/maintenance:ro
+      # Uploads live at repo root (persistent across refactors); reach
+      # them via `../` — see comment on mongo_data above.
+      - ../uploads:/srv/uploads:ro
       - caddy_data:/data
       - caddy_config:/config
     networks:

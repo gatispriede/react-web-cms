@@ -1,6 +1,7 @@
 import {resolve} from "@services/api/generated";
 import {IPost, InPost} from "@interfaces/IPost";
 import {refreshBus} from "@client/lib/refreshBus";
+import {triggerRevalidate} from "@client/lib/triggerRevalidate";
 import {isConflictError, parseMutationResponse} from "@client/lib/conflict";
 
 export class PostApi {
@@ -32,6 +33,13 @@ export class PostApi {
             }));
             const parsed: any = parseMutationResponse(raw);
             refreshBus.emit('settings');
+            // Post slug might have been renamed, which would orphan the
+            // old `/blog/<old-slug>` path — we can't know the prior slug
+            // here without an extra fetch. Trigger both the post-level
+            // scope (regenerates /blog + /blog/<new-slug>) and fall back
+            // to `all` if the new slug is missing.
+            if (post?.slug) triggerRevalidate({scope: 'post', slug: post.slug});
+            else triggerRevalidate({scope: 'blog'});
             return parsed.savePost ?? parsed;
         } catch (err) {
             if (isConflictError(err)) throw err;
@@ -44,6 +52,10 @@ export class PostApi {
             const raw = await resolve(({mutation}) => (mutation as any).mongo.deletePost({id}));
             const parsed = JSON.parse(raw || '{}');
             refreshBus.emit('settings');
+            // Delete removes a `/blog/<slug>` path — regenerating /blog
+            // is the best we can do without the caller supplying the
+            // slug; the deleted post's own path will 404 naturally.
+            triggerRevalidate({scope: 'blog'});
             return parsed.deletePost ?? parsed;
         } catch (err) { return {error: String(err)}; }
     }
@@ -53,6 +65,9 @@ export class PostApi {
             const raw = await resolve(({mutation}) => (mutation as any).mongo.setPostPublished({id, publish}));
             const parsed = JSON.parse(raw || '{}');
             refreshBus.emit('settings');
+            // Publish toggle flips whether the post appears on /blog — we
+            // don't have the slug here, so regenerate the index only.
+            triggerRevalidate({scope: 'blog'});
             return parsed.setPostPublished ?? parsed;
         } catch (err) { return {error: String(err)}; }
     }

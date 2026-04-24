@@ -2,6 +2,7 @@ import {resolve, invalidateCache} from "@services/api/generated";
 import {IMongo, MutationMongo} from "@interfaces/IMongo";
 import {INavigation} from "@interfaces/INavigation";
 import {refreshBus} from "@client/lib/refreshBus";
+import {triggerRevalidate} from "@client/lib/triggerRevalidate";
 
 /**
  * Audit fields (`editedBy` / `editedAt`) are output-only — the `InNavigation`
@@ -37,6 +38,10 @@ export class NavigationApi {
             const r = await resolve(({mutation}) => mutation.mongo.createNavigation({navigation: toInNavigation(newNavigation)}));
             invalidateCache();
             refreshBus.emit('content');
+            // Navigation changes (create / rename / reorder / delete) alter
+            // the getStaticPaths set and the tab bar, so every public page
+            // needs to regen to see the new page list.
+            triggerRevalidate({scope: 'all'});
             return r;
         } catch (err) {
             console.error('Error creating navigation:', err);
@@ -51,6 +56,10 @@ export class NavigationApi {
             }));
             invalidateCache();
             refreshBus.emit('content');
+            // Navigation changes (create / rename / reorder / delete) alter
+            // the getStaticPaths set and the tab bar, so every public page
+            // needs to regen to see the new page list.
+            triggerRevalidate({scope: 'all'});
             return r;
         } catch (err) {
             console.error('Error replacing/updating navigation:', err);
@@ -63,6 +72,10 @@ export class NavigationApi {
             const r = await resolve(({mutation}) => mutation.mongo.updateNavigation({page, sections}));
             invalidateCache();
             refreshBus.emit('content');
+            // Navigation changes (create / rename / reorder / delete) alter
+            // the getStaticPaths set and the tab bar, so every public page
+            // needs to regen to see the new page list.
+            triggerRevalidate({scope: 'all'});
             return r;
         } catch (err) {
             console.error('Error updating navigation:', err);
@@ -82,6 +95,10 @@ export class NavigationApi {
                 (mutation as MutationMongo).mongo.deleteNavigationItem({pageName}));
             invalidateCache();
             refreshBus.emit('content');
+            // Navigation changes (create / rename / reorder / delete) alter
+            // the getStaticPaths set and the tab bar, so every public page
+            // needs to regen to see the new page list.
+            triggerRevalidate({scope: 'all'});
             return r;
         } catch (err) {
             console.error('Error deleting navigation:', err);

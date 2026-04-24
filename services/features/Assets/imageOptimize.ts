@@ -173,6 +173,19 @@ export async function optimizeImageFile(srcPath: string, destPath: string, opts:
     // Ensure dest dir exists — callers sometimes pass a path into a
     // bind-mounted volume that the container overlay hasn't created yet.
     await fs.mkdir(path.dirname(destPath), {recursive: true});
-    await fs.writeFile(destPath, result.buffer);
+    // Atomic write: Caddy's file_server streams straight from the
+    // bind-mounted uploads dir, so a direct `fs.writeFile(destPath, …)`
+    // races with in-flight reads — a client fetching the image mid-write
+    // can get a truncated / partial buffer and lodge that in its HTTP
+    // cache. Stage under `.tmp-<pid>-<rand>` and rename once fully on
+    // disk; rename is atomic on the same filesystem (same bind mount).
+    const tmpPath = `${destPath}.tmp-${process.pid}-${Math.random().toString(36).slice(2, 8)}`;
+    try {
+        await fs.writeFile(tmpPath, result.buffer);
+        await fs.rename(tmpPath, destPath);
+    } catch (err) {
+        try { await fs.unlink(tmpPath); } catch { /* best-effort cleanup */ }
+        throw err;
+    }
     return result;
 }

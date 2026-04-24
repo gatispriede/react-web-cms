@@ -1,6 +1,7 @@
 import {resolve} from "@services/api/generated";
 import {ITheme, InTheme} from "@interfaces/ITheme";
 import {refreshBus} from "@client/lib/refreshBus";
+import {triggerRevalidate} from "@client/lib/triggerRevalidate";
 import {isConflictError, parseMutationResponse} from "@client/lib/conflict";
 
 // Module-level theme cache. A page navigation may touch 2–3 components that
@@ -54,6 +55,9 @@ export class ThemeApi {
             const parsed: any = parseMutationResponse(raw);
             this.invalidateCache();
             refreshBus.emit('settings');
+            // Theme is site-wide — every static page embeds the active
+            // theme tokens in its HTML, so every path needs to regen.
+            triggerRevalidate({scope: 'all'});
             return parsed.saveTheme ?? parsed;
         } catch (err) {
             if (isConflictError(err)) throw err;
@@ -67,6 +71,9 @@ export class ThemeApi {
             const parsed = JSON.parse(raw || '{}');
             this.invalidateCache();
             refreshBus.emit('settings');
+            // Theme is site-wide — every static page embeds the active
+            // theme tokens in its HTML, so every path needs to regen.
+            triggerRevalidate({scope: 'all'});
             return parsed.deleteTheme ?? parsed;
         } catch (err) {
             return {error: String(err)};
@@ -79,6 +86,9 @@ export class ThemeApi {
             const parsed = JSON.parse(raw || '{}');
             this.invalidateCache();
             refreshBus.emit('settings');
+            // Theme is site-wide — every static page embeds the active
+            // theme tokens in its HTML, so every path needs to regen.
+            triggerRevalidate({scope: 'all'});
             return parsed.resetPreset ?? parsed;
         } catch (err) {
             return {error: String(err)};
@@ -91,6 +101,9 @@ export class ThemeApi {
             const parsed = JSON.parse(raw || '{}');
             this.invalidateCache();
             refreshBus.emit('settings');
+            // Theme is site-wide — every static page embeds the active
+            // theme tokens in its HTML, so every path needs to regen.
+            triggerRevalidate({scope: 'all'});
             return parsed.setActiveTheme ?? parsed;
         } catch (err) {
             return {error: String(err)};

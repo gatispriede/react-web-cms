@@ -1,6 +1,7 @@
 import {resolve} from "@services/api/generated";
 import {DEFAULT_FOOTER, IFooterConfig} from "@interfaces/IFooter";
 import {refreshBus} from "@client/lib/refreshBus";
+import {triggerRevalidate} from "@client/lib/triggerRevalidate";
 import {isConflictError, parseMutationResponse} from "@client/lib/conflict";
 
 export class FooterApi {
@@ -22,6 +23,8 @@ export class FooterApi {
             }));
             const parsed: any = parseMutationResponse(raw);
             refreshBus.emit('settings');
+            // Footer renders on every public page.
+            triggerRevalidate({scope: 'all'});
             return parsed.saveFooter ?? parsed;
         } catch (err) {
             if (isConflictError(err)) throw err;

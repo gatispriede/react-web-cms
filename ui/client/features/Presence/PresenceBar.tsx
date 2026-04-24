@@ -4,10 +4,15 @@ import {useSession} from 'next-auth/react';
 
 /**
  * Layer 2 presence UI for multi-admin editing. Heartbeats the caller's
- * session to `/api/presence` every 15 s and polls the peer list on the
- * same cadence, rendering small avatars of other editors active on the
- * same `docId`. Self is filtered by email so the caller doesn't see
- * themselves in the stack.
+ * session to `/api/presence` every 45 s and reads the peer list back
+ * from the same POST response (server collapses heartbeat + list into
+ * one round-trip). Renders small avatars of other editors active on
+ * the same `docId`. Self is filtered by email so the caller doesn't
+ * see themselves in the stack.
+ *
+ * Polling pauses while `document.hidden` is true (tab in background)
+ * — keeps idle tabs off the event loop without dropping peers from
+ * Mongo (TTL is 2× poll so a short hidden window doesn't evict).
  *
  * Empty presence (only self) renders nothing — the bar only appears
  * when there's actually a concurrent peer worth warning about, keeping
@@ -23,7 +28,11 @@ interface Peer {
     at: string;
 }
 
-const POLL_MS = 15_000;
+// 45 s cadence (was 15 s). The server-side PresenceService debounces
+// writes at 10 s and the TTL is 90 s, so even one missed tick keeps
+// peers visible. Cuts heartbeat+list traffic from 8/min → 1.3/min per
+// admin tab.
+const POLL_MS = 45_000;
 
 const initialFor = (p: Peer): string => {
     const src = (p.name || p.email || '?').trim();
@@ -48,35 +57,39 @@ export const PresenceBar: React.FC<{docId: string | null}> = ({docId}) => {
         if (!docId || !canPresence) return;
         let cancelled = false;
 
-        const heartbeat = async () => {
+        // Single POST does double duty: upserts the heartbeat and returns
+        // the current peer list in the response. The server's debounce
+        // may turn the write itself into a no-op if another tab already
+        // beat within 10 s — the returned list is still current.
+        const tick = async () => {
+            if (typeof document !== 'undefined' && document.hidden) return;
             try {
-                await fetch('/api/presence', {
+                const r = await fetch('/api/presence', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({docId}),
                 });
-            } catch { /* silent — presence is non-blocking */ }
-        };
-
-        const poll = async () => {
-            try {
-                const r = await fetch(`/api/presence?docId=${encodeURIComponent(docId)}`);
                 if (!r.ok) return;
                 const data = await r.json();
                 if (cancelled) return;
                 const entries: Peer[] = Array.isArray(data?.entries) ? data.entries : [];
                 setPeers(entries.filter(p => p.email && p.email !== selfEmail));
-            } catch { /* silent */ }
+            } catch { /* silent — presence is non-blocking */ }
         };
 
-        void heartbeat().then(poll);
-        const hbId = window.setInterval(heartbeat, POLL_MS);
-        const pollId = window.setInterval(poll, POLL_MS);
+        void tick();
+        const id = window.setInterval(tick, POLL_MS);
+
+        // Resume immediately when the tab comes back to the foreground —
+        // waiting up to a full POLL_MS would leave the peer bar stale for
+        // ~45 s after every tab switch.
+        const onVis = () => { if (!document.hidden) void tick(); };
+        document.addEventListener('visibilitychange', onVis);
 
         return () => {
             cancelled = true;
-            window.clearInterval(hbId);
-            window.clearInterval(pollId);
+            window.clearInterval(id);
+            document.removeEventListener('visibilitychange', onVis);
         };
     }, [docId, canPresence, selfEmail]);
 

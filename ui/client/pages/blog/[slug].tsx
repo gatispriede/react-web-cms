@@ -127,8 +127,8 @@ export const getStaticProps: GetStaticProps<Props> = async ({params, locale}) =>
     } catch (err) {
         console.error('[blog/[slug]] parse error:', err);
     }
-    if (!blogEnabled) return {notFound: true, revalidate: 60};
-    if (!post) return {notFound: true, revalidate: 60};
+    if (!blogEnabled) return {notFound: true, revalidate: 3600};
+    if (!post) return {notFound: true, revalidate: 3600};
     return {
         props: {
             post,
@@ -138,7 +138,7 @@ export const getStaticProps: GetStaticProps<Props> = async ({params, locale}) =>
             hasPosts,
             ...(await serverSideTranslations(locale ?? 'en', ['common', 'app'])),
         },
-        revalidate: 60,
+        revalidate: 3600,
     };
 };
 

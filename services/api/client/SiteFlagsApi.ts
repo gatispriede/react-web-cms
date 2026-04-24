@@ -1,6 +1,7 @@
 import {resolve} from "@services/api/generated";
 import {DEFAULT_SITE_FLAGS, ISiteFlags} from "@services/features/Seo/SiteFlagsService";
 import {refreshBus} from "@client/lib/refreshBus";
+import {triggerRevalidate} from "@client/lib/triggerRevalidate";
 import {isConflictError, parseMutationResponse} from "@client/lib/conflict";
 
 export class SiteFlagsApi {
@@ -22,6 +23,8 @@ export class SiteFlagsApi {
             }));
             const parsed: any = parseMutationResponse(raw);
             refreshBus.emit('settings');
+            // Flags affect layoutMode / blogEnabled / etc. — site-wide.
+            triggerRevalidate({scope: 'all'});
             return parsed.saveSiteFlags ?? parsed;
         } catch (err) {
             if (isConflictError(err)) throw err;

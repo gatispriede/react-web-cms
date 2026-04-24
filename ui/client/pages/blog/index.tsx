@@ -94,7 +94,7 @@ export const getStaticProps: GetStaticProps<Props> = async ({locale}) => {
     } catch (err) {
         console.error('[blog/index] parse error:', err);
     }
-    if (!blogEnabled) return {notFound: true, revalidate: 60};
+    if (!blogEnabled) return {notFound: true, revalidate: 3600};
     return {
         props: {
             posts,
@@ -103,7 +103,7 @@ export const getStaticProps: GetStaticProps<Props> = async ({locale}) => {
             pages,
             ...(await serverSideTranslations(locale ?? 'en', ['common', 'app'])),
         },
-        revalidate: 60,
+        revalidate: 3600,
     };
 };
 

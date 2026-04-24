@@ -63,6 +63,10 @@ fi
 # ─── 5. Persistent upload directories ────────────────────────────────────────
 echo "=== [5/7] Upload directories ==="
 mkdir -p "$APP_DIR/uploads/images"
+mkdir -p "$APP_DIR/uploads/bundles"
+# `design-v2` is the legacy name for the per-site theme bundle folder.
+# `bundles` is the generic replacement; both are bind-mounted so existing
+# content URLs (/design-v2/*) keep resolving while references migrate.
 mkdir -p "$APP_DIR/uploads/design-v2"
 echo "Upload directories ready at $APP_DIR/uploads/"
 
@@ -165,7 +169,7 @@ echo "         NEXTAUTH_URL  (https://yourdomain.com)"
 fi
 echo ""
 echo "    2. Start the stack:"
-echo "         docker compose -f $APP_DIR/compose.yaml up --build -d"
+echo "         docker compose -f $APP_DIR/infra/compose.yaml up --build -d"
 echo ""
 echo "  After first start, GitHub Actions handles all future deploys."
 echo "================================================================"

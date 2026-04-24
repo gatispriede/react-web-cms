@@ -47,12 +47,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (req.method === 'POST') {
             const docId = String((req.body as any)?.docId ?? '').slice(0, 256);
             if (!docId) return res.status(400).json({error: 'docId required'});
+            // Collapse heartbeat + list into one round-trip. The client
+            // used to POST a heartbeat and GET the peer list on separate
+            // calls (2× requests / 2× rate-limit budget per tick); now
+            // the POST returns `entries` as well. The service's
+            // debounce window means the heartbeat write itself may
+            // be a no-op, which is fine — the list still reflects
+            // current state.
             await connection.presenceService.heartbeat({
                 email,
                 docId,
                 name: (session?.user as any)?.name,
             });
-            return res.status(200).json({ok: true});
+            const entries = await connection.presenceService.list({docId});
+            return res.status(200).json({ok: true, entries});
         }
 
         const docId = String((req.query.docId ?? '')).slice(0, 256);

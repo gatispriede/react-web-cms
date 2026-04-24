@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta http-equiv="refresh" content="15"/>
+    <title>Be right back</title>
+    <style>
+        :root { color-scheme: light dark; }
+        html, body { height: 100%; margin: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: grid;
+            place-items: center;
+            background: #0b0b0c;
+            color: #e8e8e8;
+            padding: 24px;
+        }
+        .card {
+            max-width: 520px;
+            text-align: center;
+        }
+        h1 {
+            font-size: clamp(22px, 5vw, 32px);
+            margin: 0 0 12px;
+            letter-spacing: 0.2px;
+        }
+        p {
+            margin: 0 0 24px;
+            line-height: 1.55;
+            opacity: 0.82;
+        }
+        .spinner {
+            width: 28px;
+            height: 28px;
+            border: 2px solid rgba(255,255,255,0.15);
+            border-top-color: #e8e8e8;
+            border-radius: 50%;
+            margin: 0 auto 24px;
+            animation: spin 0.9s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .hint { font-size: 12px; opacity: 0.5; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="spinner" aria-hidden="true"></div>
+        <h1>Shipping a fresh version</h1>
+        <p>We're swapping in an update. This page will refresh automatically in a few seconds.</p>
+        <div class="hint">If this stays up for more than a minute, try a hard reload.</div>
+    </div>
+</body>
+</html>

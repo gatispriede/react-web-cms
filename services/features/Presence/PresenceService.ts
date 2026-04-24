@@ -1,5 +1,7 @@
 import {Collection, Db} from 'mongodb';
 
+let _db: Db | null = null;
+
 /**
  * Layer 2 of multi-admin conflict mitigation: informational presence.
  *
@@ -34,7 +36,17 @@ export interface PresenceEntry {
     name?: string;
 }
 
-const TTL_SECONDS = 45;
+// Keep TTL at ~2× the client poll interval so a single missed heartbeat
+// doesn't make a peer blink out. Client polls at 45 s → 90 s TTL gives
+// one grace window for a flaky mobile network without surfacing ghosts.
+const TTL_SECONDS = 90;
+
+// Server-side debounce window for heartbeat writes. If the same
+// {email, docId} heartbeated within this many ms we skip the upsert —
+// the existing doc's `at` is still within TTL, so peers don't blink
+// out, and Mongo doesn't get hammered when multiple tabs of the same
+// admin user heartbeat concurrently.
+const HEARTBEAT_DEBOUNCE_MS = 10_000;
 
 export class PresenceService {
     private presenceDB: Collection;
@@ -42,6 +54,7 @@ export class PresenceService {
 
     constructor(db: Db) {
         this.presenceDB = db.collection('Presence');
+        _db = db;
     }
 
     private async ensureIndexes(): Promise<void> {
@@ -49,6 +62,19 @@ export class PresenceService {
         try {
             await this.presenceDB.createIndex({email: 1, docId: 1}, {unique: true});
             await this.presenceDB.createIndex({at: 1}, {expireAfterSeconds: TTL_SECONDS});
+            // Existing deployments created the TTL at 45 s. If the
+            // constant has since been bumped (currently 90 s) Mongo
+            // ignores the change on `createIndex` — it silently keeps
+            // the old expiry. `collMod` is the documented way to edit
+            // an existing TTL in place without a drop-recreate dance.
+            try {
+                if (_db) {
+                    await _db.command({
+                        collMod: 'Presence',
+                        index: {keyPattern: {at: 1}, expireAfterSeconds: TTL_SECONDS},
+                    });
+                }
+            } catch { /* older Mongo / permissions — non-fatal */ }
             this.indexesReady = true;
         } catch (err) {
             // Index creation is idempotent; a concurrent setup may have
@@ -61,12 +87,26 @@ export class PresenceService {
     async heartbeat({email, docId, name}: {email: string; docId: string; name?: string}): Promise<void> {
         if (!email || !docId) return;
         await this.ensureIndexes();
-        const at = new Date();
-        await this.presenceDB.updateOne(
-            {email, docId},
-            {$set: {email, docId, name, at}},
-            {upsert: true},
+        const now = new Date();
+        // Conditional upsert: only write if the last heartbeat for this
+        // {email, docId} is older than the debounce window. Mongo's
+        // filter-based update makes this atomic — a racing writer won't
+        // double-write. If the filter doesn't match we fall back to an
+        // upsert so the very first heartbeat still creates the row.
+        const cutoff = new Date(now.getTime() - HEARTBEAT_DEBOUNCE_MS);
+        const updated = await this.presenceDB.updateOne(
+            {email, docId, at: {$lt: cutoff}},
+            {$set: {email, docId, name, at: now}},
         );
+        if (updated.matchedCount === 0 && updated.upsertedCount === 0) {
+            // Either the row is fresh (skip, already inside the debounce
+            // window) or doesn't exist yet (create it).
+            await this.presenceDB.updateOne(
+                {email, docId},
+                {$setOnInsert: {email, docId, name, at: now}},
+                {upsert: true},
+            );
+        }
     }
 
     async list({docId}: {docId: string}): Promise<PresenceEntry[]> {

@@ -106,7 +106,7 @@ jobs:
 
             # Bind-mounted in compose.yaml; ensure they exist so docker doesn't
             # auto-create them with surprising ownership.
-            mkdir -p uploads/images uploads/design-v2
+            mkdir -p uploads/images uploads/bundles uploads/design-v2
 
             # If DEPLOY_ENV_FILE is set, (re)write .env from it. If it's empty
             # (e.g. the original droplet already has .env on disk), leave the
@@ -119,11 +119,45 @@ jobs:
               exit 1
             fi
 
-            echo "==> Rebuilding and restarting containers"
-            docker compose -f compose.yaml up --build -d
+            echo "==> Rebuilding and restarting app (zero-downtime)"
+            # `--no-deps app` leaves mongodb / server / caddy running
+            # untouched, so TLS doesn't blip and the DB connection pool
+            # survives. Caddy keeps serving the previous container's
+            # port 80 until the new `app` is healthy, then Docker
+            # swaps them. BuildKit picks up layer cache from the prior
+            # build automatically on the same host.
+            export DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1
+            docker compose -f infra/compose.yaml up --no-deps --build -d app
 
-            echo "==> Waiting for containers to become healthy"
-            sleep 15
-            docker compose -f compose.yaml ps
+            echo "==> Waiting for app to report healthy"
+            # Poll the compose healthcheck (defined in compose.yaml) for
+            # up to 3 minutes before giving up. Previously this was a
+            # blind `sleep 15` — deployments regularly completed before
+            # Next had finished its first static-gen cycle, and broken
+            # rollouts weren't flagged until a human happened to check.
+            for i in $(seq 1 36); do
+              status=$(docker inspect --format '{{.State.Health.Status}}' front 2>/dev/null || echo "starting")
+              if [ "$status" = "healthy" ]; then
+                echo "    app healthy after ${i} checks"
+                break
+              fi
+              if [ "$i" = "36" ]; then
+                echo "!! app failed to become healthy within 3 minutes" >&2
+                docker compose -f infra/compose.yaml logs --tail=200 app >&2 || true
+                exit 1
+              fi
+              sleep 5
+            done
 
+            echo "==> Smoke check: public domain returns 200"
+            # Hit the public origin via Caddy, not localhost:80 — catches
+            # TLS / reverse-proxy regressions as well as app health.
+            SMOKE_URL="${SMOKE_URL:-https://funisimo.pro/}"
+            smoke_code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 20 "$SMOKE_URL" || echo "000")
+            if [ "$smoke_code" != "200" ]; then
+              echo "!! Smoke check failed: $SMOKE_URL returned $smoke_code" >&2
+              exit 1
+            fi
+
+            docker compose -f infra/compose.yaml ps
             echo "==> Deploy complete"

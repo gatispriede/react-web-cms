@@ -11,8 +11,12 @@
     # zero app CPU.
 
     # Admin uploads land in /opt/cms/uploads/images/ (bind-mounted at
-    # /srv/uploads/images). Bundle/design assets in /srv/uploads/design-v2.
-    @uploads path /design-v2/* /images/*
+    # /srv/uploads/images). Per-site theme/design bundles land in
+    # /srv/uploads/bundles (generic replacement for the old `design-v2`
+    # namespace — matcher keeps /design-v2/* as a back-compat alias so
+    # live content on funisimo.pro/skyclimber.pro keeps resolving while
+    # we migrate bundle references).
+    @uploads path /bundles/* /design-v2/* /images/*
     handle @uploads {
         root * /srv/uploads
         file_server
@@ -35,7 +39,25 @@
     }
 
     # --- Everything else → Next.js app ---
-    reverse_proxy app:80
+    # `lb_try_duration` makes Caddy hold incoming requests for up to 30 s
+    # while retrying the upstream — that bridges the brief gap when the
+    # `app` container is being swapped on deploy. Most users never see a
+    # hiccup because the retry wins before they notice. The separate
+    # `fail_duration 0s` keeps Caddy optimistic — we don't want it to
+    # mark the sole backend as permanently bad after a single miss.
+    reverse_proxy app:80 {
+        lb_try_duration 30s
+        lb_try_interval 500ms
+        fail_duration 0s
+        # Treat 502/503/504 from Next as upstream failures so the
+        # maintenance page (below) can take over — otherwise a
+        # container that's booted but not yet serving would return
+        # raw gateway errors to the browser.
+        @bad status 502 503 504
+        handle_response @bad {
+            error 502
+        }
+    }
 
     header {
         Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
@@ -46,4 +68,22 @@
 
     @static path /_next/static/*
     header @static Cache-Control "public, max-age=31536000, immutable"
+
+    # --- Maintenance page for deploy windows > retry duration ---
+    # If `app` is still unreachable after the 30 s retry budget, Caddy
+    # falls here instead of surfacing a raw 502 from the browser's
+    # point of view. The static page has a `<meta http-equiv=refresh>`
+    # so visitors who land on it get bounced back to the real site as
+    # soon as the new container answers. Served from a read-only
+    # bind-mount (see compose.yaml).
+    handle_errors {
+        @downtime expression {http.error.status_code} in [502, 503, 504]
+        handle @downtime {
+            root * /srv/maintenance
+            rewrite * /index.html
+            file_server
+            header Cache-Control "no-store"
+            header Retry-After "30"
+        }
+    }
 }

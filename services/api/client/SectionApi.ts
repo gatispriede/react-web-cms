@@ -5,6 +5,7 @@ import {IItem} from "@interfaces/IItem";
 import {IPage} from "@interfaces/IPage";
 import {IConfigSectionAddRemove} from "@interfaces/IConfigSectionAddRemove";
 import {refreshBus} from "@client/lib/refreshBus";
+import {triggerRevalidate} from "@client/lib/triggerRevalidate";
 import {parseMutationResponse} from "@client/lib/conflict";
 
 /**
@@ -38,6 +39,13 @@ function toInSection(section: ISection): InSection {
         ...(Array.isArray(section.slots) ? {slots: section.slots} : {}),
         ...(typeof section.overlay === 'boolean' ? {overlay: section.overlay} : {}),
         ...(typeof section.overlayAnchor === 'string' && section.overlayAnchor ? {overlayAnchor: section.overlayAnchor} : {}),
+        // Section-level transparency (toggle + 0..100 opacity). Both fields
+        // land in `InSection` so the server persists them; otherwise the
+        // optimistic UI flip reverts on the next refresh because the
+        // re-fetched section has neither flag. See `loadSections` below for
+        // the read side — both need to be plumbed symmetrically.
+        ...(typeof section.transparent === 'boolean' ? {transparent: section.transparent} : {}),
+        ...(typeof section.transparentOpacity === 'number' ? {transparentOpacity: section.transparentOpacity} : {}),
     } as InSection;
 }
 
@@ -53,6 +61,8 @@ export class SectionApi {
                 slots: Array.isArray((item as any).slots) ? (item as any).slots as number[] : undefined,
                 overlay: typeof (item as any).overlay === 'boolean' ? (item as any).overlay : undefined,
                 overlayAnchor: typeof (item as any).overlayAnchor === 'string' ? (item as any).overlayAnchor : undefined,
+                transparent: typeof (item as any).transparent === 'boolean' ? (item as any).transparent : undefined,
+                transparentOpacity: typeof (item as any).transparentOpacity === 'number' ? (item as any).transparentOpacity : undefined,
                 version: typeof (item as any).version === 'number' ? (item as any).version : 0,
                 editedBy: (item as any).editedBy,
                 editedAt: (item as any).editedAt,
@@ -78,6 +88,11 @@ export class SectionApi {
                 (mutation as MutationMongo).mongo.removeSectionItem({id: sectionId}));
             invalidateCache();
             refreshBus.emit('content');
+            // We don't know which page this section was on from the
+            // delete call signature, so revalidate everything. Section
+            // deletes are rare enough that the wider blast radius is
+            // acceptable — narrowing it would need a pre-delete lookup.
+            triggerRevalidate({scope: 'all'});
             return r;
         } catch (err) {
             console.error('Error deleting section:', err);
@@ -90,6 +105,7 @@ export class SectionApi {
         sections: ISection[],
     ): Promise<ISection[]> {
         const clean = toInSection(item.section as unknown as ISection);
+        const revalidatePageName = item.pageName ?? (item.section as any)?.page;
         // Forward `pageName` when present — the server-side resolver only
         // appends the new section's id to the Navigation.sections array
         // when it knows which page the section belongs to. Without it,
@@ -114,6 +130,14 @@ export class SectionApi {
             console.error(err);
         }
         refreshBus.emit('content');
+        // Narrowed page scope — only the edited page's static HTML needs
+        // to regen. If pageName wasn't carried on the payload, fall back
+        // to site-wide; it's still cheap vs no on-demand regen at all.
+        if (revalidatePageName) {
+            triggerRevalidate({scope: 'page', pageName: revalidatePageName});
+        } else {
+            triggerRevalidate({scope: 'all'});
+        }
         return sections;
     }
 
@@ -154,6 +178,13 @@ export class SectionApi {
             }));
         invalidateCache();
         refreshBus.emit('content');
+        // Section item edits are per-page — regenerate just the affected
+        // page's static HTML, not the whole site.
+        if (section.page) {
+            triggerRevalidate({scope: 'page', pageName: section.page});
+        } else {
+            triggerRevalidate({scope: 'all'});
+        }
         // Surface the bumped version back into local state so subsequent
         // edits stay conflict-aware. Throws ConflictError on conflict.
         const parsed = parseMutationResponse<{updateSection?: {version?: number}; createSection?: {version?: number}}>(r);
