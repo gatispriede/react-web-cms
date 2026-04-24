@@ -192,7 +192,7 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
         try {
             const count = await navigation.countDocuments({type: {$ne: 'navigation'}});
             if (count > 0) {
-                console.warn(`[cleanup] ${count} ghost Navigation docs detected. Run: npx tsx --tsconfig src/Server/tsconfig.custom.json Scripts/cleanup-ghost-navigation.ts --apply`);
+                console.warn(`[cleanup] ${count} ghost Navigation docs detected. Run: npx tsx --tsconfig services/tsconfig.custom.json tools/scripts/cleanup-ghost-navigation.ts --apply`);
             }
         } catch (err) {
             console.error('[cleanup] ghost-navigation check failed:', err);

@@ -1,18 +1,18 @@
 /**
- * Rebuild the [`google-fonts.json`](../src/frontend/data/google-fonts.json)
+ * Rebuild the [`google-fonts.json`](../../services/infra/data/google-fonts.json)
  * snapshot from the Google Fonts Developer API.
  *
  * The catalogue is hand-curated today — this script replaces that with a
  * reproducible pull. Keeps the same shape the in-app picker and
- * [`googleFonts.buildGoogleFontsUrl`](../src/frontend/theme/googleFonts.ts)
- * consume: `{family, category, variants, subsets}`. Variants are trimmed
- * to the canonical numeric weights (400/500/600/700 by default — italic
- * and oblique faces are dropped to keep the picker scope sane).
+ * `googleFonts.buildGoogleFontsUrl` consume: `{family, category,
+ * variants, subsets}`. Variants are trimmed to the canonical numeric
+ * weights (400/500/600/700 by default — italic and oblique faces are
+ * dropped to keep the picker scope sane).
  *
  * Usage (from repo root):
  *   GOOGLE_FONTS_API_KEY=xxx \
- *     npx tsx --tsconfig src/Server/tsconfig.custom.json \
- *     Scripts/update-google-fonts.ts
+ *     npx tsx --tsconfig services/tsconfig.custom.json \
+ *     tools/scripts/update-google-fonts.ts
  *
  * Dry-run by default. Pass `--apply` to overwrite the snapshot file and
  * `--all-categories` to keep every category the API exposes (today we
@@ -39,7 +39,7 @@ interface CatalogueFont {
     subsets: string[];
 }
 
-const OUT = path.join(process.cwd(), 'src/frontend/data/google-fonts.json');
+const OUT = path.join(process.cwd(), 'services/infra/data/google-fonts.json');
 
 // Italic / weight-tag mapping. Google API reports `regular`, `italic`,
 // `100italic`, `100`, ..., `900italic`. We drop italics (picker doesn't
@@ -120,7 +120,7 @@ async function main(): Promise<void> {
 
     const snapshot = {
         _meta: {
-            source: 'Google Fonts Developer API · Scripts/update-google-fonts.ts',
+            source: 'Google Fonts Developer API · tools/scripts/update-google-fonts.ts',
             updatedAt: new Date().toISOString().slice(0, 10),
             schema: 'family · category · variants · subsets',
             totalFamilies: transformed.length,

@@ -11,11 +11,11 @@
  * operators with legacy data know to run this.
  *
  * Usage (from repo root):
- *   npx tsx --tsconfig src/Server/tsconfig.custom.json Scripts/cleanup-ghost-navigation.ts
+ *   npx tsx --tsconfig services/tsconfig.custom.json tools/scripts/cleanup-ghost-navigation.ts
  *
  * Dry-run is the default; pass `--apply` to actually delete.
  */
-import {getMongoConnection} from '../src/Server/mongoDBConnection';
+import {getMongoConnection} from '../../services/infra/mongoDBConnection';
 
 async function main() {
     const apply = process.argv.includes('--apply');
