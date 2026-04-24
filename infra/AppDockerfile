@@ -37,7 +37,11 @@ COPY ./nodemon.json ./nodemon.json
 COPY ./vitest.config.ts ./vitest.config.ts
 COPY ./vitest.setup.ts ./vitest.setup.ts
 COPY ./tools ./tools
-COPY ./infra/certificates ./infra/certificates
+# `infra/certificates/` is gitignored (local mkcert dev TLS for
+# `npm run ssl` via services/sslServer.ts). Production terminates
+# TLS at Caddy (Let's Encrypt), so the certs aren't needed in the
+# image — and the directory is missing on CI/droplet, which used
+# to break the build.
 COPY ./ui ./ui
 COPY ./services ./services
 COPY ./shared ./shared

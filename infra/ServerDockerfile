@@ -30,7 +30,10 @@ COPY ./next-i18next.config.js ./next-i18next.config.js
 COPY ./next-sitemap.config.cjs ./next-sitemap.config.cjs
 COPY ./nodemon.json ./nodemon.json
 COPY ./tools ./tools
-COPY ./infra/certificates ./infra/certificates
+# `infra/certificates/` is gitignored (local mkcert dev TLS for
+# `npm run ssl` via services/sslServer.ts). The standalone GraphQL
+# server in the container speaks HTTP only and sits behind Caddy's
+# Let's Encrypt TLS, so the directory is intentionally absent.
 COPY ./services ./services
 COPY ./shared ./shared
 # Run the application as a non-root user.
