@@ -47,7 +47,7 @@ Tracked separately under [production/](production/) so the two streams can be sc
 
 | # | Item | Size | Notes |
 |---|------|------|-------|
-| C1 | [themes-as-files.md](themes-as-files.md) | M | Presets as repo JSON, seeded on boot; admin edits stay DB-only |
+| C1 | [themes-as-files.md](themes-as-files.md) | M | **Shipped (2026-04-24)** — four editorial presets in `ui/client/themes/*.json`, seeded on boot when missing; admin "Reset to preset" overwrites DB row from disk |
 | C2 | [image-optimization-on-upload.md](image-optimization-on-upload.md) | M | Sharp pipeline (resize/recompress/strip EXIF) + `width`/`height` on record; foundation for C3–C6 |
 | C3 | [bulk-image-upload-with-ratio.md](bulk-image-upload-with-ratio.md) | L | Multi-file upload + per-batch ratio crop |
 | C4 | [drag-drop-images-modules.md](drag-drop-images-modules.md) | M | OS file + URL drops onto any image module |
@@ -58,6 +58,7 @@ Tracked separately under [production/](production/) so the two streams can be sc
 | C9 | [production-caching.md](production-caching.md) | L | ISR + on-demand revalidation + Caddy SWR + DataLoader |
 | C10 | [admin-modules-preview-page.md](admin-modules-preview-page.md) | M | Admin page rendering every module × every style × theme switcher — catch regressions before ship |
 | C11 | [admin-menu-icons.md](admin-menu-icons.md) | S | Icons on every admin main-menu + settings-tab + sidebar row, reusing `@client/lib/icons` |
+| BUG | [client-report-2026-04-24.md](client-report-2026-04-24.md) | S×3 | Client-flagged: (1) Hero text overflow on narrow viewport, (2) Hero text contrast, (3) Services module — can't add new item |
 
 ### Reference docs
 
@@ -68,13 +69,14 @@ Tracked separately under [production/](production/) so the two streams can be sc
 
 1. [tests-remaining.md](tests-remaining.md) — can run in parallel with any of the above
 2. C2 → C3 → C4 → C5 → C6 — optimisation unlocks picker dimensions + gallery ratios; bulk upload unblocks gallery population
-3. C1, C7, C9 — interleave at any point; no hard dep on the image chain
-4. C10 — best scheduled after C7 (style variants) and C1 (theme registry) so it can exercise both; can ship earlier with a hardcoded theme list
-5. ~~C8 module-transparency-style~~ — **done** (2026-04-24)
-6. ~~N15 folder-structure-reorg~~ — **done** (2026-04-24)
+3. C7, C9 — interleave at any point; no hard dep on the image chain
+4. C10 — best scheduled after C7 (style variants) so it can exercise style variants against the shipped theme registry
+5. ~~C1 themes-as-files~~ — **done** (2026-04-24)
+6. ~~C8 module-transparency-style~~ — **done** (2026-04-24)
+7. ~~N15 folder-structure-reorg~~ — **done** (2026-04-24)
 
 ## Total rough budget
 
 - Original queue: ~10–15 engineering days (N15 shipped — subtract ~1 week)
-- Content-editor block (C1–C10): ~10–14 engineering days (C8 shipped — subtract ~2 h)
+- Content-editor block (C1–C10): ~10–14 engineering days (C1 + C8 shipped — subtract ~1 day)
 - Grand total remaining: ~3–5 focused weeks

@@ -1,5 +1,7 @@
 # Themes as repo files
 
+**Status:** **Shipped (2026-04-24).** Four editorial presets (Paper, Studio, Industrial, High contrast) now live as JSON in `ui/client/themes/`; `ThemeService` seeds missing rows from disk on boot and the admin Theme editor exposes a "Reset to preset" button that overwrites the DB row with on-disk values.
+
 ## Goal
 
 Treat presets as source-controlled artefacts: each theme lives in the repo as a
