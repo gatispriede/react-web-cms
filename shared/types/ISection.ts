@@ -36,6 +36,20 @@ export interface ISection {
      * `docs/roadmap/module-transparency-style.md`.
      */
     transparent?: boolean
+    /**
+     * Section transparency level, 0–100 (%). Independent of `transparent`:
+     * - `0` (or absent): fully opaque — no effect.
+     * - `1..99`: partially see-through — applied as CSS `opacity: 1 - n/100`
+     *   on the section element. Text dims alongside the background, matching
+     *   user expectations for a "ghost section" style.
+     * - `100`: fully transparent (invisible). Use sparingly — intended for
+     *   admin-tunable overlays.
+     *
+     * Surfaced in the per-module Style tab (see `AddNewSectionItem`). The
+     * legacy inline Switch from the section admin strip has been absorbed
+     * into the same control + Slider pair.
+     */
+    transparentOpacity?: number
     /** Optimistic-concurrency counter — bumped server-side on each save.
      *  Frontend stashes this at read-time and sends it back as
      *  `expectedVersion` on save; server rejects with a `ConflictError`

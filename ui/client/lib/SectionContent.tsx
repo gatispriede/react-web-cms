@@ -19,6 +19,10 @@ import {setupAnimations} from "@client/lib/animateOnScroll";
 interface IPropsSectionContent {
     section: ISection,
     addRemoveSectionItem: (sectionId: string, config: IConfigSectionAddRemove) => Promise<void>,
+    /** Section-level patch — routed to `AddNewSectionItem`'s Style tab so
+     *  admins can toggle transparency + opacity from per-module settings
+     *  rather than the inline admin strip. Wired from `DynamicTabsContent`. */
+    updateSection?: (patch: Partial<ISection>) => Promise<void> | void,
     refresh: () => Promise<void>,
     admin: boolean,
     t: TFunction<"translation", undefined>,
@@ -193,8 +197,18 @@ class SectionContent extends React.Component<IPropsSectionContent> {
             gap: 16,
             ['--section-cols' as any]: totalUnits,
         };
+        // Transparency level — see `ISection.transparentOpacity`. Partial
+        // values (1..99) dim the section via CSS `opacity`; 0/undefined is
+        // opaque; 100 is fully invisible. The legacy boolean `transparent`
+        // stays a backward-compat flag that still clears the bg chain.
+        const opacityPct = typeof section.transparentOpacity === 'number'
+            ? Math.max(0, Math.min(100, section.transparentOpacity))
+            : 0;
+        if (opacityPct > 0) {
+            gridStyle.opacity = 1 - opacityPct / 100;
+        }
         return (
-            <div className={`section${section.transparent ? ' is-transparent' : ''}`} style={gridStyle}>
+            <div className={`section${section.transparent || opacityPct > 0 ? ' is-transparent' : ''}`} style={gridStyle}>
                 {
                     section.content.map((item: IItem, id: number) => {
                         const span = slots[id] ?? 1;
@@ -234,6 +248,7 @@ class SectionContent extends React.Component<IPropsSectionContent> {
                                                 tApp={this.props.tApp}
                                                 index={id}
                                                 addSectionItem={this.props.addRemoveSectionItem}
+                                                updateSection={this.props.updateSection}
                                                 section={this.state.section}
                                                 loadItem={true}
                                             /> :
@@ -266,6 +281,7 @@ class SectionContent extends React.Component<IPropsSectionContent> {
                                                     tApp={this.props.tApp}
                                                     index={id}
                                                     addSectionItem={this.addRemoveSectionItem}
+                                                    updateSection={this.props.updateSection}
                                                     section={this.state.section}
                                                     loadItem={false}
                                                 />

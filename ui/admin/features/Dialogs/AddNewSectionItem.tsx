@@ -1,4 +1,4 @@
-import {Button, Drawer, Select, Space, Tabs} from "antd";
+import {Button, Drawer, Select, Slider, Space, Switch, Tabs, Tooltip} from "antd";
 import {EditOutlined, PlusCircleOutlined} from "@client/lib/icons";
 import React from "react";
 import {ISection} from "@interfaces/ISection";
@@ -17,6 +17,10 @@ import ModulePickerDialog from "@admin/features/Dialogs/ModulePickerDialog";
 
 interface IAddNewSectionItemProps {
     addSectionItem: (sectionId: string, config: IConfigSectionAddRemove) => void,
+    /** Optional section-level update — wired from SectionContent to persist
+     *  transparency changes made inside the per-module Style tab. When absent
+     *  (very-early render paths, tests) the controls stay uncontrolled. */
+    updateSection?: (patch: Partial<ISection>) => void | Promise<void>,
     section: ISection,
     item?: IItem,
     index: number,
@@ -28,6 +32,11 @@ interface IAddNewSectionItemProps {
 class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
     state = {
         dialogOpen: false,
+        // Local draft for the transparency slider. Decouples the live thumb
+        // position from the (async) server commit so dragging doesn't spam
+        // `updateSection` → `addSectionToPage`. `null` = not dragging, fall
+        // back to the prop value. Committed on `onChangeComplete`.
+        transparencyDraft: null as number | null,
         pickerTarget: null as null | 'content' | 'action',
         actionPreviewOpen: false,
         selected: EItemType.Text,
@@ -187,6 +196,21 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
     }
 
     generateStyleSection() {
+        // Section transparency (moved here from the inline admin strip per
+        // user feedback — "3rd tab where style is"). The Switch gates the
+        // Slider; at 0 the section is opaque, at 100 it's fully invisible.
+        // Default on first enable is 50 — a balanced "ghost" look.
+        const section = this.props.section;
+        const committedPct = typeof section?.transparentOpacity === 'number' ? section.transparentOpacity : (section?.transparent ? 100 : 0);
+        // While dragging (`transparencyDraft` set), show the draft value so
+        // the thumb tracks the user's finger/mouse — the server hasn't been
+        // told yet. On release we commit and clear the draft, falling back
+        // to the authoritative prop value.
+        const transparencyPct = this.state.transparencyDraft ?? committedPct;
+        const transparencyEnabled = !!section?.transparent || transparencyPct > 0;
+        const pushSectionPatch = (patch: Partial<ISection>) => {
+            if (this.props.updateSection) void this.props.updateSection(patch);
+        };
 
         return <div>
             <h4>{this.props.t("Style configuration")}</h4>
@@ -214,6 +238,61 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                             }}/>
                 </div>
             }
+            {this.props.updateSection && (
+                <div style={{marginTop: 16, padding: 12, borderRadius: 6, background: 'rgba(0,0,0,0.03)'}}>
+                    <h4 style={{marginTop: 0}}>{this.props.t('Section transparency')}</h4>
+                    <Space align="center" wrap style={{marginBottom: 12}}>
+                        <Tooltip title={this.props.t("Lets whatever sits behind the section (hero image, theme body, overlay host) show through.")}>
+                            <span>{this.props.t('Transparent')}</span>
+                        </Tooltip>
+                        <Switch
+                            size="small"
+                            checked={transparencyEnabled}
+                            onChange={(checked) => {
+                                if (checked) {
+                                    // Enable with a sensible default (50%) when switching on
+                                    // from a fully-opaque state.
+                                    pushSectionPatch({
+                                        transparent: true,
+                                        transparentOpacity: transparencyPct > 0 ? transparencyPct : 50,
+                                    });
+                                } else {
+                                    pushSectionPatch({transparent: false, transparentOpacity: 0});
+                                }
+                            }}
+                        />
+                    </Space>
+                    <div style={{opacity: transparencyEnabled ? 1 : 0.4, pointerEvents: transparencyEnabled ? 'auto' : 'none'}}>
+                        <label style={{display: 'block', marginBottom: 4, fontSize: 12, opacity: 0.75}}>
+                            {this.props.t('Transparency level — 0% opaque, 100% fully invisible')}
+                        </label>
+                        <Slider
+                            min={0}
+                            max={100}
+                            step={5}
+                            value={transparencyPct}
+                            tooltip={{formatter: (v) => `${v}%`}}
+                            // onChange fires every thumb step — stash locally
+                            // so the UI tracks the drag without round-tripping
+                            // the server + re-rendering the whole section
+                            // tree (which would unmount this Drawer).
+                            onChange={(value: number) => {
+                                this.setState({transparencyDraft: value});
+                            }}
+                            // onChangeComplete fires once on release — safe
+                            // place to persist + push an undo entry.
+                            onChangeComplete={(value: number) => {
+                                this.setState({transparencyDraft: null});
+                                pushSectionPatch({
+                                    transparent: value > 0,
+                                    transparentOpacity: value,
+                                });
+                            }}
+                            marks={{0: '0%', 50: '50%', 100: '100%'}}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     }
 
@@ -324,6 +403,18 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                             <div
                                 key={`preview-${this.state.selected}-${this.state.style}-${this.state.action}-${this.state.actionStyle}`}
                                 className={`content-wrapper ${item.action === 'onClick' ? 'action-enabled' : ''}`}
+                                style={(() => {
+                                    // Prefer the drag-draft over the committed
+                                    // prop so the preview dims live while the
+                                    // slider thumb moves (server commit only
+                                    // happens on release — see Style tab).
+                                    const raw = this.state.transparencyDraft
+                                        ?? (typeof this.props.section?.transparentOpacity === 'number'
+                                            ? this.props.section.transparentOpacity
+                                            : 0);
+                                    const pct = Math.max(0, Math.min(100, raw));
+                                    return pct > 0 ? {opacity: 1 - pct / 100} : undefined;
+                                })()}
                                 onClick={() => {
                                     if (item.action === 'onClick' && !this.state.actionPreviewOpen) {
                                         this.setState({actionPreviewOpen: true});

@@ -86,8 +86,22 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
         }
     }
 
+    /** Set while a per-section patch (transparency, overlay, slots) is in
+     *  flight. The resulting server-side `refreshBus.emit('content')` would
+     *  otherwise round-trip through AdminApp.initialize → rebuild the whole
+     *  tabs tree → unmount AddNewSectionItem's drawer mid-edit. Optimistic
+     *  setState inside `updateSection` already reflects the patch locally,
+     *  so swallowing one refresh tick is safe. */
+    private suppressNextContentRefresh = false;
+
     componentDidMount() {
-        this.refreshUnsub = refreshBus.subscribe(() => this.refreshView(), 'content');
+        this.refreshUnsub = refreshBus.subscribe(() => {
+            if (this.suppressNextContentRefresh) {
+                this.suppressNextContentRefresh = false;
+                return;
+            }
+            void this.refreshView();
+        }, 'content');
     }
 
     componentWillUnmount() {
@@ -108,7 +122,17 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
      */
     componentDidUpdate(prevProps: IDynamicTabsContent) {
         if (prevProps.sections !== this.props.sections) {
-            this.setState({sections: this.props.sections, state: guid()});
+            // Only re-key DraggableWrapper when section *identity/order*
+            // changes (add/remove/reorder). Field-level edits (transparency,
+            // overlay, slots) reach us through the same refresh pipe but
+            // keep the same id sequence — re-keying there would unmount any
+            // open `AddNewSectionItem` drawer mid-edit.
+            const prevIds = (prevProps.sections ?? []).map(s => s.id ?? '').join('|');
+            const nextIds = (this.props.sections ?? []).map(s => s.id ?? '').join('|');
+            const structuralChange = prevIds !== nextIds;
+            this.setState(structuralChange
+                ? {sections: this.props.sections, state: guid()}
+                : {sections: this.props.sections});
         }
         if (prevProps.page !== this.props.page) {
             this.setState({page: this.props.page});
@@ -209,26 +233,51 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
      * Admin-only: flip a section's `transparent` flag. Same optimistic
      * save + undo rail as overlay. See roadmap/module-transparency-style.md.
      */
-    private updateSectionTransparent = async (section: ISection, transparent: boolean): Promise<void> => {
+    /**
+     * Generic section-level patch — used by the in-dialog "Style" tab
+     * (section transparency + opacity slider) and any future section-level
+     * controls. Optimistic: local state updates immediately, server write
+     * follows; on failure we roll back and surface a message. An undo entry
+     * is pushed so the operator can ctrl-Z a bad slider pull.
+     */
+    private updateSection = async (section: ISection, patch: Partial<ISection>): Promise<void> => {
         if (!section.id) return;
-        const before = {transparent: section.transparent};
-        const next: ISection = {...section, transparent};
+        const before: Partial<ISection> = {};
+        for (const k of Object.keys(patch) as Array<keyof ISection>) {
+            (before as any)[k] = (section as any)[k];
+        }
+        const next: ISection = {...section, ...patch};
+        // NOTE: intentionally do NOT bump `state: guid()` here. That id is a
+        // DraggableWrapper remount key; re-keying it on every transparency
+        // tick unmounts the whole section tree → closes any open
+        // AddNewSectionItem drawer mid-edit. The sections-array replace is
+        // enough to surface the patch visually.
         this.setState({
             sections: this.state.sections.map(s => s.id === section.id ? next : s),
-            state: guid(),
         });
+        // The server emits `refreshBus.emit('content')` after save; swallow
+        // that one tick so AdminApp.initialize doesn't tear down the open
+        // drawer. Our optimistic setState above already reflects the patch.
+        this.suppressNextContentRefresh = true;
         try {
             await this.MongoApi.addSectionToPage({section: next as any, pageName: this.state.page}, this.state.sections);
         } catch (err) {
-            console.error('transparent toggle failed, rolling back:', err);
+            console.error('section patch failed, rolling back:', err);
+            // Failed save → no server refresh will fire, so clear the
+            // suppression flag to avoid eating the next unrelated refresh.
+            this.suppressNextContentRefresh = false;
             this.setState({
                 sections: this.state.sections.map(s => s.id === section.id ? {...s, ...before} : s),
             });
-            message.error(this.props.t('Transparency change failed — reverted.'));
+            message.error(this.props.t('Section change failed — reverted.'));
             return;
         }
+        const keys = Object.keys(patch);
+        const label = keys.includes('transparent') || keys.includes('transparentOpacity')
+            ? this.props.t('Transparency change')
+            : this.props.t('Section change');
         undoStack.push({
-            label: transparent ? this.props.t('Transparent on') : this.props.t('Transparent off'),
+            label,
             undo: async () => {
                 if (!section.id) return;
                 await this.MongoApi.addSectionToPage({section: {...section, ...before} as any, pageName: this.state.page}, this.state.sections);
@@ -242,44 +291,10 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
         });
     }
 
-    private renderTransparentControl(section: ISection): React.ReactNode {
-        if (!this.admin) return null;
-        // Contrast nudge — surface only when the flag is on AND the section
-        // carries body text items (RichText / PlainText / Hero copy). Admin
-        // can still save; this is a hint, not a gate.
-        const hasBodyText = (section.content ?? []).some(it =>
-            it.type === EItemType.RichText || it.type === EItemType.Text
-        );
-        return (
-            <div
-                className="section-admin-transparent-controls"
-                style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    padding: '4px 8px',
-                    marginBottom: 4,
-                    fontSize: 11,
-                }}
-            >
-                <Tooltip title={this.props.t('Clear this section\'s own background so whatever sits behind (hero image, theme colour, overlay host) shows through.')}>
-                    <span style={{textTransform: 'uppercase', letterSpacing: 0.8, color: 'rgba(0,0,0,0.55)'}}>
-                        {this.props.t('Transparent')}
-                    </span>
-                </Tooltip>
-                <Switch
-                    size="small"
-                    checked={!!section.transparent}
-                    onChange={(checked) => this.updateSectionTransparent(section, checked)}
-                />
-                {section.transparent && hasBodyText && (
-                    <Tooltip title={this.props.t('This section has body text — check it stays readable against whatever now shows through.')}>
-                        <span style={{color: '#d46b08', fontSize: 11}} aria-label={this.props.t('Contrast warning')}>⚠</span>
-                    </Tooltip>
-                )}
-            </div>
-        );
-    }
+    /* Legacy inline transparency Switch was removed — the control now lives
+       inside `AddNewSectionItem`'s Style tab (third tab) with a proper
+       opacity slider. See `updateSection` + SectionContent's `updateSection`
+       prop for the data path. */
 
     private renderOverlayControls(section: ISection): React.ReactNode {
         if (!this.admin) return null;
@@ -347,7 +362,6 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
                 {this.admin && (
                     <div className="section-admin-strip" style={{display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', padding: '4px 8px 0'}}>
                         {this.renderOverlayControls(section)}
-                        {this.renderTransparentControl(section)}
                         {(section as any).editedAt && (
                             <AuditBadge
                                 editedBy={(section as any).editedBy}
@@ -375,6 +389,7 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
                             t={this.props.t}
                             tApp={this.props.tApp}
                             section={section}
+                            updateSection={(patch) => this.updateSection(section, patch)}
                             refresh={async () => { await this.refresh(); }}
                             addRemoveSectionItem={async (sectionId: string, config: IConfigSectionAddRemove) => {
                                 const target = this.state.sections.find(s => s.id === sectionId);

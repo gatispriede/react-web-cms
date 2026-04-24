@@ -13,7 +13,7 @@ const RichTextEditorWidget = dynamic(
     {ssr: false}
 ) as React.ComponentType<{value: string; setValue: (value: string) => void}>;
 
-const PlainImageEditor = ({content, setContent, t}: IInputContent) => {
+export const PlainImageEditor = ({content, setContent, t}: IInputContent) => {
     const plainImage = new PlainImageContent(EItemType.Image, content);
     const setFile = (file: File) => {
         plainImage.setSrc(PUBLIC_IMAGE_PATH + file.name)
@@ -84,5 +84,4 @@ const PlainImageEditor = ({content, setContent, t}: IInputContent) => {
     )
 }
 
-export {PlainImageEditor};
 export default PlainImageEditor;
