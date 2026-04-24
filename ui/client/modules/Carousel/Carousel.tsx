@@ -97,7 +97,7 @@ const CarouselView = ({item, t, tApp}: {
                 <div className={'image'}>
                     <Image
                         preview={false}
-                        src={`/${item.src}`}
+                        src={item.src && (item.src.startsWith('/') || /^https?:\/\//.test(item.src)) ? item.src : `/${item.src}`}
                         alt={item.alt}
                     />
                 </div>
@@ -109,9 +109,15 @@ const CarouselView = ({item, t, tApp}: {
             </li>
         )
     })
+    // `item.style` carries the ECarouselStyle value the author picked in the
+    // admin Style dropdown. Attach it as a class so per-style SCSS rules
+    // (`.carousel-wrapper.cinematic`, `.polaroid`, `.ribbon`, `.editorial`)
+    // can layer on top of the shared base treatment. Empty / default falls
+    // back to no extra class (base `default` layout applies unconditionally).
+    const styleClass = item.style && item.style !== 'default' ? ` ${item.style}` : '';
     return (
         <div >
-            <div className={'carousel-wrapper'} style={{
+            <div className={`carousel-wrapper${styleClass}`} style={{
                 display: "block"
             }}>
                 <Carousel autoplay={data.autoplay} autoplaySpeed={data.autoplaySpeed} arrows={data.arrows} infinite={data.infinity} dotPosition={'bottom'} dots={data.dots}>

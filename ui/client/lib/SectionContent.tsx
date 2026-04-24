@@ -5,6 +5,7 @@ import {ColumnWidthOutlined, MergeCellsOutlined, SplitCellsOutlined} from "@clie
 import {ISection} from "@interfaces/ISection";
 import {EItemType} from "@enums/EItemType";
 import ContentType from "@client/lib/ContentType";
+import AdminItemDropHost from "@admin/lib/AdminItemDropHost";
 import AddNewSectionItem from "@admin/features/Dialogs/AddNewSectionItem";
 import {IConfigSectionAddRemove} from "@interfaces/IConfigSectionAddRemove";
 import ActionDialog from "@admin/features/Dialogs/ActionDialog";
@@ -270,23 +271,39 @@ class SectionContent extends React.Component<IPropsSectionContent> {
                                                 this.setState({actionDialogOpen: true})
                                             }
                                         }}>
-                                        <ContentType
-                                            t={this.props.t}
-                                            tApp={this.props.tApp}
-                                            admin={this.admin}
+                                        {/* In-page image drop host — admin only. For image-bearing
+                                            item types (Image / Gallery / Carousel / Hero / ProjectCard)
+                                            this wraps the rendered Display in an `<ImageDropTarget>`
+                                            so dragging a rail thumbnail straight onto the module
+                                            replaces (or appends for list-style) the image. For all
+                                            other types it's a pass-through. See
+                                            `ui/admin/lib/AdminItemDropHost.tsx`. */}
+                                        <AdminItemDropHost
+                                            sectionId={sectionId}
                                             item={item}
-                                            addButton={
-                                                <AddNewSectionItem
-                                                    t={this.props.t}
-                                                    tApp={this.props.tApp}
-                                                    index={id}
-                                                    addSectionItem={this.addRemoveSectionItem}
-                                                    updateSection={this.props.updateSection}
-                                                    section={this.state.section}
-                                                    loadItem={false}
-                                                />
-                                            }
-                                        />
+                                            index={id}
+                                            admin={this.admin}
+                                            addRemoveSectionItem={this.addRemoveSectionItem}
+                                            t={this.props.t}
+                                        >
+                                            <ContentType
+                                                t={this.props.t}
+                                                tApp={this.props.tApp}
+                                                admin={this.admin}
+                                                item={item}
+                                                addButton={
+                                                    <AddNewSectionItem
+                                                        t={this.props.t}
+                                                        tApp={this.props.tApp}
+                                                        index={id}
+                                                        addSectionItem={this.addRemoveSectionItem}
+                                                        updateSection={this.props.updateSection}
+                                                        section={this.state.section}
+                                                        loadItem={false}
+                                                    />
+                                                }
+                                            />
+                                        </AdminItemDropHost>
                                         {item.action && item.action !== 'none' &&
                                             <ActionDialog t={this.props.t} tApp={this.props.tApp} item={item}
                                                           open={this.state.actionDialogOpen} close={() => {

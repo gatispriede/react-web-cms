@@ -10,17 +10,23 @@
 .services-module {
   color: var(--ink, var(--theme-colorTextBase, inherit));
 
+  // Services head was laid out as `[num][title][sub]` in a three-col grid
+  // with the subtitle crammed into a 32ch right-aligned column. Result
+  // on Pakalpojumi: the title sat left, the middle column was a giant
+  // empty gap, and the subtitle floated off to the right looking
+  // orphaned — compounded by `.em-accent` runs rendering in the accent
+  // colour (orange/amber) inside the narrow right column. Re-laid out as
+  // a two-row block: the title (with an optional small num badge above)
+  // sits left at display scale, the subtitle runs as a proper paragraph
+  // underneath at a generous reading width, aligned left so it reads as
+  // an intro rather than a caption pinned to the corner.
   &__head {
     display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: 24px;
-    align-items: end;
-    margin-bottom: 32px;
-
-    @media (max-width: 900px) {
-      grid-template-columns: 1fr;
-      gap: 8px;
-    }
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 40px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--rule, rgba(0, 0, 0, 0.12));
   }
   &__num {
     font-family: var(--font-mono, ui-monospace, monospace);
@@ -32,17 +38,30 @@
   &__title {
     font-family: var(--font-display, var(--font-sans, system-ui, sans-serif));
     font-weight: 400;
-    font-size: clamp(28px, 4vw, 48px);
-    line-height: 1.05;
-    letter-spacing: -0.01em;
+    font-size: clamp(32px, 4.5vw, 56px);
+    line-height: 1.02;
+    letter-spacing: -0.015em;
     margin: 0;
+    max-width: 20ch;
   }
   &__sub {
     font-family: var(--font-sans, system-ui, sans-serif);
-    font-size: 14px;
+    font-size: clamp(15px, 1.2vw, 17px);
+    line-height: 1.55;
     color: var(--ink-2, var(--theme-colorInkSecondary, #555));
-    max-width: 32ch;
-    text-align: right;
+    max-width: 62ch;
+    margin: 4px 0 0;
+    text-align: left;
+    // Accent runs (`*word*`) inside the intro paragraph default to the
+    // theme accent (amber on SkyClimber). In the intro that read as
+    // orange flecks in a muted paragraph — drop them to the subtitle
+    // colour so the intro stays a unified block. Authors can still put
+    // *words* inline, they just don't colour-shift.
+    .em-accent {
+      color: inherit;
+      font-style: italic;
+      opacity: 1;
+    }
 
     @media (max-width: 900px) { text-align: left; }
   }

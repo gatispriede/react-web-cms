@@ -33,6 +33,10 @@ export interface InSection {
     overlay?: boolean
     /** Overlay anchor — `top-left` | `top-right` | `bottom-left` | `bottom-right` | `center` | `fill`. */
     overlayAnchor?: string
+    /** Cross-cutting transparent-background flag — see ISection.transparent. */
+    transparent?: boolean
+    /** Section-level opacity 0..100 (%). See ISection.transparentOpacity. */
+    transparentOpacity?: number
 }
 
 export interface MutationMongo {

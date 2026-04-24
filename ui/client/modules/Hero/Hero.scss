@@ -29,9 +29,28 @@
      against any image — opacity is theme-tunable via `--hero-scrim-opacity`.
      Light-image themes can bump it; dark themes can leave it at default.
      (client report 2026-04-24 #2 — top text was washing out.) */
+  /* Dedicated bg-image layer. Moved out of the hero root's `background-image`
+     so authors can fade the image (Hero `bgOpacity`, 0–100) without dimming
+     the text overlay above it. Uses positive z-indexes (bg=0, scrim=1,
+     content=2) rather than negative — the previous `z-index: -1` + parent
+     `isolation: isolate` setup rendered correctly on the public client but
+     dropped out on the admin side where the module is wrapped in
+     `<AdminItemDropHost>` / `<ImageDropTarget>`. Those wrappers establish
+     their own positioned context and the negative-z layer was painting
+     behind the wrapper's own paint box. Positive-z keeps everything in the
+     hero's paint tree and works in either surface. */
+  &__bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    pointer-events: none;
+    z-index: 0;
+  }
+
   &.is-fullbleed {
     padding-inline: 24px;
-    isolation: isolate; /* contain the ::before scrim + restack text above it */
+    position: relative;
 
     &::before {
       content: "";
@@ -45,9 +64,12 @@
           rgba(0, 0, 0, calc(var(--hero-scrim-opacity, 0.35) * 0.55)) 100%
         );
       pointer-events: none;
-      z-index: 0;
+      z-index: 1;
     }
-    > * { position: relative; z-index: 1; }
+    /* Exclude the bg layer from the text-elevation rule — otherwise it
+       gets flipped to `position: relative` and the absolute `inset: 0`
+       collapses to 0×0. */
+    > *:not(.hero__bg) { position: relative; z-index: 2; }
 
     /* Overlay text needs a floor of contrast even in themes that dim the
        scrim for aesthetic reasons. A subtle text-shadow under headline +
@@ -307,6 +329,107 @@
     b {
       color: var(--ink, var(--theme-colorTextBase, inherit));
       font-weight: 500;
+    }
+  }
+
+  /* ---- poster style — readable over any photo -----------------------
+     Forces a dark, blurred "card" behind the text so white display type
+     sits clearly over even the busiest background. Designed for cases
+     where the hero sits as an overlay on top of another section's image
+     (e.g. home page) and the default scrim + text-shadow aren't enough.
+
+     The card spans roughly half the hero at wide viewports, full width
+     on mobile. Typography is white with moderate letter-spacing and a
+     subtle shadow so anti-aliasing survives gradients. Meta / coords
+     strips are dropped because they fight the clean poster look. */
+  &.poster {
+    padding: 80px 24px;
+    color: #fff;
+
+    // Drop the photorealistic bottom scrim — the card itself carries
+    // contrast. A thin global dimmer over the whole hero softens the
+    // image behind the card without washing it out.
+    &::before {
+      background: linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.35));
+    }
+
+    .hero__main {
+      max-width: min(640px, 90%);
+      padding: 32px 36px;
+      background: rgba(18, 20, 24, 0.62);
+      color: #fff;
+      -webkit-backdrop-filter: blur(10px) saturate(110%);
+      backdrop-filter: blur(10px) saturate(110%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    .hero__eyebrow {
+      color: rgba(255, 255, 255, 0.75);
+      margin-bottom: 18px;
+      .hero__eyebrow-bullet { color: var(--accent, #f59e0b); }
+    }
+
+    .hero__headline {
+      color: #fff;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.05;
+      letter-spacing: -0.015em;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+      margin-bottom: 14px;
+
+      // First-span accent (controlled via `accent` on the hero) is
+      // overridden to pure white — the accent drives the CTA, bullet,
+      // and titles instead. Keeps the headline a single unified block.
+      > span:first-child { color: #fff !important; }
+      .hero__headline-soft { color: rgba(255, 255, 255, 0.82); }
+    }
+
+    .hero__titles {
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 18px;
+      .hero__title-sep { color: var(--accent, #f59e0b); opacity: 1; }
+    }
+
+    .hero__subtitle {
+      color: rgba(255, 255, 255, 0.88);
+      font-size: clamp(0.95rem, 1.4vw, 1.1rem);
+      max-width: 52ch;
+      margin-bottom: 20px;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    }
+
+    .hero__cta-row { margin-top: 20px; }
+    .hero__cta {
+      border-color: rgba(255, 255, 255, 0.55);
+      color: #fff;
+      &:hover {
+        background: #fff;
+        color: #111;
+        border-color: #fff;
+      }
+    }
+    .hero__cta--primary {
+      background: var(--accent, #f59e0b);
+      border-color: var(--accent, #f59e0b);
+      color: #111;
+      &:hover {
+        background: #fff;
+        border-color: #fff;
+        color: #111;
+      }
+    }
+
+    // Hide the meta / coords strips — they belong on the editorial
+    // style, not the poster. If an author fills them in anyway the data
+    // is still in the DOM (screen-reader accessible) but visually muted.
+    .hero__meta,
+    .hero__coords { display: none; }
+
+    @media (max-width: 720px) {
+      padding: 56px 16px;
+      .hero__main { padding: 24px 20px; max-width: 100%; }
     }
   }
 

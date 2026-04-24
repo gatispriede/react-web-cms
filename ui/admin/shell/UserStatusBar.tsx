@@ -1,5 +1,6 @@
 import {Alert, Button, Dropdown, Space} from "antd";
 import {
+    AppstoreOutlined,
     EyeOutlined,
     FileTextOutlined,
     GlobalOutlined,
@@ -22,10 +23,11 @@ import {i18n} from "next-i18next";
 import SiteFlagsApi from "@services/api/client/SiteFlagsApi";
 import CommandPalette, {useCommandPaletteHotkey} from "./CommandPalette";
 import {I18nextProvider, useTranslation as useReactTranslation} from "react-i18next";
-import adminI18n, {ADMIN_LOCALES, AdminLocale, setAdminLocale} from "@admin/i18n/adminI18n";
+import adminI18n, {ADMIN_LOCALES, AdminLocale, setAdminLocale, detectStoredOrNavigatorLocale} from "@admin/i18n/adminI18n";
 import UserApi from "@services/api/client/UserApi";
+import ModulesPreview from "@client/lib/preview/ModulesPreview";
 
-export type AdminView = 'app' | 'settings' | 'languages';
+export type AdminView = 'app' | 'settings' | 'languages' | 'modules-preview';
 
 /**
  * Inner chrome — uses the dedicated `adminI18n` instance via the
@@ -56,6 +58,19 @@ const UserStatusBarInner = ({session, view, tApp}: {
     useEffect(() => {
         void new SiteFlagsApi().get().then(f => setBlogEnabled(f.blogEnabled !== false));
     }, []);
+    // Post-hydration locale switch. `adminI18n` now boots at `'en'` on both
+    // server and client so the initial render matches SSR byte-for-byte
+    // (fixes the "Hydration failed: server rendered 'Skip to content' vs
+    // client 'Pāriet uz saturu'" warning). After mount we read the
+    // operator's stored/navigator preference and apply it — this causes a
+    // normal re-render, not a hydration mismatch. The session-preference
+    // effect below then takes precedence if the user has one set server-side.
+    useEffect(() => {
+        const pref = detectStoredOrNavigatorLocale();
+        if (pref && adminI.language !== pref) {
+            setAdminLocale(pref);
+        }
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
     // Session-backed preference wins over the localStorage fallback that
     // `adminI18n`'s SSR init already applied — the user set it on purpose.
     const sessionLocale = (session?.user as any)?.preferredAdminLocale;
@@ -69,7 +84,18 @@ const UserStatusBarInner = ({session, view, tApp}: {
     const adminLocaleLabel = currentAdminLocale.toUpperCase();
     return (
         <>
-            <a href="#admin-main" className="skip-to-content">{tAdmin("Skip to content")}</a>
+            {/*
+              `tAdmin` is powered by the dedicated admin-i18n instance, whose
+              initial language is hydrated from `localStorage` on the client
+              (see `@admin/i18n/adminI18n`). SSR can't see that value, so the
+              server renders the default ("Skip to content") and the client
+              immediately swaps to the user's preferred admin locale
+              ("Pāriet uz saturu" for lv) — React flags that as a hydration
+              mismatch. The mismatch is intentional: admin-locale is a
+              per-user pref, not a URL-driven one. `suppressHydrationWarning`
+              silences the noisy dev overlay without changing the render.
+            */}
+            <a href="#admin-main" className="skip-to-content" suppressHydrationWarning>{tAdmin("Skip to content")}</a>
             <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)}/>
             {mustChangePassword && (
                 <Alert
@@ -110,6 +136,14 @@ const UserStatusBarInner = ({session, view, tApp}: {
                     icon={<GlobalOutlined/>}
                 >
                     {tAdmin("Languages")}
+                </Button>
+                <Button
+                    type={view === 'modules-preview' ? "primary" : "link"}
+                    href={`/admin/modules-preview`}
+                    icon={<AppstoreOutlined/>}
+                    title={tAdmin("Style matrix — every module × every style × theme switcher")}
+                >
+                    {tAdmin("Style matrix")}
                 </Button>
                 <Button type={"link"} icon={<EyeOutlined/>} onClick={(e) => {
                     e.preventDefault();
@@ -174,6 +208,9 @@ const UserStatusBarInner = ({session, view, tApp}: {
                         i18n={i18nCommon}
                         tAdmin={tCommon}
                     />
+                )}
+                {view === 'modules-preview' && (
+                    <ModulesPreview t={tAdmin as TFunction<"translation", undefined>} tApp={tApp}/>
                 )}
             </main>
         </>

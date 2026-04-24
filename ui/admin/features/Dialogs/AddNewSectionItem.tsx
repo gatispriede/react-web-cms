@@ -30,13 +30,76 @@ interface IAddNewSectionItemProps {
 }
 
 class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
+    /**
+     * Transient UI scratch-space pattern.
+     *
+     * Fields prefixed with `_` are *instance-local* and intentionally bypass
+     * React's setState → re-render pipeline. They:
+     *   1. Survive parent re-renders (React state can be stomped when the
+     *      component unmounts/remounts via ancestor churn; instance fields
+     *      live on the fiber's `stateNode` and persist until unmount).
+     *   2. Don't batch or defer — a mutation is visible to the next render
+     *      immediately, paired with an explicit `forceUpdate()`.
+     *   3. Act as a local override while a server round-trip is in flight,
+     *      so the Switch/Slider don't "uncheck after checking" if the
+     *      incoming prop lags the optimistic write.
+     *
+     * Clear the override in `componentDidUpdate` once `this.props.section`
+     * catches up to the committed value — from there on, the prop is the
+     * source of truth again.
+     */
+    private _transparencyDraft: number | null = null;
+    private _transparencyOverride: {transparent: boolean; pct: number} | null = null;
+
+    componentDidUpdate(prevProps: IAddNewSectionItemProps) {
+        // Drop the override the moment props catch up to the last committed
+        // transparency value — keeps the UI in sync with the server
+        // afterwards without losing the optimistic paint.
+        const o = this._transparencyOverride;
+        if (o) {
+            const s = this.props.section;
+            const propPct = typeof s?.transparentOpacity === 'number'
+                ? s.transparentOpacity
+                : (s?.transparent ? 100 : 0);
+            if (!!s?.transparent === o.transparent && propPct === o.pct) {
+                this._transparencyOverride = null;
+            }
+        }
+        // Discard stale drafts if the section identity changed underneath us.
+        if (prevProps.section?.id !== this.props.section?.id) {
+            this._transparencyDraft = null;
+            this._transparencyOverride = null;
+        }
+    }
+
+    /** Resolve the currently-displayed transparency — override first, then
+     *  props. Called from render + preview panel so both stay in lock-step. */
+    private _readTransparency(): {transparent: boolean; pct: number} {
+        if (this._transparencyOverride) return this._transparencyOverride;
+        const s = this.props.section;
+        const pct = typeof s?.transparentOpacity === 'number'
+            ? s.transparentOpacity
+            : (s?.transparent ? 100 : 0);
+        return {transparent: !!s?.transparent, pct};
+    }
+
+    /** Commit a transparency change: stash an optimistic override, paint
+     *  immediately, then fire the server round-trip. Errors roll the
+     *  override back so the Switch/Slider revert visually. */
+    private _commitTransparency = (transparent: boolean, pct: number): void => {
+        this._transparencyOverride = {transparent, pct};
+        this.forceUpdate();
+        if (!this.props.updateSection) return;
+        Promise.resolve(this.props.updateSection({
+            transparent,
+            transparentOpacity: pct,
+        })).catch(() => {
+            this._transparencyOverride = null;
+            this.forceUpdate();
+        });
+    };
     state = {
         dialogOpen: false,
-        // Local draft for the transparency slider. Decouples the live thumb
-        // position from the (async) server commit so dragging doesn't spam
-        // `updateSection` → `addSectionToPage`. `null` = not dragging, fall
-        // back to the prop value. Committed on `onChangeComplete`.
-        transparencyDraft: null as number | null,
         pickerTarget: null as null | 'content' | 'action',
         actionPreviewOpen: false,
         selected: EItemType.Text,
@@ -200,17 +263,15 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
         // user feedback — "3rd tab where style is"). The Switch gates the
         // Slider; at 0 the section is opaque, at 100 it's fully invisible.
         // Default on first enable is 50 — a balanced "ghost" look.
-        const section = this.props.section;
-        const committedPct = typeof section?.transparentOpacity === 'number' ? section.transparentOpacity : (section?.transparent ? 100 : 0);
-        // While dragging (`transparencyDraft` set), show the draft value so
-        // the thumb tracks the user's finger/mouse — the server hasn't been
-        // told yet. On release we commit and clear the draft, falling back
-        // to the authoritative prop value.
-        const transparencyPct = this.state.transparencyDraft ?? committedPct;
-        const transparencyEnabled = !!section?.transparent || transparencyPct > 0;
-        const pushSectionPatch = (patch: Partial<ISection>) => {
-            if (this.props.updateSection) void this.props.updateSection(patch);
-        };
+        //
+        // Source of truth: `_readTransparency()` — prefers the in-flight
+        // optimistic override, falls back to props. While dragging, the
+        // `_transparencyDraft` field wins so the thumb tracks live without
+        // touching React state (which would re-render ancestors and risk
+        // unmounting this Drawer).
+        const {transparent: committedTransparent, pct: committedPct} = this._readTransparency();
+        const transparencyPct = this._transparencyDraft ?? committedPct;
+        const transparencyEnabled = committedTransparent || transparencyPct > 0;
 
         return <div>
             <h4>{this.props.t("Style configuration")}</h4>
@@ -251,13 +312,14 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                             onChange={(checked) => {
                                 if (checked) {
                                     // Enable with a sensible default (50%) when switching on
-                                    // from a fully-opaque state.
-                                    pushSectionPatch({
-                                        transparent: true,
-                                        transparentOpacity: transparencyPct > 0 ? transparencyPct : 50,
-                                    });
+                                    // from a fully-opaque state. Optimistic commit via
+                                    // `_commitTransparency` paints the checked state
+                                    // immediately and keeps it checked while the server
+                                    // round-trip is in flight.
+                                    const nextPct = transparencyPct > 0 ? transparencyPct : 50;
+                                    this._commitTransparency(true, nextPct);
                                 } else {
-                                    pushSectionPatch({transparent: false, transparentOpacity: 0});
+                                    this._commitTransparency(false, 0);
                                 }
                             }}
                         />
@@ -277,16 +339,18 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                             // the server + re-rendering the whole section
                             // tree (which would unmount this Drawer).
                             onChange={(value: number) => {
-                                this.setState({transparencyDraft: value});
+                                // Instance-field draft — see class-level comment on
+                                // `_transparencyDraft`. `forceUpdate` paints the new
+                                // thumb position + preview opacity without going
+                                // through React state (keeps the Drawer mounted).
+                                this._transparencyDraft = value;
+                                this.forceUpdate();
                             }}
                             // onChangeComplete fires once on release — safe
                             // place to persist + push an undo entry.
                             onChangeComplete={(value: number) => {
-                                this.setState({transparencyDraft: null});
-                                pushSectionPatch({
-                                    transparent: value > 0,
-                                    transparentOpacity: value,
-                                });
+                                this._transparencyDraft = null;
+                                this._commitTransparency(value > 0, value);
                             }}
                             marks={{0: '0%', 50: '50%', 100: '100%'}}
                         />
@@ -404,14 +468,12 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                                 key={`preview-${this.state.selected}-${this.state.style}-${this.state.action}-${this.state.actionStyle}`}
                                 className={`content-wrapper ${item.action === 'onClick' ? 'action-enabled' : ''}`}
                                 style={(() => {
-                                    // Prefer the drag-draft over the committed
-                                    // prop so the preview dims live while the
-                                    // slider thumb moves (server commit only
-                                    // happens on release — see Style tab).
-                                    const raw = this.state.transparencyDraft
-                                        ?? (typeof this.props.section?.transparentOpacity === 'number'
-                                            ? this.props.section.transparentOpacity
-                                            : 0);
+                                    // Prefer the drag-draft, then the optimistic
+                                    // override, then the committed prop — so the
+                                    // preview dims live while the slider thumb
+                                    // moves and stays dim while the server
+                                    // commit is in flight.
+                                    const raw = this._transparencyDraft ?? this._readTransparency().pct;
                                     const pct = Math.max(0, Math.min(100, raw));
                                     return pct > 0 ? {opacity: 1 - pct / 100} : undefined;
                                 })()}

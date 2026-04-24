@@ -9,6 +9,7 @@
 @use "../../../admin/styles/Admin/AdminPlainImage";
 @use "../../../admin/styles/Admin/Login";
 @use "../../../admin/styles/Admin/InlineTranslate";
+@use "../../../admin/styles/Admin/ImageDropTarget";
 
 // Cross-cutting primitives
 @use "../Common/Reveal";
@@ -76,6 +77,46 @@
 @keyframes dndPulse {
   from { opacity: 0.55; }
   to   { opacity: 1; }
+}
+
+// Cross-module text-clipping guard.
+//
+// Display-scale headlines (Hero, Manifesto, Testimonials, ProjectCard,
+// StatsCard, Services, …) use serif/display faces with negative
+// `letter-spacing`, which gives the first glyph a negative left
+// sidebearing. When the host container has tight `padding-inline` and/or
+// `overflow: hidden` (set on `.section-item-container` to keep grid
+// tracks honest), that sidebearing gets clipped and the first letter of
+// the headline visually disappears against the container edge.
+//
+// Fixing this per-module is whack-a-mole — every new module that
+// introduces a big headline hits the same trap. Instead: give any
+// heading-like element a small inline-start safety that scales with the
+// font-size (`em` unit), and make the container's inline padding a
+// `max()` of the theme value and `0.5em` of the content font-size so
+// padding grows with larger text. Also back it up with universal
+// long-word wrapping so narrow viewports can't push a headline past the
+// container. No !important — per-module rules that already set padding
+// still win where they're stricter.
+.dynamic-content {
+  h1, h2, h3, h4, h5, h6,
+  [class$="__headline"], [class*="__headline "],
+  [class$="__title"], [class*="__title "],
+  [class$="__eyebrow"], [class*="__eyebrow "],
+  [class$="__subtitle"], [class*="__subtitle "] {
+    padding-inline-start: 0.08em;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    hyphens: auto;
+  }
+
+  // Bump any `.is-fullbleed` container's inline padding so that at
+  // display font sizes the edge never kisses the first glyph. The `max()`
+  // keeps small-type layouts pinned to the designed 24 px while big-type
+  // heroes auto-breathe.
+  .is-fullbleed {
+    padding-inline: max(24px, 0.5em);
+  }
 }
 
 // Cross-cutting transparency modifier (see roadmap/module-transparency-style.md).

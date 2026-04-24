@@ -1,5 +1,17 @@
 # Drag-and-drop images onto image-bearing modules
 
+> **Shipped (2026-04-24)** — `useImageDrop` now accepts three sources: the
+> existing internal picker payload (`application/x-cms-image`), OS file drops
+> (`DataTransfer.files`, routed through `/api/upload`), and URL drops
+> (`text/uri-list` / `text/plain`, fetched + re-hosted). Multi-file drops
+> emit one `onDrop` per successful upload so list-style targets (Gallery /
+> Carousel) naturally append. A new `<ImageDropTarget>` wrapper
+> (`ui/client/lib/ImageDropTarget.tsx` + `ImageDropTarget.scss`) carries
+> hover / upload / error chrome and AntD-toasted per-file failures; it's
+> consumed by `GalleryEditor` (tiles + footer), `CarouselEditor` (tiles +
+> footer), `PlainImageEditor`, `ImageUrlInput`, and the site-wide
+> `LogoSettings`.
+
 ## Goal
 
 Let editors drop an image from their desktop (or from the picker grid) straight

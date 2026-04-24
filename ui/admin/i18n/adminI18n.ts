@@ -54,22 +54,33 @@ export function setStoredAdminLocale(locale: AdminLocale): void {
     try { window.localStorage.setItem(STORAGE_KEY, locale); } catch { /* noop */ }
 }
 
-function detectInitialLocale(): AdminLocale {
+/**
+ * Detect the operator's preferred locale from localStorage / navigator.
+ * Returns null on the server (no access to either) — callers use that as
+ * a signal to defer the language switch until after hydration.
+ */
+export function detectStoredOrNavigatorLocale(): AdminLocale | null {
     const stored = getStoredAdminLocale();
     if (stored) return stored;
     if (typeof navigator !== 'undefined') {
         const code = navigator.language?.split('-')[0]?.toLowerCase();
         if (code === 'en' || code === 'lv') return code;
     }
-    return 'en';
+    return null;
 }
 
 const adminI18n: I18n = i18n.createInstance();
 
+// Initial language is always `'en'` — matching the SSR default. The actual
+// preferred locale is applied in a post-mount effect (see `UserStatusBar`)
+// so the first client render matches the server HTML byte-for-byte and
+// React's hydration doesn't spit a "text didn't match" warning into the
+// dev overlay. A language change after hydration triggers a normal
+// re-render, which is fine — no hydration contract is violated there.
 void adminI18n
     .use(initReactI18next)
     .init({
-        lng: detectInitialLocale(),
+        lng: 'en',
         fallbackLng: 'en',
         // Admin chrome uses literal English strings as keys (matching the
         // existing call sites pulled from `next-i18next` so the migration

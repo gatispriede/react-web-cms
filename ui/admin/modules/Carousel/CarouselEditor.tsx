@@ -7,27 +7,13 @@ import EditWrapper from "@client/lib/EditWrapper";
 import ImageUpload from "@admin/lib/ImageUpload";
 import {CarouselContent} from "@client/modules/Carousel";
 import {PUBLIC_IMAGE_PATH} from "@utils/imgPath";
-import {ImageDropPayload, useImageDrop} from "@client/lib/useImageDrop";
-
-const ItemDropZone: React.FC<{
-    onImage: (img: ImageDropPayload) => void;
-    children: React.ReactNode;
-}> = ({onImage, children}) => {
-    const {dropHandlers, isDragOver} = useImageDrop(onImage);
-    return (
-        <div
-            {...dropHandlers}
-            style={isDragOver ? {outline: '2px dashed var(--theme-colorPrimary, #1677ff)', outlineOffset: 2, borderRadius: 4} : undefined}
-        >
-            {children}
-        </div>
-    );
-};
+import {ImageDropPayload} from "@client/lib/useImageDrop";
+import ImageDropTarget from "@client/lib/ImageDropTarget";
 
 const CarouselEditor = ({content, setContent, t}: IInputContent) => {
     const galleryContent = new CarouselContent(EItemType.Image, content);
     const data = galleryContent.data
-    const {dropHandlers: addDropHandlers, isDragOver: addDragOver} = useImageDrop((img) => {
+    const handleAppendFromDrop = (img: ImageDropPayload) => {
         galleryContent.addItem();
         const items = galleryContent.data.items ?? [];
         const lastIndex = items.length - 1;
@@ -35,7 +21,7 @@ const CarouselEditor = ({content, setContent, t}: IInputContent) => {
             galleryContent.setItem(lastIndex, {...items[lastIndex], src: PUBLIC_IMAGE_PATH + img.name});
         }
         setContent(galleryContent.stringData);
-    });
+    };
     return (
         <div className={'admin gallery-wrapper'}>
             <div className={'config-item'}>
@@ -113,8 +99,35 @@ const CarouselEditor = ({content, setContent, t}: IInputContent) => {
                                          }}>
                                 <div key={index} className={`container text-${item.textPosition}`}>
                                     <div className={'config-item'}>
-                                        <ItemDropZone onImage={onDropImage}>
-                                            <div className={'select-image-container'}>
+                                        <ImageDropTarget onImage={onDropImage} filled={!!item.src}>
+                                            <div
+                                                className={'select-image-container'}
+                                                style={{display: 'flex', alignItems: 'center', gap: 10}}
+                                            >
+                                                {/* Inline thumbnail — GalleryEditor shows a preview
+                                                    per tile but Carousel rows were text-input-only,
+                                                    so authors had to cross-reference URLs against the
+                                                    picker. Placing the <img> *inside*
+                                                    `select-image-container` (row-flex) keeps it in
+                                                    the upload control's band — the surrounding
+                                                    `.config-item` is column-flex, so a standalone
+                                                    thumbnail would spawn its own row and disappear
+                                                    off the visible panel. */}
+                                                {item.src && (
+                                                    <img
+                                                        src={`/${item.src}`}
+                                                        alt={item.alt || ''}
+                                                        style={{
+                                                            width: 72,
+                                                            height: 54,
+                                                            objectFit: 'cover',
+                                                            borderRadius: 3,
+                                                            border: '1px solid #e4e4e4',
+                                                            flexShrink: 0,
+                                                            background: '#fafafa',
+                                                        }}
+                                                    />
+                                                )}
                                                 <ImageUpload t={t} setFile={setFile}/>
                                             </div>
                                             <div className={'content'}>
@@ -124,7 +137,7 @@ const CarouselEditor = ({content, setContent, t}: IInputContent) => {
                                                     disabled={true}
                                                 />
                                             </div>
-                                        </ItemDropZone>
+                                        </ImageDropTarget>
                                     </div>
                                     <div className={'config-item'}>
                                         <label>{t("Description")}:</label>
@@ -150,10 +163,11 @@ const CarouselEditor = ({content, setContent, t}: IInputContent) => {
                     })
                 }
             </div>
-            <div
+            <ImageDropTarget
+                onImage={handleAppendFromDrop}
                 className={'add-image-container'}
-                {...addDropHandlers}
-                style={addDragOver ? {outline: '2px dashed var(--theme-colorPrimary, #1677ff)', outlineOffset: 2, borderRadius: 4, padding: 8} : {padding: 8}}
+                style={{padding: 8}}
+                hint={t("Drop to add to carousel")}
             >
                 <Button type="primary" onClick={() => {
                     galleryContent.addItem()
@@ -164,7 +178,7 @@ const CarouselEditor = ({content, setContent, t}: IInputContent) => {
                 <span style={{marginLeft: 12, fontSize: 11, color: '#888'}}>
                     {t("or drag an image here")}
                 </span>
-            </div>
+            </ImageDropTarget>
         </div>
     )
 }

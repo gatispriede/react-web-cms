@@ -62,8 +62,13 @@ describe('Hero render', () => {
         expect(container.querySelector('.hero.is-fullbleed')).not.toBeNull();
         // Scrim is CSS-only now (`::before` pseudo + text-shadow) — the inline
         // `background-image` must NOT bake in the gradient any more, otherwise
-        // themes can't tune scrim opacity via `--hero-scrim-opacity`. Guard:
-        const bg = (container.querySelector('.hero') as HTMLElement).style.backgroundImage;
+        // themes can't tune scrim opacity via `--hero-scrim-opacity`. The
+        // image itself moved to an absolutely-positioned `.hero__bg` child
+        // so `bgOpacity` can fade it without touching the scrim layer above,
+        // so that's where the inline `url(...)` now lives.
+        const bgLayer = container.querySelector('.hero__bg') as HTMLElement | null;
+        expect(bgLayer).not.toBeNull();
+        const bg = bgLayer!.style.backgroundImage;
         expect(bg).toContain('url(');
         expect(bg).not.toContain('linear-gradient');
     });

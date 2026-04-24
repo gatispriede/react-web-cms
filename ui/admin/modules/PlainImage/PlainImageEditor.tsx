@@ -6,7 +6,7 @@ import {PlainImageContent} from "@client/modules/PlainImage";
 import dynamic from 'next/dynamic'
 import ImageUpload from "@admin/lib/ImageUpload";
 import {PUBLIC_IMAGE_PATH} from "@utils/imgPath";
-import {useImageDrop} from "@client/lib/useImageDrop";
+import ImageDropTarget from "@client/lib/ImageDropTarget";
 
 const RichTextEditorWidget = dynamic(
     () => import('@client/lib/RichTextEditor'),
@@ -19,15 +19,14 @@ export const PlainImageEditor = ({content, setContent, t}: IInputContent) => {
         plainImage.setSrc(PUBLIC_IMAGE_PATH + file.name)
         setContent(plainImage.stringData)
     }
-    const {dropHandlers, isDragOver} = useImageDrop((img) => {
-        plainImage.setSrc(PUBLIC_IMAGE_PATH + img.name);
-        setContent(plainImage.stringData);
-    });
     return (
-        <div
+        <ImageDropTarget
             className={'admin-image'}
-            {...dropHandlers}
-            style={isDragOver ? {outline: '2px dashed var(--theme-colorPrimary, #1677ff)', outlineOffset: 2, borderRadius: 4} : undefined}
+            filled={!!plainImage.data.src}
+            onImage={(img) => {
+                plainImage.setSrc(PUBLIC_IMAGE_PATH + img.name);
+                setContent(plainImage.stringData);
+            }}
         >
             <div className={'settings'}>
                 <label>{t("Use as background image")}</label>
@@ -80,7 +79,7 @@ export const PlainImageEditor = ({content, setContent, t}: IInputContent) => {
 
                 </div>
             }
-        </div>
+        </ImageDropTarget>
     )
 }
 

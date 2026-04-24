@@ -83,18 +83,36 @@ const Hero = ({item, tApp}: {
     // `--hero-scrim-opacity` and we get a readable top-edge (client report
     // 2026-04-24 #2 — text over bright images was washing out at the top where
     // the previous bottom-only gradient hadn't landed yet).
+    // Background image is rendered as its own absolutely-positioned layer
+    // (`.hero__bg`) rather than a `background-image` on the hero root, so
+    // authors can fade it independently of the text overlay. Opacity of 0
+    // (default) keeps historical rendering; 100 hides the image entirely
+    // without dropping the scrim + text-shadow legibility layer above it.
     const style: React.CSSProperties = {
-        backgroundImage: c.bgImage ? `url(${c.bgImage})` : undefined,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
         borderLeft: c.accent ? `4px solid ${c.accent}` : undefined,
     };
     const fullbleed = !!c.bgImage;
+    const bgOpacityPct = typeof c.bgOpacity === 'number'
+        ? Math.max(0, Math.min(100, c.bgOpacity))
+        : 0;
+    const portraitOpacityPct = typeof c.portraitOpacity === 'number'
+        ? Math.max(0, Math.min(100, c.portraitOpacity))
+        : 0;
     const hasSideBlock = Boolean(c.portraitLabel || c.portraitImage);
     const hasCta = Boolean(c.ctaPrimary?.label || c.ctaSecondary?.label);
 
     return (
         <div className={`hero ${item.style ?? ''}${fullbleed ? ' is-fullbleed' : ''}${hasSideBlock ? ' hero--has-portrait' : ''}`} style={style}>
+            {fullbleed && (
+                <div
+                    className="hero__bg"
+                    aria-hidden
+                    style={{
+                        backgroundImage: `url(${c.bgImage})`,
+                        opacity: bgOpacityPct > 0 ? 1 - bgOpacityPct / 100 : undefined,
+                    }}
+                />
+            )}
             <div className="hero__main">
                 {c.eyebrow && (
                     <RevealOnScroll as="div" className="hero__eyebrow">
@@ -146,7 +164,11 @@ const Hero = ({item, tApp}: {
             {hasSideBlock && (
                 <div className="hero__portrait">
                     {c.portraitImage ? (
-                        <img src={c.portraitImage} alt=""/>
+                        <img
+                            src={c.portraitImage}
+                            alt=""
+                            style={portraitOpacityPct > 0 ? {opacity: 1 - portraitOpacityPct / 100} : undefined}
+                        />
                     ) : (
                         <>
                             <span className="hero__portrait-corner hero__portrait-corner--tl">+</span>

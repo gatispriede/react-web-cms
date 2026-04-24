@@ -1,0 +1,122 @@
+// Drop-state chrome for `<ImageDropTarget>` (see `ui/client/lib/ImageDropTarget.tsx`).
+//
+// Three states, driven by data-* attributes the wrapper sets:
+//   • idle                 — no styling, target shows its own content only
+//   • data-drop-active     — something acceptable is being dragged over the
+//                            target. Accent outline + subtle tint. The dashed
+//                            pattern matches `.section-drop-indicator` in
+//                            `global.scss` so the editor has one visual
+//                            vocabulary for "this is a drop zone".
+//   • data-drop-uploading  — a dropped file is being POSTed. A spinner
+//                            overlay blocks accidental second drops; the
+//                            ring uses the `@keyframes` already shared
+//                            across the admin (see `.admin-loading`).
+//
+// Targets opt into the chrome by wrapping the image. The wrapper is a
+// positioned container so the overlay can absolute-fill without the parent
+// layout needing to know.
+
+.image-drop-target {
+    position: relative;
+    transition: outline-color 160ms ease, background-color 160ms ease;
+    outline: 2px dashed transparent;
+    outline-offset: 2px;
+    border-radius: 4px;
+
+    &[data-drop-active='true'] {
+        outline-color: var(--theme-colorPrimary, #1677ff);
+        background-color: color-mix(in srgb, var(--theme-colorPrimary, #1677ff) 8%, transparent);
+    }
+
+    &[data-drop-invalid='true'] {
+        outline-color: var(--theme-colorError, #ff4d4f);
+        background-color: color-mix(in srgb, var(--theme-colorError, #ff4d4f) 10%, transparent);
+    }
+
+    &__hint {
+        // Absolutely centered text cue — fades in on drop-active.
+        // Pointer-events:none so it doesn't steal dragleave/drop from the
+        // underlying target. Opaque bg so it reads over busy images.
+        position: absolute;
+        inset: 50% auto auto 50%;
+        transform: translate(-50%, -50%);
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.72);
+        color: #fff;
+        font-size: 12px;
+        letter-spacing: 0.3px;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 160ms ease;
+        z-index: 2;
+    }
+
+    &[data-drop-active='true'] &__hint {
+        opacity: 1;
+    }
+
+    &[data-drop-uploading='true'] {
+        pointer-events: none;
+        opacity: 0.75;
+    }
+
+    &__spinner {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.55);
+        backdrop-filter: blur(2px);
+        border-radius: inherit;
+        z-index: 3;
+
+        &::before {
+            content: '';
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid rgba(0, 0, 0, 0.15);
+            border-top-color: var(--theme-colorPrimary, #1677ff);
+            animation: image-drop-spin 0.85s linear infinite;
+        }
+    }
+}
+
+@keyframes image-drop-spin {
+    to { transform: rotate(360deg); }
+}
+
+// Admin in-page drop host (see `ui/admin/lib/AdminItemDropHost.tsx`).
+// The wrapper always exists for image-bearing modules in admin mode; the
+// `.is-empty` modifier kicks in when the module has no src yet so the
+// operator sees a drop-able silhouette even though the public `Display`
+// component would otherwise render nothing. 100×100 floor matches the
+// user's request — "at least 100 x 100 as empty place". The filled state
+// relies on the default `&[data-drop-active]` outline above, which traces
+// the natural bounds of whatever image is rendered inside.
+.admin-item-drop-host {
+    // Guarantee a visible hit area even when the inner Display renders
+    // nothing. `min-height` alone would collapse on flex parents, so we
+    // also set `display:block` to keep the box measurable.
+    &.is-empty {
+        display: block;
+        min-width: 100px;
+        min-height: 100px;
+        outline: 2px dashed rgba(0, 0, 0, 0.18);
+        outline-offset: 0;
+        background: repeating-linear-gradient(
+            45deg,
+            rgba(0, 0, 0, 0.02) 0,
+            rgba(0, 0, 0, 0.02) 6px,
+            transparent 6px,
+            transparent 12px
+        );
+
+        &[data-drop-active='true'] {
+            outline-color: var(--theme-colorPrimary, #1677ff);
+            background-color: color-mix(in srgb, var(--theme-colorPrimary, #1677ff) 10%, transparent);
+        }
+    }
+}

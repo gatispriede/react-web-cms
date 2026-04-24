@@ -1,35 +1,305 @@
+// Admin image picker (`ui/admin/lib/ImageUpload.tsx`).
+//
+// Layout after the C5 picker-improvements rewrite:
+//
+//   ┌───────────────────────────────────┐
+//   │ tags + upload controls │ preview  │   upload-image-container
+//   ├───────────────────────────────────┤
+//   │ search / sort / count             │   image-search-container
+//   ├────────────────────────┬──────────┤
+//   │ tile grid              │ sticky   │   image-grid-layout
+//   │                        │ preview  │     ├─ image-result-container
+//   │                        │ panel    │     └─ image-preview-panel
+//   └────────────────────────┴──────────┘
+//
+// Tiles are full-bleed thumbnails with an always-visible caption strip
+// (name + size), a hover-revealed actions row (info / preview / delete),
+// and an expandable details drawer. See the component for state flow;
+// chrome-only here.
+
 .image-upload {
-  .upload-image-container {
-    border: 2px dashed rgba(58, 58, 58, 0.22);
-    border-radius: 4px;
-    padding: 10px;
-    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 
-    .image-preview img {
-      max-height: 140px;
-    }
-  }
-
-  .image-select-container {
-    .image-search-container {
-      padding: 10px 0;
-      border-bottom: 1px solid rgba(128, 128, 128, 0.51);
-      input {
-        width: 100%;
-      }
+    // ---- Tiny form primitives reused across the picker. Kept here (not
+    //      in globals) because the picker is the only consumer and the
+    //      spacing is tuned for its modal width.
+    .field-label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: rgba(0, 0, 0, 0.72);
+        margin-bottom: 4px;
+        letter-spacing: 0.2px;
     }
 
-    .image-result-container {
-      // Grid layout is declared inline; no flex/width overrides here.
-      .image-item {
-        // Tile is full-bleed image — only the thumbnail itself stretches.
-        > img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          display: block;
+    .field-hint {
+        font-size: 11px;
+        color: rgba(0, 0, 0, 0.5);
+        line-height: 1.4;
+    }
+
+    .result-count {
+        font-size: 11px;
+        color: rgba(0, 0, 0, 0.55);
+        margin-left: 4px;
+    }
+
+    // ---- Top strip: tag editor + upload buttons on the left, small upload
+    //      preview box on the right. The Uppload widget binds to the <img>
+    //      inside `.image-preview` so we give it a hard size floor.
+    .upload-image-container {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 200px;
+        gap: 16px;
+        padding: 12px;
+        border: 2px dashed rgba(58, 58, 58, 0.22);
+        border-radius: 6px;
+
+        .tag-container {
+            margin-bottom: 8px;
         }
-      }
+
+        .image-preview {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+
+            img.uppload-image {
+                width: 100%;
+                height: 120px;
+                object-fit: contain;
+                background: #f5f5f5;
+                border-radius: 4px;
+            }
+        }
     }
-  }
+
+    // ---- Search / sort / count row.
+    .image-select-container {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        .image-search-container {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(128, 128, 128, 0.3);
+
+            > .ant-input-affix-wrapper,
+            > .ant-input {
+                flex: 1 1 220px;
+                min-width: 180px;
+            }
+        }
+
+        // ---- Two-column body: tile grid + persistent preview panel.
+        //      minmax floor on the panel keeps the filename readable;
+        //      `align-items: start` stops the preview from stretching
+        //      to the full grid height on short result sets.
+        .image-grid-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(200px, 260px);
+            gap: 12px;
+            align-items: start;
+        }
+
+        .image-result-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+        }
+    }
+
+    // ---- Tile.
+    .image-item {
+        position: relative;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 6px;
+        overflow: hidden;
+        background: #fafafa;
+        cursor: pointer;
+        transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+        display: flex;
+        flex-direction: column;
+        outline: none;
+
+        &:hover,
+        &:focus-visible {
+            border-color: var(--theme-colorPrimary, #1677ff);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        &:focus-visible {
+            // Ring that doesn't collapse layout — matches AntD's focus
+            // convention so keyboard users get a clear signal without
+            // breaking grid rhythm.
+            box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.2), 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        &.is-expanded {
+            border-color: var(--theme-colorPrimary, #1677ff);
+            grid-row: span 2;
+        }
+
+        &__thumb {
+            display: block;
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            object-fit: cover;
+            background: #eee;
+        }
+
+        // Hover-revealed action cluster (info, preview, delete).
+        // `stopPropagation` on the container handles tile-vs-button clicks
+        // in the component; here we just position + fade.
+        &__actions {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transform: translateY(-2px);
+            transition: opacity 140ms ease, transform 140ms ease;
+
+            .ant-btn {
+                background: rgba(255, 255, 255, 0.92);
+                backdrop-filter: blur(2px);
+                border-color: rgba(0, 0, 0, 0.1);
+            }
+        }
+
+        &:hover &__actions,
+        &:focus-within &__actions,
+        &.is-expanded &__actions {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        // Always-visible filename + size strip. Name truncates; size stays
+        // right-aligned so it doesn't push the filename ellipsis around as
+        // the panel resizes.
+        &__caption {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 6px 8px;
+            font-size: 11px;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+            background: #fff;
+        }
+
+        &__name {
+            flex: 1 1 auto;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: rgba(0, 0, 0, 0.82);
+        }
+
+        &__size {
+            flex: 0 0 auto;
+            color: rgba(0, 0, 0, 0.45);
+            font-variant-numeric: tabular-nums;
+        }
+
+        // Expanded details drawer — renders below the caption when the
+        // info button is toggled. Only one tile can be expanded at a time
+        // (component state) so vertical jumps stay predictable.
+        &__details {
+            padding: 8px;
+            font-size: 11px;
+            color: rgba(0, 0, 0, 0.7);
+            background: #fafafa;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+            line-height: 1.5;
+
+            > div {
+                margin-bottom: 2px;
+            }
+        }
+    }
+
+    // ---- Persistent preview panel.
+    .image-preview-panel {
+        position: sticky;
+        top: 0;
+        padding: 10px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 6px;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+
+        &__box {
+            // `resize: both` satisfies the roadmap's "~100×60 default,
+            // resizable to ~400×240" requirement without us wiring a
+            // drag handler. Overflow:hidden so resizing doesn't let the
+            // image poke outside the rounded frame.
+            resize: both;
+            overflow: hidden;
+            min-width: 100px;
+            min-height: 60px;
+            width: 100%;
+            height: 140px;
+            max-width: 400px;
+            max-height: 320px;
+            border-radius: 4px;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            img {
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: contain;
+            }
+        }
+
+        &__placeholder {
+            font-size: 11px;
+            color: rgba(0, 0, 0, 0.4);
+            text-align: center;
+            padding: 12px;
+        }
+
+        &__meta {
+            font-size: 11px;
+            color: rgba(0, 0, 0, 0.7);
+            overflow: hidden;
+        }
+
+        &__name {
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        &__size {
+            color: rgba(0, 0, 0, 0.5);
+            font-variant-numeric: tabular-nums;
+        }
+    }
+
+    // Narrow-viewport fallback — collapse to a single column so the
+    // preview panel drops below the grid instead of squeezing tiles.
+    @media (max-width: 720px) {
+        .image-select-container .image-grid-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .upload-image-container {
+            grid-template-columns: 1fr;
+        }
+    }
 }

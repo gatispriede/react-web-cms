@@ -82,6 +82,8 @@ export interface InSection {
   overlayAnchor?: InputMaybe<Scalars["String"]["input"]>;
   page: Scalars["String"]["input"];
   slots?: InputMaybe<Array<InputMaybe<Scalars["Int"]["input"]>>>;
+  transparent?: InputMaybe<Scalars["Boolean"]["input"]>;
+  transparentOpacity?: InputMaybe<Scalars["Int"]["input"]>;
   type: Scalars["Int"]["input"];
 }
 
@@ -186,6 +188,8 @@ export const generatedSchema = {
     overlayAnchor: { __type: "String" },
     page: { __type: "String" },
     slots: { __type: "[Int]" },
+    transparent: { __type: "Boolean" },
+    transparentOpacity: { __type: "Int" },
     type: { __type: "Int!" },
     version: { __type: "Int" },
   },
@@ -256,6 +260,8 @@ export const generatedSchema = {
     overlayAnchor: { __type: "String" },
     page: { __type: "String!" },
     slots: { __type: "[Int]" },
+    transparent: { __type: "Boolean" },
+    transparentOpacity: { __type: "Int" },
     type: { __type: "Int!" },
   },
   InSeo: {
@@ -486,6 +492,8 @@ export interface ISection {
   overlayAnchor?: Maybe<Scalars["String"]["output"]>;
   page?: Maybe<Scalars["String"]["output"]>;
   slots?: Maybe<Array<Maybe<Scalars["Int"]["output"]>>>;
+  transparent?: Maybe<Scalars["Boolean"]["output"]>;
+  transparentOpacity?: Maybe<Scalars["Int"]["output"]>;
   type?: Scalars["Int"]["output"];
   /**
    * Optimistic-concurrency counter — see src/Server/conflict.ts.

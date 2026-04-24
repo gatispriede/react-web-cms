@@ -90,6 +90,7 @@ const SECTIONS_QUERY = `query($ids:[String]){
     getSections(ids: $ids) {
       id page type
       slots overlay overlayAnchor version
+      transparent transparentOpacity
       content { name type style content action actionStyle actionType actionContent }
     }
   }

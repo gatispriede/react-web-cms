@@ -35,13 +35,37 @@ export interface FooterAutoContext {
     blogEnabled?: boolean;
 }
 
+/**
+ * Titles the auto "Site" column will also recognise as "operator
+ * already has a nav-style column — don't add the default too". Matching
+ * is case-insensitive and diacritic-tolerant via a normalise helper so
+ * "Navigācija" and "navigacija" both suppress the duplicate.
+ */
+const NAV_TITLE_ALIASES = new Set([
+    'site', 'nav', 'navigation', 'navigacija',
+]);
+
+const normaliseTitle = (s: string) =>
+    (s || '').trim().toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
 export function buildFooterColumns(
     config: IFooterConfig,
     ctx: FooterAutoContext,
     tr: (s: string) => string = (s) => s,
 ): IFooterColumn[] {
+    const customTitlesNorm = new Set(
+        config.columns.map(c => normaliseTitle(c.title)),
+    );
+
     const auto: IFooterColumn[] = [];
-    if (ctx.pages.length > 0) {
+    // Only emit the auto "Site" column if the operator hasn't already
+    // configured one under any of the nav-ish aliases. Prevents the
+    // "SITE + NAVIGĀCIJA" duplicate seen on sites where the operator
+    // added their own localised nav column before we shipped the auto
+    // column.
+    const operatorHasNav = [...customTitlesNorm].some(t => NAV_TITLE_ALIASES.has(t));
+    if (ctx.pages.length > 0 && !operatorHasNav) {
         auto.push({
             title: tr('Site'),
             entries: ctx.pages.map(p => ({
@@ -53,14 +77,14 @@ export function buildFooterColumns(
     if (ctx.hasPosts && ctx.blogEnabled !== false) {
         auto.push({title: tr('Writing'), entries: [{label: tr('Blog'), url: '/blog'}]});
     }
-    const customByTitle = new Map(config.columns.map(c => [c.title.toLowerCase(), c]));
+    const customByTitle = new Map(config.columns.map(c => [normaliseTitle(c.title), c]));
     const merged = auto.map(col =>
-        customByTitle.has(col.title.toLowerCase())
-            ? customByTitle.get(col.title.toLowerCase())!
+        customByTitle.has(normaliseTitle(col.title))
+            ? customByTitle.get(normaliseTitle(col.title))!
             : col
     );
     for (const col of config.columns) {
-        if (!auto.some(a => a.title.toLowerCase() === col.title.toLowerCase())) {
+        if (!auto.some(a => normaliseTitle(a.title) === normaliseTitle(col.title))) {
             merged.push(col);
         }
     }

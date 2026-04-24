@@ -1,5 +1,5 @@
 import React from "react";
-import {Button, Checkbox, Col, Collapse, ColorPicker, Divider, Input, Row, Space} from "antd";
+import {Button, Checkbox, Col, Collapse, ColorPicker, Divider, Input, Row, Slider, Space, Typography} from "antd";
 import ImageUrlInput from "@client/lib/ImageUrlInput";
 import {DeleteOutlined, PlusOutlined} from "@client/lib/icons";
 import {IInputContent} from "@interfaces/IInputContent";
@@ -201,6 +201,24 @@ const HeroEditor = ({content, setContent, t}: IInputContent) => {
                                         placeholder="api/portrait.jpg"
                                     />
                                 </Col>
+                                {/* Portrait image opacity — only meaningful when an
+                                    image is set. Slider reads 0–100 where 0 is
+                                    fully visible (historical behaviour) and 100
+                                    hides the image. */}
+                                <Col xs={24}>
+                                    <Typography.Text type="secondary" style={{fontSize: 12}}>
+                                        {t('Portrait image transparency')}: {data.portraitOpacity ?? 0}%
+                                    </Typography.Text>
+                                    <Slider
+                                        min={0}
+                                        max={100}
+                                        step={5}
+                                        value={data.portraitOpacity ?? 0}
+                                        disabled={!data.portraitImage}
+                                        onChange={v => update('portraitOpacity', typeof v === 'number' ? v : 0)}
+                                        tooltip={{formatter: (v) => `${v}%`}}
+                                    />
+                                </Col>
                             </Row>
                         ),
                     },
@@ -285,6 +303,26 @@ const HeroEditor = ({content, setContent, t}: IInputContent) => {
                                     <label>{t('Accent color')}</label>
                                     <br/>
                                     <ColorPicker value={data.accent || '#1677ff'} onChange={v => update('accent', toHex(v))} showText/>
+                                </Col>
+                                {/* Background image opacity — fades the bg layer
+                                    behind the text overlay so authors can tone a
+                                    busy photograph without dropping legibility
+                                    (text + scrim stay at full opacity). Scale
+                                    mirrors the section-level transparency slider:
+                                    0 = historical, 100 = invisible. */}
+                                <Col xs={24}>
+                                    <Typography.Text type="secondary" style={{fontSize: 12}}>
+                                        {t('Background image transparency')}: {data.bgOpacity ?? 0}%
+                                    </Typography.Text>
+                                    <Slider
+                                        min={0}
+                                        max={100}
+                                        step={5}
+                                        value={data.bgOpacity ?? 0}
+                                        disabled={!data.bgImage}
+                                        onChange={v => update('bgOpacity', typeof v === 'number' ? v : 0)}
+                                        tooltip={{formatter: (v) => `${v}%`}}
+                                    />
                                 </Col>
                             </Row>
                         ),

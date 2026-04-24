@@ -50,15 +50,16 @@ Tracked separately under [production/](production/) so the two streams can be sc
 | C1 | [themes-as-files.md](themes-as-files.md) | M | **Shipped (2026-04-24)** — four editorial presets in `ui/client/themes/*.json`, seeded on boot when missing; admin "Reset to preset" overwrites DB row from disk |
 | C2 | [image-optimization-on-upload.md](image-optimization-on-upload.md) | M | **Shipped (2026-04-24, partial)** — shared `imageOptimize.ts` pipeline (resize 1920 cap + recompress + strip EXIF + size guard) on both single + batch uploads; `IImage` schema fields (width/height/etc) deferred to a separate migration |
 | C3 | [bulk-image-upload-with-ratio.md](bulk-image-upload-with-ratio.md) | L | **Shipped (2026-04-24)** — `/api/upload-batch` (sharp cover-crop + EXIF strip + collision-safe), `BulkImageUploadModal`, GalleryEditor "Bulk upload" button; per-image crop-handle deferred |
-| C4 | [drag-drop-images-modules.md](drag-drop-images-modules.md) | M | OS file + URL drops onto any image module |
-| C5 | [picker-improvements.md](picker-improvements.md) | M | Show-more panel, persistent ~100×60 preview box, filter/sort |
+| C4 | [drag-drop-images-modules.md](drag-drop-images-modules.md) | M | **Shipped (2026-04-24)** — extended `useImageDrop` with OS file upload + URL re-host + per-file AntD toasts; shared `<ImageDropTarget>` wrapper + SCSS; wired into Gallery / Carousel / PlainImage / ImageUrlInput / Logo settings |
+| C5 | [picker-improvements.md](picker-improvements.md) | M | **Shipped (2026-04-24)** — sort dropdown (recent/name/size), two-column grid + sticky resizable preview panel, always-visible name+size caption, per-tile info drawer, keyboard navigation, localStorage-persisted sort/search |
 | C6 | [gallery-improvements.md](gallery-improvements.md) | L | **Shipped (2026-04-24, partial)** — aspect-ratio lock, Masonry style, per-tile `href`, up/down reorder; custom lightbox + drag-reorder deferred |
 | C7 | [logo-style-options.md](logo-style-options.md) | S | **Shipped (2026-04-24)** — site-wide Logo `style` field + `.logo--{default,bordered,framed,circle}` SCSS + admin Style select; tokens fall back to theme so presets unchanged |
 | C8 | [module-transparency-style.md](module-transparency-style.md) | S | **Shipped (2026-04-24)** — `transparent` flag on `ISection` + `.is-transparent` renderer rule + admin Switch with contrast hint |
 | C9 | [production-caching.md](production-caching.md) | L | ISR + on-demand revalidation + Caddy SWR + DataLoader |
-| C10 | [admin-modules-preview-page.md](admin-modules-preview-page.md) | M | Admin page rendering every module × every style × theme switcher — catch regressions before ship |
+| C10 | [admin-modules-preview-page.md](admin-modules-preview-page.md) | M | **Shipped (2026-04-24)** — `/admin/modules-preview` with sample fixture per `EItemType`, theme-switcher dropdown (client-side `applyThemeCssVars`), transparent-bg toggle, module-name filter; sample-coverage test fails if a new type ships without a fixture |
 | C11 | [admin-menu-icons.md](admin-menu-icons.md) | S | **Shipped (2026-04-24)** — icons on every main-nav button + settings tab + sidebar row; adapter extended with 11 new lucide mappings |
 | BUG | [client-report-2026-04-24.md](client-report-2026-04-24.md) | S×3 | Client-flagged: (1) Hero text overflow on narrow viewport, (2) Hero text contrast, (3) Services module — can't add new item |
+| C12 | [image-width-height-respect.md](image-width-height-respect.md) | S | Author-supplied `width` / `height` on Logo, PlainImage, Gallery, Carousel, ProjectCard, Hero portrait currently ignored by public render — flagged 2026-04-24 from SkyClimber review |
 
 ### Reference docs
 

@@ -4,6 +4,7 @@ import {DeleteOutlined} from "@client/lib/icons";
 import {ELogoStyle} from "@enums/ELogoStyle";
 import {useTranslation} from "react-i18next";
 import ImageUpload from "@admin/lib/ImageUpload";
+import ImageDropTarget from "@client/lib/ImageDropTarget";
 import MongoApi from "@services/api/client/MongoApi";
 import {PUBLIC_IMAGE_PATH} from "@utils/imgPath";
 import AuditBadge from "@admin/shell/AuditBadge";
@@ -190,9 +191,16 @@ const AdminSettingsLogo: React.FC = () => {
             </Space>
 
             <Typography.Text strong>{t('Upload or pick a logo image')}</Typography.Text>
-            <div style={{marginTop: 8}}>
+            {/* Wrap the upload control as a drop target so editors can drag a
+                file / URL / picker tile straight onto the logo card — mirrors
+                the PlainImage / Gallery / Carousel drag-drop affordance. */}
+            <ImageDropTarget
+                filled={!!logo.src}
+                style={{marginTop: 8}}
+                onImage={(img) => setLogo(prev => ({...prev, src: `${PUBLIC_IMAGE_PATH}${img.name}`}))}
+            >
                 <ImageUpload t={t as any} setFile={handleFile}/>
-            </div>
+            </ImageDropTarget>
 
             <Space style={{marginTop: 24}}>
                 <Button type="primary" onClick={save} loading={saving} disabled={loading}>

@@ -6,6 +6,10 @@ input InSection {
     slots: [Int]
     overlay: Boolean
     overlayAnchor: String
+    """Cross-cutting "transparent background" flag — clears the section's default bg chain."""
+    transparent: Boolean
+    """Section-level opacity, 0..100 (%). 0 / absent = opaque; 100 = invisible."""
+    transparentOpacity: Int
 }
 
 input InItem {
@@ -129,6 +133,10 @@ type ISection {
     slots: [Int]
     overlay: Boolean
     overlayAnchor: String
+    """Cross-cutting transparent-background flag — see InSection.transparent."""
+    transparent: Boolean
+    """Section opacity 0..100 (%). See InSection.transparentOpacity."""
+    transparentOpacity: Int
     """Optimistic-concurrency counter — see src/Server/conflict.ts."""
     version: Int
     editedBy: String
