@@ -16,7 +16,6 @@ Per-item implementation plans + time estimates live under [`roadmap/`](roadmap/)
 
 Grouped because most of these share the upload/optimise/picker surface and land cleanest in sequence.
 
-3. [image-optimization-on-upload.md](roadmap/image-optimization-on-upload.md) — sharp resize/recompress/strip-EXIF pipeline **(M)** — *foundation for 4–6*
 5. [drag-drop-images-modules.md](roadmap/drag-drop-images-modules.md) — OS-file and URL drops onto image modules **(M)**
 6. [picker-improvements.md](roadmap/picker-improvements.md) — show-more panel + persistent preview box + filter/sort **(M)**
 9. [production-caching.md](roadmap/production-caching.md) — ISR + on-demand revalidation + Caddy SWR + DataLoader **(L)**
@@ -33,6 +32,7 @@ Suggested order: 3 → 4 → 5 → 6 → 7 (optimisation first; it unblocks pick
 - ~~[logo-style-options.md](roadmap/logo-style-options.md)~~ — **2026-04-24** — `ELogoStyle` (Default/Bordered/Framed/Circle) on site-wide Logo; `.logo--<style>` SCSS with theme-token fallbacks; admin Style select
 - ~~[gallery-improvements.md](roadmap/gallery-improvements.md) (partial)~~ — **2026-04-24** — per-gallery aspect-ratio lock (`free/1:1/4:3/3:2/16:9`) + `EGalleryStyle.Masonry` CSS-columns + per-tile `href` + up/down reorder buttons; custom lightbox and drag-reorder deferred
 - ~~[bulk-image-upload-with-ratio.md](roadmap/bulk-image-upload-with-ratio.md)~~ — **2026-04-24** — `POST /api/upload-batch` with sharp cover-crop to chosen ratio (EXIF stripped, collision-safe `-N` suffix) + `BulkImageUploadModal` (drop-zone, XHR progress, per-file error list) + GalleryEditor "Bulk upload" button pre-filling the gallery's ratio
+- ~~[image-optimization-on-upload.md](roadmap/image-optimization-on-upload.md) (partial)~~ — **2026-04-24** — shared `imageOptimize.ts` pipeline (resize 1920 cap + recompress jpeg/png/webp/avif + strip EXIF + size guard + pass-through for unreadable) used by both single + batch uploads; `IImage` width/height/uploadedBy/etc schema fields deferred (GraphQL-generated type; needs separate SDL migration)
 
 ### Production / ops
 

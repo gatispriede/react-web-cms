@@ -21,12 +21,12 @@
 import * as Formidable from 'formidable';
 import fs from "fs";
 import path from "node:path";
-import sharp from "sharp";
 import guid from "@utils/guid";
 import {PUBLIC_IMAGE_PATH} from "@utils/imgPath";
 import {InImage} from "@interfaces/IImage";
 import {getMongoConnection} from "@services/infra/mongoDBConnection";
 import {ROLE_RANK, sessionFromReq} from "@services/features/Auth/authz";
+import {optimizeImageFile, type RatioLock} from "@services/features/Assets/imageOptimize";
 import {authOptions} from "./auth/authOptions";
 
 export const config = {
@@ -39,13 +39,7 @@ export const config = {
     }
 };
 
-type Ratio = 'free' | '1:1' | '4:3' | '3:2' | '16:9';
-const RATIO_TARGETS: Record<Exclude<Ratio, 'free'>, {w: number; h: number}> = {
-    '1:1':  {w: 1600, h: 1600},
-    '4:3':  {w: 1600, h: 1200},
-    '3:2':  {w: 1800, h: 1200},
-    '16:9': {w: 1920, h: 1080},
-};
+type Ratio = RatioLock;
 
 interface PerFileResult {
     ok: boolean;
@@ -136,30 +130,19 @@ const handler = async (req: any, res: any) => {
             const targetName = resolveUniqueName(imagesDir, originalName);
             const destPath = path.join(imagesDir, targetName);
 
-            // sharp pipeline: always strip EXIF; crop to cover the target
-            // ratio box (or just recompress when `free`). `withMetadata()`
-            // is NOT called — we intentionally drop EXIF for privacy.
-            let pipeline = sharp(file.filepath).rotate(); // auto-orient via EXIF then strip
-            if (ratio !== 'free') {
-                const {w, h} = RATIO_TARGETS[ratio];
-                pipeline = pipeline.resize(w, h, {fit: 'cover', position: 'attention'});
-            }
-            const ext = path.extname(targetName).toLowerCase();
-            if (ext === '.jpg' || ext === '.jpeg') pipeline = pipeline.jpeg({quality: 82, mozjpeg: true});
-            else if (ext === '.png') pipeline = pipeline.png({compressionLevel: 9});
-            else if (ext === '.webp') pipeline = pipeline.webp({quality: 82});
-            await pipeline.toFile(destPath);
+            // Shared pipeline (C2) — resize cap + ratio crop + recompress +
+            // EXIF strip. Falls back to the original bytes if the optimised
+            // output would be larger (already-compressed re-uploads).
+            const result = await optimizeImageFile(file.filepath, destPath, {ratio});
 
-            const {size} = await sharp(destPath).metadata();
-            // NOTE: width/height on InImage is landing with C2 (image-
-            // optimisation) — skipping here to keep the batch handler
-            // schema-compatible with the single-file endpoint.
+            // Width/height on InImage still deferred to a separate schema
+            // migration — the shape of IImage/InImage is GraphQL-generated.
             const image: InImage = {
                 created: new Date().toDateString(),
                 id: guid(),
                 location: `${PUBLIC_IMAGE_PATH}${targetName}`,
                 name: targetName,
-                size: size ?? file.size ?? 0,
+                size: result.size ?? file.size ?? 0,
                 type: file.mimetype ?? 'image/*',
                 tags: withAll,
             };

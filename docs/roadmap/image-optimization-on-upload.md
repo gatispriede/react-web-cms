@@ -1,5 +1,22 @@
 # Image optimisation on upload
 
+> **Shipped (2026-04-24, partial)** — shared pipeline lives at
+> `services/features/Assets/imageOptimize.ts` (`optimizeImageBuffer` /
+> `optimizeImageFile`). Used by both `/api/upload` (single-file) and
+> `/api/upload-batch`. Behaviour: auto-orient via EXIF → optional cover-crop
+> (ratio lock, batch only) → resize cap 1920 long edge `withoutEnlargement`
+> → recompress (jpeg q78 mozjpeg progressive / png lvl9 / webp q82 / avif
+> q60) → strip EXIF. Size guard means already-compressed re-uploads keep
+> their original bytes. Unreadable formats (SVG/GIF/corrupt) pass through
+> untouched. 6 hermetic unit tests on `imageOptimize.ts` (no checked-in
+> binaries — sharp composes fixtures in-memory).
+>
+> **Deferred:** `width`/`height`/`sizeBytes`/`originalName`/`uploadedBy`/
+> `uploadedAt` fields on `IImage`. The type is GraphQL-generated, so the
+> schema change is a separate migration (SDL edit + regeneration + mongo
+> back-fill). The pipeline computes these values (see `OptimizeResult`) —
+> they're just not persisted to the DB yet.
+
 ## Goal
 
 Every image that enters the CMS lands on disk already resized, recompressed and

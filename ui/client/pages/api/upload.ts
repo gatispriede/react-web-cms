@@ -6,6 +6,7 @@ import {PUBLIC_IMAGE_PATH} from "@utils/imgPath";
 import {InImage} from "@interfaces/IImage";
 import {getMongoConnection} from "@services/infra/mongoDBConnection";
 import {ROLE_RANK, sessionFromReq} from "@services/features/Auth/authz";
+import {optimizeImageFile} from "@services/features/Assets/imageOptimize";
 import {authOptions} from "./auth/authOptions";
 
 export const config = {
@@ -50,11 +51,12 @@ const uploadForm = (next: { (req: any, res: any): void; (arg0: any, arg1: any): 
                 const fileTargetName = file.originalFilename.replace(' ','_')
                 const existingFile = fs.existsSync(`ui/client/public/images/${fileTargetName}`);
                 if(!existingFile){
-                    // copy+unlink instead of rename — `public/temp` is on the
-                    // container overlay fs while `public/images` is bind-mounted
-                    // from the host, so renameSync fails with EXDEV.
+                    // Optimise on ingest (C2) — resize cap 1920 long edge,
+                    // recompress, strip EXIF. Preserves the original bytes
+                    // when the optimised output would be larger. Replaces
+                    // the prior copyFileSync pass-through.
                     const dest = path.join(process.cwd(), 'ui/client/', `public/images/${fileTargetName}`);
-                    fs.copyFileSync(file.filepath, dest);
+                    const optResult = await optimizeImageFile(file.filepath, dest);
                     fs.unlinkSync(file.filepath);
                     const rawTags = (() => {
                         try { return JSON.parse(fields.tags) } catch { return [] }
@@ -66,7 +68,7 @@ const uploadForm = (next: { (req: any, res: any): void; (arg0: any, arg1: any): 
                         id: guid(),
                         location: `${PUBLIC_IMAGE_PATH}${fileTargetName}`,
                         name: fileTargetName,
-                        size: file.size,
+                        size: optResult.size ?? file.size,
                         type: file.mimetype,
                         tags: withAll
                     }
