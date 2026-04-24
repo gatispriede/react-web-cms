@@ -1,6 +1,6 @@
 # Data model
 
-UML at [`../../src/frontend/public/data-model.svg`](../../src/frontend/public/data-model.svg). Authoritative GraphQL types in [`../../src/Server/schema.graphql`](../../src/Server/schema.graphql). TypeScript-side mirrors live under [`../../src/Interfaces/`](../../src/Interfaces/).
+UML at [`./data-model.svg`](./data-model.svg). Authoritative GraphQL types in [`../../services/api/schema.graphql`](../../services/api/schema.graphql). TypeScript-side mirrors live under [`../../shared/types/`](../../shared/types/).
 
 ## Mongo collections
 

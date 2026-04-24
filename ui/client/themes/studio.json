@@ -1,0 +1,28 @@
+{
+    "name": "Studio",
+    "custom": false,
+    "tokens": {
+        "colorPrimary": "#C24B1E",
+        "colorBgBase": "#E8E3D3",
+        "colorTextBase": "#13201A",
+        "colorSuccess": "#52c41a",
+        "colorWarning": "#faad14",
+        "colorError": "#ff4d4f",
+        "colorInfo": "#1E5A6B",
+        "colorBgInset": "#DDD7C2",
+        "colorInkSecondary": "#2C3A30",
+        "colorInkTertiary": "#5A6559",
+        "colorRule": "#B5B49B",
+        "colorRuleStrong": "#8A8A73",
+        "colorAccent": "#C24B1E",
+        "colorAccentInk": "#F5F0E6",
+        "colorMark": "rgba(194, 75, 30, 0.12)",
+        "fontDisplay": "'Fraunces', 'Times New Roman', serif",
+        "fontMono": "'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace",
+        "fontSans": "'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "borderRadius": 2,
+        "fontSize": 16,
+        "contentPadding": 32,
+        "themeSlug": "studio"
+    }
+}

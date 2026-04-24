@@ -1,0 +1,49 @@
+{$DOMAIN} {
+    encode zstd gzip
+
+    # --- Static uploads served by Caddy, bypassing Next.js ---
+    # Uploaded files aren't in Next's build-time public manifest (they live
+    # on the host's ./uploads bind mount). Previously the /api/[name].ts
+    # and /api/media/[...path].ts handlers served them via synchronous
+    # fs.readFileSync, which blocked the Node event loop on every request
+    # and competed with GraphQL / SSR for the single vCPU on small droplets.
+    # file_server streams from disk, auto-sets ETag + mime, and requires
+    # zero app CPU.
+
+    # Admin uploads land in /opt/cms/uploads/images/ (bind-mounted at
+    # /srv/uploads/images). Bundle/design assets in /srv/uploads/design-v2.
+    @uploads path /design-v2/* /images/*
+    handle @uploads {
+        root * /srv/uploads
+        file_server
+        # 5 min freshness + a week of stale-while-revalidate. Caddy also
+        # emits ETag, so 304s are cheap even during the stale window.
+        # Admins see replaced images within 5 minutes without cache busting.
+        header Cache-Control "public, max-age=300, stale-while-revalidate=604800"
+    }
+
+    # Legacy path: the /api/[name].ts handler previously served image files
+    # as /api/<filename>.<ext>. Catch only requests that look like an image
+    # filename (keeps /api/graphql, /api/presence, /api/upload, etc. going
+    # to the Next app) and serve them from /srv/uploads/images/.
+    @legacyApiImages path_regexp legacy ^/api/([^/]+\.(?i:jpe?g|png|webp|gif|svg|avif))$
+    handle @legacyApiImages {
+        rewrite * /images/{re.legacy.1}
+        root * /srv/uploads
+        file_server
+        header Cache-Control "public, max-age=300, stale-while-revalidate=604800"
+    }
+
+    # --- Everything else → Next.js app ---
+    reverse_proxy app:80
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Frame-Options "DENY"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    @static path /_next/static/*
+    header @static Cache-Control "public, max-age=31536000, immutable"
+}

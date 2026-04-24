@@ -1,0 +1,25 @@
+{
+    "name": "High contrast",
+    "custom": false,
+    "tokens": {
+        "colorPrimary": "#ffd400",
+        "colorBgBase": "#000000",
+        "colorTextBase": "#ffffff",
+        "colorSuccess": "#7cffb2",
+        "colorWarning": "#ffd400",
+        "colorError": "#ff8a8a",
+        "colorInfo": "#a5f3fc",
+        "colorBgInset": "#0a0a0a",
+        "colorInkSecondary": "#f5f5f5",
+        "colorInkTertiary": "#d4d4d4",
+        "colorRule": "#ffffff",
+        "colorRuleStrong": "#ffffff",
+        "colorAccent": "#ffd400",
+        "colorAccentInk": "#000000",
+        "colorMark": "rgba(255, 212, 0, 0.28)",
+        "borderRadius": 0,
+        "fontSize": 17,
+        "contentPadding": 28,
+        "themeSlug": "high-contrast"
+    }
+}

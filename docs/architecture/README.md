@@ -39,7 +39,7 @@ The "Canonical" docs stay at the repo root because dozens of other files (`ROADM
 
 ## Diagrams
 
-- [`../../src/frontend/public/data-model.svg`](../../src/frontend/public/data-model.svg) — UML of the Mongo collections.
+- [`./data-model.svg`](./data-model.svg) — UML of the Mongo collections.
 
 Sequence + topology diagrams (request lifecycle, deployment containers) are deferred. Until they ship, the textual `request-lifecycle.md` carries the same information in ASCII steps.
 

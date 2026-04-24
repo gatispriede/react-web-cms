@@ -1,92 +1,67 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Single source of truth — all ignore rules live here, no sub-folder .gitignore files.
 
-#frontend
-/src/frontend/.next
+# ── Build outputs / generated runtime artefacts ──────────────────────────────
+# Path-agnostic so the reshape (src/frontend/ → ui/client/) doesn't leave stale rules.
+**/.next/
+**/dist/
+**/build/
+**/LogFiles/
+**/coverage/
+*.tsbuildinfo
 
-/src/frontend/public/images
-/src/frontend/public/temp
-/uploads/images/*
-!/uploads/images/.gitkeep
-/uploads/design-v2/*
-!/uploads/design-v2/.gitkeep
-
-/.cache
-
-# dependencies
+# ── Dependencies ─────────────────────────────────────────────────────────────
 /node_modules
 /.pnp
 .pnp.js
+/.cache
 
-#IDE
-/.idea/*
-!.idea/rcb-settings.xml
+# ── Runtime uploads / local dev data ─────────────────────────────────────────
+# Folders auto-created on demand (upload.ts mkdirSync / CI mkdir -p / compose
+# volume mount). No .gitkeep needed — git doesn't track empty dirs and nothing
+# here needs to survive a fresh clone.
+/uploads/
+/ui/client/public/images
+/ui/client/public/temp
+/ui/client/public/uploads
 
-# testing
-/coverage
-
-# production
-/build
-
-# misc
-.DS_Store
-src/frontend/.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-IP.ts
-
-# local-only secrets / ops notes — infra IPs, cert fingerprints, passwords
-/secrets.md
-/secrets/
-
-# local dev data — MongoDB WiredTiger storage, bundle exports, log files
-/data
+# MongoDB WiredTiger storage + bundle exports
+/data/**
 /mongo_data
-/src/frontend/public/LogFiles
 
-# generated first-boot admin credentials (see src/Server/initialPassword.ts)
+# Generated first-boot admin credentials (see services/features/Auth/initialPassword.ts)
 /var/
 
-# env / secrets
+# ── Env / secrets ────────────────────────────────────────────────────────────
 .env
 .env.*
 !.env.example
-src/frontend/.env
+IP.ts
 
-# TLS certs / keys — localhost dev or otherwise, never commit private keys
-certificates/*
-!certificates/.gitkeep
+# Local-only secrets / ops notes — infra IPs, cert fingerprints, passwords
+/secrets.md
+/secrets/
+
+# ── TLS certs / keys (dev + prod) ────────────────────────────────────────────
+/infra/certificates/
 **/*.pem
 **/*.key
 **/*.crt
 **/*.p12
 **/*.pfx
 
-# TS incremental build caches
-*.tsbuildinfo
-
-# OS cruft
+# ── Editor / OS / tool cruft ─────────────────────────────────────────────────
+/.idea/*
+!/.idea/rcb-settings.xml
+.DS_Store
 Thumbs.db
 desktop.ini
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# local Claude state — keep launch.json (shared), ignore per-user settings
+# Local Claude state — keep launch.json (shared), ignore per-user settings
 .claude/settings.local.json
-/public/Gatis Priede CV.md
 
-# design reference assets — HTML mockups, screenshots, uploaded images (large binaries)
-public/design-v2/assets/
-public/design-v2/skyclimber.bundle.json
-public/design-v5/*.html
-public/design-v5/responsive-test.html
-public/design-v5/screenshots/
-public/design-v5/uploads/
-public/design-v6/*.html
-public/design-v6/responsive-test.html
-public/design-v6/screenshots/
-public/design-v6/uploads/
-src/frontend/public/design-v2/
+# ── Legacy design reference assets (root /public/, not ui/client/public/) ────
+/public/**

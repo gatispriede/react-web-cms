@@ -1,0 +1,28 @@
+{
+    "name": "Paper",
+    "custom": false,
+    "tokens": {
+        "colorPrimary": "#c65a2a",
+        "colorBgBase": "#f7f3e8",
+        "colorTextBase": "#1f1b15",
+        "colorSuccess": "#52c41a",
+        "colorWarning": "#faad14",
+        "colorError": "#ff4d4f",
+        "colorInfo": "#1f3a8a",
+        "colorBgInset": "oklch(0.945 0.012 82)",
+        "colorInkSecondary": "oklch(0.36 0.01 60)",
+        "colorInkTertiary": "oklch(0.55 0.008 60)",
+        "colorRule": "oklch(0.82 0.012 70)",
+        "colorRuleStrong": "oklch(0.62 0.012 60)",
+        "colorAccent": "oklch(0.58 0.17 35)",
+        "colorAccentInk": "oklch(0.98 0.008 85)",
+        "colorMark": "oklch(0.58 0.17 35 / 0.14)",
+        "fontDisplay": "'Instrument Serif', ui-serif, Georgia, serif",
+        "fontMono": "'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace",
+        "fontSans": "'Inter Tight', system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "borderRadius": 0,
+        "fontSize": 15,
+        "contentPadding": 28,
+        "themeSlug": "paper"
+    }
+}

@@ -1,0 +1,459 @@
+@use 'base-colors';
+
+@use "../../../admin/styles/Admin/EditSection";
+@use "../Layout/Content";
+@use "../../../admin/styles/Admin/Navigation";
+@use "../../../admin/styles/Admin/ImageUpload";
+@use "../../../admin/styles/Admin/InputGallery";
+@use "../../../admin/styles/Admin/AddNewSection";
+@use "../../../admin/styles/Admin/AdminPlainImage";
+@use "../../../admin/styles/Admin/Login";
+@use "../../../admin/styles/Admin/InlineTranslate";
+
+// Cross-cutting primitives
+@use "../Common/Reveal";
+@use "../Common/SiteFooter";
+@use "../Common/MobileNav";
+@use "../Common/Logo";
+@use "../Common/Animations";
+
+// Editorial theme overrides (scoped via `[data-theme-name=…]` — see THEMING.md)
+@use "../Themes/Paper";
+@use "../Themes/Studio";
+@use "../Themes/Industrial";
+@use "../Themes/HighContrast";
+
+// Per-module public renderers — one folder per item type under modules/.
+@use "../../modules/PlainImage/PlainImage";
+@use "../../modules/PlainText/PlainText";
+@use "../../modules/RichText/RichText";
+@use "../../modules/Gallery/Gallery";
+@use "../../modules/Carousel/Carousel";
+@use "../../modules/Hero/Hero";
+@use "../../modules/ProjectCard/ProjectCard";
+@use "../../modules/SkillPills/SkillPills";
+@use "../../modules/Timeline/Timeline";
+@use "../../modules/SocialLinks/SocialLinks";
+@use "../../modules/BlogFeed/BlogFeed";
+@use "../../modules/List/List";
+@use "../../modules/Services/Services";
+@use "../../modules/Testimonials/Testimonials";
+@use "../../modules/ProjectGrid/ProjectGrid";
+@use "../../modules/Manifesto/Manifesto";
+@use "../../modules/StatsCard/StatsCard";
+
+@use 'app';
+
+// Shared accent-italic helper used by Hero / Services / Testimonials /
+// ProjectGrid / Manifesto render helpers (`*word*` markup). Individual themes
+// may override colour + weight; this is the base fallback so modules retain
+// emphasis runs in themes that don't own the class.
+.em-accent {
+  font-style: italic;
+  color: var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary, inherit)));
+}
+
+// Drag-and-drop reorder — native HTML5 DnD with a visible placeholder gap
+// at the drop target so admins can tell where the dragged section will land.
+.dnd-list { display: block; }
+.dnd-item {
+  transition: transform 180ms cubic-bezier(.2, .8, .2, 1), opacity 120ms ease;
+
+  &.is-dragging {
+    opacity: 0.4;
+    transform: scale(0.995);
+  }
+}
+.section-drop-indicator {
+  display: block;
+  height: 48px;
+  margin: 12px 0;
+  border-radius: 6px;
+  background: color-mix(in oklch, var(--theme-colorPrimary, var(--accent, #c65a2a)) 22%, transparent);
+  border: 2px dashed var(--theme-colorPrimary, var(--accent, #c65a2a));
+  animation: dndPulse 900ms ease-in-out infinite alternate;
+}
+@keyframes dndPulse {
+  from { opacity: 0.55; }
+  to   { opacity: 1; }
+}
+
+// Cross-cutting transparency modifier (see roadmap/module-transparency-style.md).
+// Toggling `section.transparent` on any section type clears its own background
+// chain so whatever sits behind (hero image, theme body bg, overlay host) shows
+// through. `!important` is intentional and scoped only to `.is-transparent` —
+// the point is to override whatever each module baked in by default.
+.section.is-transparent,
+.section.is-transparent > .section-item-container {
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+// Multi-column sections (33/33/33, 66/33, 50/50 etc.) collapse to a single
+// column on narrow viewports. The `.section` inline style sets
+// `grid-template-columns: repeat(var(--section-cols, N), 1fr)` — we override
+// `--section-cols` via @media so the inline declaration re-evaluates to 1.
+// Each child was laid out with `grid-column: span <n>` for desktop; `span 1`
+// on a 1-col grid still keeps each item one full row. Span > 1 collapses too
+// since there's only one column, so every item stacks vertically.
+@media (max-width: 720px) {
+  .section {
+    --section-cols: 1;
+  }
+  .section > .section-item-container {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+// Admin-only per-section strip (overlay segmented control + audit badge).
+// Floated above the section instead of consuming flow height — previously
+// it sat in-flow with `opacity: 0` which still pushed every section down
+// by ~30 px on every page even when invisible. Now it absolutely
+// positions to the top-right outside the section box and fades in on
+// hover / keyboard focus, so the rendered page is unaffected when not
+// being interacted with.
+.section-admin-wrap {
+  position: relative;
+  // Reserve a small breathing strip above each section that the floated
+  // strip (top: -32px) can overlap into when revealed — avoids covering
+  // the section's own first-line content while still keeping the strip
+  // visually attached to the section it controls.
+  margin-top: 8px;
+}
+.section-admin-strip {
+  position: absolute;
+  top: -32px;
+  right: 0;
+  z-index: 5;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+  background: var(--theme-colorBgBase, var(--background, #fff));
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+.section-admin-wrap:hover > .section-admin-strip,
+.section-admin-wrap:focus-within > .section-admin-strip {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+// Section-overlay anchors — a `section.overlay: true` section renders inside
+// the previous host with absolute positioning, pinned to the named anchor.
+// The host wrapper carries `position: relative`.
+.section-host { position: relative; }
+.section-overlay {
+  position: absolute;
+  z-index: 2;
+  max-width: 50%;
+  pointer-events: auto;
+
+  &--top-left { top: 16px; left: 16px; }
+  &--top-right { top: 16px; right: 16px; }
+  &--bottom-left { bottom: 16px; left: 16px; }
+  &--bottom-right { bottom: 16px; right: 16px; }
+  &--center {
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 80%;
+  }
+  &--fill { inset: 0; max-width: none; }
+}
+
+// Admin sidebar menu items need to grow past AntD's default 40px row height
+// because we stack the page name + a small AuditBadge underneath it. Let the
+// .ant-menu-item auto-fit, and keep the actions block pinned right.
+.ant-menu-inline .ant-menu-item {
+  &:has(.admin-sider-item) {
+    height: auto;
+    line-height: 1.2;
+    padding-block: 10px;
+  }
+  .admin-sider-item {
+    width: 100%;
+  }
+  .admin-sider-actions .ant-btn {
+    pointer-events: auto;
+  }
+}
+
+// Admin-only merge / split chips on each section item. Hidden until the
+// admin hovers the item, then fade in so the content preview stays clean.
+.section-item-container {
+  position: relative;
+  // Prevents grid items from expanding past their track when children (e.g.
+  // marquee gallery with width:max-content) are intrinsically wider than 1fr.
+  min-width: 0;
+  overflow: hidden;
+
+  &:hover .slot-merge-btn,
+  &:hover .slot-split-btn,
+  &:hover .slot-span-badge {
+    opacity: 1 !important;
+  }
+  &:focus-within .slot-merge-btn,
+  &:focus-within .slot-split-btn {
+    opacity: 1 !important;
+  }
+}
+
+
+.skip-to-content {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--theme-colorPrimary, #1677ff);
+  color: #fff;
+  padding: 8px 12px;
+  z-index: 9999;
+  text-decoration: none;
+  border-radius: 0 0 4px 0;
+
+  &:focus {
+    left: 0;
+  }
+}
+
+html {
+  background: var(--theme-colorBgBase, var(--background));
+}
+body{
+  //margin-left: 16px;
+  //margin-right: 16px;
+  background: transparent;
+  margin: auto;
+  overflow: auto;
+  font-family: gf_Playfair_Display variant0;
+
+  .dynamic-content {
+    color: var(--theme-colorTextBase, inherit);
+    font-size: var(--theme-fontSize, var(--font-text));
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-inline: var(--theme-contentPadding, 24px);
+
+    // Themes set `--theme-contentPadding` as high as 32 px for desktop
+    // breathing room; on phones that's ~17 % of a 375 px viewport, so cap
+    // the inline padding at mobile widths regardless of theme choice.
+    // `!important` because per-theme rules (`[data-theme-name="studio"]
+    // .dynamic-content`) have higher specificity than `body .dynamic-content`
+    // and would otherwise win at narrow viewports too.
+    @media (max-width: 720px) {
+      padding-inline: 16px !important;
+    }
+    @media (max-width: 460px) {
+      padding-inline: 12px !important;
+    }
+
+    // Per-section vertical rhythm — designer-pass breathing room
+    > * + * {
+      margin-top: 56px;
+    }
+
+    // Sections wrap each DynamicTabsContent item
+    .section {
+      padding-inline: 0; // content already has padding-inline via .dynamic-content
+    }
+
+    // Full-bleed opt-out: break out of the padded container.
+    // Components add `.is-fullbleed` on their root when they want the whole viewport width.
+    .is-fullbleed {
+      margin-inline: calc(-1 * var(--theme-contentPadding, 24px));
+    }
+
+    .rich-text,
+    .plain-text,
+    .plain-image,
+    .gallery-container,
+    .carousel-container {
+      color: var(--theme-colorTextBase, inherit);
+    }
+    .rich-text { line-height: 1.7; }
+    .plain-text { line-height: 1.6; }
+    .plain-image img,
+    .gallery-container img,
+    .carousel-container img {
+      border-radius: var(--theme-borderRadius, 0);
+    }
+  }
+  // `.logo` is always a flex container so the wordmark (real `<img>` when a
+  // logo is uploaded, `<span class="logo-mark">` fallback otherwise) sits
+  // neatly inside the top bar. Previous implementation was `position:
+  // absolute` pinned to the viewport — legacy from a different layout
+  // pattern — which popped the element out of flow and collided with the
+  // adjacent MobileNav / language picker whenever a real logo was loaded.
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    cursor: pointer;
+    z-index: 2;
+
+    img {
+      height: 40px;
+      width: auto;
+      max-width: 180px;
+      display: block;
+    }
+  }
+
+  // Public-site tab bar: [Logo + Nav items] grouped centre-ish, [Language
+  // dropdown] flex-aligned to the far right. Everything stays in flex flow
+  // so the dropdown can't overlap the nav even on narrow viewports.
+  .site-tabs {
+    > .ant-tabs-nav {
+      padding-inline: 16px;
+      align-items: center;
+      column-gap: 12px;
+
+      .ant-tabs-extra-content {
+        display: flex;
+        align-items: center;
+        min-height: 60px;
+      }
+
+      // Auto-margin on both sides of the Logo pushes the [Logo+Tabs] group
+      // roughly centre; the trailing auto on the last-child keeps the
+      // dropdown pinned right. Group centre is off by ±half the dropdown
+      // width — acceptable at normal viewport widths.
+      .ant-tabs-extra-content:first-child {
+        margin-left: auto;
+        .logo {
+          position: static;
+          display: inline-flex;
+          align-items: center;
+          min-height: 40px;
+        }
+      }
+      .ant-tabs-nav-wrap {
+        flex: 0 1 auto;
+        min-width: 0;
+      }
+      .ant-tabs-extra-content:last-child {
+        margin-left: auto;
+      }
+    }
+
+    // Mobile topbar: compact the chrome so logo + scrollable nav + lang
+    // dropdown fit a phone-width viewport without the nav words squishing
+    // together (mirroring design-v5's approach — see
+    // `public/design-v5/Portfolio.html` reference media queries).
+    @media (max-width: 720px) {
+      > .ant-tabs-nav {
+        padding-inline: 12px;
+        column-gap: 8px;
+
+        .ant-tabs-extra-content {
+          min-height: 52px;
+        }
+        .ant-tabs-extra-content:first-child {
+          // Let the logo sit flush-left — otherwise the `margin-left: auto`
+          // from the desktop rule pushes the whole topbar off-centre on
+          // narrow screens.
+          margin-left: 0;
+          .logo {
+            min-height: 32px;
+            height: 32px;
+          }
+        }
+
+        .ant-tabs-nav-wrap {
+          // AntD Tabs has an internal `ant-tabs-nav-operations` affordance
+          // for overflow (the `…` more button). Shrinking the wrap lets that
+          // kick in instead of letting the nav items collide.
+          flex: 1 1 0;
+          min-width: 0;
+          overflow-x: auto;
+          scrollbar-width: none;
+          &::-webkit-scrollbar { display: none; }
+        }
+
+        // Tighter spacing between tab items — keeps labels visibly distinct
+        // even when three or four compete for 320 px of usable width.
+        .ant-tabs-tab {
+          padding: 12px 8px;
+          + .ant-tabs-tab { margin-left: 0; }
+        }
+        .navigation-item {
+          font-size: 12px;
+          letter-spacing: 0;
+        }
+      }
+    }
+
+    @media (max-width: 460px) {
+      > .ant-tabs-nav {
+        padding-inline: 10px;
+
+        .ant-tabs-tab { padding: 12px 6px; }
+        .navigation-item { font-size: 11px; }
+
+        // At the narrowest widths, constrain uploaded wordmark logos so a wide
+        // image doesn't push the nav/language picker off-screen.
+        .logo img { max-width: 100px; }
+      }
+    }
+  }
+
+  // Language dropdown viewport pinning — on very narrow screens the popup can
+  // overflow the right edge of the viewport. `.lang-popup` is set as the
+  // overlayClassName on both Dropdown instances in app.tsx so we can target
+  // the portal element without affecting other dropdowns.
+  @media (max-width: 460px) {
+    .lang-popup.ant-dropdown {
+      position: fixed !important;
+      left: 12px !important;
+      right: 12px !important;
+      width: auto !important;
+      max-width: calc(100vw - 24px) !important;
+      top: auto !important;
+    }
+  }
+
+  // Responsive: on narrow viewports hide the language label and keep only
+  // the glyph (flag emoji if set, 2-letter symbol otherwise) to save room.
+  .lang-glyph--symbol {
+    font-variant-caps: all-small-caps;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  @media (max-width: 640px) {
+    .language-dropdown .lang-label,
+    .ant-dropdown-menu .lang-label {
+      display: none;
+    }
+  }
+  .ant-tabs{
+    font-family: gf_Playfair_Display variant0;
+    .ant-tabs-nav{
+      &::before{
+        border: none;
+      }
+    }
+  }
+
+  .ant-modal{
+    .ant-modal-content{
+      .ant-modal-footer{
+        display: flex;
+        flex-direction: row;
+        justify-content: right;
+      }
+    }
+  }
+  .dynamic-content{
+    font-family: gf_Playfair_Display variant0;
+  }
+  .ant-select-selector{
+    min-width: 150px;
+  }
+}
+// When the image rail is docked open, offset the admin canvas so the fixed
+// 260px panel doesn't cover editable fields. `admin-rail-open` is toggled
+// on `document.body` by `ImageRailDock.tsx`.
+body.admin-rail-open {
+  .ant-layout-content {
+    padding-right: calc(16px + 260px) !important;
+  }
+}

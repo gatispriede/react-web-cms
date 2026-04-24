@@ -4,19 +4,19 @@
   "private": true,
   "type": "esnext",
   "scripts": {
-    "dev": "next dev --turbo -p 80 src/frontend  ",
-    "start": "cross-env NODE_ENV=production next start -p 80 src/frontend ",
-    "start-docker": "cross-env NODE_ENV=production NODE_SERVER_PORT=true BUILD_PORT=3000 next build src/frontend && cross-env NODE_ENV=production NODE_SERVER_PORT=true next start -p 80 src/frontend",
-    "build": "cross-env NODE_ENV=production next build src/frontend",
-    "build-docker": "cross-env NODE_ENV=production NODE_SERVER_PORT=true BUILD_PORT=3000 next build src/frontend",
+    "dev": "next dev --turbo -p 80 ui/client",
+    "start": "cross-env NODE_ENV=production next start -p 80 ui/client",
+    "start-docker": "cross-env NODE_ENV=production NODE_SERVER_PORT=true BUILD_PORT=3000 next build ui/client && cross-env NODE_ENV=production NODE_SERVER_PORT=true next start -p 80 ui/client",
+    "build": "cross-env NODE_ENV=production next build ui/client",
+    "build-docker": "cross-env NODE_ENV=production NODE_SERVER_PORT=true BUILD_PORT=3000 next build ui/client",
     "postbuild": "next-sitemap --config next-sitemap.config.cjs",
     "lint": "eslint \"./**/*.{ts,tsx}\" --fix",
-    "clean": "rm -rf src/frontend/.next",
+    "clean": "rm -rf ui/client/.next",
     "dev-server": "nodemon --config ./nodemon.json",
-    "standalone-graphql": "cross-env npx tsx --tsconfig src/Server/tsconfig.custom.json src/Server/index.ts",
-    "standalone-graphql-docker": "cross-env NODE_SERVER_PORT=true npx tsx --tsconfig src/Server/tsconfig.custom.json src/Server/index.ts",
-    "ssl": "npx tsx --tsconfig src/Server/tsconfig.custom.json src/Server/sslServer.ts",
-    "generate-schema": "npx @gqty/cli http://localhost:80/api/graphql --target=src/frontend/gqty/index.ts ",
+    "standalone-graphql": "cross-env npx tsx --tsconfig services/tsconfig.custom.json services/index.ts",
+    "standalone-graphql-docker": "cross-env NODE_SERVER_PORT=true npx tsx --tsconfig services/tsconfig.custom.json services/index.ts",
+    "ssl": "npx tsx --tsconfig services/tsconfig.custom.json services/sslServer.ts",
+    "generate-schema": "npx @gqty/cli http://localhost:80/api/graphql --target=services/api/generated/index.ts",
     "setupSecrets": "npx auth@latest secret next",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -112,7 +112,7 @@
             },
             {
               "name": "@ant-design/icons",
-              "message": "Direct imports from @ant-design/icons are forbidden — import the same name from src/frontend/components/common/icons (lucide adapter). See roadmap/icon-consolidation.md."
+              "message": "Direct imports from @ant-design/icons are forbidden — import the same name from ui/client/lib/icons (lucide adapter). See docs/roadmap/icon-consolidation.md."
             }
           ],
           "patterns": [
@@ -127,7 +127,7 @@
               "group": [
                 "@ant-design/icons/*"
               ],
-              "message": "Direct imports from @ant-design/icons are forbidden — import the same name from src/frontend/components/common/icons (lucide adapter). See roadmap/icon-consolidation.md."
+              "message": "Direct imports from @ant-design/icons are forbidden — import the same name from ui/client/lib/icons (lucide adapter). See docs/roadmap/icon-consolidation.md."
             }
           ]
         }

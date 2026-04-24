@@ -1,0 +1,28 @@
+{
+    "name": "Industrial",
+    "custom": false,
+    "tokens": {
+        "colorPrimary": "#FFC400",
+        "colorBgBase": "#0F1419",
+        "colorTextBase": "#F3F1EC",
+        "colorSuccess": "#52c41a",
+        "colorWarning": "#FF6B2C",
+        "colorError": "#ff4d4f",
+        "colorInfo": "#4A9EFF",
+        "colorBgInset": "#171D24",
+        "colorInkSecondary": "#B7BCC2",
+        "colorInkTertiary": "#6E7680",
+        "colorRule": "#2B333C",
+        "colorRuleStrong": "#3F4750",
+        "colorAccent": "#FFC400",
+        "colorAccentInk": "#0F1419",
+        "colorMark": "rgba(255, 196, 0, 0.16)",
+        "fontDisplay": "'Barlow Condensed', 'Barlow', system-ui, sans-serif",
+        "fontMono": "'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace",
+        "fontSans": "'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "borderRadius": 2,
+        "fontSize": 16,
+        "contentPadding": 28,
+        "themeSlug": "industrial"
+    }
+}

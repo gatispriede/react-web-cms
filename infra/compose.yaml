@@ -1,0 +1,112 @@
+# Comments are provided throughout this file to help you get started.
+# If you need more help, visit the Docker Compose reference guide at
+# https://docs.docker.com/go/compose-spec-reference/
+
+# Here the instructions define your application as a service called "server".
+# This service is built from the Dockerfile in the current directory.
+# You can add other services your application may depend on here, such as a
+# database or a cache. For examples, see the Awesome Compose repository:
+# https://github.com/docker/awesome-compose
+services:
+  mongodb:
+    image: 'mongo:7.0'
+    container_name: mongodb
+    restart: always
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo mongodb://mongodb:27017/ --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - ./mongo_data:/data/db
+    # No public `ports:` mapping — Mongo must only be reachable from the
+    # `server` container over the internal `db` network. Publishing 27017
+    # to the host exposed it to the internet (DO security scan flagged it).
+    networks:
+      - db
+      - back-end
+      - front-end
+  server:
+    container_name: server
+    build:
+      context: ..
+      dockerfile: infra/ServerDockerfile
+    depends_on:
+      mongodb: {
+        condition: service_started
+      }
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test:  curl --fail "http://server:3000?query=%7B%0A%09sample%0A%7D%0A" || exit 1
+      interval: 10s
+    command: npm run standalone-graphql-docker
+    networks:
+      - db
+      - back-end
+    ports:
+      - 3000:3000
+    expose:
+      - 3000
+  app:
+    image: node-app
+    container_name: front
+    depends_on:
+      mongodb: {
+        condition: service_started
+      }
+      server: {
+        condition: service_healthy
+      }
+    command: npm run start-docker
+    build:
+      context: ..
+      dockerfile: infra/AppDockerfile
+    env_file:
+      - .env
+    environment:
+      - BUILD_PORT=3000
+    volumes:
+      - ./uploads/images:/app/ui/client/public/images
+      - ./uploads/design-v2:/app/ui/client/public/design-v2
+    networks:
+      - db
+      - front-end
+      - back-end
+    expose:
+      - 80
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy
+    restart: unless-stopped
+    depends_on:
+      app: { condition: service_started }
+    environment:
+      # Site address for the Caddyfile. Set DOMAIN in .env per droplet
+      # (e.g. DOMAIN=skyclimber.pro). Falls back to :80 so the proxy still
+      # works without a domain — useful when DNS isn't wired up yet.
+      - DOMAIN=${DOMAIN:-:80}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"  # HTTP/3
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Upload folders are bind-mounted read-only so Caddy can serve them
+      # directly via file_server, bypassing Next.js. This avoids the event-
+      # loop-blocking fs.readFileSync that the /api/[name].ts and
+      # /api/media/[...path].ts routes used to do on every image request.
+      - ./uploads:/srv/uploads:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - front-end
+networks:
+  front-end:
+  db:
+  back-end:
+volumes:
+  caddy_data:
+  caddy_config:

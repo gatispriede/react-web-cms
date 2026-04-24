@@ -219,7 +219,7 @@ module.exports = {
     partialBundledLanguages: isBrowser && true,
     localePath:
         typeof window === 'undefined'
-            ? require('path').resolve('./src/frontend/public/locales')
+            ? require('path').resolve('./ui/client/public/locales')
             : '/locales/{{lng}}/{{ns}}.json',
     /**
      * @link https://github.com/i18next/next-i18next#6-advanced-configuration
