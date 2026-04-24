@@ -24,13 +24,47 @@
 
   /* When a bg image is configured, the component already tags itself with
      `is-fullbleed` + inline `background-image` style. Provide the padding
-     so the overlaid text doesn't sit flush to the viewport edge. */
+     so the overlaid text doesn't sit flush to the viewport edge, and layer
+     a full-element scrim underneath the content so text stays readable
+     against any image — opacity is theme-tunable via `--hero-scrim-opacity`.
+     Light-image themes can bump it; dark themes can leave it at default.
+     (client report 2026-04-24 #2 — top text was washing out.) */
   &.is-fullbleed {
     padding-inline: 24px;
+    isolation: isolate; /* contain the ::before scrim + restack text above it */
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(
+          180deg,
+          rgba(0, 0, 0, calc(var(--hero-scrim-opacity, 0.35) * 0.9)) 0%,
+          rgba(0, 0, 0, calc(var(--hero-scrim-opacity, 0.35) * 0.25)) 40%,
+          rgba(0, 0, 0, calc(var(--hero-scrim-opacity, 0.35) * 0.55)) 100%
+        );
+      pointer-events: none;
+      z-index: 0;
+    }
+    > * { position: relative; z-index: 1; }
+
+    /* Overlay text needs a floor of contrast even in themes that dim the
+       scrim for aesthetic reasons. A subtle text-shadow under headline +
+       subtitle guarantees legibility without making the type look stamped. */
+    .hero__headline,
+    .hero__subtitle,
+    .hero__eyebrow {
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+    }
   }
 
   @media (max-width: 720px) {
     padding: 40px 0 32px;
+
+    &.is-fullbleed {
+      padding-inline: 16px;
+    }
   }
 
   // Two-column layout when portrait tile is present.
@@ -64,11 +98,19 @@
   }
 
   &__headline {
-    font-size: clamp(2.5rem, 6vw, 5rem);
+    /* Mobile floor dropped from 2.5rem (40px) to 1.75rem (28px) — the old
+       floor overflowed the hero on ~360px viewports when a long word was
+       present (client report 2026-04-24 #1). `overflow-wrap: anywhere`
+       and `hyphens: auto` back it up for languages with long words
+       (LV/DE) so the headline wraps instead of pushing the container. */
+    font-size: clamp(1.75rem, 6vw, 5rem);
     font-weight: 700;
     line-height: 1.03;
     letter-spacing: -0.025em;
     margin: 0 0 16px;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    hyphens: auto;
 
     .hero__headline-soft {
       font-style: italic;
@@ -93,12 +135,16 @@
   }
 
   &__subtitle {
-    font-size: clamp(1.15rem, 2.2vw, 1.6rem);
+    /* Matches the headline treatment — give narrow viewports room to wrap
+       long words instead of overflowing the hero container. */
+    font-size: clamp(1rem, 2.2vw, 1.6rem);
     font-weight: 500;
     margin: 0 0 18px;
     color: var(--theme-colorTextBase, inherit);
     opacity: .82;
     max-width: 62ch;
+    overflow-wrap: anywhere;
+    hyphens: auto;
   }
   &.centered &__subtitle {
     margin-left: auto;

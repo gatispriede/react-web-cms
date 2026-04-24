@@ -60,6 +60,12 @@ describe('Hero render', () => {
         expect(container.querySelector('.hero__coords')).not.toBeNull();
         // bg image drives `is-fullbleed`
         expect(container.querySelector('.hero.is-fullbleed')).not.toBeNull();
+        // Scrim is CSS-only now (`::before` pseudo + text-shadow) — the inline
+        // `background-image` must NOT bake in the gradient any more, otherwise
+        // themes can't tune scrim opacity via `--hero-scrim-opacity`. Guard:
+        const bg = (container.querySelector('.hero') as HTMLElement).style.backgroundImage;
+        expect(bg).toContain('url(');
+        expect(bg).not.toContain('linear-gradient');
     });
 
     it('empty content: renders container but no optional sub-elements', () => {

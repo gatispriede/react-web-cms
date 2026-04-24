@@ -77,8 +77,14 @@ const Hero = ({item, tApp}: {
     const c = new HeroContent(EItemType.Hero, item.content).data;
     const trStr = (v: string) => translateOrKeep(tApp, v);
     const tr = (v: string) => <InlineTranslatable tApp={tApp as any} source={v}/>;
+    // Fullbleed hero: scrim is rendered by a CSS ::before pseudo (see Hero.scss
+    // `.hero.is-fullbleed::before`) rather than as a gradient layer baked into
+    // `background-image`, so each theme can tune the scrim opacity via
+    // `--hero-scrim-opacity` and we get a readable top-edge (client report
+    // 2026-04-24 #2 — text over bright images was washing out at the top where
+    // the previous bottom-only gradient hadn't landed yet).
     const style: React.CSSProperties = {
-        backgroundImage: c.bgImage ? `linear-gradient(180deg, rgba(0,0,0,.0) 0%, rgba(0,0,0,.35) 100%), url(${c.bgImage})` : undefined,
+        backgroundImage: c.bgImage ? `url(${c.bgImage})` : undefined,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         borderLeft: c.accent ? `4px solid ${c.accent}` : undefined,
