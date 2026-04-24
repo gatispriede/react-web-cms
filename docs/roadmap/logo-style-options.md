@@ -1,5 +1,15 @@
 # Logo — theme-aware style variants
 
+> **Shipped (2026-04-24)** — the site-wide top-bar Logo (now at
+> `ui/client/features/Logo/Logo.tsx`, not a section module — see reshape)
+> accepts a `style` field persisted in the Logo JSON. Variants `default`,
+> `bordered`, `framed`, `circle` land via `.logo--<style>` class. All tokens
+> (`--logoBorderColor`, `--logoBorderWidth`, `--logoFrameBg`, `--logoShadow`,
+> `--logoRadius`) fall back through theme → hardcoded defaults, so variants
+> work on every existing theme without touching the preset JSONs. Admin Theme
+> → Logo tab gained a Style select (Default / Bordered / Framed / Circle).
+> `Transparent` deferred — it's a cross-cutting concern already covered by C8.
+
 ## Goal
 
 Give the Logo section real presentational options so a brand can choose a

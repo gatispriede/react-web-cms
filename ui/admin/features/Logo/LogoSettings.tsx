@@ -1,6 +1,7 @@
 import React, {useCallback, useEffect, useState} from "react";
-import {Alert, Button, InputNumber, Popconfirm, Space, Typography, message} from "antd";
+import {Alert, Button, InputNumber, Popconfirm, Select, Space, Typography, message} from "antd";
 import {DeleteOutlined} from "@client/lib/icons";
+import {ELogoStyle} from "@enums/ELogoStyle";
 import {useTranslation} from "react-i18next";
 import ImageUpload from "@admin/lib/ImageUpload";
 import MongoApi from "@services/api/client/MongoApi";
@@ -14,9 +15,10 @@ interface LogoState {
     src: string;
     width: number;
     height: number;
+    style: ELogoStyle;
 }
 
-const DEFAULT: LogoState = {src: '', width: 40, height: 40};
+const DEFAULT: LogoState = {src: '', width: 40, height: 40, style: ELogoStyle.Default};
 
 const mongoApi = new MongoApi();
 
@@ -52,10 +54,15 @@ const AdminSettingsLogo: React.FC = () => {
             if (!raw?.content) { setLogo({...DEFAULT}); return; }
             try {
                 const parsed = JSON.parse(raw.content);
+                const parsedStyle = typeof parsed?.style === 'string'
+                    && (Object.values(ELogoStyle) as string[]).includes(parsed.style)
+                    ? (parsed.style as ELogoStyle)
+                    : DEFAULT.style;
                 setLogo({
                     src: typeof parsed?.src === 'string' ? parsed.src : '',
                     width: Number.isFinite(parsed?.width) ? parsed.width : DEFAULT.width,
                     height: Number.isFinite(parsed?.height) ? parsed.height : DEFAULT.height,
+                    style: parsedStyle,
                 });
             } catch { setLogo({...DEFAULT}); }
         } finally { setLoading(false); }
@@ -161,6 +168,22 @@ const AdminSettingsLogo: React.FC = () => {
                             max={160}
                             value={logo.height}
                             onChange={v => setLogo(prev => ({...prev, height: Number(v) || DEFAULT.height}))}
+                        />
+                    </div>
+                </div>
+                <div>
+                    <Typography.Text strong>{t('Style')}</Typography.Text>
+                    <div style={{marginTop: 8}}>
+                        <Select
+                            value={logo.style}
+                            style={{minWidth: 160}}
+                            onChange={(v: ELogoStyle) => setLogo(prev => ({...prev, style: v}))}
+                            options={[
+                                {value: ELogoStyle.Default, label: t('Default')},
+                                {value: ELogoStyle.Bordered, label: t('Bordered')},
+                                {value: ELogoStyle.Framed, label: t('Framed')},
+                                {value: ELogoStyle.Circle, label: t('Circle')},
+                            ]}
                         />
                     </div>
                 </div>

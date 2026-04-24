@@ -2,6 +2,7 @@ import {Component} from "react";
 import LogoEditDialog from "@admin/features/Logo/LogoEditDialog";
 import MongoApi from "@services/api/client/MongoApi";
 import {ILogo} from "@interfaces/ILogo";
+import {ELogoStyle} from "@enums/ELogoStyle";
 import Link from "next/link";
 import {TFunction} from "i18next";
 
@@ -17,6 +18,7 @@ class Logo extends Component<ILogoProps> {
             src: '',
             width: 40,
             height: 40,
+            style: ELogoStyle.Default as ELogoStyle,
         },
         open: false,
     }
@@ -60,7 +62,7 @@ class Logo extends Component<ILogoProps> {
         // `scss/Common/Logo.scss` so every theme picks up the same structural
         // rules and only layers in its own accents.
         return (
-            <Link href={this.admin ? '#' : '/'} className={'logo'} onClick={() => {
+            <Link href={this.admin ? '#' : '/'} className={`logo logo--${this.state.logo.style ?? ELogoStyle.Default}`} onClick={() => {
                 if (this.admin && !this.state.open) {
                     this.setState({open: true})
                 }

@@ -21,7 +21,6 @@ Grouped because most of these share the upload/optimise/picker surface and land 
 5. [drag-drop-images-modules.md](roadmap/drag-drop-images-modules.md) — OS-file and URL drops onto image modules **(M)**
 6. [picker-improvements.md](roadmap/picker-improvements.md) — show-more panel + persistent preview box + filter/sort **(M)**
 7. [gallery-improvements.md](roadmap/gallery-improvements.md) — aspect-ratio lock, reorder, lightbox, Masonry style **(L)**
-8. [logo-style-options.md](roadmap/logo-style-options.md) — Bordered / Framed / Circle variants **(S)**
 9. [production-caching.md](roadmap/production-caching.md) — ISR + on-demand revalidation + Caddy SWR + DataLoader **(L)**
 10. [admin-modules-preview-page.md](roadmap/admin-modules-preview-page.md) — admin matrix page × theme switcher for regression smoke-testing **(M)**
 
@@ -33,6 +32,7 @@ Suggested order: 3 → 4 → 5 → 6 → 7 (optimisation first; it unblocks pick
 - ~~[module-transparency-style.md](roadmap/module-transparency-style.md)~~ — **2026-04-24** — shared `transparent` flag + admin Switch + contrast hint
 - ~~[themes-as-files.md](roadmap/themes-as-files.md)~~ — **2026-04-24** — four editorial presets live as `ui/client/themes/*.json`; `ThemeService` seeds missing rows on boot; admin "Reset to preset" overwrites DB row from disk
 - ~~[admin-menu-icons.md](roadmap/admin-menu-icons.md)~~ — **2026-04-24** — icons on every main-nav button, every settings tab, generic `FileOutlined` on every page sidebar row; 11 new lucide mappings in `@client/lib/icons`
+- ~~[logo-style-options.md](roadmap/logo-style-options.md)~~ — **2026-04-24** — `ELogoStyle` (Default/Bordered/Framed/Circle) on site-wide Logo; `.logo--<style>` SCSS with theme-token fallbacks; admin Style select
 
 ### Production / ops
 
