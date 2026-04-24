@@ -1,5 +1,28 @@
 # Bulk image upload with aspect-ratio normalisation
 
+> **Shipped (2026-04-24)** — new `POST /api/upload-batch` handler accepts
+> `multiple` files + a `ratio` field (`free / 1:1 / 4:3 / 3:2 / 16:9`).
+> Each file runs through sharp: auto-orient via EXIF → `resize(w,h,{fit:
+> 'cover', position: 'attention'})` when ratio is locked → recompress
+> (mozjpeg q82 / png compressionLevel 9 / webp q82) → strip EXIF. Collisions
+> are resolved with `-N` suffix instead of rejecting (fixes the `IMG_0001.jpg`
+> phone-batch case noted in the spec). Per-file results come back in a
+> parallel array so one bad file never aborts a 30-image batch.
+>
+> Admin surface: new `BulkImageUploadModal` (drop-zone + file-picker + ratio
+> select + XHR upload with real progress + per-file error list). Wired into
+> `GalleryEditor` as a "Bulk upload" button next to the aspect-ratio select
+> — pre-fills the modal with the gallery's current ratio and appends each
+> accepted image as a new gallery item.
+>
+> `sharp` made an explicit dependency in `package.json` (was transitive via
+> Next.js).
+>
+> **Deferred:** per-image crop-handle UI (drag centre pre-upload). The
+> `position: 'attention'` heuristic handles most phone shots well; a proper
+> crop UI pairs better with C5 picker-improvements which needs preview work
+> anyway.
+
 ## Goal
 
 Let an operator drop a folder's worth of photos into the picker and have them

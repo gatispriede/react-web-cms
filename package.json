@@ -91,6 +91,7 @@
     "react-icons": "^5.4.0",
     "redis": "^4.7.0",
     "sass": "^1.85.1",
+    "sharp": "^0.34.0",
     "styled-components": "^6.1.14",
     "tls": "^0.0.1",
     "uppload": "^3.2.1",

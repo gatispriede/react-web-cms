@@ -49,7 +49,7 @@ Tracked separately under [production/](production/) so the two streams can be sc
 |---|------|------|-------|
 | C1 | [themes-as-files.md](themes-as-files.md) | M | **Shipped (2026-04-24)** — four editorial presets in `ui/client/themes/*.json`, seeded on boot when missing; admin "Reset to preset" overwrites DB row from disk |
 | C2 | [image-optimization-on-upload.md](image-optimization-on-upload.md) | M | Sharp pipeline (resize/recompress/strip EXIF) + `width`/`height` on record; foundation for C3–C6 |
-| C3 | [bulk-image-upload-with-ratio.md](bulk-image-upload-with-ratio.md) | L | Multi-file upload + per-batch ratio crop |
+| C3 | [bulk-image-upload-with-ratio.md](bulk-image-upload-with-ratio.md) | L | **Shipped (2026-04-24)** — `/api/upload-batch` (sharp cover-crop + EXIF strip + collision-safe), `BulkImageUploadModal`, GalleryEditor "Bulk upload" button; per-image crop-handle deferred |
 | C4 | [drag-drop-images-modules.md](drag-drop-images-modules.md) | M | OS file + URL drops onto any image module |
 | C5 | [picker-improvements.md](picker-improvements.md) | M | Show-more panel, persistent ~100×60 preview box, filter/sort |
 | C6 | [gallery-improvements.md](gallery-improvements.md) | L | **Shipped (2026-04-24, partial)** — aspect-ratio lock, Masonry style, per-tile `href`, up/down reorder; custom lightbox + drag-reorder deferred |

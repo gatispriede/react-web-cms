@@ -1,13 +1,17 @@
 import {Button, Input, Select, Space, Typography} from "antd";
-import React from "react";
+import {CloudUploadOutlined} from "@client/lib/icons";
+import React, {useState} from "react";
 import {IInputContent} from "@interfaces/IInputContent";
 import {EItemType} from "@enums/EItemType";
+import {ETextPosition} from "@enums/ETextPosition";
 import {GalleryContent, IGalleryItem} from "@client/modules/Gallery";
 import {GALLERY_ASPECT_RATIOS, GalleryAspectRatio} from "@client/modules/Gallery/Gallery.types";
 import EditWrapper from "@client/lib/EditWrapper";
 import ImageUpload from "@admin/lib/ImageUpload";
+import BulkImageUploadModal, {BulkRatio} from "@admin/lib/BulkImageUploadModal";
 import {PUBLIC_IMAGE_PATH} from "@utils/imgPath";
 import {ImageDropPayload, useImageDrop} from "@client/lib/useImageDrop";
+import type IImage from "@interfaces/IImage";
 
 /**
  * Inline drop zone — hooks can't be called in a `.map()`, so each item
@@ -46,6 +50,29 @@ const GalleryEditor = ({content, setContent, t}: IInputContent) => {
     });
 
     const totalItems = data.items?.length ?? 0;
+    const [bulkOpen, setBulkOpen] = useState(false);
+
+    // Feed each successfully-uploaded image into the gallery as a new item.
+    // We re-read `data.items` inside the callback because prior state on
+    // `galleryContent` is stale once the modal ran server-side work.
+    const handleBulkUploaded = (images: IImage[]) => {
+        for (const img of images) {
+            const src = img.location && img.location.startsWith(PUBLIC_IMAGE_PATH)
+                ? img.location
+                : `${PUBLIC_IMAGE_PATH}${img.name}`;
+            galleryContent.addItem({
+                src,
+                alt: img.name ?? '',
+                text: '',
+                height: 0,
+                preview: true,
+                imgWidth: '',
+                imgHeight: '',
+                textPosition: ETextPosition.Bottom,
+            });
+        }
+        setContent(galleryContent.stringData);
+    };
 
     return (
         <div className={'gallery-wrapper admin'}>
@@ -64,7 +91,23 @@ const GalleryEditor = ({content, setContent, t}: IInputContent) => {
                     }}
                     options={GALLERY_ASPECT_RATIOS.map((r) => ({value: r, label: r}))}
                 />
+                {/* Bulk upload — opens a modal wired to /api/upload-batch.
+                    Pre-fills the gallery's current aspectRatio so phone-shot
+                    dumps land uniformly without a second step. */}
+                <Button icon={<CloudUploadOutlined/>} onClick={() => setBulkOpen(true)}>
+                    {t('Bulk upload')}
+                </Button>
             </Space>
+            <BulkImageUploadModal
+                open={bulkOpen}
+                t={t}
+                initialRatio={(data.aspectRatio ?? 'free') as BulkRatio}
+                onClose={() => setBulkOpen(false)}
+                onUploaded={(images) => {
+                    handleBulkUploaded(images);
+                    setBulkOpen(false);
+                }}
+            />
             <div className={'images-container'}>
                 {
                     data.items && data.items.map((item: IGalleryItem, index) => {
