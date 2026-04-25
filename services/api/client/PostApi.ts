@@ -25,22 +25,27 @@ export class PostApi {
         }
     }
 
-    async save(post: InPost, expectedVersion?: number | null): Promise<{id?: string; version?: number; error?: string}> {
+    async save(post: InPost, expectedVersion?: number | null): Promise<{id?: string; version?: number; slug?: string; error?: string}> {
         try {
             const raw = await resolve(({mutation}) => (mutation as any).mongo.savePost({
                 post,
                 ...(expectedVersion != null ? {expectedVersion} : {}),
             }));
             const parsed: any = parseMutationResponse(raw);
+            const result = parsed.savePost ?? parsed;
             refreshBus.emit('settings');
-            // Post slug might have been renamed, which would orphan the
-            // old `/blog/<old-slug>` path — we can't know the prior slug
-            // here without an extra fetch. Trigger both the post-level
-            // scope (regenerates /blog + /blog/<new-slug>) and fall back
-            // to `all` if the new slug is missing.
-            if (post?.slug) triggerRevalidate({scope: 'post', slug: post.slug});
-            else triggerRevalidate({scope: 'blog'});
-            return parsed.savePost ?? parsed;
+            // The server may have renamed the slug (collision-bump) — its
+            // response carries the authoritative `slug`. Revalidate the
+            // page at the FINAL slug, and if the input slug differs, also
+            // revalidate the input path so a stale ISR snapshot at the
+            // requested slug doesn't keep serving the old body.
+            const finalSlug = result?.slug || post?.slug;
+            if (finalSlug) triggerRevalidate({scope: 'post', slug: finalSlug});
+            if (post?.slug && finalSlug && post.slug !== finalSlug) {
+                triggerRevalidate({scope: 'post', slug: post.slug});
+            }
+            if (!finalSlug) triggerRevalidate({scope: 'blog'});
+            return result;
         } catch (err) {
             if (isConflictError(err)) throw err;
             return {error: String(err)};

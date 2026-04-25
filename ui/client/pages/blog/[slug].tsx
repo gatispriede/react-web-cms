@@ -60,7 +60,16 @@ const BlogPost = ({post, themeTokens, footer, pages, hasPosts}: Props) => {
                     <Link href="/blog"><Button type="link" icon={<ArrowLeftOutlined/>}>{t('All posts')}</Button></Link>
                 </div>
                 {post.coverImage && (
-                    <img src={post.coverImage} alt={post.title} style={{width: '100%', maxHeight: 360, objectFit: 'cover', borderRadius: 'var(--theme-borderRadius, 8px)', marginTop: 16}}/>
+                    // Force a leading slash so the browser doesn't resolve
+                    // relative cover paths (e.g. `api/cover.jpg`) against
+                    // the current URL — on `/blog/cms` that would 404 as
+                    // `/blog/api/cover.jpg`. Absolute URLs (http(s)://, //)
+                    // and root-relative paths pass through unchanged.
+                    <img
+                        src={/^([a-z]+:|\/\/|\/)/i.test(post.coverImage) ? post.coverImage : `/${post.coverImage}`}
+                        alt={post.title}
+                        style={{width: '100%', maxHeight: 360, objectFit: 'cover', borderRadius: 'var(--theme-borderRadius, 8px)', marginTop: 16}}
+                    />
                 )}
                 <Typography.Title level={1} style={{marginTop: 20}}>{post.title}</Typography.Title>
                 <Space size={12} style={{marginBottom: 16}}>

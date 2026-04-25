@@ -6,6 +6,7 @@ import {ISeo} from "@interfaces/ISeo";
 import {INavigation} from "@interfaces/INavigation";
 import guid from "@utils/guid";
 import {TFunction} from "i18next";
+import {isReservedPageSlug, RESERVED_PAGE_SLUGS} from "@utils/reservedSlugs";
 
 interface IProps {
     refresh: () => Promise<void>,
@@ -115,10 +116,16 @@ class AddNewDialogNavigation extends React.Component<IProps, {}> {
 
     render() {
         const seo: ISeo = this.state.seo;
+        // Server has the source-of-truth check (see `assertNotReservedPageSlug`
+        // in NavigationService). We mirror it here so the OK button disables
+        // and the operator sees a hint without round-tripping. Comparison is
+        // case-insensitive and trims whitespace — matches the server rule.
+        const reserved = isReservedPageSlug(this.state.newNavigationName);
+        const tooShort = this.state.newNavigationName.length < 4;
         return (
             <>
                 <Modal width={'90%'} open={this.props.open}
-                       okButtonProps={{disabled: this.state.newNavigationName.length < 4}}
+                       okButtonProps={{disabled: tooShort || reserved}}
                        onOk={async () => {
                            await this.createEditNavigation()
                        }}
@@ -127,8 +134,19 @@ class AddNewDialogNavigation extends React.Component<IProps, {}> {
                        }}>
                     <div className={'page-name'}>
                         <label>{this.props.t("Page name")}</label>
-                        <Input value={this.state.newNavigationName}
-                               onChange={(input) => this.newNavigationName = input.target.value}/>
+                        <Input
+                            status={reserved ? 'error' : undefined}
+                            value={this.state.newNavigationName}
+                            onChange={(input) => this.newNavigationName = input.target.value}
+                        />
+                        {reserved && (
+                            <div style={{color: '#ff4d4f', fontSize: '.85em', marginTop: 4}}>
+                                {this.props.t('"{{name}}" is reserved and can\'t be used. Reserved: {{list}}.', {
+                                    name: this.state.newNavigationName.trim(),
+                                    list: RESERVED_PAGE_SLUGS.join(', '),
+                                })}
+                            </div>
+                        )}
                     </div>
                     <hr/>
                     <div className={'page-seo'}>

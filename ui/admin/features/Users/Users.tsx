@@ -207,6 +207,14 @@ const AdminSettingsUsers = () => {
                 onOk={save}
                 confirmLoading={saving}
                 okText={editing?.id ? t('Save') : t('Create')}
+                // antd lazy-mounts modal children on first open. Without
+                // forceRender, the `useEffect` that calls
+                // form.setFieldsValue fires before the <Form> is in the
+                // tree on the FIRST edit, leaving fields blank — second
+                // open then works because the Form is mounted from the
+                // previous render. forceRender mounts the Form eagerly
+                // so values land every time.
+                forceRender
             >
                 <Form form={form} layout="vertical" preserve={false}>
                     <Form.Item

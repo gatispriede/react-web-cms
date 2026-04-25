@@ -40,14 +40,22 @@ export class PostService {
         return doc ? this.normalize(doc) : null;
     }
 
-    async save(post: InPost, editedBy?: string, expectedVersion?: number | null): Promise<{id: string; version: number}> {
+    async save(post: InPost, editedBy?: string, expectedVersion?: number | null): Promise<{id: string; version: number; slug: string}> {
         const title = (post.title || '').trim();
         if (!title) throw new Error('title is required');
         const now = new Date().toISOString();
         let slug = (post.slug || slugify(title)).trim();
         if (!slug) slug = slugify(title) || guid().slice(0, 8);
-        // slug uniqueness
-        const collision = await this.posts.findOne({slug, id: {$ne: post.id ?? ''}});
+        // Slug uniqueness — exclude self only when we have a real id to
+        // exclude. The previous form `id: {$ne: post.id ?? ''}` collapsed
+        // to `id: {$ne: ''}` for any update where `post.id` was missing
+        // or falsy, which matches the doc itself and silently renamed
+        // the slug to `<slug>-<timestamp>` on a save that should have
+        // been a no-op for the slug. Guarding on `selfId` makes the
+        // bad-update path throw "post not found" further down instead.
+        const selfId = post.id;
+        const collisionQuery = selfId ? {slug, id: {$ne: selfId}} : {slug};
+        const collision = await this.posts.findOne(collisionQuery);
         if (collision) slug = `${slug}-${Date.now().toString(36)}`;
         if (post.id) {
             const existing = await this.posts.findOne({id: post.id});
@@ -71,7 +79,7 @@ export class PostService {
             if (post.publishedAt !== undefined) update.publishedAt = post.publishedAt;
             if (update.draft === false && !(existing as any).publishedAt) update.publishedAt = now;
             await this.posts.updateOne({id: post.id}, {$set: update});
-            return {id: post.id, version};
+            return {id: post.id, version, slug};
         }
         const id = guid();
         const draft = post.draft ?? false;
@@ -92,7 +100,7 @@ export class PostService {
             ...(editedBy ? {editedBy} : {}),
         };
         await this.posts.insertOne(doc as any);
-        return {id, version: 1};
+        return {id, version: 1, slug};
     }
 
     async remove(id: string, deletedBy?: string): Promise<{id: string; deleted: number; deletedBy?: string}> {

@@ -5,6 +5,7 @@ import {ISection} from "@interfaces/ISection";
 import {InSection} from "@interfaces/IMongo";
 import {INavigationService} from "@services/infra/mongoConfig";
 import {validateSectionInput} from "@utils/contentSchemas";
+import {assertNotReservedPageSlug} from "@utils/reservedSlugs";
 import {auditStamp} from "@services/features/Audit/audit";
 import {nextVersion, requireVersion} from "@services/infra/conflict";
 
@@ -21,17 +22,26 @@ export class NavigationService implements INavigationService{
 
     async createNavigation(newNavigation: INavigation): Promise<string> {
         try {
+            // Hard block: certain page names collide with built-in routes
+            // (`/admin`) or QA fixtures (`/test`). Enforced server-side as
+            // the source of truth — the admin form has the same check, but
+            // we don't trust the client to be the only gate.
+            assertNotReservedPageSlug(newNavigation?.page);
             const result = await this.navigationDB.insertOne(newNavigation);
             return result.insertedId?.toString() || '';
         } catch (err) {
             console.error('Error creating navigation:', err);
             await this.setupClient();
-            return '';
+            return JSON.stringify({error: String((err as Error).message || err)});
         }
     }
 
     async updateNavigation(page: string, sections: string[], editedBy?: string): Promise<string> {
         try {
+            // `updateNavigation` upserts on `{type, page}` — without this
+            // guard a caller could create `/admin` via the upsert path
+            // even though `createNavigation` blocks it.
+            assertNotReservedPageSlug(page);
             // Filter on the canonical shape so we only touch navigation docs,
             // and `$setOnInsert` backfills `id`/`type`/`seo` when upsert
             // creates a new doc — preventing malformed rows with only
@@ -159,6 +169,10 @@ export class NavigationService implements INavigationService{
 
     async replaceUpdateNavigation(oldPageName: string, navigation: INavigation, editedBy?: string): Promise<string> {
         try {
+            // Block renames into a reserved slug too — otherwise an editor
+            // can sidestep the create-time guard by creating "foo" and
+            // renaming it to "admin".
+            assertNotReservedPageSlug(navigation?.page);
             const audit = auditStamp(editedBy);
             const result: { navigation: any, sections: any } = {navigation: undefined, sections: undefined};
             if (oldPageName !== navigation.page) {
@@ -205,6 +219,11 @@ export class NavigationService implements INavigationService{
 
     async addUpdateNavigationItem(pageName: string, sections?: string[], editedBy?: string): Promise<string> {
         try {
+            // See `createNavigation` — same reserved-slug block on the
+            // upsert path so callers that create through this method
+            // (rather than `createNavigation`) can't slip a `/admin`
+            // page in.
+            assertNotReservedPageSlug(pageName);
             const audit = auditStamp(editedBy);
             const existing = await this.navigationDB.findOne({type: 'navigation', page: pageName});
             if (!existing) {

@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useMemo, useState} from "react";
 import {Button, Drawer, Form, Input, Popconfirm, Select, Space, Switch, Table, Tag, Typography, message} from "antd";
-import {DeleteOutlined, EditOutlined, EyeOutlined, PlusOutlined} from "@client/lib/icons";
+import {DeleteOutlined, EditOutlined, EyeOutlined, LinkOutlined, PlusOutlined} from "@client/lib/icons";
 import {useTranslation} from "react-i18next";
 import ImageUrlInput from "@client/lib/ImageUrlInput";
 import PostApi from "@services/api/client/PostApi";
@@ -97,7 +97,21 @@ const AdminSettingsPosts: React.FC = () => {
     const performSave = useCallback(async (payload: InPost, expectedVersion: number | undefined) => {
         const result = await postApi.save(payload, expectedVersion);
         if (result.error) { message.error(result.error); return false; }
-        message.success(payload.id ? t('Post updated') : t('Post created'));
+        // Server may have renamed the slug — typically a uniqueness
+        // collision against an existing post — and the rename is silent
+        // unless we surface it. Compare requested vs returned slug and
+        // tell the operator the actual URL their post now lives at, so
+        // they don't paste links to a 404.
+        const requestedSlug = (payload.slug || '').trim();
+        const finalSlug = (result.slug || '').trim();
+        if (finalSlug && requestedSlug && finalSlug !== requestedSlug) {
+            message.warning(
+                `${t('Slug "{{requested}}" was already taken — saved as "{{final}}"', {requested: requestedSlug, final: finalSlug})}`,
+                6,
+            );
+        } else {
+            message.success(payload.id ? t('Post updated') : t('Post created'));
+        }
         close();
         await refresh();
         return true;
@@ -205,10 +219,27 @@ const AdminSettingsPosts: React.FC = () => {
         {
             title: t('Actions'),
             key: 'actions',
-            width: 260,
+            width: 340,
             render: (_: unknown, post: IPost) => (
                 <Space size={4}>
                     <Button size="small" icon={<EditOutlined/>} onClick={() => openEdit(post)}>{t('Edit')}</Button>
+                    {/* Always pulls the slug from the row, so a server-side
+                        rename (collision-bump) is automatically reflected
+                        once `refresh()` repopulates after save — no stale
+                        URL ever lingers in the admin. */}
+                    {post.slug ? (
+                        <Button
+                            size="small"
+                            icon={<LinkOutlined/>}
+                            href={`/blog/${post.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            disabled={post.draft}
+                            title={post.draft ? t('Publish to view') : `/blog/${post.slug}`}
+                        >
+                            {t('View')}
+                        </Button>
+                    ) : null}
                     <Button size="small" icon={<EyeOutlined/>} onClick={() => togglePublish(post)}>
                         {post.draft ? t('Publish') : t('Unpublish')}
                     </Button>
