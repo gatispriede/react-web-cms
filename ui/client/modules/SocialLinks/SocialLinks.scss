@@ -25,4 +25,55 @@
       transform: translateY(-2px);
     }
   }
+
+  /* ---- channels strip (CV Contact) — card grid with platform glyph,
+     big href row, mono "OPEN" affordance. */
+  &.channels {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    padding: 0;
+
+    a {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 18px 18px;
+      border-radius: 0;
+      border: 1px solid var(--rule, rgba(0, 0, 0, 0.16));
+      background: transparent;
+      color: var(--ink, var(--theme-colorTextBase, inherit));
+      transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
+
+      svg, [class*="anticon"] {
+        font-size: 22px;
+        color: var(--ink-2, currentColor);
+      }
+
+      span {
+        font-family: var(--font-mono, ui-monospace, monospace);
+        font-size: 13px;
+        letter-spacing: 0.04em;
+        word-break: break-all;
+      }
+
+      &::after {
+        content: "OPEN ↗";
+        font-family: var(--font-mono, ui-monospace, monospace);
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        color: var(--ink-3, var(--theme-colorInkTertiary, #888));
+      }
+
+      &:hover {
+        background: transparent;
+        color: var(--ink, var(--theme-colorTextBase, inherit));
+        border-color: var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary)));
+        transform: translateY(-1px);
+
+        &::after { color: var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary))); }
+      }
+    }
+  }
 }

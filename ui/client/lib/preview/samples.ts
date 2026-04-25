@@ -417,6 +417,140 @@ export const sampleContent: Record<string, PreviewSample[]> = {
             }),
         },
     ],
+    [EItemType.InquiryForm]: [
+        {
+            label: 'CV contact',
+            content: JSON.stringify({
+                eyebrow: 'INQUIRY · 002',
+                title: 'Start a conversation',
+                subtitle: 'Tell me what you\u2019re building. Replies in 1\u20133 working days.',
+                topicsLabel: 'WHAT\u2019S THIS ABOUT',
+                topics: [
+                    {value: 'project', label: 'Project'},
+                    {value: 'role', label: 'Role / hire'},
+                    {value: 'advisory', label: 'Advisory'},
+                    {value: 'other', label: 'Other'},
+                ],
+                fields: [
+                    {name: 'name', label: 'Name', placeholder: 'Your full name', kind: 'text', required: true},
+                    {name: 'email', label: 'Email', placeholder: 'you@studio.com', kind: 'email', required: true},
+                    {name: 'company', label: 'Company / studio', placeholder: 'Optional', kind: 'text'},
+                    {name: 'budget', label: 'Budget range', placeholder: 'Ballpark or N/A', kind: 'text'},
+                    {name: 'message', label: 'Message', placeholder: 'A few lines on context, scope, timing.', kind: 'textarea', required: true},
+                ],
+                submitLabel: 'Send inquiry',
+                successMessage: 'Thanks \u2014 noted. I\u2019ll be in touch.',
+                sideNote: 'No NDAs at first contact \u2014 happy to sign once scope is clear.',
+            }),
+        },
+    ],
+    [EItemType.DataModel]: [
+        {
+            label: 'CMS schema',
+            content: JSON.stringify({
+                eyebrow: '\u00a7 04 \u00b7 DATA MODEL',
+                title: 'Sections, items, navigation',
+                subtitle: 'Three collections cover every piece of content in the CMS.',
+                tableTitle: 'Section fields',
+                fields: [
+                    {name: '_id', type: 'ObjectId', nullable: 'no', notes: 'Mongo PK'},
+                    {name: 'page', type: 'string', nullable: 'no', notes: 'slug, indexed'},
+                    {name: 'type', type: 'number', nullable: 'no', notes: 'column count 1\u201310'},
+                    {name: 'content', type: 'IItem[]', nullable: 'no', notes: 'rendered modules'},
+                    {name: 'overlay', type: 'boolean', nullable: 'yes', notes: 'absolute layer'},
+                    {name: 'parent', type: 'ObjectId', nullable: 'fk', notes: 'self-ref nesting'},
+                ],
+                collectionsTitle: 'Collections',
+                collections: [
+                    {name: 'Sections', count: '~120 docs'},
+                    {name: 'Navigation', count: '8 pages'},
+                    {name: 'Languages', count: '3 active'},
+                    {name: 'Users', count: 'admin only'},
+                ],
+                asideNote: 'Inquiries collection is provisioned but not yet wired to the public form.',
+                audits: [
+                    {tag: 'AUDIT \u00b7 ACCESS', title: 'Public read', body: 'Anonymous resolvers strip drafts + restricted fields before responding.'},
+                    {tag: 'AUDIT \u00b7 WRITES', title: 'Admin only', body: 'Mutations gated by NextAuth role; CSRF cookie + same-site lax.'},
+                    {tag: 'AUDIT \u00b7 BACKUP', title: 'Daily snapshot', body: 'Mongo dump to off-site bucket; 30 day retention, restore drill quarterly.'},
+                ],
+            }),
+        },
+    ],
+    [EItemType.InfraTopology]: [
+        {
+            label: 'two-droplet stack',
+            content: JSON.stringify({
+                eyebrow: '\u00a7 05 \u00b7 INFRASTRUCTURE',
+                title: 'Two droplets, one cache',
+                subtitle: 'Boring infra. Predictable bills. No region surprises.',
+                dropletsLabel: 'DROPLETS',
+                droplets: [
+                    {
+                        name: 'web-prod-01',
+                        role: 'WEB \u00b7 API',
+                        accent: '#b8431d',
+                        specs: ['2 vCPU', '4 GB RAM', '80 GB SSD', 'Frankfurt'],
+                        services: ['next.js', 'graphql', 'nginx'],
+                    },
+                    {
+                        name: 'data-prod-01',
+                        role: 'DATA',
+                        accent: '#1f5d8a',
+                        specs: ['2 vCPU', '8 GB RAM', '160 GB SSD', 'Frankfurt'],
+                        services: ['mongodb', 'redis', 'restic'],
+                    },
+                ],
+                topologyLabel: 'TOPOLOGY',
+                topologySvg: '<svg viewBox="0 0 360 120" xmlns="http://www.w3.org/2000/svg" role="img"><rect x="20" y="30" width="100" height="60" fill="none" stroke="currentColor" stroke-opacity=".4"/><text x="70" y="65" text-anchor="middle" font-family="monospace" font-size="11">web-prod-01</text><rect x="240" y="30" width="100" height="60" fill="none" stroke="currentColor" stroke-opacity=".4"/><text x="290" y="65" text-anchor="middle" font-family="monospace" font-size="11">data-prod-01</text><line x1="120" y1="60" x2="240" y2="60" stroke="currentColor" stroke-opacity=".6"/><text x="180" y="55" text-anchor="middle" font-family="monospace" font-size="9">TLS</text></svg>',
+                topologyCaption: 'Private VPC; only the web droplet is exposed publicly.',
+            }),
+        },
+    ],
+    [EItemType.PipelineFlow]: [
+        {
+            label: 'CI/CD',
+            content: JSON.stringify({
+                eyebrow: '\u00a7 06 \u00b7 CI/CD',
+                title: 'Push to deploy',
+                subtitle: 'Five stages, all green or no merge.',
+                steps: [
+                    {label: 'lint', status: 'ok', meta: '0:08', notes: 'eslint + tsc --noEmit'},
+                    {label: 'test', status: 'ok', meta: '1:14', notes: 'vitest run + jsdom; 312 tests'},
+                    {label: 'build', status: 'ok', meta: '2:42', notes: 'next build, output trace, sitemap'},
+                    {label: 'image', status: 'warn', meta: '0:55', notes: 'docker buildx, sbom; warns on unpinned base'},
+                    {label: 'deploy', status: 'ok', meta: '0:22', notes: 'compose pull + up -d, smoke endpoint'},
+                ],
+                sideNotesLabel: 'NOTES',
+                sideNotes: [
+                    'Branch protection requires green pipeline + 1 review.',
+                    'Rollback: redeploy previous tag, ~30 s.',
+                    'Smoke test hits /api/healthz; failures abort.',
+                ],
+            }),
+        },
+    ],
+    [EItemType.RepoTree]: [
+        {
+            label: 'monorepo layout',
+            content: JSON.stringify({
+                eyebrow: '\u00a7 07 \u00b7 REPOSITORY',
+                title: 'Where things live',
+                subtitle: 'Click a node \u2014 the right pane explains it.',
+                treeLabel: 'TREE',
+                nodes: [
+                    {path: 'ui', kind: 'dir', tag: 'FRONTEND', summary: 'public site + admin shell', body: 'React 19 + Next.js 16. Public site under `client/`, admin under `admin/`. Sibling trees enforce render/edit concern split.'},
+                    {path: 'ui/client', kind: 'dir', summary: 'public-facing modules', body: 'Pages, sections, modules, themes, locales. Hot-reloaded by `npm run dev`.'},
+                    {path: 'ui/client/modules', kind: 'dir', summary: 'CMS module renderers'},
+                    {path: 'ui/client/modules/Hero', kind: 'file', summary: 'Hero.tsx', body: 'Editorial hero with portrait + meta + coords. Drives `/` and CV pages.'},
+                    {path: 'ui/admin/modules', kind: 'dir', summary: 'sibling editors'},
+                    {path: 'services', kind: 'dir', tag: 'BACKEND', summary: 'graphql + mongo'},
+                    {path: 'services/api', kind: 'file', summary: 'apollo server', body: 'Schema-first GraphQL on Apollo Server v5; bounded cache, depth-limited queries.'},
+                    {path: 'shared', kind: 'dir', summary: 'shared types + enums'},
+                    {path: 'docs', kind: 'dir', summary: 'roadmap + architecture notes'},
+                ],
+            }),
+        },
+    ],
     // Empty is a placeholder type (render-nothing); skipped intentionally.
     [EItemType.Empty]: [],
 };

@@ -316,6 +316,14 @@ const VALIDATORS: Record<string, (c: any) => ValidationResult> = {
     [EItemType.StatsCard]: validateStatsCard,
     [EItemType.ProjectGrid]: validateProjectGrid,
     [EItemType.Manifesto]: validateManifesto,
+    // CV-bundle modules — kept loose (string/array shape only) so authors
+    // can iterate without fighting the schema. Tighten once the shapes
+    // settle (see roadmap/cv-bundle.md).
+    [EItemType.InquiryForm]: (c) => isObject(c) ? {valid: true} : {valid: false, error: 'InquiryForm content must be an object'},
+    [EItemType.DataModel]: (c) => isObject(c) ? {valid: true} : {valid: false, error: 'DataModel content must be an object'},
+    [EItemType.InfraTopology]: (c) => isObject(c) ? {valid: true} : {valid: false, error: 'InfraTopology content must be an object'},
+    [EItemType.PipelineFlow]: (c) => isObject(c) ? {valid: true} : {valid: false, error: 'PipelineFlow content must be an object'},
+    [EItemType.RepoTree]: (c) => isObject(c) ? {valid: true} : {valid: false, error: 'RepoTree content must be an object'},
     [EItemType.Empty]: () => ({valid: true}),
 };
 

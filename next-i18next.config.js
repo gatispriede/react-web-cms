@@ -11,7 +11,7 @@ const isBrowser = typeof window !== 'undefined'
 const isDev = false// process.env.NODE_ENV === 'development'
 const cacheTime = 0// 60 * 60 * 1000
 /**
- * @type {import('next-i18next').UserConfig}
+ * @type {import('next-i18next/pages').UserConfig}
  */
 module.exports = {
     // https://www.i18next.com/overview/configuration-options#logging

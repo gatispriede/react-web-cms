@@ -1,0 +1,1 @@
+export {InquiryFormEditor} from './InquiryFormEditor';

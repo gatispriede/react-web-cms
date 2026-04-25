@@ -317,4 +317,58 @@
       gap: 8px;
     }
   }
+
+  /* ---- tiers (CV CMS architecture) — wider columns, accent rule top,
+     small mono "FLOW →" caption between cells. */
+  &.tiers {
+    .services-module__rows {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0;
+      counter-reset: tier;
+    }
+    .services-module__row {
+      counter-increment: tier;
+      position: relative;
+      border: 1px solid var(--rule, rgba(0, 0, 0, 0.16));
+      border-top: 3px solid var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary)));
+      padding: 18px 18px 22px;
+      margin: 0 -1px -1px 0;
+
+      .services-module__row-num {
+        font-family: var(--font-mono, ui-monospace, monospace);
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--ink-3, var(--theme-colorInkTertiary, #888));
+        margin-bottom: 8px;
+      }
+      .services-module__row-title {
+        font-family: var(--font-display, var(--font-serif, var(--font-sans, system-ui, sans-serif)));
+        font-weight: 500;
+        font-size: clamp(18px, 1.8vw, 22px);
+        line-height: 1.1;
+        margin-bottom: 10px;
+      }
+      .services-module__row-desc {
+        font-size: 13px;
+        line-height: 1.55;
+        color: var(--ink-2, var(--theme-colorInkSecondary, #555));
+      }
+      &:not(:last-child)::after {
+        content: "FLOW →";
+        position: absolute;
+        right: -10px;
+        top: 24px;
+        font-family: var(--font-mono, ui-monospace, monospace);
+        font-size: 9px;
+        letter-spacing: 0.16em;
+        color: var(--ink-3, var(--theme-colorInkTertiary, #888));
+        background: var(--bg, var(--theme-colorBgBase, #fff));
+        padding: 2px 4px;
+        z-index: 1;
+        @media (max-width: 700px) { display: none; }
+      }
+    }
+  }
 }

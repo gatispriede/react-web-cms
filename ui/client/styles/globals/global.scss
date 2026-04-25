@@ -42,6 +42,11 @@
 @use "../../modules/ProjectGrid/ProjectGrid";
 @use "../../modules/Manifesto/Manifesto";
 @use "../../modules/StatsCard/StatsCard";
+@use "../../modules/InquiryForm/InquiryForm";
+@use "../../modules/DataModel/DataModel";
+@use "../../modules/InfraTopology/InfraTopology";
+@use "../../modules/PipelineFlow/PipelineFlow";
+@use "../../modules/RepoTree/RepoTree";
 
 @use 'app';
 

@@ -28,4 +28,8 @@ export enum EServicesStyle {
     Grid = "grid",
     /** 3-col card grid with serif title + hover-invert (design-v6 Brandappart). */
     Cards = "cards",
+    /** Architecture-tier columns — wider cards, accent rule top, small mono
+     *  "FLOW →" caption between cells. Used by the CV CMS-page architecture
+     *  section. */
+    Tiers = "tiers",
 }

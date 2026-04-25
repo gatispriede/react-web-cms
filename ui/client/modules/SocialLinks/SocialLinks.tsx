@@ -34,9 +34,11 @@ export const PLATFORM_ICONS: Record<SocialPlatform, React.ReactNode> = {
 };
 
 const hrefFor = (link: ISocialLink): string => {
-    if (link.platform === 'email') return link.url.startsWith('mailto:') ? link.url : `mailto:${link.url}`;
-    if (link.platform === 'phone') return link.url.startsWith('tel:') ? link.url : `tel:${link.url.replace(/\s+/g, '')}`;
-    return link.url;
+    const url = link.url ?? '';
+    if (!url) return '#';
+    if (link.platform === 'email') return url.startsWith('mailto:') ? url : `mailto:${url}`;
+    if (link.platform === 'phone') return url.startsWith('tel:') ? url : `tel:${url.replace(/\s+/g, '')}`;
+    return url;
 };
 
 const SocialLinks = ({item, tApp}: {

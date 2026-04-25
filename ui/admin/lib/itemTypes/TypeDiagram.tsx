@@ -182,6 +182,62 @@ const DIAGRAMS: Partial<Record<EItemType, React.ReactNode>> = {
             <rect x="30" y="28" width="6" height="3" rx="1.5" fill={fill} opacity={.4}/>
         </Wrap>
     ),
+    [EItemType.InquiryForm]: (
+        <Wrap>
+            <rect x="6" y="6" width="14" height="3" rx="1.5" fill={fill} opacity={.4}/>
+            <rect x="22" y="6" width="14" height="3" rx="1.5" fill={fill} opacity={.4}/>
+            <rect x="6" y="13" width="52" height="2" fill={fill} opacity={.5}/>
+            <rect x="6" y="18" width="52" height="2" fill={fill} opacity={.5}/>
+            <rect x="6" y="23" width="52" height="6" fill={softFill} stroke={stroke} strokeOpacity={.35}/>
+            <rect x="44" y="32" width="14" height="4" fill={fill}/>
+        </Wrap>
+    ),
+    [EItemType.DataModel]: (
+        <Wrap>
+            <rect x="6" y="6" width="34" height="2" fill={fill} opacity={.6}/>
+            {[12, 18, 24, 30].map((y, i) => (
+                <g key={i}>
+                    <rect x="6" y={y} width="10" height="1.5" fill={fill}/>
+                    <rect x="18" y={y} width="14" height="1.5" fill={fill} opacity={.5}/>
+                    <rect x="34" y={y} width="6" height="1.5" fill={fill} opacity={.4}/>
+                </g>
+            ))}
+            <rect x="44" y="6" width="14" height="28" fill={softFill} stroke={stroke} strokeOpacity={.35}/>
+        </Wrap>
+    ),
+    [EItemType.InfraTopology]: (
+        <Wrap>
+            <rect x="6" y="8" width="20" height="14" fill={softFill} stroke={stroke} strokeOpacity={.4}/>
+            <rect x="38" y="8" width="20" height="14" fill={softFill} stroke={stroke} strokeOpacity={.4}/>
+            <line x1="26" y1="15" x2="38" y2="15" stroke={stroke} strokeOpacity={.5}/>
+            <circle cx="32" cy="30" r="3" fill={fill} opacity={.5}/>
+            <line x1="16" y1="22" x2="32" y2="28" stroke={stroke} strokeOpacity={.4}/>
+            <line x1="48" y1="22" x2="32" y2="28" stroke={stroke} strokeOpacity={.4}/>
+        </Wrap>
+    ),
+    [EItemType.PipelineFlow]: (
+        <Wrap>
+            {[8, 22, 36, 50].map((x, i) => (
+                <g key={i}>
+                    <rect x={x} y="14" width="10" height="12" fill={softFill} stroke={stroke} strokeOpacity={.4}/>
+                    {i < 3 && <line x1={x + 11} y1="20" x2={x + 13} y2="20" stroke={stroke} strokeOpacity={.6}/>}
+                </g>
+            ))}
+        </Wrap>
+    ),
+    [EItemType.RepoTree]: (
+        <Wrap>
+            <rect x="6" y="8" width="22" height="2" fill={fill} opacity={.7}/>
+            <rect x="10" y="14" width="18" height="1.5" fill={fill} opacity={.5}/>
+            <rect x="10" y="19" width="18" height="1.5" fill={fill} opacity={.5}/>
+            <rect x="14" y="24" width="14" height="1.5" fill={fill} opacity={.5}/>
+            <rect x="10" y="29" width="18" height="1.5" fill={fill} opacity={.5}/>
+            <rect x="34" y="6" width="24" height="28" fill={softFill} stroke={stroke} strokeOpacity={.35}/>
+            <rect x="36" y="10" width="14" height="2" fill={fill} opacity={.6}/>
+            <rect x="36" y="15" width="20" height="1.5" fill={fill} opacity={.4}/>
+            <rect x="36" y="19" width="18" height="1.5" fill={fill} opacity={.4}/>
+        </Wrap>
+    ),
 };
 
 const TypeDiagram: React.FC<{type: string | EItemType}> = ({type}) => {

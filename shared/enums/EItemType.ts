@@ -16,6 +16,11 @@ export enum EItemType {
     StatsCard = "STATS_CARD",
     ProjectGrid = "PROJECT_GRID",
     Manifesto = "MANIFESTO",
+    InquiryForm = "INQUIRY_FORM",
+    DataModel = "DATA_MODEL",
+    InfraTopology = "INFRA_TOPOLOGY",
+    PipelineFlow = "PIPELINE_FLOW",
+    RepoTree = "REPO_TREE",
     Empty = 'EMPTY',
 }
 export default EItemType

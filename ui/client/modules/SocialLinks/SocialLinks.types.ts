@@ -13,4 +13,7 @@ export interface ISocialLinks {
 export enum ESocialLinksStyle {
     Default = "default",
     Large = "large",
+    /** Editorial CV "channels strip" — card grid with platform glyph,
+     *  big href row, mono "OPEN" affordance. */
+    Channels = "channels",
 }

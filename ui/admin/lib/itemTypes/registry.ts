@@ -31,6 +31,11 @@ import Testimonials, {ETestimonialsStyle} from "@client/modules/Testimonials";
 import StatsCard, {EStatsCardStyle} from "@client/modules/StatsCard";
 import ProjectGrid, {EProjectGridStyle} from "@client/modules/ProjectGrid";
 import Manifesto, {EManifestoStyle} from "@client/modules/Manifesto";
+import InquiryForm, {EInquiryFormStyle} from "@client/modules/InquiryForm";
+import DataModel, {EDataModelStyle} from "@client/modules/DataModel";
+import InfraTopology, {EInfraTopologyStyle} from "@client/modules/InfraTopology";
+import PipelineFlow, {EPipelineFlowStyle} from "@client/modules/PipelineFlow";
+import RepoTree, {ERepoTreeStyle} from "@client/modules/RepoTree";
 
 import {PlainTextEditor as InputPlainText} from "@admin/modules/PlainText/PlainTextEditor";
 import {RichTextEditor as InputRichText} from "@admin/modules/RichText/RichTextEditor";
@@ -49,6 +54,11 @@ import {TestimonialsEditor as InputTestimonials} from "@admin/modules/Testimonia
 import {StatsCardEditor as InputStatsCard} from "@admin/modules/StatsCard/StatsCardEditor";
 import {ProjectGridEditor as InputProjectGrid} from "@admin/modules/ProjectGrid/ProjectGridEditor";
 import {ManifestoEditor as InputManifesto} from "@admin/modules/Manifesto/ManifestoEditor";
+import {InquiryFormEditor as InputInquiryForm} from "@admin/modules/InquiryForm/InquiryFormEditor";
+import {DataModelEditor as InputDataModel} from "@admin/modules/DataModel/DataModelEditor";
+import {InfraTopologyEditor as InputInfraTopology} from "@admin/modules/InfraTopology/InfraTopologyEditor";
+import {PipelineFlowEditor as InputPipelineFlow} from "@admin/modules/PipelineFlow/PipelineFlowEditor";
+import {RepoTreeEditor as InputRepoTree} from "@admin/modules/RepoTree/RepoTreeEditor";
 
 export type ItemCategory = 'hero' | 'media' | 'content' | 'cta';
 
@@ -244,6 +254,56 @@ const entries: ItemTypeDefinition[] = [
         Editor: InputManifesto,
         styleEnum: EManifestoStyle as unknown as Record<string, string>,
         defaultContent: '{"body":"","addendum":"","chips":[]}',
+    },
+    {
+        key: EItemType.InquiryForm,
+        labelKey: "Inquiry form",
+        descriptionKey: "Topic chips + name/email/message + submit (CV Contact).",
+        category: 'cta',
+        Display: InquiryForm,
+        Editor: InputInquiryForm,
+        styleEnum: EInquiryFormStyle as unknown as Record<string, string>,
+        defaultContent: '{"topics":[],"fields":[]}',
+    },
+    {
+        key: EItemType.DataModel,
+        labelKey: "Data model",
+        descriptionKey: "Schema visualiser — fields table + collections aside + audit cards.",
+        category: 'content',
+        Display: DataModel,
+        Editor: InputDataModel,
+        styleEnum: EDataModelStyle as unknown as Record<string, string>,
+        defaultContent: '{"fields":[],"collections":[],"audits":[]}',
+    },
+    {
+        key: EItemType.InfraTopology,
+        labelKey: "Infra topology",
+        descriptionKey: "Droplet/server cards + author-supplied SVG topology.",
+        category: 'content',
+        Display: InfraTopology,
+        Editor: InputInfraTopology,
+        styleEnum: EInfraTopologyStyle as unknown as Record<string, string>,
+        defaultContent: '{"droplets":[]}',
+    },
+    {
+        key: EItemType.PipelineFlow,
+        labelKey: "Pipeline flow",
+        descriptionKey: "Linear CI/CD pipeline with status pills and side notes.",
+        category: 'content',
+        Display: PipelineFlow,
+        Editor: InputPipelineFlow,
+        styleEnum: EPipelineFlowStyle as unknown as Record<string, string>,
+        defaultContent: '{"steps":[],"sideNotes":[]}',
+    },
+    {
+        key: EItemType.RepoTree,
+        labelKey: "Repo tree",
+        descriptionKey: "Interactive repo path tree with detail pane.",
+        category: 'content',
+        Display: RepoTree,
+        Editor: InputRepoTree,
+        styleEnum: ERepoTreeStyle as unknown as Record<string, string>,
+        defaultContent: '{"nodes":[]}',
     },
 ];
 
