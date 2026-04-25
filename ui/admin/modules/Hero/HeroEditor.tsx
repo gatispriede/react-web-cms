@@ -1,6 +1,7 @@
 import React from "react";
 import {Button, Checkbox, Col, Collapse, ColorPicker, Divider, Input, Row, Slider, Space, Typography} from "antd";
 import ImageUrlInput from "@client/lib/ImageUrlInput";
+import {LabeledInput} from "@client/lib/LabeledInput";
 import {DeleteOutlined, PlusOutlined} from "@client/lib/icons";
 import {IInputContent} from "@interfaces/IInputContent";
 import {EItemType} from "@enums/EItemType";
@@ -146,34 +147,34 @@ const HeroEditor = ({content, setContent, t}: IInputContent) => {
                             <Row gutter={[12, 8]}>
                                 <Col xs={12}>
                                     <Divider titlePlacement="left" plain style={{fontSize: 12}}>{t('Primary')}</Divider>
-                                    <Input
+                                    <LabeledInput
                                         value={ctaPrimary.label}
                                         onChange={e => patchCta('ctaPrimary', {label: e.target.value, primary: true})}
                                         placeholder="View work ↘"
-                                        addonBefore={t('Label')}
+                                        label={t('Label')}
                                     />
-                                    <Input
+                                    <LabeledInput
                                         value={ctaPrimary.href ?? ''}
                                         onChange={e => patchCta('ctaPrimary', {href: e.target.value})}
                                         placeholder="#career-record"
-                                        addonBefore={t('Link')}
-                                        style={{marginTop: 6}}
+                                        label={t('Link')}
+                                        wrapperStyle={{marginTop: 6}}
                                     />
                                 </Col>
                                 <Col xs={12}>
                                     <Divider titlePlacement="left" plain style={{fontSize: 12}}>{t('Secondary')}</Divider>
-                                    <Input
+                                    <LabeledInput
                                         value={ctaSecondary.label}
                                         onChange={e => patchCta('ctaSecondary', {label: e.target.value})}
                                         placeholder="Get in touch"
-                                        addonBefore={t('Label')}
+                                        label={t('Label')}
                                     />
-                                    <Input
+                                    <LabeledInput
                                         value={ctaSecondary.href ?? ''}
                                         onChange={e => patchCta('ctaSecondary', {href: e.target.value})}
                                         placeholder="mailto:you@example.com"
-                                        addonBefore={t('Link')}
-                                        style={{marginTop: 6}}
+                                        label={t('Link')}
+                                        wrapperStyle={{marginTop: 6}}
                                     />
                                 </Col>
                             </Row>

@@ -1,20 +1,22 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
-    "ignoreDeprecations": "6.0",
-    "types": ["vitest/globals"],
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
     "plugins": [
       {
@@ -22,15 +24,28 @@
       }
     ],
     "paths": {
-      "@client/*": ["./*"],
-      "@admin/*": ["../admin/*"],
-      "@shared/*": ["../../shared/*"],
-      "@services/*": ["../../services/*"],
-      "@interfaces/*": ["../../shared/types/*"],
-      "@enums/*": ["../../shared/enums/*"],
-      "@utils/*": ["../../shared/utils/*"]
-    },
-    "baseUrl": ".",
+      "@client/*": [
+        "./*"
+      ],
+      "@admin/*": [
+        "../admin/*"
+      ],
+      "@shared/*": [
+        "../../shared/*"
+      ],
+      "@services/*": [
+        "../../services/*"
+      ],
+      "@interfaces/*": [
+        "../../shared/types/*"
+      ],
+      "@enums/*": [
+        "../../shared/enums/*"
+      ],
+      "@utils/*": [
+        "../../shared/utils/*"
+      ]
+    }
   },
   "include": [
     "next-env.d.ts",
@@ -42,6 +57,10 @@
     "**/*.mjs"
   ],
   "exclude": [
-    "node_modules"
-  ],
+    "node_modules",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx"
+  ]
 }

@@ -1,6 +1,7 @@
 import React, {useMemo} from "react";
 import {Button, Input, Space, Typography} from "antd";
 import {DeleteOutlined, PlusOutlined} from "@client/lib/icons";
+import {LabeledInput} from "@client/lib/LabeledInput";
 import {IInputContent} from "@interfaces/IInputContent";
 import {EItemType} from "@enums/EItemType";
 import {IManifesto, IManifestoChip, ManifestoContent} from "@client/modules/Manifesto";
@@ -55,9 +56,9 @@ const ManifestoEditor: React.FC<IInputContent> = ({content, setContent, t}) => {
                 <Space orientation="vertical" style={{width: '100%'}} size={6}>
                     {chips.map((c, i) => (
                         <SortableHandleItem key={chipIds[i]} id={chipIds[i]}>
-                            <Input value={c.key} onChange={e => patchChip(i, {key: e.target.value})} placeholder="react" addonBefore={t('Key')} style={{width: 220}}/>
-                            <Input value={c.thumb} onChange={e => patchChip(i, {thumb: e.target.value})} placeholder="REACT" addonBefore={t('Thumb')} style={{width: 200}}/>
-                            <Input value={c.color ?? ''} onChange={e => patchChip(i, {color: e.target.value})} placeholder="radial-gradient(circle, #61DAFB22, #0D1117)" addonBefore={t('CSS')} style={{width: 380}}/>
+                            <LabeledInput value={c.key} onChange={e => patchChip(i, {key: e.target.value})} placeholder="react" label={t('Key')} wrapperStyle={{width: 220}}/>
+                            <LabeledInput value={c.thumb} onChange={e => patchChip(i, {thumb: e.target.value})} placeholder="REACT" label={t('Thumb')} wrapperStyle={{width: 200}}/>
+                            <LabeledInput value={c.color ?? ''} onChange={e => patchChip(i, {color: e.target.value})} placeholder="radial-gradient(circle, #61DAFB22, #0D1117)" label={t('CSS')} wrapperStyle={{width: 380}}/>
                             <Button danger size="small" icon={<DeleteOutlined/>} onClick={() => removeChip(i)}/>
                         </SortableHandleItem>
                     ))}

@@ -7,11 +7,9 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
-    "ignoreDeprecations": "6.0",
-    "types": ["vitest/globals"],
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
@@ -29,8 +27,7 @@
       "@interfaces/*": ["../shared/types/*"],
       "@enums/*": ["../shared/enums/*"],
       "@utils/*": ["../shared/utils/*"]
-    },
-    "baseUrl": "."
+    }
   },
   "exclude": [
     "node_modules"

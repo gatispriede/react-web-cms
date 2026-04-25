@@ -52,6 +52,13 @@ const apolloServer = new ApolloServer<GqlContext>({
     resolvers,
     validationRules: [depthLimit(10)],
     introspection: true,
+    // Bounded LRU for the persisted-query / parse cache. Default is an
+    // unbounded Map, which Apollo logs a startup warning for — under
+    // adversarial load (an attacker pushing distinct queries) the
+    // process slowly leaks until OOM. The default `cache: "bounded"`
+    // string switches to a 30 MiB approximate ceiling, which is plenty
+    // for our handful of admin / SSG queries.
+    cache: 'bounded',
 });
 
 const handler = startServerAndCreateNextHandler<NextApiRequest, GqlContext>(apolloServer, {

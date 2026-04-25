@@ -1,6 +1,7 @@
 import React, {useMemo} from "react";
 import {Button, Input, Space, Typography} from "antd";
 import {DeleteOutlined, PlusOutlined} from "@client/lib/icons";
+import {LabeledInput} from "@client/lib/LabeledInput";
 import {IInputContent} from "@interfaces/IInputContent";
 import {EItemType} from "@enums/EItemType";
 import {IProjectGrid, IProjectGridItem, ProjectGridContent} from "@client/modules/ProjectGrid";
@@ -47,17 +48,17 @@ const ProjectGridEditor: React.FC<IInputContent> = ({content, setContent, t}) =>
                                     <Typography.Text strong>{t('Project')} #{i + 1}</Typography.Text>
                                     <Button danger size="small" icon={<DeleteOutlined/>} onClick={() => removeItem(i)}/>
                                 </Space>
-                                <Input value={p.title} onChange={e => patchItem(i, {title: e.target.value})} addonBefore={t('Title')} placeholder="SciChart"/>
-                                <Input value={p.stack ?? ''} onChange={e => patchItem(i, {stack: e.target.value})} addonBefore={t('Stack / domain')} placeholder="3D/2D browser charts · large data"/>
-                                <Input value={p.kind ?? ''} onChange={e => patchItem(i, {kind: e.target.value})} addonBefore={t('Kind')} placeholder="Contract<br/>UK / USA"/>
+                                <LabeledInput value={p.title} onChange={e => patchItem(i, {title: e.target.value})} label={t('Title')} placeholder="SciChart"/>
+                                <LabeledInput value={p.stack ?? ''} onChange={e => patchItem(i, {stack: e.target.value})} label={t('Stack / domain')} placeholder="3D/2D browser charts · large data"/>
+                                <LabeledInput value={p.kind ?? ''} onChange={e => patchItem(i, {kind: e.target.value})} label={t('Kind')} placeholder="Contract<br/>UK / USA"/>
                                 <Space style={{width: '100%'}}>
-                                    <Input value={p.year ?? ''} onChange={e => patchItem(i, {year: e.target.value})} addonBefore={t('Year')} placeholder="2024 — PRESENT" style={{width: 280}}/>
-                                    <Input value={p.coverArt ?? ''} onChange={e => patchItem(i, {coverArt: e.target.value})} addonBefore={t('Art')} placeholder="SC" style={{width: 140}}/>
+                                    <LabeledInput value={p.year ?? ''} onChange={e => patchItem(i, {year: e.target.value})} label={t('Year')} placeholder="2024 — PRESENT" wrapperStyle={{width: 280}}/>
+                                    <LabeledInput value={p.coverArt ?? ''} onChange={e => patchItem(i, {coverArt: e.target.value})} label={t('Art')} placeholder="SC" wrapperStyle={{width: 140}}/>
                                 </Space>
-                                <Input value={p.coverColor ?? ''} onChange={e => patchItem(i, {coverColor: e.target.value})} addonBefore={t('Cover CSS')} placeholder="radial-gradient(circle at 20% 80%, #1E5A6B, #0B1E24 70%)"/>
+                                <LabeledInput value={p.coverColor ?? ''} onChange={e => patchItem(i, {coverColor: e.target.value})} label={t('Cover CSS')} placeholder="radial-gradient(circle at 20% 80%, #1E5A6B, #0B1E24 70%)"/>
                                 <Space style={{width: '100%'}}>
-                                    <Input value={p.moreLabel ?? ''} onChange={e => patchItem(i, {moreLabel: e.target.value})} addonBefore={t('More label')} placeholder="View engagement ↗" style={{width: 300}}/>
-                                    <Input value={p.href ?? ''} onChange={e => patchItem(i, {href: e.target.value})} addonBefore={t('Link')} placeholder="#scichart"/>
+                                    <LabeledInput value={p.moreLabel ?? ''} onChange={e => patchItem(i, {moreLabel: e.target.value})} label={t('More label')} placeholder="View engagement ↗" wrapperStyle={{width: 300}}/>
+                                    <LabeledInput value={p.href ?? ''} onChange={e => patchItem(i, {href: e.target.value})} label={t('Link')} placeholder="#scichart"/>
                                 </Space>
                             </Space>
                         </div>

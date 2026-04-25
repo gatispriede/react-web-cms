@@ -1,6 +1,7 @@
 import React, {useMemo} from "react";
 import {Button, Input, Space, Typography} from "antd";
 import {DeleteOutlined, PlusOutlined} from "@client/lib/icons";
+import {LabeledInput} from "@client/lib/LabeledInput";
 import {IInputContent} from "@interfaces/IInputContent";
 import {EItemType} from "@enums/EItemType";
 import {ITestimonial, ITestimonials, TestimonialsContent} from "@client/modules/Testimonials";
@@ -64,18 +65,18 @@ const TestimonialsEditor: React.FC<IInputContent> = ({content, setContent, t}) =
                                     rows={3}
                                 />
                                 <Space style={{width: '100%'}}>
-                                    <Input
+                                    <LabeledInput
                                         value={q.name}
                                         onChange={e => patchItem(i, {name: e.target.value})}
                                         placeholder="Andrew Burnett-Thompson"
-                                        addonBefore={t('Name')}
-                                        style={{width: 300}}
+                                        label={t('Name')}
+                                        wrapperStyle={{width: 300}}
                                     />
-                                    <Input
+                                    <LabeledInput
                                         value={q.role ?? ''}
                                         onChange={e => patchItem(i, {role: e.target.value})}
                                         placeholder="Founder · SciChart"
-                                        addonBefore={t('Role')}
+                                        label={t('Role')}
                                     />
                                 </Space>
                                 <Input

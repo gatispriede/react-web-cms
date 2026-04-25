@@ -1,0 +1,31 @@
+{
+  // Test-only typecheck config. The main `ui/client/tsconfig.json` excludes
+  // *.test.* / *.spec.* files because the production Docker image installs
+  // with `NODE_ENV=production`, which drops devDependencies — including
+  // `vitest`. With vitest absent, `next build`'s typecheck stage can't
+  // resolve `vitest/globals` and the build fails.
+  //
+  // This config is run locally (and in the CI typecheck job, where vitest
+  // *is* installed) to keep test files honest. Tests use ambient
+  // `describe` / `it` / `expect` — `vitest/globals` provides those types.
+  "extends": "./ui/client/tsconfig.json",
+  "compilerOptions": {
+    "types": ["vitest/globals"],
+    "noEmit": true
+  },
+  "include": [
+    "ui/**/*.test.ts",
+    "ui/**/*.test.tsx",
+    "ui/**/*.spec.ts",
+    "ui/**/*.spec.tsx",
+    "services/**/*.test.ts",
+    "services/**/*.test.tsx",
+    "services/**/*.spec.ts",
+    "services/**/*.spec.tsx",
+    "shared/**/*.test.ts",
+    "shared/**/*.test.tsx",
+    "shared/**/*.spec.ts",
+    "shared/**/*.spec.tsx",
+    "vitest.setup.ts"
+  ]
+}

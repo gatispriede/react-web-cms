@@ -32,6 +32,13 @@ jobs:
       - name: Typecheck (frontend)
         run: npx tsc --noEmit -p ui/client/tsconfig.json
 
+      - name: Typecheck (tests)
+        # Tests live behind a separate tsconfig because vitest is a devDep
+        # and the production Docker image (NODE_ENV=production) doesn't
+        # install it — `next build`'s typecheck would otherwise fail to
+        # resolve `vitest/globals`.
+        run: npx tsc --noEmit -p tsconfig.test.json
+
       - name: Tests
         run: npm test -- --reporter=dot
 
@@ -45,7 +52,9 @@ jobs:
     needs: test-and-typecheck
     # Only deploy on direct pushes to master, not on PRs
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    timeout-minutes: 30
+    # Holds the appleboy/ssh-action command_timeout (30m) plus the
+    # workflow setup/teardown around it.
+    timeout-minutes: 40
     env:
       DEPLOY_ENV_FILE: ${{ secrets.DEPLOY_ENV_FILE_1 }}
 
@@ -58,6 +67,12 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           envs: DEPLOY_ENV_FILE
           script_stop: true
+          # Default appleboy/ssh-action command_timeout is 10m, which fires
+          # before the inner app-healthy loop on cold deploys (image pull +
+          # `next build` regularly take 6-8m alone). Bumped to 30m so the
+          # SSH session outlasts the inner timeouts; the GHA job timeout
+          # (timeout-minutes: 30 above) is the real upper bound.
+          command_timeout: 30m
           script: |
             set -euo pipefail
 
@@ -174,6 +189,50 @@ jobs:
             export DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1
             docker compose -p cms -f infra/compose.yaml --env-file .env up -d --no-build mongodb server caddy || true
 
+            # Rebuild `server` whenever the commit touches services/ or
+            # the ServerDockerfile. The pre-fix workflow only rebuilt
+            # `app` (with `--no-deps app`), leaving the `server`
+            # container pinned to whatever image was current the *last*
+            # time someone manually rebuilt it — which is how a
+            # months-old standalone GraphQL build ended up live in
+            # production. BuildKit layer cache makes the no-op case
+            # cheap (~5s) when nothing under services/ changed; the
+            # explicit dirty check still avoids the container churn for
+            # pure-frontend deploys.
+            DIRTY_SERVER=0
+            LAST_SHA_FILE="/opt/cms/.last-deploy-sha"
+            CUR_SHA=$(git rev-parse HEAD)
+            if [ -f "$LAST_SHA_FILE" ]; then
+              LAST_SHA=$(cat "$LAST_SHA_FILE")
+              if git diff --name-only "$LAST_SHA" "$CUR_SHA" -- services/ infra/ServerDockerfile shared/ 2>/dev/null | grep -q .; then
+                DIRTY_SERVER=1
+              fi
+            else
+              # First deploy after introducing the dirty-check — be
+              # safe and rebuild server once.
+              DIRTY_SERVER=1
+            fi
+            if [ "$DIRTY_SERVER" = "1" ]; then
+              echo "==> services/ or ServerDockerfile changed; rebuilding server"
+              docker compose -p cms -f infra/compose.yaml --env-file .env up --no-deps --build -d server
+              echo "==> Waiting for server to report healthy"
+              for i in $(seq 1 24); do
+                status=$(docker inspect --format '{{.State.Health.Status}}' server 2>/dev/null || echo "starting")
+                if [ "$status" = "healthy" ]; then
+                  echo "    server healthy after ${i} checks"
+                  break
+                fi
+                if [ "$i" = "24" ]; then
+                  echo "!! server failed to become healthy within 2 minutes" >&2
+                  docker compose -p cms -f infra/compose.yaml --env-file .env logs --tail=200 server >&2 || true
+                  exit 1
+                fi
+                sleep 5
+              done
+            else
+              echo "==> services/ unchanged; skipping server rebuild"
+            fi
+
             echo "==> Rebuilding and restarting app (zero-downtime)"
             # `--no-deps app` leaves mongodb / server / caddy running
             # untouched, so TLS doesn't blip and the DB connection pool
@@ -185,18 +244,21 @@ jobs:
 
             echo "==> Waiting for app to report healthy"
             # Poll the compose healthcheck (defined in compose.yaml) for
-            # up to 3 minutes before giving up. Previously this was a
-            # blind `sleep 15` — deployments regularly completed before
-            # Next had finished its first static-gen cycle, and broken
-            # rollouts weren't flagged until a human happened to check.
-            for i in $(seq 1 36); do
+            # up to 10 minutes before giving up. Cold builds (no
+            # BuildKit cache, fresh `next build` SSG pass) routinely run
+            # 6-8 min on the droplet's small CPU budget; the previous
+            # 3-min cap was tripping legitimate deploys. The
+            # appleboy/ssh-action `command_timeout: 30m` set above
+            # gives this loop room to run plus the server-rebuild loop
+            # plus image pulls.
+            for i in $(seq 1 120); do
               status=$(docker inspect --format '{{.State.Health.Status}}' front 2>/dev/null || echo "starting")
               if [ "$status" = "healthy" ]; then
                 echo "    app healthy after ${i} checks"
                 break
               fi
-              if [ "$i" = "36" ]; then
-                echo "!! app failed to become healthy within 3 minutes" >&2
+              if [ "$i" = "120" ]; then
+                echo "!! app failed to become healthy within 10 minutes" >&2
                 docker compose -p cms -f infra/compose.yaml --env-file .env logs --tail=200 app >&2 || true
                 exit 1
               fi
@@ -212,6 +274,11 @@ jobs:
               echo "!! Smoke check failed: $SMOKE_URL returned $smoke_code" >&2
               exit 1
             fi
+
+            # Record this commit SHA so the next deploy can diff
+            # services/ + ServerDockerfile against it and skip the
+            # server rebuild when the change set is purely frontend.
+            echo "$CUR_SHA" > "$LAST_SHA_FILE"
 
             docker compose -p cms -f infra/compose.yaml --env-file .env ps
             echo "==> Deploy complete"

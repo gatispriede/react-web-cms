@@ -9,14 +9,12 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
         unobserve() {}
         disconnect() {}
     }
-    // @ts-expect-error — minimal stub, sufficient for layout-effect bail-outs.
-    globalThis.ResizeObserver = ResizeObserverStub;
+    globalThis.ResizeObserver = ResizeObserverStub as unknown as typeof globalThis.ResizeObserver;
 }
 
 // rc-virtual-list / rc-overflow query matchMedia at mount time.
 if (typeof globalThis.matchMedia === 'undefined') {
-    // @ts-expect-error — minimal stub.
-    globalThis.matchMedia = (query: string) => ({
+    globalThis.matchMedia = ((query: string) => ({
         matches: false,
         media: query,
         onchange: null,
@@ -25,5 +23,5 @@ if (typeof globalThis.matchMedia === 'undefined') {
         addEventListener: () => {},
         removeEventListener: () => {},
         dispatchEvent: () => false,
-    });
+    })) as typeof globalThis.matchMedia;
 }

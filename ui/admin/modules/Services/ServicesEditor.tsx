@@ -1,5 +1,6 @@
 import React, {useMemo} from "react";
 import {Button, Input, Space, Typography} from "antd";
+import {LabeledInput} from "@client/lib/LabeledInput";
 import {DeleteOutlined, PlusOutlined} from "@client/lib/icons";
 import {IInputContent} from "@interfaces/IInputContent";
 import {EItemType} from "@enums/EItemType";
@@ -73,11 +74,11 @@ const ServicesEditor: React.FC<IInputContent> = ({content, setContent, t}) => {
                                     />
                                     <Button danger size="small" icon={<DeleteOutlined/>} onClick={() => removeRow(i)}/>
                                 </Space>
-                                <Input
+                                <LabeledInput
                                     value={r.title}
                                     onChange={e => patchRow(i, {title: e.target.value})}
                                     placeholder="Solutions *architecture*"
-                                    addonBefore={t('Title')}
+                                    label={t('Title')}
                                 />
                                 <Input.TextArea
                                     value={r.description}
@@ -86,33 +87,33 @@ const ServicesEditor: React.FC<IInputContent> = ({content, setContent, t}) => {
                                     rows={2}
                                 />
                                 <Space style={{width: '100%'}}>
-                                    <Input
+                                    <LabeledInput
                                         value={r.ctaLabel ?? ''}
                                         onChange={e => patchRow(i, {ctaLabel: e.target.value})}
                                         placeholder="Find out more"
-                                        addonBefore={t('CTA')}
-                                        style={{width: 260}}
+                                        label={t('CTA')}
+                                        wrapperStyle={{width: 260}}
                                     />
-                                    <Input
+                                    <LabeledInput
                                         value={r.ctaHref ?? ''}
                                         onChange={e => patchRow(i, {ctaHref: e.target.value})}
                                         placeholder="#contact"
-                                        addonBefore={t('Link')}
+                                        label={t('Link')}
                                     />
                                 </Space>
                                 <Space style={{width: '100%'}}>
-                                    <Input
+                                    <LabeledInput
                                         value={r.iconGlyph ?? ''}
                                         onChange={e => patchRow(i, {iconGlyph: e.target.value})}
                                         placeholder="▲ or 🧱 or free-text"
-                                        addonBefore={t('Icon glyph')}
-                                        style={{width: 240}}
+                                        label={t('Icon glyph')}
+                                        wrapperStyle={{width: 240}}
                                     />
-                                    <Input
+                                    <LabeledInput
                                         value={(r.tags ?? []).join(', ')}
                                         onChange={e => patchTags(i, e.target.value)}
                                         placeholder="AWS, Azure, Multi-cloud"
-                                        addonBefore={t('Tags (comma-sep)')}
+                                        label={t('Tags (comma-sep)')}
                                     />
                                 </Space>
                             </Space>
