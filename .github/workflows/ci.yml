@@ -202,14 +202,26 @@ jobs:
             DIRTY_SERVER=0
             LAST_SHA_FILE="/opt/cms/.last-deploy-sha"
             CUR_SHA=$(git rev-parse HEAD)
+            echo "==> Computing dirty-server diff (cur=$CUR_SHA)"
             if [ -f "$LAST_SHA_FILE" ]; then
               LAST_SHA=$(cat "$LAST_SHA_FILE")
-              if git diff --name-only "$LAST_SHA" "$CUR_SHA" -- services/ infra/ServerDockerfile shared/ 2>/dev/null | grep -q .; then
+              echo "    last-deployed SHA: $LAST_SHA"
+              # Wrap in `|| true` so a missing/unreachable LAST_SHA (force-push,
+              # branch reset, repo GC) doesn't trip `set -euo pipefail` and
+              # silently kill the script with no log line. Worst case the
+              # diff fails and we fall through to a rebuild — never the wrong
+              # direction for safety.
+              CHANGED=$(git diff --name-only "$LAST_SHA" "$CUR_SHA" -- services/ infra/ServerDockerfile shared/ 2>/dev/null || echo "__DIFF_FAILED__")
+              if [ "$CHANGED" = "__DIFF_FAILED__" ]; then
+                echo "    git diff failed (LAST_SHA likely unreachable); rebuilding server to be safe"
+                DIRTY_SERVER=1
+              elif [ -n "$CHANGED" ]; then
                 DIRTY_SERVER=1
               fi
             else
               # First deploy after introducing the dirty-check — be
               # safe and rebuild server once.
+              echo "    no last-SHA file; rebuilding server (first run)"
               DIRTY_SERVER=1
             fi
             if [ "$DIRTY_SERVER" = "1" ]; then
