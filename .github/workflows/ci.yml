@@ -225,9 +225,13 @@ jobs:
                   echo "    LAST_SHA $LAST_SHA unreachable; rebuilding server"
                   DIRTY_SERVER=1
                 else
-                  CHANGED=$(git diff --name-only "$LAST_SHA" "$CUR_SHA" -- services/ infra/ServerDockerfile shared/ 2>/dev/null)
+                  # Cap to first changed path — we only need a yes/no
+                  # signal, not the full file list. Avoids dragging a
+                  # multi-hundred-line diff into the deploy log when the
+                  # changeset is large.
+                  CHANGED=$(git diff --name-only "$LAST_SHA" "$CUR_SHA" -- services/ infra/ServerDockerfile shared/ 2>/dev/null | head -1)
                   if [ -n "$CHANGED" ]; then
-                    echo "    services/infra changed since last deploy; rebuilding server"
+                    echo "    services/infra changed (e.g. $CHANGED); rebuilding server"
                     DIRTY_SERVER=1
                   else
                     echo "    services/infra unchanged since $LAST_SHA"
