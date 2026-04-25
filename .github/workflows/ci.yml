@@ -304,15 +304,12 @@ jobs:
             smoke_code=$(curl -sSL -o /dev/null -w "%{http_code}" --max-time 20 "$SMOKE_URL" || echo "000")
             if [ "$smoke_code" != "200" ]; then
               echo "!! Smoke check failed: $SMOKE_URL returned $smoke_code" >&2
-              echo "---- response headers ($SMOKE_URL) ----" >&2
-              curl -sSIL --max-time 20 "$SMOKE_URL" >&2 || true
-              echo "---- response body head ($SMOKE_URL) ----" >&2
-              curl -sSL --max-time 20 "$SMOKE_URL" 2>/dev/null | head -c 500 >&2 || true
-              echo >&2
-              echo "---- localhost:80 (bypass Caddy) ----" >&2
+              # Compact diagnostics: status line of the public URL,
+              # localhost bypass code, and the last 20 app log lines.
+              # Trim further if log noise becomes a problem.
+              curl -sSIL --max-time 20 "$SMOKE_URL" 2>&1 | head -1 >&2 || true
               curl -sS -o /dev/null -w "localhost http_code: %{http_code}\n" --max-time 10 http://localhost/ >&2 || true
-              echo "---- recent app logs ----" >&2
-              docker compose -p cms -f infra/compose.yaml --env-file .env logs --tail=80 app >&2 || true
+              docker compose -p cms -f infra/compose.yaml --env-file .env logs --tail=20 app >&2 || true
               exit 1
             fi
 
