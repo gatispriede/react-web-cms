@@ -1,0 +1,46 @@
+.stats-strip {
+  --ss-rule: var(--rule, rgba(0, 0, 0, 0.16));
+  --ss-rule-strong: var(--rule-strong, rgba(0, 0, 0, 0.32));
+  --ss-ink: var(--ink, var(--theme-colorTextBase, #1a1a1a));
+  --ss-ink-2: var(--ink-2, var(--theme-colorInkSecondary, #555));
+  --ss-ink-3: var(--ink-3, var(--theme-colorInkTertiary, #888));
+  --ss-accent: var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary, #c65a2a)));
+
+  &__row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    border-top: 1px solid var(--ss-rule-strong);
+    border-bottom: 1px solid var(--ss-rule-strong);
+  }
+  &__cell {
+    padding: 18px 22px;
+    border-right: 1px solid var(--ss-rule);
+    &:last-child { border-right: none; }
+    &.is-hl { background: var(--theme-colorMark, color-mix(in oklch, var(--ss-accent) 14%, transparent)); }
+  }
+  &__v {
+    font-family: var(--font-display, var(--font-serif, serif));
+    font-weight: 400;
+    font-size: clamp(28px, 3.4vw, 40px);
+    line-height: 1;
+    color: var(--ss-ink);
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  &__unit {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--ss-accent);
+    font-weight: 500;
+  }
+  &__k {
+    margin-top: 8px;
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ss-ink-3);
+  }
+}

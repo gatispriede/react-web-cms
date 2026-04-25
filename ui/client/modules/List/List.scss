@@ -196,4 +196,57 @@
       color: var(--ink-3, #888);
     }
   }
+
+  /* Paper grid — 4-col card grid for Dossier "Key technologies" B.01-B.12. */
+  &.paper-grid {
+    .list-module__paper-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      border-top: 1px solid var(--rule-strong, rgba(0,0,0,0.32));
+      border-left: 1px solid var(--rule-strong, rgba(0,0,0,0.32));
+    }
+    .list-module__pg-card {
+      padding: 16px 18px 18px;
+      border-right: 1px solid var(--rule, rgba(0,0,0,0.16));
+      border-bottom: 1px solid var(--rule, rgba(0,0,0,0.16));
+      background: var(--bg-base, transparent);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-height: 110px;
+    }
+    .list-module__pg-ord {
+      font-family: var(--font-mono, ui-monospace, monospace);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent, var(--theme-colorAccent, #c65a2a));
+    }
+    .list-module__pg-label {
+      font-family: var(--font-display, var(--font-serif, serif));
+      font-size: 18px;
+      line-height: 1.15;
+      color: var(--ink, var(--theme-colorTextBase, #1a1a1a));
+    }
+    .list-module__pg-meta {
+      font-family: var(--font-mono, ui-monospace, monospace);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-3, #888);
+    }
+    .list-module__pg-value {
+      margin: 4px 0 0;
+      font-size: 12.5px;
+      line-height: 1.45;
+      color: var(--ink-2, #2b2b2b);
+    }
+    @media (max-width: 980px) {
+      .list-module__paper-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 540px) {
+      .list-module__paper-grid { grid-template-columns: 1fr; }
+    }
+  }
 }

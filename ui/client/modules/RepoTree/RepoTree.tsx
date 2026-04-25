@@ -71,11 +71,17 @@ const RepoTree = ({item, tApp}: {
 
     const viewTree = useMemo(() => buildViewTree(nodes), [nodes]);
 
-    // Default expansion: only the top-level (depth 0) folders. Anything
-    // deeper stays collapsed so the rail starts at one screenful.
+    // Default expansion: every folder up to depth 2 (i.e. the first three
+    // visible layers — root + two nested levels). Deeper folders stay
+    // collapsed but are still toggleable.
     const initialExpanded = useMemo(() => {
         const set = new Set<string>();
-        for (const root of viewTree) if (root.node.kind === 'dir') set.add(root.path);
+        const walk = (vn: ViewNode) => {
+            if (vn.node.kind !== 'dir') return;
+            if (vn.depth <= 2) set.add(vn.path);
+            for (const child of vn.children) walk(child);
+        };
+        for (const root of viewTree) walk(root);
         return set;
     }, [viewTree]);
     const [expanded, setExpanded] = useState<Set<string>>(initialExpanded);
@@ -144,17 +150,75 @@ const RepoTree = ({item, tApp}: {
                     </div>
                 </div>
                 <div className="repo-tree__col-detail">
-                    {selected ? (
-                        <div className="repo-tree__detail-card">
-                            <div className="repo-tree__detail-row">
-                                {selected.tag && <span className="repo-tree__detail-tag">{tr(selected.tag)}</span>}
-                                <span className="repo-tree__detail-kind">{selected.kind === 'dir' ? 'DIR' : 'FILE'}</span>
+                    {selected ? (() => {
+                        const segments = selected.path.split('/').filter(Boolean);
+                        const leafName = segments[segments.length - 1] ?? selected.path;
+                        const trailing = selected.kind === 'dir' ? '/' : '';
+                        const ancestors: {label: string; path: string}[] = [];
+                        let cum = '';
+                        for (let i = 0; i < segments.length - 1; i++) {
+                            cum = cum ? `${cum}/${segments[i]}` : segments[i];
+                            ancestors.push({label: segments[i], path: cum});
+                        }
+                        // direct children of selected (if dir) — pulled from viewTree
+                        const findInTree = (list: ViewNode[], path: string): ViewNode | undefined => {
+                            for (const v of list) {
+                                if (v.path === path) return v;
+                                const hit = findInTree(v.children, path);
+                                if (hit) return hit;
+                            }
+                            return undefined;
+                        };
+                        const selectedView = findInTree(viewTree, selected.path);
+                        const children = selectedView?.children ?? [];
+                        return (
+                            <div className="repo-tree__detail-card">
+                                {ancestors.length > 0 && (
+                                    <div className="repo-tree__crumb">
+                                        {ancestors.map((a, i) => (
+                                            <React.Fragment key={a.path}>
+                                                <button type="button" className="repo-tree__crumb-link" onClick={() => setSelectedPath(a.path)}>{a.label}</button>
+                                                {i < ancestors.length - 1 && <span className="repo-tree__crumb-sep">/</span>}
+                                            </React.Fragment>
+                                        ))}
+                                        <span className="repo-tree__crumb-sep">/</span>
+                                        <span className="repo-tree__crumb-here">{leafName}</span>
+                                    </div>
+                                )}
+                                <h3 className="repo-tree__detail-title">{leafName}{trailing}</h3>
+                                {selected.badge && (
+                                    <div className="repo-tree__detail-badge"><span className="repo-tree__detail-dot" aria-hidden/>{tr(selected.badge)}</div>
+                                )}
+                                {selected.body && <p className="repo-tree__detail-body">{tr(selected.body)}</p>}
+                                {selected.kind === 'dir' && selected.stats && (
+                                    <div className="repo-tree__stats">
+                                        <div className="repo-tree__stat"><div className="repo-tree__stat-v">{selected.stats.subfolders}</div><div className="repo-tree__stat-l">subfolders</div></div>
+                                        <div className="repo-tree__stat"><div className="repo-tree__stat-v">{selected.stats.files}</div><div className="repo-tree__stat-l">files (annotated)</div></div>
+                                        <div className="repo-tree__stat"><div className="repo-tree__stat-v">{selected.stats.maxDepth}</div><div className="repo-tree__stat-l">max depth</div></div>
+                                        <div className="repo-tree__stat"><div className="repo-tree__stat-v">{ancestors.length === 0 ? '—' : ancestors.length}</div><div className="repo-tree__stat-l">depth here</div></div>
+                                    </div>
+                                )}
+                                {children.length > 0 && (
+                                    <>
+                                        <div className="repo-tree__detail-sub">Contents · {children.length} direct child{children.length === 1 ? '' : 'ren'}</div>
+                                        <ul className="repo-tree__children">
+                                            {children.map(ch => (
+                                                <li key={ch.path}>
+                                                    <button type="button" className="repo-tree__child" onClick={() => { setSelectedPath(ch.path); if (ch.node.kind === 'dir' && !expanded.has(ch.path)) toggle(ch.path); }}>
+                                                        <span className="repo-tree__child-name">
+                                                            <span className="repo-tree__child-glyph" aria-hidden>▦</span>
+                                                            {ch.name}{ch.node.kind === 'dir' ? '/' : ''}
+                                                        </span>
+                                                        {ch.node.summary && <span className="repo-tree__child-desc">{tr(ch.node.summary)}</span>}
+                                                    </button>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </>
+                                )}
                             </div>
-                            <div className="repo-tree__detail-path">{selected.path}</div>
-                            {selected.summary && <div className="repo-tree__detail-summary">{tr(selected.summary)}</div>}
-                            {selected.body && <p className="repo-tree__detail-body">{tr(selected.body)}</p>}
-                        </div>
-                    ) : (
+                        );
+                    })() : (
                         <div className="repo-tree__detail-empty">—</div>
                     )}
                 </div>

@@ -16,6 +16,10 @@ export interface IRepoNode {
     body?: string;
     /** Optional mono caps tag in the detail pane (e.g. "FRONTEND"). */
     tag?: string;
+    /** Display badge for dir nodes (e.g. "BACKEND", "FRONTEND"). */
+    badge?: string;
+    /** Subtree stats for dir nodes. */
+    stats?: {subfolders: number; files: number; maxDepth: number};
 }
 
 export interface IRepoTree {

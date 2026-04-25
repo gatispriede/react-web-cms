@@ -493,6 +493,30 @@
       margin: 18px 0 4px;
       line-height: 1.15;
     }
+    /* Body paragraphs inside a RichText block — sans, body-sized, ink-2.
+       Without this rule, <p> inherits the surrounding display-serif and
+       reads as a giant blob of italic prose. */
+    p {
+      font-family: var(--font-sans);
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 1.55;
+      color: var(--ink-2);
+      margin: 0 0 12px;
+      &:last-child { margin-bottom: 0; }
+    }
+    em {
+      font-style: italic;
+      color: var(--ink-2);
+    }
+    code {
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      color: var(--ink);
+      background: var(--bg-inset);
+      padding: 1px 5px;
+      border-radius: 0;
+    }
   }
 
   /* ===== PLAINTEXT — used as "§ 01 · Capability matrix" section head ==== */

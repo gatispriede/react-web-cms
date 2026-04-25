@@ -35,6 +35,22 @@ const sec3 = (id, page, slots, items) => ({id, type: 3, page, slots, content: it
 
 const heading = (html) => item('RICH_TEXT', 'default', {value: html});
 
+// Vitals dl rendered as a stand-alone module under each hero. The hero
+// itself stays purely about identity (eyebrow, name, lede, CTA, portrait);
+// the labelled key/value pairs (CODENAME, STATUS, FOOTPRINT, etc) and the
+// ALL-CAPS coords strip become their own siblings — easier to author,
+// easier to re-skin without touching Hero.
+function vitalsBlock(metaPairs) {
+    const dl = '<dl class="hero-vitals">'
+        + metaPairs.map(p => `<dt>${p.label}</dt><dd>${p.value}</dd>`).join('')
+        + '</dl>';
+    return heading(dl);
+}
+function statsStrip(coords) {
+    const cells = coords.map(c => `<span><b style="color:var(--ink-3);font-family:var(--font-mono);font-size:11px;letter-spacing:0.14em;text-transform:uppercase;">${c.label}</b>&nbsp;<b>${c.value}</b></span>`).join('<span style="color:var(--rule-strong);margin:0 14px;">·</span>');
+    return heading(`<div class="hero-strip" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;font-family:var(--font-mono);font-size:11px;letter-spacing:0.04em;color:var(--ink-2);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:14px 0;">${cells}</div>`);
+}
+
 // --- Repo tree -------------------------------------------------------------
 // Eval the v2 mockup's data file to read window.REPO_TREE, then flatten it
 // into the {path, tag, summary, body}[] shape that the RepoTree module
@@ -65,18 +81,86 @@ function tagFor(node) {
     if (k === 'pem' || k === 'secret') return 'KEY';
     return 'FILE';
 }
+
+// Mirrors the v3 mockup's DIR_KIND_BADGE map — small editorial label
+// shown next to the folder name in the tree and at the top of the detail
+// pane (e.g. "BACKEND", "FRONTEND", "FEATURES · ADMIN").
+const DIR_KIND_BADGE = {
+    'root':            'MONOREPO',
+    'root-server':     'BACKEND',
+    'root-ui':         'FRONTEND',
+    'root-shared':     'CONTRACT',
+    'root-infra':      'DEPLOY',
+    'root-docs':       'DOCS',
+    'root-tools':      'TOOLS',
+    'root-ci':         'CI',
+    'api':             'API',
+    'api-client':      'API · CLIENT',
+    'generated':       'CODEGEN',
+    'features-server': 'FEATURES',
+    'features-admin':  'FEATURES · ADMIN',
+    'features-client': 'FEATURES · CLIENT',
+    'infra-server':    'INFRA',
+    'feature':         'FEATURE',
+    'module':          'MODULE',
+    'modules-admin':   'MODULES · ADMIN',
+    'modules-client':  'MODULES · CLIENT',
+    'shell':           'SHELL',
+    'lib-admin':       'LIB · ADMIN',
+    'lib-client':      'LIB · CLIENT',
+    'i18n':            'I18N',
+    'themes':          'THEMES',
+    'scss':            'SCSS',
+    'pages':           'PAGES',
+    'api-routes':      'API ROUTES',
+    'tests':           'TESTS',
+    'preview':         'PREVIEW',
+    'static':          'STATIC',
+    'secret':          'SECRETS',
+    'enums':           'ENUMS',
+    'types':           'TYPES',
+    'utils':           'UTILS',
+    'docs':            'DOCS',
+    'admin-ui':        'ADMIN',
+    'client-ui':       'CLIENT',
+};
+function statsFor(node) {
+    let subfolders = 0, files = 0, maxDepth = 0;
+    function visit(n, d) {
+        if (n !== node) {
+            if (n.t === 'dir') subfolders++;
+            else files++;
+        }
+        if (d > maxDepth) maxDepth = d;
+        if (n.c) for (const ch of n.c) visit(ch, d + 1);
+    }
+    visit(node, 0);
+    return {subfolders, files, maxDepth};
+}
 function flattenTree(root) {
     const out = [];
-    const MAX_DEPTH = 3; // keep tree size sane for an editorial spread
+    const MAX_DEPTH = 12; // folders only — render the whole spine
     function walk(node, parentPath, depth) {
+        // Skip anything flagged as a secret store — keystores, certs, env
+        // bundles. Folder names alone can leak hosting choices, so we drop
+        // the whole subtree. (Bundle still describes the runtime use of
+        // env files in prose elsewhere.)
+        if (node.k === 'secret') return;
         const here = parentPath ? `${parentPath}/${node.n}` : node.n;
-        const summary = node.t === 'dir' ? (node.k === 'root' ? 'Monorepo root' : 'Folder') : (node.k || 'file');
-        out.push({
-            path: here,
-            tag: tagFor(node),
-            summary: node.d ? node.d.split(/[.;]/)[0].trim().slice(0, 80) : summary,
-            body: node.d ?? '',
-        });
+        // Folders only — files would balloon the rail and aren't the point.
+        if (node.t === 'dir') {
+            const summary = node.k === 'root' ? 'Monorepo root' : 'Folder';
+            const badge = DIR_KIND_BADGE[node.k] || (node.k === 'root' ? 'MONOREPO' : 'FOLDER');
+            out.push({
+                path: here,
+                kind: 'dir',
+                tag: tagFor(node),
+                badge,
+                summary: node.d ? node.d.split(/[.;]/)[0].trim().slice(0, 80) : summary,
+                body: node.d ?? '',
+                stats: statsFor(node),
+            });
+        }
         if (node.c && depth < MAX_DEPTH) for (const child of node.c) walk(child, here, depth + 1);
     }
     walk(root, '', 0);
@@ -104,18 +188,24 @@ sections.push(sec1('cv-sec-home-hero', 'Home', [
         portraitImage: '/images/20260415_142341.jpg',
         ctaPrimary: {label: 'View work ↘', href: '#career', primary: true},
         ctaSecondary: {label: 'Get in touch', href: '/contact'},
-        meta: [
-            {label: 'Based', value: 'Sigulda, Latvia'},
-            {label: 'Years', value: '15+ in digital'},
-            {label: 'Mode', value: 'Remote / Hybrid'},
-            {label: 'Stack', value: 'JS · React · Next · Node · 3D'},
-        ],
-        coords: [
-            {label: 'LAT', value: '57.15°N'},
-            {label: 'LON', value: '24.85°E'},
-            {label: 'ELEV', value: '102 m'},
-            {label: 'LOCAL', value: '—', liveTime: true},
-            {label: 'UPDATED', value: '2026.04'},
+    }),
+]));
+sections.push(sec1('cv-sec-home-vitals', 'Home', [
+    vitalsBlock([
+        {label: 'Based', value: 'Sigulda, Latvia'},
+        {label: 'Years', value: '15+ in digital'},
+        {label: 'Mode', value: 'Remote / Hybrid'},
+        {label: 'Stack', value: 'JS · React · Next · Node · 3D'},
+    ]),
+]));
+sections.push(sec1('cv-sec-home-coords', 'Home', [
+    item('STATS_STRIP', 'default', {
+        cells: [
+            {value: '57.15°N', label: 'lat'},
+            {value: '24.85°E', label: 'lon'},
+            {value: '102 m', label: 'elev'},
+            {value: '15+', unit: 'yrs', label: 'in digital'},
+            {value: '2026.04', label: 'updated'},
         ],
     }),
 ]));
@@ -123,7 +213,11 @@ sections.push(sec1('cv-sec-home-hero', 'Home', [
 sections.push(sec1('cv-sec-home-matrix-head', 'Home', [
     heading('<h2>§ 01 · Capability matrix</h2><p><em>Self-reported · 0–10 scale</em></p>'),
 ]));
-sections.push(sec1('cv-sec-home-matrix-core', 'Home', [
+// 60/30 split: Core delivery on the left (span=2), Languages dl on the
+// right (span=1). Stacking a second [2,1] row right after gives the same
+// visual rhythm as the two-table dossier mockup — left column carries
+// the matrix bars, right column carries Languages then Own work.
+sections.push(sec3('cv-sec-home-matrix-row1', 'Home', [2, 1], [
     item('SKILL_PILLS', 'matrix', {
         category: 'Core delivery',
         categoryMeta: '08 entries',
@@ -138,8 +232,18 @@ sections.push(sec1('cv-sec-home-matrix-core', 'Home', [
             {label: 'CI/CD · Docker · HAProxy', score: 7.8},
         ],
     }),
+    heading(
+        '<h4>Languages — spoken &amp; written</h4>'
+        + '<dl>'
+        + '<dt>Latvian</dt><dd>10 / 10 · native</dd>'
+        + '<dt>English</dt><dd>9 / 10 · proficient</dd>'
+        + '<dt>German</dt><dd>3 / 4 · novice</dd>'
+        + '<dt>Russian</dt><dd>4 / 2 · novice</dd>'
+        + '<dt>Greek</dt><dd>2 / 2 · trained</dd>'
+        + '</dl>',
+    ),
 ]));
-sections.push(sec1('cv-sec-home-matrix-lead', 'Home', [
+sections.push(sec3('cv-sec-home-matrix-row2', 'Home', [2, 1], [
     item('SKILL_PILLS', 'matrix', {
         category: 'Leadership & management',
         categoryMeta: '06 entries',
@@ -150,6 +254,14 @@ sections.push(sec1('cv-sec-home-matrix-lead', 'Home', [
             {label: 'Architecture & strategic planning', score: 8.2},
             {label: 'Mentoring & BA management', score: 8.0},
             {label: 'Cross-country remote delivery (11+)', score: 7.5},
+        ],
+    }),
+    item('LIST', 'facts', {
+        title: 'Own work',
+        items: [
+            {label: 'JF', value: 'JS framework / library — all-in-one JS, HTML, style', href: 'https://github.com/gatispriede/jf'},
+            {label: 'LegalStableSure', value: 'Mobile app — live · legalstablesure.com ↗', href: 'https://legalstablesure.com'},
+            {label: 'JS-based CMS', value: 'Case study · funisimo.pro ↗', href: '/cms'},
         ],
     }),
 ]));
@@ -163,14 +275,6 @@ sections.push(sec1('cv-sec-home-matrix-platforms', 'Home', [
         + '<dt>Build &amp; test</dt><dd>Webpack · Babel · Vite · Vitest · Mocha · Jasmine</dd>'
         + '<dt>Libraries</dt><dd>Material UI · D3 · Handlebars · i18next · Bootstrap</dd>'
         + '<dt>In pursuit</dt><dd>AI · quantum · VR · robotics</dd>'
-        + '</dl>'
-        + '<h4>Languages — spoken &amp; written</h4>'
-        + '<dl>'
-        + '<dt>Latvian</dt><dd>10 / 10 · native</dd>'
-        + '<dt>English</dt><dd>9 / 10 · proficient</dd>'
-        + '<dt>German</dt><dd>3 / 4 · novice</dd>'
-        + '<dt>Russian</dt><dd>4 / 2 · novice</dd>'
-        + '<dt>Greek</dt><dd>2 / 2 · trained</dd>'
         + '</dl>',
     ),
 ]));
@@ -323,22 +427,37 @@ sections.push(sec1('cv-sec-cms-hero', 'CMS', [
         portraitLabel: 'CMS',
         portraitImage: '/images/20260415_142341.jpg',
         ctaPrimary: {label: 'Tour architecture ↘', href: '#architecture', primary: true},
-        ctaSecondary: {label: 'Visit production ↗', href: 'https://funisimo.pro'},
-        meta: [
-            {label: 'Codename', value: 'funisimo · monorepo · TypeScript'},
-            {label: 'Status', value: 'In development · live at funisimo.pro'},
-            {label: 'Footprint', value: 'Two droplets · same code · isolated content'},
-            {label: 'Pipeline', value: 'Push → CI → SSH deploy · ~3 min p95'},
-            {label: 'Audit', value: 'Every write stamps editedBy + version'},
-        ],
-        coords: [
-            {label: 'STACK', value: 'NEXT · MONGO · GRAPHQL'},
-            {label: 'RUNTIME', value: 'NODE 22 LTS'},
-            {label: 'PROXY', value: 'CADDY'},
-            {label: 'HOST', value: 'DIGITALOCEAN · 2 GB'},
-            {label: 'UPDATED', value: '2026.04'},
+        ctaSecondary: {label: 'Visit GitHub ↗', href: 'https://github.com/gatispriede/redis-node-js-cloud'},
+    }),
+]));
+sections.push(sec1('cv-sec-cms-vitals', 'CMS', [
+    vitalsBlock([
+        {label: 'Codename', value: 'funisimo · monorepo · TypeScript'},
+        {label: 'Status', value: 'In development · live at funisimo.pro'},
+        {label: 'Footprint', value: 'Two droplets · same code · isolated content'},
+        {label: 'Pipeline', value: 'Push → CI → SSH deploy · ~3 min p95'},
+        {label: 'Audit', value: 'Every write stamps editedBy + version'},
+    ]),
+]));
+sections.push(sec1('cv-sec-cms-stats', 'CMS', [
+    item('STATS_STRIP', 'default', {
+        cells: [
+            {value: '17', unit: 'types', label: 'reusable item types', highlight: true},
+            {value: '10', unit: 'cols', label: 'mongo collections'},
+            {value: '8', unit: 'themes', label: 'editorial · a11y'},
+            {value: '~3', unit: 'min', label: 'push → live'},
+            {value: '60', unit: 's', label: 'isr fallback'},
         ],
     }),
+]));
+
+sections.push(sec1('cv-sec-cms-pitch', 'CMS', [
+    heading(
+        '<h2>§ 0 · Built for AI to use as a CMS language</h2>'
+        + '<p>A small, declarative grammar — <b>pages, sections, items, styles</b> — that an LLM can compose end-to-end. The output is a <b>beautiful, complex, fully editable</b> site, generated within minutes from a single prompt or bundle.</p>'
+        + '<p>Each item type carries a strict schema, a renderer, and an editor. Hand the AI the registry, hand it a brief, and it returns a complete bundle — type-checked, theme-aware, and immediately publishable. The same admin surface a human uses to edit a page is the surface the AI writes against.</p>'
+        + '<p><em>17 reusable types · 8 themes · 5 locales · one prompt → one site, in minutes.</em></p>',
+    ),
 ]));
 
 sections.push(sec1('cv-sec-cms-arch-head', 'CMS', [
@@ -347,12 +466,53 @@ sections.push(sec1('cv-sec-cms-arch-head', 'CMS', [
         + '<p>Client and admin never import each other\'s code — they share only the generic <code>ISection</code> / <code>IItem</code> types from <code>shared/types/</code>. Removing a module = drop two folders + unregister.</p>'),
 ]));
 sections.push(sec1('cv-sec-cms-tiers', 'CMS', [
-    item('SERVICES', 'tiers', {
-        title: 'Architecture tiers',
-        rows: [
-            {title: 'ui/client/', price: 'A.01', summary: 'Public site + mobile · SSR + ISR', features: ['Next.js 15', 'React 19', 'SSG · ISR 60s', 'i18n via next-i18next', '5 locales']},
-            {title: 'ui/admin/', price: 'A.02', summary: 'Single-page React surface', features: ['AntD chrome', 'NextAuth + bcrypt', '@dnd-kit reorder', 'InlineEdit · Alt+click', 'Conflict-aware writes']},
-            {title: 'services/', price: 'A.03', summary: 'Two GraphQL processes · one schema', features: ['Apollo Server in Next', 'Express twin · standalone', 'MongoDB 7', 'GQty typed client', 'PublishService · AuditLogService']},
+    item('ARCHITECTURE_TIERS', 'default', {
+        eyebrow: '§ A / TIERS',
+        title: 'Three concerns, one repo.',
+        subtitle: 'Client · admin · services — siblings, never importing each other.',
+        intro: 'Every feature lives in exactly one of three tiers. The client renders, the admin edits, services own the GraphQL contract and persistence. Removing a module = drop two folders + unregister.',
+        tiers: [
+            {ord: 'A.01', concern: 'CLIENT', role: 'Render the public site', title: 'ui/client/', description: 'SSR + ISR public surface. Next.js 15 / React 19 / next-i18next / 5 locales. Modules are self-contained — types, view, styles in one folder.',
+                pills: ['Next.js 15', 'React 19', 'SSG · ISR 60s', 'next-i18next', '5 locales'],
+                modules: [
+                    {label: 'modules/Hero', tag: 'TSX'},
+                    {label: 'modules/RepoTree', tag: 'TSX'},
+                    {label: 'modules/InfraTopology', tag: 'TSX'},
+                    {label: 'modules/PipelineFlow', tag: 'TSX'},
+                    {label: 'styles/globals/global.scss', tag: 'SCSS'},
+                ]},
+            {ord: 'A.02', concern: 'ADMIN', role: 'Edit content', title: 'ui/admin/', description: 'Single-page React surface. AntD chrome, @dnd-kit reorder, InlineEdit (Alt+click), conflict-aware writes. Mirrors client/modules folder-for-folder.',
+                pills: ['AntD', 'NextAuth + bcrypt', '@dnd-kit', 'InlineEdit', 'Conflict-aware'],
+                modules: [
+                    {label: 'modules/Hero/HeroEditor', tag: 'TSX'},
+                    {label: 'modules/RepoTree/RepoTreeEditor', tag: 'TSX'},
+                    {label: 'lib/itemTypes/registry', tag: 'TS'},
+                    {label: 'lib/inlineEdit', tag: 'TS'},
+                    {label: 'pages/admin/index', tag: 'TSX'},
+                ]},
+            {ord: 'A.03', concern: 'SERVICES', role: 'Own the contract', title: 'services/', description: 'Two GraphQL processes, one schema. Apollo Server in Next + standalone Express twin. MongoDB 7, GQty typed client, PublishService + AuditLogService.',
+                pills: ['Apollo Server', 'Express twin', 'MongoDB 7', 'GQty', 'Audit triplet'],
+                modules: [
+                    {label: 'features/Bundle/BundleService', tag: 'TS'},
+                    {label: 'features/Audit/AuditLogService', tag: 'TS'},
+                    {label: 'features/Publish/PublishService', tag: 'TS'},
+                    {label: 'graphql/schema.graphql', tag: 'GQL'},
+                    {label: 'mongoDBConnection', tag: 'TS'},
+                ]},
+        ],
+        sharedTitle: 'shared/',
+        sharedDescription: 'The only code both client and admin (and services) import. Generic ISection / IItem / EItemType — never UI, never business logic.',
+        sharedPills: ['shared/types', 'shared/enums', 'shared/utils/contentSchemas'],
+        lifecycleLabel: 'A.04 · Edit lifecycle',
+        lifecycleNote: 'A single edit walks all three tiers in <300 ms p95.',
+        lifecycleSteps: [
+            {n: '01', title: 'Click', sub: 'Alt+click in client'},
+            {n: '02', title: 'Edit', sub: 'Admin inline editor'},
+            {n: '03', title: 'Mutate', sub: 'GraphQL → service'},
+            {n: '04', title: 'Audit', sub: 'editedBy / Δ / version', highlight: true},
+            {n: '05', title: 'Persist', sub: 'Mongo write'},
+            {n: '06', title: 'Re-render', sub: 'ISR revalidate'},
+            {n: '07', title: 'Live', sub: '<60 s on disk'},
         ],
     }),
 ]));
@@ -361,21 +521,21 @@ sections.push(sec1('cv-sec-cms-stack-head', 'CMS', [
     heading('<h2>§ B · Key technologies</h2><p><em>12 entries · production-shipping</em></p>'),
 ]));
 sections.push(sec1('cv-sec-cms-stack', 'CMS', [
-    item('LIST', 'facts', {
-        title: 'Stack',
+    item('LIST', 'paper-grid', {
+        title: '',
         items: [
-            {label: 'Framework', value: 'Next.js 15 · App composes via getStaticProps + getStaticPaths · ISR for index/slug · SSR for the blog · SPA for admin'},
-            {label: 'UI runtime', value: 'React 19 · concurrent renderer · admin is single-page · public site uses islands hydrated from preloaded JSON'},
-            {label: 'Language', value: 'TypeScript · strict mode end-to-end · frontend, backend, codegen all share shared/types'},
-            {label: 'Data layer', value: 'GraphQL · Apollo Server in Next API route + standalone Express twin · schema.graphql is the contract · client is generated'},
-            {label: 'Database', value: 'MongoDB 7 · 10 collections + keyed-singleton settings · singleton driver pool, maxPoolSize 80 · daily mongodump'},
-            {label: 'Auth', value: 'NextAuth · Credentials + optional Google OAuth · Bcrypt-hashed admin seed · mustChangePassword on first login'},
-            {label: 'Reverse proxy', value: 'Caddy · auto Let\'s Encrypt · HSTS + security headers · long-cache for /_next/static/*'},
-            {label: 'Process', value: 'PM2 · Two processes: web (next start) + gql (standalone) · systemd-bootstrapped on reboot'},
-            {label: 'Container', value: 'Docker · compose stack ships server + Mongo + Caddy as a unit · standalone-graphql container shares same Mongo volume'},
-            {label: 'DnD', value: '@dnd-kit · section reorder + intra-section sort · native dataTransfer for image-rail → section drops'},
-            {label: 'i18n', value: 'i18next · public site + decoupled admin instance · inline Alt+click translation editor · hot-reloads without page refresh'},
-            {label: 'Icons', value: 'lucide-react · sole icon library · ESLint no-restricted-imports bans the rest · IconBase normalises size + weight'},
+            {prefix: 'B.01', label: 'Framework', value: 'Next.js 15 · getStaticProps + getStaticPaths · ISR for index/slug · SSR for blog · SPA for admin'},
+            {prefix: 'B.02', label: 'UI runtime', value: 'React 19 · concurrent renderer · admin is single-page · public site hydrates islands from preloaded JSON'},
+            {prefix: 'B.03', label: 'Language', value: 'TypeScript · strict end-to-end · frontend, backend, codegen all share shared/types'},
+            {prefix: 'B.04', label: 'Data layer', value: 'GraphQL · Apollo Server in Next + standalone Express twin · schema.graphql is the contract · GQty client'},
+            {prefix: 'B.05', label: 'Database', value: 'MongoDB 7 · 10 collections + keyed-singleton settings · singleton pool · daily mongodump'},
+            {prefix: 'B.06', label: 'Auth', value: 'NextAuth · Credentials + optional Google OAuth · Bcrypt admin seed · mustChangePassword on first login'},
+            {prefix: 'B.07', label: 'Reverse proxy', value: "Caddy · auto Let's Encrypt · HSTS + security headers · long-cache for /_next/static/*"},
+            {prefix: 'B.08', label: 'Process', value: 'PM2 · two processes (web · gql) · systemd-bootstrapped on reboot'},
+            {prefix: 'B.09', label: 'Container', value: 'Docker · compose stack ships server + Mongo + Caddy as a unit · GQL container shares Mongo volume'},
+            {prefix: 'B.10', label: 'Drag-and-drop', value: '@dnd-kit · section reorder + intra-section sort · native dataTransfer for image-rail drops'},
+            {prefix: 'B.11', label: 'i18n', value: 'i18next · public + decoupled admin instance · inline Alt+click translation editor · hot-reloads'},
+            {prefix: 'B.12', label: 'Icons', value: 'lucide-react · sole icon library · ESLint bans the rest · IconBase normalises size + weight'},
         ],
     }),
 ]));
@@ -522,19 +682,25 @@ sections.push(sec1('cv-sec-lss-hero', 'LSS', [
         portraitImage: '/images/20260415_142341.jpg',
         ctaPrimary: {label: 'Tour architecture ↘', href: '#architecture', primary: true},
         ctaSecondary: {label: 'Visit production ↗', href: 'https://legalstablesure.com'},
-        meta: [
-            {label: 'Codename', value: 'peaches · monorepo · pnpm + Turborepo'},
-            {label: 'Status', value: 'v1.7 in market · legalstablesure.com · Play Store'},
-            {label: 'Footprint', value: 'Android APK + AAB · Fastify API · static landing'},
-            {label: 'Pipeline', value: 'Manual Android workflow · path-triggered website deploy'},
-            {label: 'Audit', value: 'Crash reports, AI usage caps, Stripe-driven tier state'},
-        ],
-        coords: [
-            {label: 'STACK', value: 'EXPO · FASTIFY · SQLITE'},
-            {label: 'RUNTIME', value: 'NODE 20 LTS'},
-            {label: 'PROXY', value: 'CADDY'},
-            {label: 'HOST', value: 'DIGITALOCEAN · 1× DROPLET'},
-            {label: 'UPDATED', value: '2026.04.13'},
+    }),
+]));
+sections.push(sec1('cv-sec-lss-vitals', 'LSS', [
+    vitalsBlock([
+        {label: 'Codename', value: 'peaches · monorepo · pnpm + Turborepo'},
+        {label: 'Status', value: 'v1.7 in market · legalstablesure.com · Play Store'},
+        {label: 'Footprint', value: 'Android APK + AAB · Fastify API · static landing'},
+        {label: 'Pipeline', value: 'Manual Android workflow · path-triggered website deploy'},
+        {label: 'Audit', value: 'Crash reports, AI usage caps, Stripe-driven tier state'},
+    ]),
+]));
+sections.push(sec1('cv-sec-lss-stats', 'LSS', [
+    item('STATS_STRIP', 'default', {
+        cells: [
+            {value: '13', unit: 'models', label: 'prisma schema', highlight: true},
+            {value: '7', unit: 'locales', label: 'hand-translated'},
+            {value: '$13', unit: '/mo', label: 'all-in droplet'},
+            {value: '~3', unit: 'min', label: 'push → live'},
+            {value: 'EU', label: 'region · gdpr'},
         ],
     }),
 ]));
@@ -545,12 +711,53 @@ sections.push(sec1('cv-sec-lss-arch-head', 'LSS', [
         + '<p>The Fastify backend handles only <em>auth</em>, <em>legal-content sync</em>, the <em>AI proxy</em>, <em>Stripe webhooks</em>, and <em>crash reports</em>. Three apps share one TypeScript contract via <code>packages/shared</code> — types and constants both sides agree on.</p>'),
 ]));
 sections.push(sec1('cv-sec-lss-tiers', 'LSS', [
-    item('SERVICES', 'tiers', {
-        title: 'Architecture tiers',
-        rows: [
-            {title: 'apps/mobile/', price: 'A.01', summary: 'Device tier · Expo + React Native. SQLite via expo-sqlite; web falls back to in-memory mock.', features: ['Expo SDK 52', 'RN 0.76', 'Paper MD3', 'Zustand', '7 locales']},
-            {title: 'apps/api/', price: 'A.02', summary: 'Server tier · Fastify 4 + Prisma. Deliberately small surface: auth, sync, AI proxy, Stripe, crashes.', features: ['Fastify 4', 'Prisma 5', 'Argon2', 'Zod', '13 models']},
-            {title: '3rd-party/', price: 'A.03', summary: 'External tier · outbound HTTP only. Each integration in its own folder so a swap (or mock) is one import.', features: ['OpenRouter', 'Stripe', 'Resend', 'EUR-Lex', 'AdMob']},
+    item('ARCHITECTURE_TIERS', 'default', {
+        eyebrow: '§ A / TIERS',
+        title: 'Device-first, server is a thin shim.',
+        subtitle: 'Mobile · server · third-party — clean tiers, one shared contract.',
+        intro: 'Every CRUD entity lives in expo-sqlite on the device. The server only handles auth, legal-content sync, the AI proxy, Stripe webhooks and crash reports. Three apps share one TypeScript contract via packages/shared.',
+        tiers: [
+            {ord: 'A.01', concern: 'DEVICE', role: 'Owns the data', title: 'apps/mobile/', description: 'Expo + React Native. SQLite via expo-sqlite; web falls back to an in-memory mock. Fully usable offline.',
+                pills: ['Expo SDK 52', 'RN 0.76', 'Paper MD3', 'Zustand', '7 locales'],
+                modules: [
+                    {label: 'src/db/sqlite', tag: 'TS'},
+                    {label: 'src/screens', tag: 'TSX'},
+                    {label: 'src/state/zustand', tag: 'TS'},
+                    {label: 'src/i18n', tag: 'TS'},
+                    {label: 'app.config.ts', tag: 'TS'},
+                ]},
+            {ord: 'A.02', concern: 'SERVER', role: 'Identity + sync only', title: 'apps/api/', description: 'Fastify 4 + Prisma. Deliberately small: auth, legal-content sync, AI proxy, Stripe webhooks, crash reports. Never sees practice data.',
+                pills: ['Fastify 4', 'Prisma 5', 'Argon2', 'Zod', '13 models'],
+                modules: [
+                    {label: 'src/routes/auth', tag: 'TS'},
+                    {label: 'src/routes/ai', tag: 'TS'},
+                    {label: 'src/routes/legal', tag: 'TS'},
+                    {label: 'prisma/schema.prisma', tag: 'PRISMA'},
+                    {label: 'src/cron/eurlex', tag: 'TS'},
+                ]},
+            {ord: 'A.03', concern: 'EXTERNAL', role: 'Vendors + integrations', title: '3rd-party/', description: 'Outbound HTTP only. Each integration in its own folder so a swap (or mock) is one import.',
+                pills: ['OpenRouter', 'Stripe', 'Resend', 'EUR-Lex', 'AdMob'],
+                modules: [
+                    {label: 'src/3rd/openrouter', tag: 'TS'},
+                    {label: 'src/3rd/stripe', tag: 'TS'},
+                    {label: 'src/3rd/resend', tag: 'TS'},
+                    {label: 'src/3rd/eurlex', tag: 'TS'},
+                    {label: 'src/3rd/admob', tag: 'TS'},
+                ]},
+        ],
+        sharedTitle: 'packages/shared/',
+        sharedDescription: 'One TypeScript contract for all three apps. Types, enums, Zod schemas — both sides compile against the same source.',
+        sharedPills: ['types/', 'enums/', 'zod/', 'constants/'],
+        lifecycleLabel: 'A.04 · Request lifecycle',
+        lifecycleNote: 'A single AI request walks every tier in <800 ms p95.',
+        lifecycleSteps: [
+            {n: '01', title: 'Tap', sub: 'Mobile screen'},
+            {n: '02', title: 'Sign', sub: 'JWT in header'},
+            {n: '03', title: 'Fastify', sub: 'Route + Zod parse'},
+            {n: '04', title: 'Tier check', sub: 'AI quota + bonus', highlight: true},
+            {n: '05', title: 'OpenRouter', sub: 'PII-stripped'},
+            {n: '06', title: 'Persist', sub: 'AiUsage++ · SQLite'},
+            {n: '07', title: 'Reply', sub: 'Mobile renders'},
         ],
     }),
 ]));
@@ -559,21 +766,21 @@ sections.push(sec1('cv-sec-lss-stack-head', 'LSS', [
     heading('<h2>§ B · Key technologies</h2><p><em>12 entries · production-shipping</em></p>'),
 ]));
 sections.push(sec1('cv-sec-lss-stack', 'LSS', [
-    item('LIST', 'facts', {
-        title: 'Stack',
+    item('LIST', 'paper-grid', {
+        title: '',
         items: [
-            {label: 'Mobile runtime', value: 'Expo 52 · bare-workflow-friendly · expo prebuild in CI generates the Android project · release APK + AAB built by GitHub workflow'},
-            {label: 'UI runtime', value: 'React Native 0.76 · Hermes engine · new architecture opt-in · one Paper component family · one navigation library'},
-            {label: 'Component lib', value: 'RN Paper · Material Design 3 · one PaperProvider at the root · dark mode (PRO) flips a single token'},
-            {label: 'On-device DB', value: 'expo-sqlite · all CRUD entities · singleton connection + per-entity repository module · web build swaps in JS in-memory mock'},
-            {label: 'State', value: 'Zustand · tiny stores for cross-screen UI only — auth, theme, language, ad bonuses · everything else lives in SQLite or React local state'},
-            {label: 'Server runtime', value: 'Fastify 4 · plugin tree mirrors the route tree · Pino logging + central error handler maps Zod / ApiError / 500 with one shape'},
-            {label: 'ORM', value: 'Prisma 5 · SQLite in dev and prod · 13 models · single schema.prisma · dev DB checked in for shape'},
-            {label: 'Hashing', value: 'Argon2id · sane defaults · password reset codes use a Resend HTTP send — no SMTP cred ever sits on the box'},
-            {label: 'Billing', value: 'Stripe · checkout + customer portal opened via expo-web-browser · webhook is source of truth for tier · verify-session is for UX only'},
-            {label: 'AI', value: 'OpenRouter · single proxy endpoint · PII stripped before logging · tier limits + rewarded-ad bonuses checked here, not on device'},
-            {label: 'i18n', value: 'i18next · 7 hand-translated locales (EN · DE · FR · ES · NL · LV · RU) · country-of-registration sets default language at signup'},
-            {label: 'Email', value: 'Resend · HTTP API only — no SDK, no SMTP · three templates: password reset, welcome, account-deletion confirmation'},
+            {prefix: 'B.01', label: 'Mobile runtime', value: 'Expo 52 · bare-friendly · expo prebuild in CI generates the Android project · APK + AAB by GitHub workflow'},
+            {prefix: 'B.02', label: 'UI runtime', value: 'React Native 0.76 · Hermes · new architecture opt-in · one Paper family · one navigation library'},
+            {prefix: 'B.03', label: 'Component lib', value: 'RN Paper · Material Design 3 · one PaperProvider at root · dark mode (PRO) flips a single token'},
+            {prefix: 'B.04', label: 'On-device DB', value: 'expo-sqlite · all CRUD entities · singleton connection + per-entity repository · web swaps in in-memory mock'},
+            {prefix: 'B.05', label: 'State', value: 'Zustand · tiny stores for cross-screen UI only — auth, theme, language, ad bonuses'},
+            {prefix: 'B.06', label: 'Server runtime', value: 'Fastify 4 · plugin tree mirrors route tree · Pino + central error handler maps Zod / ApiError / 500'},
+            {prefix: 'B.07', label: 'ORM', value: 'Prisma 5 · SQLite in dev and prod · 13 models · single schema.prisma · dev DB checked in for shape'},
+            {prefix: 'B.08', label: 'Hashing', value: 'Argon2id · sane defaults · password reset uses a Resend HTTP send — no SMTP cred on the box'},
+            {prefix: 'B.09', label: 'Billing', value: 'Stripe · checkout + customer portal via expo-web-browser · webhook is truth for tier · verify-session UX only'},
+            {prefix: 'B.10', label: 'AI', value: 'OpenRouter · single proxy endpoint · PII stripped before logging · tier limits + ad bonuses checked here'},
+            {prefix: 'B.11', label: 'i18n', value: 'i18next · 7 hand-translated locales (EN · DE · FR · ES · NL · LV · RU) · country sets default at signup'},
+            {prefix: 'B.12', label: 'Email', value: 'Resend · HTTP API only · three templates — password reset, welcome, account-deletion confirmation'},
         ],
     }),
 ]));
@@ -721,9 +928,9 @@ const bundle = {
     site: {
         siteFlags: {blogEnabled: false, layoutMode: 'tabs'},
         siteSeo: {
-            title: 'Gatis Priede — Dossier · Architect · Engineer',
-            description: 'Editorial portfolio of Gatis Priede — Digital Solutions Architect and Senior JavaScript Engineer. 15+ years building React/Next.js/Node products, GraphQL data layers, 3D/WebGL surfaces and bespoke editorial CMS platforms. Includes a CMS case study and the Legal Stable Sure architecture dossier.',
-            keywords: ['Gatis Priede','portfolio','digital solutions architect','senior javascript engineer','react','next.js','node.js','typescript','graphql','mongodb','expo','react native','fastify','sqlite','cms','legal stable sure','case study','sigulda','latvia','remote'],
+            title: 'Gatis Priede — Dossier · Architect · AI-driven CMS · Engineer',
+            description: 'Editorial portfolio of Gatis Priede — Digital Solutions Architect and Senior JavaScript Engineer. 15+ years building React/Next.js/Node products, GraphQL data layers, 3D/WebGL surfaces, and an AI-driven editorial CMS designed as a content language an LLM can author with — beautiful, complex, fully editable sites generated within minutes. Includes the funisimo CMS case study and the Legal Stable Sure architecture dossier.',
+            keywords: ['Gatis Priede','portfolio','digital solutions architect','senior javascript engineer','ai cms','ai content authoring','llm cms','schema-first cms','headless cms','react','next.js','node.js','typescript','graphql','mongodb','expo','react native','fastify','sqlite','cms','legal stable sure','case study','sigulda','latvia','remote'],
             author: 'Gatis Priede',
             url: 'https://funisimo.pro/',
             image: '/images/20260415_142341.jpg',
@@ -774,9 +981,9 @@ const bundle = {
                 sections: sections.filter(s => s.page === 'Contact').map(s => s.id)},
             {id: 'cv-nav-cms', type: 'navigation', page: 'CMS',
                 seo: {
-                    title: 'CMS — Case study · Next.js · MongoDB · GraphQL',
-                    description: 'Case study of funisimo — a multi-tenant editorial CMS built on Next.js 15, React 19, MongoDB 7 and GraphQL. Architecture tiers, 12-entry tech stack, 10-collection data model with audit triplet, two-droplet infra topology, repository tree and 7-stage CI/CD pipeline.',
-                    keywords: ['cms case study','next.js cms','mongodb','graphql','apollo','editorial cms','multi-tenant','headless cms','architecture','digitalocean','caddy','pm2','docker','funisimo'],
+                    title: 'CMS — Built for AI · A content language for LLMs · Case study',
+                    description: 'funisimo is a CMS built for AI to use as a content language — a small declarative grammar of pages, sections, items and styles an LLM can author end-to-end. One prompt, one bundle: a beautiful, complex, fully editable site generated within minutes. Case study covers schema-first item types, architecture tiers, 12-entry tech stack, 10-collection data model with audit triplet, two-droplet infra and 7-stage CI/CD pipeline.',
+                    keywords: ['ai cms','ai content authoring','llm cms','schema-first cms','generate site with ai','editable site generation','cms case study','next.js cms','mongodb','graphql','apollo','editorial cms','multi-tenant','headless cms','architecture','digitalocean','caddy','pm2','docker','funisimo'],
                     viewport: 'width=device-width,initial-scale=1', charSet: 'utf-8',
                     url: 'https://funisimo.pro/cms',
                     image: '/images/20260415_142341.jpg',

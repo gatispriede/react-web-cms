@@ -21,6 +21,8 @@ export enum EItemType {
     InfraTopology = "INFRA_TOPOLOGY",
     PipelineFlow = "PIPELINE_FLOW",
     RepoTree = "REPO_TREE",
+    ArchitectureTiers = "ARCHITECTURE_TIERS",
+    StatsStrip = "STATS_STRIP",
     Empty = 'EMPTY',
 }
 export default EItemType

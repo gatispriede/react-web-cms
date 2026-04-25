@@ -47,6 +47,8 @@
 @use "../../modules/InfraTopology/InfraTopology";
 @use "../../modules/PipelineFlow/PipelineFlow";
 @use "../../modules/RepoTree/RepoTree";
+@use "../../modules/ArchitectureTiers/ArchitectureTiers";
+@use "../../modules/StatsStrip/StatsStrip";
 
 @use 'app';
 

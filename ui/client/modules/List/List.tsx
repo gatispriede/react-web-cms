@@ -32,11 +32,32 @@ const List = ({item, tApp}: {
     const style = item.style || EListStyle.Default;
     const isFacts = style === EListStyle.Facts;
     const isCases = style === EListStyle.Cases;
+    const isPaperGrid = style === EListStyle.PaperGrid;
 
     return (
         <RevealOnScroll className={`list-module ${style}`}>
             {c.title && <div className="list-module__title">{tr(c.title)}</div>}
-            {isCases ? (
+            {isPaperGrid ? (
+                <div className="list-module__paper-grid">
+                    {c.items.map((it, i) => {
+                        const ord = it.prefix || String(i + 1).padStart(2, '0');
+                        return (
+                            <div key={i} className="list-module__pg-card">
+                                <div className="list-module__pg-ord">{tr(ord)}</div>
+                                <div className="list-module__pg-label">{tr(it.label)}</div>
+                                {it.meta && <div className="list-module__pg-meta">{tr(it.meta)}</div>}
+                                {it.value && (
+                                    <p className="list-module__pg-value">
+                                        {it.href
+                                            ? <a href={it.href} rel="noopener">{tr(it.value)}</a>
+                                            : tr(it.value)}
+                                    </p>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            ) : isCases ? (
                 <div className="list-module__cases">
                     {c.items.map((it, i) => {
                         const inner = (

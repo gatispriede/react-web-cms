@@ -34,4 +34,6 @@ export enum EListStyle {
     Inline = "inline",
     /** 2-col project / case-card grid (Industrial). */
     Cases = "cases",
+    /** 4-col grid of editorial paper cards — mono-caps prefix top-left, label, value paragraph (Dossier "Key technologies" B.01-B.12). */
+    PaperGrid = "paper-grid",
 }

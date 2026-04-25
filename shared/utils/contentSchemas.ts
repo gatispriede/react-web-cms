@@ -324,6 +324,8 @@ const VALIDATORS: Record<string, (c: any) => ValidationResult> = {
     [EItemType.InfraTopology]: (c) => isObject(c) ? {valid: true} : {valid: false, error: 'InfraTopology content must be an object'},
     [EItemType.PipelineFlow]: (c) => isObject(c) ? {valid: true} : {valid: false, error: 'PipelineFlow content must be an object'},
     [EItemType.RepoTree]: (c) => isObject(c) ? {valid: true} : {valid: false, error: 'RepoTree content must be an object'},
+    [EItemType.ArchitectureTiers]: (c) => isObject(c) ? {valid: true} : {valid: false, error: 'ArchitectureTiers content must be an object'},
+    [EItemType.StatsStrip]: (c) => isObject(c) ? {valid: true} : {valid: false, error: 'StatsStrip content must be an object'},
     [EItemType.Empty]: () => ({valid: true}),
 };
 

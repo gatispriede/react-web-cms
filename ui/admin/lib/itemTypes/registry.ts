@@ -36,6 +36,8 @@ import DataModel, {EDataModelStyle} from "@client/modules/DataModel";
 import InfraTopology, {EInfraTopologyStyle} from "@client/modules/InfraTopology";
 import PipelineFlow, {EPipelineFlowStyle} from "@client/modules/PipelineFlow";
 import RepoTree, {ERepoTreeStyle} from "@client/modules/RepoTree";
+import ArchitectureTiers, {EArchitectureTiersStyle} from "@client/modules/ArchitectureTiers";
+import StatsStrip, {EStatsStripStyle} from "@client/modules/StatsStrip";
 
 import {PlainTextEditor as InputPlainText} from "@admin/modules/PlainText/PlainTextEditor";
 import {RichTextEditor as InputRichText} from "@admin/modules/RichText/RichTextEditor";
@@ -59,6 +61,8 @@ import {DataModelEditor as InputDataModel} from "@admin/modules/DataModel/DataMo
 import {InfraTopologyEditor as InputInfraTopology} from "@admin/modules/InfraTopology/InfraTopologyEditor";
 import {PipelineFlowEditor as InputPipelineFlow} from "@admin/modules/PipelineFlow/PipelineFlowEditor";
 import {RepoTreeEditor as InputRepoTree} from "@admin/modules/RepoTree/RepoTreeEditor";
+import {ArchitectureTiersEditor as InputArchitectureTiers} from "@admin/modules/ArchitectureTiers/ArchitectureTiersEditor";
+import {StatsStripEditor as InputStatsStrip} from "@admin/modules/StatsStrip/StatsStripEditor";
 
 export type ItemCategory = 'hero' | 'media' | 'content' | 'cta';
 
@@ -304,6 +308,26 @@ const entries: ItemTypeDefinition[] = [
         Editor: InputRepoTree,
         styleEnum: ERepoTreeStyle as unknown as Record<string, string>,
         defaultContent: '{"nodes":[]}',
+    },
+    {
+        key: EItemType.ArchitectureTiers,
+        labelKey: "Architecture tiers",
+        descriptionKey: "Tier cards (concern/role/title/pills/modules) + shared footer + lifecycle rail.",
+        category: 'content',
+        Display: ArchitectureTiers,
+        Editor: InputArchitectureTiers,
+        styleEnum: EArchitectureTiersStyle as unknown as Record<string, string>,
+        defaultContent: '{"tiers":[]}',
+    },
+    {
+        key: EItemType.StatsStrip,
+        labelKey: "Stats strip",
+        descriptionKey: "Horizontal numeric strip — value / unit / caption per cell.",
+        category: 'content',
+        Display: StatsStrip,
+        Editor: InputStatsStrip,
+        styleEnum: EStatsStripStyle as unknown as Record<string, string>,
+        defaultContent: '{"cells":[]}',
     },
 ];
 
