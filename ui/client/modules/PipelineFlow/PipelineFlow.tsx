@@ -5,6 +5,7 @@ import ContentManager from "@client/lib/ContentManager";
 import {TFunction} from "i18next";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import RevealOnScroll from "@client/lib/RevealOnScroll";
+import {slugifyAnchor} from "@utils/stringFunctions";
 import type {IPipelineFlow} from "./PipelineFlow.types";
 export type {IPipelineFlow, IPipelineStep} from "./PipelineFlow.types";
 export {EPipelineFlowStyle} from "./PipelineFlow.types";
@@ -36,7 +37,7 @@ const PipelineFlow = ({item, tApp}: {
             {(c.eyebrow || c.title || c.subtitle) && (
                 <header className="pipeline-flow__head">
                     {c.eyebrow && <div className="pipeline-flow__eyebrow">{tr(c.eyebrow)}</div>}
-                    {c.title && <h2 className="pipeline-flow__title">{tr(c.title)}</h2>}
+                    {c.title && <h2 id={slugifyAnchor(c.title)} className="pipeline-flow__title">{tr(c.title)}</h2>}
                     {c.subtitle && <p className="pipeline-flow__subtitle">{tr(c.subtitle)}</p>}
                 </header>
             )}

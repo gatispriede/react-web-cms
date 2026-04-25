@@ -5,6 +5,7 @@ import {IInputContent} from "@interfaces/IInputContent";
 import {EItemType} from "@enums/EItemType";
 import {IList, IListItem, ListContent} from "@client/modules/List";
 import {SortableHandleItem, SortableList, arrayMove} from "@client/lib/SortableList";
+import LinkTargetPicker from "@admin/lib/LinkTargetPicker";
 
 /**
  * Editor for the `List` module. Mirrors the data shape 1:1:
@@ -70,12 +71,13 @@ const ListEditor: React.FC<IInputContent> = ({content, setContent, t}) => {
                                     placeholder="Value (you@example.com)"
                                     style={{flex: 1, minWidth: 180}}
                                 />
-                                <Input
-                                    value={it.href ?? ''}
-                                    onChange={e => patchItem(i, {href: e.target.value})}
-                                    placeholder="Link (optional)"
-                                    style={{width: 180}}
-                                />
+                                <div style={{width: 220}}>
+                                    <LinkTargetPicker
+                                        value={it.href ?? ''}
+                                        onChange={(v) => patchItem(i, {href: v})}
+                                        placeholder="Link (optional)"
+                                    />
+                                </div>
                                 <Button danger size="small" icon={<DeleteOutlined/>} onClick={() => removeItem(i)}/>
                             </SortableHandleItem>
                         ))}

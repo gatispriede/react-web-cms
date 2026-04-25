@@ -5,6 +5,7 @@ import ContentManager from "@client/lib/ContentManager";
 import {TFunction} from "i18next";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import RevealOnScroll from "@client/lib/RevealOnScroll";
+import {slugifyAnchor} from "@utils/stringFunctions";
 import type {IInquiryForm} from "./InquiryForm.types";
 export type {IInquiryForm, IInquiryFormField, IInquiryFormTopic} from "./InquiryForm.types";
 export {EInquiryFormStyle} from "./InquiryForm.types";
@@ -54,7 +55,7 @@ const InquiryForm = ({item, tApp}: {
             {(c.eyebrow || c.title || c.subtitle) && (
                 <header className="inquiry-form__head">
                     {c.eyebrow && <div className="inquiry-form__eyebrow">{tr(c.eyebrow)}</div>}
-                    {c.title && <h2 className="inquiry-form__title">{tr(c.title)}</h2>}
+                    {c.title && <h2 id={slugifyAnchor(c.title)} className="inquiry-form__title">{tr(c.title)}</h2>}
                     {c.subtitle && <p className="inquiry-form__subtitle">{tr(c.subtitle)}</p>}
                 </header>
             )}

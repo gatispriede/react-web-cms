@@ -5,6 +5,7 @@ import ContentManager from "@client/lib/ContentManager";
 import {TFunction} from "i18next";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import RevealOnScroll from "@client/lib/RevealOnScroll";
+import {slugifyAnchor} from "@utils/stringFunctions";
 import type {IDataModel} from "./DataModel.types";
 export type {IDataModel, IDataModelField, IDataModelCollection, IDataModelAudit} from "./DataModel.types";
 export {EDataModelStyle} from "./DataModel.types";
@@ -40,7 +41,7 @@ const DataModel = ({item, tApp}: {
             {(c.eyebrow || c.title || c.subtitle) && (
                 <header className="data-model__head">
                     {c.eyebrow && <div className="data-model__eyebrow">{tr(c.eyebrow)}</div>}
-                    {c.title && <h2 className="data-model__title">{tr(c.title)}</h2>}
+                    {c.title && <h2 id={slugifyAnchor(c.title)} className="data-model__title">{tr(c.title)}</h2>}
                     {c.subtitle && <p className="data-model__subtitle">{tr(c.subtitle)}</p>}
                 </header>
             )}

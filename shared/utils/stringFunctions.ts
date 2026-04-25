@@ -40,3 +40,45 @@ export const sanitizeKey = (key: string): string => {
     if (stripped.length <= MAX_LEN) return stripped;
     return `${stripped.slice(0, HEAD_LEN)}_${hash36(stripped)}`;
 };
+
+/**
+ * Slugify a free-text title into a hash-anchor friendly id:
+ *   "Career record"  → "career-record"
+ *   "Why we win 🚀"  → "why-we-win"
+ *   "  ÄÖÜ  "        → "aou"
+ *
+ * Used by modules that render a title to expose an `id` attribute the
+ * site's hash-anchor router (`#career-record`) can target. Kept
+ * lightweight on purpose — the picker layer (see roadmap C13) does the
+ * collision resolution against the live anchor registry.
+ */
+export const slugifyAnchor = (input: unknown): string => {
+    if (typeof input !== 'string') return '';
+    return input
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')   // strip combining diacritics
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]+/g, '')      // drop punctuation / emoji
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .slice(0, 60);
+};
+
+
+/**
+ * Normalize a CSS dimension string. If the operator typed a bare
+ * number (e.g. "100"), append "px" so the renderer's direct
+ * `style.width = ...` assignment accepts it. Explicit units (`50%`,
+ * `20vw`, `auto`, `calc(...)`) and the empty string pass through.
+ *
+ * Used by editors that surface free-form `width` / `height` text
+ * fields — bare numbers are the common typo there and CSS silently
+ * drops them, so the field appears to do nothing.
+ */
+export const normalizeCssDimension = (raw: string): string => {
+    const v = (raw ?? '').trim();
+    if (v === '') return '';
+    if (/^-?\d+(\.\d+)?$/.test(v)) return `${v}px`;
+    return v;
+};

@@ -111,10 +111,88 @@ class App extends React.Component<IHomeProps> {
             })();
         }
         this.refreshUnsub = refreshBus.subscribe(() => this.refreshView());
+        // Tabs-mode hash routing: when someone lands on `/#career-record` or
+        // clicks an in-page anchor, find the tab whose sections include that
+        // id and switch to it before letting the browser scroll. Without this
+        // the hash points at a node that's hidden behind another tab and the
+        // jump silently no-ops. Scroll-mode pages already render every section
+        // inline so the native browser jump works without help.
+        if (typeof window !== 'undefined') {
+            // `handleHashChange` is an arrow class property — already bound to
+            // `this`, so the same reference works for add + remove listener.
+            window.addEventListener('hashchange', this.handleHashChange!);
+            // Defer initial resolution until after first paint so section DOM
+            // ids exist (they're rendered inside DynamicTabsContent).
+            setTimeout(() => this.handleHashChange!(), 0);
+        }
     }
 
     componentWillUnmount() {
         this.refreshUnsub?.();
+        if (typeof window !== 'undefined' && this.handleHashChange) {
+            window.removeEventListener('hashchange', this.handleHashChange!);
+        }
+    }
+
+    /** Bound in `componentDidMount` so we can pass the same reference to
+     *  `removeEventListener`. Resolves the current `window.location.hash`
+     *  to the tab containing that anchor (in tabs mode), switches tabs,
+     *  then scrolls the element into view on the next frame. No-op in
+     *  scroll mode — the browser handles it natively. */
+    private handleHashChange?: () => void = () => {
+        if (typeof window === 'undefined') return;
+        const raw = window.location.hash.replace(/^#/, '');
+        if (!raw) return;
+        // Tabs mode is the only one that hides peer sections behind a tab —
+        // scroll mode renders the whole page so the native browser jump is
+        // sufficient.
+        if (this.state.layoutMode === 'tabs') {
+            const tabs = this.state.tabProps ?? [];
+            const owner = tabs.findIndex(tp => {
+                const sections: ISection[] = tp?.page?.sections ?? [];
+                return sections.some(s => {
+                    if (s.id === raw) return true;
+                    // Match a slugified module-title anchor by walking the
+                    // content items. Keeps this resolver in sync with the
+                    // ids modules render via `slugifyAnchor`.
+                    const items = (s as any).content ?? [];
+                    return items.some((it: any) => {
+                        try {
+                            const j = typeof it?.content === 'string' ? JSON.parse(it.content) : it?.content;
+                            const candidates = [j?.title, j?.sectionTitle];
+                            for (const t of candidates) {
+                                if (typeof t === 'string' && this.slugify(t) === raw) return true;
+                            }
+                        } catch { /* malformed item content — skip */ }
+                        return false;
+                    });
+                });
+            });
+            if (owner >= 0 && String(owner) !== this.state.activeTab) {
+                this.setState({activeTab: String(owner)});
+            }
+        }
+        // Scroll into view after the tab switch (or immediately in scroll
+        // mode). `requestAnimationFrame` lets the new tab paint first.
+        requestAnimationFrame(() => {
+            const el = document.getElementById(raw);
+            if (el) el.scrollIntoView({behavior: 'smooth', block: 'start'});
+        });
+    }
+
+    /** Shared with the modules' `slugifyAnchor` (kept inline to avoid an
+     *  extra import roundtrip in the page bundle). Must match the
+     *  `slugifyAnchor` in `shared/utils/stringFunctions.ts`. */
+    private slugify(input: string): string {
+        return input
+            .normalize('NFKD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .replace(/[^a-z0-9\s-]+/g, '')
+            .trim()
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-')
+            .slice(0, 60);
     }
 
     /** Full re-fetch for the public shell. Typically triggered from the admin

@@ -5,6 +5,7 @@ import ContentManager from "@client/lib/ContentManager";
 import {TFunction} from "i18next";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import RevealOnScroll from "@client/lib/RevealOnScroll";
+import {slugifyAnchor} from "@utils/stringFunctions";
 import type {IStatsCard} from "./StatsCard.types";
 export type {IStatsCard, IStatsCardStat, IStatsCardFeature} from "./StatsCard.types";
 export {EStatsCardStyle} from "./StatsCard.types";
@@ -32,7 +33,7 @@ const StatsCard = ({item, tApp}: {
     return (
         <RevealOnScroll className={`stats-card ${item.style ?? ''}`}>
             {c.tag && <div className="stats-card__tag">{tr(c.tag)}</div>}
-            {c.title && <h3 className="stats-card__title">{tr(c.title)}</h3>}
+            {c.title && <h3 id={slugifyAnchor(c.title)} className="stats-card__title">{tr(c.title)}</h3>}
             {c.stats.length > 0 && (
                 <div className="stats-card__grid">
                     {c.stats.map((s, i) => (

@@ -357,6 +357,12 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
         return (
             <div
                 key={`${index}-${section.type}`}
+                /* `id` makes the section addressable by `#<section-id>` for the
+                 * tabs-mode hash-anchor router (see app.tsx). Scroll-margin
+                 * keeps the sticky nav from clipping the heading on scroll-in.
+                 * Overlays skip the id — only the host gets the anchor. */
+                id={!opts.asOverlay && section.id ? section.id : undefined}
+                style={!opts.asOverlay && section.id ? {scrollMarginTop: 80} : undefined}
                 className={`section-admin-wrap ${index}-${section.type}${opts.asOverlay ? ' is-overlay' : ''}`}
             >
                 {this.admin && (

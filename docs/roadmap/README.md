@@ -60,6 +60,7 @@ Tracked separately under [production/](production/) so the two streams can be sc
 | C11 | [admin-menu-icons.md](admin-menu-icons.md) | S | **Shipped (2026-04-24)** — icons on every main-nav button + settings tab + sidebar row; adapter extended with 11 new lucide mappings |
 | BUG | [client-report-2026-04-24.md](client-report-2026-04-24.md) | S×3 | Client-flagged: (1) Hero text overflow on narrow viewport, (2) Hero text contrast, (3) Services module — can't add new item |
 | C12 | [image-width-height-respect.md](image-width-height-respect.md) | S | Author-supplied `width` / `height` on Logo, PlainImage, Gallery, Carousel, ProjectCard, Hero portrait currently ignored by public render — flagged 2026-04-24 from SkyClimber review |
+| C13 | [link-target-autosearch.md](link-target-autosearch.md) | M | Replace bare link text inputs with an autosearch dropdown of pages + section anchors + module-title anchors. Module saves emit a stable anchor (slugified title), tabs/scroll layout resolved at read time |
 
 ### Reference docs
 

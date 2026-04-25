@@ -6,6 +6,7 @@ import ContentManager from "@client/lib/ContentManager";
 import {TFunction} from "i18next";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import RevealOnScroll from "@client/lib/RevealOnScroll";
+import {slugifyAnchor} from "@utils/stringFunctions";
 import type {IInfraTopology} from "./InfraTopology.types";
 export type {IInfraTopology, IInfraDroplet} from "./InfraTopology.types";
 export {EInfraTopologyStyle} from "./InfraTopology.types";
@@ -47,7 +48,7 @@ const InfraTopology = ({item, tApp}: {
             {(c.eyebrow || c.title || c.subtitle) && (
                 <header className="infra-topology__head">
                     {c.eyebrow && <div className="infra-topology__eyebrow">{tr(c.eyebrow)}</div>}
-                    {c.title && <h2 className="infra-topology__title">{tr(c.title)}</h2>}
+                    {c.title && <h2 id={slugifyAnchor(c.title)} className="infra-topology__title">{tr(c.title)}</h2>}
                     {c.subtitle && <p className="infra-topology__subtitle">{tr(c.subtitle)}</p>}
                 </header>
             )}

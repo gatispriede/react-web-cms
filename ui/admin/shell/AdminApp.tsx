@@ -20,6 +20,7 @@ import AuditBadge from "./AuditBadge";
 import UndoStatusPill from "./UndoStatusPill";
 import {refreshBus} from "@client/lib/refreshBus";
 import ImageRailDock from "@admin/features/Navigation/ImageRailDock";
+import {setAnchors} from "@admin/lib/anchorRegistry";
 
 interface IHomeState {
     loading: boolean,
@@ -209,10 +210,12 @@ class AdminApp extends React.Component<{
             }
         )
         const newTabsState = []
+        const sectionsByPage: Record<string, any[]> = {};
         if (pages[0]) {
             for (let id in pages) {
                 if (pages[id]) {
                     const sectionsData: any[] = await this.MongoApi.loadSections(pages[id].page, pages)
+                    sectionsByPage[pages[id].page] = sectionsData;
                     newTabsState.push({
                         key: id,
                         page: pages[id].page,
@@ -243,6 +246,13 @@ class AdminApp extends React.Component<{
 
         newState.tabProps = newTabsState
         newState.pages = pages
+        // Refresh the link-target picker's options. Cheap walk over already-
+        // loaded data — no extra fetches. See `anchorRegistry` + `LinkTargetPicker`.
+        try {
+            setAnchors(pages.map((p: any) => ({page: p.page})), sectionsByPage);
+        } catch (err) {
+            console.warn('anchorRegistry refresh failed:', err);
+        }
         this.setState(newState)
     }
 

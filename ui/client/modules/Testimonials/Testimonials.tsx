@@ -6,6 +6,7 @@ import {TFunction} from "i18next";
 import {translateOrKeep} from "@utils/translateOrKeep";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import RevealOnScroll from "@client/lib/RevealOnScroll";
+import {slugifyAnchor} from "@utils/stringFunctions";
 import type {ITestimonials} from "./Testimonials.types";
 export type {ITestimonials, ITestimonial} from "./Testimonials.types";
 export {ETestimonialsStyle} from "./Testimonials.types";
@@ -46,7 +47,7 @@ const Testimonials = ({item, tApp}: {
             {(c.sectionTitle || c.sectionSubtitle) && (
                 <header className="testimonials-module__head">
                     {c.sectionTitle && (
-                        <h2 className="testimonials-module__title">{renderAccentRuns(c.sectionTitle, trStr)}</h2>
+                        <h2 id={slugifyAnchor(c.sectionTitle)} className="testimonials-module__title">{renderAccentRuns(c.sectionTitle, trStr)}</h2>
                     )}
                     {c.sectionSubtitle && (
                         <div className="testimonials-module__sub">{tr(c.sectionSubtitle)}</div>

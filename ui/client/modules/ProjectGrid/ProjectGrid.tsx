@@ -6,6 +6,7 @@ import {TFunction} from "i18next";
 import {translateOrKeep} from "@utils/translateOrKeep";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import RevealOnScroll from "@client/lib/RevealOnScroll";
+import {slugifyAnchor} from "@utils/stringFunctions";
 import type {IProjectGrid} from "./ProjectGrid.types";
 export type {IProjectGrid, IProjectGridItem} from "./ProjectGrid.types";
 export {EProjectGridStyle} from "./ProjectGrid.types";
@@ -48,7 +49,7 @@ const ProjectGrid = ({item, tApp}: {
                 <header className="project-grid__head">
                     {c.sectionNumber && <div className="project-grid__num">{tr(c.sectionNumber)}</div>}
                     {c.sectionTitle && (
-                        <h2 className="project-grid__title">{renderAccentRuns(c.sectionTitle, trStr)}</h2>
+                        <h2 id={slugifyAnchor(c.sectionTitle)} className="project-grid__title">{renderAccentRuns(c.sectionTitle, trStr)}</h2>
                     )}
                     {c.sectionSubtitle && (
                         <div className="project-grid__sub">{tr(c.sectionSubtitle)}</div>

@@ -7,6 +7,7 @@ import dynamic from 'next/dynamic'
 import ImageUpload from "@admin/lib/ImageUpload";
 import {PUBLIC_IMAGE_PATH} from "@utils/imgPath";
 import ImageDropTarget from "@client/lib/ImageDropTarget";
+import {normalizeCssDimension} from "@utils/stringFunctions";
 
 const RichTextEditorWidget = dynamic(
     () => import('@client/lib/RichTextEditor'),
@@ -54,11 +55,26 @@ export const PlainImageEditor = ({content, setContent, t}: IInputContent) => {
                 <Input defaultValue={0} value={plainImage.data.imgWidth} onChange={(e) => {
                     plainImage.setImgWidth((e.target.value))
                     setContent(plainImage.stringData)
+                }} onBlur={(e) => {
+                    // Auto-append `px` on blur when the operator typed a bare
+                    // number — otherwise the renderer drops the value as
+                    // invalid CSS and the field appears to do nothing.
+                    const norm = normalizeCssDimension(e.target.value);
+                    if (norm !== e.target.value) {
+                        plainImage.setImgWidth(norm)
+                        setContent(plainImage.stringData)
+                    }
                 }}/>
                 <label>{t("Image height")}</label>
                 <Input defaultValue={0} value={plainImage.data.imgHeight} onChange={(e) => {
                     plainImage.setImgHeight((e.target.value))
                     setContent(plainImage.stringData)
+                }} onBlur={(e) => {
+                    const norm = normalizeCssDimension(e.target.value);
+                    if (norm !== e.target.value) {
+                        plainImage.setImgHeight(norm)
+                        setContent(plainImage.stringData)
+                    }
                 }}/>
             </div>
             <label>{t("Image")}</label>

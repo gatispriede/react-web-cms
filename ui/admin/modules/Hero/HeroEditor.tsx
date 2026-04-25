@@ -2,6 +2,7 @@ import React from "react";
 import {Button, Checkbox, Col, Collapse, ColorPicker, Divider, Input, Row, Slider, Space, Typography} from "antd";
 import ImageUrlInput from "@client/lib/ImageUrlInput";
 import {LabeledInput} from "@client/lib/LabeledInput";
+import LinkTargetPicker from "@admin/lib/LinkTargetPicker";
 import {DeleteOutlined, PlusOutlined} from "@client/lib/icons";
 import {IInputContent} from "@interfaces/IInputContent";
 import {EItemType} from "@enums/EItemType";
@@ -153,13 +154,14 @@ const HeroEditor = ({content, setContent, t}: IInputContent) => {
                                         placeholder="View work ↘"
                                         label={t('Label')}
                                     />
-                                    <LabeledInput
-                                        value={ctaPrimary.href ?? ''}
-                                        onChange={e => patchCta('ctaPrimary', {href: e.target.value})}
-                                        placeholder="#career-record"
-                                        label={t('Link')}
-                                        wrapperStyle={{marginTop: 6}}
-                                    />
+                                    <div style={{marginTop: 6}}>
+                                        <LinkTargetPicker
+                                            value={ctaPrimary.href ?? ''}
+                                            onChange={(v) => patchCta('ctaPrimary', {href: v})}
+                                            placeholder="#career-record"
+                                            label={t('Link')}
+                                        />
+                                    </div>
                                 </Col>
                                 <Col xs={12}>
                                     <Divider titlePlacement="left" plain style={{fontSize: 12}}>{t('Secondary')}</Divider>
@@ -169,13 +171,14 @@ const HeroEditor = ({content, setContent, t}: IInputContent) => {
                                         placeholder="Get in touch"
                                         label={t('Label')}
                                     />
-                                    <LabeledInput
-                                        value={ctaSecondary.href ?? ''}
-                                        onChange={e => patchCta('ctaSecondary', {href: e.target.value})}
-                                        placeholder="mailto:you@example.com"
-                                        label={t('Link')}
-                                        wrapperStyle={{marginTop: 6}}
-                                    />
+                                    <div style={{marginTop: 6}}>
+                                        <LinkTargetPicker
+                                            value={ctaSecondary.href ?? ''}
+                                            onChange={(v) => patchCta('ctaSecondary', {href: v})}
+                                            placeholder="mailto:you@example.com"
+                                            label={t('Link')}
+                                        />
+                                    </div>
                                 </Col>
                             </Row>
                         ),

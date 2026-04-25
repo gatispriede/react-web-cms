@@ -1,6 +1,6 @@
 import {Alert, Button, Empty, Image as AntImage, Input, message, Modal, Popconfirm, Select, Space, Tag, Tooltip} from "antd";
 import {CloudUploadOutlined, DeleteOutlined, EyeOutlined, InfoCircleOutlined, ReloadOutlined, SearchOutlined} from "@client/lib/icons";
-import React, {RefObject, useEffect, useMemo, useRef, useState} from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import UpploadManager from "@services/infra/UpploadeManager";
 import EditableTags from "@client/lib/EditableTags";
 import MongoApi from "@services/api/client/MongoApi";
@@ -48,11 +48,17 @@ function formatBytes(n: number | undefined): string {
 
 const ImageUpload = ({setFile, t}: { setFile: (file: File) => void, t: TFunction<"translation", undefined> }) => {
 
-    let upploadManager: UpploadManager;
     const mongoApi = new MongoApi()
 
-    const imageRef: RefObject<HTMLImageElement | null> = React.createRef();
-    const buttonRef: RefObject<HTMLButtonElement | null> = React.createRef();
+    // `useRef` (not `React.createRef`) — `React.createRef` returns a fresh
+    // RefObject on every render, so the useEffect below that *captures*
+    // the ref objects in its deps was comparing different identities each
+    // render and silently mis-wiring the Uppload instance. Symptom: clicking
+    // "Upload New Image" did literally nothing because the Uppload manager
+    // was bound to a button DOM node from a stale render.
+    const imageRef = useRef<HTMLImageElement | null>(null);
+    const buttonRef = useRef<HTMLButtonElement | null>(null);
+    const upploadManagerRef = useRef<UpploadManager | null>(null);
 
     const [error, setErrorState] = useState('')
     const [dialogOpen, setDialogOpen] = useState(false)
@@ -86,8 +92,8 @@ const ImageUpload = ({setFile, t}: { setFile: (file: File) => void, t: TFunction
     }
 
     const setTags = (tags: string[]) => {
-        if (upploadManager) {
-            upploadManager.setTags(tags);
+        if (upploadManagerRef.current) {
+            upploadManagerRef.current.setTags(tags);
         }
     }
     const loadImages = async (override?: string) => {
@@ -95,6 +101,41 @@ const ImageUpload = ({setFile, t}: { setFile: (file: File) => void, t: TFunction
         const tag = raw && raw.trim().length > 0 ? raw.trim() : 'All'
         const imgs: IImage[] = await mongoApi.getImages(tag)
         setImages(imgs)
+    }
+
+    /**
+     * Auto-rescan when the DB-backed list comes back empty. This used to
+     * require the operator to click "Rescan Disk" on every fresh local DB
+     * (or after importing a new bundle without a paired upload pass) which
+     * was confusing — files exist on disk under `public/images/`, but the
+     * `Images` collection that drives this picker hadn't been seeded yet.
+     * Now any time the picker opens to an empty list, we transparently
+     * reconcile from disk so the operator sees the images they expect.
+     *
+     * Bound by a sentinel so we only do this once per session: the operator
+     * may legitimately end up with an empty list after deleting everything,
+     * and we don't want to keep refilling it from disk on every open.
+     */
+    const autoRescanedRef = useRef<boolean>(false);
+    const ensureNotEmpty = async () => {
+        if (autoRescanedRef.current) return;
+        // Use the most recent state — `images` here is from the closure of
+        // the previous render, so we re-read after `loadImages()` resolved.
+        // The simpler way: ask Mongo directly, but the API roundtrip we
+        // already did set `images` via setState; React batches, so check
+        // the synchronous result via getImages here.
+        const tag = (searchTag && searchTag.trim().length > 0) ? searchTag.trim() : 'All';
+        const fresh: IImage[] = await mongoApi.getImages(tag);
+        if (fresh.length > 0) return;
+        autoRescanedRef.current = true;
+        try {
+            await mongoApi.rescanDiskImages();
+            await loadImages();
+        } catch (err) {
+            // Don't surface as a hard error — the operator can still click
+            // Rescan Disk manually if disk-discovery is genuinely broken.
+            console.warn('auto-rescan-on-open failed:', err);
+        }
     }
 
     const rescanDisk = async () => {
@@ -110,13 +151,39 @@ const ImageUpload = ({setFile, t}: { setFile: (file: File) => void, t: TFunction
         }
     }
 
+    // Wire (or re-wire) the Uppload manager whenever the modal opens. The
+    // refs are stable across renders now (`useRef`), but the modal contents
+    // mount lazily on `open=true`, so refs are only populated after the
+    // open-toggle render commits. Running on `dialogOpen` covers that.
     useEffect(() => {
-        if (imageRef.current && buttonRef.current) {
-            // eslint-disable-next-line react-hooks/exhaustive-deps
-            upploadManager = new UpploadManager(imageRef.current, buttonRef.current, cb, setError);
-            void loadImages()
-        }
-    }, [window, imageRef.current, buttonRef.current, dialogOpen])
+        if (!dialogOpen) return;
+        // Defer one frame: AntD Modal portals contents on `open=true`, but
+        // on the very first open the children commit slightly after the
+        // outer Modal wrapper, so we'd otherwise miss the button on first
+        // click ("Upload New Image" did nothing first time, worked second").
+        const handle = requestAnimationFrame(() => {
+            if (!imageRef.current || !buttonRef.current) return;
+            // The manager itself owns the focus-trap-conflict workaround
+            // via private class state — see `UpploadManager.setHostSelector`.
+            // We tag the picker Modal root via `modalRender` below; the
+            // manager re-parents Uppload's DOM into that root on open and
+            // installs a capturing focusin listener that stops AntD's
+            // document-level handler from yanking focus back, breaking the
+            // rc-util/focus-trap ping-pong (`RangeError: Maximum call stack
+            // size exceeded`).
+            const mgr = new UpploadManager(imageRef.current, buttonRef.current, cb, setError);
+            mgr.setHostSelector('[data-image-picker-root]');
+            upploadManagerRef.current = mgr;
+        });
+        // Auto-load. If the DB has nothing yet (fresh local dev DB or a
+        // freshly imported bundle) the disk-rescan kicks in below so the
+        // picker is never blank.
+        void (async () => {
+            await loadImages();
+            await ensureNotEmpty();
+        })();
+        return () => cancelAnimationFrame(handle);
+    }, [dialogOpen])
     useRefreshView(loadImages, 'assets');
 
     // Persist sort / search so the picker reopens where you left it.
@@ -166,6 +233,10 @@ const ImageUpload = ({setFile, t}: { setFile: (file: File) => void, t: TFunction
             <Modal
                 width={'min(1200px, 95vw)'}
                 title={t('Image Selection')}
+                // Cap the body height so a large library doesn't push the
+                // Modal taller than the viewport. The grid + preview pane
+                // both scroll inside this cap.
+                styles={{body: {maxHeight: 800, overflow: 'auto'}}}
                 open={dialogOpen}
                 onCancel={async () => {
                     setDialogOpen(false)

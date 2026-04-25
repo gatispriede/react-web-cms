@@ -5,6 +5,7 @@ import ContentManager from "@client/lib/ContentManager";
 import {TFunction} from "i18next";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import RevealOnScroll from "@client/lib/RevealOnScroll";
+import {slugifyAnchor} from "@utils/stringFunctions";
 import type {IList} from "./List.types";
 import {EListStyle} from "./List.types";
 export type {IList, IListItem} from "./List.types";
@@ -36,7 +37,7 @@ const List = ({item, tApp}: {
 
     return (
         <RevealOnScroll className={`list-module ${style}`}>
-            {c.title && <div className="list-module__title">{tr(c.title)}</div>}
+            {c.title && <div id={slugifyAnchor(c.title)} className="list-module__title">{tr(c.title)}</div>}
             {isPaperGrid ? (
                 <div className="list-module__paper-grid">
                     {c.items.map((it, i) => {

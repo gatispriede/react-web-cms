@@ -18,7 +18,9 @@ import type {TFunction} from "i18next";
 import type IImage from "@interfaces/IImage";
 
 export type BulkRatio = 'free' | '1:1' | '4:3' | '3:2' | '16:9';
-const RATIOS: BulkRatio[] = ['free', '1:1', '4:3', '3:2', '16:9'];
+// 16:9 first — it's the gallery default and the most common phone-camera
+// landscape framing, so the picker doesn't make the operator hunt for it.
+const RATIOS: BulkRatio[] = ['16:9', 'free', '1:1', '4:3', '3:2'];
 
 export interface BulkUploadResult {
     ok: boolean;
@@ -40,7 +42,7 @@ interface Props {
 
 const BulkImageUploadModal: React.FC<Props> = ({open, onClose, onUploaded, initialRatio, t}) => {
     const [files, setFiles] = useState<File[]>([]);
-    const [ratio, setRatio] = useState<BulkRatio>(initialRatio ?? 'free');
+    const [ratio, setRatio] = useState<BulkRatio>(initialRatio ?? '16:9');
     const [uploading, setUploading] = useState(false);
     const [progress, setProgress] = useState(0);
     const [results, setResults] = useState<BulkUploadResult[] | null>(null);

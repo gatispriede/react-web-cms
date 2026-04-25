@@ -5,6 +5,7 @@ import ContentManager from "@client/lib/ContentManager";
 import {TFunction} from "i18next";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import RevealOnScroll from "@client/lib/RevealOnScroll";
+import {slugifyAnchor} from "@utils/stringFunctions";
 import type {IArchitectureTiers} from "./ArchitectureTiers.types";
 export type {IArchitectureTiers, IArchitectureTier, IArchitectureLifecycleStep} from "./ArchitectureTiers.types";
 export {EArchitectureTiersStyle} from "./ArchitectureTiers.types";
@@ -36,7 +37,7 @@ const ArchitectureTiers = ({item, tApp}: {
             {(c.eyebrow || c.title || c.subtitle) && (
                 <header className="arch-tiers__head">
                     {c.eyebrow && <div className="arch-tiers__eyebrow">{tr(c.eyebrow)}</div>}
-                    {c.title && <h2 className="arch-tiers__title">{tr(c.title)}</h2>}
+                    {c.title && <h2 id={slugifyAnchor(c.title)} className="arch-tiers__title">{tr(c.title)}</h2>}
                     {c.subtitle && <p className="arch-tiers__subtitle">{tr(c.subtitle)}</p>}
                 </header>
             )}

@@ -5,6 +5,7 @@ import ContentManager from "@client/lib/ContentManager";
 import {TFunction} from "i18next";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import RevealOnScroll from "@client/lib/RevealOnScroll";
+import {slugifyAnchor} from "@utils/stringFunctions";
 import type {IRepoNode, IRepoTree} from "./RepoTree.types";
 export type {IRepoTree, IRepoNode} from "./RepoTree.types";
 export {ERepoTreeStyle} from "./RepoTree.types";
@@ -136,7 +137,7 @@ const RepoTree = ({item, tApp}: {
             {(c.eyebrow || c.title || c.subtitle) && (
                 <header className="repo-tree__head">
                     {c.eyebrow && <div className="repo-tree__eyebrow">{tr(c.eyebrow)}</div>}
-                    {c.title && <h2 className="repo-tree__title">{tr(c.title)}</h2>}
+                    {c.title && <h2 id={slugifyAnchor(c.title)} className="repo-tree__title">{tr(c.title)}</h2>}
                     {c.subtitle && <p className="repo-tree__subtitle">{tr(c.subtitle)}</p>}
                 </header>
             )}

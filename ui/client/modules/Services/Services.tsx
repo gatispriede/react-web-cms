@@ -6,6 +6,7 @@ import {TFunction} from "i18next";
 import {translateOrKeep} from "@utils/translateOrKeep";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import RevealOnScroll from "@client/lib/RevealOnScroll";
+import {slugifyAnchor} from "@utils/stringFunctions";
 import type {IServices} from "./Services.types";
 export type {IServices, IServiceRow} from "./Services.types";
 export {EServicesStyle} from "./Services.types";
@@ -56,7 +57,7 @@ const Services = ({item, tApp}: {
                 <header className="services-module__head">
                     {c.sectionNumber && <div className="services-module__num">{tr(c.sectionNumber)}</div>}
                     {c.sectionTitle && (
-                        <h2 className="services-module__title">{renderAccentRuns(c.sectionTitle, trStr)}</h2>
+                        <h2 id={slugifyAnchor(c.sectionTitle)} className="services-module__title">{renderAccentRuns(c.sectionTitle, trStr)}</h2>
                     )}
                     {c.sectionSubtitle && (
                         <div className="services-module__sub">{tr(c.sectionSubtitle)}</div>
@@ -70,7 +71,7 @@ const Services = ({item, tApp}: {
                             <div className="services-module__row-icon" aria-hidden>{r.iconGlyph}</div>
                         )}
                         <div className="services-module__row-num">{tr(r.number)}</div>
-                        <h3 className="services-module__row-title">{renderAccentRuns(r.title, trStr)}</h3>
+                        <h3 id={slugifyAnchor(r.title)} className="services-module__row-title">{renderAccentRuns(r.title, trStr)}</h3>
                         <div className="services-module__row-desc">{tr(r.description)}</div>
                         {r.tags && r.tags.length > 0 && (
                             <div className="services-module__row-tags">

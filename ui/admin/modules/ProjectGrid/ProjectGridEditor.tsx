@@ -6,6 +6,7 @@ import {IInputContent} from "@interfaces/IInputContent";
 import {EItemType} from "@enums/EItemType";
 import {IProjectGrid, IProjectGridItem, ProjectGridContent} from "@client/modules/ProjectGrid";
 import {SortableHandleItem, SortableList, arrayMove} from "@client/lib/SortableList";
+import LinkTargetPicker from "@admin/lib/LinkTargetPicker";
 
 const ProjectGridEditor: React.FC<IInputContent> = ({content, setContent, t}) => {
     const mgr = new ProjectGridContent(EItemType.ProjectGrid, content);
@@ -58,7 +59,14 @@ const ProjectGridEditor: React.FC<IInputContent> = ({content, setContent, t}) =>
                                 <LabeledInput value={p.coverColor ?? ''} onChange={e => patchItem(i, {coverColor: e.target.value})} label={t('Cover CSS')} placeholder="radial-gradient(circle at 20% 80%, #1E5A6B, #0B1E24 70%)"/>
                                 <Space style={{width: '100%'}}>
                                     <LabeledInput value={p.moreLabel ?? ''} onChange={e => patchItem(i, {moreLabel: e.target.value})} label={t('More label')} placeholder="View engagement ↗" wrapperStyle={{width: 300}}/>
-                                    <LabeledInput value={p.href ?? ''} onChange={e => patchItem(i, {href: e.target.value})} label={t('Link')} placeholder="#scichart"/>
+                                    <div style={{minWidth: 220}}>
+                                        <LinkTargetPicker
+                                            value={p.href ?? ''}
+                                            onChange={(v) => patchItem(i, {href: v})}
+                                            placeholder="#scichart"
+                                            label={t('Link')}
+                                        />
+                                    </div>
                                 </Space>
                             </Space>
                         </div>
