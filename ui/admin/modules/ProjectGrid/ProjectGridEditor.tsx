@@ -26,7 +26,7 @@ const ProjectGridEditor: React.FC<IInputContent> = ({content, setContent, t}) =>
 
     return (
         <div className={'admin-project-grid'} style={{display: 'flex', flexDirection: 'column', gap: 14}}>
-            <Space direction="vertical" style={{width: '100%'}} size={6}>
+            <Space orientation="vertical" style={{width: '100%'}} size={6}>
                 <label>{t('Section number')}</label>
                 <Input value={data.sectionNumber ?? ''} onChange={e => update({sectionNumber: e.target.value})} placeholder="§ 01"/>
                 <label>{t('Section title (supports *italic-accent*)')}</label>
@@ -38,11 +38,11 @@ const ProjectGridEditor: React.FC<IInputContent> = ({content, setContent, t}) =>
             <div>
                 <div style={{marginBottom: 6, fontWeight: 500}}>{t('Projects')}</div>
                 <SortableList ids={itemIds} onReorder={reorderItems}>
-                <Space direction="vertical" style={{width: '100%'}} size={10}>
+                <Space orientation="vertical" style={{width: '100%'}} size={10}>
                     {items.map((p, i) => (
                         <SortableHandleItem key={itemIds[i]} id={itemIds[i]}>
                         <div style={{flex: 1, border: '1px solid rgba(0,0,0,0.1)', padding: 12, borderRadius: 4}}>
-                            <Space direction="vertical" style={{width: '100%'}} size={6}>
+                            <Space orientation="vertical" style={{width: '100%'}} size={6}>
                                 <Space style={{width: '100%', justifyContent: 'space-between'}}>
                                     <Typography.Text strong>{t('Project')} #{i + 1}</Typography.Text>
                                     <Button danger size="small" icon={<DeleteOutlined/>} onClick={() => removeItem(i)}/>

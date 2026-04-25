@@ -55,7 +55,7 @@ const ListEditor: React.FC<IInputContent> = ({content, setContent, t}) => {
             <div>
                 <div style={{marginBottom: 6}}>{t('Items')}</div>
                 <SortableList ids={itemIds} onReorder={reorderItems}>
-                    <Space direction="vertical" style={{width: '100%'}}>
+                    <Space orientation="vertical" style={{width: '100%'}}>
                         {data.items.map((it, i) => (
                             <SortableHandleItem key={itemIds[i]} id={itemIds[i]}>
                                 <Input

@@ -212,7 +212,7 @@ const AuditTab: React.FC = () => {
                 title={selected ? `${selected.op} · ${selected.collection} · ${selected.docId ?? '—'}` : ''}
             >
                 {selected && (
-                    <Space direction="vertical" size={12} style={{width: '100%'}}>
+                    <Space orientation="vertical" size={12} style={{width: '100%'}}>
                         <Typography.Text type="secondary" style={{fontSize: 12}}>
                             {new Date(selected.at).toLocaleString()} · {selected.actor?.email ?? 'anonymous'}
                         </Typography.Text>

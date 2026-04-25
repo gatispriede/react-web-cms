@@ -95,7 +95,7 @@ const BundleSettings = ({t}: { t: TFunction<"translation", undefined> }) => {
     };
 
     return (
-        <Space direction="vertical" size="large" style={{width: '100%', padding: 16}}>
+        <Space orientation="vertical" size="large" style={{width: '100%', padding: 16}}>
             <div>
                 <Title level={4}>{t('Export')}</Title>
                 <Paragraph>{t('Download a single JSON file with your navigation, sections, languages, logo and all referenced images inlined as base64.')}</Paragraph>
@@ -110,7 +110,7 @@ const BundleSettings = ({t}: { t: TFunction<"translation", undefined> }) => {
                     {t('Restore a previously exported bundle.')}{' '}
                     <Text type="danger">{t('This replaces ALL site data and overwrites files in public/images.')}</Text>
                 </Paragraph>
-                <Space direction="vertical" style={{width: '100%'}}>
+                <Space orientation="vertical" style={{width: '100%'}}>
                     <Space>
                         <input
                             ref={fileRef}

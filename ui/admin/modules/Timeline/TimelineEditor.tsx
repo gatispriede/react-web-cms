@@ -27,7 +27,7 @@ const TimelineEditor = ({content, setContent, t}: IInputContent) => {
     return (
         <div className={'timeline-editor'}>
             <SortableList ids={entryIds} onReorder={reorderEntries}>
-            <Space direction="vertical" size={12} style={{width: '100%'}}>
+            <Space orientation="vertical" size={12} style={{width: '100%'}}>
                 {entries.map((entry, i) => (
                     <SortableHandleItem key={entryIds[i]} id={entryIds[i]}>
                     <Card

@@ -59,7 +59,7 @@ const ConflictDialog: React.FC<{
             ]}
             width={520}
         >
-            <Space direction="vertical" size={12} style={{width: '100%'}}>
+            <Space orientation="vertical" size={12} style={{width: '100%'}}>
                 <Alert
                     type="warning"
                     showIcon

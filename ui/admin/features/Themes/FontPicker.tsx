@@ -93,7 +93,7 @@ const FontPicker: React.FC<{
             okButtonProps={{disabled: !picked}}
             onOk={() => { if (picked) onPick(buildFontStack(picked)); }}
         >
-            <Space direction="vertical" style={{width: '100%'}} size={12}>
+            <Space orientation="vertical" style={{width: '100%'}} size={12}>
                 <Input
                     allowClear
                     placeholder="Search families"

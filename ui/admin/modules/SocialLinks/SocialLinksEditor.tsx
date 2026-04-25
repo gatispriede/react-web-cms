@@ -31,7 +31,7 @@ const SocialLinksEditor = ({content, setContent, t}: IInputContent) => {
 
     return (
         <SortableList ids={linkIds} onReorder={reorder}>
-            <Space direction="vertical" size={8} style={{width: '100%'}}>
+            <Space orientation="vertical" size={8} style={{width: '100%'}}>
                 {links.map((link, i) => (
                     <SortableHandleItem key={linkIds[i]} id={linkIds[i]}>
                         <Row gutter={6} align="middle" style={{flex: 1, width: '100%'}}>

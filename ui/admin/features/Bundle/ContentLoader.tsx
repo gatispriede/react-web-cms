@@ -164,7 +164,7 @@ export const ContentLoader = ({translationManager, currentLanguageKey, dataPromi
             key: 'translation',
             width: '40%',
             render: (_: unknown, row: TranslationRow) => (
-                <Space direction="vertical" size={4} style={{width: '100%'}}>
+                <Space orientation="vertical" size={4} style={{width: '100%'}}>
                     <Space.Compact style={{width: '100%'}}>
                         <Input
                             // Controlled — drives off the state we also send to the

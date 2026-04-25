@@ -97,7 +97,7 @@ const HeroEditor = ({content, setContent, t}: IInputContent) => {
                         key: 'titles',
                         label: t('Titles (A / B / C separator row)'),
                         children: (
-                            <Space direction="vertical" style={{width: '100%'}}>
+                            <Space orientation="vertical" style={{width: '100%'}}>
                                 {titles.map((title, i) => (
                                     <Space key={i} align="start" style={{width: '100%'}}>
                                         <Input
@@ -145,7 +145,7 @@ const HeroEditor = ({content, setContent, t}: IInputContent) => {
                         children: (
                             <Row gutter={[12, 8]}>
                                 <Col xs={12}>
-                                    <Divider orientation="left" plain style={{fontSize: 12}}>{t('Primary')}</Divider>
+                                    <Divider titlePlacement="left" plain style={{fontSize: 12}}>{t('Primary')}</Divider>
                                     <Input
                                         value={ctaPrimary.label}
                                         onChange={e => patchCta('ctaPrimary', {label: e.target.value, primary: true})}
@@ -161,7 +161,7 @@ const HeroEditor = ({content, setContent, t}: IInputContent) => {
                                     />
                                 </Col>
                                 <Col xs={12}>
-                                    <Divider orientation="left" plain style={{fontSize: 12}}>{t('Secondary')}</Divider>
+                                    <Divider titlePlacement="left" plain style={{fontSize: 12}}>{t('Secondary')}</Divider>
                                     <Input
                                         value={ctaSecondary.label}
                                         onChange={e => patchCta('ctaSecondary', {label: e.target.value})}
@@ -226,7 +226,7 @@ const HeroEditor = ({content, setContent, t}: IInputContent) => {
                         key: 'meta',
                         label: t('Meta rows (Based / Years / Mode / Stack)'),
                         children: (
-                            <Space direction="vertical" style={{width: '100%'}}>
+                            <Space orientation="vertical" style={{width: '100%'}}>
                                 {meta.map((m, i) => (
                                     <Space key={i} align="start" style={{width: '100%'}}>
                                         <Input
@@ -254,7 +254,7 @@ const HeroEditor = ({content, setContent, t}: IInputContent) => {
                         key: 'coords',
                         label: t('Coordinates strip (LAT / LON / LOCAL …)'),
                         children: (
-                            <Space direction="vertical" style={{width: '100%'}}>
+                            <Space orientation="vertical" style={{width: '100%'}}>
                                 {coords.map((c, i) => (
                                     <Space key={i} align="start" style={{width: '100%'}}>
                                         <Input

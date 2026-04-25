@@ -50,14 +50,12 @@ import {
     Eye,
     File,
     FileText,
-    Github,
     Globe,
     History,
     Info,
     LayoutDashboard,
     LayoutGrid,
     Lightbulb,
-    Linkedin,
     Link as LinkIcon,
     Loader2,
     LogOut,
@@ -76,15 +74,20 @@ import {
     Settings,
     Split,
     Trash2,
-    Twitter,
     Undo2,
     Upload,
     User,
     X,
     XCircle,
-    Youtube,
     Zap,
 } from 'lucide-react';
+// lucide v1 dropped brand-mark icons (Github, Linkedin, Twitter, Youtube).
+// `simple-icons` (via `react-icons/si`) is the official replacement for
+// brand glyphs. The `react-icons` SVG components accept the same `size`/
+// `style`/`className` shape `IconBase` consumes, so they drop in unchanged.
+import {SiGithub, SiX, SiYoutube} from 'react-icons/si';
+// LinkedIn isn't in Simple Icons (brand-trademark restriction); pull from FA6.
+import {FaLinkedin} from 'react-icons/fa6';
 
 const SPIN_KEYFRAMES_ID = 'lucide-spin-keyframes';
 
@@ -158,12 +161,12 @@ export const ExportOutlined: React.FC<IconBaseProps> = (p) => <IconBase componen
 export const EyeOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Eye} {...p}/>;
 export const FileOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={File} {...p}/>;
 export const FileTextOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={FileText} {...p}/>;
-export const GithubOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Github} {...p}/>;
+export const GithubOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={SiGithub as any} {...p}/>;
 export const GlobalOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Globe} {...p}/>;
 export const HistoryOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={History} {...p}/>;
 export const InfoCircleOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Info} {...p}/>;
 export const LayoutOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={LayoutDashboard} {...p}/>;
-export const LinkedinOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Linkedin} {...p}/>;
+export const LinkedinOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={FaLinkedin as any} {...p}/>;
 export const LinkOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={LinkIcon} {...p}/>;
 export const LoadingOutlined: React.FC<IconBaseProps> = ({spin = true, ...p}) => <IconBase component={Loader2} spin={spin} {...p}/>;
 export const LogoutOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={LogOut} {...p}/>;
@@ -181,9 +184,9 @@ export const SearchOutlined: React.FC<IconBaseProps> = (p) => <IconBase componen
 export const SettingOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Settings} {...p}/>;
 export const SplitCellsOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Split} {...p}/>;
 export const ThunderboltOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Zap} {...p}/>;
-export const TwitterOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Twitter} {...p}/>;
+export const TwitterOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={SiX as any} {...p}/>;
 export const UndoOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Undo2} {...p}/>;
 export const UpOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={ChevronUp} {...p}/>;
 export const UploadOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Upload} {...p}/>;
 export const UserOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={User} {...p}/>;
-export const YoutubeOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Youtube} {...p}/>;
+export const YoutubeOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={SiYoutube as any} {...p}/>;

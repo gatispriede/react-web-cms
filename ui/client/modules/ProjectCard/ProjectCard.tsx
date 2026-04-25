@@ -44,7 +44,7 @@ const ProjectCard = ({item, tApp}: {
             <Card.Meta
                 title={tr(c.title)}
                 description={
-                    <Space direction="vertical" size={8} style={{width: '100%'}}>
+                    <Space orientation="vertical" size={8} style={{width: '100%'}}>
                         {c.description && <span>{tr(c.description)}</span>}
                         {c.tags?.length > 0 && (
                             <Space wrap size={[4, 4]}>

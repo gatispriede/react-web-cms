@@ -199,7 +199,7 @@ const ThemeEditor: React.FC<{
                 </Row>
                 <div style={{marginTop: 12, borderTop: '1px solid #eee', paddingTop: 12}}>
                     <div style={{fontWeight: 500, marginBottom: 8}}>{t('Fonts')}</div>
-                    <Space direction="vertical" size={6} style={{width: '100%'}}>
+                    <Space orientation="vertical" size={6} style={{width: '100%'}}>
                         {FONT_SLOTS.map(({slot, tokenKey, label}) => {
                             const stack = draft.tokens[tokenKey] as string | undefined;
                             return (

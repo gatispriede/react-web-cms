@@ -49,7 +49,7 @@ const BlogIndex = ({posts, themeTokens, footer, pages}: Props) => {
                                         <Card.Meta
                                             title={p.title}
                                             description={
-                                                <Space direction="vertical" size={6} style={{width: '100%'}}>
+                                                <Space orientation="vertical" size={6} style={{width: '100%'}}>
                                                     <span style={{fontSize: '.85em', opacity: .65}}>
                                                         {p.publishedAt ? p.publishedAt.slice(0, 10) : ''}
                                                         {p.author ? ` · ${p.author}` : ''}

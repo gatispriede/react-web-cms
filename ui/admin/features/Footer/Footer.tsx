@@ -102,7 +102,7 @@ const AdminSettingsFooter: React.FC = () => {
                             }
                             extra={<Button danger size="small" icon={<DeleteOutlined/>} onClick={() => removeColumn(i)}/>}
                         >
-                            <Space direction="vertical" size={6} style={{width: '100%'}}>
+                            <Space orientation="vertical" size={6} style={{width: '100%'}}>
                                 {col.entries.map((entry, j) => (
                                     <Row key={j} gutter={4} align="middle">
                                         <Col xs={10}>

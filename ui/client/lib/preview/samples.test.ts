@@ -4,6 +4,7 @@
  * in `samples.ts`. Add a new module type without a fixture → this test
  * fails, the preview page can't silently render a gap.
  */
+import {describe, it, expect} from 'vitest';
 import {EItemType} from '@enums/EItemType';
 import {sampleContent, missingSampleTypes} from './samples';
 

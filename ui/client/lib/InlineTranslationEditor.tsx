@@ -180,7 +180,7 @@ export const InlineTranslationEditor: React.FC = () => {
             role="dialog"
             aria-label="Edit translation"
         >
-            <Space direction="vertical" size={6} style={{width: '100%'}}>
+            <Space orientation="vertical" size={6} style={{width: '100%'}}>
                 <Typography.Text type="secondary" style={{fontSize: 11, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block'}}>
                     <code>{state.key}</code> · source: <span style={{opacity: 0.75}}>{state.source}</span>
                 </Typography.Text>

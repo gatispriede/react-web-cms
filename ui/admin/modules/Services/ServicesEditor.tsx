@@ -32,7 +32,7 @@ const ServicesEditor: React.FC<IInputContent> = ({content, setContent, t}) => {
 
     return (
         <div className={'admin-services'} style={{display: 'flex', flexDirection: 'column', gap: 14}}>
-            <Space direction="vertical" style={{width: '100%'}} size={6}>
+            <Space orientation="vertical" style={{width: '100%'}} size={6}>
                 <label>{t('Section number (e.g. § 03)')}</label>
                 <Input
                     value={data.sectionNumber ?? ''}
@@ -59,11 +59,11 @@ const ServicesEditor: React.FC<IInputContent> = ({content, setContent, t}) => {
             <div>
                 <div style={{marginBottom: 6, fontWeight: 500}}>{t('Rows')}</div>
                 <SortableList ids={rowIds} onReorder={reorderRows}>
-                <Space direction="vertical" style={{width: '100%'}} size={10}>
+                <Space orientation="vertical" style={{width: '100%'}} size={10}>
                     {rows.map((r, i) => (
                         <SortableHandleItem key={rowIds[i]} id={rowIds[i]}>
                         <div style={{flex: 1, border: '1px solid rgba(0,0,0,0.1)', padding: 12, borderRadius: 4}}>
-                            <Space direction="vertical" style={{width: '100%'}} size={6}>
+                            <Space orientation="vertical" style={{width: '100%'}} size={6}>
                                 <Space style={{width: '100%', justifyContent: 'space-between'}}>
                                     <Input
                                         value={r.number}

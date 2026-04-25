@@ -52,7 +52,7 @@ const ManifestoEditor: React.FC<IInputContent> = ({content, setContent, t}) => {
             <div>
                 <div style={{marginBottom: 6, fontWeight: 500}}>{t('Chip definitions')}</div>
                 <SortableList ids={chipIds} onReorder={reorderChips}>
-                <Space direction="vertical" style={{width: '100%'}} size={6}>
+                <Space orientation="vertical" style={{width: '100%'}} size={6}>
                     {chips.map((c, i) => (
                         <SortableHandleItem key={chipIds[i]} id={chipIds[i]}>
                             <Input value={c.key} onChange={e => patchChip(i, {key: e.target.value})} placeholder="react" addonBefore={t('Key')} style={{width: 220}}/>

@@ -34,7 +34,7 @@ const StatsCardEditor: React.FC<IInputContent> = ({content, setContent, t}) => {
 
     return (
         <div className={'admin-stats-card'} style={{display: 'flex', flexDirection: 'column', gap: 14}}>
-            <Space direction="vertical" style={{width: '100%'}} size={6}>
+            <Space orientation="vertical" style={{width: '100%'}} size={6}>
                 <label>{t('Tag (small pill above the title)')}</label>
                 <Input
                     value={data.tag ?? ''}
@@ -52,7 +52,7 @@ const StatsCardEditor: React.FC<IInputContent> = ({content, setContent, t}) => {
             <div>
                 <div style={{marginBottom: 6, fontWeight: 500}}>{t('Stats')}</div>
                 <SortableList ids={statIds} onReorder={reorderStats}>
-                <Space direction="vertical" style={{width: '100%'}} size={6}>
+                <Space orientation="vertical" style={{width: '100%'}} size={6}>
                     {stats.map((s, i) => (
                         <SortableHandleItem key={statIds[i]} id={statIds[i]}>
                             <Input
@@ -83,7 +83,7 @@ const StatsCardEditor: React.FC<IInputContent> = ({content, setContent, t}) => {
             <div>
                 <div style={{marginBottom: 6, fontWeight: 500}}>{t('Features (checklist)')}</div>
                 <SortableList ids={featureIds} onReorder={reorderFeatures}>
-                <Space direction="vertical" style={{width: '100%'}} size={6}>
+                <Space orientation="vertical" style={{width: '100%'}} size={6}>
                     {features.map((f, i) => (
                         <SortableHandleItem key={featureIds[i]} id={featureIds[i]}>
                             <Input

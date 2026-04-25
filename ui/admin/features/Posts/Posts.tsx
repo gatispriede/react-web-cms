@@ -170,7 +170,7 @@ const AdminSettingsPosts: React.FC = () => {
             dataIndex: 'title',
             key: 'title',
             render: (title: string, post: IPost) => (
-                <Space direction="vertical" size={0}>
+                <Space orientation="vertical" size={0}>
                     <Typography.Text strong>{title}</Typography.Text>
                     <Typography.Text type="secondary" style={{fontSize: '.85em'}}>/{post.slug}</Typography.Text>
                 </Space>

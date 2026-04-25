@@ -156,7 +156,7 @@ const AdminSettingsLayout: React.FC = () => {
                 <AuditBadge editedBy={audit.editedBy} editedAt={audit.editedAt}/>
             </div>
             <Radio.Group value={mode} onChange={e => change(e.target.value)} disabled={loading} style={{width: '100%'}}>
-                <Space direction="vertical" style={{width: '100%'}}>
+                <Space orientation="vertical" style={{width: '100%'}}>
                     <Card hoverable style={{border: mode === 'tabs' ? '2px solid var(--theme-colorPrimary, #1677ff)' : undefined}}>
                         <Radio value="tabs">
                             <Typography.Text strong>{t('Tabs')}</Typography.Text>
@@ -180,7 +180,7 @@ const AdminSettingsLayout: React.FC = () => {
                 </Space>
             </Radio.Group>
             <Divider/>
-            <Space direction="vertical" style={{width: '100%'}} size={8}>
+            <Space orientation="vertical" style={{width: '100%'}} size={8}>
                 <Typography.Text strong>{t('Inline translation editing')}</Typography.Text>
                 <Typography.Text type="secondary" style={{fontSize: 12}}>
                     {t('When on, editors + admins can Alt-click any translated string on the public site to edit its translation inline. Off by default to avoid hijacking Alt-click elsewhere.')}
@@ -191,7 +191,7 @@ const AdminSettingsLayout: React.FC = () => {
                 </Space>
             </Space>
             <Divider/>
-            <Space direction="vertical" style={{width: '100%'}} size={8}>
+            <Space orientation="vertical" style={{width: '100%'}} size={8}>
                 <Typography.Text strong>{t('Auto high-contrast theme')}</Typography.Text>
                 <Typography.Text type="secondary" style={{fontSize: 12}}>
                     {t('When on, visitors whose browser reports prefers-contrast: more (or forced-colors: active) get the High contrast theme automatically, regardless of the active site theme.')}
@@ -202,7 +202,7 @@ const AdminSettingsLayout: React.FC = () => {
                 </Space>
             </Space>
             <Divider/>
-            <Space direction="vertical" style={{width: '100%'}} size={8}>
+            <Space orientation="vertical" style={{width: '100%'}} size={8}>
                 <Typography.Text strong>{t('Self-host Google Fonts (GDPR)')}</Typography.Text>
                 <Typography.Text type="secondary" style={{fontSize: 12}}>
                     {t('When on, Google Fonts are proxied through /api/fonts so the visitor browser never contacts fonts.googleapis.com or fonts.gstatic.com. Adds one server hop on first load; repeat visits ride the browser cache.')}

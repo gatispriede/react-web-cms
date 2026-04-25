@@ -79,7 +79,7 @@ const CsvImportDialog: React.FC<Props> = ({open, close, translationManager, lang
                 style={{marginBottom: 12}}
                 message="Header row must include a `key` column plus one column per locale symbol. Empty cells are skipped (they won't wipe existing translations)."
             />
-            <Space direction="vertical" size={8} style={{width: '100%'}}>
+            <Space orientation="vertical" size={8} style={{width: '100%'}}>
                 <Space wrap>
                     <Typography.Text strong>Target locale:</Typography.Text>
                     <Select

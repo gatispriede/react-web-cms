@@ -127,7 +127,7 @@ const BulkImageUploadModal: React.FC<Props> = ({open, onClose, onUploaded, initi
                 </Button>,
             ]}
         >
-            <Space direction="vertical" size={12} style={{width: '100%'}}>
+            <Space orientation="vertical" size={12} style={{width: '100%'}}>
                 <Space wrap>
                     <Typography.Text strong>{t('Aspect ratio')}</Typography.Text>
                     <Select<BulkRatio>
