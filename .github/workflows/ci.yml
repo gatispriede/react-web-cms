@@ -189,80 +189,35 @@ jobs:
             export DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1
             docker compose -p cms -f infra/compose.yaml --env-file .env up -d --no-build mongodb server caddy || true
 
-            # Rebuild `server` whenever the commit touches services/ or
-            # the ServerDockerfile. The pre-fix workflow only rebuilt
-            # `app` (with `--no-deps app`), leaving the `server`
-            # container pinned to whatever image was current the *last*
-            # time someone manually rebuilt it — which is how a
-            # months-old standalone GraphQL build ended up live in
-            # production. BuildKit layer cache makes the no-op case
-            # cheap (~5s) when nothing under services/ changed; the
-            # explicit dirty check still avoids the container churn for
-            # pure-frontend deploys.
-            DIRTY_SERVER=0
-            LAST_SHA_FILE="/opt/cms/.last-deploy-sha"
+            # Always rebuild `server`. The pre-fix workflow only rebuilt
+            # `app` (`--no-deps app`), leaving the `server` container
+            # pinned to whatever image was current the *last* time it was
+            # manually rebuilt — months-old standalone GraphQL builds
+            # ended up live in production that way. A dirty-SHA check
+            # to skip the rebuild on pure-frontend commits was attempted
+            # twice and silently killed the deploy script both times
+            # (the "Computing dirty-server diff" echo printed, then
+            # exit 1 with no further log line — even with set +eu and
+            # pre-validated SHAs). BuildKit layer cache already makes
+            # a no-op `up --build server` ~5s, so the optimization
+            # wasn't worth the failure mode. Removed.
             CUR_SHA=$(git rev-parse HEAD)
-            echo "==> Computing dirty-server diff (cur=$CUR_SHA)"
-            # Defuse `set -euo pipefail` for the dirty-check block. Earlier
-            # deploys died silently here right after the "Computing
-            # dirty-server diff" echo, with no further log line — even
-            # though every nominal failure mode was already wrapped in
-            # `|| true` / `|| echo __FAILED__`. Belt-and-braces: turn
-            # off -e/-u for the whole probe, capture a result, then
-            # restore. Worst case we fall through to a rebuild, which
-            # is never the wrong direction.
-            set +eu
-            if [ -f "$LAST_SHA_FILE" ]; then
-              LAST_SHA=$(tr -d '[:space:]' < "$LAST_SHA_FILE")
-              echo "    last-deployed SHA: '${LAST_SHA}'"
-              if [ -z "$LAST_SHA" ]; then
-                echo "    last-SHA file is empty; rebuilding server"
-                DIRTY_SERVER=1
-              else
-                # Verify LAST_SHA is reachable before diffing — `git
-                # cat-file -e` is the cheapest existence probe.
-                if ! git cat-file -e "${LAST_SHA}^{commit}" 2>/dev/null; then
-                  echo "    LAST_SHA $LAST_SHA unreachable; rebuilding server"
-                  DIRTY_SERVER=1
-                else
-                  # Cap to first changed path — we only need a yes/no
-                  # signal, not the full file list. Avoids dragging a
-                  # multi-hundred-line diff into the deploy log when the
-                  # changeset is large.
-                  CHANGED=$(git diff --name-only "$LAST_SHA" "$CUR_SHA" -- services/ infra/ServerDockerfile shared/ 2>/dev/null | head -1)
-                  if [ -n "$CHANGED" ]; then
-                    echo "    services/infra changed (e.g. $CHANGED); rebuilding server"
-                    DIRTY_SERVER=1
-                  else
-                    echo "    services/infra unchanged since $LAST_SHA"
-                  fi
-                fi
+            echo "==> Rebuilding server (cur=$CUR_SHA)"
+            docker compose -p cms -f infra/compose.yaml --env-file .env up --no-deps --build -d server
+            echo "==> Waiting for server to report healthy"
+            for i in $(seq 1 24); do
+              status=$(docker inspect --format '{{.State.Health.Status}}' server 2>/dev/null || echo "starting")
+              if [ "$status" = "healthy" ]; then
+                echo "    server healthy after ${i} checks"
+                break
               fi
-            else
-              echo "    no last-SHA file at $LAST_SHA_FILE; rebuilding server (first run)"
-              DIRTY_SERVER=1
-            fi
-            set -eu
-            if [ "$DIRTY_SERVER" = "1" ]; then
-              echo "==> services/ or ServerDockerfile changed; rebuilding server"
-              docker compose -p cms -f infra/compose.yaml --env-file .env up --no-deps --build -d server
-              echo "==> Waiting for server to report healthy"
-              for i in $(seq 1 24); do
-                status=$(docker inspect --format '{{.State.Health.Status}}' server 2>/dev/null || echo "starting")
-                if [ "$status" = "healthy" ]; then
-                  echo "    server healthy after ${i} checks"
-                  break
-                fi
-                if [ "$i" = "24" ]; then
-                  echo "!! server failed to become healthy within 2 minutes" >&2
-                  docker compose -p cms -f infra/compose.yaml --env-file .env logs --tail=200 server >&2 || true
-                  exit 1
-                fi
-                sleep 5
-              done
-            else
-              echo "==> services/ unchanged; skipping server rebuild"
-            fi
+              if [ "$i" = "24" ]; then
+                echo "!! server failed to become healthy within 2 minutes" >&2
+                docker compose -p cms -f infra/compose.yaml --env-file .env logs --tail=200 server >&2 || true
+                exit 1
+              fi
+              sleep 5
+            done
 
             echo "==> Rebuilding and restarting app (zero-downtime)"
             # `--no-deps app` leaves mongodb / server / caddy running
@@ -316,11 +271,6 @@ jobs:
               docker compose -p cms -f infra/compose.yaml --env-file .env logs --tail=20 app >&2 || true
               exit 1
             fi
-
-            # Record this commit SHA so the next deploy can diff
-            # services/ + ServerDockerfile against it and skip the
-            # server rebuild when the change set is purely frontend.
-            echo "$CUR_SHA" > "$LAST_SHA_FILE"
 
             docker compose -p cms -f infra/compose.yaml --env-file .env ps
             echo "==> Deploy complete"
