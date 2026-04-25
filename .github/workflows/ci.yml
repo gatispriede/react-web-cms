@@ -203,27 +203,42 @@ jobs:
             LAST_SHA_FILE="/opt/cms/.last-deploy-sha"
             CUR_SHA=$(git rev-parse HEAD)
             echo "==> Computing dirty-server diff (cur=$CUR_SHA)"
+            # Defuse `set -euo pipefail` for the dirty-check block. Earlier
+            # deploys died silently here right after the "Computing
+            # dirty-server diff" echo, with no further log line — even
+            # though every nominal failure mode was already wrapped in
+            # `|| true` / `|| echo __FAILED__`. Belt-and-braces: turn
+            # off -e/-u for the whole probe, capture a result, then
+            # restore. Worst case we fall through to a rebuild, which
+            # is never the wrong direction.
+            set +eu
             if [ -f "$LAST_SHA_FILE" ]; then
-              LAST_SHA=$(cat "$LAST_SHA_FILE")
-              echo "    last-deployed SHA: $LAST_SHA"
-              # Wrap in `|| true` so a missing/unreachable LAST_SHA (force-push,
-              # branch reset, repo GC) doesn't trip `set -euo pipefail` and
-              # silently kill the script with no log line. Worst case the
-              # diff fails and we fall through to a rebuild — never the wrong
-              # direction for safety.
-              CHANGED=$(git diff --name-only "$LAST_SHA" "$CUR_SHA" -- services/ infra/ServerDockerfile shared/ 2>/dev/null || echo "__DIFF_FAILED__")
-              if [ "$CHANGED" = "__DIFF_FAILED__" ]; then
-                echo "    git diff failed (LAST_SHA likely unreachable); rebuilding server to be safe"
+              LAST_SHA=$(tr -d '[:space:]' < "$LAST_SHA_FILE")
+              echo "    last-deployed SHA: '${LAST_SHA}'"
+              if [ -z "$LAST_SHA" ]; then
+                echo "    last-SHA file is empty; rebuilding server"
                 DIRTY_SERVER=1
-              elif [ -n "$CHANGED" ]; then
-                DIRTY_SERVER=1
+              else
+                # Verify LAST_SHA is reachable before diffing — `git
+                # cat-file -e` is the cheapest existence probe.
+                if ! git cat-file -e "${LAST_SHA}^{commit}" 2>/dev/null; then
+                  echo "    LAST_SHA $LAST_SHA unreachable; rebuilding server"
+                  DIRTY_SERVER=1
+                else
+                  CHANGED=$(git diff --name-only "$LAST_SHA" "$CUR_SHA" -- services/ infra/ServerDockerfile shared/ 2>/dev/null)
+                  if [ -n "$CHANGED" ]; then
+                    echo "    services/infra changed since last deploy; rebuilding server"
+                    DIRTY_SERVER=1
+                  else
+                    echo "    services/infra unchanged since $LAST_SHA"
+                  fi
+                fi
               fi
             else
-              # First deploy after introducing the dirty-check — be
-              # safe and rebuild server once.
-              echo "    no last-SHA file; rebuilding server (first run)"
+              echo "    no last-SHA file at $LAST_SHA_FILE; rebuilding server (first run)"
               DIRTY_SERVER=1
             fi
+            set -eu
             if [ "$DIRTY_SERVER" = "1" ]; then
               echo "==> services/ or ServerDockerfile changed; rebuilding server"
               docker compose -p cms -f infra/compose.yaml --env-file .env up --no-deps --build -d server
