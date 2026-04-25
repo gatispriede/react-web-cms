@@ -23,7 +23,14 @@ module.exports = {
         // / the admin dropdown, not the URL). Public site locale is still user-
         // selectable via the `.language-dropdown`.
         localeDetection: false,
-        defaultLocale: 'lv',
+        // Public-site default locale. Next.js bakes this into URL routing
+        // at build time (the `Languages` admin doc's `default: true` flag
+        // governs the *Mongo* default for bundle export and translation
+        // fallback ordering, but Next.js i18n is static). Operators flip
+        // this constant when the canonical site language changes — last
+        // change 2026-04-25 from 'lv' → 'en' so `/` serves the English
+        // home and `/lv` serves the Latvian variant.
+        defaultLocale: 'en',
         locales: [
             // "aa",
             // "ab",

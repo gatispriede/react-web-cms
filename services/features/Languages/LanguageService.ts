@@ -53,6 +53,21 @@ export class LanguageService implements ILanguageService {
         const incoming = (translations as unknown as Record<string, string>) ?? {};
         const merged: Record<string, string> = {...mongoBase, ...diskBase, ...incoming};
         const version = nextVersion(existingVersion);
+        // Default-language is a singleton flag — when the incoming payload
+        // promotes this language to default, demote everyone else first so
+        // the collection invariant ("at most one default") holds. Without
+        // this, the admin UI would happily mark two locales default and the
+        // public site / bundle export would have to pick one arbitrarily.
+        if (language.default === true && language.symbol) {
+            try {
+                await this.languagesDB.updateMany(
+                    {symbol: {$ne: language.symbol}, default: true},
+                    {$set: {default: false}}
+                );
+            } catch (err) {
+                console.error('Error demoting previous default language:', err);
+            }
+        }
         await this.languagesDB.updateOne(
             {symbol: language.symbol},
             {$set: {...language, translations: merged, version, ...auditStamp(editedBy)}},

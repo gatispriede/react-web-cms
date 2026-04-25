@@ -17,9 +17,41 @@ export class SiteSeoService {
 
     async get(): Promise<ISiteSeoDefaults> {
         const doc = await this.settings.findOne({key: KEY});
-        const value = (doc as any)?.value as ISiteSeoDefaults | undefined;
+        const raw = (doc as any)?.value as Record<string, any> | undefined;
+        // Normalize legacy / bundle-imported shapes onto the form schema.
+        // Prod imports historically wrote `siteSeo` using the per-page SEO
+        // shape (`title`, `description`, `keywords[]`, `image`, `author`,
+        // `locale`, `url`) — when the admin form then asked for
+        // `siteName`, `defaultDescription`, etc. it found nothing and rendered
+        // empty fields even though rich data was present. This shim keeps
+        // both shapes readable; the next save canonicalizes to the form
+        // shape via `save()` below.
+        const value: ISiteSeoDefaults = (() => {
+            if (!raw) return {...DEFAULT_SITE_SEO};
+            const v: ISiteSeoDefaults = {
+                siteName: raw.siteName ?? raw.title,
+                defaultDescription: raw.defaultDescription ?? raw.description,
+                defaultKeywords: raw.defaultKeywords ?? (
+                    Array.isArray(raw.keywords) ? raw.keywords.join(', ') : raw.keywords
+                ),
+                defaultImage: raw.defaultImage ?? raw.image,
+                defaultAuthor: raw.defaultAuthor ?? raw.author,
+                defaultLocale: raw.defaultLocale ?? raw.locale,
+                twitterHandle: raw.twitterHandle,
+                primaryDomain: raw.primaryDomain ?? (() => {
+                    // Per-page SEO `url` is a full page URL; we want just the
+                    // origin for the site-wide default. Best-effort parse —
+                    // if URL parsing fails, drop it rather than poisoning the
+                    // form with `https://example.com/some/path`.
+                    if (typeof raw.url !== 'string' || !raw.url) return undefined;
+                    try { return new URL(raw.url).origin; } catch { return undefined; }
+                })(),
+            };
+            // Strip undefined so DEFAULT_SITE_SEO can fall through cleanly.
+            return Object.fromEntries(Object.entries(v).filter(([, x]) => x != null)) as ISiteSeoDefaults;
+        })();
         return {
-            ...(value ?? DEFAULT_SITE_SEO),
+            ...value,
             version: (doc as any)?.version ?? 0,
             editedBy: (doc as any)?.editedBy,
             editedAt: (doc as any)?.editedAt,

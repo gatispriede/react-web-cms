@@ -1,5 +1,5 @@
 import {Alert, Button, Empty, Image as AntImage, Input, message, Modal, Popconfirm, Select, Space, Tag, Tooltip} from "antd";
-import {CloudUploadOutlined, DeleteOutlined, EyeOutlined, InfoCircleOutlined, ReloadOutlined, SearchOutlined} from "@client/lib/icons";
+import {CheckCircleFilled, CloudUploadOutlined, DeleteOutlined, EyeOutlined, InfoCircleOutlined, ReloadOutlined, SearchOutlined} from "@client/lib/icons";
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import UpploadManager from "@services/infra/UpploadeManager";
 import EditableTags from "@client/lib/EditableTags";
@@ -76,7 +76,37 @@ const ImageUpload = ({setFile, t}: { setFile: (file: File) => void, t: TFunction
     // Per-tile info drawer state. Only one tile can be expanded at a time —
     // otherwise grids tear vertically as rows grow inconsistently.
     const [expandedId, setExpandedId] = useState<string | null>(null)
+    // Bulk-select state — mirrors the ImageRail UX so multi-delete works the
+    // same way in either entry point (rail = sidebar dock, this modal =
+    // legacy picker). `selectMode` is derived from `selected.size > 0` so
+    // the operator enters/leaves it implicitly by toggling the check circle.
+    const [selected, setSelected] = useState<Set<string>>(new Set())
+    const [bulkBusy, setBulkBusy] = useState(false)
     const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const selectMode = selected.size > 0
+    const toggleSelect = (id: string) => {
+        setSelected(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id); else next.add(id);
+            return next;
+        });
+    }
+    const clearSelection = () => setSelected(new Set())
+    const bulkDelete = async () => {
+        const ids = [...selected];
+        if (!ids.length) return;
+        setBulkBusy(true);
+        let ok = 0, fail = 0;
+        for (const id of ids) {
+            try { await mongoApi.deleteImage(id); ok++; }
+            catch (err) { console.error('[image-picker] delete failed', id, err); fail++; }
+        }
+        setBulkBusy(false);
+        clearSelection();
+        if (fail === 0) message.success(t('Deleted {{count}} images', {count: ok}) as string);
+        else message.warning(t('Deleted {{ok}}, {{fail}} failed', {ok, fail}) as string);
+        await loadImages();
+    }
 
     const cb = async (inputFile: File) => {
         setFile(inputFile)
@@ -185,6 +215,22 @@ const ImageUpload = ({setFile, t}: { setFile: (file: File) => void, t: TFunction
         return () => cancelAnimationFrame(handle);
     }, [dialogOpen])
     useRefreshView(loadImages, 'assets');
+
+    // Drop selected IDs that disappeared from the latest fetch so the
+    // toolbar count never lies (e.g. another tab or a bundle reimport
+    // wiped a row out from under us).
+    useEffect(() => {
+        const live = new Set(images.map(i => i.id));
+        setSelected(prev => {
+            let changed = false;
+            const next = new Set<string>();
+            for (const id of prev) {
+                if (live.has(id)) next.add(id);
+                else changed = true;
+            }
+            return changed ? next : prev;
+        });
+    }, [images]);
 
     // Persist sort / search so the picker reopens where you left it.
     // Reload survives this (the roadmap asked for URL-param round-tripping,
@@ -320,6 +366,37 @@ const ImageUpload = ({setFile, t}: { setFile: (file: File) => void, t: TFunction
                             </span>
                         </div>
 
+                        {selectMode && (
+                            <div style={{
+                                padding: '6px 10px',
+                                margin: '0 0 8px 0',
+                                background: '#e6f4ff',
+                                border: '1px solid #91caff',
+                                borderRadius: 4,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 8,
+                                fontSize: 13,
+                            }}>
+                                <strong style={{flex: 1}}>{t('{{count}} selected', {count: selected.size})}</strong>
+                                <Popconfirm
+                                    title={t('Delete {{count}} images?', {count: selected.size})}
+                                    description={t('The Mongo record is removed; the file on disk is kept.')}
+                                    okText={t('Delete')}
+                                    cancelText={t('Cancel')}
+                                    okButtonProps={{danger: true, loading: bulkBusy}}
+                                    onConfirm={bulkDelete}
+                                >
+                                    <Button danger size="small" icon={<DeleteOutlined/>} loading={bulkBusy}>
+                                        {t('Delete')}
+                                    </Button>
+                                </Popconfirm>
+                                <Button size="small" onClick={clearSelection} disabled={bulkBusy}>
+                                    {t('Clear')}
+                                </Button>
+                            </div>
+                        )}
+
                         {/* Two-column layout: tile grid + sticky preview panel.
                             Panel width floors at ~200px so filename + metadata
                             stay readable; it grows with viewport via minmax.
@@ -338,31 +415,74 @@ const ImageUpload = ({setFile, t}: { setFile: (file: File) => void, t: TFunction
                                     const src = `/${image.location}`
                                     const tileId = image.id ?? `${image.name}-${index}`;
                                     const isExpanded = expandedId === tileId;
+                                    const isSelected = selected.has(image.id);
                                     return (
                                         <div
-                                            className={`image-item${isExpanded ? ' is-expanded' : ''}`}
+                                            className={`image-item${isExpanded ? ' is-expanded' : ''}${isSelected ? ' is-selected' : ''}`}
                                             key={tileId}
                                             tabIndex={0}
                                             onMouseEnter={() => setFocusImage(image)}
                                             onFocus={() => setFocusImage(image)}
                                             onClick={() => {
+                                                // While curating a delete batch, body-clicks toggle
+                                                // selection instead of committing the pick. Otherwise
+                                                // the operator would accidentally close the modal mid-
+                                                // multi-select.
+                                                if (selectMode) { toggleSelect(image.id); return; }
                                                 setFile(image as unknown as File)
                                                 setDialogOpen(false)
                                             }}
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Enter' || e.key === ' ') {
                                                     e.preventDefault();
+                                                    if (selectMode) { toggleSelect(image.id); return; }
                                                     setFile(image as unknown as File);
                                                     setDialogOpen(false);
                                                 }
                                             }}
+                                            style={isSelected ? {outline: '2px solid #1677ff', outlineOffset: -2} : undefined}
                                         >
                                             <img
                                                 src={src}
                                                 alt={image.name}
                                                 className={'image-item__thumb'}
                                                 loading="lazy"
+                                                style={isSelected ? {filter: 'brightness(0.92)'} : undefined}
                                             />
+
+                                            {/* Top-left select-toggle. Always shown so the affordance
+                                                is discoverable without a hover (mobile / touchpad
+                                                hover is unreliable inside the modal); the dark
+                                                backdrop keeps it readable on any photo. */}
+                                            <button
+                                                type="button"
+                                                aria-label={isSelected ? t('Deselect image') as string : t('Select image') as string}
+                                                onClick={(e) => { e.stopPropagation(); toggleSelect(image.id); }}
+                                                style={{
+                                                    position: 'absolute',
+                                                    top: 6,
+                                                    left: 6,
+                                                    width: 24,
+                                                    height: 24,
+                                                    borderRadius: '50%',
+                                                    border: 'none',
+                                                    background: isSelected ? '#fff' : 'rgba(0,0,0,0.55)',
+                                                    color: isSelected ? '#1677ff' : '#fff',
+                                                    cursor: 'pointer',
+                                                    padding: 0,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    zIndex: 2,
+                                                }}
+                                            >
+                                                {isSelected
+                                                    ? <CheckCircleFilled style={{fontSize: 22, background: '#fff', borderRadius: '50%'}}/>
+                                                    : <span style={{
+                                                        width: 14, height: 14, borderRadius: '50%',
+                                                        border: '2px solid currentColor', display: 'block',
+                                                    }}/>}
+                                            </button>
 
                                             <div
                                                 className={'image-item__actions'}

@@ -57,14 +57,14 @@ const nextConfig = {
     sassOptions: {},
     // Locale-prefixed admin URLs from old bookmarks redirect to the prefix-
     // less admin. `locale: false` stops Next.js expanding the source with the
-    // active locale. We intentionally skip the defaultLocale (`lv`) — Next.js
-    // i18n treats `/admin` and `/lv/admin` as the same route (defaultLocale
-    // canonical form), and adding a rule for `/lv/admin` causes `/admin` to
+    // active locale. We intentionally skip the defaultLocale (`en`) — Next.js
+    // i18n treats `/admin` and `/en/admin` as the same route (defaultLocale
+    // canonical form), and adding a rule for `/en/admin` causes `/admin` to
     // 307-redirect to itself (internal canonicalization loop). Admin language
     // is driven by `preferredAdminLocale`, not the URL.
     redirects: async () => [
-        {source: '/en/admin', destination: '/admin', permanent: false, locale: false},
-        {source: '/en/admin/:path*', destination: '/admin/:path*', permanent: false, locale: false},
+        {source: '/lv/admin', destination: '/admin', permanent: false, locale: false},
+        {source: '/lv/admin/:path*', destination: '/admin/:path*', permanent: false, locale: false},
         {source: '/it/admin', destination: '/admin', permanent: false, locale: false},
         {source: '/it/admin/:path*', destination: '/admin/:path*', permanent: false, locale: false},
         {source: '/lt/admin', destination: '/admin', permanent: false, locale: false},

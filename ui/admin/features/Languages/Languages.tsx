@@ -136,6 +136,46 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
         }
     };
 
+    const setAsDefault = async () => {
+        if (currentLanguage === 'default') return;
+        const lang = languages[currentLanguage];
+        if (!lang?.symbol) return;
+        if (lang.default) {
+            message.info(tAdmin('Already the default language.'));
+            return;
+        }
+        setSaving(true);
+        try {
+            // Send the full language doc with `default: true`. The service-side
+            // demotes any previous default in the same call so the collection
+            // invariant (at most one default) is preserved atomically.
+            const result = await translationManager.saveNewLanguage({
+                label: lang.label,
+                symbol: lang.symbol,
+                flag: lang.flag,
+                default: true,
+                version: lang.version,
+            } as INewLanguage);
+            if ((result as any)?.error) {
+                message.error(String((result as any).error));
+                return;
+            }
+            message.success(tAdmin('Default language updated'));
+            await refreshMenu();
+            setReloadNonce(n => n + 1);
+        } catch (err) {
+            if (isConflictError(err)) {
+                // Refresh and show conflict — operator can retry.
+                await refreshMenu();
+                message.warning(tAdmin('Language was modified elsewhere — please retry.'));
+            } else {
+                message.error(String((err as Error)?.message ?? err));
+            }
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const deleteTranslation = async () => {
         if (currentLanguage === 'default') return;
         // Refuse to delete the seeded default language — without it i18next
@@ -227,6 +267,14 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
                                 <>
                                     <p style={{margin: '0 16px'}}>{currentLanguageName}</p>
                                     <Button type="primary" loading={saving} onClick={saveNewTranslation}>{tAdmin('Save')}</Button>
+                                    <Button
+                                        loading={saving}
+                                        onClick={setAsDefault}
+                                        disabled={currentLanguage === 'default' || !!languages[currentLanguage]?.default}
+                                        title={languages[currentLanguage]?.default ? tAdmin('Already the default language.') as string : undefined}
+                                    >
+                                        {languages[currentLanguage]?.default ? tAdmin('Default') : tAdmin('Set as Default')}
+                                    </Button>
                                     <Button danger type="primary" loading={saving} onClick={deleteTranslation}
                                         disabled={currentLanguage === 'default' || !!languages[currentLanguage]?.default}>
                                         {tAdmin('Delete')}
