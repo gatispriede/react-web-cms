@@ -99,7 +99,7 @@ const Hero = ({item, tApp}: {
         ? Math.max(0, Math.min(100, c.portraitOpacity))
         : 0;
     const hasSideBlock = Boolean(c.portraitLabel || c.portraitImage);
-    const hasCta = Boolean(c.ctaPrimary?.label || c.ctaSecondary?.label);
+    const hasCta = Boolean(c.ctaPrimary?.label || c.ctaSecondary?.label || c.ctaTertiary?.label);
 
     return (
         <div className={`hero ${item.style ?? ''}${fullbleed ? ' is-fullbleed' : ''}${hasSideBlock ? ' hero--has-portrait' : ''}`} style={style}>
@@ -157,6 +157,7 @@ const Hero = ({item, tApp}: {
                     <div className="hero__cta-row">
                         {renderCta(c.ctaPrimary, tr)}
                         {renderCta(c.ctaSecondary, tr)}
+                        {renderCta(c.ctaTertiary, tr)}
                     </div>
                 )}
             </div>

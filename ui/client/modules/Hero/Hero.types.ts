@@ -49,6 +49,7 @@ export interface IHero {
     coords?: IHeroCoord[];
     ctaPrimary?: IHeroCta;
     ctaSecondary?: IHeroCta;
+    ctaTertiary?: IHeroCta;
 }
 
 export enum EHeroStyle {

@@ -188,6 +188,7 @@ sections.push(sec1('cv-sec-home-hero', 'Home', [
         portraitImage: '/images/20260415_142341.jpg',
         ctaPrimary: {label: 'View work ↘', href: '#career', primary: true},
         ctaSecondary: {label: 'Get in touch', href: '/contact'},
+        ctaTertiary: {label: 'CMS language built for AI usage ↗', href: '/cms'},
     }),
 ]));
 sections.push(sec1('cv-sec-home-vitals', 'Home', [

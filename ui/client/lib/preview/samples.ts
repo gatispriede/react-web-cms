@@ -551,6 +551,40 @@ export const sampleContent: Record<string, PreviewSample[]> = {
             }),
         },
     ],
+    [EItemType.ArchitectureTiers]: [
+        {
+            label: 'three-tier system',
+            content: JSON.stringify({
+                eyebrow: '\u00a7 ARCHITECTURE',
+                title: 'Three tiers, one delivery loop',
+                subtitle: 'Edge \u00b7 Service \u00b7 Storage',
+                intro: 'Each tier owns a single concern; the boundaries are JSON over HTTP.',
+                tiers: [
+                    {ord: '01', concern: 'EDGE', role: 'public surface', title: 'Next.js SSR + ISR', description: 'Renders pages, hydrates modules, owns auth cookies.', pills: ['Next.js', 'Vercel-style ISR'], modules: [{name: 'pages/', note: 'route handlers'}]},
+                    {ord: '02', concern: 'SERVICE', role: 'business logic', title: 'Express + Apollo', description: 'GraphQL schema, mutations, validators.', pills: ['Apollo Server', 'Express'], modules: [{name: 'services/api', note: 'graphql resolvers'}]},
+                    {ord: '03', concern: 'STORAGE', role: 'state', title: 'Mongo + Redis', description: 'Documents in Mongo, ephemeral cache in Redis.', pills: ['MongoDB', 'Redis'], modules: [{name: 'services/db', note: 'collections + indexes'}]},
+                ],
+                sharedTitle: 'Cross-cutting',
+                sharedDescription: 'Logging, metrics, feature flags wired through every tier.',
+                sharedPills: ['OpenTelemetry', 'pino'],
+                lifecycleSteps: ['author', 'lint', 'test', 'build', 'deploy', 'verify', 'observe'],
+                lifecycleHighlight: [3, 4],
+            }),
+        },
+    ],
+    [EItemType.StatsStrip]: [
+        {
+            label: 'four cells',
+            content: JSON.stringify({
+                cells: [
+                    {value: '15+', unit: 'yrs', label: 'shipped', highlight: true},
+                    {value: '11', label: 'countries'},
+                    {value: '100', unit: '%', label: 'on time'},
+                    {value: '24/7', label: 'remote'},
+                ],
+            }),
+        },
+    ],
     // Empty is a placeholder type (render-nothing); skipped intentionally.
     [EItemType.Empty]: [],
 };
