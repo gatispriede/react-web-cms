@@ -11,40 +11,22 @@
  * renderer calls `resolveSampleMedia()` to swap those for real URLs just
  * before rendering a module's `Display`.
  */
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const cosmos = require('./samples-media/cosmos1080p.jpg');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const coalescence = require('./samples-media/coalescence1080p.jpg');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const maya = require('./samples-media/maya21080p.jpg');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const nanocyte = require('./samples-media/nanocyte1080p.jpg');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const deepblue = require('./samples-media/deepblue1080p.jpg');
-
-/** Next's jpg require yields one of three shapes depending on loader +
- *  module interop: a plain string (old next-images loader), a
- *  `{src, height, width}` object (next/image StaticImport), or a CJS
- *  interop wrapper `{default: {src, …}}` (how TS compiles `import` to
- *  `require` under moduleResolution=node). Normalise every shape to a
- *  usable URL string. */
-const toUrl = (v: unknown): string => {
-    if (typeof v === 'string') return v;
-    if (v && typeof v === 'object') {
-        const obj = v as {src?: unknown; default?: unknown};
-        if (typeof obj.src === 'string') return obj.src;
-        if (obj.default) return toUrl(obj.default);
-    }
-    return '';
-};
+/** Sample images live under `public/preview-samples/` so Next.js serves
+ *  them as static assets at a stable URL — bare `require('./img.jpg')`
+ *  paths under `ui/client/lib/...` aren't picked up by Next's webpack
+ *  as static assets, which is what produced the broken-image icons in
+ *  the modules-preview screen. Public-dir paths Just Work in dev,
+ *  prod and SSG, and stay portable for tests too (the URL string is
+ *  inert outside the browser). Originals also remain in
+ *  `samples-media/` for reference / future loader changes. */
 
 /** Registry of `preview:<key>` tokens → runtime image URLs. */
 export const SAMPLE_MEDIA_URLS: Record<string, string> = {
-    'cosmos1080p': toUrl(cosmos),
-    'coalescence1080p': toUrl(coalescence),
-    'maya21080p': toUrl(maya),
-    'nanocyte1080p': toUrl(nanocyte),
-    'deepblue1080p': toUrl(deepblue),
+    'cosmos1080p': '/preview-samples/cosmos1080p.jpg',
+    'coalescence1080p': '/preview-samples/coalescence1080p.jpg',
+    'maya21080p': '/preview-samples/maya21080p.jpg',
+    'nanocyte1080p': '/preview-samples/nanocyte1080p.jpg',
+    'deepblue1080p': '/preview-samples/deepblue1080p.jpg',
 };
 
 const TOKEN_PREFIX = 'preview:';
