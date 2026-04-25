@@ -46,7 +46,14 @@ app.use((req: any, res: any, next: () => void) => {
 // standalone process. Standalone is build-time + Docker-internal only.
 const schema = makeExecutableSchema({typeDefs, resolvers: standaloneResolvers});
 app.use(express.json());
-app.all('/', cors(), createHandler({schema}));
+// Serve at both `/` (Docker container-internal: http://server:3000/) and
+// `/api/graphql` (build-time SSG via gqlFetch: http://localhost/api/graphql).
+// Pre-refactor the SSG path went through `next dev`; post-refactor `next build`
+// runs without Next serving routes, so the standalone server must answer both
+// URL shapes for the build to find resolvers.
+const gqlHandler = createHandler({schema});
+app.all('/', cors(), gqlHandler);
+app.all('/api/graphql', cors(), gqlHandler);
 
 const server = http.createServer(app);
 server.listen(port, bindHost, () => console.log(`Server running at http://${bindHost}:${port}`));

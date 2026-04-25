@@ -36,6 +36,10 @@ COPY ./tools ./tools
 # Let's Encrypt TLS, so the directory is intentionally absent.
 COPY ./services ./services
 COPY ./shared ./shared
+# ThemeService reads JSON presets from ui/client/themes/ at module init.
+# Server container doesn't need the rest of ui/, but these four files are
+# canonical theme data consumed by the standalone GraphQL resolvers.
+COPY ./ui/client/themes ./ui/client/themes
 # Run the application as a non-root user.
 #USER node
 
