@@ -1,5 +1,5 @@
 import '../styles/globals/global.scss'
-import { appWithTranslation } from 'next-i18next'
+import { appWithTranslation } from 'next-i18next/pages'
 import nextI18NextConfig from '../../../next-i18next.config.js'
 import NextApp, {AppContext} from 'next/app';
 import NextCookies from 'next-cookies';

@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useState} from 'react';
 import {Modal, Input, List, Typography} from 'antd';
 import {useTranslation} from 'react-i18next';
-import {i18n as globalI18n} from 'next-i18next';
+import {i18n as globalI18n} from 'next-i18next/pages';
 
 interface Command {
     id: string;

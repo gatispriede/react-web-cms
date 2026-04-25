@@ -2,7 +2,7 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {Button, Checkbox, Input, Space, Tooltip, Typography, message} from 'antd';
 import LanguageApi from '@services/api/client/LanguageApi';
 import TranslationMetaApi from '@services/api/client/TranslationMetaApi';
-import {i18n as nextI18n} from 'next-i18next';
+import {i18n as nextI18n} from 'next-i18next/pages';
 import type {INewLanguage} from '@interfaces/INewLanguage';
 import {hashSource} from '@services/features/Languages/TranslationMetaService';
 

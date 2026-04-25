@@ -1,9 +1,9 @@
 import React, {useEffect} from 'react';
 import type {GetStaticPaths, GetStaticProps} from 'next';
 import {useRouter} from 'next/router';
-import {useTranslation} from 'next-i18next';
+import {useTranslation} from 'next-i18next/pages';
 import {usePathname} from 'next/navigation';
-import {serverSideTranslations} from 'next-i18next/serverSideTranslations';
+import {serverSideTranslations} from 'next-i18next/pages/serverSideTranslations';
 import App from './app';
 import {fetchInitialPageData, gqlFetch, InitialPageData} from '@client/lib/gqlFetch';
 

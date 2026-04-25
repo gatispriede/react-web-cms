@@ -6,7 +6,7 @@ import {ContentLoader} from "@admin/features/Bundle/ContentLoader";
 import {ContentLoaderCompare} from "@admin/features/Bundle/ContentLoaderCompare";
 import {TFunction} from "i18next";
 import AddNewLanguageDialog from "./AddNewLanguageDialog";
-import {useTranslation} from "next-i18next";
+import {useTranslation} from "next-i18next/pages";
 import {sanitizeKey} from "@utils/stringFunctions";
 import AuditBadge from "@admin/shell/AuditBadge";
 import {INewLanguage} from "@interfaces/INewLanguage";

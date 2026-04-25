@@ -1,0 +1,22 @@
+# Local-dev compose: brings up only the dependencies the host-run
+# `npm run dev` needs (Mongo). The Next.js app + GraphQL server run
+# directly on the host (faster reloads, native debugger), so they are
+# intentionally absent here.
+#
+# Use:
+#   docker compose -f infra/compose.dev.yaml up -d        # start
+#   docker compose -f infra/compose.dev.yaml down         # stop
+#
+# The root `npm run dev` auto-invokes this via the `predev` script.
+services:
+  mongodb:
+    image: 'mongo:7.0'
+    container_name: mongodb
+    restart: unless-stopped
+    # Publish 27017 to the host so the host-run Next/GraphQL can reach
+    # it at mongodb://localhost:27017 (matches .env.example default).
+    # In prod (compose.yaml) this is intentionally NOT published.
+    ports:
+      - "27017:27017"
+    volumes:
+      - ../mongo_data:/data/db

@@ -1,6 +1,11 @@
 // @ts-check
+// `i18next-http-backend` v3 + `i18next-chained-backend` v5 both export the
+// plugin class as the CJS module root (no `.default`). Earlier versions
+// shipped a `.default` named export — using it now yields `undefined`,
+// which crashes next-i18next's `userConfig.use.some(b => b.type)` check
+// in createConfig.js.
 const HttpBackend = require('i18next-http-backend/cjs')
-const ChainedBackend= require('i18next-chained-backend').default
+const ChainedBackend = require('i18next-chained-backend')
 
 const isBrowser = typeof window !== 'undefined'
 const isDev = false// process.env.NODE_ENV === 'development'

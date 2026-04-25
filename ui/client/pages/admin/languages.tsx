@@ -5,7 +5,7 @@ import {Session} from "next-auth";
 import {GetServerSideProps} from "next";
 import {getServerSession} from "next-auth/next";
 import {authOptions} from "../api/auth/[...nextauth]";
-import {serverSideTranslations} from 'next-i18next/serverSideTranslations';
+import {serverSideTranslations} from 'next-i18next/pages/serverSideTranslations';
 
 const AdminLanguages = ({session}: {session: Session}) => (
     <SessionProvider session={session}>
