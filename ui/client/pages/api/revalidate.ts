@@ -32,14 +32,43 @@ type RevalidateBody =
     | {scope: 'blog'}
     | {paths: string[]};
 
+/**
+ * Resolve the navigation entry that the public site renders at `/`.
+ *
+ * The home slot is positional — `pages/app.tsx`'s `findIdForActiveTab`
+ * falls back to `tabProps[0]` when the URL is `/`, so whichever nav row
+ * is first IS the home page regardless of its display name.
+ *
+ * The legacy `isHomePage(name)` helper in `@utils/pagePath` only matched
+ * the literal English string `"home"`. On a localised install (e.g.
+ * skyclimber.pro where the first page is "Sākums") that meant section
+ * saves on the home page revalidated `/sākums` — a non-existent path —
+ * while the real `/` kept its 1-hour-cached HTML and operators saw
+ * "publish does nothing". Resolving by position fixes every locale.
+ */
+async function fetchHomePageName(): Promise<string | null> {
+    const navResp = await gqlFetch<{mongo: {getNavigationCollection: Array<{page: string}>}}>(
+        `{ mongo { getNavigationCollection { page } } }`,
+    );
+    const list = navResp?.mongo?.getNavigationCollection ?? [];
+    return list[0]?.page ?? null;
+}
+
+function namesMatch(a: string, b: string | null): boolean {
+    if (!b) return false;
+    return a.trim().toLowerCase() === b.trim().toLowerCase();
+}
+
 async function collectAllPaths(): Promise<string[]> {
     const out = new Set<string>(['/', '/blog']);
     const navResp = await gqlFetch<{mongo: {getNavigationCollection: Array<{page: string}>}}>(
         `{ mongo { getNavigationCollection { page } } }`,
     );
-    for (const p of navResp?.mongo?.getNavigationCollection ?? []) {
+    const list = navResp?.mongo?.getNavigationCollection ?? [];
+    const homeName = list[0]?.page ?? null;
+    for (const p of list) {
         if (!p?.page) continue;
-        if (isHomePage(p.page)) out.add('/');
+        if (namesMatch(p.page, homeName) || isHomePage(p.page)) out.add('/');
         else out.add(pageNameToPath(p.page));
     }
     // Published posts — drafts don't appear on `/blog/<slug>`, so asking
@@ -90,10 +119,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 case 'all':
                     paths = await collectAllPaths();
                     break;
-                case 'page':
+                case 'page': {
                     if (!body.pageName) return res.status(400).json({error: 'pageName required'});
-                    paths = [isHomePage(body.pageName) ? '/' : pageNameToPath(body.pageName)];
+                    // Home is positional (first nav entry), not English-name-matched.
+                    // See `fetchHomePageName` rationale.
+                    const homeName = await fetchHomePageName();
+                    const isHome = namesMatch(body.pageName, homeName) || isHomePage(body.pageName);
+                    paths = [isHome ? '/' : pageNameToPath(body.pageName)];
                     break;
+                }
                 case 'post':
                     if (!body.slug) return res.status(400).json({error: 'slug required'});
                     paths = ['/blog', `/blog/${body.slug}`];

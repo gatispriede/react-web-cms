@@ -1,4 +1,4 @@
-import {Alert, Button, Dropdown, Space} from "antd";
+import {Button, Dropdown, Space} from "antd";
 import {
     AppstoreOutlined,
     EyeOutlined,
@@ -79,7 +79,7 @@ const UserStatusBarInner = ({session, view, tApp}: {
             setAdminLocale(sessionLocale as AdminLocale);
         }
     }, [sessionLocale]); // eslint-disable-line react-hooks/exhaustive-deps
-    const mustChangePassword = Boolean((session?.user as any)?.mustChangePassword);
+    // mustChangePassword flag still flows through the session; banner suppressed.
     const currentAdminLocale = (adminI.language as AdminLocale) || 'en';
     const adminLocaleLabel = currentAdminLocale.toUpperCase();
     return (
@@ -97,21 +97,11 @@ const UserStatusBarInner = ({session, view, tApp}: {
             */}
             <a href="#admin-main" className="skip-to-content" suppressHydrationWarning>{tAdmin("Skip to content")}</a>
             <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)}/>
-            {mustChangePassword && (
-                <Alert
-                    type="error"
-                    showIcon
-                    banner
-                    message={tAdmin("Change your password — you're using the seeded initial password.")}
-                    description={
-                        <span>
-                            {tAdmin("Open")}{' '}
-                            <a href={`/admin/settings`}>{tAdmin("Site settings → Users")}</a>{' '}
-                            {tAdmin("and set a new password to clear this warning.")}
-                        </span>
-                    }
-                />
-            )}
+            {/* Seeded-initial-password banner removed — warning was noisy for
+                single-operator dev installs where the admin and the DB seed
+                are owned by the same person. The `mustChangePassword` flag
+                still flows through the session, so a future surface (e.g.
+                a settings-page nudge) can re-use it without the global banner. */}
             <nav aria-label={tAdmin("Admin")} className={'app-login-wrapper'}>
                 <div className={'container'}>
                     <p>{`${tAdmin("User")}: ${session?.user?.name} `}</p>

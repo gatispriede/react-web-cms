@@ -4,6 +4,7 @@ import type {Collection, Db} from 'mongodb';
 import {validateSectionInput} from '@utils/contentSchemas';
 import {PRESETS} from '@services/features/Themes/ThemeService';
 import guid from '@utils/guid';
+import FileManager from '@services/infra/fileManager';
 
 const PUBLIC_IMAGES_DIR = path.join(process.cwd(), 'ui/client/public/images');
 const IMAGE_PATH_PREFIX = 'api/';
@@ -44,12 +45,32 @@ const MIME_BY_EXT: Record<string, string> = {
     '.svg': 'image/svg+xml',
 };
 
-/** Extract local asset filenames from arbitrary JSON content. */
+/** Extract local asset filenames from arbitrary JSON content.
+ *
+ * Section items store their payload as a JSON-stringified `content` field
+ * (e.g. Hero's `{"portraitImage":"api/foo.jpg","bgImage":"api/bar.jpg",...}`),
+ * so a naive walk treats the whole blob as one string that doesn't begin
+ * with `api/` and silently drops every nested asset. We try `JSON.parse`
+ * on string nodes that look structured (start with `{`/`[`) and recurse
+ * into the parsed shape — that's how Hero's `portraitImage` / `bgImage`,
+ * RichText `value` HTML attachments, etc. are discovered alongside the
+ * top-level Images-collection entries (which Gallery / PlainImage already
+ * surface naturally because they reference items in `Images` whose
+ * `location` is a flat string).
+ */
 const collectLocalAssets = (node: unknown, out: Set<string>): void => {
     if (!node) return;
     if (typeof node === 'string') {
         if (node.startsWith(IMAGE_PATH_PREFIX) || node.startsWith('/' + IMAGE_PATH_PREFIX)) {
             out.add(node.replace(/^\//, '').slice(IMAGE_PATH_PREFIX.length));
+            return;
+        }
+        const trimmed = node.trim();
+        if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+            try {
+                const parsed = JSON.parse(trimmed);
+                collectLocalAssets(parsed, out);
+            } catch { /* not JSON — leave as-is */ }
         }
         return;
     }
@@ -214,6 +235,25 @@ export class BundleService {
         await put('Navigation', bundle.site.navigation ?? []);
         await put('Sections', bundle.site.sections ?? []);
         await put('Languages', bundle.site.languages ?? []);
+
+        // Mongo is the authoritative store, but next-i18next's HTTP backend
+        // serves runtime translations from `ui/client/public/locales/<sym>/app.json`.
+        // `LanguageService.addUpdateLanguage` keeps the two in sync on each
+        // admin save, but the bundle import path wrote straight into Mongo
+        // and skipped the disk side — so after `import` the public site kept
+        // its old (or empty) on-disk translations and the language switcher
+        // appeared broken (e.g. switching to English on funisimo.pro showed
+        // raw keys / Latvian fallback because `en/app.json` never got the
+        // imported strings). Mirror every imported language to disk here.
+        const fileManager = new FileManager();
+        for (const lang of (bundle.site.languages ?? []) as Array<{symbol?: string; translations?: Record<string, string>}>) {
+            if (!lang?.symbol) continue;
+            try {
+                fileManager.saveTranslation(lang.symbol, (lang.translations ?? {}) as unknown as JSON);
+            } catch (err) {
+                console.error(`[bundle] failed writing translations for ${lang.symbol}:`, err);
+            }
+        }
         await put('Images', bundle.site.images ?? []);
         await put('Logos', bundle.site.logo ? [bundle.site.logo] : []);
         if (bundle.site.themes !== undefined) {

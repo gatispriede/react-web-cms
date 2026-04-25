@@ -213,6 +213,15 @@ module.exports = {
     },
     defaultNS: "app",
     ns: ["app", "common"],
+    // No cross-locale fallback. Without this, i18next inherits `fallbackLng`
+    // from `defaultLocale` ('lv'), which means a missing EN key reads the
+    // LV translation instead — so the English page renders Latvian phrases
+    // for any string that wasn't authored in en/app.json. Source content
+    // already carries the canonical English text, and `translateOrKeep`
+    // returns the source value when a key is absent, so disabling the
+    // language fallback is the correct behaviour: EN serves source, LV
+    // serves translations, neither bleeds into the other.
+    fallbackLng: false,
     use: isBrowser ? [ChainedBackend] : [],
     backend: {
         backendOptions: [{ expirationTime: isDev ? 0 : cacheTime }, {}], // 1 hour

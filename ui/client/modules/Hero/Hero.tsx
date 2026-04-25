@@ -108,7 +108,12 @@ const Hero = ({item, tApp}: {
                     className="hero__bg"
                     aria-hidden
                     style={{
-                        backgroundImage: `url(${c.bgImage})`,
+                        // Stored as `api/<file>` (no leading slash) — without
+                        // the prefix the browser resolves it against the
+                        // current path, so on `/en/home` the request becomes
+                        // `/en/api/<file>` and 404s. Match Gallery/PlainImage
+                        // which already root-anchor the URL.
+                        backgroundImage: `url(${c.bgImage?.startsWith('/') || /^https?:/.test(c.bgImage || '') ? c.bgImage : '/' + c.bgImage})`,
                         opacity: bgOpacityPct > 0 ? 1 - bgOpacityPct / 100 : undefined,
                     }}
                 />
@@ -166,7 +171,9 @@ const Hero = ({item, tApp}: {
                 <div className="hero__portrait">
                     {c.portraitImage ? (
                         <img
-                            src={c.portraitImage}
+                            // Root-anchor relative `api/<file>` paths — same
+                            // reason as `bgImage` above.
+                            src={c.portraitImage.startsWith('/') || /^https?:/.test(c.portraitImage) ? c.portraitImage : '/' + c.portraitImage}
                             alt=""
                             style={portraitOpacityPct > 0 ? {opacity: 1 - portraitOpacityPct / 100} : undefined}
                         />

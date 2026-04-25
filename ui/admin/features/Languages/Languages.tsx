@@ -52,13 +52,25 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
     const refreshMenu = useCallback(async () => {
         const data = await translationManager.getLanguages();
         setLanguages(data);
+        // The synthetic 'default' entry stays at the top as a read-only
+        // overview ("App Translations") — it's not a real locale, just the
+        // landing view that shows source keys.
+        //
+        // Previously the loop skipped any language flagged `default: true`,
+        // which meant English (the seeded default) had no editable entry
+        // at all — operators could not translate or even view its keys via
+        // the same workflow as Latviešu / others. Including it here gives
+        // the default language the same edit surface; the `Delete` button
+        // separately guards against removing it (see deleteTranslation).
         const items: MenuItem[] = [{key: 'default', label: tAdmin('App Translations'), name: 'App Translations'}];
         for (const id in data) {
-            if (data[id].default) continue;
+            const lang = data[id];
+            if (!lang?.symbol) continue;
+            const suffix = lang.default ? ` (${tAdmin('default')})` : '';
             items.push({
-                key: data[id].symbol,
-                name: data[id].label,
-                label: data[id].label,
+                key: lang.symbol,
+                name: lang.label,
+                label: `${lang.label}${suffix}`,
             });
         }
         setMenuItems(items);
@@ -126,6 +138,13 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
 
     const deleteTranslation = async () => {
         if (currentLanguage === 'default') return;
+        // Refuse to delete the seeded default language — without it i18next
+        // has no fallback to fall through to and the public site renders raw
+        // keys.
+        if (languages[currentLanguage]?.default) {
+            message.warning(tAdmin('The default language cannot be deleted.'));
+            return;
+        }
         setSaving(true);
         try {
             await translationManager.deleteTranslation({label: currentLanguageName, symbol: currentLanguage});
@@ -208,7 +227,8 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
                                 <>
                                     <p style={{margin: '0 16px'}}>{currentLanguageName}</p>
                                     <Button type="primary" loading={saving} onClick={saveNewTranslation}>{tAdmin('Save')}</Button>
-                                    <Button danger type="primary" loading={saving} onClick={deleteTranslation} disabled={currentLanguage === 'default'}>
+                                    <Button danger type="primary" loading={saving} onClick={deleteTranslation}
+                                        disabled={currentLanguage === 'default' || !!languages[currentLanguage]?.default}>
                                         {tAdmin('Delete')}
                                     </Button>
                                     {currentLanguage !== 'default' && (
