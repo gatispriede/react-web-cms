@@ -76,6 +76,24 @@ services:
       - ../.env
     environment:
       - BUILD_PORT=3000
+      # SMTP credentials for the public contact form ("Send a brief").
+      # The `*_FILE` form is the standard Docker secrets convention —
+      # each var points to a file mounted at `/run/secrets/<name>` and
+      # the inquiry mailer reads its content at request time. Operators
+      # rotate creds by replacing the secret file on disk; no `.env`
+      # edit, no rebuild. Plain `SMTP_USER` / `SMTP_PASS` / `MAIL_FROM`
+      # in `.env` still work as a fallback for non-secret deployments.
+      - SMTP_HOST_FILE=/run/secrets/smtp_host
+      - SMTP_PORT_FILE=/run/secrets/smtp_port
+      - SMTP_USER_FILE=/run/secrets/smtp_user
+      - SMTP_PASS_FILE=/run/secrets/smtp_pass
+      - MAIL_FROM_FILE=/run/secrets/mail_from
+    secrets:
+      - smtp_host
+      - smtp_port
+      - smtp_user
+      - smtp_pass
+      - mail_from
     volumes:
       - ../uploads/images:/app/ui/client/public/images
       # Per-site theme/design bundles. `bundles` is the generic name;
@@ -136,3 +154,32 @@ networks:
 volumes:
   caddy_data:
   caddy_config:
+secrets:
+  # SMTP credentials for the public contact form. Each secret is a
+  # one-line file at the path below — replace the file and re-run
+  # `docker compose up -d app` to roll the credentials. The
+  # transporter cache invalidates automatically on signature change
+  # (see `_inquiryMailer.ts`).
+  #
+  # Initial set-up on the droplet:
+  #   sudo mkdir -p /opt/cms/secrets && sudo chmod 700 /opt/cms/secrets
+  #   echo -n 'mail.inbox.lv'        | sudo tee /opt/cms/secrets/smtp_host  >/dev/null
+  #   echo -n '465'                  | sudo tee /opt/cms/secrets/smtp_port  >/dev/null
+  #   echo -n 'noreply@example.com'  | sudo tee /opt/cms/secrets/smtp_user  >/dev/null
+  #   echo -n 'super-secret-pass'    | sudo tee /opt/cms/secrets/smtp_pass  >/dev/null
+  #   echo -n 'Funisimo <noreply@…>' | sudo tee /opt/cms/secrets/mail_from  >/dev/null
+  #   sudo chmod 600 /opt/cms/secrets/*
+  #
+  # `echo -n` matters — a trailing newline lands in the secret file
+  # and most SMTP servers reject auth with the trailing whitespace.
+  # The mailer also `.trim()`s defensively, but this avoids surprises.
+  smtp_host:
+    file: ../secrets/smtp_host
+  smtp_port:
+    file: ../secrets/smtp_port
+  smtp_user:
+    file: ../secrets/smtp_user
+  smtp_pass:
+    file: ../secrets/smtp_pass
+  mail_from:
+    file: ../secrets/mail_from

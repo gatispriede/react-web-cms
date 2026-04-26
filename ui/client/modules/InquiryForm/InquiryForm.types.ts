@@ -1,8 +1,9 @@
 /**
  * Inquiry form — Contact-page workhorse. Author-defined topic chips + free
- * text fields + a Send button. Submission is intentionally a no-op stub
- * for now (logs to console + flips the button into a "thanks" state) —
- * the real Inquiries-collection backend lives in a separate roadmap entry.
+ * text fields + a Send button. Submissions POST to `/api/inquiry`, which
+ * sends an email via SMTP (env-configured) to the recipient address from
+ * `siteFlags.inquiryRecipientEmail` and audit-logs the row to the
+ * `Inquiries` Mongo collection.
  */
 export interface IInquiryFormField {
     /** Field name posted to the backend (e.g. "name", "email"). */
@@ -38,7 +39,10 @@ export interface IInquiryForm {
     fields?: IInquiryFormField[];
     /** Submit-button label. */
     submitLabel?: string;
-    /** Confirmation copy shown after a successful (stubbed) submit. */
+    /** Optional in-flight label while the POST is in flight. Falls back
+     *  to "Sending…" when not provided. */
+    sendingLabel?: string;
+    /** Confirmation copy shown after a successful submit. */
     successMessage?: string;
     /** Side-note column copy under the chips (mono small caps). */
     sideNote?: string;

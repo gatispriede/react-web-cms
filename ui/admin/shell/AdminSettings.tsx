@@ -6,6 +6,7 @@ import {
     CloudUploadOutlined,
     DownloadOutlined,
     FileTextOutlined,
+    MailOutlined,
     PictureOutlined,
     SearchOutlined,
     UserOutlined,
@@ -19,6 +20,7 @@ import AdminSettingsFooter from "@admin/features/Footer/Footer";
 import AdminSettingsSEO from "@admin/features/Seo/SEO";
 import AdminSettingsLogo from "@admin/features/Logo/LogoSettings";
 import AdminSettingsLayout from "@admin/features/Navigation/Layout";
+import AdminSettingsInquiries from "@admin/features/Inquiries/Inquiries";
 import AuditTab from "@admin/features/Audit/AuditTab";
 import {useTranslation} from "react-i18next";
 import {useSession} from "next-auth/react";
@@ -79,6 +81,12 @@ const getItems = (
         children: <AdminSettingsFooter/>,
     });
     if (role === 'admin') {
+        items.push({
+            key: '12',
+            icon: <MailOutlined/>,
+            label: t('Inquiries'),
+            children: <AdminSettingsInquiries/>,
+        });
         items.push({
             key: '4',
             icon: <DownloadOutlined/>,

@@ -244,8 +244,17 @@ module.exports = {
             : '/locales/{{lng}}/{{ns}}.json',
     /**
      * @link https://github.com/i18next/next-i18next#6-advanced-configuration
+     *
+     * Auto-collect missing keys by POSTing to `/locales/add/{lng}/{ns}`.
+     * Useful while authoring — every new `t('...')` call shows up in the
+     * locale JSON without a manual round-trip. NEVER enable this in
+     * production: there's no handler at that path on the live server, so
+     * every public visitor's browser fires off a flood of 405s for any
+     * key that isn't in the bundle (devtools console looks alarming, and
+     * it's just noise — the keys were already collected during
+     * development). Gate on NODE_ENV so prod builds ship with it off.
      */
-    saveMissing: true,
+    saveMissing: process.env.NODE_ENV !== 'production',
     // strictMode: true,
     serializeConfig: false,
     // react: { useSuspense: false }

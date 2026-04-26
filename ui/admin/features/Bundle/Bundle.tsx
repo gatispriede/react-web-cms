@@ -2,6 +2,7 @@ import {Button, message, Popconfirm, Progress, Space, Typography} from "antd";
 import {DownloadOutlined, UploadOutlined} from "@client/lib/icons";
 import React, {useEffect, useRef, useState} from "react";
 import {TFunction} from "i18next";
+import {triggerRevalidate} from "@client/lib/triggerRevalidate";
 
 const {Title, Paragraph, Text} = Typography;
 
@@ -82,6 +83,16 @@ const BundleSettings = ({t}: { t: TFunction<"translation", undefined> }) => {
             if (Array.isArray(data.skippedAssets) && data.skippedAssets.length) {
                 message.warning(`${t('Skipped assets')}: ${data.skippedAssets.join(', ')}`);
             }
+            // Bundle import wipes & replaces every public-facing
+            // collection (Navigation, Sections, Languages, Images, Logos,
+            // Themes, Posts, SiteSettings). In production every public
+            // page is ISR-cached for an hour, so without an explicit
+            // revalidate the imported content stays invisible until that
+            // window expires. Fire-and-forget `scope: 'all'` regenerates
+            // every known route. `keepalive: true` (set inside the
+            // helper) keeps the request alive across the upcoming page
+            // reload. In dev this is a no-op cost — Next disables ISR.
+            triggerRevalidate({scope: 'all'});
             setPendingBundle(null);
             if (fileRef.current) fileRef.current.value = '';
             setTimeout(() => window.location.reload(), 1500);

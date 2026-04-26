@@ -22,6 +22,27 @@ export interface ISiteFlags {
      *  `fonts.googleapis.com` / `fonts.gstatic.com`. GDPR-clean at the
      *  cost of a small proxy hop + longer first-paint on cold cache. */
     selfHostFonts?: boolean;
+    /** Where the public-site contact form ("Send a brief") delivers
+     *  submissions. Configurable in the admin so the operator can swap
+     *  inboxes without redeploying. Falls back to the default below if
+     *  unset. The actual SMTP credentials live in env (`SMTP_HOST`,
+     *  `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`). */
+    inquiryRecipientEmail?: string;
+    /** Master toggle for the inquiry form. When false, the API rejects
+     *  submissions with 503 and the form's submit button is disabled. */
+    inquiryEnabled?: boolean;
+    /** Lifetime quota for a single client IP. Once `Inquiries`-collection
+     *  count for that IP reaches this number the API returns 429. Default
+     *  3 — enough for legitimate visitors but blunts the abuse case where
+     *  a single IP bombards the form. Set to 0 to disable the per-client
+     *  cap entirely (the per-window rate-limiter still applies). */
+    inquiryMaxPerClient?: number;
+    /** Comma-separated list of origins allowed to POST to `/api/inquiry`.
+     *  Empty / unset = fall back to same-origin (request `Origin` matches
+     *  request `Host`). Set explicitly when the same image runs on
+     *  multiple deployments and you want to lock submissions to one
+     *  canonical domain. Example: `https://funisimo.pro,https://www.funisimo.pro`. */
+    inquiryAllowedOrigins?: string;
     version?: number;
     editedBy?: string;
     editedAt?: string;
@@ -33,6 +54,24 @@ export const DEFAULT_SITE_FLAGS: ISiteFlags = {
     inlineTranslationEdit: false,
     autoHighContrast: false,
     selfHostFonts: false,
+    inquiryRecipientEmail: 'gatiss.priede@inbox.lv',
+    inquiryEnabled: true,
+    inquiryMaxPerClient: 3,
+    inquiryAllowedOrigins: '',
+};
+
+/** Light validation — keeps obviously-broken values from being saved.
+ *  Empty string is allowed (resets to default at read time). */
+const isPlausibleEmail = (s: unknown): s is string =>
+    typeof s === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
+
+/** Clamp the per-client quota to something sensible. Negative values
+ *  collapse to 0 (cap disabled), and absurdly high numbers are capped at
+ *  100 so an admin typo doesn't render the cap meaningless. */
+const sanitizeMaxPerClient = (n: unknown): number => {
+    const x = typeof n === 'number' ? n : Number(n);
+    if (!Number.isFinite(x) || x < 0) return 0;
+    return Math.min(Math.floor(x), 100);
 };
 
 const KEY = 'siteFlags';
@@ -61,6 +100,18 @@ export class SiteFlagsService {
             selfHostFonts: typeof value?.selfHostFonts === 'boolean'
                 ? value.selfHostFonts
                 : DEFAULT_SITE_FLAGS.selfHostFonts,
+            inquiryRecipientEmail: isPlausibleEmail(value?.inquiryRecipientEmail)
+                ? value!.inquiryRecipientEmail
+                : DEFAULT_SITE_FLAGS.inquiryRecipientEmail,
+            inquiryEnabled: typeof value?.inquiryEnabled === 'boolean'
+                ? value.inquiryEnabled
+                : DEFAULT_SITE_FLAGS.inquiryEnabled,
+            inquiryMaxPerClient: typeof value?.inquiryMaxPerClient === 'number'
+                ? sanitizeMaxPerClient(value.inquiryMaxPerClient)
+                : DEFAULT_SITE_FLAGS.inquiryMaxPerClient,
+            inquiryAllowedOrigins: typeof value?.inquiryAllowedOrigins === 'string'
+                ? value.inquiryAllowedOrigins
+                : DEFAULT_SITE_FLAGS.inquiryAllowedOrigins,
             version: (doc as any)?.version ?? 0,
             editedBy: (doc as any)?.editedBy,
             editedAt: (doc as any)?.editedAt,
@@ -86,6 +137,24 @@ export class SiteFlagsService {
             selfHostFonts: typeof flags.selfHostFonts === 'boolean'
                 ? flags.selfHostFonts
                 : current.selfHostFonts,
+            // Empty string is permitted on input — the read-side logic
+            // falls back to the default email when the stored value is
+            // not a plausible email shape, so an editor can "clear" the
+            // field and have it revert without an extra UI gesture.
+            inquiryRecipientEmail: isPlausibleEmail(flags.inquiryRecipientEmail)
+                ? flags.inquiryRecipientEmail
+                : (flags.inquiryRecipientEmail === ''
+                    ? DEFAULT_SITE_FLAGS.inquiryRecipientEmail
+                    : current.inquiryRecipientEmail),
+            inquiryEnabled: typeof flags.inquiryEnabled === 'boolean'
+                ? flags.inquiryEnabled
+                : current.inquiryEnabled,
+            inquiryMaxPerClient: typeof flags.inquiryMaxPerClient === 'number'
+                ? sanitizeMaxPerClient(flags.inquiryMaxPerClient)
+                : current.inquiryMaxPerClient,
+            inquiryAllowedOrigins: typeof flags.inquiryAllowedOrigins === 'string'
+                ? flags.inquiryAllowedOrigins.trim()
+                : current.inquiryAllowedOrigins,
         };
         const version = nextVersion(existingVersion);
         await this.settings.updateOne(

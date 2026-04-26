@@ -1,0 +1,32 @@
+# Local-test override: adds a Mailpit SMTP catcher to the prod compose
+# stack so the inquiry form can be exercised end-to-end without real
+# SMTP credentials. Mailpit captures every outbound email in an in-
+# memory inbox and exposes it via a web UI + REST API.
+#
+# Use:
+#   docker compose -f infra/compose.yaml -f infra/compose.test.yaml up -d
+#
+# Web UI:  http://localhost:8025
+# API:     http://localhost:8025/api/v1/messages
+#
+# The `mailpit` service joins the `back-end` network so the `app`
+# container can reach it at host `mailpit:1025` (the standard SMTP
+# listener port for Mailpit). Set `secrets/smtp_host` to the literal
+# `mailpit` and `secrets/smtp_port` to `1025` when testing.
+services:
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    restart: unless-stopped
+    networks:
+      - back-end
+    ports:
+      # Expose the web UI to the host so we can browse captured mail
+      # at http://localhost:8025. SMTP listener stays internal — the
+      # `app` container reaches it via the docker network.
+      - "8025:8025"
+    environment:
+      # Bound inboxes — small, in-memory only, perfect for tests.
+      - MP_MAX_MESSAGES=200
+      - MP_SMTP_AUTH_ACCEPT_ANY=true
+      - MP_SMTP_AUTH_ALLOW_INSECURE=true

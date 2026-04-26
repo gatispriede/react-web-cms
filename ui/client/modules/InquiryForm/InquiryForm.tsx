@@ -38,16 +38,36 @@ const InquiryForm = ({item, tApp}: {
     const fields = c.fields ?? [];
     const [topic, setTopic] = useState<string | undefined>(topics[0]?.value);
     const [submitted, setSubmitted] = useState(false);
+    const [sending, setSending] = useState(false);
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-    const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (sending || submitted) return;
+
         const fd = new FormData(e.currentTarget);
-        const payload: Record<string, FormDataEntryValue> = {topic: topic ?? ''};
-        fd.forEach((v, k) => { payload[k] = v; });
-        // Real submission lives in a separate backend roadmap; stub for now.
-        // eslint-disable-next-line no-console
-        console.info('[InquiryForm] stub submit', payload);
-        setSubmitted(true);
+        const payload: Record<string, string> = {topic: topic ?? ''};
+        fd.forEach((v, k) => { payload[k] = String(v); });
+
+        setSending(true);
+        setErrorMsg(null);
+        try {
+            const res = await fetch('/api/inquiry', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                credentials: 'same-origin',
+                body: JSON.stringify(payload),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || data.error) {
+                throw new Error(data.error || `Send failed (${res.status})`);
+            }
+            setSubmitted(true);
+        } catch (err) {
+            setErrorMsg(String((err as Error)?.message ?? err));
+        } finally {
+            setSending(false);
+        }
     };
 
     return (
@@ -110,13 +130,36 @@ const InquiryForm = ({item, tApp}: {
                         );
                     })}
                 </div>
+                {/* Honeypot — invisible to humans (CSS-hidden + aria),
+                    visible to scraping bots which dutifully fill every
+                    field. Server treats a non-empty value as bot traffic
+                    and 200s without sending. */}
+                <input
+                    type="text"
+                    name="website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    aria-hidden="true"
+                    style={{position: 'absolute', left: '-9999px', width: 0, height: 0, opacity: 0}}
+                />
                 <div className="inquiry-form__footer">
                     {c.sideNote && <div className="inquiry-form__sidenote">{tr(c.sideNote)}</div>}
-                    <button type="submit" className="inquiry-form__submit" disabled={submitted}>
+                    <button
+                        type="submit"
+                        className="inquiry-form__submit"
+                        disabled={submitted || sending}
+                    >
                         {submitted
-                            ? tr(c.successMessage ?? 'Thanks — we\'ll be in touch.')
-                            : tr(c.submitLabel ?? 'Send inquiry')}
+                            ? tr(c.successMessage ?? "Thanks — we'll be in touch.")
+                            : sending
+                                ? tr(c.sendingLabel ?? 'Sending…')
+                                : tr(c.submitLabel ?? 'Send inquiry')}
                     </button>
+                    {errorMsg && (
+                        <div className="inquiry-form__error" role="alert" style={{color: '#b13', marginTop: 8}}>
+                            {errorMsg}
+                        </div>
+                    )}
                 </div>
             </form>
         </RevealOnScroll>

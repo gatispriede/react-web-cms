@@ -98,6 +98,15 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
     private db: Db | undefined;
     private fileManager: FileManager;
 
+    /** Read-only accessor for the bound `Db` handle — lets infrequent
+     *  call sites (one-off audit collections, ad-hoc queries) reach Mongo
+     *  without us widening the field's visibility. Returns `undefined`
+     *  until `setupClient()` finishes, so callers must null-check just
+     *  like they would with the cached service references above. */
+    public get database(): Db | undefined {
+        return this.db;
+    }
+
     public userService!: UserService;
     public languageService!: LanguageService;
     public assetService!: AssetService;
