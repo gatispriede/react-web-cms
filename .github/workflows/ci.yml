@@ -164,6 +164,25 @@ jobs:
             # auto-create them with surprising ownership.
             mkdir -p uploads/images uploads/bundles uploads/design-v2
 
+            # Inquiry-form SMTP secrets — bind-mounted into `app` via
+            # compose.yaml's `secrets:` block. Each file holds one
+            # credential; `*_FILE=/run/secrets/<name>` env vars in the
+            # container point at them. Bind-mount fails fast if the
+            # source path is missing, so we materialise empty
+            # placeholders here. The operator overwrites each file on
+            # the droplet (`echo -n '...' > /opt/cms/secrets/smtp_pass`)
+            # without redeploying. If a credential file stays empty
+            # the inquiry mailer falls through to a clean 502 with
+            # "SMTP not configured" — graceful degradation, no crash.
+            mkdir -p secrets
+            chmod 700 secrets
+            for s in smtp_host smtp_port smtp_user smtp_pass mail_from; do
+              if [ ! -f "secrets/$s" ]; then
+                : > "secrets/$s"
+                chmod 600 "secrets/$s"
+              fi
+            done
+
             # If DEPLOY_ENV_FILE is set, (re)write .env from it. If it's empty
             # (e.g. the original droplet already has .env on disk), leave the
             # existing file alone — but fail loudly if there's nothing at all.
