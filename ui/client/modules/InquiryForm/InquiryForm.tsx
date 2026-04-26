@@ -51,12 +51,20 @@ const InquiryForm = ({item, tApp}: {
 
         setSending(true);
         setErrorMsg(null);
+        // Client-side hard timeout. The server-side nodemailer is also
+        // capped at ~15s, but a network-layer hang (CDN, proxy, broken
+        // pipe) would still leave the visitor staring at "Sending…"
+        // forever. 25s is comfortably above the server's worst-case
+        // latency yet short enough to feel responsive.
+        const controller = new AbortController();
+        const t = setTimeout(() => controller.abort(), 25_000);
         try {
             const res = await fetch('/api/inquiry', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 credentials: 'same-origin',
                 body: JSON.stringify(payload),
+                signal: controller.signal,
             });
             const data = await res.json().catch(() => ({}));
             if (!res.ok || data.error) {
@@ -64,8 +72,14 @@ const InquiryForm = ({item, tApp}: {
             }
             setSubmitted(true);
         } catch (err) {
-            setErrorMsg(String((err as Error)?.message ?? err));
+            const name = (err as Error)?.name;
+            if (name === 'AbortError') {
+                setErrorMsg("Request timed out. Please try again or email directly.");
+            } else {
+                setErrorMsg(String((err as Error)?.message ?? err));
+            }
         } finally {
+            clearTimeout(t);
             setSending(false);
         }
     };

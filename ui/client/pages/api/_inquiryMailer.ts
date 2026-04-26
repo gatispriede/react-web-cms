@@ -84,13 +84,26 @@ function _transport(): Transporter | null {
     cached = nodemailer.createTransport({
         host: cfg.host,
         port,
-        // 465 implies implicit TLS; everything else uses STARTTLS upgrade.
-        secure: port === 465,
+        // Implicit TLS on 465 (canonical) and 2465 (alternate that
+        // some providers — Resend included — publish for cases where
+        // 465 is blocked at the cloud-provider firewall, as
+        // DigitalOcean does by default). Every other port uses
+        // STARTTLS upgrade, including 587 / 2587.
+        secure: port === 465 || port === 2465,
         auth: {user: cfg.user, pass: cfg.pass},
         // Conservative pool — the public form is bursty, not high-volume.
         pool: true,
         maxConnections: 2,
         maxMessages: 50,
+        // Hard timeouts — without these nodemailer hangs the request
+        // for many minutes if the SMTP server doesn't answer (port
+        // blocked at the upstream firewall, TLS handshake stalls,
+        // etc.). 10s is generous for any healthy relay, fast enough
+        // that the API returns a 502 + audit row well before the
+        // public-form fetch times out client-side.
+        connectionTimeout: 10_000,
+        greetingTimeout: 10_000,
+        socketTimeout: 15_000,
     });
     cachedSignature = sig;
     return cached;
