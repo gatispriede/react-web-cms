@@ -3,6 +3,7 @@ import {Alert, Button, Input, Modal, Select, Space, Typography, message} from 'a
 import {UploadOutlined} from '@client/lib/icons';
 import {parseCsv, translationsFromCsv} from '@utils/csvTranslations';
 import TranslationManager from '@admin/shell/TranslationManager';
+import {triggerRevalidate} from '@client/lib/triggerRevalidate';
 
 interface Props {
     open: boolean;
@@ -54,7 +55,15 @@ const CsvImportDialog: React.FC<Props> = ({open, close, translationManager, lang
             const lang = languages.find(l => l.symbol === targetLocale);
             if (!lang) return;
             await translationManager.saveNewTranslation(lang, preview as Record<string, string>);
-            message.success(`Imported ${previewCount} translations into ${lang.label}`);
+            // ISR cache busting — without this the prerendered public pages
+            // (e.g. funisimo.pro/lv) keep serving the previous translations
+            // from `getStaticProps` snapshot until their `revalidate` window
+            // expires. Same fix as Bundle import: scope 'all' touches every
+            // locale's prerendered routes so the next request rebuilds with
+            // the just-imported translations baked in. Fire-and-forget so a
+            // slow webhook doesn't block the modal close.
+            void triggerRevalidate({scope: 'all'});
+            message.success(`Imported ${previewCount} translations into ${lang.label} — rebuilding public pages`);
             setRaw('');
             close(true);
         } catch (err) {
