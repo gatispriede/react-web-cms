@@ -43,16 +43,21 @@ export const ContentLoader = ({translationManager, currentLanguageKey, dataPromi
     // one triggered by the user's own keystroke) overwrote the edit with the
     // stored value before the save payload could see it — giving the visible
     // "save doesn't persist" bug.
+    //
+    // Pollution rule: any stored entry where `value === key` is treated as
+    // missing (legacy `saveMissing` behaviour wrote those when an untranslated
+    // key was first hit; the editor would then re-seed the same junk and a
+    // round-trip save would persist it indefinitely). For polluted / missing
+    // / equal-to-key entries we leave the input empty so the placeholder
+    // (=source) stays visible — the user knows what they're meant to write.
     useEffect(() => {
         const i18nConfig = i18n.toJSON();
         const languageData = i18nConfig?.store?.data?.[currentLanguageKey]?.app;
         const seeded: Record<string, string> = {};
         for (const key of keys) {
-            if (languageData && typeof languageData[key] !== 'undefined') {
-                seeded[key] = tApp(key);
-            } else {
-                seeded[key] = key !== sanitizeKey(t(key)) ? tApp(key) : translations[key];
-            }
+            const stored = languageData?.[key];
+            const isReal = typeof stored === 'string' && stored.length > 0 && stored !== key;
+            seeded[key] = isReal ? stored : '';
         }
         setNewTranslations(seeded);
         setTranslation(seeded);
@@ -124,6 +129,52 @@ export const ContentLoader = ({translationManager, currentLanguageKey, dataPromi
         }
     }, [acceptedKeys, currentLanguageKey, metaApi, metaVersion, translations]);
 
+    // Bulk-accept (or unaccept) every CURRENTLY VISIBLE row. Scoping to the
+    // current filter / "missing only" view is intentional — clicking once and
+    // accepting 1000 hidden rows would be a foot-gun. Operators are expected
+    // to narrow the table first (e.g. filter to "Tech stack chip values" or
+    // "Module Federation"), then bulk-accept the visible subset.
+    const bulkAcceptVisible = useCallback(async (visibleKeys: string[], checked: boolean) => {
+        if (visibleKeys.length === 0) return;
+        const nextSet = new Set(acceptedKeys);
+        for (const k of visibleKeys) {
+            if (checked) {
+                nextSet.add(k);
+                translationChange(k, translations[k]);
+            } else {
+                nextSet.delete(k);
+            }
+        }
+        setAcceptedKeys(nextSet);
+        try {
+            const {value: current} = await metaApi.get();
+            const patch: Record<string, any> = {};
+            for (const k of visibleKeys) {
+                const existing = current[k] ?? {};
+                const prev = Array.isArray(existing.acceptedSources) ? existing.acceptedSources : [];
+                const next = checked
+                    ? Array.from(new Set([...prev, currentLanguageKey]))
+                    : prev.filter((s: string) => s !== currentLanguageKey);
+                patch[k] = {...existing, acceptedSources: next};
+            }
+            const result = await metaApi.save(patch, metaVersion);
+            if ((result as any)?.version != null) setMetaVersion((result as any).version);
+            message.success(`${checked ? 'Marked' : 'Cleared'} ${visibleKeys.length} row${visibleKeys.length === 1 ? '' : 's'}`);
+        } catch (err) {
+            console.error('bulk acceptSource failed:', err);
+            message.error('Bulk save failed — reloading.');
+            const {value, version} = await metaApi.get();
+            const restored = new Set<string>();
+            for (const [k, entry] of Object.entries(value ?? {})) {
+                if (Array.isArray(entry?.acceptedSources) && entry.acceptedSources.includes(currentLanguageKey)) {
+                    restored.add(k);
+                }
+            }
+            setAcceptedKeys(restored);
+            setMetaVersion(version ?? 0);
+        }
+    }, [acceptedKeys, currentLanguageKey, metaApi, metaVersion, translations]);
+
     const rows: TranslationRow[] = useMemo(() => {
         const lower = filter.trim().toLowerCase();
         return keys
@@ -159,7 +210,31 @@ export const ContentLoader = ({translationManager, currentLanguageKey, dataPromi
             render: (s: string) => <Typography.Text>{s}</Typography.Text>,
         },
         ...(isDefault ? [] : [{
-            title: 'Translation',
+            title: () => {
+                // Header cell carries a bulk "Same as source" checkbox that
+                // toggles every CURRENTLY VISIBLE row at once. The label sits
+                // on the right of the header so it doesn't crowd the column
+                // title. Indeterminate state when the visible rows are mixed.
+                const visibleKeys = rows.map(r => r.key);
+                const acceptedCount = visibleKeys.filter(k => acceptedKeys.has(k)).length;
+                const allAccepted = visibleKeys.length > 0 && acceptedCount === visibleKeys.length;
+                const indeterminate = acceptedCount > 0 && !allAccepted;
+                return (
+                    <Space style={{width: '100%', justifyContent: 'space-between'}}>
+                        <span>Translation</span>
+                        <Tooltip title={`Mark all ${visibleKeys.length} visible row${visibleKeys.length === 1 ? '' : 's'} as 'same as source'. Narrow the filter first if you only want a subset.`}>
+                            <Checkbox
+                                checked={allAccepted}
+                                indeterminate={indeterminate}
+                                onChange={(e) => void bulkAcceptVisible(visibleKeys, e.target.checked)}
+                                style={{fontSize: 11, fontWeight: 'normal'}}
+                            >
+                                Same as source ({acceptedCount}/{visibleKeys.length})
+                            </Checkbox>
+                        </Tooltip>
+                    </Space>
+                );
+            },
             dataIndex: 'translation',
             key: 'translation',
             width: '40%',
@@ -215,7 +290,16 @@ export const ContentLoader = ({translationManager, currentLanguageKey, dataPromi
                 rowKey="key"
                 columns={columns as any}
                 dataSource={rows}
-                pagination={{pageSize: 25, showSizeChanger: true}}
+                // `defaultPageSize` (uncontrolled) lets AntD's Pagination
+                // size-changer actually take effect. The controlled
+                // `pageSize` form was locking the table at 25 because the
+                // size-changer events had nowhere to land.
+                pagination={{
+                    defaultPageSize: 25,
+                    pageSizeOptions: ['10', '25', '50', '100', '250'],
+                    showSizeChanger: true,
+                    showTotal: (total) => `${total} key${total === 1 ? '' : 's'}`,
+                }}
                 size="small"
             />
         </div>
