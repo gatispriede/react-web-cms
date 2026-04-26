@@ -40,7 +40,23 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
     const dataPromise = useMemo(() => translationManager.loadData(), [translationManager, reloadNonce]);
 
     const {t} = useTranslation('app');
-    const tApp = (data: string) => t(sanitizeKey(data));
+    // `tApp` MUST resolve against the language the operator is editing
+    // (`currentLanguage`), not whatever `i18n.language` happens to be —
+    // those diverge whenever the admin UI runs in English while the
+    // operator clicks "Latviešu" in the sidebar to translate it. The
+    // bare `t` from `useTranslation` is bound to `i18n.language`, so a
+    // stale closure would seed the editor's inputs from the wrong
+    // locale (showing blanks because `t('Home')` returns 'Home' under
+    // `en`, which the seeding fix treats as missing).
+    //
+    // `getFixedT(lng, ns)` returns a fresh resolver pinned to the
+    // language we actually care about. Re-derived per render so that
+    // late-arriving `reloadResources()` calls show through.
+    const tApp = useMemo(() => {
+        const fixed = i18n.getFixedT(currentLanguage, 'app');
+        return (data: string) => fixed(sanitizeKey(data));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentLanguage, reloadNonce, i18n]);
 
     const [menuItems, setMenuItems] = useState<MenuItem[]>([{
         key: 'default',
@@ -89,9 +105,21 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
     const setTranslationValue = (data: any) => setTranslation(data);
 
     const performTranslationSave = useCallback(async (expectedVersion: number | undefined) => {
+        // Filter out empty-string entries before sending. The editor seeds
+        // missing rows with `''` so the placeholder=source shows, but the
+        // server-side merge does `{...mongoBase, ...diskBase, ...incoming}`
+        // — an empty string in `incoming` would overwrite real translations
+        // on disk and Mongo with blanks. Sending only the keys the operator
+        // actually typed (or accepted-as-source) keeps untouched rows
+        // intact. Same intent as `csvTranslations.translationsFromCsv`'s
+        // `if (val === '') continue` skip.
+        const trimmed: Record<string, string> = {};
+        for (const [k, v] of Object.entries(translation as Record<string, string> ?? {})) {
+            if (typeof v === 'string' && v.length > 0) trimmed[k] = v;
+        }
         const result = await translationManager.saveNewTranslation(
             {label: currentLanguageName, symbol: currentLanguage},
-            translation,
+            trimmed,
             expectedVersion,
         );
         if ((result as any)?.error) {
@@ -229,14 +257,31 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
                             const match = menuItems.find(it => it.key === info.key);
                             if (!match) return;
                             // Load the target locale's resources BEFORE we
-                            // flip the displayed key — otherwise ContentLoader
-                            // reads i18n.store.data[newKey] which isn't loaded
-                            // yet and falls through to the previous language,
-                            // making the panel show Latvian while "English"
-                            // is highlighted until a hard refresh.
+                            // flip the displayed key. Order matters:
+                            //   1) `loadLanguages(lng)` makes i18next aware
+                            //      of the locale (no-op if already known).
+                            //   2) `loadNamespaces('app')` only fetches the
+                            //      namespace for the CURRENT language —
+                            //      since the admin SSR bootstrap loaded
+                            //      only the en/app bundle, lv/app is
+                            //      otherwise missing from the store. We
+                            //      switch language first then load the ns.
+                            //   3) `reloadResources(lng, ns)` is a HARD
+                            //      refresh — bypasses cache, picks up the
+                            //      bytes the bulk CSV import just wrote
+                            //      to disk so the editor shows them.
+                            // Without step (2), `reloadResources` is a
+                            // silent no-op for namespaces never loaded
+                            // before, and `getFixedT(lv, app)` returns
+                            // the key — manifesting as 237/237 missing
+                            // even though lv/app.json on disk has values.
                             try {
-                                await i18n.changeLanguage(info.key);
-                                await i18n.reloadResources(info.key);
+                                if (info.key !== 'default') {
+                                    await i18n.loadLanguages(info.key);
+                                    await i18n.changeLanguage(info.key);
+                                    await i18n.loadNamespaces('app');
+                                    await i18n.reloadResources(info.key, 'app');
+                                }
                             } catch (err) {
                                 console.error('switch language failed:', err);
                             }

@@ -38,32 +38,63 @@ export const ContentLoader = ({translationManager, currentLanguageKey, dataPromi
 
     const keys = useMemo(() => Object.keys(translations), [translations]);
 
-    // Seed newTranslations from the i18next store **once per language**. The
-    // earlier version seeded during render, so every re-render (including the
-    // one triggered by the user's own keystroke) overwrote the edit with the
-    // stored value before the save payload could see it — giving the visible
-    // "save doesn't persist" bug.
+    // Seed newTranslations directly from the locale JSON file on disk —
+    // the same source of truth `ContentLoaderCompare` uses. Previously
+    // we read via `tApp(key)` (i18next), but that depends on the admin's
+    // i18next instance having the namespace + language loaded. Since the
+    // admin URL has no locale prefix, SSR only bootstraps `en/app`, and
+    // `i18n.reloadResources('lv')` is a silent no-op for namespaces never
+    // loaded before. Result: Compare (which fetches the JSON directly)
+    // showed every value, while Edit (i18next-backed) showed every row
+    // missing for any non-default locale.
     //
-    // Pollution rule: any stored entry where `value === key` is treated as
-    // missing (legacy `saveMissing` behaviour wrote those when an untranslated
-    // key was first hit; the editor would then re-seed the same junk and a
-    // round-trip save would persist it indefinitely). For polluted / missing
-    // / equal-to-key entries we leave the input empty so the placeholder
-    // (=source) stays visible — the user knows what they're meant to write.
+    // Pollution rule: any stored entry where `value === key` (or sanitized
+    // key) is treated as missing — leftover `saveMissing` writes from
+    // earlier dev runs that would otherwise round-trip back to disk.
     useEffect(() => {
-        const i18nConfig = i18n.toJSON();
-        const languageData = i18nConfig?.store?.data?.[currentLanguageKey]?.app;
-        const seeded: Record<string, string> = {};
-        for (const key of keys) {
-            const stored = languageData?.[key];
-            const isReal = typeof stored === 'string' && stored.length > 0 && stored !== key;
-            seeded[key] = isReal ? stored : '';
+        if (currentLanguageKey === 'default') {
+            // No translation column on the default view, but we still
+            // want to wipe any state from a prior language so a switch
+            // back to a real locale re-seeds cleanly.
+            setNewTranslations({});
+            setTranslation({});
+            return;
         }
-        setNewTranslations(seeded);
-        setTranslation(seeded);
-        // Intentional: we only reseed when language or key-set changes, never
-        // on in-flight edits. i18n object identity shifts between renders and
-        // would cause the overwrite we just fixed — keep it out of deps.
+        let cancelled = false;
+        const reseed = async () => {
+            let stored: Record<string, string> = {};
+            try {
+                const r = await fetch(`/locales/${currentLanguageKey}/app.json`, {cache: 'no-store'});
+                if (r.ok) stored = await r.json();
+            } catch {
+                // network / 404 — leave stored empty, editor shows placeholders.
+            }
+            if (cancelled) return;
+            const seeded: Record<string, string> = {};
+            for (const key of keys) {
+                const v = stored[key];
+                const source = translations[key];
+                // Trust the file. Two pollution shapes are still
+                // filtered (legacy `saveMissing` wrote `{key: key}` for
+                // untranslated keys, and the same shape with the
+                // sanitizer's underscore stripped) — but ONLY when the
+                // value diverges from the source. For numeric / proper-
+                // noun keys where source === key === value (e.g.
+                // `"10":"10"`), the value is a legitimate same-as-
+                // source translation and must be preserved.
+                const isPolluted =
+                    typeof v === 'string' &&
+                    v !== source &&
+                    (v === key || (key.includes('_') && v === key.replace(/_/g, '')));
+                seeded[key] = (typeof v === 'string' && v.length > 0 && !isPolluted) ? v : '';
+            }
+            setNewTranslations(seeded);
+            setTranslation(seeded);
+        };
+        void reseed();
+        return () => { cancelled = true; };
+        // Intentional deps: language + keyset only — in-flight edits must
+        // not trigger reseed, otherwise the user's keystroke is wiped.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentLanguageKey, keys, translations]);
 
@@ -92,6 +123,35 @@ export const ContentLoader = ({translationManager, currentLanguageKey, dataPromi
         });
         return () => { cancelled = true; };
     }, [currentLanguageKey, metaApi]);
+
+    // Backfill the source value into newTranslations for any key that's
+    // marked "Same as source" but whose seeded value is empty. Two reasons
+    // this case exists:
+    //   1) The seeding effect runs before `acceptedKeys` is loaded, so on
+    //      first paint the input renders blank for already-accepted rows.
+    //   2) The `performTranslationSave` filter drops empty strings, so a
+    //      row visually flagged "Same as source" with no value would never
+    //      actually persist a translation — saved-then-reopened, the row
+    //      shows blank again. Pre-filling the value here means Save sends
+    //      `{key: source}` and the round-trip is honest.
+    useEffect(() => {
+        if (acceptedKeys.size === 0) return;
+        setNewTranslations(prev => {
+            let changed = false;
+            const next = {...prev};
+            for (const k of acceptedKeys) {
+                if (!translations[k]) continue;
+                if (!next[k]) {
+                    next[k] = translations[k];
+                    changed = true;
+                }
+            }
+            if (!changed) return prev;
+            setTranslation(next);
+            return next;
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [acceptedKeys, translations]);
 
     const toggleAcceptSource = useCallback(async (key: string, checked: boolean) => {
         // Optimistic — update local state first, then persist. On server error,
@@ -181,11 +241,18 @@ export const ContentLoader = ({translationManager, currentLanguageKey, dataPromi
             .map(k => {
                 const tr = newTranslations[k] ?? '';
                 const acceptedSource = acceptedKeys.has(k);
-                // A key counts as "translated" when an explicit value is set OR
-                // the translator accepted the source verbatim. Keys where the
-                // bound value happens to equal the sanitised key aren't really
-                // translated (i18next fallback) unless acceptedSource is set.
-                const missing = !acceptedSource && (!tr || tr === k);
+                // A row counts as "translated" only when:
+                //   - the value is non-empty AND differs from the source, OR
+                //   - the operator explicitly accepted "same as source" via meta.
+                // Without the `tr === source` check, rows like
+                // `{"Engagementterms":"Engagement terms"}` (where the LV
+                // file just echoes the English source because nobody
+                // translated it yet) would silently look done. Numbers
+                // and proper nouns where source === value also surface
+                // here so the operator can bulk-accept them in one click
+                // via the column-header checkbox.
+                const source = translations[k];
+                const missing = !acceptedSource && (!tr || tr === source);
                 return {key: k, source: translations[k], translation: tr, missing, acceptedSource};
             })
             .filter(r => !lower || r.key.toLowerCase().includes(lower) || r.source?.toLowerCase().includes(lower))
