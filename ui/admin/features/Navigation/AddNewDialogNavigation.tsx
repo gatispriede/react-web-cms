@@ -120,8 +120,10 @@ class AddNewDialogNavigation extends React.Component<IProps, {}> {
         // in NavigationService). We mirror it here so the OK button disables
         // and the operator sees a hint without round-tripping. Comparison is
         // case-insensitive and trims whitespace — matches the server rule.
+        // The min-length is just a guard against empty / single-char typos —
+        // 3 is the floor so existing 3-letter pages (CMS, LSS) round-trip.
         const reserved = isReservedPageSlug(this.state.newNavigationName);
-        const tooShort = this.state.newNavigationName.length < 4;
+        const tooShort = this.state.newNavigationName.trim().length < 2;
         return (
             <>
                 <Modal width={'90%'} open={this.props.open}
