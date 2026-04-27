@@ -68,8 +68,19 @@ async function collectAllPaths(): Promise<string[]> {
     const homeName = list[0]?.page ?? null;
     for (const p of list) {
         if (!p?.page) continue;
-        if (namesMatch(p.page, homeName) || isHomePage(p.page)) out.add('/');
-        else out.add(pageNameToPath(p.page));
+        if (namesMatch(p.page, homeName) || isHomePage(p.page)) {
+            // The home page is reachable at TWO prerendered routes: `/`
+            // (served by `pages/index.tsx`) AND `/home` / `/<homeSlug>`
+            // (served by `pages/[...slug].tsx` because `getStaticPaths`
+            // builds a path for every navigation entry, including the
+            // first one). Each route is its own ISR cache key, so
+            // touching only `/` left the slug variant stuck on the
+            // previous snapshot — operators saw the new section order
+            // at funisimo.pro/ but the old order at funisimo.pro/home.
+            // Always invalidate both.
+            out.add('/');
+            out.add(pageNameToPath(p.page));
+        } else out.add(pageNameToPath(p.page));
     }
     // Published posts — drafts don't appear on `/blog/<slug>`, so asking
     // ISR to revalidate a draft path just 404s and wastes a cycle.
@@ -125,7 +136,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     // See `fetchHomePageName` rationale.
                     const homeName = await fetchHomePageName();
                     const isHome = namesMatch(body.pageName, homeName) || isHomePage(body.pageName);
-                    paths = [isHome ? '/' : pageNameToPath(body.pageName)];
+                    // For the home page, flush BOTH the index route (`/`)
+                    // AND the slug duplicate (`/home`, `/sākums`, …) — see
+                    // `collectAllPaths` for why both exist.
+                    paths = isHome
+                        ? ['/', pageNameToPath(body.pageName)]
+                        : [pageNameToPath(body.pageName)];
                     break;
                 }
                 case 'post':
