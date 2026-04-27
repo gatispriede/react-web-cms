@@ -43,6 +43,14 @@ export interface IHero {
      *  the `<img>` itself — the placeholder chrome (corners, 4:5 badge) is
      *  not affected. */
     portraitOpacity?: number;
+    /** Portrait tile width override. Plain number = pixels; a string with a
+     *  unit suffix (e.g. "320px", "20rem", "30%") is passed through as-is.
+     *  When unset the SCSS defaults govern. */
+    portraitWidth?: number | string;
+    /** Portrait tile height override. Same shape as `portraitWidth`. Useful
+     *  when the source image isn't 4:5 and the author wants a tighter or
+     *  taller frame than the placeholder ratio gives. */
+    portraitHeight?: number | string;
     /** Definition-list pairs below the hero (Based / Years / Mode / Stack). */
     meta?: IHeroMeta[];
     /** Bottom coordinate strip (LAT / LON / ELEV / LOCAL / UPDATED). */

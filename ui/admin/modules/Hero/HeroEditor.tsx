@@ -205,11 +205,48 @@ const HeroEditor = ({content, setContent, t}: IInputContent) => {
                                         placeholder="api/portrait.jpg"
                                     />
                                 </Col>
+                                <Col xs={12}>
+                                    <label>{t('Portrait width (px or any CSS unit)')}</label>
+                                    <Input
+                                        value={data.portraitWidth == null ? '' : String(data.portraitWidth)}
+                                        onChange={e => {
+                                            const v = e.target.value.trim();
+                                            // Empty → undefined → SCSS default. Bare
+                                            // integer → store as a number so the
+                                            // renderer can append `px`. Anything else
+                                            // (e.g. "20rem", "30%") → string.
+                                            if (v === '') return update('portraitWidth', undefined);
+                                            if (/^\d+$/.test(v)) return update('portraitWidth', Number(v));
+                                            return update('portraitWidth', v);
+                                        }}
+                                        placeholder="320 or 20rem or 30%"
+                                    />
+                                </Col>
+                                <Col xs={12}>
+                                    <label>{t('Portrait height (px or any CSS unit)')}</label>
+                                    <Input
+                                        value={data.portraitHeight == null ? '' : String(data.portraitHeight)}
+                                        onChange={e => {
+                                            const v = e.target.value.trim();
+                                            if (v === '') return update('portraitHeight', undefined);
+                                            if (/^\d+$/.test(v)) return update('portraitHeight', Number(v));
+                                            return update('portraitHeight', v);
+                                        }}
+                                        placeholder="auto or 400 or 25rem"
+                                    />
+                                </Col>
                                 {/* Portrait image opacity — only meaningful when an
                                     image is set. Slider reads 0–100 where 0 is
                                     fully visible (historical behaviour) and 100
-                                    hides the image. */}
-                                <Col xs={24}>
+                                    hides the image.
+                                    The wrapper's `onPointerDown` swallow stops
+                                    @dnd-kit's PointerSensor on the parent section
+                                    card from interpreting the slider drag as a
+                                    section reorder — without it, dragging the
+                                    thumb also drags the whole module up/down the
+                                    page. Same fix is applied to the bg slider
+                                    below. */}
+                                <Col xs={24} onPointerDown={e => e.stopPropagation()}>
                                     <Typography.Text type="secondary" style={{fontSize: 12}}>
                                         {t('Portrait image transparency')}: {data.portraitOpacity ?? 0}%
                                     </Typography.Text>
@@ -313,8 +350,11 @@ const HeroEditor = ({content, setContent, t}: IInputContent) => {
                                     busy photograph without dropping legibility
                                     (text + scrim stay at full opacity). Scale
                                     mirrors the section-level transparency slider:
-                                    0 = historical, 100 = invisible. */}
-                                <Col xs={24}>
+                                    0 = historical, 100 = invisible.
+                                    `onPointerDown` swallow keeps @dnd-kit from
+                                    treating the slider drag as a section
+                                    reorder (see Portrait slider note). */}
+                                <Col xs={24} onPointerDown={e => e.stopPropagation()}>
                                     <Typography.Text type="secondary" style={{fontSize: 12}}>
                                         {t('Background image transparency')}: {data.bgOpacity ?? 0}%
                                     </Typography.Text>

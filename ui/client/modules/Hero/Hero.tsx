@@ -168,7 +168,21 @@ const Hero = ({item, tApp}: {
             </div>
 
             {hasSideBlock && (
-                <div className="hero__portrait">
+                <div
+                    className="hero__portrait"
+                    style={{
+                        // Bare numbers become pixels; strings with a unit
+                        // ("20rem", "30%") flow through verbatim. Empty
+                        // values stay undefined so the SCSS default sizing
+                        // wins (`width: 100%`, ratio-driven height).
+                        width: typeof c.portraitWidth === 'number'
+                            ? `${c.portraitWidth}px`
+                            : (c.portraitWidth || undefined),
+                        height: typeof c.portraitHeight === 'number'
+                            ? `${c.portraitHeight}px`
+                            : (c.portraitHeight || undefined),
+                    }}
+                >
                     {c.portraitImage ? (
                         <img
                             // Root-anchor relative `api/<file>` paths — same
