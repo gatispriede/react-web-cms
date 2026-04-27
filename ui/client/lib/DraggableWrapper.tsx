@@ -149,18 +149,40 @@ const SortableItem: React.FC<{id: string; children: React.ReactNode}> = ({id, ch
     // `<Input>` was reaching dnd-kit's KeyboardSensor, which treats Space
     // as "grab the item" and `preventDefault`s it. Net effect: space key
     // never reaches text inputs anywhere inside a sortable section.
+    //
+    // The check walks up from the event target via `closest(...)` so any
+    // descendant of an interactive control yields, not just the focusable
+    // node itself. This catches a long tail of leaks that otherwise need
+    // per-component `stopPropagation` patches:
+    //
+    //   • `<Slider>` thumb / rail — pointer-down on the thumb (a `div`
+    //     with `role="slider"`) was being interpreted as the start of a
+    //     section reorder, so dragging the thumb dragged the whole module
+    //     up the page.
+    //   • `<ColorPicker>` saturation pad / hue/alpha sliders — same shape.
+    //   • `<Button>` / icon buttons — clicks were already protected by
+    //     the 8 px activation distance, but a slow click + tiny jitter
+    //     could still cross the threshold and start a drag.
+    //   • `[data-no-dnd]` — explicit opt-out for any custom widget the
+    //     guard list doesn't anticipate; future modules can sprinkle this
+    //     attribute on a wrapper to keep their pointer events local.
+    const INTERACTIVE_SELECTOR = [
+        'input', 'textarea', 'select', 'button',
+        '[contenteditable]', '[contenteditable="true"]',
+        '[role="slider"]', '[role="combobox"]', '[role="textbox"]',
+        '[role="searchbox"]', '[role="button"]', '[role="switch"]',
+        '[role="checkbox"]', '[role="radio"]', '[role="menuitem"]',
+        '[role="tab"]', '[role="option"]',
+        '.ant-slider', '.ant-color-picker-trigger',
+        '.ant-color-picker-panel', '.ant-color-picker-slider',
+        '.ant-color-picker-saturation',
+        '[data-no-dnd]',
+    ].join(',');
+
     const isFormElement = (target: EventTarget | null): boolean => {
         const el = target as HTMLElement | null;
-        if (!el) return false;
-        const tag = el.tagName?.toLowerCase();
-        if (tag === 'input' || tag === 'textarea' || tag === 'select') return true;
-        if (el.isContentEditable) return true;
-        // AntD selects / autocompletes render their actual focusable node as
-        // a div with `role="combobox"` or `role="textbox"`; treat those as
-        // form elements too so the handler yields on typing.
-        const role = el.getAttribute?.('role');
-        if (role === 'combobox' || role === 'textbox' || role === 'searchbox') return true;
-        return false;
+        if (!el || typeof (el as any).closest !== 'function') return false;
+        return el.closest(INTERACTIVE_SELECTOR) != null;
     };
     const guardedListeners = listeners ? Object.fromEntries(
         Object.entries(listeners).map(([name, handler]) => [
