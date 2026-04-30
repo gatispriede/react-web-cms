@@ -3,8 +3,8 @@ import {useRouter} from 'next/router';
 import Head from 'next/head';
 import {Button, ConfigProvider, Radio, Typography, message} from 'antd';
 import staticTheme from '@client/features/Themes/themeConfig';
-import {useCheckoutMachine} from './useCheckoutMachine';
-import {attachOrderShipping, formatMoney, shippingMethodsFor} from './_api';
+import {useCheckoutMachine} from '@client/lib/checkout/useCheckoutMachine';
+import {attachOrderShipping, formatMoney, shippingMethodsFor} from '@client/lib/checkout/api';
 
 const ShippingStep: React.FC = () => {
     const router = useRouter();

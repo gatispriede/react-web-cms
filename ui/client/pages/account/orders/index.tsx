@@ -3,9 +3,9 @@ import {GetServerSideProps} from 'next';
 import Link from 'next/link';
 import {ConfigProvider, Spin, Table, Typography} from 'antd';
 import staticTheme from '@client/features/Themes/themeConfig';
-import {requireCustomerSession} from '../_session';
-import {myOrders} from '@client/pages/checkout/_api';
-import {formatMoney} from '@client/pages/checkout/_api';
+import {requireCustomerSession} from '@client/lib/account/session';
+import {myOrders} from '@client/lib/checkout/api';
+import {formatMoney} from '@client/lib/checkout/api';
 
 const OrdersHistory = () => {
     const [orders, setOrders] = useState<any[]>([]);

@@ -1,8 +1,15 @@
 const {i18n} = require('../../next-i18next.config.js')
 const {loadCustomBuildParams} = require('./next-utils.config')
 const {tsconfigPath} = loadCustomBuildParams()
+// E2E full-suite builds (`pnpm e2e:full:build`) write into a sibling
+// `.next-e2e/` so they don't clobber the local dev server's `.next/`.
+// `next start` later in `e2e:full` reads from the same dir via the
+// same env flag. Set by the script, never by humans directly.
+const distDir = process.env.E2E_BUILD_DIR ? process.env.E2E_BUILD_DIR : '.next';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    distDir,
     transpilePackages: [
         //
         "@glidejs",
@@ -43,7 +50,14 @@ const nextConfig = {
         "rc-upload",
         "rc-util",
     ],
-    env: {
+    // E2E builds run each Playwright worker on a different free port —
+    // baking `NEXTAUTH_URL` here would freeze it to :80 and NextAuth's
+    // prod-mode CSRF/cookie origin check would reject every worker login.
+    // Skip the inline when E2E_BUILD_DIR is set; runtime `process.env`
+    // (set by the worker's `server.ts`) drives the value instead.
+    env: process.env.E2E_BUILD_DIR ? {
+        API_URL: 'http://localhost',
+    } : {
         NEXTAUTH_URL: 'http://localhost:80',
         API_URL: 'http://localhost',
         NEXT_PUBLIC_BASE_URL: 'http://localhost:80',

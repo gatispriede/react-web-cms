@@ -171,12 +171,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(500).json({error: 'resolve failed'});
     }
 
+    // Next i18n static routes are PER LOCALE — `res.revalidate('/')` only
+    // refreshes the default-locale prerender, leaving every `/<lng>/...`
+    // variant stuck on the old snapshot. Expand every path across the
+    // configured locale set so a footer save (or any global-scope flush)
+    // updates EN + LV + LT + IT + RU + DE in one go.
+    let expanded: string[] = paths;
+    try {
+        const i18nCfg = require('../../../../next-i18next.config.js');
+        const locales: string[] = i18nCfg?.i18n?.locales ?? [];
+        const defaultLocale: string = i18nCfg?.i18n?.defaultLocale ?? 'en';
+        if (locales.length) {
+            const out = new Set<string>();
+            for (const p of paths) {
+                out.add(p);
+                for (const l of locales) {
+                    if (l === defaultLocale) continue;
+                    out.add(p === '/' ? `/${l}` : `/${l}${p}`);
+                }
+            }
+            expanded = [...out];
+        }
+    } catch (err) {
+        // i18n config unavailable in some test setups — fall through to
+        // the un-expanded path list. The default-locale variant still
+        // refreshes; non-default locales just stay cached longer.
+        console.warn('[revalidate] i18n locale expand skipped:', err);
+    }
+
     // Deduplicate and cap to a sensible ceiling — ISR regeneration is
     // serial within Next, so `scope: 'all'` on a site with 400 blog
     // posts would hammer the origin. If operators need a bigger window
     // they can bump REVALIDATE_MAX.
     const max = Number(process.env.REVALIDATE_MAX ?? 200);
-    const unique = [...new Set(paths)].slice(0, max);
+    const unique = [...new Set(expanded)].slice(0, max);
 
     const results = await Promise.all(unique.map(async (p) => {
         try {

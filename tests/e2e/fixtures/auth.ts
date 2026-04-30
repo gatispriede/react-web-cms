@@ -5,21 +5,26 @@ import {seedAdmin, SeededAdmin} from './seedFactories';
 
 // Playwright test fixtures shared by the whole e2e suite.
 //
-// DECISION: worker-scoped Mongo + server. Per-test boot would dominate wall
-// time (~15s/worker on Windows). Each test owns its own slug-namespaced
-// state and cleans up after itself; we don't blanket-wipe the dev-server
-// Mongo between tests (that would be a side channel that defeats
-// per-test isolation).
+// DECISION: worker-scoped everything that can be — Mongo, server, admin
+// user, AND the signed-in session. Per-test sign-in was the dominant
+// per-test cost (300–800 ms × N tests adds up); now we sign in ONCE per
+// worker, capture the NextAuth cookie via `context.storageState()`, and
+// every `adminPage` opens with that storage state pre-injected. Tests
+// stay independent because each one still spins up its OWN browser
+// context — the cookie is the only state copied across, identity is
+// otherwise fresh.
 //
-// DECISION: admin sign-in goes through the real `/auth/signin` form once per
-// spec rather than minting a session cookie out-of-band. NextAuth signs the
-// JWT with the running server's `NEXTAUTH_SECRET`, and reproducing that here
-// duplicates secrets across two processes — too brittle for the speed-up.
+// Per-test slug namespacing (`buildScenario` in the module harness)
+// keeps data-level isolation: each spec authors its own pages/sections
+// so concurrent tests within a worker can't collide on the same row.
 
 export interface E2EWorkerFixtures {
     mongo: E2EMongoHandle;
     server: E2EServerHandle;
     serverUrl: string;
+    sharedAdmin: SeededAdmin;
+    /** NextAuth-cookie storage state, captured once per worker. */
+    adminStorageState: any;
 }
 
 export interface E2ETestFixtures {
@@ -58,19 +63,43 @@ export const test = base.extend<E2ETestFixtures, E2EWorkerFixtures>({
         await use(serverUrl);
     }, {scope: 'test'}],
 
-    seededAdmin: async ({mongo}, use) => {
-        // Per-test admin: unique email, deleted on teardown. Tests that
-        // don't need an admin use `anonPage` and skip this fixture entirely.
+    /** Shared admin row — one Users insert per worker, reused across all tests. */
+    sharedAdmin: [async ({mongo}, use) => {
         const admin = await seedAdmin(mongo.uri);
         await use(admin);
         await admin.cleanup();
+    }, {scope: 'worker'}],
+
+    /**
+     * Sign in once per worker through the real `/auth/signin` form, then
+     * capture the resulting storage state (cookies + localStorage) so
+     * every per-test `adminPage` skips the form entirely. The throwaway
+     * context is closed immediately after capture — only the serialized
+     * storageState object travels into per-test contexts.
+     */
+    adminStorageState: [async ({browser, serverUrl, sharedAdmin}, use) => {
+        const ctx = await browser.newContext({baseURL: serverUrl});
+        const page = await ctx.newPage();
+        await signInThroughForm(page, sharedAdmin.email, sharedAdmin.password);
+        const state = await ctx.storageState();
+        await ctx.close();
+        await use(state);
+    }, {scope: 'worker', timeout: 60_000}],
+
+    /**
+     * Backwards-compat alias — older specs request `seededAdmin` to assert
+     * lockout / wrong-password flows that need a clean per-test bucket.
+     * For the common "I just need an admin session" path, prefer
+     * `adminPage` (worker-scoped, no per-test signin cost).
+     */
+    seededAdmin: async ({sharedAdmin}, use) => {
+        await use(sharedAdmin);
     },
 
-    adminPage: async ({browser, seededAdmin, serverUrl}, use) => {
-        const ctx: BrowserContext = await browser.newContext({baseURL: serverUrl});
+    adminPage: async ({browser, serverUrl, adminStorageState}, use) => {
+        const ctx: BrowserContext = await browser.newContext({baseURL: serverUrl, storageState: adminStorageState});
         const page = await ctx.newPage();
         attachHydrationFilter(page);
-        await signInThroughForm(page, seededAdmin.email, seededAdmin.password);
         await use(page);
         await ctx.close();
     },

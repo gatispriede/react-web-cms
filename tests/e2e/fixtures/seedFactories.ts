@@ -32,11 +32,13 @@ export interface SeededAdmin {
 export async function withDb<T>(uri: string, fn: (db: Db) => Promise<T>): Promise<T> {
     const client = await MongoClient.connect(uri);
     try {
-        // The next-server defaults to db('DB') in mongoDBConnection.ts; if
-        // the URI carries a different default DB the client will use that
-        // instead. We respect that and let the seeded data land in the same
-        // DB the server reads.
-        const db = client.db();
+        // The next-server pins `db('DB')` in mongoDBConnection.ts. The
+        // memory-server URI doesn't include a default db, so a bare
+        // `client.db()` would land on `test` and the server would never
+        // see the seeded admin → "Wrong email or password" on every
+        // login. Override `MONGODB_SEED_DB` if a future server pivot
+        // away from `'DB'` ever lands.
+        const db = client.db(process.env.MONGODB_SEED_DB || 'DB');
         return await fn(db);
     } finally {
         await client.close();

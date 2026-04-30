@@ -18,7 +18,12 @@ import {standaloneResolvers} from "./api/graphqlResolvers";
  * door by accident.
  */
 // @ts-ignore
-const port = process.env.NODE_SERVER_PORT ? 3000 : 80;
+// `STANDALONE_PORT` overrides everything — used by the e2e build helper
+// (`tools/e2e-build.js`) so it can pick a free port and run alongside any
+// existing dev server on :80 / docker on :3000.
+const port = process.env.STANDALONE_PORT
+    ? Number(process.env.STANDALONE_PORT)
+    : (process.env.NODE_SERVER_PORT ? 3000 : 80);
 const bindHost = process.env.NODE_SERVER_PORT ? '0.0.0.0' : '127.0.0.1';
 const allowRemote = process.env.STANDALONE_ALLOW_REMOTE === '1';
 

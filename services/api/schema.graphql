@@ -125,6 +125,12 @@ type IUser {
     password: String!
     role: String
     avatar: String
+    # `kind` distinguishes admin/customer/editor/viewer docs. Authoritative
+    # for NextAuth's customer-credentials authorize() — without it, every
+    # customer login is rejected (gqty proxy returns undefined → kind check
+    # fails). Was already on `InUser` (input); the output side parity here
+    # closes the loop.
+    kind: String
     canPublishProduction: Boolean
     mustChangePassword: Boolean
     preferredAdminLocale: String

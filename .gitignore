@@ -4,6 +4,7 @@
 # ── Build outputs / generated runtime artefacts ──────────────────────────────
 # Path-agnostic so the reshape (src/frontend/ → ui/client/) doesn't leave stale rules.
 **/.next/
+**/.next-e2e/
 **/dist/
 **/build/
 **/LogFiles/

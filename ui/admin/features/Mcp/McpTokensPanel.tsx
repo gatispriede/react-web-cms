@@ -103,9 +103,9 @@ const McpTokensPanel: React.FC = () => {
             title: 'Actions', key: 'actions',
             render: (_: unknown, row: IMcpTokenSummary) => row.status === 'active' ? (
                 <Popconfirm title="Revoke this token? Active MCP clients will be cut off."
-                            okText="Revoke" okButtonProps={{danger: true}}
+                            okText="Revoke" okButtonProps={{danger: true, 'data-testid': 'mcp-revoke-confirm-btn'} as any}
                             onConfirm={() => onRevoke(row.id)}>
-                    <Button danger size="small">Revoke</Button>
+                    <Button data-testid="mcp-revoke-btn" danger size="small">Revoke</Button>
                 </Popconfirm>
             ) : null,
         },
@@ -114,7 +114,7 @@ const McpTokensPanel: React.FC = () => {
     return (
         <div>
             <Space style={{marginBottom: 16}}>
-                <Button type="primary" onClick={() => setIssueOpen(true)}>{t('Issue token')}</Button>
+                <Button data-testid="mcp-issue-btn" type="primary" onClick={() => setIssueOpen(true)}>{t('Issue token')}</Button>
                 <Button onClick={() => void refresh()} loading={loading}>{t('Refresh')}</Button>
             </Space>
 
@@ -133,10 +133,11 @@ const McpTokensPanel: React.FC = () => {
                 onOk={onIssue}
                 onCancel={() => setIssueOpen(false)}
                 okText={t('Issue')}
+                okButtonProps={{'data-testid': 'mcp-issue-submit-btn'} as any}
             >
                 <Form layout="vertical">
                     <Form.Item label={t('Name')} required>
-                        <Input value={name} onChange={e => setName(e.target.value)}
+                        <Input data-testid="mcp-issue-name-input" value={name} onChange={e => setName(e.target.value)}
                                placeholder="e.g. Claude Code laptop"/>
                     </Form.Item>
                     <Form.Item label={t('Preset')}>
@@ -176,7 +177,7 @@ const McpTokensPanel: React.FC = () => {
                 onCancel={() => setIssuedSecret(null)}
                 footer={[
                     <Button key="copy" onClick={copySecret}>{t('Copy secret')}</Button>,
-                    <Button key="done" type="primary" onClick={() => setIssuedSecret(null)}>{t('Done')}</Button>,
+                    <Button key="done" data-testid="mcp-reveal-close-btn" type="primary" onClick={() => setIssuedSecret(null)}>{t('Done')}</Button>,
                 ]}
                 width={600}
             >

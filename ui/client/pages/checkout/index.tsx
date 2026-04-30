@@ -5,8 +5,8 @@ import Link from 'next/link';
 import {Button, ConfigProvider, Empty, Input, Typography, message} from 'antd';
 import staticTheme from '@client/features/Themes/themeConfig';
 import {useCart} from '@client/components/cart/useCart';
-import {useCheckoutMachine} from './useCheckoutMachine';
-import {createDraftOrder, formatMoney} from './_api';
+import {useCheckoutMachine} from '@client/lib/checkout/useCheckoutMachine';
+import {createDraftOrder, formatMoney} from '@client/lib/checkout/api';
 
 /**
  * Step 1 — review cart, capture optional guest email, create the

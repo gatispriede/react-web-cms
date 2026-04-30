@@ -204,6 +204,7 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
             <h4>{this.props.t("Content configuration")}</h4>
             <label>{this.props.t("Please select content type")}: </label>
             <Button
+                data-testid="section-module-type-picker-btn"
                 onClick={() => this.setState({pickerTarget: 'content'})}
                 style={{display: 'inline-flex', alignItems: 'center', gap: 8, height: 'auto', padding: '6px 12px'}}
             >

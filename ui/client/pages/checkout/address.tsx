@@ -3,8 +3,8 @@ import {useRouter} from 'next/router';
 import Head from 'next/head';
 import {Button, ConfigProvider, Form, Input, Typography, message} from 'antd';
 import staticTheme from '@client/features/Themes/themeConfig';
-import {useCheckoutMachine} from './useCheckoutMachine';
-import {attachOrderAddress} from './_api';
+import {useCheckoutMachine} from '@client/lib/checkout/useCheckoutMachine';
+import {attachOrderAddress} from '@client/lib/checkout/api';
 
 const AddressStep: React.FC = () => {
     const router = useRouter();

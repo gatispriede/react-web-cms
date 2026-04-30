@@ -2,8 +2,8 @@ import React, {useEffect, useState} from 'react';
 import {GetServerSideProps} from 'next';
 import Link from 'next/link';
 import {Alert, Button, Card, Form, Input, Spin, Typography} from 'antd';
-import {requireCustomerSession} from './_session';
-import {gql, parseEnvelope} from './_gqlClient';
+import {requireCustomerSession} from '@client/lib/account/session';
+import {gql, parseEnvelope} from '@client/lib/account/gqlClient';
 
 const {Title} = Typography;
 

@@ -481,22 +481,28 @@ class App extends React.Component<IHomeProps> {
                             <>
                                 <header className="site-tabs" style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px'}}>
                                     <Logo t={this.props.t} admin={false}/>
-                                    <ScrollNav
-                                        links={this.state.tabProps.map(tp => ({
-                                            key: tp.key,
-                                            slug: tp.page.replace(/\s+/g, '-').toLowerCase(),
-                                            label: translateOrKeep(this.props.t, tp.page),
-                                        }))}
-                                    />
-                                    {this.state.blogEnabled && this.state.hasPosts && (
-                                        <a
-                                            href="/blog"
-                                            className="scroll-nav-link"
-                                            style={{textTransform: 'uppercase', textDecoration: 'none', fontWeight: 400, opacity: 0.7}}
-                                        >
-                                            {this.props.t('Blog')}
-                                        </a>
-                                    )}
+                                    {/* ScrollNav + Blog share one flex strip so the blog link
+                                        sits at the END of the nav with the same gap/uppercase
+                                        treatment as section links. Blog is a real route, not
+                                        an anchor — kept outside ScrollNav's IntersectionObserver. */}
+                                    <div style={{display: 'flex', gap: 12, alignItems: 'center'}}>
+                                        <ScrollNav
+                                            links={this.state.tabProps.map(tp => ({
+                                                key: tp.key,
+                                                slug: tp.page.replace(/\s+/g, '-').toLowerCase(),
+                                                label: translateOrKeep(this.props.t, tp.page),
+                                            }))}
+                                        />
+                                        {this.state.blogEnabled && this.state.hasPosts && (
+                                            <a
+                                                href="/blog"
+                                                className="scroll-nav-link"
+                                                style={{textTransform: 'uppercase', textDecoration: 'none', fontWeight: 400, opacity: 0.7}}
+                                            >
+                                                {this.props.t('Blog')}
+                                            </a>
+                                        )}
+                                    </div>
                                     <MobileNav
                                         links={[
                                             ...this.state.tabProps.map<MobileNavLink>(tp => ({
@@ -577,30 +583,43 @@ class App extends React.Component<IHomeProps> {
                                                     if (typeof window !== 'undefined') window.location.assign(link.href);
                                                 }}
                                             />
+                                        </div>
+                                    ),
+                                    // Blog moved out of the LEFT cluster (where it sat
+                                    // before the tabs) into RIGHT — placed AFTER the tab
+                                    // strip and BEFORE the language dropdown so it reads
+                                    // as the last nav entry. Matches AntD's Tabs visual
+                                    // rhythm via the `.navigation-item` class.
+                                    right: (
+                                        <div style={{display: 'flex', alignItems: 'center', gap: 12}}>
                                             {this.state.blogEnabled && this.state.hasPosts && (
-                                                <Link href="/blog" className="navigation-item" style={{marginLeft: 8}}>
+                                                <Link
+                                                    href="/blog"
+                                                    className="navigation-item"
+                                                    style={{textTransform: 'uppercase', fontWeight: 400, opacity: 0.7, textDecoration: 'none'}}
+                                                >
                                                     {this.props.t('Blog')}
                                                 </Link>
                                             )}
+                                            {items.length > 1 && (
+                                                <Dropdown className="language-dropdown" overlayClassName="lang-popup" menu={{items}}>
+                                                    <Typography.Link>
+                                                        <Space size={6}>
+                                                            {activeLang?.flag
+                                                                ? <span className="lang-glyph" aria-hidden>{activeLang.flag}</span>
+                                                                : <span className="lang-glyph lang-glyph--symbol">
+                                                                    {(activeLang?.symbol ?? this.props.i18n.language).toUpperCase()}
+                                                                </span>
+                                                            }
+                                                            <span className="lang-label">
+                                                                {activeLang?.label ?? this.props.i18n.language}
+                                                            </span>
+                                                        </Space>
+                                                    </Typography.Link>
+                                                </Dropdown>
+                                            )}
                                         </div>
                                     ),
-                                    right: items.length > 1 ? (
-                                        <Dropdown className="language-dropdown" overlayClassName="lang-popup" menu={{items}}>
-                                            <Typography.Link>
-                                                <Space size={6}>
-                                                    {activeLang?.flag
-                                                        ? <span className="lang-glyph" aria-hidden>{activeLang.flag}</span>
-                                                        : <span className="lang-glyph lang-glyph--symbol">
-                                                            {(activeLang?.symbol ?? this.props.i18n.language).toUpperCase()}
-                                                        </span>
-                                                    }
-                                                    <span className="lang-label">
-                                                        {activeLang?.label ?? this.props.i18n.language}
-                                                    </span>
-                                                </Space>
-                                            </Typography.Link>
-                                        </Dropdown>
-                                    ) : null,
                                 }}
                             />
                         )}

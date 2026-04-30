@@ -2,14 +2,23 @@ import {spawn, ChildProcess} from 'node:child_process';
 import {createServer} from 'node:net';
 import path from 'node:path';
 
-// DECISION: spawn `next dev` per worker (not `next start`). Phase 1 trades
-// boot cost (~15s/worker on Windows) for not having to keep a built `.next`
-// in sync with test code. Spec §4 calls this out as an acceptable cost; if
-// it becomes a CI bottleneck we'll switch to a single shared `next build`
-// + per-worker `next start` here without changing any spec.
+// DECISION: two server modes, picked by `PLAYWRIGHT_E2E_PROD`.
 //
-// DECISION: HMR is disabled (`NEXT_DISABLE_HMR=1`) so a slow filesystem
-// poll mid-test doesn't trip a recompile while a test is navigating.
+//   - dev mode (default, smoke + iteration): spawn `next dev` per worker.
+//     Trades ~15s/worker boot for not needing a build, fine for smoke
+//     where the chain runs once.
+//
+//   - prod mode (e2e:full): spawn `next start` per worker against a
+//     SINGLE pre-built `.next/` produced by the `e2e:full:build` script.
+//     Workers share the build output read-only — `next start` only reads
+//     it at boot, so N workers + 1 build is safe and the per-worker boot
+//     drops to ~2s. The full suite running 30+ specs would otherwise pay
+//     a 15s × workers cold-start tax + per-route Turbopack compiles on
+//     every first navigation.
+//
+// DECISION: HMR is disabled (`NEXT_DISABLE_HMR=1`) for dev mode so a slow
+// filesystem poll mid-test doesn't trip a recompile while a test is
+// navigating. In prod mode the flag is moot — `next start` doesn't watch.
 
 export interface E2EServerHandle {
     url: string;       // http://localhost:<port>
@@ -75,31 +84,53 @@ export async function startServer(opts: {mongoUri: string; workerIndex: number})
     const port = await findFreePort();
     const url = `http://localhost:${port}`;
 
+    // Prod mode reads the prebuilt `.next-e2e/` produced by
+    // `pnpm e2e:full:build`. Workers share the build read-only — Next
+    // only touches it during boot, so N starts + 1 build is safe.
+    const isProd = !!process.env.PLAYWRIGHT_E2E_PROD;
+
     const env: NodeJS.ProcessEnv = {
         ...process.env,
         MONGODB_URI: opts.mongoUri,
         NEXT_DISABLE_HMR: '1',
+        // E2E_RUN gates the in-memory rate-limit hike in authOptions.ts
+        // (`signin:<ip>` and `signin-customer:<ip>`). Without this set,
+        // prod-mode workers hit the 5/min cap after the first 4–5 admin
+        // signins (especially with retries) and every subsequent test
+        // bounces with "Too many attempts".
+        E2E_RUN: '1',
         ADMIN_DEFAULT_PASSWORD: 'test-admin-pw',
         ADMIN_EMAIL: 'admin@admin.com',
         ADMIN_USERNAME: 'Admin',
         NEXTAUTH_SECRET: 'e2e-secret',
         NEXTAUTH_URL: url,
+        // Server-side gqty (used by NextAuth.authorize) defaults to
+        // `http://server:<BUILD_PORT>/` (docker) or `:80` (local). Workers
+        // run on random free ports, so we must point gqty's SSR fetch at
+        // the worker's own server, otherwise the user lookup falls
+        // through to a non-existent server and authorize() returns
+        // "wrong email or password" for everyone.
+        INTERNAL_GRAPHQL_URL: `${url}/api/graphql`,
         // Lower bcrypt cost — bcrypt.compare on the default 10 rounds is
         // ~80ms per attempt, which is fine in prod but compounds across
         // the lockout-hammering test. 4 rounds is still real bcrypt
         // (so the hashing path is exercised) without dominating wall time.
         BCRYPT_ROUNDS: '4',
         PORT: String(port),
+        // Both build & start consult `E2E_BUILD_DIR` via next.config.js so
+        // the prebuilt artefacts live in `ui/client/.next-e2e/` and the
+        // local dev server's own `.next/` stays pristine.
+        ...(isProd ? {NODE_ENV: 'production', E2E_BUILD_DIR: '.next-e2e'} : {}),
     };
 
-    // `next dev` lives in the root package.json under `dev`. We invoke it
-    // directly so the worker port is settable; --turbo is omitted because
-    // turbopack swallows compile errors in some Windows configs we've hit.
+    // dev mode → `next dev`; prod mode → `next start` against the shared
+    // `.next-e2e/` build. Both invoke the same binary entrypoint with
+    // different verbs.
     const child: ChildProcess = spawn(
         process.execPath,
         [
             path.join(REPO_ROOT, 'node_modules/next/dist/bin/next'),
-            'dev',
+            isProd ? 'start' : 'dev',
             '-p', String(port),
             NEXT_DIR,
         ],

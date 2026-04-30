@@ -4,7 +4,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import {Card, ConfigProvider, Spin, Typography} from 'antd';
 import staticTheme from '@client/features/Themes/themeConfig';
-import {formatMoney, myOrder, orderByToken} from '../_api';
+import {formatMoney, myOrder, orderByToken} from '@client/lib/checkout/api';
 
 /**
  * Confirmation page. Reads via `myOrder` first (works for signed-in

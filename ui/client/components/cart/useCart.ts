@@ -4,10 +4,10 @@
  * Wraps the GraphQL queries/mutations for the cart with optimistic
  * local state. Mutations send via the customer pages' `gql()` helper
  * (same path used by /account/*) — the cart cookie is sent same-origin
- * automatically by `credentials: 'same-origin'` in `_gqlClient.ts`.
+ * automatically by `credentials: 'same-origin'` in `gqlClient.ts`.
  */
 import {useCallback, useEffect, useState} from 'react';
-import {gql} from '../../pages/account/_gqlClient';
+import {gql} from '@client/lib/account/gqlClient';
 import type {Cart} from '@interfaces/ICart';
 
 const CART_QUERY = `{ mongo { cart } }`;

@@ -3,8 +3,8 @@ import {GetServerSideProps} from 'next';
 import Link from 'next/link';
 import {signOut} from 'next-auth/react';
 import {Button, Card, Spin, Typography} from 'antd';
-import {requireCustomerSession} from './_session';
-import {gql} from './_gqlClient';
+import {requireCustomerSession} from '@client/lib/account/session';
+import {gql} from '@client/lib/account/gqlClient';
 
 const {Title, Text} = Typography;
 

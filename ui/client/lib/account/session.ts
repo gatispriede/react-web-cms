@@ -1,6 +1,6 @@
 import type {GetServerSidePropsContext} from 'next';
 import {getServerSession} from 'next-auth/next';
-import {authOptions} from '../api/auth/[...nextauth]';
+import {authOptions} from '@client/pages/api/auth/[...nextauth]';
 
 /**
  * Server-side guard for `/account/*` pages — parallels the admin

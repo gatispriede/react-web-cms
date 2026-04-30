@@ -3,7 +3,7 @@ import {GetServerSideProps} from 'next';
 import Link from 'next/link';
 import {signIn} from 'next-auth/react';
 import {Alert, Button, Form, Input} from 'antd';
-import {gql, parseEnvelope} from './_gqlClient';
+import {gql, parseEnvelope} from '@client/lib/account/gqlClient';
 
 const SignUpPage = ({callbackUrl}: {callbackUrl: string}) => {
     const [submitting, setSubmitting] = useState(false);
@@ -52,18 +52,18 @@ const SignUpPage = ({callbackUrl}: {callbackUrl: string}) => {
                 {errorText ? <Alert type="error" showIcon style={{marginBottom: 12}} message={errorText}/> : null}
                 <Form layout="vertical" onFinish={onFinish} disabled={submitting}>
                     <Form.Item label="Name" name="name">
-                        <Input autoComplete="name"/>
+                        <Input autoComplete="name" data-testid="customer-signup-name-input"/>
                     </Form.Item>
                     <Form.Item label="Email" name="email" rules={[{required: true, type: 'email'}]}>
-                        <Input autoComplete="email"/>
+                        <Input autoComplete="email" data-testid="customer-signup-email-input"/>
                     </Form.Item>
                     <Form.Item label="Password" name="password" rules={[{required: true, min: 8}]}>
-                        <Input.Password autoComplete="new-password"/>
+                        <Input.Password autoComplete="new-password" data-testid="customer-signup-password-input"/>
                     </Form.Item>
                     <Form.Item label="Phone" name="phone">
-                        <Input autoComplete="tel"/>
+                        <Input autoComplete="tel" data-testid="customer-signup-phone-input"/>
                     </Form.Item>
-                    <Button type="primary" htmlType="submit" block loading={submitting}>Create account</Button>
+                    <Button type="primary" htmlType="submit" block loading={submitting} data-testid="customer-signup-submit-btn">Create account</Button>
                 </Form>
                 <div style={{marginTop: 16, textAlign: 'center'}}>
                     Already have an account? <Link href={`/account/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`}>Sign in</Link>

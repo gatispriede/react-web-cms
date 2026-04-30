@@ -32,6 +32,11 @@
     "e2e:isolated": "playwright test",
     "e2e:isolated:headed": "playwright test --headed",
     "e2e:smoke": "cross-env PLAYWRIGHT_E2E_REUSE_DEV=1 E2E_SMOKE_ENABLED=1 playwright test --workers=1 --reporter=list tests/e2e/smoke/",
+    "e2e:full:build": "node tools/e2e-build.js",
+    "e2e:full": "npm run e2e:full:build && cross-env PLAYWRIGHT_E2E_PROD=1 playwright test tests/e2e/modules/ tests/e2e/features/",
+    "e2e:full:headed": "npm run e2e:full:build && cross-env PLAYWRIGHT_E2E_PROD=1 playwright test tests/e2e/modules/ tests/e2e/features/ --headed",
+    "e2e:full:nobuild": "cross-env PLAYWRIGHT_E2E_PROD=1 playwright test tests/e2e/modules/ tests/e2e/features/",
+    "e2e:full:nobuild:headed": "cross-env PLAYWRIGHT_E2E_PROD=1 playwright test tests/e2e/modules/ tests/e2e/features/ --headed",
     "e2e:bundle:refresh": "node tools/e2e-bundle-refresh.js",
     "e2e:update-screenshots": "cross-env PLAYWRIGHT_E2E_REUSE_DEV=1 playwright test --update-snapshots",
     "e2e:install": "playwright install --with-deps chromium"

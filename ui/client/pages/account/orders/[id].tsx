@@ -4,8 +4,8 @@ import {useRouter} from 'next/router';
 import Link from 'next/link';
 import {Card, ConfigProvider, Spin, Steps, Typography} from 'antd';
 import staticTheme from '@client/features/Themes/themeConfig';
-import {requireCustomerSession} from '../_session';
-import {myOrder, formatMoney} from '@client/pages/checkout/_api';
+import {requireCustomerSession} from '@client/lib/account/session';
+import {myOrder, formatMoney} from '@client/lib/checkout/api';
 
 const STATUS_ORDER = ['pending', 'paid', 'fulfilling', 'shipped', 'delivered'] as const;
 

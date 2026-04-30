@@ -3,8 +3,8 @@ import {useRouter} from 'next/router';
 import Head from 'next/head';
 import {Alert, Button, ConfigProvider, Form, Input, Typography, message} from 'antd';
 import staticTheme from '@client/features/Themes/themeConfig';
-import {useCheckoutMachine} from './useCheckoutMachine';
-import {authorizeOrderPayment, finalizeOrder} from './_api';
+import {useCheckoutMachine} from '@client/lib/checkout/useCheckoutMachine';
+import {authorizeOrderPayment, finalizeOrder} from '@client/lib/checkout/api';
 
 const isDev = process.env.NODE_ENV !== 'production';
 

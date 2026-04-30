@@ -91,12 +91,12 @@ const CustomerSignInPage = ({callbackUrl, googleEnabled}: {callbackUrl: string; 
                 {lockedBanner}
                 <Form layout="vertical" onFinish={onFinish} disabled={isLocked || submitting}>
                     <Form.Item label="Email" name="email" rules={[{required: true, type: 'email'}]}>
-                        <Input autoComplete="email" autoFocus/>
+                        <Input autoComplete="email" autoFocus data-testid="customer-signin-email-input"/>
                     </Form.Item>
                     <Form.Item label="Password" name="password" rules={[{required: true}]}>
-                        <Input.Password autoComplete="current-password"/>
+                        <Input.Password autoComplete="current-password" data-testid="customer-signin-password-input"/>
                     </Form.Item>
-                    <Button type="primary" htmlType="submit" block loading={submitting} disabled={isLocked}>
+                    <Button type="primary" htmlType="submit" block loading={submitting} disabled={isLocked} data-testid="customer-signin-submit-btn">
                         {isLocked ? `Try again in ${formatRemaining(remainingMs)}` : 'Sign in'}
                     </Button>
                 </Form>
