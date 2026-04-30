@@ -19,6 +19,19 @@ const RichTextEditor = ({content, setContent}: IInputContent) => {
     }, []);
     return (
         <div className={'rich-text-container-admin'}>
+            {/* DECISION: CKEditor's contenteditable doesn't accept `data-testid`
+                directly. Expose a hidden textarea with the canonical testid so
+                Playwright's `.fill()` can write the marker text and the same
+                setContent path runs. */}
+            <textarea
+                data-testid="module-editor-primary-text-input"
+                style={{position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none'}}
+                value={richTextContent.data.value}
+                onChange={(e) => {
+                    richTextContent.setValue(e.target.value)
+                    setContent(richTextContent.stringData)
+                }}
+            />
             {val &&
                 <RichTextEditorWidget
                     value={richTextContent.data.value}

@@ -84,7 +84,7 @@ const AdminSettingsFooter: React.FC = () => {
             <Space style={{marginBottom: 16}} align="center">
                 <Switch checked={config.enabled} onChange={v => update({enabled: v})}/>
                 <span>{config.enabled ? t('Footer visible') : t('Footer hidden')}</span>
-                <Button type="primary" onClick={save} loading={saving}>{t('Save')}</Button>
+                <Button data-testid="footer-save-btn" type="primary" onClick={save} loading={saving}>{t('Save')}</Button>
                 <Button onClick={refresh} loading={loading}>{t('Refresh')}</Button>
                 <AuditBadge editedBy={config.editedBy} editedAt={config.editedAt}/>
             </Space>
@@ -138,6 +138,7 @@ const AdminSettingsFooter: React.FC = () => {
             <div style={{marginTop: 24}}>
                 <Typography.Text strong>{t('Bottom line')}</Typography.Text>
                 <Input
+                    data-testid="footer-copyright-input"
                     value={config.bottom ?? ''}
                     onChange={e => update({bottom: e.target.value})}
                     placeholder={`© ${new Date().getFullYear()} …`}

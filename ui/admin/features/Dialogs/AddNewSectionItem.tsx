@@ -399,7 +399,14 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
             <>
                 {
                     <div className={'add-new-section-container'}>
-                        <Button type="primary" onClick={() => {
+                        {/* DECISION: same Button serves both "add" and "edit" flows;
+                            tag with the type-specific edit testid only when loading
+                            an existing item, otherwise the generic add-module testid. */}
+                        <Button
+                            data-testid={this.props.loadItem
+                                ? `section-module-edit-${String(this.state.selected).toLowerCase().replace(/_/g, '-')}-btn`
+                                : 'section-add-module-btn'}
+                            type="primary" onClick={() => {
                             this.setState({dialogOpen: true})
 
                             const activeOption = this.activeOption()
@@ -431,6 +438,7 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                                 {this.props.t('Cancel')}
                             </Button>
                             <Button
+                                data-testid="module-editor-save-btn"
                                 type="primary"
                                 onClick={async () => {
                                     await this.addSectionItem();

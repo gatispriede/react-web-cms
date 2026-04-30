@@ -60,6 +60,7 @@ const ListEditor: React.FC<IInputContent> = ({content, setContent, t}) => {
                         {data.items.map((it, i) => (
                             <SortableHandleItem key={itemIds[i]} id={itemIds[i]}>
                                 <Input
+                                    {...(i === 0 ? {'data-testid': 'module-editor-primary-text-input'} : {})}
                                     value={it.label}
                                     onChange={e => patchItem(i, {label: e.target.value})}
                                     placeholder="Label (E-mail)"

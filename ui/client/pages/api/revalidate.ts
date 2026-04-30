@@ -30,6 +30,8 @@ type RevalidateBody =
     | {scope: 'page'; pageName: string}
     | {scope: 'post'; slug: string}
     | {scope: 'blog'}
+    | {scope: 'product'; slug: string}
+    | {scope: 'products'}
     | {paths: string[]};
 
 /**
@@ -150,6 +152,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     break;
                 case 'blog':
                     paths = ['/blog'];
+                    break;
+                case 'product':
+                    if (!body.slug) return res.status(400).json({error: 'slug required'});
+                    paths = ['/products', `/products/${body.slug}`];
+                    break;
+                case 'products':
+                    paths = ['/products'];
                     break;
                 default:
                     return res.status(400).json({error: 'unknown scope'});

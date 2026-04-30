@@ -43,6 +43,10 @@ export interface ISiteFlags {
      *  multiple deployments and you want to lock submissions to one
      *  canonical domain. Example: `https://funisimo.pro,https://www.funisimo.pro`. */
     inquiryAllowedOrigins?: string;
+    /** Master toggle for guest checkout. When false, anonymous callers
+     *  can't drive the checkout-flow mutations — they have to sign in
+     *  first. Default true. See docs/features/checkout.md §1. */
+    allowGuestCheckout?: boolean;
     version?: number;
     editedBy?: string;
     editedAt?: string;
@@ -58,6 +62,7 @@ export const DEFAULT_SITE_FLAGS: ISiteFlags = {
     inquiryEnabled: true,
     inquiryMaxPerClient: 3,
     inquiryAllowedOrigins: '',
+    allowGuestCheckout: true,
 };
 
 /** Light validation — keeps obviously-broken values from being saved.
@@ -112,6 +117,9 @@ export class SiteFlagsService {
             inquiryAllowedOrigins: typeof value?.inquiryAllowedOrigins === 'string'
                 ? value.inquiryAllowedOrigins
                 : DEFAULT_SITE_FLAGS.inquiryAllowedOrigins,
+            allowGuestCheckout: typeof value?.allowGuestCheckout === 'boolean'
+                ? value.allowGuestCheckout
+                : DEFAULT_SITE_FLAGS.allowGuestCheckout,
             version: (doc as any)?.version ?? 0,
             editedBy: (doc as any)?.editedBy,
             editedAt: (doc as any)?.editedAt,
@@ -155,6 +163,9 @@ export class SiteFlagsService {
             inquiryAllowedOrigins: typeof flags.inquiryAllowedOrigins === 'string'
                 ? flags.inquiryAllowedOrigins.trim()
                 : current.inquiryAllowedOrigins,
+            allowGuestCheckout: typeof flags.allowGuestCheckout === 'boolean'
+                ? flags.allowGuestCheckout
+                : current.allowGuestCheckout,
         };
         const version = nextVersion(existingVersion);
         await this.settings.updateOne(

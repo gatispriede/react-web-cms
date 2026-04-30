@@ -16,6 +16,15 @@ import {ThemeService} from '@services/features/Themes/ThemeService';
 import {InTheme} from '@interfaces/ITheme';
 import {PostService} from '@services/features/Posts/PostService';
 import {InPost} from '@interfaces/IPost';
+import {ProductService} from '@services/features/Products/ProductService';
+import {InProduct} from '@interfaces/IProduct';
+import {CartService} from '@services/features/Cart/CartService';
+import {CartOwner} from '@interfaces/ICart';
+import {InventoryService} from '@services/features/Inventory/InventoryService';
+import {createAdapter, MockAdapter} from '@services/features/Inventory/adapters';
+import type {IWarehouseAdapter} from '@services/features/Inventory/adapters/IWarehouseAdapter';
+import type {IAdapterConfig} from '@interfaces/IInventory';
+import {RedisAdapter, type RedisLike} from '@services/infra/redis';
 import {FooterService} from '@services/features/Footer/FooterService';
 import {IFooterConfig} from '@interfaces/IFooter';
 import {ISiteFlags, SiteFlagsService} from '@services/features/Seo/SiteFlagsService';
@@ -24,6 +33,12 @@ import {ISiteSeoDefaults} from '@interfaces/ISiteSeo';
 import {ITranslationMetaMap, TranslationMetaService} from '@services/features/Languages/TranslationMetaService';
 import {PresenceService} from '@services/features/Presence/PresenceService';
 import {AuditService} from '@services/features/Audit/AuditService';
+import {OrderService, type OrderMailer} from '@services/features/Orders/OrderService';
+import {McpTokenService} from '@services/features/Mcp/McpTokenService';
+import type {McpScope} from '@interfaces/IMcp';
+import {StockReservationService} from '@services/features/Orders/StockReservationService';
+import {getPaymentProvider} from '@services/features/Orders/payment';
+import type {IOrderAddress, OrderStatus} from '@interfaces/IOrder';
 import {ConflictError, isConflictError, serialiseConflict} from '@services/infra/conflict';
 import {
     defaultSettings,
@@ -115,12 +130,22 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
     public publishService!: PublishService;
     public themeService!: ThemeService;
     public postService!: PostService;
+    public productService!: ProductService;
+    public cartService!: CartService;
+    private cartRedis: RedisLike = new RedisAdapter();
+    public inventoryService!: InventoryService;
+    /** Cached adapter — invalidated when `saveAdapterConfig` writes a
+     *  fresh value or when the InventoryService boots for the first time. */
+    private inventoryAdapter: IWarehouseAdapter | null = null;
     public footerService!: FooterService;
     public siteFlagsService!: SiteFlagsService;
     public siteSeoService!: SiteSeoService;
     public translationMetaService!: TranslationMetaService;
     public presenceService!: PresenceService;
     public auditService!: AuditService;
+    public stockReservationService!: StockReservationService;
+    public orderService!: OrderService;
+    public mcpTokenService!: McpTokenService;
 
     constructor() {
         this._settings.mongoDBDatabaseUrl = `mongodb+srv://${this._settings.mongodbUser}:${this._settings.mongodbPassword}@${this._settings.mongoDBClusterUrl}`;
@@ -167,12 +192,82 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
             this.themeService = new ThemeService(this.db);
             void this.themeService.seedIfEmpty();
             this.postService = new PostService(this.db);
+            this.productService = new ProductService(this.db);
+            this.cartService = new CartService(this.db, this.cartRedis, this.productService);
+            // Inventory: adapter is resolved lazily so the service can boot
+            // before `SiteSettings.inventoryAdapterConfig` is written. The
+            // env var beats the DB value (precedent: prefer ops-managed
+            // secrets over self-service writes — see secrets.md). On unset
+            // we fall back to the in-memory MockAdapter so the admin UI
+            // doesn't blow up on a fresh install.
+            this.inventoryAdapter = null;
+            this.inventoryService = new InventoryService(
+                this.db,
+                this.productService,
+                () => this.resolveInventoryAdapter(),
+                {
+                    triggerRevalidate: () => {
+                        // Server-side fire-and-forget — same shape as the
+                        // client helper but speaks to the same /api/revalidate
+                        // endpoint via internal HTTP if the host is set, or
+                        // is a no-op otherwise (build-time tests).
+                        try {
+                            const host = process.env.REVALIDATE_HOST || process.env.NEXT_PUBLIC_SITE_URL;
+                            if (!host) return;
+                            void fetch(`${host.replace(/\/$/, '')}/api/revalidate`, {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/json'},
+                                body: JSON.stringify({scope: 'all'}),
+                            }).catch((err) => console.warn('[inventory] revalidate failed', err));
+                        } catch (err) {
+                            console.warn('[inventory] revalidate failed', err);
+                        }
+                    },
+                },
+            );
             this.footerService = new FooterService(this.db);
             this.siteFlagsService = new SiteFlagsService(this.db);
             this.siteSeoService = new SiteSeoService(this.db);
             this.translationMetaService = new TranslationMetaService(this.db);
             this.presenceService = new PresenceService(this.db);
             this.auditService = new AuditService(this.db);
+            this.stockReservationService = new StockReservationService(this.db, this.productService);
+            this.mcpTokenService = new McpTokenService(this.db);
+            // Mailer is best-effort: if `_inquiryMailer` is reachable
+            // (UI layer, Next runtime) we wire it; tests / standalone
+            // server skip and pass `undefined`. The dynamic import
+            // means the services tree never hard-depends on the UI tree.
+            const mailer: OrderMailer | undefined = (() => {
+                if (typeof process !== 'undefined' && process.env && (process.env.SMTP_HOST || process.env.SMTP_HOST_FILE)) {
+                    return {
+                        sendOrderConfirmation: async (order, to) => {
+                            try {
+                                const mod: any = await import('@client/pages/api/_inquiryMailer').catch(() => null);
+                                if (!mod || typeof mod.sendInquiryEmail !== 'function') {
+                                    console.warn('[orders] mailer unreachable; SMTP env set but `_inquiryMailer` not loadable');
+                                    return;
+                                }
+                                const subject = `Order confirmation ${order.orderNumber}`;
+                                const total = (order.total / 100).toFixed(2);
+                                const text = `Thanks for your order!\n\nOrder ${order.orderNumber}\nTotal: ${total} ${order.currency}\n`;
+                                const html = `<h1>Thanks for your order!</h1><p>Order <strong>${order.orderNumber}</strong></p><p>Total: ${total} ${order.currency}</p>`;
+                                await mod.sendInquiryEmail({to, subject, text, html});
+                            } catch (err) {
+                                console.error('[orders] sendOrderConfirmation:', err);
+                            }
+                        },
+                    };
+                }
+                return undefined;
+            })();
+            this.orderService = new OrderService(
+                this.db,
+                this.productService,
+                this.cartService,
+                this.stockReservationService,
+                getPaymentProvider(),
+                mailer,
+            );
 
             if (!MongoDBConnection.adminSeeded) {
                 MongoDBConnection.adminSeeded = true;
@@ -215,6 +310,28 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
     async removeUser({ id }: { id: string }) { return this.userService.removeUser({ id }); }
     async getUser({ email }: { email: string }) { return this.userService.getUser({ email }); }
     async getUsers() { return this.userService.getUsers(); }
+
+    // Customer-auth surface — separate from the admin user methods above.
+    // The Proxy in `authz.ts` injects `_session.email` for customer-scoped
+    // methods so the service can scope every Mongo query by the
+    // authenticated customer rather than a client-supplied id.
+    async signUpCustomer({customer}: {customer: any}) { return this.userService.signUpCustomer({user: customer}); }
+    async addCustomerFromGoogle(args: {email: string; name?: string; googleSub: string}) {
+        return this.userService.addCustomerFromGoogle(args);
+    }
+    async getMe(args: {_session?: {email?: string}; email?: string} = {}) { return this.userService.getMe(args); }
+    async updateMyProfile({customer, _session}: {customer: any; _session?: {email?: string}}) {
+        return this.userService.updateMyProfile({user: customer, _session});
+    }
+    async changeMyPassword(args: {oldPassword: string; newPassword: string; _session?: {email?: string}}) {
+        return this.userService.changeMyPassword(args);
+    }
+    async saveMyAddress(args: {address: any; _session?: {email?: string}}) {
+        return this.userService.saveMyAddress(args);
+    }
+    async deleteMyAddress(args: {id: string; _session?: {email?: string}}) {
+        return this.userService.deleteMyAddress(args);
+    }
 
     // Delegate LanguageService methods
     async getLanguages() { return this.languageService.getLanguages(); }
@@ -454,6 +571,58 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
         catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
     }
 
+    async getProducts({includeDrafts, limit, category, inStockOnly, source}: {includeDrafts?: boolean; limit?: number; category?: string; inStockOnly?: boolean; source?: string} = {}): Promise<string> {
+        try {
+            const src = source === 'manual' || source === 'warehouse' ? source : undefined;
+            return JSON.stringify(await this.productService.list({includeDrafts, limit, category, inStockOnly, source: src}));
+        }
+        catch (err) { console.error('getProducts:', err); return '[]'; }
+    }
+    async getProduct({slug, includeDrafts}: {slug: string; includeDrafts?: boolean}): Promise<string | null> {
+        try {
+            const product = await this.productService.getBySlug(slug, {includeDrafts});
+            return product ? JSON.stringify(product) : null;
+        } catch (err) { console.error('getProduct:', err); return null; }
+    }
+    async searchProducts({q, limit, includeDrafts}: {q: string; limit?: number; includeDrafts?: boolean}): Promise<string> {
+        try { return JSON.stringify(await this.productService.search(q, {limit, includeDrafts})); }
+        catch (err) { console.error('searchProducts:', err); return '[]'; }
+    }
+    async saveProduct({product, expectedVersion, _session}: {product: InProduct; expectedVersion?: number | null; _session?: {email?: string}}): Promise<string> {
+        return runMutation(
+            'saveProduct',
+            () => this.productService.save(product, _session?.email, expectedVersion),
+            (result: any) => ({
+                collection: 'Product',
+                docId: result?.id ?? (product as any)?.id,
+                op: (product as any)?.id ? 'update' : 'create',
+                actor: {email: _session?.email},
+            }),
+        );
+    }
+    async deleteProduct({id, _session}: {id: string; _session?: {email?: string}}): Promise<string> {
+        try {
+            const payload = await this.productService.remove(id, _session?.email);
+            void this.auditService?.record({
+                collection: 'Product', docId: id, op: 'delete',
+                actor: {email: _session?.email},
+            });
+            return JSON.stringify({deleteProduct: payload});
+        }
+        catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+    async setProductPublished({id, publish, _session}: {id: string; publish: boolean; _session?: {email?: string}}): Promise<string> {
+        try {
+            const payload = await this.productService.setPublished(id, publish, _session?.email);
+            void this.auditService?.record({
+                collection: 'Product', docId: id, op: 'update', tag: publish ? 'publish' : 'unpublish',
+                actor: {email: _session?.email},
+            });
+            return JSON.stringify({setProductPublished: payload});
+        }
+        catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+
     async getFooter(): Promise<string> {
         try { return JSON.stringify(await this.footerService.get()); }
         catch (err) { console.error('getFooter:', err); return JSON.stringify({enabled: true, columns: [], bottom: ''}); }
@@ -553,6 +722,292 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
 
     getMongoDBUri(): string {
         return this._settings.mongoDBDatabaseUrl;
+    }
+
+    // Cart surface — owner is supplied by the resolver (derived from
+    // session/cookie, never from arguments). Customer cart mutations are
+    // intentionally NOT audited (privacy + volume — see cart.md §11.8).
+    async getCartFor(owner: CartOwner): Promise<string> {
+        try { return JSON.stringify(await this.cartService.getCart(owner)); }
+        catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+    async cartAddItem(owner: CartOwner, input: {productId: string; sku: string; qty: number}): Promise<string> {
+        try { return JSON.stringify(await this.cartService.addItem(owner, input)); }
+        catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+    async cartUpdateQty(owner: CartOwner, input: {productId: string; sku: string; qty: number}): Promise<string> {
+        try { return JSON.stringify(await this.cartService.updateQty(owner, input)); }
+        catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+    async cartRemoveItem(owner: CartOwner, input: {productId: string; sku: string}): Promise<string> {
+        try { return JSON.stringify(await this.cartService.removeItem(owner, input)); }
+        catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+    async cartClear(owner: CartOwner): Promise<string> {
+        try { return JSON.stringify(await this.cartService.clear(owner)); }
+        catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+    async cartMergeGuestIntoCustomer(cartId: string, customerId: string): Promise<void> {
+        await this.cartService.mergeGuestIntoCustomer(cartId, customerId);
+    }
+
+    // -----------------------------------------------------------------
+    // Inventory surface
+    // -----------------------------------------------------------------
+
+    /** Adapter resolution: env first (`INVENTORY_ADAPTER_CONFIG` JSON),
+     *  `SiteSettings.inventoryAdapterConfig` second, MockAdapter fallback.
+     *  Cached after first resolution; cleared by `saveAdapterConfig`. */
+    private resolveInventoryAdapter(): IWarehouseAdapter {
+        if (this.inventoryAdapter) return this.inventoryAdapter;
+        // Env var first — ops-managed secrets beat self-service writes.
+        const envCfg = (process.env.INVENTORY_ADAPTER_CONFIG || '').trim();
+        if (envCfg) {
+            try {
+                const parsed = JSON.parse(envCfg) as IAdapterConfig;
+                this.inventoryAdapter = createAdapter(parsed);
+                return this.inventoryAdapter;
+            } catch (err) {
+                console.error('[inventory] INVENTORY_ADAPTER_CONFIG parse failed:', err);
+            }
+        }
+        // Lazy-load from settings asynchronously; first call falls back to
+        // mock and a follow-up settles cache once the DB read completes.
+        if (this.inventoryService) {
+            void this.inventoryService.readAdapterConfigRaw().then(cfg => {
+                if (cfg) {
+                    try { this.inventoryAdapter = createAdapter(cfg); }
+                    catch (err) { console.error('[inventory] adapter rebuild failed:', err); }
+                }
+            }).catch(err => console.error('[inventory] adapter read failed:', err));
+        }
+        const mock = new MockAdapter();
+        this.inventoryAdapter = mock;
+        return mock;
+    }
+
+    async inventoryStatus(): Promise<string> {
+        try { return JSON.stringify(await this.inventoryService.getStatus()); }
+        catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+
+    async inventoryReadDeadLetters({limit}: {limit?: number} = {}): Promise<string> {
+        try { return JSON.stringify(await this.inventoryService.readDeadLetters({limit})); }
+        catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+
+    async inventorySyncAll({_session}: {_session?: {email?: string}} = {}): Promise<string> {
+        try {
+            const report = await this.inventoryService.syncAll();
+            void this.auditService?.record({
+                collection: 'InventoryRuns', docId: report.runId, op: 'create',
+                actor: {email: _session?.email}, tag: `sync:all:${report.status}`,
+            });
+            return JSON.stringify({inventorySyncAll: report});
+        } catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+
+    async inventorySyncDelta({_session}: {_session?: {email?: string}} = {}): Promise<string> {
+        try {
+            const report = await this.inventoryService.syncDelta();
+            void this.auditService?.record({
+                collection: 'InventoryRuns', docId: report.runId, op: 'create',
+                actor: {email: _session?.email}, tag: `sync:delta:${report.status}`,
+            });
+            return JSON.stringify({inventorySyncDelta: report});
+        } catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+
+    // -----------------------------------------------------------------
+    // Orders surface — see docs/features/checkout.md.
+    // Customer / guest checkout-flow methods receive `_session` from the
+    // authz Proxy so the service can apply per-session IDOR checks.
+    // -----------------------------------------------------------------
+
+    async myOrders({limit, _session}: {limit?: number; _session?: {customerId?: string}} = {}): Promise<string> {
+        try {
+            if (!_session?.customerId) return JSON.stringify([]);
+            const orders = await this.orderService.listForCustomer(_session.customerId, limit ?? 25);
+            return JSON.stringify(orders);
+        } catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+
+    async myOrder({id, _session}: {id: string; _session?: {customerId?: string}}): Promise<string | null> {
+        try {
+            if (!_session?.customerId) return null;
+            const order = await this.orderService.getForCustomer(id, _session.customerId);
+            return order ? JSON.stringify(order) : null;
+        } catch (err) { console.error('myOrder:', err); return null; }
+    }
+
+    async orderByToken({token, cookieToken}: {token: string; cookieToken?: string | null}): Promise<string | null> {
+        try {
+            const order = await this.orderService.getByToken(token, cookieToken ?? null);
+            return order ? JSON.stringify(order) : null;
+        } catch (err) { console.error('orderByToken:', err); return null; }
+    }
+
+    async adminOrders({status, limit}: {status?: OrderStatus; limit?: number} = {}): Promise<string> {
+        try {
+            const orders = await this.orderService.listAll({status, limit});
+            return JSON.stringify(orders);
+        } catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+
+    async adminOrder({id}: {id: string}): Promise<string | null> {
+        try {
+            const order = await this.orderService.getById(id);
+            return order ? JSON.stringify(order) : null;
+        } catch (err) { console.error('adminOrder:', err); return null; }
+    }
+
+    async shippingMethodsFor({orderId}: {orderId: string}): Promise<string> {
+        try { return JSON.stringify(await this.orderService.shippingMethodsFor(orderId)); }
+        catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+
+    async createDraftOrder(args: {cartId?: string; currency: string; guestEmail?: string; _session?: {kind?: string; customerId?: string}}): Promise<string> {
+        try {
+            const customerId = args._session?.kind === 'customer' ? args._session.customerId : undefined;
+            const order = await this.orderService.createDraftOrder({
+                cartId: args.cartId,
+                customerId,
+                currency: args.currency,
+                guestEmail: args.guestEmail,
+            });
+            return JSON.stringify({createDraftOrder: order});
+        } catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+
+    async attachOrderAddress(args: {orderId: string; shipping: IOrderAddress; billing?: IOrderAddress; _session?: any}): Promise<string> {
+        try {
+            const order = await this.orderService.attachOrderAddress({
+                orderId: args.orderId,
+                shipping: args.shipping,
+                billing: args.billing,
+                session: args._session,
+            });
+            return JSON.stringify({attachOrderAddress: order});
+        } catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+
+    async attachOrderShipping(args: {orderId: string; methodCode: string; _session?: any}): Promise<string> {
+        try {
+            const order = await this.orderService.attachOrderShipping({
+                orderId: args.orderId,
+                methodCode: args.methodCode,
+                session: args._session,
+            });
+            return JSON.stringify({attachOrderShipping: order});
+        } catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+
+    async authorizeOrderPayment(args: {orderId: string; card: any; idempotencyKey: string; _session?: any}): Promise<string> {
+        try {
+            const result = await this.orderService.authorizeOrderPayment({
+                orderId: args.orderId,
+                card: args.card,
+                idempotencyKey: args.idempotencyKey,
+                session: args._session,
+            });
+            return JSON.stringify({authorizeOrderPayment: result});
+        } catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+
+    async finalizeOrder(args: {orderId: string; idempotencyKey: string; _session?: any}): Promise<string> {
+        try {
+            const order = await this.orderService.finalizeOrder({
+                orderId: args.orderId,
+                idempotencyKey: args.idempotencyKey,
+                session: args._session,
+            });
+            return JSON.stringify({finalizeOrder: order});
+        } catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+
+    async cancelOrder(args: {orderId: string; _session?: any}): Promise<string> {
+        try {
+            const order = await this.orderService.cancelOrder({
+                orderId: args.orderId,
+                session: args._session,
+            });
+            return JSON.stringify({cancelOrder: order});
+        } catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+
+    async adminTransitionOrder({orderId, next, note, _session}: {orderId: string; next: OrderStatus; note?: string; _session?: {email?: string}}): Promise<string> {
+        try {
+            const order = await this.orderService.transition({orderId, next, by: _session?.email, note});
+            void this.auditService?.record({
+                collection: 'Order', docId: orderId, op: 'update', tag: `transition:${next}`,
+                actor: {email: _session?.email},
+            });
+            return JSON.stringify({adminTransitionOrder: order});
+        } catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+
+    async adminRefundOrder({orderId, amount, reason, _session}: {orderId: string; amount?: number; reason?: string; _session?: {email?: string}}): Promise<string> {
+        try {
+            const order = await this.orderService.refund({orderId, amount, reason, by: _session?.email});
+            void this.auditService?.record({
+                collection: 'Order', docId: orderId, op: 'update', tag: 'refund',
+                actor: {email: _session?.email},
+            });
+            return JSON.stringify({adminRefundOrder: order});
+        } catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+
+    // -----------------------------------------------------------------
+    // MCP token surface — admin-only (gated by graphqlResolvers / authz).
+    // The MCP server itself reads tokens directly off `mcpTokenService`,
+    // not through these methods — these exist to expose token CRUD over
+    // the admin GraphQL surface so the admin UI can issue / revoke.
+    // -----------------------------------------------------------------
+    async mcpListTokens(): Promise<string> {
+        try { return JSON.stringify(await this.mcpTokenService.listTokens()); }
+        catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+
+    async mcpIssueToken({name, scopes, ttlDays, _session}: {name: string; scopes: string[]; ttlDays?: number | null; _session?: {email?: string}}): Promise<string> {
+        try {
+            const issued = await this.mcpTokenService.issueToken(
+                {name, scopes: scopes as McpScope[], ttlDays: ttlDays ?? undefined},
+                _session?.email ?? 'system',
+            );
+            void this.auditService?.record({
+                collection: 'McpToken', docId: issued.id, op: 'create',
+                actor: {email: _session?.email}, tag: 'mcp:issue',
+            });
+            return JSON.stringify({mcpIssueToken: issued});
+        } catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+
+    async mcpRevokeToken({id, _session}: {id: string; _session?: {email?: string}}): Promise<string> {
+        try {
+            const res = await this.mcpTokenService.revokeToken(id);
+            void this.auditService?.record({
+                collection: 'McpToken', docId: id, op: 'update',
+                actor: {email: _session?.email}, tag: 'mcp:revoke',
+            });
+            return JSON.stringify({mcpRevokeToken: res});
+        } catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    }
+
+    async inventorySaveAdapterConfig({config, _session}: {config: any; _session?: {email?: string}}): Promise<string> {
+        try {
+            // Accept either a parsed JSON object or a stringified payload —
+            // the GraphQL schema uses the JSON scalar but resolvers can
+            // receive either.
+            const parsed = typeof config === 'string' ? JSON.parse(config) : config;
+            const result = await this.inventoryService.saveAdapterConfig(parsed as IAdapterConfig, _session?.email);
+            // Invalidate cached adapter so the next sync rebuilds.
+            this.inventoryAdapter = null;
+            void this.auditService?.record({
+                collection: 'InventoryAdapterConfig', op: 'update',
+                actor: {email: _session?.email},
+            });
+            return JSON.stringify({inventorySaveAdapterConfig: result});
+        } catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
     }
 }
 

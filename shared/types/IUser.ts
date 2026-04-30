@@ -2,6 +2,30 @@ export type UserRole = 'viewer' | 'editor' | 'admin';
 
 export type AdminLocale = 'en' | 'lv';
 
+export type UserKind = 'admin' | 'customer';
+
+export interface IAddress {
+    id: string;
+    name: string;
+    line1: string;
+    line2?: string;
+    city: string;
+    postalCode: string;
+    country: string;
+    isDefault?: boolean;
+}
+
+export interface InAddress {
+    id?: string;
+    name: string;
+    line1: string;
+    line2?: string;
+    city: string;
+    postalCode: string;
+    country: string;
+    isDefault?: boolean;
+}
+
 export interface IUser {
     id: string;
     name: string;
@@ -24,6 +48,29 @@ export interface IUser {
      * `localStorage.admin.locale` → browser → `en` when unset.
      */
     preferredAdminLocale?: AdminLocale;
+
+    /**
+     * Discriminator across admin and customer populations. Undefined is
+     * implicitly 'admin' for back-compat with legacy docs seeded before
+     * the customer flow shipped — `setupAdmin()` back-fills the field
+     * the same way it back-fills `role`.
+     */
+    kind?: UserKind;
+    /** Customer-only — Google OAuth `sub` (provider account id). Lets a
+     *  customer who originally signed up with email+password later link
+     *  Google by matching email. */
+    googleSub?: string;
+    /** ISO date — set when Google attests the email or after a reset
+     *  confirmation flow lands. Currently informational. */
+    emailVerified?: string;
+    /** Customer-only contact field — admins use email only. */
+    phone?: string;
+    /** Customer-only — list of saved shipping addresses. Mutated via
+     *  saveMyAddress / deleteMyAddress, scoped to the current customer. */
+    shippingAddresses?: IAddress[];
+    /** ISO date — populated on customer creation. Admin docs may not
+     *  carry this for legacy reasons. */
+    createdAt?: string;
 }
 
 export interface InUser {
@@ -36,4 +83,10 @@ export interface InUser {
     canPublishProduction?: boolean;
     mustChangePassword?: boolean;
     preferredAdminLocale?: AdminLocale;
+    kind?: UserKind;
+    googleSub?: string;
+    emailVerified?: string;
+    phone?: string;
+    shippingAddresses?: IAddress[];
+    createdAt?: string;
 }

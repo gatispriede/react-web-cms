@@ -22,7 +22,7 @@ const ProjectCardEditor = ({content, setContent, t}: IInputContent) => {
             <Row gutter={[8, 8]}>
                 <Col xs={24} md={16}>
                     <label>{t('Title')}</label>
-                    <Input value={data.title} onChange={e => update('title', e.target.value)}/>
+                    <Input data-testid="module-editor-primary-text-input" value={data.title} onChange={e => update('title', e.target.value)}/>
                 </Col>
                 <Col xs={24} md={8}>
                     <label>{t('Cover image URL')}</label>

@@ -23,6 +23,11 @@ export default defineConfig({
             'ui/admin/**/*.{test,spec}.{ts,tsx}',
             'services/**/*.{test,spec}.{ts,tsx}',
             'shared/**/*.{test,spec}.{ts,tsx}',
+            // E2E fixtures: registry-completeness checks, RNG determinism,
+            // etc. The Playwright `.spec.ts` files under tests/e2e/features/
+            // are NOT in scope (Vitest would try to run them as unit tests
+            // and error). Narrow to `fixtures/**` only.
+            'tests/e2e/fixtures/**/*.{test,spec}.ts',
         ],
         environmentMatchGlobs: [
             ['ui/client/**/*.{test,spec}.{ts,tsx}', 'jsdom'],

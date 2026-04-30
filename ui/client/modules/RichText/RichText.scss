@@ -1,6 +1,23 @@
 .rich-text-container-admin{
   max-height: 500px;
-  overflow: auto;
+  // `overflow: auto` was clipping CKEditor's toolbar dropdown panels
+  // (alignment, font colour, list-style) the moment the editable was
+  // empty — the panel rendered below the editor's inline flow and got
+  // hidden behind the scrollable bounds, leaving "Align left" et al.
+  // visible but unselectable. `visible` lets dropdowns escape; the
+  // editable itself gets its own bounded scroll via `min-height` +
+  // `max-height` below so a tall body still scrolls.
+  overflow: visible;
+
+  // Empty editor used to collapse to a single text-line height,
+  // which left zero space for the dropdown anchor and forced the
+  // panel to overlap the toolbar. A 200px floor gives the panel room
+  // to drop, and the cap keeps a long article inside its own scroller.
+  .ck-editor__editable {
+    min-height: 200px;
+    max-height: 460px;
+    overflow-y: auto;
+  }
 }
 .rich-text{
   &.centeredBoxed{

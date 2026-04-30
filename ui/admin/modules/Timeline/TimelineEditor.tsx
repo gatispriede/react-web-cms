@@ -39,7 +39,7 @@ const TimelineEditor = ({content, setContent, t}: IInputContent) => {
                         <Row gutter={[8, 8]}>
                             <Col xs={12}><label>{t('Start')}</label><Input value={entry.start} onChange={e => patchEntry(i, {start: e.target.value})} placeholder="2024-01"/></Col>
                             <Col xs={12}><label>{t('End')}</label><Input value={entry.end} onChange={e => patchEntry(i, {end: e.target.value})} placeholder="present"/></Col>
-                            <Col xs={12}><label>{t('Company')}</label><Input value={entry.company} onChange={e => patchEntry(i, {company: e.target.value})}/></Col>
+                            <Col xs={12}><label>{t('Company')}</label><Input {...(i === 0 ? {'data-testid': 'module-editor-primary-text-input'} : {})} value={entry.company} onChange={e => patchEntry(i, {company: e.target.value})}/></Col>
                             <Col xs={12}><label>{t('Role')}</label><Input value={entry.role} onChange={e => patchEntry(i, {role: e.target.value})}/></Col>
                             <Col xs={12}>
                                 <label>{t('Domain / website (optional)')}</label>

@@ -56,6 +56,7 @@ const ThemeCard: React.FC<{
     t: (k: string) => string;
 }> = ({theme, active, onActivate, onEdit, onDuplicate, onDelete, onReset, t}) => (
     <Card
+        data-testid={`themes-list-row-${theme.id}`}
         size="small"
         title={
             <Space>
@@ -66,9 +67,18 @@ const ThemeCard: React.FC<{
         }
         extra={
             <Space size={4}>
-                {!active && (
-                    <Button size="small" type="primary" onClick={onActivate}>{t('Activate')}</Button>
-                )}
+                {/* DECISION: render the set-active button on every row (disabled
+                    when already active) so tests can locate it per row and use
+                    `.isEnabled()` to find an inactive theme to switch to. */}
+                <Button
+                    data-testid="themes-set-active-btn"
+                    size="small"
+                    type="primary"
+                    disabled={active}
+                    onClick={onActivate}
+                >
+                    {t('Activate')}
+                </Button>
             </Space>
         }
     >

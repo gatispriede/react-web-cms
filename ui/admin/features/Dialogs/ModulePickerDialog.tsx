@@ -127,6 +127,7 @@ const ModulePickerDialog: React.FC<Props> = ({open, onClose, onSelect, t, curren
                             return (
                                 <Col xs={24} sm={12} md={8} key={def.key}>
                                     <Card
+                                        data-testid={`section-module-picker-${def.key.toLowerCase().replace(/_/g, '-')}`}
                                         hoverable
                                         size="small"
                                         onClick={() => pick(def.key)}

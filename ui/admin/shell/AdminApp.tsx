@@ -265,9 +265,13 @@ class AdminApp extends React.Component<{
         return this.state.tabProps.map((tp: any) => ({
             key: tp.key,
             label: (
-                <div className="admin-sider-item" style={{
-                    display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'space-between',
-                }}>
+                <div
+                    className="admin-sider-item"
+                    data-testid={`nav-page-row-${String(tp.page).toLowerCase()}`}
+                    style={{
+                        display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'space-between',
+                    }}
+                >
                     <div style={{flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2}}>
                         <span style={{
                             overflow: 'hidden',
@@ -311,6 +315,7 @@ class AdminApp extends React.Component<{
                                 onConfirm={() => this.deletePage(tp.key)}
                             >
                                 <Button
+                                    data-testid="nav-page-delete-btn"
                                     size="small"
                                     type="text"
                                     danger
@@ -349,9 +354,10 @@ class AdminApp extends React.Component<{
                                     description={this.props.t('This copies the current draft to the live published snapshot.')}
                                     okText={this.props.t('Publish')}
                                     cancelText={this.props.t('Cancel')}
+                                    okButtonProps={{'data-testid': 'publishing-publish-confirm-btn'} as any}
                                     onConfirm={this.publish}
                                 >
-                                    <Button type="primary" icon={<CloudUploadOutlined/>} loading={this.state.publishing}>
+                                    <Button data-testid="publishing-publish-btn" type="primary" icon={<CloudUploadOutlined/>} loading={this.state.publishing}>
                                         {this.props.t('Publish')}
                                     </Button>
                                 </Popconfirm>
@@ -403,6 +409,7 @@ class AdminApp extends React.Component<{
                             {this.canEditNav && (
                                 <div style={{padding: 12, textAlign: 'center'}}>
                                     <Button
+                                        data-testid="nav-add-page-btn"
                                         type="dashed"
                                         icon={<PlusOutlined/>}
                                         onClick={this.openAdd}

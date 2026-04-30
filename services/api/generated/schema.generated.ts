@@ -371,6 +371,12 @@ export const generatedSchema = {
       __args: { page: "String!", sections: "[String]" },
     },
     updateUser: { __type: "String!", __args: { user: "InUser!" } },
+    inventorySyncAll: { __type: "String!" },
+    inventorySyncDelta: { __type: "String!" },
+    inventorySaveAdapterConfig: {
+      __type: "String!",
+      __args: { config: "JSON!" },
+    },
   },
   QueryMongo: {
     __typename: { __type: "String!" },
@@ -404,6 +410,8 @@ export const generatedSchema = {
     getUsers: { __type: "[IUser!]!" },
     loadData: { __type: "[ILoadData!]!" },
     setupAdmin: { __type: "IUser" },
+    inventoryStatus: { __type: "String!" },
+    inventoryReadDeadLetters: { __type: "String!", __args: { limit: "Int" } },
   },
   mutation: {
     __typename: { __type: "String!" },

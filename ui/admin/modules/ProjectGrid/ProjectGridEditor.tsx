@@ -49,7 +49,7 @@ const ProjectGridEditor: React.FC<IInputContent> = ({content, setContent, t}) =>
                                     <Typography.Text strong>{t('Project')} #{i + 1}</Typography.Text>
                                     <Button danger size="small" icon={<DeleteOutlined/>} onClick={() => removeItem(i)}/>
                                 </Space>
-                                <LabeledInput value={p.title} onChange={e => patchItem(i, {title: e.target.value})} label={t('Title')} placeholder="SciChart"/>
+                                <LabeledInput {...(i === 0 ? {'data-testid': 'module-editor-primary-text-input'} : {})} value={p.title} onChange={e => patchItem(i, {title: e.target.value})} label={t('Title')} placeholder="SciChart"/>
                                 <LabeledInput value={p.stack ?? ''} onChange={e => patchItem(i, {stack: e.target.value})} label={t('Stack / domain')} placeholder="3D/2D browser charts · large data"/>
                                 <LabeledInput value={p.kind ?? ''} onChange={e => patchItem(i, {kind: e.target.value})} label={t('Kind')} placeholder="Contract<br/>UK / USA"/>
                                 <Space style={{width: '100%'}}>

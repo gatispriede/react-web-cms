@@ -234,6 +234,7 @@ class SectionContent extends React.Component<IPropsSectionContent> {
                             : style;
                         return (
                             <div key={id}
+                                 data-testid={`section-module-row-${String(item.type).toLowerCase().replace(/_/g, '-')}`}
                                  className={`section-item-container ${item.type} span-${span} ${styleClass}`}
                                  style={animStyle}
                                  {...(animAttr ? {'data-anim': animAttr} : {})}>

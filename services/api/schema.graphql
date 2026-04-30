@@ -73,6 +73,41 @@ input InUser {
     canPublishProduction: Boolean
     mustChangePassword: Boolean
     preferredAdminLocale: String
+    kind: String
+    googleSub: String
+    phone: String
+}
+
+input InAddress {
+    id: String
+    name: String!
+    line1: String!
+    line2: String
+    city: String!
+    postalCode: String!
+    country: String!
+    isDefault: Boolean
+}
+
+type IAddress {
+    id: String!
+    name: String!
+    line1: String!
+    line2: String
+    city: String!
+    postalCode: String!
+    country: String!
+    isDefault: Boolean
+}
+
+type ICustomer {
+    id: String!
+    name: String
+    email: String!
+    phone: String
+    emailVerified: String
+    shippingAddresses: [IAddress!]!
+    createdAt: String
 }
 type INewLanguage {
     label: String!
@@ -189,6 +224,9 @@ type QueryMongo {
     getPublishedHistory(limit: Int): String!
     getPosts(includeDrafts: Boolean, limit: Int): String!
     getPost(slug: String!, includeDrafts: Boolean): String
+    getProducts(includeDrafts: Boolean, limit: Int, category: String, inStockOnly: Boolean, source: String): String!
+    getProduct(slug: String!, includeDrafts: Boolean): String
+    searchProducts(q: String!, limit: Int, includeDrafts: Boolean): String!
     getFooter: String!
     getSiteFlags: String!
     getSiteSeo: String!
@@ -196,6 +234,24 @@ type QueryMongo {
     getAuditLog(filter: JSON): String!
     getAuditCollections: String!
     getAuditActors: String!
+    me: ICustomer
+    cart: String!
+    inventoryStatus: String!
+    inventoryReadDeadLetters(limit: Int): String!
+    """Customer-only — current customer's order history."""
+    myOrders(limit: Int): String!
+    """Customer-only — single order by id (IDOR-checked)."""
+    myOrder(id: String!): String
+    """Guest confirmation page — token must match the `order_token` cookie."""
+    orderByToken(token: String!): String
+    """Admin/editor — paged order list."""
+    adminOrders(status: String, limit: Int): String!
+    """Admin/editor — order detail."""
+    adminOrder(id: String!): String
+    """Static shipping methods table; reserved for future per-order rates."""
+    shippingMethodsFor(orderId: String!): String!
+    """Admin-only — list issued MCP tokens (no secrets returned)."""
+    mcpListTokens: String!
 }
 
 scalar JSON
@@ -225,10 +281,40 @@ type MutationMongo {
     savePost(post: JSON!, expectedVersion: Int): String!
     deletePost(id: String!): String!
     setPostPublished(id: String!, publish: Boolean!): String!
+    saveProduct(product: JSON!, expectedVersion: Int): String!
+    deleteProduct(id: String!): String!
+    setProductPublished(id: String!, publish: Boolean!): String!
     saveFooter(config: JSON!, expectedVersion: Int): String!
     saveSiteFlags(flags: JSON!, expectedVersion: Int): String!
     saveSiteSeo(seo: JSON!, expectedVersion: Int): String!
     saveTranslationMeta(meta: JSON!, expectedVersion: Int): String!
+    signUpCustomer(customer: InUser!): String!
+    updateMyProfile(customer: InUser!): String!
+    changeMyPassword(oldPassword: String!, newPassword: String!): String!
+    saveMyAddress(address: InAddress!): String!
+    deleteMyAddress(id: String!): String!
+    cartAddItem(productId: String!, sku: String!, qty: Int!): String!
+    cartUpdateQty(productId: String!, sku: String!, qty: Int!): String!
+    cartRemoveItem(productId: String!, sku: String!): String!
+    cartClear: String!
+    inventorySyncAll: String!
+    inventorySyncDelta: String!
+    inventorySaveAdapterConfig(config: JSON!): String!
+    """Snapshot cart -> Order, reserve stock, status:pending. Customer or guest (when allowGuestCheckout)."""
+    createDraftOrder(cartId: String, currency: String!, guestEmail: String): String!
+    attachOrderAddress(orderId: String!, shipping: JSON!, billing: JSON): String!
+    attachOrderShipping(orderId: String!, methodCode: String!): String!
+    authorizeOrderPayment(orderId: String!, card: JSON!, idempotencyKey: String!): String!
+    finalizeOrder(orderId: String!, idempotencyKey: String!): String!
+    cancelOrder(orderId: String!): String!
+    """Admin: state-machine transition (editor)."""
+    adminTransitionOrder(orderId: String!, next: String!, note: String): String!
+    """Admin: refund whole order (admin)."""
+    adminRefundOrder(orderId: String!, amount: Int, reason: String): String!
+    """Admin-only — issue a new MCP token. Secret is returned ONCE in the response."""
+    mcpIssueToken(name: String!, scopes: [String!]!, ttlDays: Int): String!
+    """Admin-only — revoke an MCP token by id."""
+    mcpRevokeToken(id: String!): String!
 }
 
 

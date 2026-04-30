@@ -30,6 +30,7 @@ const ManifestoEditor: React.FC<IInputContent> = ({content, setContent, t}) => {
             <div>
                 <label>{t('Body — supports *italic* and {{chip:KEY:LABEL}} tokens')}</label>
                 <Input.TextArea
+                    data-testid="module-editor-primary-text-input"
                     value={data.body}
                     onChange={e => update({body: e.target.value})}
                     rows={6}

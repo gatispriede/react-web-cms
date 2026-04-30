@@ -125,6 +125,7 @@ const BundleSettings = ({t}: { t: TFunction<"translation", undefined> }) => {
                     <Space>
                         <input
                             ref={fileRef}
+                            data-testid="bundle-import-file-input"
                             type="file"
                             accept="application/json,.json"
                             onChange={(e) => {
@@ -136,12 +137,13 @@ const BundleSettings = ({t}: { t: TFunction<"translation", undefined> }) => {
                             title={t('Replace all site data?')}
                             description={t('This cannot be undone. Export first if unsure.')}
                             okText={t('Import')}
-                            okButtonProps={{danger: true}}
+                            okButtonProps={{danger: true, 'data-testid': 'bundle-import-confirm-btn'} as any}
                             cancelText={t('Cancel')}
                             disabled={!pendingBundle || importing}
                             onConfirm={doImport}
                         >
                             <Button
+                                data-testid="bundle-import-submit-btn"
                                 danger
                                 icon={<UploadOutlined/>}
                                 loading={importing}

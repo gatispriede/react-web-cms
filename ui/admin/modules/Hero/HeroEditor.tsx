@@ -67,6 +67,7 @@ const HeroEditor = ({content, setContent, t}: IInputContent) => {
                 <Col xs={12}>
                     <label>{t('Headline')}</label>
                     <Input
+                        data-testid="module-editor-primary-text-input"
                         value={data.headline}
                         onChange={e => update('headline', e.target.value)}
                         placeholder="Gatis"
@@ -185,7 +186,7 @@ const HeroEditor = ({content, setContent, t}: IInputContent) => {
                     },
                     {
                         key: 'portrait',
-                        label: t('Portrait tile'),
+                        label: <span data-testid="module-editor-hero-tab-portrait">{t('Portrait tile')}</span>,
                         children: (
                             <Row gutter={[12, 8]}>
                                 <Col xs={12}>
@@ -203,11 +204,13 @@ const HeroEditor = ({content, setContent, t}: IInputContent) => {
                                         value={data.portraitImage ?? ''}
                                         onChange={v => update('portraitImage', v)}
                                         placeholder="api/portrait.jpg"
+                                        data-testid="module-editor-hero-portrait-image-input"
                                     />
                                 </Col>
                                 <Col xs={12}>
                                     <label>{t('Portrait width (px or any CSS unit)')}</label>
                                     <Input
+                                        data-testid="module-editor-hero-portrait-width-input"
                                         value={data.portraitWidth == null ? '' : String(data.portraitWidth)}
                                         onChange={e => {
                                             const v = e.target.value.trim();
@@ -225,6 +228,7 @@ const HeroEditor = ({content, setContent, t}: IInputContent) => {
                                 <Col xs={12}>
                                     <label>{t('Portrait height (px or any CSS unit)')}</label>
                                     <Input
+                                        data-testid="module-editor-hero-portrait-height-input"
                                         value={data.portraitHeight == null ? '' : String(data.portraitHeight)}
                                         onChange={e => {
                                             const v = e.target.value.trim();

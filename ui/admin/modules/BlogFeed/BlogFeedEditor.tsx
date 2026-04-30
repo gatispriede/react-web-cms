@@ -26,7 +26,7 @@ const BlogFeedEditor = ({content, setContent, t}: IInputContent) => {
                         <Row gutter={[8, 8]}>
                             <Col xs={24}>
                                 <label>{t('Section heading (optional)')}</label>
-                                <Input value={data.heading} onChange={e => update('heading', e.target.value)} placeholder={t('Latest writing')}/>
+                                <Input data-testid="module-editor-primary-text-input" value={data.heading} onChange={e => update('heading', e.target.value)} placeholder={t('Latest writing')}/>
                             </Col>
                             <Col xs={24}>
                                 <label>{t('Filter by tag (optional)')}</label>

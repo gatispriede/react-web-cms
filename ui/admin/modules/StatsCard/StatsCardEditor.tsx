@@ -62,6 +62,7 @@ const StatsCardEditor: React.FC<IInputContent> = ({content, setContent, t}) => {
                                 style={{width: 110}}
                             />
                             <Input
+                                {...(i === 0 ? {'data-testid': 'module-editor-primary-text-input'} : {})}
                                 value={s.label}
                                 onChange={e => patchStat(i, {label: e.target.value})}
                                 placeholder="Years of experience"

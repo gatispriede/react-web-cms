@@ -10,6 +10,9 @@ interface Props {
     onChange?: (val: string) => void;
     placeholder?: string;
     t: TFunction<'translation', undefined>;
+    /** Forwarded to the inner text Input. Lets module editors expose a
+     *  predictable testid for e2e specs (e.g. the Hero portrait field). */
+    'data-testid'?: string;
 }
 
 /**
@@ -18,7 +21,8 @@ interface Props {
  * module editors (OS file, picker tile, URL drag) so behaviour is
  * consistent across the admin — see `ImageDropTarget`.
  */
-const ImageUrlInput: React.FC<Props> = ({value, onChange, placeholder, t}) => {
+const ImageUrlInput: React.FC<Props> = ({value, onChange, placeholder, t, ...rest}) => {
+    const testid = (rest as {'data-testid'?: string})['data-testid'];
     return (
         <ImageDropTarget
             filled={!!value}
@@ -30,6 +34,7 @@ const ImageUrlInput: React.FC<Props> = ({value, onChange, placeholder, t}) => {
                     value={value ?? ''}
                     onChange={e => onChange?.(e.target.value)}
                     placeholder={placeholder}
+                    data-testid={testid}
                 />
                 <ImageUpload t={t} setFile={f => onChange?.(PUBLIC_IMAGE_PATH + f.name)}/>
             </div>

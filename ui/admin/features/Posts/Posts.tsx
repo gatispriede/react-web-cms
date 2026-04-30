@@ -260,7 +260,7 @@ const AdminSettingsPosts: React.FC = () => {
     return (
         <div style={{padding: 16}}>
             <Space style={{marginBottom: 16}} align="center" wrap>
-                <Button type="primary" icon={<PlusOutlined/>} onClick={openCreate}>{t('New post')}</Button>
+                <Button data-testid="posts-add-btn" type="primary" icon={<PlusOutlined/>} onClick={openCreate}>{t('New post')}</Button>
                 <Button onClick={refresh} loading={loading}>{t('Refresh')}</Button>
                 <AuditBadge editedBy={latestAudit.editedBy} editedAt={latestAudit.editedAt}/>
                 <Space>
@@ -284,14 +284,14 @@ const AdminSettingsPosts: React.FC = () => {
                 title={editing?.id ? t('Edit post') : t('New post')}
                 width={720}
                 destroyOnClose
-                extra={<Button type="primary" onClick={save} loading={saving}>{t('Save')}</Button>}
+                extra={<Button data-testid="posts-save-btn" type="primary" onClick={save} loading={saving}>{t('Save')}</Button>}
             >
                 <Form form={form} layout="vertical">
                     <Form.Item name="title" label={t('Title')} rules={[{required: true, message: t('Title is required')}]}>
-                        <Input/>
+                        <Input data-testid="posts-title-input"/>
                     </Form.Item>
                     <Form.Item name="slug" label={t('Slug')} tooltip={t('Leave blank to auto-generate from the title.')}>
-                        <Input placeholder="my-first-post"/>
+                        <Input data-testid="posts-slug-input" placeholder="my-first-post"/>
                     </Form.Item>
                     <Form.Item name="excerpt" label={t('Excerpt')}>
                         <Input.TextArea rows={2}/>
@@ -306,10 +306,10 @@ const AdminSettingsPosts: React.FC = () => {
                         <Select mode="tags" tokenSeparators={[',', ';']}/>
                     </Form.Item>
                     <Form.Item name="body" label={t('Body (HTML or Markdown)')} rules={[{required: true, message: t('Body is required')}]}>
-                        <Input.TextArea rows={12}/>
+                        <Input.TextArea data-testid="posts-body-textarea" rows={12}/>
                     </Form.Item>
                     <Form.Item name="draft" label={t('Draft')} valuePropName="checked">
-                        <Switch/>
+                        <Switch data-testid="posts-draft-switch"/>
                     </Form.Item>
                 </Form>
             </Drawer>

@@ -311,6 +311,7 @@ export const ContentLoader = ({translationManager, currentLanguageKey, dataPromi
                         <Input
                             // Controlled — drives off the state we also send to the
                             // server, so there can't be DOM/state divergence.
+                            data-testid={`translations-row-${row.key}-input`}
                             value={row.translation}
                             placeholder={row.source}
                             disabled={row.acceptedSource}

@@ -289,7 +289,13 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
                             setCurrentLanguageName(match.name ?? String(match.label));
                             setReloadNonce(n => n + 1);
                         }}
-                        items={menuItems.map(it => ({key: it.key, label: it.label}))}
+                        items={menuItems.map(it => ({
+                            key: it.key,
+                            // Wrap label in a span carrying the per-language
+                            // testid so e2e specs can target a specific
+                            // language tab without depending on `i18n` text.
+                            label: <span data-testid={`translations-language-tab-${String(it.key).toLowerCase()}`}>{it.label}</span>,
+                        }))}
                     />
                     <div style={{display: 'flex', justifyContent: 'center', padding: 16}}>
                         <Button type="default" onClick={() => setDialogOpen(true)}>
@@ -311,7 +317,7 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
                             {mode === 'edit' && (
                                 <>
                                     <p style={{margin: '0 16px'}}>{currentLanguageName}</p>
-                                    <Button type="primary" loading={saving} onClick={saveNewTranslation}>{tAdmin('Save')}</Button>
+                                    <Button data-testid="translations-save-btn" type="primary" loading={saving} onClick={saveNewTranslation}>{tAdmin('Save')}</Button>
                                     <Button
                                         loading={saving}
                                         onClick={setAsDefault}

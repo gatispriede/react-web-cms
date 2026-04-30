@@ -27,11 +27,19 @@ import {startServerAndCreateNextHandler} from '@as-integrations/next';
 // @ts-expect-error — no type defs published; value is `(depth: number) => ValidationRule`
 import depthLimit from 'graphql-depth-limit';
 import {sessionFromReq, type GraphqlSession} from '@services/features/Auth/authz';
-import {nextResolvers as resolvers} from '@services/api/graphqlResolvers';
+import {nextResolvers as resolvers, type ResolverHooks} from '@services/api/graphqlResolvers';
 import {authOptions} from './auth/authOptions';
+import {clientIp, rateLimit} from './_rateLimit';
+import {
+    COOKIE_NAME as CART_COOKIE_NAME,
+    buildSetCookieHeader,
+    getCartCookieSecrets,
+    verifyCartId,
+} from '@services/features/Cart/cartCookie';
 
 interface GqlContext {
     session: GraphqlSession;
+    hooks: ResolverHooks;
 }
 
 const typeDefs = readFileSync('services/api/schema.graphql', {encoding: 'utf-8'});
@@ -64,7 +72,63 @@ const apolloServer = new ApolloServer<GqlContext>({
 const handler = startServerAndCreateNextHandler<NextApiRequest, GqlContext>(apolloServer, {
     context: async (req, res) => {
         const session = await sessionFromReq(req, res, authOptions);
-        return {session};
+        const ip = clientIp(req as any);
+        // Cart cookie: parse the request once; expose getter/setter to
+        // resolvers. Forged or malformed cookies are treated as absent;
+        // cart resolvers will mint a fresh one and queue it via
+        // `setCartCookie`.
+        const cartRaw = (req.cookies as Record<string, string> | undefined)?.[CART_COOKIE_NAME];
+        let cartId: string | null = null;
+        try {
+            cartId = verifyCartId(cartRaw, getCartCookieSecrets());
+        } catch {
+            // Missing CART_COOKIE_SECRET / NEXTAUTH_SECRET — refuse to
+            // emit a guest cookie. Resolvers will see no cookie hooks
+            // and (for now) operate as if the cart is empty for guests.
+            cartId = null;
+        }
+        const orderTokenCookie = (req.cookies as Record<string, string> | undefined)?.['order_token'] ?? null;
+        const hooks: ResolverHooks = {
+            rateLimitSignup: () => rateLimit(`signup:${ip}`, 5, 60_000),
+            getCartCookieId: () => cartId,
+            setCartCookie: (signedValue: string) => {
+                try {
+                    res.setHeader('Set-Cookie', buildSetCookieHeader(signedValue));
+                } catch (err) {
+                    console.error('[cart] setCartCookie failed:', err);
+                }
+            },
+            getOrderTokenCookie: () => orderTokenCookie,
+            setOrderTokenCookie: (token: string) => {
+                try {
+                    const isProd = process.env.NODE_ENV === 'production';
+                    // 24h, scoped to /checkout per spec §8 (guest
+                    // confirmation page only — no other route reads it).
+                    const parts = [
+                        `order_token=${token}`,
+                        'Max-Age=86400',
+                        'Path=/checkout',
+                        'HttpOnly',
+                        'SameSite=Lax',
+                    ];
+                    if (isProd) parts.push('Secure');
+                    // Append to any existing Set-Cookie header (cart
+                    // cookie may have been queued earlier).
+                    const existing = res.getHeader('Set-Cookie');
+                    const next = parts.join('; ');
+                    if (Array.isArray(existing)) {
+                        res.setHeader('Set-Cookie', [...existing, next]);
+                    } else if (typeof existing === 'string') {
+                        res.setHeader('Set-Cookie', [existing, next]);
+                    } else {
+                        res.setHeader('Set-Cookie', next);
+                    }
+                } catch (err) {
+                    console.error('[orders] setOrderTokenCookie failed:', err);
+                }
+            },
+        };
+        return {session, hooks};
     },
 });
 

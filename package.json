@@ -4,7 +4,7 @@
   "private": true,
   "type": "esnext",
   "scripts": {
-    "predev": "npm run dev:db",
+    "predev": "node tools/dev-predev.js",
     "dev": "next dev --turbo -p 80 ui/client",
     "dev:db": "docker compose -f infra/compose.dev.yaml up -d",
     "dev:db:stop": "docker compose -f infra/compose.dev.yaml down",
@@ -19,12 +19,22 @@
     "dev-server": "nodemon --config ./nodemon.json",
     "standalone-graphql": "cross-env npx tsx --tsconfig services/tsconfig.custom.json services/index.ts",
     "standalone-graphql-docker": "cross-env NODE_SERVER_PORT=true npx tsx --tsconfig services/tsconfig.custom.json services/index.ts",
+    "mcp:stdio": "cross-env npx tsx --tsconfig services/tsconfig.custom.json services/mcp/stdio.ts",
+    "mcp:http": "cross-env npx tsx --tsconfig services/tsconfig.custom.json services/mcp/http.ts",
     "ssl": "npx tsx --tsconfig services/tsconfig.custom.json services/sslServer.ts",
     "generate-schema": "npx @gqty/cli http://localhost:80/api/graphql --target=services/api/generated/index.ts",
     "setupSecrets": "npx auth@latest secret next",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "e2e": "cross-env PLAYWRIGHT_E2E_REUSE_DEV=1 playwright test",
+    "e2e:headed": "cross-env PLAYWRIGHT_E2E_REUSE_DEV=1 playwright test --headed",
+    "e2e:isolated": "playwright test",
+    "e2e:isolated:headed": "playwright test --headed",
+    "e2e:smoke": "cross-env PLAYWRIGHT_E2E_REUSE_DEV=1 E2E_SMOKE_ENABLED=1 playwright test --workers=1 --reporter=list tests/e2e/smoke/",
+    "e2e:bundle:refresh": "node tools/e2e-bundle-refresh.js",
+    "e2e:update-screenshots": "cross-env PLAYWRIGHT_E2E_REUSE_DEV=1 playwright test --update-snapshots",
+    "e2e:install": "playwright install --with-deps chromium"
   },
   "gqty": {
     "introspections": {
@@ -45,6 +55,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@graphql-tools/schema": "^10.0.16",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@types/bcrypt": "^6.0.0",
     "@types/formidable": "^3.4.5",
     "@types/glidejs__glide": "^3.6.6",
@@ -157,6 +168,7 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/react-dom": "^19.0.3",
+    "@playwright/test": "^1.55.0",
     "@vitejs/plugin-react": "^6.0.1",
     "@vitest/coverage-v8": "^4.1.4",
     "immutable": "^5.0.3",

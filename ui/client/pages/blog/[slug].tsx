@@ -52,7 +52,22 @@ const BlogPost = ({post, themeTokens, footer, pages, hasPosts}: Props) => {
             <Head>
                 <title>{post.title}</title>
                 {post.excerpt && <meta name="description" content={post.excerpt}/>}
-                {post.coverImage && <meta property="og:image" content={post.coverImage}/>}
+                <meta property="og:type" content="article"/>
+                <meta property="og:title" content={post.title}/>
+                {post.excerpt && <meta property="og:description" content={post.excerpt}/>}
+                {post.coverImage && <meta property="og:image" content={
+                    /^([a-z]+:|\/\/)/i.test(post.coverImage)
+                        ? post.coverImage
+                        : `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}${post.coverImage.startsWith('/') ? '' : '/'}${post.coverImage}`
+                }/>}
+                <meta name="twitter:card" content="summary_large_image"/>
+                <meta name="twitter:title" content={post.title}/>
+                {post.excerpt && <meta name="twitter:description" content={post.excerpt}/>}
+                {post.coverImage && <meta name="twitter:image" content={
+                    /^([a-z]+:|\/\/)/i.test(post.coverImage)
+                        ? post.coverImage
+                        : `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}${post.coverImage.startsWith('/') ? '' : '/'}${post.coverImage}`
+                }/>}
             </Head>
             <div style={{maxWidth: 720, margin: '0 auto', padding: '24px 20px 80px'}}>
                 <Logo t={t} admin={false}/>

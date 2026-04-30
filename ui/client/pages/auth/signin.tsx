@@ -53,7 +53,7 @@ const SignInPage = ({callbackUrl}: {callbackUrl: string}) => {
         setSubmitting(true);
         setErrorText(null);
         try {
-            const res = await signIn('credentials', {
+            const res = await signIn('admin-credentials', {
                 redirect: false,
                 email: values.email,
                 password: values.password,

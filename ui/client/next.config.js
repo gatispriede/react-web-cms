@@ -71,6 +71,12 @@ const nextConfig = {
         {source: '/lt/admin/:path*', destination: '/admin/:path*', permanent: false, locale: false},
         {source: '/ru/admin', destination: '/admin', permanent: false, locale: false},
         {source: '/ru/admin/:path*', destination: '/admin/:path*', permanent: false, locale: false},
+        // Phase 2 of admin segregation — legacy URLs jump to the new area
+        // structure. Keep `/admin/settings` reachable only as a redirect
+        // target (the file remains for the AdminSettings legacy fallback).
+        {source: '/admin/settings', destination: '/admin/build', permanent: false},
+        {source: '/admin/languages', destination: '/admin/content/translations', permanent: false},
+        {source: '/admin/modules-preview', destination: '/admin/build/modules-preview', permanent: false},
     ],
     rewrites: async () => [
         {

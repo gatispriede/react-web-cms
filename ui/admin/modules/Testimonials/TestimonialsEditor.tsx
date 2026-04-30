@@ -59,6 +59,7 @@ const TestimonialsEditor: React.FC<IInputContent> = ({content, setContent, t}) =
                                     <Button danger size="small" icon={<DeleteOutlined/>} onClick={() => removeItem(i)}/>
                                 </Space>
                                 <Input.TextArea
+                                    {...(i === 0 ? {'data-testid': 'module-editor-primary-text-input'} : {})}
                                     value={q.quote}
                                     onChange={e => patchItem(i, {quote: e.target.value})}
                                     placeholder="Delivered architecture that reads like C# in the browser…"

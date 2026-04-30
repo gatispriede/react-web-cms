@@ -1,0 +1,14 @@
+{
+  "_comment": "Drop this into your Claude Code / Cursor MCP config. Replace <absolute-path-to-repo> with the checkout path on this machine, paste a freshly-issued token from the admin UI into MCP_TOKEN, and point MONGODB_URI at the same Mongo the CMS uses.",
+  "mcpServers": {
+    "redis-node-js-cloud-cms": {
+      "command": "npm",
+      "args": ["run", "mcp:stdio"],
+      "cwd": "<absolute-path-to-repo>",
+      "env": {
+        "MCP_TOKEN": "<paste-token-here>",
+        "MONGODB_URI": "mongodb://localhost:27017/cms"
+      }
+    }
+  }
+}

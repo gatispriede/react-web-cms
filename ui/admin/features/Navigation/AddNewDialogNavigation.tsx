@@ -127,7 +127,7 @@ class AddNewDialogNavigation extends React.Component<IProps, {}> {
         return (
             <>
                 <Modal width={'90%'} open={this.props.open}
-                       okButtonProps={{disabled: tooShort || reserved}}
+                       okButtonProps={{disabled: tooShort || reserved, 'data-testid': 'nav-page-save-btn'}}
                        onOk={async () => {
                            await this.createEditNavigation()
                        }}
@@ -137,6 +137,7 @@ class AddNewDialogNavigation extends React.Component<IProps, {}> {
                     <div className={'page-name'}>
                         <label>{this.props.t("Page name")}</label>
                         <Input
+                            data-testid="nav-page-name-input"
                             status={reserved ? 'error' : undefined}
                             value={this.state.newNavigationName}
                             onChange={(input) => this.newNavigationName = input.target.value}

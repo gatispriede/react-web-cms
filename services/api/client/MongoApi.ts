@@ -25,6 +25,33 @@ class MongoApi {
     private readonly sectionApi = new SectionApi();
 
     getUser = (args: { email: string }): Promise<Partial<IUser> | null> => this.userApi.getUser(args);
+    /**
+     * Customer-side Google sign-in landing point. NextAuth's signIn callback
+     * calls this on first touch — service-side it's idempotent on `googleSub`
+     * and links to an existing customer when the email already has a doc.
+     */
+    addCustomerFromGoogle = async (args: {email: string; name?: string; googleSub: string}): Promise<{id?: string; error?: string; raw?: string}> => {
+        try {
+            // Direct service call — runs server-side from the NextAuth
+            // callback. We use `eval('require')` instead of a dynamic
+            // `import()` because Turbopack/webpack still walks dynamic
+            // imports during browser-bundle analysis. Pulling
+            // `mongoDBConnection` into the client graph drags in mongo,
+            // nodemailer, bcrypt, and every server-only service. The
+            // eval'd require is opaque to the bundler, so the chain stops
+            // at MongoApi's boundary.
+            // eslint-disable-next-line @typescript-eslint/no-implied-eval, no-eval
+            const nodeRequire = eval('require') as NodeJS.Require;
+            const {getMongoConnection} = nodeRequire('@services/infra/mongoDBConnection');
+            const conn = getMongoConnection() as any;
+            const raw: string = await conn.addCustomerFromGoogle(args);
+            const parsed = JSON.parse(raw || '{}');
+            if (parsed.error) return {error: parsed.error};
+            return {id: parsed.createCustomer?.id, raw};
+        } catch (err) {
+            return {error: String(err)};
+        }
+    };
 
     getLogo = (): Promise<ILogo> => this.assetApi.getLogo();
     saveLogo = (content: string, expectedVersion?: number | null): Promise<{version?: number; error?: string}> => this.assetApi.saveLogo(content, expectedVersion);

@@ -9,7 +9,7 @@ const PlainTextEditor = ({content, setContent, t}:IInputContent) => {
     return (
         <div className={'plain-text'}>
             <label>{t("Please enter text")}: </label>
-            <Input value={richTextContent.data.value} onChange={(e) => {
+            <Input data-testid="module-editor-primary-text-input" value={richTextContent.data.value} onChange={(e) => {
                 richTextContent.setValue(e.target.value)
                 setContent(richTextContent.stringData)
             }}/>

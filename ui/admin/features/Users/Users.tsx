@@ -54,27 +54,6 @@ const AdminSettingsUsers = () => {
         });
     };
 
-    // Modal is `preserve={false}`, which unmounts the inner Form when
-    // closed — so calling `form.setFieldsValue(...)` inside the open*
-    // handlers above used to no-op on the **first** open of an edit
-    // session (form not yet mounted), then succeed on the second open
-    // because the previously-mounted instance was still around. Effect
-    // runs after the Form is in the tree, so the values land every time.
-    useEffect(() => {
-        if (editing === null) return;
-        form.resetFields();
-        if (editing.id) {
-            form.setFieldsValue({
-                email: editing.email ?? '',
-                name: editing.name ?? '',
-                role: editing.role ?? 'viewer',
-                canPublishProduction: Boolean(editing.canPublishProduction),
-            });
-        } else {
-            form.setFieldsValue({role: 'viewer', canPublishProduction: false});
-        }
-    }, [editing, form]);
-
     const close = () => {
         setEditing(null);
         form.resetFields();
@@ -200,23 +179,34 @@ const AdminSettingsUsers = () => {
                 pagination={{pageSize: 10}}
                 size="middle"
             />
+            {/* Modal mounted only when editing — `forceRender` would eagerly
+                mount the Portal during SSR and triggers a hydration mismatch
+                (`<div class="ant-modal-root">` on client, absent on server).
+                The original "first-open empty fields" race is now solved by
+                keying the Form on `editing?.id` so it remounts per open and
+                picks up `initialValues` cleanly — no setFieldsValue race. */}
+            {editing !== null && (
             <Modal
                 title={editing?.id ? t('Edit user') : t('Add user')}
-                open={editing !== null}
+                open
                 onCancel={close}
                 onOk={save}
                 confirmLoading={saving}
                 okText={editing?.id ? t('Save') : t('Create')}
-                // antd lazy-mounts modal children on first open. Without
-                // forceRender, the `useEffect` that calls
-                // form.setFieldsValue fires before the <Form> is in the
-                // tree on the FIRST edit, leaving fields blank — second
-                // open then works because the Form is mounted from the
-                // previous render. forceRender mounts the Form eagerly
-                // so values land every time.
-                forceRender
+                destroyOnClose
             >
-                <Form form={form} layout="vertical" preserve={false}>
+                <Form
+                    form={form}
+                    layout="vertical"
+                    preserve={false}
+                    key={editing?.id ?? 'new'}
+                    initialValues={{
+                        email: editing?.email ?? '',
+                        name: editing?.name ?? '',
+                        role: editing?.role ?? 'viewer',
+                        canPublishProduction: Boolean(editing?.canPublishProduction),
+                    }}
+                >
                     <Form.Item
                         name="email"
                         label={t('Email')}
@@ -252,6 +242,7 @@ const AdminSettingsUsers = () => {
                     </Form.Item>
                 </Form>
             </Modal>
+            )}
         </div>
     );
 };

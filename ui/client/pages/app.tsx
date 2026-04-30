@@ -488,14 +488,30 @@ class App extends React.Component<IHomeProps> {
                                             label: translateOrKeep(this.props.t, tp.page),
                                         }))}
                                     />
+                                    {this.state.blogEnabled && this.state.hasPosts && (
+                                        <a
+                                            href="/blog"
+                                            className="scroll-nav-link"
+                                            style={{textTransform: 'uppercase', textDecoration: 'none', fontWeight: 400, opacity: 0.7}}
+                                        >
+                                            {this.props.t('Blog')}
+                                        </a>
+                                    )}
                                     <MobileNav
-                                        links={this.state.tabProps.map<MobileNavLink>(tp => ({
-                                            key: tp.key,
-                                            href: `#${tp.page.replace(/\s+/g, '-').toLowerCase()}`,
-                                            label: translateOrKeep(this.props.t, tp.page),
-                                        }))}
+                                        links={[
+                                            ...this.state.tabProps.map<MobileNavLink>(tp => ({
+                                                key: tp.key,
+                                                href: `#${tp.page.replace(/\s+/g, '-').toLowerCase()}`,
+                                                label: translateOrKeep(this.props.t, tp.page),
+                                            })),
+                                            ...(this.state.blogEnabled && this.state.hasPosts ? [{key: 'blog', href: '/blog', label: this.props.t('Blog')}] : []),
+                                        ]}
                                         activeKey={this.state.activeTab}
                                         onNavigate={(link) => {
+                                            if (!link.href.startsWith('#')) {
+                                                if (typeof window !== 'undefined') window.location.assign(link.href);
+                                                return;
+                                            }
                                             const slug = link.href.replace(/^#/, '');
                                             const el = document.getElementById(slug);
                                             if (el) el.scrollIntoView({behavior: 'smooth', block: 'start'});
@@ -544,11 +560,14 @@ class App extends React.Component<IHomeProps> {
                                         <div className="site-tabs-left-cluster">
                                             <Logo t={this.props.t} admin={false}/>
                                             <MobileNav
-                                                links={this.state.tabProps.map<MobileNavLink>(tp => ({
-                                                    key: tp.key,
-                                                    href: `/${tp.page.replace(/\s+/g, '-').toLowerCase()}`,
-                                                    label: translateOrKeep(this.props.t, tp.page),
-                                                }))}
+                                                links={[
+                                                    ...this.state.tabProps.map<MobileNavLink>(tp => ({
+                                                        key: tp.key,
+                                                        href: `/${tp.page.replace(/\s+/g, '-').toLowerCase()}`,
+                                                        label: translateOrKeep(this.props.t, tp.page),
+                                                    })),
+                                                    ...(this.state.blogEnabled && this.state.hasPosts ? [{key: 'blog', href: '/blog', label: this.props.t('Blog')}] : []),
+                                                ]}
                                                 activeKey={"" + activeKey}
                                                 onNavigate={(link) => {
                                                     // Delegate to the Tabs onChange so AntD updates its own
@@ -558,6 +577,11 @@ class App extends React.Component<IHomeProps> {
                                                     if (typeof window !== 'undefined') window.location.assign(link.href);
                                                 }}
                                             />
+                                            {this.state.blogEnabled && this.state.hasPosts && (
+                                                <Link href="/blog" className="navigation-item" style={{marginLeft: 8}}>
+                                                    {this.props.t('Blog')}
+                                                </Link>
+                                            )}
                                         </div>
                                     ),
                                     right: items.length > 1 ? (

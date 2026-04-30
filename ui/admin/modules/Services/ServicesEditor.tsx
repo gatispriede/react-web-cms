@@ -75,6 +75,7 @@ const ServicesEditor: React.FC<IInputContent> = ({content, setContent, t}) => {
                                     <Button danger size="small" icon={<DeleteOutlined/>} onClick={() => removeRow(i)}/>
                                 </Space>
                                 <LabeledInput
+                                    {...(i === 0 ? {'data-testid': 'module-editor-primary-text-input'} : {})}
                                     value={r.title}
                                     onChange={e => patchRow(i, {title: e.target.value})}
                                     placeholder="Solutions *architecture*"
