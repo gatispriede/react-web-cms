@@ -307,19 +307,31 @@ Every `e2e.smoke` / `e2e.run` / `e2e.bundle.refresh` invocation writes an audit 
 
 ## Implementation status
 
-Status as of 2026-04-29: **Phase 1 shipped on `develop`** (uncommitted).
+### 2026-04-30 — Phase 2 shipped on `develop`
 
-Phase 1 complete:
-- `playwright.config.ts` at repo root, chromium-only, sharded 4× in CI.
-- `tests/e2e/{tsconfig.json,README.md}` + fixtures (`db.ts` per-worker `mongodb-memory-server`, `server.ts` per-worker `next dev`, `seedFactories.ts` direct-Mongo seeders, `auth.ts` Playwright `test.extend` with `adminPage`/`customerPage`/`anonPage`/`resetData`).
-- 3 representative specs: `features/auth-admin.spec.ts`, `features/content-management.spec.ts`, `features/theming.spec.ts`.
-- `.github/workflows/e2e.yml` — PR-gate, sharded, artifacts on failure.
-- `package.json` scripts: `e2e`, `e2e:headed`, `e2e:dev`, `e2e:update-screenshots`, `e2e:install`. Dep: `@playwright/test@^1.55.0`.
+What landed:
 
-Deferred (queued under Phases 2–4):
-- Phase 2 — per-`EItemType` × style specs under `tests/e2e/modules/`.
-- Phase 3 — e-commerce specs (customer-auth, products, cart, checkout, inventory).
-- Phase 4 — visual regression.
-- Coverage gate (`COVERAGE.md` autogen + CI fail on missing specs) — wires up when Phase 2 lands.
+- **Two-mode runner.**
+  - `npm run e2e:smoke` — single-chain smoke against the canonical CV bundle, ~25s, runs against an external dev server (`PLAYWRIGHT_E2E_REUSE_DEV=1`). 7 passing + 1 deferred (theme switch — see `dev-server-free build` ROADMAP backlog).
+  - `npm run e2e:full` — broad coverage against a per-worker prod build, ~45s no-rebuild / ~80s with rebuild. Each worker spawns its own `next start` against its own `mongodb-memory-server`. Build output lives in `ui/client/.next-e2e/` (separate `distDir`, never clobbers dev's `.next/`).
+  - `npm run e2e:full:headed` / `:nobuild` / `:nobuild:headed` — variants for iteration.
+- **Dev-server-free build.** `tools/e2e-build.js` spins up its own `mongodb-memory-server` + `services/index.ts` standalone GraphQL on a free port, runs `next build ui/client` with `GRAPHQL_ENDPOINT` pointing at it, then tears everything down. The build no longer depends on a running local dev server.
+- **Worker-scoped login session.** `tests/e2e/fixtures/auth.ts` signs in once per worker via the real `/auth/signin` form, captures `context.storageState()`, and every per-test `adminPage` opens a fresh context with that storage state pre-loaded. Eliminates the per-test signin cost.
+- **24 module specs + 17 feature specs** under `tests/e2e/modules/` and `tests/e2e/features/`, all routed through `tests/e2e/modules/_shared/moduleHarness.ts` (`buildScenario` → `createPage` → `addBlankSection` → `openAddModuleDrawer` → `fillPrimaryText` → `saveModuleDrawer` → `assertPublicMarker`).
+- **ISR refresh fixed.** `gqlFetch` honors `INTERNAL_GRAPHQL_URL` so worker-internal SSR + revalidate hit the right server; `pages/api/revalidate.ts` expands paths across configured locales (`/`, `/lv/...`, `/lt/...`, etc.) so a save flushes every locale variant.
+- **CI gate.** `.github/workflows/e2e.yml` triggers on PRs into `master` and on `master` itself (was `develop`). Sharded 4× chromium, artifacts on failure. **Develop is no longer in the CI loop** — too noisy for WIP commits.
 
-Operator first-run: `npm install` → `npm run e2e:install` → `npm run e2e`.
+Current tally: 54 passed, 25 documented `test.fixme` markers, 0 failed.
+
+### Documented backlog (see [ROADMAP.md](../../ROADMAP.md) #16–23)
+
+- Empty-array `defaultContent` fix → unblocks 14 tests across List/ProjectGrid/Services/SocialLinks/StatsCard/Testimonials/Timeline
+- gqty schema regen → drops the `UserApi.getUser` raw-fetch workaround + restores MCP token issue/revoke
+- BlogFeed primary-text-input behind a closed `<Collapse>`
+- Themes (legacy ROADMAP #13) — `gqty.resolve` returns empty for `mongo.getThemes` on the direct page route
+- ProductApi mock → real GraphQL resolvers (promotes 5 surface-mount specs to real flow specs)
+- Customer signup auto-signin race
+- Blog posts editor testids
+- Visual regression baselines
+
+Operator first-run: `npm install` → `npm run e2e:install` → `npm run e2e:full`.

@@ -1,9 +1,15 @@
 name: e2e
 
+# Pre-merge gate only — runs on PRs into master and on the master branch
+# itself. `develop` is the long-lived integration branch and gets noisy
+# pushes; we don't want a CI run on every WIP commit. Open a PR to master
+# when the branch is ready for the e2e gate.
 on:
   pull_request:
+    branches: [master]
   push:
-    branches: [develop]
+    branches: [master]
+  workflow_dispatch:
 
 jobs:
   e2e:
