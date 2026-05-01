@@ -26,7 +26,7 @@ test.describe.serial('feature — MCP tokens', () => {
     // the screenshot. The dialog never opens (or closes immediately).
     // Likely the same gqty schema-drift issue as `getUser.kind`. Re-enable
     // after `pnpm generate-schema` regen + workaround drop.
-    test.fixme('admin issues a new MCP token', async ({adminPage}) => {
+    test('admin issues a new MCP token', async ({adminPage}) => {
         await adminPage.goto('/admin/system/mcp');
 
         const issueBtn = byTid(adminPage, tid('mcp', 'issue', 'btn'));
@@ -49,12 +49,18 @@ test.describe.serial('feature — MCP tokens', () => {
         await expect(adminPage.getByText(tokenName)).toBeVisible({timeout: 5_000});
     });
 
-    test.fixme('admin revokes the issued token', async ({adminPage}) => {
+    test('admin revokes the issued token', async ({adminPage}) => {
         await adminPage.goto('/admin/system/mcp');
         const row = adminPage.getByRole('row', {name: new RegExp(tokenName)});
         await expect(row).toBeVisible({timeout: 10_000});
         await row.getByTestId('mcp-revoke-btn').click();
         await byTid(adminPage, tid('mcp', 'revoke', 'confirm', 'btn')).click();
-        await expect(adminPage.getByText(tokenName)).toHaveCount(0, {timeout: 10_000});
+        // Revoke flips the row's status tag to "revoked" rather than
+        // deleting the row — historical record stays so the operator can
+        // see when each token was killed. Assert the status flip + that
+        // the revoke button itself is gone (Actions cell renders null
+        // for non-active rows).
+        await expect(row.getByText(/revoked/i)).toBeVisible({timeout: 10_000});
+        await expect(row.getByTestId('mcp-revoke-btn')).toHaveCount(0);
     });
 });

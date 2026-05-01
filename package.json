@@ -22,7 +22,7 @@
     "mcp:stdio": "cross-env npx tsx --tsconfig services/tsconfig.custom.json services/mcp/stdio.ts",
     "mcp:http": "cross-env npx tsx --tsconfig services/tsconfig.custom.json services/mcp/http.ts",
     "ssl": "npx tsx --tsconfig services/tsconfig.custom.json services/sslServer.ts",
-    "generate-schema": "npx @gqty/cli http://localhost:80/api/graphql --target=services/api/generated/index.ts",
+    "generate-schema": "node tools/generate-schema.js",
     "setupSecrets": "npx auth@latest secret next",
     "test": "vitest run",
     "test:watch": "vitest",

@@ -3,25 +3,29 @@ import {test, expect} from '../fixtures/auth';
 // ──────────────────────────────────────────────────────────────────
 // FEATURE — Themes (admin)
 //
-// `ROADMAP #13` — when Theme.tsx mounts as a direct page route (not
-// inside the legacy tabbed AdminSettings shell), gqty's `resolve(...)`
-// for `mongo.getThemes` returns empty even though direct fetch works.
-// The whole describe is `fixme` until the gqty/page-tree initialization
-// gap is resolved. Until then, smoke step 7 stays skipped too.
+// gqty schema regen (2026-04-30) unblocked the direct-page-route
+// rendering — `Theme.tsx` at `/admin/client-config/themes` now sees
+// the seeded preset grid via `gqty.resolve(query.mongo.getThemes)`.
 // ──────────────────────────────────────────────────────────────────
 
 test.describe('feature — themes admin', () => {
-    test.fixme('admin sees the themes grid', async ({adminPage}) => {
+    test('admin sees the themes grid', async ({adminPage}) => {
         await adminPage.goto('/admin/client-config/themes');
         await expect(
             adminPage.locator('[data-testid^="themes-list-row-"]').first(),
         ).toBeVisible({timeout: 15_000});
     });
 
-    test.fixme('admin can switch the active theme', async ({adminPage}) => {
+    test('admin can switch the active theme', async ({adminPage}) => {
         await adminPage.goto('/admin/client-config/themes');
-        const setActiveBtns = adminPage.locator('[data-testid="themes-set-active-btn"]');
-        await setActiveBtns.first().click();
+        // The currently-active theme's Activate button is disabled — pick
+        // the first ENABLED Activate button so the test always switches
+        // to a different theme regardless of which one was active.
+        const inactiveActivate = adminPage
+            .locator('[data-testid="themes-set-active-btn"]:not([disabled])')
+            .first();
+        await expect(inactiveActivate).toBeVisible({timeout: 10_000});
+        await inactiveActivate.click();
         await expect(adminPage.getByText(/theme.*activated/i)).toBeVisible({timeout: 10_000});
     });
 });

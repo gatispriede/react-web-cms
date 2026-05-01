@@ -34,6 +34,17 @@ export interface Scalars {
   JSON: { input: any; output: any };
 }
 
+export interface InAddress {
+  city: Scalars["String"]["input"];
+  country: Scalars["String"]["input"];
+  id?: InputMaybe<Scalars["String"]["input"]>;
+  isDefault?: InputMaybe<Scalars["Boolean"]["input"]>;
+  line1: Scalars["String"]["input"];
+  line2?: InputMaybe<Scalars["String"]["input"]>;
+  name: Scalars["String"]["input"];
+  postalCode: Scalars["String"]["input"];
+}
+
 export interface InImage {
   created: Scalars["String"]["input"];
   id: Scalars["String"]["input"];
@@ -82,7 +93,9 @@ export interface InSection {
   overlayAnchor?: InputMaybe<Scalars["String"]["input"]>;
   page: Scalars["String"]["input"];
   slots?: InputMaybe<Array<InputMaybe<Scalars["Int"]["input"]>>>;
+  /** Cross-cutting "transparent background" flag — clears the section's default bg chain. */
   transparent?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Section-level opacity, 0..100 (%). 0 / absent = opaque; 100 = invisible. */
   transparentOpacity?: InputMaybe<Scalars["Int"]["input"]>;
   type: Scalars["Int"]["input"];
 }
@@ -105,10 +118,13 @@ export interface InUser {
   avatar?: InputMaybe<Scalars["String"]["input"]>;
   canPublishProduction?: InputMaybe<Scalars["Boolean"]["input"]>;
   email?: InputMaybe<Scalars["String"]["input"]>;
+  googleSub?: InputMaybe<Scalars["String"]["input"]>;
   id?: InputMaybe<Scalars["String"]["input"]>;
+  kind?: InputMaybe<Scalars["String"]["input"]>;
   mustChangePassword?: InputMaybe<Scalars["Boolean"]["input"]>;
   name?: InputMaybe<Scalars["String"]["input"]>;
   password?: InputMaybe<Scalars["String"]["input"]>;
+  phone?: InputMaybe<Scalars["String"]["input"]>;
   preferredAdminLocale?: InputMaybe<Scalars["String"]["input"]>;
   role?: InputMaybe<Scalars["String"]["input"]>;
 }
@@ -121,6 +137,27 @@ export const scalarsEnumsHash: ScalarsEnumsHash = {
   String: true,
 };
 export const generatedSchema = {
+  IAddress: {
+    __typename: { __type: "String!" },
+    city: { __type: "String!" },
+    country: { __type: "String!" },
+    id: { __type: "String!" },
+    isDefault: { __type: "Boolean" },
+    line1: { __type: "String!" },
+    line2: { __type: "String" },
+    name: { __type: "String!" },
+    postalCode: { __type: "String!" },
+  },
+  ICustomer: {
+    __typename: { __type: "String!" },
+    createdAt: { __type: "String" },
+    email: { __type: "String!" },
+    emailVerified: { __type: "String" },
+    id: { __type: "String!" },
+    name: { __type: "String" },
+    phone: { __type: "String" },
+    shippingAddresses: { __type: "[IAddress!]!" },
+  },
   IImage: {
     __typename: { __type: "String!" },
     created: { __type: "String!" },
@@ -213,11 +250,22 @@ export const generatedSchema = {
     canPublishProduction: { __type: "Boolean" },
     email: { __type: "String!" },
     id: { __type: "String!" },
+    kind: { __type: "String" },
     mustChangePassword: { __type: "Boolean" },
     name: { __type: "String" },
     password: { __type: "String!" },
     preferredAdminLocale: { __type: "String" },
     role: { __type: "String" },
+  },
+  InAddress: {
+    city: { __type: "String!" },
+    country: { __type: "String!" },
+    id: { __type: "String" },
+    isDefault: { __type: "Boolean" },
+    line1: { __type: "String!" },
+    line2: { __type: "String" },
+    name: { __type: "String!" },
+    postalCode: { __type: "String!" },
   },
   InImage: {
     created: { __type: "String!" },
@@ -281,10 +329,13 @@ export const generatedSchema = {
     avatar: { __type: "String" },
     canPublishProduction: { __type: "Boolean" },
     email: { __type: "String" },
+    googleSub: { __type: "String" },
     id: { __type: "String" },
+    kind: { __type: "String" },
     mustChangePassword: { __type: "Boolean" },
     name: { __type: "String" },
     password: { __type: "String" },
+    phone: { __type: "String" },
     preferredAdminLocale: { __type: "String" },
     role: { __type: "String" },
   },
@@ -311,18 +362,77 @@ export const generatedSchema = {
       },
     },
     addUser: { __type: "String!", __args: { user: "InUser!" } },
+    adminRefundOrder: {
+      __type: "String!",
+      __args: { amount: "Int", orderId: "String!", reason: "String" },
+    },
+    adminTransitionOrder: {
+      __type: "String!",
+      __args: { next: "String!", note: "String", orderId: "String!" },
+    },
+    attachOrderAddress: {
+      __type: "String!",
+      __args: { billing: "JSON", orderId: "String!", shipping: "JSON!" },
+    },
+    attachOrderShipping: {
+      __type: "String!",
+      __args: { methodCode: "String!", orderId: "String!" },
+    },
+    authorizeOrderPayment: {
+      __type: "String!",
+      __args: { card: "JSON!", idempotencyKey: "String!", orderId: "String!" },
+    },
+    cancelOrder: { __type: "String!", __args: { orderId: "String!" } },
+    cartAddItem: {
+      __type: "String!",
+      __args: { productId: "String!", qty: "Int!", sku: "String!" },
+    },
+    cartClear: { __type: "String!" },
+    cartRemoveItem: {
+      __type: "String!",
+      __args: { productId: "String!", sku: "String!" },
+    },
+    cartUpdateQty: {
+      __type: "String!",
+      __args: { productId: "String!", qty: "Int!", sku: "String!" },
+    },
+    changeMyPassword: {
+      __type: "String!",
+      __args: { newPassword: "String!", oldPassword: "String!" },
+    },
+    createDraftOrder: {
+      __type: "String!",
+      __args: { cartId: "String", currency: "String!", guestEmail: "String" },
+    },
     createNavigation: {
       __type: "String!",
       __args: { navigation: "InNavigation!" },
     },
     deleteImage: { __type: "String!", __args: { id: "String!" } },
     deleteLanguage: { __type: "String!", __args: { language: "InLanguage" } },
+    deleteMyAddress: { __type: "String!", __args: { id: "String!" } },
     deleteNavigationItem: {
       __type: "String!",
       __args: { pageName: "String!" },
     },
     deletePost: { __type: "String!", __args: { id: "String!" } },
+    deleteProduct: { __type: "String!", __args: { id: "String!" } },
     deleteTheme: { __type: "String!", __args: { id: "String!" } },
+    finalizeOrder: {
+      __type: "String!",
+      __args: { idempotencyKey: "String!", orderId: "String!" },
+    },
+    inventorySaveAdapterConfig: {
+      __type: "String!",
+      __args: { config: "JSON!" },
+    },
+    inventorySyncAll: { __type: "String!" },
+    inventorySyncDelta: { __type: "String!" },
+    mcpIssueToken: {
+      __type: "String!",
+      __args: { name: "String!", scopes: "[String!]!", ttlDays: "Int" },
+    },
+    mcpRevokeToken: { __type: "String!", __args: { id: "String!" } },
     publishSnapshot: { __type: "String!", __args: { note: "String" } },
     removeSectionItem: { __type: "String!", __args: { id: "String!" } },
     removeUser: { __type: "String!", __args: { id: "String!" } },
@@ -330,6 +440,7 @@ export const generatedSchema = {
       __type: "String!",
       __args: { navigation: "InNavigation", oldPageName: "String!" },
     },
+    resetPreset: { __type: "String!", __args: { id: "String!" } },
     rollbackToSnapshot: { __type: "String!", __args: { id: "String!" } },
     saveFooter: {
       __type: "String!",
@@ -340,9 +451,14 @@ export const generatedSchema = {
       __type: "String!",
       __args: { content: "String!", expectedVersion: "Int" },
     },
+    saveMyAddress: { __type: "String!", __args: { address: "InAddress!" } },
     savePost: {
       __type: "String!",
       __args: { expectedVersion: "Int", post: "JSON!" },
+    },
+    saveProduct: {
+      __type: "String!",
+      __args: { expectedVersion: "Int", product: "JSON!" },
     },
     saveSiteFlags: {
       __type: "String!",
@@ -361,25 +477,30 @@ export const generatedSchema = {
       __args: { expectedVersion: "Int", meta: "JSON!" },
     },
     setActiveTheme: { __type: "String!", __args: { id: "String!" } },
-    resetPreset: { __type: "String!", __args: { id: "String!" } },
     setPostPublished: {
       __type: "String!",
       __args: { id: "String!", publish: "Boolean!" },
     },
+    setProductPublished: {
+      __type: "String!",
+      __args: { id: "String!", publish: "Boolean!" },
+    },
+    signUpCustomer: { __type: "String!", __args: { customer: "InUser!" } },
+    updateMyProfile: { __type: "String!", __args: { customer: "InUser!" } },
     updateNavigation: {
       __type: "String!",
       __args: { page: "String!", sections: "[String]" },
     },
     updateUser: { __type: "String!", __args: { user: "InUser!" } },
-    inventorySyncAll: { __type: "String!" },
-    inventorySyncDelta: { __type: "String!" },
-    inventorySaveAdapterConfig: {
-      __type: "String!",
-      __args: { config: "JSON!" },
-    },
   },
   QueryMongo: {
     __typename: { __type: "String!" },
+    adminOrder: { __type: "String", __args: { id: "String!" } },
+    adminOrders: {
+      __type: "String!",
+      __args: { limit: "Int", status: "String" },
+    },
+    cart: { __type: "String!" },
     getActiveTheme: { __type: "String" },
     getAuditActors: { __type: "String!" },
     getAuditCollections: { __type: "String!" },
@@ -398,6 +519,20 @@ export const generatedSchema = {
       __type: "String!",
       __args: { includeDrafts: "Boolean", limit: "Int" },
     },
+    getProduct: {
+      __type: "String",
+      __args: { includeDrafts: "Boolean", slug: "String!" },
+    },
+    getProducts: {
+      __type: "String!",
+      __args: {
+        category: "String",
+        inStockOnly: "Boolean",
+        includeDrafts: "Boolean",
+        limit: "Int",
+        source: "String",
+      },
+    },
     getPublishedHistory: { __type: "String!", __args: { limit: "Int" } },
     getPublishedMeta: { __type: "String" },
     getPublishedSnapshot: { __type: "String" },
@@ -408,10 +543,20 @@ export const generatedSchema = {
     getTranslationMeta: { __type: "String!" },
     getUser: { __type: "IUser", __args: { email: "String" } },
     getUsers: { __type: "[IUser!]!" },
-    loadData: { __type: "[ILoadData!]!" },
-    setupAdmin: { __type: "IUser" },
-    inventoryStatus: { __type: "String!" },
     inventoryReadDeadLetters: { __type: "String!", __args: { limit: "Int" } },
+    inventoryStatus: { __type: "String!" },
+    loadData: { __type: "[ILoadData!]!" },
+    mcpListTokens: { __type: "String!" },
+    me: { __type: "ICustomer" },
+    myOrder: { __type: "String", __args: { id: "String!" } },
+    myOrders: { __type: "String!", __args: { limit: "Int" } },
+    orderByToken: { __type: "String", __args: { token: "String!" } },
+    searchProducts: {
+      __type: "String!",
+      __args: { includeDrafts: "Boolean", limit: "Int", q: "String!" },
+    },
+    setupAdmin: { __type: "IUser" },
+    shippingMethodsFor: { __type: "String!", __args: { orderId: "String!" } },
   },
   mutation: {
     __typename: { __type: "String!" },
@@ -426,6 +571,29 @@ export const generatedSchema = {
   },
   subscription: {},
 } as const;
+
+export interface IAddress {
+  __typename?: "IAddress";
+  city?: Scalars["String"]["output"];
+  country?: Scalars["String"]["output"];
+  id?: Scalars["String"]["output"];
+  isDefault?: Maybe<Scalars["Boolean"]["output"]>;
+  line1?: Scalars["String"]["output"];
+  line2?: Maybe<Scalars["String"]["output"]>;
+  name?: Scalars["String"]["output"];
+  postalCode?: Scalars["String"]["output"];
+}
+
+export interface ICustomer {
+  __typename?: "ICustomer";
+  createdAt?: Maybe<Scalars["String"]["output"]>;
+  email?: Scalars["String"]["output"];
+  emailVerified?: Maybe<Scalars["String"]["output"]>;
+  id?: Scalars["String"]["output"];
+  name?: Maybe<Scalars["String"]["output"]>;
+  phone?: Maybe<Scalars["String"]["output"]>;
+  shippingAddresses: Array<IAddress>;
+}
 
 export interface IImage {
   __typename?: "IImage";
@@ -500,7 +668,13 @@ export interface ISection {
   overlayAnchor?: Maybe<Scalars["String"]["output"]>;
   page?: Maybe<Scalars["String"]["output"]>;
   slots?: Maybe<Array<Maybe<Scalars["Int"]["output"]>>>;
+  /**
+   * Cross-cutting transparent-background flag — see InSection.transparent.
+   */
   transparent?: Maybe<Scalars["Boolean"]["output"]>;
+  /**
+   * Section opacity 0..100 (%). See InSection.transparentOpacity.
+   */
   transparentOpacity?: Maybe<Scalars["Int"]["output"]>;
   type?: Scalars["Int"]["output"];
   /**
@@ -530,6 +704,7 @@ export interface IUser {
   canPublishProduction?: Maybe<Scalars["Boolean"]["output"]>;
   email?: Scalars["String"]["output"];
   id?: Scalars["String"]["output"];
+  kind?: Maybe<Scalars["String"]["output"]>;
   mustChangePassword?: Maybe<Scalars["Boolean"]["output"]>;
   name?: Maybe<Scalars["String"]["output"]>;
   password?: Scalars["String"]["output"];
@@ -554,6 +729,66 @@ export interface MutationMongo {
     section: InSection;
   }) => Scalars["String"]["output"];
   addUser: (args: { user: InUser }) => Scalars["String"]["output"];
+  /**
+   * Admin: refund whole order (admin).
+   */
+  adminRefundOrder: (args: {
+    amount?: Maybe<Scalars["Int"]["input"]>;
+    orderId: Scalars["String"]["input"];
+    reason?: Maybe<Scalars["String"]["input"]>;
+  }) => Scalars["String"]["output"];
+  /**
+   * Admin: state-machine transition (editor).
+   */
+  adminTransitionOrder: (args: {
+    next: Scalars["String"]["input"];
+    note?: Maybe<Scalars["String"]["input"]>;
+    orderId: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
+  attachOrderAddress: (args: {
+    billing?: Maybe<Scalars["JSON"]["input"]>;
+    orderId: Scalars["String"]["input"];
+    shipping: Scalars["JSON"]["input"];
+  }) => Scalars["String"]["output"];
+  attachOrderShipping: (args: {
+    methodCode: Scalars["String"]["input"];
+    orderId: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
+  authorizeOrderPayment: (args: {
+    card: Scalars["JSON"]["input"];
+    idempotencyKey: Scalars["String"]["input"];
+    orderId: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
+  cancelOrder: (args: {
+    orderId: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
+  cartAddItem: (args: {
+    productId: Scalars["String"]["input"];
+    qty: Scalars["Int"]["input"];
+    sku: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
+  cartClear?: Scalars["String"]["output"];
+  cartRemoveItem: (args: {
+    productId: Scalars["String"]["input"];
+    sku: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
+  cartUpdateQty: (args: {
+    productId: Scalars["String"]["input"];
+    qty: Scalars["Int"]["input"];
+    sku: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
+  changeMyPassword: (args: {
+    newPassword: Scalars["String"]["input"];
+    oldPassword: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
+  /**
+   * Snapshot cart -> Order, reserve stock, status:pending. Customer or guest (when allowGuestCheckout).
+   */
+  createDraftOrder: (args: {
+    cartId?: Maybe<Scalars["String"]["input"]>;
+    currency: Scalars["String"]["input"];
+    guestEmail?: Maybe<Scalars["String"]["input"]>;
+  }) => Scalars["String"]["output"];
   createNavigation: (args: {
     navigation: InNavigation;
   }) => Scalars["String"]["output"];
@@ -563,13 +798,42 @@ export interface MutationMongo {
   deleteLanguage: (args?: {
     language?: Maybe<InLanguage>;
   }) => Scalars["String"]["output"];
+  deleteMyAddress: (args: {
+    id: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
   deleteNavigationItem: (args: {
     pageName: Scalars["String"]["input"];
   }) => Scalars["String"]["output"];
   deletePost: (args: {
     id: Scalars["String"]["input"];
   }) => Scalars["String"]["output"];
+  deleteProduct: (args: {
+    id: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
   deleteTheme: (args: {
+    id: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
+  finalizeOrder: (args: {
+    idempotencyKey: Scalars["String"]["input"];
+    orderId: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
+  inventorySaveAdapterConfig: (args: {
+    config: Scalars["JSON"]["input"];
+  }) => Scalars["String"]["output"];
+  inventorySyncAll?: Scalars["String"]["output"];
+  inventorySyncDelta?: Scalars["String"]["output"];
+  /**
+   * Admin-only — issue a new MCP token. Secret is returned ONCE in the response.
+   */
+  mcpIssueToken: (args: {
+    name: Scalars["String"]["input"];
+    scopes: Array<Scalars["String"]["input"]>;
+    ttlDays?: Maybe<Scalars["Int"]["input"]>;
+  }) => Scalars["String"]["output"];
+  /**
+   * Admin-only — revoke an MCP token by id.
+   */
+  mcpRevokeToken: (args: {
     id: Scalars["String"]["input"];
   }) => Scalars["String"]["output"];
   publishSnapshot: (args?: {
@@ -585,6 +849,9 @@ export interface MutationMongo {
     navigation?: Maybe<InNavigation>;
     oldPageName: Scalars["String"]["input"];
   }) => Scalars["String"]["output"];
+  resetPreset: (args: {
+    id: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
   rollbackToSnapshot: (args: {
     id: Scalars["String"]["input"];
   }) => Scalars["String"]["output"];
@@ -597,9 +864,14 @@ export interface MutationMongo {
     content: Scalars["String"]["input"];
     expectedVersion?: Maybe<Scalars["Int"]["input"]>;
   }) => Scalars["String"]["output"];
+  saveMyAddress: (args: { address: InAddress }) => Scalars["String"]["output"];
   savePost: (args: {
     expectedVersion?: Maybe<Scalars["Int"]["input"]>;
     post: Scalars["JSON"]["input"];
+  }) => Scalars["String"]["output"];
+  saveProduct: (args: {
+    expectedVersion?: Maybe<Scalars["Int"]["input"]>;
+    product: Scalars["JSON"]["input"];
   }) => Scalars["String"]["output"];
   saveSiteFlags: (args: {
     expectedVersion?: Maybe<Scalars["Int"]["input"]>;
@@ -620,13 +892,16 @@ export interface MutationMongo {
   setActiveTheme: (args: {
     id: Scalars["String"]["input"];
   }) => Scalars["String"]["output"];
-  resetPreset: (args: {
-    id: Scalars["String"]["input"];
-  }) => Scalars["String"]["output"];
   setPostPublished: (args: {
     id: Scalars["String"]["input"];
     publish: Scalars["Boolean"]["input"];
   }) => Scalars["String"]["output"];
+  setProductPublished: (args: {
+    id: Scalars["String"]["input"];
+    publish: Scalars["Boolean"]["input"];
+  }) => Scalars["String"]["output"];
+  signUpCustomer: (args: { customer: InUser }) => Scalars["String"]["output"];
+  updateMyProfile: (args: { customer: InUser }) => Scalars["String"]["output"];
   updateNavigation: (args: {
     page: Scalars["String"]["input"];
     sections?: Maybe<Array<Maybe<Scalars["String"]["input"]>>>;
@@ -636,6 +911,20 @@ export interface MutationMongo {
 
 export interface QueryMongo {
   __typename?: "QueryMongo";
+  /**
+   * Admin/editor — order detail.
+   */
+  adminOrder: (args: {
+    id: Scalars["String"]["input"];
+  }) => Maybe<Scalars["String"]["output"]>;
+  /**
+   * Admin/editor — paged order list.
+   */
+  adminOrders: (args?: {
+    limit?: Maybe<Scalars["Int"]["input"]>;
+    status?: Maybe<Scalars["String"]["input"]>;
+  }) => Scalars["String"]["output"];
+  cart?: Scalars["String"]["output"];
   getActiveTheme?: Maybe<Scalars["String"]["output"]>;
   getAuditActors?: Scalars["String"]["output"];
   getAuditCollections?: Scalars["String"]["output"];
@@ -656,6 +945,17 @@ export interface QueryMongo {
     includeDrafts?: Maybe<Scalars["Boolean"]["input"]>;
     limit?: Maybe<Scalars["Int"]["input"]>;
   }) => Scalars["String"]["output"];
+  getProduct: (args: {
+    includeDrafts?: Maybe<Scalars["Boolean"]["input"]>;
+    slug: Scalars["String"]["input"];
+  }) => Maybe<Scalars["String"]["output"]>;
+  getProducts: (args?: {
+    category?: Maybe<Scalars["String"]["input"]>;
+    inStockOnly?: Maybe<Scalars["Boolean"]["input"]>;
+    includeDrafts?: Maybe<Scalars["Boolean"]["input"]>;
+    limit?: Maybe<Scalars["Int"]["input"]>;
+    source?: Maybe<Scalars["String"]["input"]>;
+  }) => Scalars["String"]["output"];
   getPublishedHistory: (args?: {
     limit?: Maybe<Scalars["Int"]["input"]>;
   }) => Scalars["String"]["output"];
@@ -672,8 +972,46 @@ export interface QueryMongo {
     email?: Maybe<Scalars["String"]["input"]>;
   }) => Maybe<IUser>;
   getUsers: Array<IUser>;
+  inventoryReadDeadLetters: (args?: {
+    limit?: Maybe<Scalars["Int"]["input"]>;
+  }) => Scalars["String"]["output"];
+  inventoryStatus?: Scalars["String"]["output"];
   loadData: Array<ILoadData>;
+  /**
+   * Admin-only — list issued MCP tokens (no secrets returned).
+   */
+  mcpListTokens?: Scalars["String"]["output"];
+  me?: Maybe<ICustomer>;
+  /**
+   * Customer-only — single order by id (IDOR-checked).
+   */
+  myOrder: (args: {
+    id: Scalars["String"]["input"];
+  }) => Maybe<Scalars["String"]["output"]>;
+  /**
+   * Customer-only — current customer's order history.
+   */
+  myOrders: (args?: {
+    limit?: Maybe<Scalars["Int"]["input"]>;
+  }) => Scalars["String"]["output"];
+  /**
+   * Guest confirmation page — token must match the `order_token` cookie.
+   */
+  orderByToken: (args: {
+    token: Scalars["String"]["input"];
+  }) => Maybe<Scalars["String"]["output"]>;
+  searchProducts: (args: {
+    includeDrafts?: Maybe<Scalars["Boolean"]["input"]>;
+    limit?: Maybe<Scalars["Int"]["input"]>;
+    q: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
   setupAdmin?: Maybe<IUser>;
+  /**
+   * Static shipping methods table; reserved for future per-order rates.
+   */
+  shippingMethodsFor: (args: {
+    orderId: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
 }
 
 export interface Mutation {

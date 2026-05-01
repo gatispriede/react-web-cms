@@ -1,3 +1,5 @@
+import {spawn} from 'node:child_process';
+import * as path from 'node:path';
 import {McpTool} from '../types';
 
 const ok = (data: unknown) => ({content: [{type: 'text' as const, text: JSON.stringify(data)}]});
@@ -42,4 +44,54 @@ export const siteRevalidate: McpTool = {
     },
 };
 
-export const SITE_TOOLS: McpTool[] = [siteRevalidate];
+/**
+ * site.regenerateSchema — runs `tools/generate-schema.js` to refresh the
+ * gqty client (`services/api/generated/`) against the current
+ * `services/api/schema.graphql`. The script self-spawns its own
+ * `mongodb-memory-server` + standalone GraphQL, so the agent doesn't
+ * need a dev server up. Useful after editing `schema.graphql` from an
+ * AI session — the agent can finish the round trip without leaving the
+ * MCP loop. Returns the codegen stdout/stderr tail so the agent can
+ * see what changed (or what failed).
+ */
+export const siteRegenerateSchema: McpTool = {
+    name: 'site.regenerateSchema',
+    description: 'Regenerate the gqty client (services/api/generated/) from schema.graphql. Self-spawns a temp graphql server — no dev server required. Run after editing the schema.',
+    scopes: ['write:site'],
+    inputSchema: {type: 'object', properties: {}},
+    handler: async (_args, _ctx) => {
+        // Resolve the script relative to this file so the tool works from
+        // both the bundled MCP server and `npm run mcp:stdio` against the
+        // workspace tree.
+        const repoRoot = path.resolve(__dirname, '..', '..', '..', '..');
+        const scriptPath = path.join(repoRoot, 'tools', 'generate-schema.js');
+
+        return await new Promise((resolve) => {
+            const child = spawn(process.execPath, [scriptPath], {
+                cwd: repoRoot,
+                env: process.env,
+                stdio: ['ignore', 'pipe', 'pipe'],
+            });
+            let stdout = '';
+            let stderr = '';
+            child.stdout?.on('data', (d) => { stdout += d.toString(); });
+            child.stderr?.on('data', (d) => { stderr += d.toString(); });
+            child.on('exit', (code) => {
+                // Trim to the last 4 KB each — codegen output is mostly
+                // banner noise, the agent only needs the tail.
+                const tail = (s: string) => s.length > 4096 ? s.slice(-4096) : s;
+                resolve(ok({
+                    ok: code === 0,
+                    exitCode: code,
+                    stdout: tail(stdout),
+                    stderr: tail(stderr),
+                }));
+            });
+            child.on('error', (err) => {
+                resolve(ok({ok: false, error: String((err as Error).message || err)}));
+            });
+        });
+    },
+};
+
+export const SITE_TOOLS: McpTool[] = [siteRevalidate, siteRegenerateSchema];
