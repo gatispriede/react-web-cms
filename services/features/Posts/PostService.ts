@@ -40,6 +40,21 @@ export class PostService {
         return doc ? this.normalize(doc) : null;
     }
 
+    /**
+     * Batched read used by the BatchLoader fold-in (C9). Returns a
+     * parallel array of values aligned with `ids`, with `null` slots
+     * for misses — same shape `BatchLoader<K,V>` requires.
+     */
+    async getManyByIds(ids: readonly string[]): Promise<(IPost | null)[]> {
+        if (ids.length === 0) return [];
+        const docs = await this.posts
+            .find({id: {$in: [...ids]}}, {projection: {_id: 0}})
+            .toArray();
+        const byId = new Map<string, IPost>();
+        for (const d of docs) byId.set((d as any).id, this.normalize(d));
+        return ids.map(id => byId.get(id) ?? null);
+    }
+
     async save(post: InPost, editedBy?: string, expectedVersion?: number | null): Promise<{id: string; version: number; slug: string}> {
         const title = (post.title || '').trim();
         if (!title) throw new Error('title is required');

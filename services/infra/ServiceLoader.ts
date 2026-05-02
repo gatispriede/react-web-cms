@@ -50,6 +50,28 @@ export abstract class ServiceLoader extends Loader {
     /** Authz table contributions. */
     readonly authz?: FeatureAuthzContribution;
 
+    /**
+     * Cache-version keys this feature owns. Listed keys are bumped via
+     * `bumpFeatureVersions` from the registry's `runMutation` helper
+     * whenever this feature's mutations land. The same keys appear in
+     * the public response's `X-Cms-Cache-Tag` so Caddy SWR keys evict
+     * naturally on admin write. Empty by default.
+     */
+    readonly cacheVersionKeys?: readonly string[];
+
+    /**
+     * Optional batched accessors — DataLoader fold-in. Each entry is a
+     * factory called once per request that returns a `BatchLoader`
+     * instance. Resolvers reach the loaders via the request context
+     * (`ctx.batch.<feature>.<accessor>`); identical keys within a tick
+     * fold into one backend call.
+     *
+     * Type intentionally loose (`unknown`) — each feature constrains
+     * its own loader value type at the consumer site. Tighter typing
+     * would force a generic on every Loader subclass for negligible gain.
+     */
+    readonly batchAccessors?: Record<string, (ctx: FeatureContext) => unknown>;
+
     /** One-shot lifecycle hook after services are built and indexes applied. */
     onBoot?(ctx: FeatureContext): Promise<void> | void;
 
@@ -78,6 +100,8 @@ export abstract class ServiceLoader extends Loader {
         if (this.buildServices) m.services = (ctx) => this.buildServices!(ctx);
         if (this.onBoot) m.onBoot = (ctx) => this.onBoot!(ctx);
         if (this.functionalRoles) m.functionalRoles = this.functionalRoles;
+        if (this.cacheVersionKeys) (m as any).cacheVersionKeys = this.cacheVersionKeys;
+        if (this.batchAccessors) (m as any).batchAccessors = this.batchAccessors;
         return m;
     }
 }

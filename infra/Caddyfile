@@ -69,6 +69,24 @@
     @static path /_next/static/*
     header @static Cache-Control "public, max-age=31536000, immutable"
 
+    # --- C9: production SWR cache for public pages + anon GraphQL ---
+    # Guarded by `PROD_CACHE`. The Node app stamps `X-Cms-Cache-Tag:
+    # <bootId>;<feature>=<ver>,…` on every cacheable response; Caddy's
+    # built-in HTTP cache module keys entries on URL + that header,
+    # so a process restart (new bootId) or an admin write (bumped
+    # feature version) evicts naturally without an explicit purge.
+    #
+    # Caddy's cache module isn't bundled in the standard build — the
+    # production deploy uses `caddy-l4 + caddy-cache-handler` (xcaddy)
+    # to add it; if you're on stock Caddy the SWR layer is a no-op
+    # and responses just go through with the headers attached.
+    # Origin sets `Cache-Control: public, max-age=…, stale-while-revalidate=…`
+    # so even unsupported intermediate caches do the right thing for
+    # straight `max-age` reads.
+    #
+    # See `docs/runbooks/caddy-cache.md` for the runbook (force-bypass,
+    # debugging cache misses, header inspection).
+
     # --- Maintenance page for deploy windows > retry duration ---
     # If `app` is still unreachable after the 30 s retry budget, Caddy
     # falls here instead of surfacing a raw 502 from the browser's

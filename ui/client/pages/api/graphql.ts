@@ -30,7 +30,8 @@ import {sessionFromReq, type GraphqlSession} from '@services/features/Auth/authz
 import {nextResolvers as resolvers, type ResolverHooks} from '@services/api/graphqlResolvers';
 import {getMongoConnection} from '@services/infra/mongoDBConnection';
 import {McpTokenService} from '@services/features/Mcp/McpTokenService';
-import {composedSchemaSDL} from '@services/infra/featureRegistry';
+import {composedCacheVersionKeys, composedSchemaSDL} from '@services/infra/featureRegistry';
+import {applyCacheHeaders} from '@services/infra/cacheHeaders';
 import {authOptions} from './auth/authOptions';
 import {clientIp, rateLimit} from './_rateLimit';
 import {
@@ -196,5 +197,21 @@ export default async function gqlRoute(req: NextApiRequest, res: NextApiResponse
     // boot read undefined off the manifest-built service getters and the
     // resolvers crash with "Cannot read properties of undefined".
     await getMongoConnection().ready;
+    // C9: stamp the cache-tag header on every response so Caddy can
+    // key its SWR entry by `bootId + per-feature versions`. The
+    // session is parsed inside the Apollo context — at this layer we
+    // only know whether an MCP/auth header was sent. Treat anything
+    // without an Authorization header AND without a Next-Auth cookie
+    // as anonymous-eligible for SWR; everything else is no-store.
+    try {
+        const hasAuth = Boolean(req.headers?.authorization);
+        const hasSession = Boolean((req.cookies as Record<string, string> | undefined)?.['next-auth.session-token']
+            ?? (req.cookies as Record<string, string> | undefined)?.['__Secure-next-auth.session-token']);
+        const isPublic = req.method === 'POST' && !hasAuth && !hasSession;
+        const features = Object.keys(composedCacheVersionKeys());
+        await applyCacheHeaders(res, {features, isPublic, audience: 'graphql'});
+    } catch {
+        // Non-fatal — cache header is purely advisory.
+    }
     return handler(req, res);
 }

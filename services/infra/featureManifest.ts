@@ -192,4 +192,20 @@ export interface FeatureManifest {
      * `docs/features/platform/edit-levels.md` (decision 4).
      */
     functionalRoles?: readonly import('@interfaces/IPermission').FunctionalRoleDescriptor[];
+
+    /**
+     * Cache-version keys this feature owns (per C9 production caching).
+     * Bumping any listed key invalidates downstream Caddy SWR entries
+     * tagged with the feature. Empty/omitted means the feature does
+     * not participate in the cache-version protocol.
+     */
+    cacheVersionKeys?: readonly string[];
+
+    /**
+     * Optional DataLoader-style batched accessors — factories invoked
+     * once per request, returning a `BatchLoader` instance reachable
+     * through the resolver request context (`ctx.batch.<feature>.<accessor>`).
+     * Type loose by design (see `ServiceLoader.batchAccessors`).
+     */
+    batchAccessors?: Record<string, (ctx: FeatureContext) => unknown>;
 }

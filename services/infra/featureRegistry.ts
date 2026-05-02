@@ -293,4 +293,67 @@ export function composedAuthz(): Required<FeatureAuthzContribution> {
     return tables;
 }
 
+/**
+ * Composed map of `feature → cacheVersionKeys` across active features.
+ * Used by `runMutation` (below) and the response cache-tag builder so
+ * a single source of truth governs which keys participate in the
+ * X-Cms-Cache-Tag header.
+ */
+export function composedCacheVersionKeys(): Record<string, readonly string[]> {
+    const out: Record<string, readonly string[]> = {};
+    for (const f of activeFeatures()) {
+        const keys = (f as FeatureManifest).cacheVersionKeys;
+        if (keys && keys.length > 0) out[f.id] = keys;
+    }
+    return out;
+}
+
+/**
+ * Build a `{<featureId>: {<accessor>: BatchLoader}}` tree for one request.
+ * Each loader factory runs once per request — call sites (resolvers,
+ * REST handlers) reach into the tree via the request context.
+ */
+export function buildBatchAccessors(ctx: FeatureContext): Record<string, Record<string, unknown>> {
+    const tree: Record<string, Record<string, unknown>> = {};
+    for (const f of activeFeatures()) {
+        const accs = (f as FeatureManifest).batchAccessors;
+        if (!accs) continue;
+        const built: Record<string, unknown> = {};
+        for (const [name, factory] of Object.entries(accs)) {
+            try {
+                built[name] = factory(ctx);
+            } catch (err) {
+                log.warn({scope: 'feature.batch', feature: f.id, accessor: name, err},
+                    'batch accessor factory threw — skipping');
+            }
+        }
+        if (Object.keys(built).length > 0) tree[f.id] = built;
+    }
+    return tree;
+}
+
+/**
+ * Wrap a mutation in the cache-version-bump protocol. Awaits the
+ * mutation; on success bumps every listed feature's version stamp.
+ * Failures skip the bump (no point evicting cache for a write that
+ * never landed).
+ */
+export async function runMutation<T>(
+    feature: string,
+    fn: () => Promise<T>,
+): Promise<T> {
+    const result = await fn();
+    const allKeys = composedCacheVersionKeys();
+    const keys = allKeys[feature];
+    if (keys && keys.length > 0) {
+        try {
+            const {bumpFeatureVersions} = await import('./cacheVersion');
+            await bumpFeatureVersions(keys);
+        } catch (err) {
+            log.warn({scope: 'feature.cv.bump', feature, err}, 'cache version bump failed (non-fatal)');
+        }
+    }
+    return result;
+}
+
 export {registry as featureRegistry};
