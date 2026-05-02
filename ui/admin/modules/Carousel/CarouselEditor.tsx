@@ -1,5 +1,5 @@
 import {Button, Input, Switch, Tooltip} from "antd";
-import React from "react";
+import React, {useState} from "react";
 import {IInputContent} from "@interfaces/IInputContent";
 import {EItemType} from "@enums/EItemType";
 import {IGalleryItem} from "@client/modules/Gallery";
@@ -13,6 +13,15 @@ import ImageDropTarget from "@client/lib/ImageDropTarget";
 const CarouselEditor = ({content, setContent, t}: IInputContent) => {
     const galleryContent = new CarouselContent(EItemType.Image, content);
     const data = galleryContent.data
+    // Auto-expand if any non-default playback option is set on an existing block.
+    const hasAdvanced = !!(
+        data.autoplay ||
+        (data.autoplaySpeed && data.autoplaySpeed !== 3000) ||
+        data.infinity ||
+        data.dots ||
+        data.arrows
+    );
+    const [showAdvanced, setShowAdvanced] = useState<boolean>(hasAdvanced);
     const handleAppendFromDrop = (img: ImageDropPayload) => {
         galleryContent.addItem();
         const items = galleryContent.data.items ?? [];
@@ -24,55 +33,68 @@ const CarouselEditor = ({content, setContent, t}: IInputContent) => {
     };
     return (
         <div className={'admin gallery-wrapper'}>
-            <div className={'config-item'}>
-                <label>{t("Autoplay")}</label>
-                <div className={'content'}>
-                    <Switch value={galleryContent.data.autoplay} onChange={(checked) => {
-                        galleryContent.setAutoplay(checked)
-                        setContent(galleryContent.stringData)
-                    }}/>
-                </div>
+            <div style={{marginBottom: 8}}>
+                <Button
+                    type="link"
+                    size="small"
+                    style={{padding: 0}}
+                    onClick={() => setShowAdvanced(v => !v)}
+                    aria-expanded={showAdvanced}
+                >
+                    {showAdvanced ? t('Hide playback options') : t('Show playback options')}
+                </Button>
             </div>
-            <div className={'config-item'}>
-                <Tooltip title="(In miliseconds - default = 3000)">
-                    <label>{t("Autoplay speed")}</label>
-                </Tooltip>
-                <div className={'content'}>
-                    <Input defaultValue={3000} value={galleryContent.data.autoplaySpeed} onChange={(e) => {
-                        galleryContent.setAutoplaySpeed(parseInt(e.target.value))
-                        setContent(galleryContent.stringData)
-                    }}/>
-                </div>
-            </div>
-            <div className={'config-item'}>
-                <label>{t("Infinity")}</label>
-                <div className={'content'}>
-
-                    <Switch value={galleryContent.data.infinity} onChange={(checked) => {
-                        galleryContent.setInfinity(checked)
-                        setContent(galleryContent.stringData)
-                    }}/>
-                </div>
-            </div>
-            <div className={'config-item'}>
-                <label>{t("Dots")}</label>
-                <div className={'content'}>
-
-                    <Switch value={galleryContent.data.dots} onChange={(checked) => {
-                        galleryContent.setDots(checked)
-                        setContent(galleryContent.stringData)
-                    }}/>
-                </div>
-            </div>
-            <div className={'config-item'}>
-                <label>{t("Arrows")}</label>
-                <div className={'content'}>
-                    <Switch value={galleryContent.data.arrows} onChange={(checked) => {
-                        galleryContent.setArrows(checked)
-                        setContent(galleryContent.stringData)
-                    }}/>
-                </div>
-            </div>
+            {showAdvanced && (
+                <>
+                    <div className={'config-item'}>
+                        <label>{t("Autoplay")}</label>
+                        <div className={'content'}>
+                            <Switch value={galleryContent.data.autoplay} onChange={(checked) => {
+                                galleryContent.setAutoplay(checked)
+                                setContent(galleryContent.stringData)
+                            }}/>
+                        </div>
+                    </div>
+                    <div className={'config-item'}>
+                        <Tooltip title="(In miliseconds - default = 3000)">
+                            <label>{t("Autoplay speed")}</label>
+                        </Tooltip>
+                        <div className={'content'}>
+                            <Input defaultValue={3000} value={galleryContent.data.autoplaySpeed} onChange={(e) => {
+                                galleryContent.setAutoplaySpeed(parseInt(e.target.value))
+                                setContent(galleryContent.stringData)
+                            }}/>
+                        </div>
+                    </div>
+                    <div className={'config-item'}>
+                        <label>{t("Infinity")}</label>
+                        <div className={'content'}>
+                            <Switch value={galleryContent.data.infinity} onChange={(checked) => {
+                                galleryContent.setInfinity(checked)
+                                setContent(galleryContent.stringData)
+                            }}/>
+                        </div>
+                    </div>
+                    <div className={'config-item'}>
+                        <label>{t("Dots")}</label>
+                        <div className={'content'}>
+                            <Switch value={galleryContent.data.dots} onChange={(checked) => {
+                                galleryContent.setDots(checked)
+                                setContent(galleryContent.stringData)
+                            }}/>
+                        </div>
+                    </div>
+                    <div className={'config-item'}>
+                        <label>{t("Arrows")}</label>
+                        <div className={'content'}>
+                            <Switch value={galleryContent.data.arrows} onChange={(checked) => {
+                                galleryContent.setArrows(checked)
+                                setContent(galleryContent.stringData)
+                            }}/>
+                        </div>
+                    </div>
+                </>
+            )}
             <hr/>
             <div className={'images-container'}>
                 {

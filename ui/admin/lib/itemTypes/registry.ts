@@ -177,7 +177,7 @@ const entries: ItemTypeDefinition[] = [
         Display: Timeline,
         Editor: InputTimeline,
         styleEnum: ETimelineStyle as unknown as Record<string, string>,
-        defaultContent: '{"entries":[]}',
+        defaultContent: '{"entries":[{"start":"","end":"","company":"","role":""}]}',
     },
     {
         key: EItemType.SocialLinks,
@@ -187,7 +187,7 @@ const entries: ItemTypeDefinition[] = [
         Display: SocialLinks,
         Editor: InputSocialLinks,
         styleEnum: ESocialLinksStyle as unknown as Record<string, string>,
-        defaultContent: '{"links":[]}',
+        defaultContent: '{"links":[{"platform":"website","url":"","label":""}]}',
     },
     {
         key: EItemType.BlogFeed,
@@ -207,7 +207,7 @@ const entries: ItemTypeDefinition[] = [
         Display: List,
         Editor: InputList,
         styleEnum: EListStyle as unknown as Record<string, string>,
-        defaultContent: '{"title":"","items":[]}',
+        defaultContent: '{"title":"","items":[{"label":"","value":"","href":""}]}',
     },
     {
         key: EItemType.Services,
@@ -217,7 +217,7 @@ const entries: ItemTypeDefinition[] = [
         Display: Services,
         Editor: InputServices,
         styleEnum: EServicesStyle as unknown as Record<string, string>,
-        defaultContent: '{"sectionNumber":"","sectionTitle":"","sectionSubtitle":"","rows":[]}',
+        defaultContent: '{"sectionNumber":"","sectionTitle":"","sectionSubtitle":"","rows":[{"number":"01","title":"","description":"","ctaLabel":"","ctaHref":"","iconGlyph":"","tags":[]}]}',
     },
     {
         key: EItemType.Testimonials,
@@ -227,7 +227,7 @@ const entries: ItemTypeDefinition[] = [
         Display: Testimonials,
         Editor: InputTestimonials,
         styleEnum: ETestimonialsStyle as unknown as Record<string, string>,
-        defaultContent: '{"sectionTitle":"","sectionSubtitle":"","items":[]}',
+        defaultContent: '{"sectionTitle":"","sectionSubtitle":"","items":[{"quote":"","name":"","role":"","avatarInitial":""}]}',
     },
     {
         key: EItemType.StatsCard,
@@ -237,7 +237,7 @@ const entries: ItemTypeDefinition[] = [
         Display: StatsCard,
         Editor: InputStatsCard,
         styleEnum: EStatsCardStyle as unknown as Record<string, string>,
-        defaultContent: '{"tag":"","title":"","stats":[],"features":[]}',
+        defaultContent: '{"tag":"","title":"","stats":[{"value":"","label":""}],"features":[]}',
     },
     {
         key: EItemType.ProjectGrid,
@@ -247,7 +247,7 @@ const entries: ItemTypeDefinition[] = [
         Display: ProjectGrid,
         Editor: InputProjectGrid,
         styleEnum: EProjectGridStyle as unknown as Record<string, string>,
-        defaultContent: '{"sectionNumber":"","sectionTitle":"","sectionSubtitle":"","items":[]}',
+        defaultContent: '{"sectionNumber":"","sectionTitle":"","sectionSubtitle":"","items":[{"title":"","stack":"","kind":"","year":"","coverArt":"","coverColor":"","moreLabel":"View engagement ↗","href":""}]}',
     },
     {
         key: EItemType.Manifesto,

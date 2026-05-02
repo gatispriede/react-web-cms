@@ -49,8 +49,17 @@
   }
 
   &.gallery-wrapper-app {
-    .ant-image {
-      img { width: 100% !important; }
+    // Author-supplied dimensions opt out of the blanket `width: 100%` so a
+    // 200px tile actually renders at 200px instead of stretching to the
+    // cell. The `data-sized` flag lives on `.image` (the parent), since
+    // AntD's `<Image>` wraps the actual `<img>` and passing the attribute
+    // through is unreliable.
+    // See docs/roadmap/image-width-height-respect.md.
+    .image:not([data-sized]) .ant-image img {
+      width: 100% !important;
+    }
+    .image[data-sized] .ant-image img {
+      max-width: 100%;
     }
 
     // --- Default masonry-like grid ---

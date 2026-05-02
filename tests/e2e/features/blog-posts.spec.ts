@@ -22,13 +22,12 @@ test.describe.serial('feature — blog posts admin', () => {
         ).toBeVisible({timeout: 15_000});
     });
 
-    test.fixme('admin creates a new draft post', async ({adminPage}) => {
-        // FIXME: needs `posts-new-btn`, `posts-title-input`, `posts-slug-input`,
-        // `posts-save-btn` testids on the post editor.
+    test('admin creates a new draft post', async ({adminPage}) => {
         await adminPage.goto('/admin/content/posts');
         await adminPage.getByTestId('posts-new-btn').click();
         await adminPage.getByTestId('posts-title-input').fill(blog.title);
         await adminPage.getByTestId('posts-slug-input').fill(blog.slug);
+        await adminPage.getByTestId('posts-body-textarea').fill('Body content for the e2e draft post.');
         await adminPage.getByTestId('posts-save-btn').click();
         await expect(adminPage.getByText(blog.title)).toBeVisible({timeout: 10_000});
     });

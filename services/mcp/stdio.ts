@@ -74,6 +74,10 @@ async function main() {
             tool: req.params.name,
             args: req.params.arguments ?? {},
             token,
+            // Tools that call back into the CMS over HTTP need the raw
+            // bearer secret. The dispatcher threads it onto the tool
+            // context; tools that don't read it never see it.
+            tokenSecret: rawToken,
         });
         if (!outcome.ok) {
             return {

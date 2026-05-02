@@ -1,5 +1,6 @@
 import {resolve} from "@services/api/generated";
 import {AdminLocale, IUser, InUser} from "@interfaces/IUser";
+import {log} from "@services/infra/logger";
 
 function normalizeAdminLocale(value: unknown): AdminLocale | undefined {
     return value === 'en' || value === 'lv' ? value : undefined;
@@ -42,7 +43,7 @@ export class UserApi {
                 }));
             });
         } catch (err) {
-            console.error('Error listing users:', err);
+            log.error({scope: 'users.list', err}, 'listUsers failed');
             return [];
         }
     }

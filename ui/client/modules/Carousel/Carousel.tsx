@@ -94,11 +94,16 @@ const CarouselView = ({item, t, tApp}: {
     const children= data.items.map((item: IGalleryItem, index: number) => {
         return (
             <li key={index} className={`container text-${item.textPosition}`}>
-                <div className={'image'}>
+                <div
+                    className={'image'}
+                    data-sized={(item.imgWidth || item.imgHeight) ? true : undefined}
+                >
                     <Image
                         preview={false}
                         src={item.src && (item.src.startsWith('/') || /^https?:\/\//.test(item.src)) ? item.src : `/${item.src}`}
                         alt={item.alt}
+                        width={item.imgWidth || undefined}
+                        height={item.imgHeight || undefined}
                     />
                 </div>
                 {item.text && (

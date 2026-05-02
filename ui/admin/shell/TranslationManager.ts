@@ -101,7 +101,7 @@ class TranslationManager {
             ({query}) => {
                 const list: ISection[] = (query as unknown as IMongo).mongo.getSections({ids: this.sectionsIds}).map(item => {
                     let content: IItem[];
-                    content = item.content.map((item: IItem) => {
+                    content = (item.content ?? []).map((item: IItem) => {
                         return {
                             name: item.name,
                             type: item.type,

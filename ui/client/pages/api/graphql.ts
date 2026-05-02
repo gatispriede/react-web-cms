@@ -28,6 +28,9 @@ import {startServerAndCreateNextHandler} from '@as-integrations/next';
 import depthLimit from 'graphql-depth-limit';
 import {sessionFromReq, type GraphqlSession} from '@services/features/Auth/authz';
 import {nextResolvers as resolvers, type ResolverHooks} from '@services/api/graphqlResolvers';
+import {getMongoConnection} from '@services/infra/mongoDBConnection';
+import {McpTokenService} from '@services/features/Mcp/McpTokenService';
+import {composedSchemaSDL} from '@services/infra/featureRegistry';
 import {authOptions} from './auth/authOptions';
 import {clientIp, rateLimit} from './_rateLimit';
 import {
@@ -37,12 +40,56 @@ import {
     verifyCartId,
 } from '@services/features/Cart/cartCookie';
 
+/**
+ * Extract an MCP Bearer token from the Authorization header and validate it.
+ * Returns a synthetic admin GraphqlSession on success, null otherwise.
+ * The token's scopes are stored on the session for optional downstream checks.
+ */
+async function sessionFromMcpBearer(req: NextApiRequest): Promise<GraphqlSession | null> {
+    const auth = req.headers?.authorization ?? '';
+    const m = /^Bearer\s+(mcpsk_\S+)$/i.exec(auth);
+    if (!m) return null;
+    try {
+        const conn = getMongoConnection();
+        // Construct McpTokenService directly from the raw DB handle so this
+        // works even when FEATURE_MCP is off (the feature service won't boot,
+        // but the collection is always there).
+        const db = conn.database;
+        if (!db) return null;
+        const svc = new McpTokenService(db);
+        const token = await svc.verifyToken(m[1]);
+        if (!token) return null;
+        await svc.markUsed(token.id);
+        // Per IMcp.ts: synthetic session always claims role:'admin' so the
+        // guardMethods proxy passes all checks. The MCP server's own scope
+        // enforcement is the caller's responsibility (cms-tools uses scopes
+        // implicitly via the tool definitions).
+        return {
+            kind: 'admin',
+            role: 'admin',
+            email: `mcp:${token.name}`,
+            canPublishProduction: token.scopes.includes('write:site' as any) ||
+                                  token.scopes.includes('write:content' as any),
+        };
+    } catch {
+        return null;
+    }
+}
+
 interface GqlContext {
     session: GraphqlSession;
     hooks: ResolverHooks;
 }
 
-const typeDefs = readFileSync('services/api/schema.graphql', {encoding: 'utf-8'});
+// Compose the schema from `services/api/schema.graphql` + every active
+// feature manifest's `schemaSDL` fragment. Manifests use
+// `extend type Mongo { … }` shapes so a feature's queries/mutations
+// land on the same composite type the legacy file declares. Disabled
+// features (env-flagged off via plug-and-play) contribute nothing —
+// their fields disappear from the schema as a natural side effect.
+const typeDefs = readFileSync('services/api/schema.graphql', {encoding: 'utf-8'})
+    + '\n'
+    + composedSchemaSDL();
 
 /** Hard cap on incoming GraphQL request body — protects against multi-MB DoS payloads. */
 const MAX_GRAPHQL_BODY_BYTES = 1 * 1024 * 1024; // 1 MB
@@ -71,7 +118,7 @@ const apolloServer = new ApolloServer<GqlContext>({
 
 const handler = startServerAndCreateNextHandler<NextApiRequest, GqlContext>(apolloServer, {
     context: async (req, res) => {
-        const session = await sessionFromReq(req, res, authOptions);
+        const session = (await sessionFromMcpBearer(req)) ?? await sessionFromReq(req, res, authOptions);
         const ip = clientIp(req as any);
         // Cart cookie: parse the request once; expose getter/setter to
         // resolvers. Forged or malformed cookies are treated as absent;
@@ -144,5 +191,10 @@ export default async function gqlRoute(req: NextApiRequest, res: NextApiResponse
         res.end(JSON.stringify({error: 'GraphQL payload too large'}));
         return;
     }
+    // Block until the manifest registry has populated `featureServices.*`.
+    // Without this gate, requests landing during the first ~50 ms of cold
+    // boot read undefined off the manifest-built service getters and the
+    // resolvers crash with "Cannot read properties of undefined".
+    await getMongoConnection().ready;
     return handler(req, res);
 }

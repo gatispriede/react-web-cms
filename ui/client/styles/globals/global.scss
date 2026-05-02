@@ -338,11 +338,19 @@ body{
     cursor: pointer;
     z-index: 2;
 
-    img {
+    // `[data-sized]` is set by `<SizedImage>` when the author specified a
+    // width/height. Without this carve-out the blanket `height: 40px` always
+    // wins and SkyClimber-class clients can't shrink a 24 px wordmark.
+    // See docs/roadmap/image-width-height-respect.md (C12).
+    img:not([data-sized]) {
       height: 40px;
       width: auto;
       max-width: 180px;
       display: block;
+    }
+    img[data-sized] {
+      display: block;
+      max-width: 180px;
     }
   }
 

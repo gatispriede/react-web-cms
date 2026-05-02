@@ -5,6 +5,7 @@ import type {
     InventoryStatus,
     SyncReport,
 } from "@interfaces/IInventory";
+import {log} from "@services/infra/logger";
 
 const parse = <T,>(raw: string | null | undefined, fallback: T): T => {
     if (!raw) return fallback;
@@ -28,7 +29,7 @@ export class InventoryApi {
             const parsed = parse<IInventoryDeadLetter[] | {error: string}>(raw, []);
             return Array.isArray(parsed) ? parsed : [];
         } catch (err) {
-            console.error('InventoryApi.readDeadLetters:', err);
+            log.error({scope: 'inventory.readDeadLetters', err}, 'inventory dead-letters read failed');
             return [];
         }
     }

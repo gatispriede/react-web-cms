@@ -8,10 +8,7 @@ import {
 const scenario = buildScenario('services');
 
 test.describe.serial('module — Services admin + client', () => {
-    // FIXME: defaultContent starts with empty array, primary-text-input
-    // doesn't render until "add" is clicked. Either click the add
-    // button first in the spec, or seed defaultContent with one row.
-    test.fixme('admin authors a Services block on a fresh page', async ({adminPage}) => {
+    test('admin authors a Services block on a fresh page', async ({adminPage}) => {
         await createPage(adminPage, scenario);
         await addBlankSection(adminPage);
         await openAddModuleDrawer(adminPage, EItemType.Services);
@@ -19,7 +16,7 @@ test.describe.serial('module — Services admin + client', () => {
         await saveModuleDrawer(adminPage);
     });
 
-    test.fixme('public site renders the Services marker', async ({anonPage}) => {
+    test('public site renders the Services marker', async ({anonPage}) => {
         await assertPublicMarker(anonPage, scenario);
     });
 });

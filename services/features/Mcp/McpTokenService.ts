@@ -9,6 +9,7 @@ import {
     IMcpTokenSummary,
     McpScope,
 } from '@interfaces/IMcp';
+import {log} from '@services/infra/logger';
 
 /**
  * MCP token service — stores per-client tokens for the MCP server.
@@ -49,7 +50,7 @@ export class McpTokenService {
             await this.tokens.createIndex({revokedAt: 1, expiresAt: 1});
             this.indexesReady = true;
         } catch (err) {
-            console.error('McpTokenService.ensureIndexes:', err);
+            log.error({scope: 'mcp.token.ensureIndexes', err}, 'mcp token ensureIndexes failed');
         }
     }
 
@@ -121,7 +122,7 @@ export class McpTokenService {
                 const ok = await bcrypt.compare(remainder, doc.hashedSecret);
                 if (ok) return this.stripMongoId(raw);
             } catch (err) {
-                console.error('McpTokenService.verifyToken bcrypt failed:', err);
+                log.error({scope: 'mcp.token.verify', err}, 'bcrypt compare failed');
             }
         }
         return null;
@@ -163,7 +164,7 @@ export class McpTokenService {
             await this.tokens.updateOne({id}, {$set: {lastUsedAt: new Date().toISOString()}});
         } catch (err) {
             // Never block the call on a lastUsedAt write.
-            console.error('McpTokenService.markUsed:', err);
+            log.error({scope: 'mcp.token.markUsed', err, id}, 'markUsed failed');
         }
     }
 

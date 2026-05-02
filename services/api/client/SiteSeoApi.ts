@@ -3,6 +3,7 @@ import {DEFAULT_SITE_SEO, ISiteSeoDefaults} from "@interfaces/ISiteSeo";
 import {refreshBus} from "@client/lib/refreshBus";
 import {triggerRevalidate} from "@client/lib/triggerRevalidate";
 import {isConflictError, parseMutationResponse} from "@client/lib/conflict";
+import {log} from "@services/infra/logger";
 
 export class SiteSeoApi {
     async get(): Promise<ISiteSeoDefaults> {
@@ -10,7 +11,7 @@ export class SiteSeoApi {
             const raw = await resolve(({query}) => (query as any).mongo.getSiteSeo);
             return raw ? JSON.parse(raw) : {...DEFAULT_SITE_SEO};
         } catch (err) {
-            console.error('SiteSeoApi.get:', err);
+            log.error({scope: 'siteSeo.get', err}, 'site seo get failed');
             return {...DEFAULT_SITE_SEO};
         }
     }

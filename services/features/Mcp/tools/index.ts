@@ -7,6 +7,7 @@ import {PRODUCT_TOOLS} from './products';
 import {INVENTORY_TOOLS} from './inventory';
 import {SITE_TOOLS} from './site';
 import {AUDIT_TOOLS} from './audit';
+import {ANALYTICS_TOOLS} from './analytics';
 
 /**
  * Out of scope (defer):
@@ -25,6 +26,7 @@ export const ALL_MCP_TOOLS: McpTool[] = [
     ...INVENTORY_TOOLS,
     ...SITE_TOOLS,
     ...AUDIT_TOOLS,
+    ...ANALYTICS_TOOLS,
 ];
 
 export function buildToolRegistry(): Map<string, McpTool> {

@@ -1,4 +1,5 @@
 import {Collection, Db} from 'mongodb';
+import {log} from '@services/infra/logger';
 
 /**
  * Atomic per-year order-number counter. Uses a `Counters` collection
@@ -20,7 +21,7 @@ export class OrderCounter {
             await this.counters.createIndex({key: 1}, {unique: true});
             this.indexesReady = true;
         } catch (err) {
-            console.error('OrderCounter.ensureIndexes:', err);
+            log.error({scope: 'orders.counter.ensureIndexes', err}, 'OrderCounter ensureIndexes failed');
         }
     }
 

@@ -1,5 +1,6 @@
 import {resolve} from '@services/api/generated';
 import type {IOrder, IOrderAddress, OrderStatus, IOrderShippingMethod} from '@interfaces/IOrder';
+import {log} from '@services/infra/logger';
 
 const parse = <T,>(raw: string | null | undefined, fallback: T): T => {
     if (!raw) return fallback;
@@ -25,7 +26,7 @@ export class OrderApi {
             const parsed = parse<IOrder[] | {error: string}>(raw, []);
             return Array.isArray(parsed) ? parsed : [];
         } catch (err) {
-            console.error('OrderApi.myOrders:', err);
+            log.error({scope: 'orders.myOrders', err}, 'myOrders failed');
             return [];
         }
     }

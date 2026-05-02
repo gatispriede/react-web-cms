@@ -68,6 +68,13 @@ async function main() {
     const gqlPort = await findFreePort();
     const gqlUrl = `http://localhost:${gqlPort}/api/graphql`;
     process.stdout.write(`[e2e-build] starting standalone-graphql on :${gqlPort}… `);
+    // Fresh tmp dir for the bootstrap-admin artefact. Without this, a
+    // stale `var/admin-initial-password.txt` from a previous local dev
+    // run trips the "stale artefact, no admin" guard on the empty
+    // memory mongo and the standalone server can't seed.
+    const fs = require('node:fs');
+    const initialPwDir = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'e2e-initpw-'));
+
     const gqlChild = spawn(
         process.execPath,
         [
@@ -81,6 +88,18 @@ async function main() {
                 ...process.env,
                 MONGODB_URI: mongoUri,
                 STANDALONE_PORT: String(gqlPort),
+                INITIAL_PASSWORD_DIR: initialPwDir,
+                // Build-time gqlFetch queries every public-route's
+                // getStaticPaths via this standalone — including
+                // /products and /cart and /checkout. Force every
+                // feature on so the composed schema is complete; the
+                // runtime workers can then turn features on/off via
+                // their own env to exercise the gating.
+                FEATURE_PRODUCTS: 'true',
+                FEATURE_CART: 'true',
+                FEATURE_INVENTORY: 'true',
+                FEATURE_ORDERS: 'true',
+                FEATURE_MCP: 'true',
             },
             stdio: ['ignore', 'pipe', 'pipe'],
         },
@@ -109,6 +128,29 @@ async function main() {
                 NODE_ENV: 'production',
                 E2E_BUILD_DIR: '.next-e2e',
                 GRAPHQL_ENDPOINT: gqlUrl,
+                // gqty's SSR fetch reads `INTERNAL_GRAPHQL_URL` first;
+                // without it, fetch falls back to `localhost:80` which
+                // the standalone isn't listening on. Mirror it so any
+                // gqty.resolve() invoked during prerender hits the
+                // same standalone gqlFetch already targets.
+                INTERNAL_GRAPHQL_URL: gqlUrl,
+                INITIAL_PASSWORD_DIR: initialPwDir,
+                // Build process imports MongoDBConnection via the
+                // service registry; without MONGODB_URI it tries to
+                // dial the production Atlas URL and tanks prerender
+                // with ECONNREFUSED. Point it at the same memory mongo
+                // the standalone is using.
+                MONGODB_URI: mongoUri,
+                // Build-side ALSO needs every feature on. Some
+                // getStaticProps paths import services that read the
+                // registry at module load; with features off, their
+                // SDL fragments + delegate methods drop and the build
+                // fails composing or calling them. Mirror the standalone.
+                FEATURE_PRODUCTS: 'true',
+                FEATURE_CART: 'true',
+                FEATURE_INVENTORY: 'true',
+                FEATURE_ORDERS: 'true',
+                FEATURE_MCP: 'true',
             },
         },
     );

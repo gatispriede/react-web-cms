@@ -12,7 +12,7 @@
  * straight into items without re-opening the picker.
  */
 import React, {useCallback, useMemo, useRef, useState} from "react";
-import {Alert, Button, List, Modal, Progress, Select, Space, Typography} from "antd";
+import {Alert, Button, Input, List, Modal, Progress, Select, Space, Tabs, Typography} from "antd";
 import {CloudUploadOutlined} from "@client/lib/icons";
 import type {TFunction} from "i18next";
 import type IImage from "@interfaces/IImage";
@@ -40,8 +40,12 @@ interface Props {
     t: TFunction<"translation", undefined>;
 }
 
+type SourceTab = 'files' | 'urls';
+
 const BulkImageUploadModal: React.FC<Props> = ({open, onClose, onUploaded, initialRatio, t}) => {
+    const [tab, setTab] = useState<SourceTab>('files');
     const [files, setFiles] = useState<File[]>([]);
+    const [urlsText, setUrlsText] = useState('');
     const [ratio, setRatio] = useState<BulkRatio>(initialRatio ?? '16:9');
     const [uploading, setUploading] = useState(false);
     const [progress, setProgress] = useState(0);
@@ -50,8 +54,13 @@ const BulkImageUploadModal: React.FC<Props> = ({open, onClose, onUploaded, initi
     const inputRef = useRef<HTMLInputElement>(null);
 
     const reset = useCallback(() => {
-        setFiles([]); setResults(null); setError(null); setProgress(0);
+        setFiles([]); setUrlsText(''); setResults(null); setError(null); setProgress(0);
     }, []);
+
+    const parsedUrls = useMemo(
+        () => urlsText.split(/\r?\n/).map(s => s.trim()).filter(Boolean),
+        [urlsText],
+    );
 
     const handleFilesPicked = (picked: FileList | null) => {
         if (!picked) return;
@@ -69,8 +78,10 @@ const BulkImageUploadModal: React.FC<Props> = ({open, onClose, onUploaded, initi
     const totalBytes = useMemo(() => files.reduce((n, f) => n + f.size, 0), [files]);
     const fmtMB = (b: number) => `${(b / (1024 * 1024)).toFixed(1)} MB`;
 
+    const inputCount = tab === 'files' ? files.length : parsedUrls.length;
+
     const doUpload = async () => {
-        if (!files.length) return;
+        if (!inputCount) return;
         setUploading(true);
         setProgress(0);
         setResults(null);
@@ -79,6 +90,7 @@ const BulkImageUploadModal: React.FC<Props> = ({open, onClose, onUploaded, initi
             const fd = new FormData();
             fd.append('ratio', ratio);
             for (const f of files) fd.append('file', f, f.name);
+            if (parsedUrls.length) fd.append('urls', JSON.stringify(parsedUrls));
 
             // Use XHR rather than fetch so we get upload progress — the
             // `fetch` Streams API can't report upload progress without
@@ -124,8 +136,10 @@ const BulkImageUploadModal: React.FC<Props> = ({open, onClose, onUploaded, initi
                 <Button key="close" onClick={() => { if (!uploading) { reset(); onClose(); } }} disabled={uploading}>
                     {results ? t('Done') : t('Cancel')}
                 </Button>,
-                <Button key="upload" type="primary" loading={uploading} disabled={!files.length} onClick={doUpload}>
-                    {t('Upload {{n}} files', {n: files.length})}
+                <Button key="upload" type="primary" loading={uploading} disabled={!inputCount} onClick={doUpload}>
+                    {tab === 'urls'
+                        ? t('Import {{n}} URLs', {n: parsedUrls.length})
+                        : t('Upload {{n}} files', {n: files.length})}
                 </Button>,
             ]}
         >
@@ -144,36 +158,72 @@ const BulkImageUploadModal: React.FC<Props> = ({open, onClose, onUploaded, initi
                     </Typography.Text>
                 </Space>
 
-                <div
-                    onDragOver={e => e.preventDefault()}
-                    onDrop={handleDrop}
-                    onClick={() => inputRef.current?.click()}
-                    style={{
-                        border: '2px dashed #d9d9d9',
-                        borderRadius: 8,
-                        padding: 24,
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        background: '#fafafa',
-                    }}
-                >
-                    <CloudUploadOutlined style={{fontSize: 32, opacity: 0.6}}/>
-                    <div style={{marginTop: 8}}>{t('Drop files here or click to pick')}</div>
-                    <input
-                        ref={inputRef}
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        style={{display: 'none'}}
-                        onChange={e => handleFilesPicked(e.target.files)}
-                    />
-                </div>
-
-                {files.length > 0 && (
-                    <Typography.Text type="secondary" style={{fontSize: 12}}>
-                        {t('{{count}} files queued ({{size}} total)', {count: files.length, size: fmtMB(totalBytes)})}
-                    </Typography.Text>
-                )}
+                <Tabs
+                    activeKey={tab}
+                    onChange={(k) => setTab(k as SourceTab)}
+                    items={[
+                        {
+                            key: 'files',
+                            label: t('From device'),
+                            children: (
+                                <Space orientation="vertical" size={8} style={{width: '100%'}}>
+                                    <div
+                                        onDragOver={e => e.preventDefault()}
+                                        onDrop={handleDrop}
+                                        onClick={() => inputRef.current?.click()}
+                                        style={{
+                                            border: '2px dashed #d9d9d9',
+                                            borderRadius: 8,
+                                            padding: 24,
+                                            textAlign: 'center',
+                                            cursor: 'pointer',
+                                            background: '#fafafa',
+                                        }}
+                                    >
+                                        <CloudUploadOutlined style={{fontSize: 32, opacity: 0.6}}/>
+                                        <div style={{marginTop: 8}}>{t('Drop files here or click to pick')}</div>
+                                        <input
+                                            ref={inputRef}
+                                            type="file"
+                                            multiple
+                                            accept="image/*"
+                                            style={{display: 'none'}}
+                                            onChange={e => handleFilesPicked(e.target.files)}
+                                        />
+                                    </div>
+                                    {files.length > 0 && (
+                                        <Typography.Text type="secondary" style={{fontSize: 12}}>
+                                            {t('{{count}} files queued ({{size}} total)', {count: files.length, size: fmtMB(totalBytes)})}
+                                        </Typography.Text>
+                                    )}
+                                </Space>
+                            ),
+                        },
+                        {
+                            key: 'urls',
+                            label: t('From URL'),
+                            children: (
+                                <Space orientation="vertical" size={8} style={{width: '100%'}}>
+                                    <Typography.Text type="secondary" style={{fontSize: 12}}>
+                                        {t('Paste one image URL per line. Server fetches each and applies the same ratio + EXIF strip.')}
+                                    </Typography.Text>
+                                    <Input.TextArea
+                                        value={urlsText}
+                                        onChange={(e) => setUrlsText(e.target.value)}
+                                        placeholder={'https://cdn.example.com/photo.jpg\nhttps://images.unsplash.com/...'}
+                                        autoSize={{minRows: 4, maxRows: 12}}
+                                        disabled={uploading}
+                                    />
+                                    {parsedUrls.length > 0 && (
+                                        <Typography.Text type="secondary" style={{fontSize: 12}}>
+                                            {t('{{count}} URLs queued', {count: parsedUrls.length})}
+                                        </Typography.Text>
+                                    )}
+                                </Space>
+                            ),
+                        },
+                    ]}
+                />
 
                 {uploading && <Progress percent={progress}/>}
 

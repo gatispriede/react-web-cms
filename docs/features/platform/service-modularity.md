@@ -1,8 +1,98 @@
 # Service-side modularity — one folder, one feature
 
-Status: Planned
-Last updated: 2026-04-29
+Status: **Phase A + B shipped 2026-04-30 → 2026-05-01.** All 18 features now own a `feature.manifest.ts`. Phase C (extract SDL fragments + authz contributions out of the shared files into manifests) is the remaining cleanup.
+Last updated: 2026-05-01
 Related: [plug-and-play-features.md](plug-and-play-features.md)
+
+## Status snapshot
+
+### Shipped (Phase A — 2026-04-30)
+
+- `services/infra/featureManifest.ts` — `FeatureManifest` + `FeatureContext` (now includes `reconnect: () => Promise<void>`) + `FeatureIndexSpec` (with `expireAfterSeconds: number | (() => number)` thunk support) + `FeatureAuthzContribution`.
+- `services/infra/featureRegistry.ts` — split into `bootFeaturesSync` (synchronous service construction, runs before constructor returns) + `bootFeaturesAsync` (indexes + onBoot). Plus `composedSchemaSDL()`, `composedResolvers()` (strict — duplicate field = boot error), `composedAuthz()`, topological `sortFeatures()` over `requires`.
+- `tools/codegen-feature-registry.ts` + `npm run features:codegen[:check]` — emits `services/infra/featureRegistry.generated.ts` from sibling `feature.manifest.ts` files. Wired into `predev` + `prebuild`; CI runs `:check`.
+- `MongoDBConnection` constructs every service synchronously via `bootFeaturesSync` before the constructor returns; `setupClient()` runs the async tail. `MongoDBConnection.featureServices.<id>` is the single source of truth.
+- `composedResolvers()` is wired into `nextResolvers` — manifest resolver entries run live.
+
+### Shipped (Phase B — 2026-04-30 → 2026-05-01)
+
+All 18 features migrated. Each owns `feature.manifest.ts` + sibling `feature.manifest.test.ts`:
+
+| Feature | Owns | Notes |
+|---|---|---|
+| `audit` | service | Phase A proof-of-concept |
+| `cart` | service + indexes + resolvers (inline owner-based) | `requires: ['products']` |
+| `products` | service + indexes | Resolvers stay on guarded `mongo` proxy (Option A) |
+| `inventory` | service + indexes | `requires: ['products']`. Adapter cache deferred via thunk |
+| `orders` | services (`orders` + `stockReservation`) + indexes + resolvers (guest-checkout flow) + mailer closure | `requires: ['products', 'cart']` |
+| `mcp` | service + indexes | |
+| `themes` | service + indexes + onBoot (`seedIfEmpty`) | |
+| `languages` | services (`languages` + `translationMeta`) + indexes | Two services per folder |
+| `posts` | service + indexes | |
+| `footer` | service + indexes | |
+| `seo` | services (`siteFlags` + `siteSeo`) + indexes | |
+| `presence` | service + indexes | |
+| `observability` | service (`errorLog`) + indexes | |
+| `assets` | service + indexes | Two-collection ctor (logos + images) |
+| `bundle` | service + indexes | |
+| `publishing` | service + indexes | |
+| `navigation` | service + indexes + onBoot (`warnOnGhostNavigations`) | |
+| `users` | service + indexes + onBoot (admin seed; idempotency-flag preserved inside the manifest module) | |
+
+**Visible artefact achieved:** every service is constructed by its manifest. `MongoDBConnection.setupClient` collapsed to ~10 lines: open client, run sync boot, run async tail. Legacy `new <X>Service(...)` lines are commented out as reversibility markers; Phase C removes them once SDL/authz also move.
+
+### Phase B follow-ups landed mid-flight
+
+- **Sync-boot race fix.** Original async-only `bootFeatures` raced HTTP requests against undefined service getters during the ~50 ms cold-boot window. Split into `bootFeaturesSync` (called before constructor returns) + `bootFeaturesAsync` (resolves `connection.ready`).
+- **Stack-overflow recursion.** Manifests calling `getMongoConnection()` inside their `services` factory re-entered the still-running constructor. Fixed by adding `ctx.reconnect: () => Promise<void>` to `FeatureContext`; manifests now read it from the context, never from the singleton.
+- **Inventory adapter cache deferral.** `inventoryAdapter` + `resolveInventoryAdapter` haven't migrated (still on `MongoDBConnection`). Inventory's manifest factory builds a `getAdapter` thunk that lazily `require()`s the connection at first use — boot stays clean.
+- **Cart's `requires: ['products']`** flipped on the day Products' manifest landed; the legacy fallback was removed in the recursion-fix sweep.
+
+## Phase C shipped 2026-05-01
+
+### C.1 — consumers wired
+
+- **`composedAuthz()` consumer.** `services/features/Auth/authz.ts` static-imports `composedAuthz` and folds every manifest's `authz` block into the legacy `MUTATION_REQUIREMENTS` / `QUERY_REQUIREMENTS` / `MUTATION_CAPABILITIES` / `SESSION_INJECTED_METHODS` / `CUSTOMER_*` / `ANON_OPEN_MUTATIONS` tables (now declared as empty literals). Existing call sites unchanged; manifest-side authz is enforced.
+- **`composedSchemaSDL()` consumer.** Both `ui/client/pages/api/graphql.ts` (Next route) and `services/index.ts` (standalone build server) concatenate the composed SDL onto the legacy `services/api/schema.graphql`. Apollo accepts the combined type-defs (every manifest uses `extend type QueryMongo { … }` / `extend type MutationMongo { … }`).
+
+### C.2 — extraction pass
+
+19 manifests now own their SDL + authz contributions:
+- 15 from the bulk migration (Audit, Observability, Assets, Footer, Inventory, Languages, Mcp, Navigation, Orders, Posts, Products, Publishing, Seo, Themes, Users)
+- Cart from Phase B
+- Platform (new in C.3) — owns the cross-cutting `getMongoDBUri`, `loadData`, `getFeatureFlags` queries
+- Bundle + Presence have no GraphQL surface; manifests stay services-only
+
+### C.3 — interface gaps + build path
+
+- **`customerSessionInjected`** added to `FeatureAuthzContribution`. Users + Orders now contribute their customer-side `_session` injections via the manifest (was previously stuck in legacy `CUSTOMER_SESSION_INJECTED_METHODS`).
+- **Platform manifest** owns the three platform-level queries that didn't fit any feature; `services/api/schema.graphql` is now nothing but shared `type` declarations + sentinel `_empty` fields on `QueryMongo` / `MutationMongo`.
+- **Strip pass.** Legacy `schema.graphql` + `authz.ts` reduced to platform shells + empty literals. The merge layer fills the literals from manifests at module load.
+- **Boot-path fixes** unearthed during e2e:
+  - `mongoDBConnection.ts` switched from `require()` (CJS) to top-level static `import` of `bootFeaturesSync` / `bootFeaturesAsync` — `tsx` runs ESM and `require` is undefined there.
+  - Constructor opens the Mongo client + db handles synchronously, runs `bootFeaturesSync` before returning. `setupClient` flips a `_hasOpenedClient` flag so the FIRST call (kicked by `this.ready`) runs the async tail without re-opening; reconnect calls go through close-and-reopen.
+  - `services/index.ts` now reads `composedSchemaSDL()` so the standalone build server has every feature's fields.
+  - `tools/e2e-build.js` mirrors `MONGODB_URI`, `INITIAL_PASSWORD_DIR` (fresh tmp), `INTERNAL_GRAPHQL_URL`, and `FEATURE_*=true` onto BOTH the standalone and the next-build subprocess so build-time gqty + gqlFetch hit the same endpoint with the same active feature set.
+  - `services/features/Auth/initialPassword.ts` reads `INITIAL_PASSWORD_DIR` env override so e2e build doesn't trip on the local dev machine's stale artefact.
+
+E2E throughout: 58 passed / 21 skipped / 0 failed in 40s.
+
+### Remaining cleanup (C.3)
+
+The dedup pass — once C.2 has shipped through e2e and a release cycle, remove the duplicates:
+
+1. **Strip legacy SDL.** Each feature's lines come out of `services/api/schema.graphql`; the file shrinks to platform-level types (`IUser`, `ISection`, …) and the small set of platform queries that don't have a feature owner — `loadData`, `getMongoDBUri`, `getFeatureFlags`.
+2. **Strip legacy authz tables.** Every entry already mirrored on a manifest comes out of `MUTATION_REQUIREMENTS` etc. Same set of platform-level entries stays.
+3. **Drop the `// MIGRATED` reversibility comments** in `mongoDBConnection.ts`.
+4. **Open shape gap — `customerSessionInjected`.** `FeatureAuthzContribution` has `sessionInjected` (admin-side) but no customer-side equivalent. Customer-injection lookups (Users' `getMe`, `updateMyProfile`, …; Orders' `myOrders`, …) currently live only in legacy `CUSTOMER_SESSION_INJECTED_METHODS`. Add `customerSessionInjected: readonly string[]` to the contribution interface, then run the missing rows through the merge layer.
+5. **Open shape gap — `guardedDelegates`.** Most features go through the guarded `mongo` proxy; Cart + Orders' inline resolvers bypass it. C.3 (or D) should decide whether the manifest ships a `guardedDelegates?: Record<string, ...>` shape so a feature can declare delegate-method + scope requirements together. Surfaced by Inventory + Orders during Phase B.
+6. **Customer-auth split.** `UserService` still owns admin + customer surface. Splitting off `services/features/CustomerAuth/` lands cleanly here — separate authz contributions, separate manifest, lets `customerAuth` become its own toggleable feature in plug-and-play v1.
+7. **Platform feature.** `getFeatureFlags`, `loadData`, `getMongoDBUri` are platform-level reads with no natural feature owner. Carve out `services/features/Platform/` (or `Admin/`) in C.3 to take ownership. Then `schema.graphql` becomes nothing but the shared `type` declarations.
+
+### Phase C follow-ups for the resolver layer (deferred)
+
+- **Resolver context shape.** Cart's resolvers reach back to `getMongoConnection().cartService`; a cleaner `FeatureResolverContext` with `services` available would prevent each feature from re-doing the lookup. Land alongside C.5.
+- **Plug-and-play v2 unblocked.** Now that authz + SDL ride manifest-side, disabling a feature at the registry level genuinely removes its surface (no orphan SDL, no dangling authz entries). Hot-reload (admin write-back to Mongo + re-compose without restart) is the actual v2 work; the static composition path is ready.
 
 ## What it is
 

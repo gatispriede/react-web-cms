@@ -1,77 +1,20 @@
-import React, {useCallback, useEffect, useState} from "react";
+import React, {useEffect} from "react";
 import {Alert, Button, Card, Col, Input, Row, Space, Switch, Typography, message} from "antd";
 import {DeleteOutlined, PlusOutlined} from "@client/lib/icons";
 import {useTranslation} from "react-i18next";
-import FooterApi from "@services/api/client/FooterApi";
-import {DEFAULT_FOOTER, IFooterColumn, IFooterConfig, IFooterEntry} from "@interfaces/IFooter";
 import AuditBadge from "@admin/shell/AuditBadge";
 import {useRefreshView} from "@client/lib/refreshBus";
 import ConflictDialog from "@client/lib/ConflictDialog";
-import {ConflictError, isConflictError} from "@client/lib/conflict";
+import {useViewModel} from "@client/lib/state/observable";
+import {FooterViewModel} from "./FooterViewModel";
 
-const footerApi = new FooterApi();
-
+/** Render-only Footer pane — state lives on `FooterViewModel`. VM3 (2026-05-02). */
 const AdminSettingsFooter: React.FC = () => {
     const {t} = useTranslation();
-    const [config, setConfig] = useState<IFooterConfig>({...DEFAULT_FOOTER});
-    const [loading, setLoading] = useState(false);
-    const [saving, setSaving] = useState(false);
-    const [conflict, setConflict] = useState<{error: ConflictError<any>; retry: () => Promise<void>} | null>(null);
+    const vm = useViewModel(() => new FooterViewModel(undefined, t));
 
-    const refresh = useCallback(async () => {
-        setLoading(true);
-        try { setConfig(await footerApi.get()); }
-        finally { setLoading(false); }
-    }, []);
-
-    useEffect(() => { void refresh(); }, [refresh]);
-    useRefreshView(refresh, 'settings');
-
-    const update = (patch: Partial<IFooterConfig>) => setConfig(c => ({...c, ...patch}));
-
-    const addColumn = () => update({columns: [...config.columns, {title: t('New column'), entries: []}]});
-    const removeColumn = (i: number) => update({columns: config.columns.filter((_, j) => j !== i)});
-    const patchColumn = (i: number, patch: Partial<IFooterColumn>) =>
-        update({columns: config.columns.map((c, j) => j === i ? {...c, ...patch} : c)});
-    const addEntry = (i: number) =>
-        patchColumn(i, {entries: [...config.columns[i].entries, {label: '', url: ''}]});
-    const removeEntry = (i: number, j: number) =>
-        patchColumn(i, {entries: config.columns[i].entries.filter((_, k) => k !== j)});
-    const patchEntry = (i: number, j: number, patch: Partial<IFooterEntry>) =>
-        patchColumn(i, {entries: config.columns[i].entries.map((e, k) => k === j ? {...e, ...patch} : e)});
-
-    const performSave = useCallback(async (cfg: IFooterConfig, expectedVersion: number | undefined) => {
-        const result = await footerApi.save(cfg, expectedVersion);
-        if ((result as any).error) { message.error((result as any).error); return false; }
-        message.success(t('Footer saved'));
-        // Adopt the bumped version into local state so subsequent saves stay aligned.
-        if (typeof (result as any).version === 'number') {
-            setConfig(c => ({...c, version: (result as any).version}));
-        }
-        return true;
-    }, [t]);
-
-    const save = async () => {
-        setSaving(true);
-        try {
-            await performSave(config, config.version);
-        } catch (err) {
-            if (isConflictError(err)) {
-                setConflict({
-                    error: err,
-                    retry: async () => {
-                        setSaving(true);
-                        try {
-                            await performSave(config, err.currentVersion);
-                            setConflict(null);
-                        } finally { setSaving(false); }
-                    },
-                });
-            } else {
-                message.error(String((err as Error)?.message ?? err));
-            }
-        } finally { setSaving(false); }
-    };
+    useEffect(() => { void vm.refresh(); }, [vm]);
+    useRefreshView(vm.refresh, 'settings');
 
     return (
         <div style={{padding: 16}}>
@@ -82,25 +25,25 @@ const AdminSettingsFooter: React.FC = () => {
                 message={t('Columns with these titles are auto-generated: Site (your pages) and Writing (blog). You can override by adding a column with the same title.')}
             />
             <Space style={{marginBottom: 16}} align="center">
-                <Switch checked={config.enabled} onChange={v => update({enabled: v})}/>
-                <span>{config.enabled ? t('Footer visible') : t('Footer hidden')}</span>
-                <Button data-testid="footer-save-btn" type="primary" onClick={save} loading={saving}>{t('Save')}</Button>
-                <Button onClick={refresh} loading={loading}>{t('Refresh')}</Button>
-                <AuditBadge editedBy={config.editedBy} editedAt={config.editedAt}/>
+                <Switch checked={vm.config.enabled} onChange={vm.setEnabled}/>
+                <span>{vm.config.enabled ? t('Footer visible') : t('Footer hidden')}</span>
+                <Button data-testid="footer-save-btn" type="primary" onClick={vm.save} loading={vm.saving}>{t('Save')}</Button>
+                <Button onClick={vm.refresh} loading={vm.loading}>{t('Refresh')}</Button>
+                <AuditBadge editedBy={vm.config.editedBy} editedAt={vm.config.editedAt}/>
             </Space>
             <Row gutter={[12, 12]}>
-                {config.columns.map((col, i) => (
+                {vm.config.columns.map((col, i) => (
                     <Col xs={24} md={12} lg={8} key={i}>
                         <Card
                             size="small"
                             title={
                                 <Input
                                     value={col.title}
-                                    onChange={e => patchColumn(i, {title: e.target.value})}
+                                    onChange={e => vm.patchColumn(i, {title: e.target.value})}
                                     placeholder={t('Column title')}
                                 />
                             }
-                            extra={<Button danger size="small" icon={<DeleteOutlined/>} onClick={() => removeColumn(i)}/>}
+                            extra={<Button danger size="small" icon={<DeleteOutlined/>} onClick={() => vm.removeColumn(i)}/>}
                         >
                             <Space orientation="vertical" size={6} style={{width: '100%'}}>
                                 {col.entries.map((entry, j) => (
@@ -109,7 +52,7 @@ const AdminSettingsFooter: React.FC = () => {
                                             <Input
                                                 size="small"
                                                 value={entry.label}
-                                                onChange={e => patchEntry(i, j, {label: e.target.value})}
+                                                onChange={e => vm.patchEntry(i, j, {label: e.target.value})}
                                                 placeholder={t('Label')}
                                             />
                                         </Col>
@@ -117,51 +60,48 @@ const AdminSettingsFooter: React.FC = () => {
                                             <Input
                                                 size="small"
                                                 value={entry.url ?? ''}
-                                                onChange={e => patchEntry(i, j, {url: e.target.value})}
+                                                onChange={e => vm.patchEntry(i, j, {url: e.target.value})}
                                                 placeholder={t('URL (optional)')}
                                             />
                                         </Col>
                                         <Col xs={2}>
-                                            <Button size="small" danger icon={<DeleteOutlined/>} onClick={() => removeEntry(i, j)}/>
+                                            <Button size="small" danger icon={<DeleteOutlined/>} onClick={() => vm.removeEntry(i, j)}/>
                                         </Col>
                                     </Row>
                                 ))}
-                                <Button size="small" icon={<PlusOutlined/>} onClick={() => addEntry(i)}>{t('Add entry')}</Button>
+                                <Button size="small" icon={<PlusOutlined/>} onClick={() => vm.addEntry(i)}>{t('Add entry')}</Button>
                             </Space>
                         </Card>
                     </Col>
                 ))}
                 <Col xs={24}>
-                    <Button icon={<PlusOutlined/>} onClick={addColumn}>{t('Add column')}</Button>
+                    <Button icon={<PlusOutlined/>} onClick={vm.addColumn}>{t('Add column')}</Button>
                 </Col>
             </Row>
             <div style={{marginTop: 24}}>
                 <Typography.Text strong>{t('Bottom line')}</Typography.Text>
                 <Input
                     data-testid="footer-copyright-input"
-                    value={config.bottom ?? ''}
-                    onChange={e => update({bottom: e.target.value})}
+                    value={vm.config.bottom ?? ''}
+                    onChange={e => vm.setBottom(e.target.value)}
                     placeholder={`© ${new Date().getFullYear()} …`}
                     style={{marginTop: 6}}
                 />
             </div>
-            {conflict && (() => {
-                const peer = conflict.error.currentDoc as {editedBy?: string; editedAt?: string} | null;
+            {vm.conflict && (() => {
+                const peer = vm.conflict.error.currentDoc as {editedBy?: string; editedAt?: string} | null;
                 return (
                     <ConflictDialog
                         open
                         docKind={t('Footer')}
-                        peerVersion={conflict.error.currentVersion}
+                        peerVersion={vm.conflict.error.currentVersion}
                         peerEditedBy={peer?.editedBy}
                         peerEditedAt={peer?.editedAt}
-                        onCancel={() => setConflict(null)}
-                        onTakeTheirs={async () => {
-                            setConflict(null);
-                            await refresh();
-                        }}
+                        onCancel={vm.dismissConflict}
+                        onTakeTheirs={vm.takeTheirs}
                         onKeepMine={async () => {
-                            try { await conflict.retry(); }
-                            catch (err) { message.error(String((err as Error)?.message ?? err)); setConflict(null); }
+                            try { await vm.conflict?.retry(); }
+                            catch (err) { message.error(String((err as Error)?.message ?? err)); vm.dismissConflict(); }
                         }}
                     />
                 );

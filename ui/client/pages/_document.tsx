@@ -51,7 +51,7 @@ const preloadData = async () => {
                     ({query}) => {
                         const list: ISection[] = (query as unknown as IMongo).mongo.getSections({ids: sectionIds}).map(item => {
                             let content: IItem[];
-                            content = item.content.map((value: IItem) => {
+                            content = (item.content ?? []).map((value: IItem) => {
                                 return {
                                     name: value.name,
                                     type: value.type,

@@ -4,6 +4,16 @@ export type AdminLocale = 'en' | 'lv';
 
 export type UserKind = 'admin' | 'customer';
 
+/**
+ * Admin UI mode — `simplified` shows the cut-down per-feature view,
+ * `advanced` shows the full surface. Per `docs/features/platform/admin-ui-modes.md`
+ * (decisions 2026-05-02). Stored on `IUser.adminUiMode`; `null` /
+ * undefined falls through to `siteFlags.defaultAdminUiMode`, then to
+ * `'advanced'` if neither is set. Mode is a UI affordance, NOT a role —
+ * see decision 1.
+ */
+export type AdminUiMode = 'simplified' | 'advanced';
+
 export interface IAddress {
     id: string;
     name: string;
@@ -48,6 +58,12 @@ export interface IUser {
      * `localStorage.admin.locale` → browser → `en` when unset.
      */
     preferredAdminLocale?: AdminLocale;
+    /**
+     * Per-user admin UI mode. Null/undefined → fall through to the
+     * site-wide default. Per `docs/features/platform/admin-ui-modes.md`
+     * (decision 2026-05-02). Only meaningful for `kind: 'admin'` users.
+     */
+    adminUiMode?: AdminUiMode;
 
     /**
      * Discriminator across admin and customer populations. Undefined is
@@ -83,6 +99,7 @@ export interface InUser {
     canPublishProduction?: boolean;
     mustChangePassword?: boolean;
     preferredAdminLocale?: AdminLocale;
+    adminUiMode?: AdminUiMode;
     kind?: UserKind;
     googleSub?: string;
     emailVerified?: string;

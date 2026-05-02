@@ -526,6 +526,23 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                             }
                         } else {
                             this.setActiveOptionState(type, undefined, type !== this.state.selected);
+                            // After picking a module type from the picker, focus
+                            // the primary text input so the operator can type
+                            // immediately. Only do this on add (`!loadItem`) —
+                            // edit flows already show populated content.
+                            // Two `requestAnimationFrame`s: the first lets React
+                            // commit the state change and re-render the editor
+                            // (which is now mounted with the new type); the
+                            // second waits for the DOM ref to be live so
+                            // `focus()` has something to grab.
+                            if (!this.props.loadItem) {
+                                requestAnimationFrame(() => requestAnimationFrame(() => {
+                                    const input = document.querySelector<HTMLElement>(
+                                        '[data-testid="module-editor-primary-text-input"]',
+                                    );
+                                    input?.focus();
+                                }));
+                            }
                         }
                     }}
                 />

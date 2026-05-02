@@ -5,6 +5,7 @@ import {validateSectionInput} from '@utils/contentSchemas';
 import {PRESETS} from '@services/features/Themes/ThemeService';
 import guid from '@utils/guid';
 import FileManager from '@services/infra/fileManager';
+import {log} from '@services/infra/logger';
 
 const PUBLIC_IMAGES_DIR = path.join(process.cwd(), 'ui/client/public/images');
 const IMAGE_PATH_PREFIX = 'api/';
@@ -147,7 +148,7 @@ export class BundleService {
                 const mime = MIME_BY_EXT[ext] ?? 'application/octet-stream';
                 assets[safeName] = `data:${mime};base64,${buf.toString('base64')}`;
             } catch (err) {
-                console.warn(`[bundle] missing asset on disk, skipping: ${name}`);
+                log.warn({scope: 'bundle.export', err, asset: name}, 'missing asset on disk, skipping');
             }
         }
 
@@ -251,7 +252,7 @@ export class BundleService {
             try {
                 fileManager.saveTranslation(lang.symbol, (lang.translations ?? {}) as unknown as JSON);
             } catch (err) {
-                console.error(`[bundle] failed writing translations for ${lang.symbol}:`, err);
+                log.error({scope: 'bundle.import', err, symbol: lang.symbol}, 'failed writing translations');
             }
         }
         await put('Images', bundle.site.images ?? []);

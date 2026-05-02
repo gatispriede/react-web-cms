@@ -14,6 +14,7 @@ import type {
     WarehouseProductRow,
 } from '@interfaces/IInventory';
 import {GenericFeedAdapter} from './adapters/GenericFeedAdapter';
+import {log} from '@services/infra/logger';
 
 /**
  * InventoryService — sole owner of the warehouse → Products pipeline.
@@ -87,7 +88,7 @@ export class InventoryService {
             await this.dead.createIndex({externalId: 1}, {unique: true});
             this.indexesReady = true;
         } catch (err) {
-            console.error('InventoryService.ensureIndexes:', err);
+            log.error({scope: 'inventory.ensureIndexes', err}, 'inventory ensureIndexes failed');
         }
     }
 
@@ -342,12 +343,12 @@ export class InventoryService {
         try {
             await this.promoteDeadLetters(runId, counters.errors);
         } catch (err) {
-            console.error('InventoryService.promoteDeadLetters:', err);
+            log.error({scope: 'inventory.promoteDeadLetters', err, runId}, 'promoteDeadLetters failed');
         }
 
         if ((status === 'succeeded' || status === 'partial') && !opts.dryRun) {
             try { this.revalidator?.triggerRevalidate({scope: 'all'}); }
-            catch (err) { console.error('InventoryService.revalidator:', err); }
+            catch (err) { log.error({scope: 'inventory.revalidator', err}, 'revalidator trigger failed'); }
         }
 
         return {

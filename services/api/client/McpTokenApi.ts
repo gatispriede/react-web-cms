@@ -1,5 +1,6 @@
 import {resolve} from "@services/api/generated";
 import type {IMcpIssuedToken, IMcpTokenSummary, McpScope} from "@interfaces/IMcp";
+import {log} from "@services/infra/logger";
 
 const parse = <T,>(raw: string | null | undefined, fallback: T): T => {
     if (!raw) return fallback;
@@ -14,7 +15,7 @@ export class McpTokenApi {
             const parsed = parse<IMcpTokenSummary[] | {error?: string}>(raw, []);
             return Array.isArray(parsed) ? parsed : [];
         } catch (err) {
-            console.error('McpTokenApi.list:', err);
+            log.error({scope: 'mcp.token.list', err}, 'mcp token list failed');
             return [];
         }
     }

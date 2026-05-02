@@ -7,6 +7,20 @@ const {tsconfigPath} = loadCustomBuildParams()
 // same env flag. Set by the script, never by humans directly.
 const distDir = process.env.E2E_BUILD_DIR ? process.env.E2E_BUILD_DIR : '.next';
 
+// Resolve the build SHA at config time so every entry tagged by the
+// logger (server) and reportError (browser via window.__BUILD_ID__)
+// names the exact deploy. Falls through to `dev` when git's missing.
+let resolvedBuildId = process.env.BUILD_ID;
+if (!resolvedBuildId) {
+    try {
+        const cp = require('child_process');
+        resolvedBuildId = cp.execSync('git rev-parse --short HEAD', {stdio: ['ignore', 'pipe', 'ignore']}).toString().trim();
+    } catch {
+        resolvedBuildId = 'dev';
+    }
+    process.env.BUILD_ID = resolvedBuildId;
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     distDir,
@@ -57,10 +71,15 @@ const nextConfig = {
     // (set by the worker's `server.ts`) drives the value instead.
     env: process.env.E2E_BUILD_DIR ? {
         API_URL: 'http://localhost',
+        // Browser-readable build SHA — `reportError.ts` injects it on
+        // every payload so an admin debugging a stale-tab error knows
+        // which deploy the failing code came from.
+        NEXT_PUBLIC_BUILD_ID: resolvedBuildId,
     } : {
         NEXTAUTH_URL: 'http://localhost:80',
         API_URL: 'http://localhost',
         NEXT_PUBLIC_BASE_URL: 'http://localhost:80',
+        NEXT_PUBLIC_BUILD_ID: resolvedBuildId,
     },
     i18n: i18n,
     reactStrictMode: true,

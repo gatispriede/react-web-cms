@@ -1,10 +1,14 @@
 /**
  * Bulk image upload (C3) — accepts multiple `file[]` parts plus a
  * `ratio` field (one of `free / 1:1 / 4:3 / 3:2 / 16:9`) and, optionally,
- * a JSON `tags` field.
+ * a JSON `tags` field. Also accepts a `urls` field (JSON array or
+ * newline-separated) — the server fetches each URL and runs the same
+ * pipeline. Admin-only (editor role), so the URL fetch is unguarded
+ * beyond an http(s) scheme check + content-type/size sanity checks.
  *
- * Each file is:
- *   1. received into `public/temp/` (formidable),
+ * Each input is:
+ *   1. received into `public/temp/` (formidable for files, fetch-to-disk
+ *      for urls),
  *   2. processed with sharp — `resize(cover, width?, height?)` to lock the
  *      aspect ratio, EXIF stripped, re-encoded jpeg/png (quality 82);
  *   3. written to `public/images/<safe-name>` (collision-safe suffix),
@@ -111,6 +115,16 @@ const handler = async (req: any, res: any) => {
     const tags = Array.isArray(rawTags) ? rawTags.filter(Boolean) : [];
     const withAll = tags.includes('All') ? tags : ['All', ...tags];
 
+    const rawUrls = parsed.fields?.urls?.[0] ?? parsed.fields?.urls;
+    const urlList: string[] = (() => {
+        if (!rawUrls) return [];
+        try {
+            const j = JSON.parse(rawUrls);
+            if (Array.isArray(j)) return j.map(String).map(s => s.trim()).filter(Boolean);
+        } catch { /* fall through to newline split */ }
+        return String(rawUrls).split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    })();
+
     // Formidable gives us `files.file` as either an array or a single record
     // depending on count. Also accept `file[]` as the field name — browsers'
     // `FormData.append('file[]', …)` convention.
@@ -154,6 +168,76 @@ const handler = async (req: any, res: any) => {
         } finally {
             // Always clean up the temp upload regardless of outcome.
             try { if (file?.filepath) fs.unlinkSync(file.filepath); } catch { /* already gone */ }
+        }
+    }
+
+    // URL fetch pass — runs after files so per-batch ordering is files-first,
+    // urls-after. Each URL writes to a temp file and reuses the same sharp
+    // pipeline below. 25 MB cap mirrors the formidable per-file cap; we abort
+    // any download that exceeds it instead of streaming forever.
+    const URL_MAX_BYTES = 25 * 1024 * 1024;
+    for (const url of urlList) {
+        let originalName = '';
+        let tempPath = '';
+        try {
+            let parsedUrl: URL;
+            try { parsedUrl = new URL(url); }
+            catch { results.push({ok: false, error: 'invalid url', originalName: url}); continue; }
+            if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+                results.push({ok: false, error: 'only http/https supported', originalName: url});
+                continue;
+            }
+
+            const resp = await fetch(parsedUrl.toString(), {redirect: 'follow'});
+            if (!resp.ok) {
+                results.push({ok: false, error: `fetch ${resp.status}`, originalName: url});
+                continue;
+            }
+            const ct = resp.headers.get('content-type') ?? '';
+            if (!/^image\//i.test(ct)) {
+                results.push({ok: false, error: `not an image (${ct || 'no content-type'})`, originalName: url});
+                continue;
+            }
+            const lenHeader = resp.headers.get('content-length');
+            if (lenHeader && Number(lenHeader) > URL_MAX_BYTES) {
+                results.push({ok: false, error: `too large (${lenHeader} bytes)`, originalName: url});
+                continue;
+            }
+            const buf = Buffer.from(await resp.arrayBuffer());
+            if (buf.byteLength > URL_MAX_BYTES) {
+                results.push({ok: false, error: `too large (${buf.byteLength} bytes)`, originalName: url});
+                continue;
+            }
+
+            // Derive a sensible filename: prefer the URL's basename, fall back
+            // to the content-type extension. Strip query strings / fragments.
+            const extFromCt = (ct.split(';')[0].split('/')[1] ?? 'jpg').toLowerCase().replace('jpeg', 'jpg');
+            const urlBase = path.basename(parsedUrl.pathname) || `image-${guid().slice(0, 8)}.${extFromCt}`;
+            originalName = urlBase.includes('.') ? urlBase : `${urlBase}.${extFromCt}`;
+
+            tempPath = path.join(tempDir, `url-${guid()}-${originalName.replace(/\s+/g, '_')}`);
+            fs.writeFileSync(tempPath, buf);
+
+            const targetName = resolveUniqueName(imagesDir, originalName);
+            const destPath = path.join(imagesDir, targetName);
+            const result = await optimizeImageFile(tempPath, destPath, {ratio});
+
+            const image: InImage = {
+                created: new Date().toDateString(),
+                id: guid(),
+                location: `${PUBLIC_IMAGE_PATH}${targetName}`,
+                name: targetName,
+                size: result.size ?? buf.byteLength,
+                type: ct.split(';')[0] || 'image/*',
+                tags: withAll,
+            };
+            await mongo.assetService.saveImage(image);
+            results.push({ok: true, image, originalName: url});
+        } catch (e: any) {
+            console.error('upload-batch: url fetch failure', url, e?.message ?? e);
+            results.push({ok: false, error: String(e?.message ?? e), originalName: url});
+        } finally {
+            try { if (tempPath) fs.unlinkSync(tempPath); } catch { /* already gone */ }
         }
     }
 

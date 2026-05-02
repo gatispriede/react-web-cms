@@ -18,6 +18,7 @@ import type {IPaymentProvider} from './payment/IPaymentProvider';
 import {OrderCounter} from './OrderCounter';
 import {roundMinor, taxRateFor} from './tax';
 import {getShippingMethod, shippingMethodList} from './shippingMethods';
+import {log} from '@services/infra/logger';
 
 /**
  * OrderService — single owner of the `Orders` collection. Encapsulates
@@ -95,7 +96,7 @@ export class OrderService {
             await this.orders.createIndex({orderToken: 1}, {sparse: true, unique: true});
             this.indexesReady = true;
         } catch (err) {
-            console.error('OrderService.ensureIndexes:', err);
+            log.error({scope: 'orders.ensureIndexes', err}, 'OrderService ensureIndexes failed');
         }
     }
 
@@ -405,7 +406,7 @@ export class OrderService {
                 await this.cart.clear(owner);
             }
         } catch (err) {
-            console.error('[orders] cart clear failed:', err);
+            log.error({scope: 'orders.cartClear', err, orderId: order.id}, 'cart clear failed');
         }
 
         // Send confirmation email — non-fatal.
@@ -418,7 +419,7 @@ export class OrderService {
                 await this.mailer.sendOrderConfirmation(written, to);
             }
         } catch (err) {
-            console.error('[orders] confirmation email failed:', err);
+            log.error({scope: 'orders.confirmationEmail', err, orderId: order.id}, 'confirmation email failed');
         }
 
         return written;
@@ -431,7 +432,7 @@ export class OrderService {
         const written = await this.write(next, order.version);
         if (order.inventoryReservationId) {
             try { await this.reservations.release(order.inventoryReservationId); }
-            catch (err) { console.error('[orders] release failed:', err); }
+            catch (err) { log.error({scope: 'orders.releaseReservation', err, orderId: order.id}, 'reservation release failed'); }
         }
         return written;
     }
@@ -544,7 +545,7 @@ export class OrderService {
                     released.push(order.inventoryReservationId);
                 }
             } catch (err) {
-                console.error('[orders] sweep failed for', order.id, err);
+                log.error({scope: 'orders.sweep', err, orderId: order.id}, 'sweep failed');
             }
         }
         // Also release any orphan held reservations whose TTL elapsed

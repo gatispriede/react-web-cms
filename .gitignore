@@ -39,6 +39,11 @@
 !.env.example
 IP.ts
 
+# Local MCP dev-token config — emitted by `npm run mcp:dev-token`,
+# contains a real bearer secret. Real tokens for shared use are
+# created via /admin/system/mcp.
+tools/mcp.dev.json
+
 # Local-only secrets / ops notes — infra IPs, cert fingerprints, passwords
 /secrets.md
 /secrets/

@@ -2,6 +2,7 @@ import {Collection, Db} from 'mongodb';
 import guid from '@utils/guid';
 import {OrderError} from '@interfaces/IOrder';
 import type {ProductService} from '@services/features/Products/ProductService';
+import {log} from '@services/infra/logger';
 
 /**
  * StockReservationService — owned by the Orders module since the
@@ -57,7 +58,7 @@ export class StockReservationService {
             await this.reservations.createIndex({status: 1, expiresAt: 1});
             this.indexesReady = true;
         } catch (err) {
-            console.error('StockReservationService.ensureIndexes:', err);
+            log.error({scope: 'orders.reservation.ensureIndexes', err}, 'StockReservationService ensureIndexes failed');
         }
     }
 

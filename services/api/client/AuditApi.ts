@@ -1,5 +1,6 @@
 import {resolve} from "@services/api/generated";
 import type {AuditEntry, AuditOp} from "@services/features/Audit/AuditService";
+import {log} from "@services/infra/logger";
 
 export interface AuditFilter {
     actorEmail?: string;
@@ -28,7 +29,7 @@ export class AuditApi {
                 total: typeof parsed?.total === 'number' ? parsed.total : 0,
             };
         } catch (err) {
-            console.error('AuditApi.list:', err);
+            log.error({scope: 'audit.list', err}, 'audit list failed');
             return {rows: [], total: 0};
         }
     }

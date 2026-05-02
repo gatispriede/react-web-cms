@@ -1,13 +1,16 @@
 import redisConnection from "@services/infra/redisConnection";
 import {getMongoConnection} from "@services/infra/mongoDBConnection";
+import {composedResolvers} from "@services/infra/featureRegistry";
 import {
     guardMethods,
     MUTATION_REQUIREMENTS,
     MUTATION_CAPABILITIES,
     QUERY_REQUIREMENTS,
+    RESOURCE_GATED_METHODS,
     AuthzError,
     GraphqlSession,
 } from "@services/features/Auth/authz";
+import {RequestPermissionCache} from "@services/features/Permissions/PermissionService";
 
 /**
  * Hook injected by the Next API route — checks IP-based rate limit on
@@ -37,30 +40,8 @@ export interface ResolverHooks {
     setOrderTokenCookie?: (token: string) => void;
 }
 
-import type {CartOwner} from '@interfaces/ICart';
-import {mintCartCookie} from '@services/features/Cart/cartCookie';
-
-/**
- * Derive the cart owner from the request context.
- *
- * Cart resolvers deliberately bypass `guardMethods` — authz here is
- * principal-based ("you own the resource bound to your cookie or
- * session"), not role-based. The customer-session branch is preferred
- * when present so a signed-in shopper cannot accidentally fall back to
- * a stale cookie cart. For guests, an absent or forged cookie causes
- * the resolver to mint a fresh signed cookie and queue it on the
- * response via `hooks.setCartCookie`.
- */
-function ownerFromCtx(ctx: {session: GraphqlSession; hooks?: ResolverHooks}): CartOwner {
-    if (ctx.session.kind === 'customer' && ctx.session.customerId) {
-        return {kind: 'customer', customerId: ctx.session.customerId};
-    }
-    const existing = ctx.hooks?.getCartCookieId?.();
-    if (existing) return {kind: 'guest', cartId: existing};
-    const minted = mintCartCookie();
-    ctx.hooks?.setCartCookie?.(minted.cookieValue);
-    return {kind: 'guest', cartId: minted.cartId};
-}
+// Cart owner derivation moved to services/features/Cart/feature.manifest.ts
+// alongside the cart resolvers themselves (Cart Phase B migration).
 
 /**
  * Shared GraphQL resolver shapes used by both servers:
@@ -86,6 +67,21 @@ export const standaloneResolvers = {
     },
 };
 
+/**
+ * Build the permission-check predicate the proxy uses to gate per-resource
+ * grants. Reads through a request-scoped cache (decision 6 — same `(user,
+ * scope, resourceId)` triple inside a request hits Mongo once). Returns
+ * `undefined` when the Permissions feature isn't booted (PermissionService
+ * absent → no gating, fall back to role-only).
+ */
+function buildPermissionCheck(): import('@services/features/Auth/authz').PermissionCheck | undefined {
+    const conn = getMongoConnection();
+    const svc = conn.permissionService;
+    if (!svc) return undefined;
+    const cache = new RequestPermissionCache();
+    return (opts) => svc.can({...opts, cache});
+}
+
 /** Resolver map for the Next route — mongo proxied through `guardMethods`. */
 export const nextResolvers = {
     Query: {
@@ -95,7 +91,14 @@ export const nextResolvers = {
     },
     Mutation: {
         mongo: (_: unknown, __: unknown, ctx: {session: GraphqlSession}) =>
-            guardMethods(getMongoConnection(), ctx.session, MUTATION_REQUIREMENTS, MUTATION_CAPABILITIES),
+            guardMethods(
+                getMongoConnection(),
+                ctx.session,
+                MUTATION_REQUIREMENTS,
+                MUTATION_CAPABILITIES,
+                RESOURCE_GATED_METHODS,
+                buildPermissionCheck(),
+            ),
     },
     // The customer-facing schema fields live on QueryMongo / MutationMongo
     // — but the underlying MongoDBConnection method names diverge in one
@@ -113,19 +116,12 @@ export const nextResolvers = {
                 throw e;
             }
         },
-        // Cart resolvers bypass `guardMethods` and call the underlying
-        // service directly via the un-proxied connection — authz here
-        // is principal-based, not role-based. See `ownerFromCtx`.
-        cart: (_parent: any, _args: unknown, ctx: {session: GraphqlSession; hooks?: ResolverHooks}) => {
-            return getMongoConnection().getCartFor(ownerFromCtx(ctx));
-        },
-        // Guest order confirmation: the schema gate is `String!` and we
-        // wire the cookie value through here so the service can compare
-        // it against the `token` argument.
-        orderByToken: (_parent: any, args: {token: string}, ctx: {hooks?: ResolverHooks}) => {
-            const cookieToken = ctx.hooks?.getOrderTokenCookie?.() ?? null;
-            return getMongoConnection().orderByToken({token: args.token, cookieToken});
-        },
+        // Cart's `cart` query is owned by the Cart feature manifest
+        // (services/features/Cart/feature.manifest.ts) and merged in
+        // below via `composedResolvers()`.
+        // Orders' `orderByToken` query is owned by the Orders feature
+        // manifest (services/features/Orders/feature.manifest.ts) — same
+        // merge path; the cookie-token wiring lives there.
     },
     MutationMongo: {
         signUpCustomer: (parent: any, args: {customer: any}, ctx: {hooks?: ResolverHooks}) => {
@@ -135,78 +131,26 @@ export const nextResolvers = {
             }
             return parent.signUpCustomer(args);
         },
-        cartAddItem: (_parent: any, args: {productId: string; sku: string; qty: number}, ctx: {session: GraphqlSession; hooks?: ResolverHooks}) => {
-            return getMongoConnection().cartAddItem(ownerFromCtx(ctx), args);
-        },
-        cartUpdateQty: (_parent: any, args: {productId: string; sku: string; qty: number}, ctx: {session: GraphqlSession; hooks?: ResolverHooks}) => {
-            return getMongoConnection().cartUpdateQty(ownerFromCtx(ctx), args);
-        },
-        cartRemoveItem: (_parent: any, args: {productId: string; sku: string}, ctx: {session: GraphqlSession; hooks?: ResolverHooks}) => {
-            return getMongoConnection().cartRemoveItem(ownerFromCtx(ctx), args);
-        },
-        cartClear: (_parent: any, _args: unknown, ctx: {session: GraphqlSession; hooks?: ResolverHooks}) => {
-            return getMongoConnection().cartClear(ownerFromCtx(ctx));
-        },
-        // ---------------- Orders / checkout ----------------
-        createDraftOrder: async (parent: any, args: {cartId?: string; currency: string; guestEmail?: string}, ctx: {session: GraphqlSession; hooks?: ResolverHooks}) => {
-            const guard = await guestCheckoutGuard(ctx.session);
-            if (guard) return guard;
-            // For guest sessions, derive cartId from the cart cookie if
-            // the client didn't pass one explicitly.
-            let cartId = args.cartId;
-            if (!cartId && ctx.session.kind !== 'customer') {
-                cartId = ctx.hooks?.getCartCookieId?.() ?? undefined;
-            }
-            return parent.createDraftOrder({...args, cartId});
-        },
-        attachOrderAddress: (parent: any, args: any, ctx: {session: GraphqlSession}) => {
-            return guestCheckoutGuard(ctx.session).then(g => g ?? parent.attachOrderAddress(args));
-        },
-        attachOrderShipping: (parent: any, args: any, ctx: {session: GraphqlSession}) => {
-            return guestCheckoutGuard(ctx.session).then(g => g ?? parent.attachOrderShipping(args));
-        },
-        authorizeOrderPayment: (parent: any, args: any, ctx: {session: GraphqlSession}) => {
-            return guestCheckoutGuard(ctx.session).then(g => g ?? parent.authorizeOrderPayment(args));
-        },
-        finalizeOrder: async (parent: any, args: any, ctx: {session: GraphqlSession; hooks?: ResolverHooks}) => {
-            const guard = await guestCheckoutGuard(ctx.session);
-            if (guard) return guard;
-            const result = await parent.finalizeOrder(args);
-            // For guest orders, queue the order_token cookie.
-            try {
-                const parsed = JSON.parse(result);
-                const order = parsed?.finalizeOrder;
-                if (order && !order.customerId && order.orderToken && ctx.hooks?.setOrderTokenCookie) {
-                    ctx.hooks.setOrderTokenCookie(order.orderToken);
-                }
-            } catch { /* error envelope — pass through */ }
-            return result;
-        },
-        cancelOrder: (parent: any, args: any, ctx: {session: GraphqlSession}) => {
-            return guestCheckoutGuard(ctx.session).then(g => g ?? parent.cancelOrder(args));
-        },
+        // Cart mutations (cartAddItem / cartUpdateQty / cartRemoveItem /
+        // cartClear) are owned by the Cart feature manifest and merged in
+        // below via `composedResolvers()`.
+        // Orders / checkout mutations (createDraftOrder, attachOrderAddress,
+        // attachOrderShipping, authorizeOrderPayment, finalizeOrder,
+        // cancelOrder) plus the guest-checkout site-flag guard are owned by
+        // the Orders feature manifest (services/features/Orders/feature.manifest.ts).
     },
 };
 
-/**
- * Guest-checkout policy gate. Returns a serialised error envelope when
- * an anonymous caller hits a checkout-flow mutation but the site flag
- * is off; returns `null` when the call is allowed to proceed. Customer
- * and admin sessions are unaffected.
- */
-async function guestCheckoutGuard(session: GraphqlSession): Promise<string | null> {
-    if (session.kind !== 'anonymous') return null;
-    try {
-        const flagsRaw = await getMongoConnection().getSiteFlags();
-        const flags = JSON.parse(flagsRaw);
-        // `allowGuestCheckout` defaults to true when unset (per spec).
-        const allowed = flags?.allowGuestCheckout !== false;
-        if (allowed) return null;
-        return JSON.stringify({error: 'Guest checkout is disabled. Sign in to place an order.'});
-    } catch {
-        // Reading site flags shouldn't happen-fail. Default to allow so
-        // checkout doesn't go down on an unrelated SiteSettings read
-        // glitch — a soft fail-open here is the lesser harm.
-        return null;
-    }
+// Merge feature-manifest resolvers into the live map. Currently a no-op
+// (no migrated feature contributes resolvers yet — Cart is the first
+// candidate per service-modularity.md Phase B). Same module-load pass
+// would let a `services/features/<X>/feature.manifest.ts` add a Query
+// or Mutation field by listing it under `resolvers.Query` / `.Mutation`.
+const _manifestResolvers = composedResolvers();
+for (const [topKey, fields] of Object.entries(_manifestResolvers)) {
+    const target = (nextResolvers as Record<string, any>)[topKey] ?? {};
+    (nextResolvers as Record<string, any>)[topKey] = {...target, ...fields};
 }
+
+// `guestCheckoutGuard` moved to services/features/Orders/feature.manifest.ts
+// alongside the six checkout-flow resolvers it gated.

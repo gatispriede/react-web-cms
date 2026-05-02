@@ -8,10 +8,7 @@ import {
 const scenario = buildScenario('timeline');
 
 test.describe.serial('module — Timeline admin + client', () => {
-    // FIXME: defaultContent starts with empty array, primary-text-input
-    // doesn't render until "add" is clicked. Either click the add
-    // button first in the spec, or seed defaultContent with one row.
-    test.fixme('admin authors a Timeline entry on a fresh page', async ({adminPage}) => {
+    test('admin authors a Timeline entry on a fresh page', async ({adminPage}) => {
         await createPage(adminPage, scenario);
         await addBlankSection(adminPage);
         await openAddModuleDrawer(adminPage, EItemType.Timeline);
@@ -21,7 +18,7 @@ test.describe.serial('module — Timeline admin + client', () => {
         await saveModuleDrawer(adminPage);
     });
 
-    test.fixme('public site renders the Timeline marker', async ({anonPage}) => {
+    test('public site renders the Timeline marker', async ({anonPage}) => {
         await assertPublicMarker(anonPage, scenario);
     });
 });

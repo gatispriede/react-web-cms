@@ -4,6 +4,7 @@ import {ILanguageService} from "@services/infra/mongoConfig";
 import FileManager from "@services/infra/fileManager";
 import {auditStamp} from "@services/features/Audit/audit";
 import {nextVersion, requireVersion} from "@services/infra/conflict";
+import {log} from "@services/infra/logger";
 
 /**
  * Translations live in two places that must stay in sync:
@@ -29,7 +30,7 @@ export class LanguageService implements ILanguageService {
             const docs = await this.languagesDB.find({}).toArray();
             return docs.map(doc => doc as unknown as INewLanguage);
         } catch (err) {
-            console.error('Error getting languages:', err);
+            log.error({scope: 'languages.list', err}, 'getLanguages failed');
             await this.setupClient();
             return [];
         }
@@ -65,7 +66,7 @@ export class LanguageService implements ILanguageService {
                     {$set: {default: false}}
                 );
             } catch (err) {
-                console.error('Error demoting previous default language:', err);
+                log.error({scope: 'languages.demoteDefault', err, symbol: language.symbol}, 'demote previous default failed');
             }
         }
         await this.languagesDB.updateOne(
@@ -77,7 +78,7 @@ export class LanguageService implements ILanguageService {
             try {
                 this.fileManager.saveTranslation(language.symbol, merged as unknown as JSON);
             } catch (err) {
-                console.error('Error writing translation JSON to disk:', err);
+                log.error({scope: 'languages.writeJson', err, symbol: language.symbol}, 'write translation JSON failed');
             }
         }
         return {symbol: language.symbol, version};
@@ -90,12 +91,12 @@ export class LanguageService implements ILanguageService {
                 try {
                     this.fileManager.deleteTranslation(language.symbol);
                 } catch (err) {
-                    console.error('Error resetting translation JSON on disk:', err);
+                    log.error({scope: 'languages.deleteJson', err, symbol: language.symbol}, 'delete translation JSON failed');
                 }
             }
             return JSON.stringify({...result, ...(deletedBy ? {deletedBy} : {})});
         } catch (err) {
-            console.error('Error deleting language:', err);
+            log.error({scope: 'languages.delete', err, symbol: language.symbol}, 'delete language failed');
             await this.setupClient();
             return '';
         }

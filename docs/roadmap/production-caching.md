@@ -1,5 +1,10 @@
 # Production caching + static-asset strategy
 
+## Decisions (2026-05-02)
+
+- **Caddy SWR scope**: public pages + public-scope (anon) GraphQL reads. Public pages get `~60s` TTL with background refresh; anon GraphQL gets `~30s` TTL. Admin / authenticated GraphQL stay `no-store`. Cache key includes a server `bootId` (see `server-restart.md`) so a restart invalidates the cache, plus a per-feature version stamp bumped on admin write so admin saves never serve stale public reads.
+- **DataLoader scope**: deferred pending the Class Loader rollout. Each `ServiceLoader` will own its own batched accessors as part of the loader contract — DataLoader becomes a Loader-internal concern, not a separate cross-cutting layer. Revisit once Class Loader L2 (Products) lands.
+
 ## Goal
 
 Formalise the caching story across Caddy, Next.js and the admin save path so

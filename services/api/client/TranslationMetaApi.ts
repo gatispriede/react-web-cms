@@ -2,6 +2,7 @@ import {resolve} from "@services/api/generated";
 import {ITranslationMetaMap} from "@services/features/Languages/TranslationMetaService";
 import {refreshBus} from "@client/lib/refreshBus";
 import {isConflictError, parseMutationResponse} from "@client/lib/conflict";
+import {log} from "@services/infra/logger";
 
 export class TranslationMetaApi {
     async get(): Promise<{value: ITranslationMetaMap; version: number}> {
@@ -15,7 +16,7 @@ export class TranslationMetaApi {
             }
             return {value: parsed ?? {}, version: 0};
         } catch (err) {
-            console.error('TranslationMetaApi.get:', err);
+            log.error({scope: 'translationMeta.get', err}, 'translation meta get failed');
             return {value: {}, version: 0};
         }
     }

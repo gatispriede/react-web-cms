@@ -6,6 +6,7 @@ import {IItem} from "@interfaces/IItem";
 import ContentManager from "@client/lib/ContentManager";
 import {TFunction} from "i18next";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
+import {slugifyAnchor} from "@utils/stringFunctions";
 import type {IProjectCard} from "./ProjectCard.types";
 export type {IProjectCard, IProjectLink} from "./ProjectCard.types";
 export {EProjectCardStyle} from "./ProjectCard.types";
@@ -28,6 +29,17 @@ const iconFor = (url: string) => {
     return <LinkOutlined/>;
 };
 
+// `PUBLIC_IMAGE_PATH` is `'api/'` (no leading slash) — the picker writes
+// values like `api/foo.jpg`. Browsers resolve that *relative to the current
+// page*, so `/admin/pages/...` produces `/admin/pages/.../api/foo.jpg`
+// (broken). Other modules prepend `/`; ProjectCard didn't, hence the broken
+// thumbnail in the live preview. Pass through absolute / data / http(s) as-is.
+const resolveCoverSrc = (raw: string): string => {
+    if (!raw) return raw;
+    if (/^(https?:|data:|blob:|\/)/i.test(raw)) return raw;
+    return `/${raw}`;
+};
+
 const ProjectCard = ({item, tApp}: {
     item: IItem;
     t: TFunction<"translation", undefined>;
@@ -35,10 +47,12 @@ const ProjectCard = ({item, tApp}: {
 }) => {
     const c = new ProjectCardContent(EItemType.ProjectCard, item.content).data;
     const tr = (v: string) => <InlineTranslatable tApp={tApp as any} source={v}/>;
+    const anchorId = slugifyAnchor(c.title) || undefined;
     return (
         <Card
+            id={anchorId}
             className={`project-card ${item.style ?? ''}`}
-            cover={c.image ? <img alt={c.title} src={c.image} style={{objectFit: 'cover', maxHeight: 200}}/> : undefined}
+            cover={c.image ? <img alt={c.title} src={resolveCoverSrc(c.image)} style={{objectFit: 'cover', maxHeight: 200}}/> : undefined}
             hoverable
         >
             <Card.Meta

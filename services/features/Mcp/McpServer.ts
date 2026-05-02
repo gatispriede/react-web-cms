@@ -3,6 +3,7 @@ import type {AuditService} from '@services/features/Audit/AuditService';
 import {McpError, McpTool, McpToolResult} from './types';
 import {buildToolRegistry} from './tools';
 import {validateArgs} from './validate';
+import {log} from '@services/infra/logger';
 
 /**
  * MCP server core — owns the tool registry and dispatch logic. Transport
@@ -21,6 +22,13 @@ export interface McpDispatchInput {
     tool: string;
     args: unknown;
     token: IMcpToken;
+    /**
+     * Raw bearer secret — set by the transport layer (stdio reads
+     * `MCP_TOKEN`; HTTP/SSE will read the Authorization header).
+     * Threaded onto the tool context for the small set of tools that
+     * call back into the CMS over HTTP. Never logged.
+     */
+    tokenSecret?: string;
 }
 
 export interface McpServerDeps {
@@ -117,6 +125,7 @@ export class McpServer {
                 services: this.deps.services,
                 actor,
                 audit: this.deps.audit,
+                tokenSecret: input.tokenSecret,
             });
             return this.finish(actor, input.tool, parsed, started, {ok: true, result});
         } catch (err) {
@@ -156,7 +165,7 @@ export class McpServer {
                     tag: outcome.ok ? `mcp:${toolName}:ok` : `mcp:${toolName}:err`,
                 });
             } catch (err) {
-                console.error('[mcp] audit record failed:', err);
+                log.error({scope: 'mcp.audit', err, tool: toolName}, 'mcp audit record failed');
             }
         }
         return {...outcome, durationMs};

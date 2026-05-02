@@ -1,4 +1,5 @@
 import {Collection, Db} from 'mongodb';
+import {log} from '@services/infra/logger';
 
 let _db: Db | null = null;
 
@@ -80,7 +81,7 @@ export class PresenceService {
             // Index creation is idempotent; a concurrent setup may have
             // raced us. Swallow and try again on the next call so a
             // transient Mongo blip doesn't disable presence forever.
-            console.error('PresenceService.ensureIndexes:', err);
+            log.error({scope: 'presence.ensureIndexes', err}, 'PresenceService ensureIndexes failed');
         }
     }
 
@@ -134,7 +135,7 @@ export class PresenceService {
         try {
             await this.presenceDB.deleteOne({email, docId});
         } catch (err) {
-            console.error('PresenceService.clear:', err);
+            log.error({scope: 'presence.clear', err, docId}, 'presence clear failed');
         }
     }
 }

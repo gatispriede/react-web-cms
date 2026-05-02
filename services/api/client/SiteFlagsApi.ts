@@ -3,6 +3,7 @@ import {DEFAULT_SITE_FLAGS, ISiteFlags} from "@services/features/Seo/SiteFlagsSe
 import {refreshBus} from "@client/lib/refreshBus";
 import {triggerRevalidate} from "@client/lib/triggerRevalidate";
 import {isConflictError, parseMutationResponse} from "@client/lib/conflict";
+import {log} from "@services/infra/logger";
 
 export class SiteFlagsApi {
     async get(): Promise<ISiteFlags> {
@@ -10,7 +11,7 @@ export class SiteFlagsApi {
             const raw = await resolve(({query}) => (query as any).mongo.getSiteFlags);
             return raw ? JSON.parse(raw) : {...DEFAULT_SITE_FLAGS};
         } catch (err) {
-            console.error('SiteFlagsApi.get:', err);
+            log.error({scope: 'siteFlags.get', err}, 'site flags get failed');
             return {...DEFAULT_SITE_FLAGS};
         }
     }

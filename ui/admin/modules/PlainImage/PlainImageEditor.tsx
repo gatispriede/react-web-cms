@@ -1,5 +1,5 @@
-import {Input, Switch} from "antd";
-import React from "react";
+import {Button, Input, Switch} from "antd";
+import React, {useState} from "react";
 import {IInputContent} from "@interfaces/IInputContent";
 import {EItemType} from "@enums/EItemType";
 import {PlainImageContent} from "@client/modules/PlainImage";
@@ -16,6 +16,17 @@ const RichTextEditorWidget = dynamic(
 
 export const PlainImageEditor = ({content, setContent, t}: IInputContent) => {
     const plainImage = new PlainImageContent(EItemType.Image, content);
+    // Auto-expand when any advanced field already has a non-default value, so
+    // operators editing an existing block don't have to dig for their own data.
+    const hasAdvanced = !!(
+        plainImage.data.useAsBackground ||
+        plainImage.data.imageFixed ||
+        plainImage.data.useGradiant ||
+        plainImage.data.offsetX ||
+        plainImage.data.imgWidth ||
+        plainImage.data.imgHeight
+    );
+    const [showAdvanced, setShowAdvanced] = useState<boolean>(hasAdvanced);
     const setFile = (file: File) => {
         plainImage.setSrc(PUBLIC_IMAGE_PATH + file.name)
         setContent(plainImage.stringData)
@@ -29,56 +40,66 @@ export const PlainImageEditor = ({content, setContent, t}: IInputContent) => {
                 setContent(plainImage.stringData);
             }}
         >
-            <div className={'settings'}>
-                <label>{t("Use as background image")}</label>
-                <Switch value={plainImage.data.useAsBackground} onChange={(checked) => {
-                    plainImage.setUseAsBackground(checked)
-                    setContent(plainImage.stringData)
-                }}/>
-                <label>{t("Make image fixed position")}</label>
-                <Switch value={plainImage.data.imageFixed} onChange={(checked) => {
-                    plainImage.setImageFixed(checked)
-                    setContent(plainImage.stringData)
-                }}/>
-                <label>{t("Use gradiant")}</label>
-                <Switch value={plainImage.data.useGradiant} onChange={(checked) => {
-                    plainImage.setUseGradiant(checked)
-                    setContent(plainImage.stringData)
-                }}/>
-
-                <label>{t("Image vertical offset")}</label>
-                <Input defaultValue={0} value={plainImage.data.offsetX} onChange={(e) => {
-                    plainImage.setOffsetX(parseInt(e.target.value))
-                    setContent(plainImage.stringData)
-                }}/>
-                <label>{t("Image width")}</label>
-                <Input defaultValue={0} value={plainImage.data.imgWidth} onChange={(e) => {
-                    plainImage.setImgWidth((e.target.value))
-                    setContent(plainImage.stringData)
-                }} onBlur={(e) => {
-                    // Auto-append `px` on blur when the operator typed a bare
-                    // number — otherwise the renderer drops the value as
-                    // invalid CSS and the field appears to do nothing.
-                    const norm = normalizeCssDimension(e.target.value);
-                    if (norm !== e.target.value) {
-                        plainImage.setImgWidth(norm)
-                        setContent(plainImage.stringData)
-                    }
-                }}/>
-                <label>{t("Image height")}</label>
-                <Input defaultValue={0} value={plainImage.data.imgHeight} onChange={(e) => {
-                    plainImage.setImgHeight((e.target.value))
-                    setContent(plainImage.stringData)
-                }} onBlur={(e) => {
-                    const norm = normalizeCssDimension(e.target.value);
-                    if (norm !== e.target.value) {
-                        plainImage.setImgHeight(norm)
-                        setContent(plainImage.stringData)
-                    }
-                }}/>
-            </div>
             <label>{t("Image")}</label>
             <ImageUpload t={t} setFile={setFile}/>
+            <div style={{marginTop: 8, marginBottom: 8}}>
+                <Button
+                    type="link"
+                    size="small"
+                    style={{padding: 0}}
+                    onClick={() => setShowAdvanced(v => !v)}
+                    aria-expanded={showAdvanced}
+                >
+                    {showAdvanced ? t('Show less') : t('Show more')}
+                </Button>
+            </div>
+            {showAdvanced && (
+                <div className={'settings'}>
+                    <label>{t("Use as background image")}</label>
+                    <Switch value={plainImage.data.useAsBackground} onChange={(checked) => {
+                        plainImage.setUseAsBackground(checked)
+                        setContent(plainImage.stringData)
+                    }}/>
+                    <label>{t("Make image fixed position")}</label>
+                    <Switch value={plainImage.data.imageFixed} onChange={(checked) => {
+                        plainImage.setImageFixed(checked)
+                        setContent(plainImage.stringData)
+                    }}/>
+                    <label>{t("Use gradiant")}</label>
+                    <Switch value={plainImage.data.useGradiant} onChange={(checked) => {
+                        plainImage.setUseGradiant(checked)
+                        setContent(plainImage.stringData)
+                    }}/>
+
+                    <label>{t("Image vertical offset")}</label>
+                    <Input defaultValue={0} value={plainImage.data.offsetX} onChange={(e) => {
+                        plainImage.setOffsetX(parseInt(e.target.value))
+                        setContent(plainImage.stringData)
+                    }}/>
+                    <label>{t("Image width")}</label>
+                    <Input defaultValue={0} value={plainImage.data.imgWidth} onChange={(e) => {
+                        plainImage.setImgWidth((e.target.value))
+                        setContent(plainImage.stringData)
+                    }} onBlur={(e) => {
+                        const norm = normalizeCssDimension(e.target.value);
+                        if (norm !== e.target.value) {
+                            plainImage.setImgWidth(norm)
+                            setContent(plainImage.stringData)
+                        }
+                    }}/>
+                    <label>{t("Image height")}</label>
+                    <Input defaultValue={0} value={plainImage.data.imgHeight} onChange={(e) => {
+                        plainImage.setImgHeight((e.target.value))
+                        setContent(plainImage.stringData)
+                    }} onBlur={(e) => {
+                        const norm = normalizeCssDimension(e.target.value);
+                        if (norm !== e.target.value) {
+                            plainImage.setImgHeight(norm)
+                            setContent(plainImage.stringData)
+                        }
+                    }}/>
+                </div>
+            )}
             <Input disabled={true} value={plainImage.data.src} onChange={(e) => {
                 plainImage.setSrc(e.target.value)
                 setContent(plainImage.stringData)

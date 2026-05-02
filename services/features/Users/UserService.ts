@@ -9,6 +9,7 @@ import {
     staleArtefactError,
     writeInitialPasswordArtefact,
 } from "@services/features/Auth/initialPassword";
+import {log} from "@services/infra/logger";
 
 const PUBLIC_FIELDS = {_id: 0} as const;
 
@@ -33,6 +34,15 @@ export class UserService implements IUserService {
 
     async setupAdmin(): Promise<IUser | undefined> {
         try {
+            // Back-fill kind:'admin' on ALL legacy admin-role docs in one pass.
+            // This ensures any user added via addUser() before the customer split
+            // (or restored from a backup without the kind field) is never invisible
+            // to kind-aware queries.
+            await this.usersDB.updateMany(
+                { role: {$in: ['admin', 'editor', 'viewer']}, kind: {$exists: false} },
+                { $set: { kind: 'admin' } },
+            ).catch(() => {}); // non-fatal — best-effort migration
+
             const existing = await this.usersDB.findOne({name: this._adminName}) as unknown as IUser;
             if (existing) {
                 const patch: Partial<IUser> = {};
@@ -40,9 +50,6 @@ export class UserService implements IUserService {
                     patch.role = 'admin';
                     existing.role = 'admin';
                 }
-                // Back-fill `kind` on the seeded admin (and any legacy doc that
-                // predates the customer split) so later kind-aware queries
-                // don't have to pretend `undefined ≡ 'admin'` everywhere.
                 if (!existing.kind) {
                     patch.kind = 'admin';
                     existing.kind = 'admin';
@@ -91,7 +98,7 @@ export class UserService implements IUserService {
             await this.usersDB.insertOne(newAdmin as any);
             return newAdmin;
         } catch (err) {
-            console.error('Error seeding admin user:', err);
+            log.error({scope: 'auth.bootstrap', err}, 'admin seed failed');
             // A stale-artefact error is a real blocker — propagate so the caller
             // can refuse to proceed instead of treating it like a transient
             // Mongo hiccup.
@@ -127,7 +134,7 @@ export class UserService implements IUserService {
             await this.usersDB.insertOne(doc as any);
             return JSON.stringify({createUser: {id: doc.id}});
         } catch (err) {
-            console.error('Error adding user:', err);
+            log.error({scope: 'users.add', err, email: user?.email}, 'addUser failed');
             return JSON.stringify({error: String((err as Error).message || err)});
         }
     }
@@ -147,6 +154,12 @@ export class UserService implements IUserService {
                 }
                 set.preferredAdminLocale = user.preferredAdminLocale;
             }
+            if (user.adminUiMode !== undefined) {
+                if (user.adminUiMode !== 'simplified' && user.adminUiMode !== 'advanced') {
+                    throw new Error('adminUiMode must be "simplified" or "advanced"');
+                }
+                set.adminUiMode = user.adminUiMode;
+            }
             if (user.password) {
                 set.password = await hash(user.password, this._hashSaltRounds);
                 // Rotating the password retires the seeded-default flag. If an
@@ -162,7 +175,7 @@ export class UserService implements IUserService {
             const result = await this.usersDB.updateOne({id: user.id}, {$set: set});
             return JSON.stringify({updateUser: {id: user.id, matched: result.matchedCount, modified: result.modifiedCount}});
         } catch (err) {
-            console.error('Error updating user:', err);
+            log.error({scope: 'users.update', err, id: user?.id}, 'updateUser failed');
             return JSON.stringify({error: String((err as Error).message || err)});
         }
     }
@@ -181,7 +194,7 @@ export class UserService implements IUserService {
             const result = await this.usersDB.deleteOne({id});
             return JSON.stringify({removeUser: {id, deleted: result.deletedCount}});
         } catch (err) {
-            console.error('Error removing user:', err);
+            log.error({scope: 'users.remove', err, id}, 'removeUser failed');
             return JSON.stringify({error: String((err as Error).message || err)});
         }
     }
@@ -190,7 +203,7 @@ export class UserService implements IUserService {
         try {
             return await this.usersDB.findOne({email}) as unknown as IUser;
         } catch (err) {
-            console.error('Error getting user:', err);
+            log.error({scope: 'users.getUser', err, email}, 'getUser failed');
             await this.setupClient();
             return undefined;
         }
@@ -216,9 +229,33 @@ export class UserService implements IUserService {
                 preferredAdminLocale: (d as any).preferredAdminLocale,
             }));
         } catch (err) {
-            console.error('Error listing users:', err);
+            log.error({scope: 'users.list', err}, 'getUsers failed');
             await this.setupClient();
             return [];
+        }
+    }
+
+    /**
+     * Per-user admin UI mode setter. Scoped by session — cannot mutate
+     * another user. Editors set their own mode; admins do too. The
+     * value is stamped on the user doc and consulted by `getMyAdminMode`
+     * (resolved against `siteFlags.defaultAdminUiMode` at read time).
+     * Per `docs/features/platform/admin-ui-modes.md`.
+     */
+    async setMyAdminUiMode({mode, _session}: {mode: 'simplified' | 'advanced'; _session?: {email?: string}}): Promise<string> {
+        try {
+            const sessionEmail = normEmail(_session?.email);
+            if (!sessionEmail) throw new Error('not signed in');
+            if (mode !== 'simplified' && mode !== 'advanced') {
+                throw new Error('mode must be "simplified" or "advanced"');
+            }
+            const me = await this.usersDB.findOne({email: sessionEmail}) as any;
+            if (!me) throw new Error('user not found');
+            await this.usersDB.updateOne({id: me.id}, {$set: {adminUiMode: mode}});
+            return JSON.stringify({setMyAdminUiMode: {id: me.id, mode}});
+        } catch (err) {
+            log.error({scope: 'users.setMyAdminUiMode', err}, 'setMyAdminUiMode failed');
+            return JSON.stringify({error: String((err as Error).message || err)});
         }
     }
 
@@ -252,7 +289,7 @@ export class UserService implements IUserService {
             await this.usersDB.insertOne(doc as any);
             return JSON.stringify({createCustomer: {id: doc.id}});
         } catch (err) {
-            console.error('Error signing up customer:', err);
+            log.error({scope: 'customer.signup', err, email: user?.email}, 'signUpCustomer failed');
             return JSON.stringify({error: String((err as Error).message || err)});
         }
     }
@@ -298,7 +335,7 @@ export class UserService implements IUserService {
             await this.usersDB.insertOne(doc as any);
             return JSON.stringify({createCustomer: {id: doc.id, linked: false}});
         } catch (err) {
-            console.error('Error linking Google customer:', err);
+            log.error({scope: 'customer.googleLink', err, email}, 'addCustomerFromGoogle failed');
             return JSON.stringify({error: String((err as Error).message || err)});
         }
     }
@@ -327,7 +364,7 @@ export class UserService implements IUserService {
                 createdAt: doc.createdAt,
             } as IUser;
         } catch (err) {
-            console.error('Error fetching me:', err);
+            log.error({scope: 'customer.me', err}, 'getMe failed');
             return undefined;
         }
     }
@@ -360,7 +397,7 @@ export class UserService implements IUserService {
             const result = await this.usersDB.updateOne({id: me.id}, {$set: set});
             return JSON.stringify({updateMyProfile: {id: me.id, matched: result.matchedCount, modified: result.modifiedCount}});
         } catch (err) {
-            console.error('Error updating my profile:', err);
+            log.error({scope: 'customer.updateProfile', err}, 'updateMyProfile failed');
             return JSON.stringify({error: String((err as Error).message || err)});
         }
     }
@@ -381,7 +418,7 @@ export class UserService implements IUserService {
             await this.usersDB.updateOne({id: me.id}, {$set: {password: hashed}});
             return JSON.stringify({changeMyPassword: {id: me.id}});
         } catch (err) {
-            console.error('Error changing password:', err);
+            log.error({scope: 'customer.changePassword', err}, 'changeMyPassword failed');
             return JSON.stringify({error: String((err as Error).message || err)});
         }
     }
@@ -425,7 +462,7 @@ export class UserService implements IUserService {
             await this.usersDB.updateOne({id: me.id}, {$set: {shippingAddresses: next}});
             return JSON.stringify({saveMyAddress: {id: updatedId}});
         } catch (err) {
-            console.error('Error saving address:', err);
+            log.error({scope: 'customer.saveAddress', err}, 'saveMyAddress failed');
             return JSON.stringify({error: String((err as Error).message || err)});
         }
     }
@@ -444,7 +481,7 @@ export class UserService implements IUserService {
             await this.usersDB.updateOne({id: me.id}, {$set: {shippingAddresses: next}});
             return JSON.stringify({deleteMyAddress: {id}});
         } catch (err) {
-            console.error('Error deleting address:', err);
+            log.error({scope: 'customer.deleteAddress', err, id}, 'deleteMyAddress failed');
             return JSON.stringify({error: String((err as Error).message || err)});
         }
     }

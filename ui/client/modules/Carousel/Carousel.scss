@@ -99,13 +99,13 @@
     // 16:9 frame so there's no empty space — cleaner than a blurred
     // backdrop which introduced muddy halos on pale stone / plaster
     // photos (client feedback 2026-04-24).
-    .container .image .ant-image,
-    .container .image .ant-image-img {
+    .container .image:not([data-sized]) .ant-image,
+    .container .image:not([data-sized]) .ant-image-img {
       width: 100%;
       height: 100%;
     }
     .container .image .ant-image { display: block; }
-    .container .image img {
+    .container .image:not([data-sized]) img {
       width: 100%;
       height: 100%;
       display: block;

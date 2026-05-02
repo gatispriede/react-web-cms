@@ -12,6 +12,8 @@ import { SessionProvider } from 'next-auth/react';
 import InlineTranslationHost from '@client/lib/InlineTranslationHost';
 import HighContrastAutoPick from '@client/lib/HighContrastAutoPick';
 import {PresenceHost} from '@client/features/Presence/PresenceBar';
+import {installErrorReporter} from '@client/lib/reportError';
+import AnalyticsHost from '@client/lib/analytics/AnalyticsHost';
 
 export const FALLBACK_LANG = nextI18NextConfig.i18n.defaultLocale;
 export const SUPPORTED_LANGUAGES = nextI18NextConfig.i18n.locales
@@ -63,6 +65,11 @@ class App extends NextApp {
                 regs.forEach(r => r.unregister());
             });
         }
+        // Surface uncaught errors + rejections to the server. Public-site
+        // pages report as `source: 'client'`; the admin shell installs
+        // again with `'admin'` after it mounts, which overrides the source
+        // for the rest of the tab's lifetime.
+        installErrorReporter({source: 'client'});
     }
 
     render() {
@@ -79,6 +86,7 @@ class App extends NextApp {
                 <InlineTranslationHost/>
                 <HighContrastAutoPick/>
                 <PresenceHost/>
+                <AnalyticsHost/>
             </SessionProvider>
         );
     }

@@ -1,6 +1,7 @@
 import {spawn} from 'node:child_process';
 import * as path from 'node:path';
 import {McpTool} from '../types';
+import {getMongoConnection} from '@services/infra/mongoDBConnection';
 
 const ok = (data: unknown) => ({content: [{type: 'text' as const, text: JSON.stringify(data)}]});
 
@@ -94,4 +95,130 @@ export const siteRegenerateSchema: McpTool = {
     },
 };
 
-export const SITE_TOOLS: McpTool[] = [siteRevalidate, siteRegenerateSchema];
+/**
+ * auth.resetLockouts — clear the in-process login-lockout bucket. Posts
+ * to `/api/auth/reset-lockout` carrying the MCP token as Bearer auth;
+ * the endpoint validates the token + checks for the `admin:auth` scope
+ * on the server side. The CMS host is read from the same env vars as
+ * `site.revalidate` so the configuration stays in one place.
+ */
+export const authResetLockouts: McpTool = {
+    name: 'auth.resetLockouts',
+    description: 'Clear all login-lockout buckets — unlock any account that hammered wrong passwords. Requires the MCP token to carry the admin:auth scope.',
+    scopes: ['admin:auth'],
+    inputSchema: {type: 'object', properties: {}},
+    handler: async (_args, ctx) => {
+        const host = (process.env.REVALIDATE_HOST || process.env.NEXT_PUBLIC_SITE_URL || '').replace(/\/$/, '');
+        if (!host) {
+            return ok({ok: false, reason: 'REVALIDATE_HOST / NEXT_PUBLIC_SITE_URL not set'});
+        }
+        // The MCP dispatcher stashes the raw secret on the context for
+        // exactly this kind of "tool needs to call back into the CMS
+        // over HTTP" case. If it's missing, decline rather than silently
+        // hitting the endpoint without auth.
+        const tokenSecret = (ctx as any)?.tokenSecret as string | undefined;
+        if (!tokenSecret) {
+            return ok({ok: false, reason: 'MCP token secret not available on context'});
+        }
+        try {
+            const res = await fetch(`${host}/api/auth/reset-lockout`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${tokenSecret}`,
+                },
+            });
+            const body = await res.json().catch(() => null);
+            return ok({ok: res.ok, status: res.status, body});
+        } catch (err) {
+            return ok({ok: false, error: String((err as Error).message || err)});
+        }
+    },
+};
+
+/**
+ * site.featureFlags — runtime view of which feature manifests are active.
+ * Mirrors the `getFeatureFlags` GraphQL field. Read-only; flipping a flag
+ * still requires an env-var + restart in v1. Useful for an AI client to
+ * answer "is the cart on?" without screen-scraping the admin panel.
+ */
+export const siteFeatureFlags: McpTool = {
+    name: 'site.featureFlags',
+    description: 'Runtime view of feature manifests — id, displayName, enabled, coreInfrastructure, requires, envKey. Read-only; flipping a flag needs an env var + restart.',
+    scopes: ['read:site'],
+    inputSchema: {type: 'object', properties: {}},
+    handler: async (_args, _ctx) => {
+        try {
+            const raw = await getMongoConnection().getFeatureFlags();
+            const parsed = JSON.parse(raw);
+            return ok({features: Array.isArray(parsed) ? parsed : []});
+        } catch (err) {
+            return ok({error: String((err as Error).message || err)});
+        }
+    },
+};
+
+/**
+ * site.setFeatureFlag — write override row for a plug-and-play feature.
+ * Persists to Mongo and refreshes the in-process cache so subsequent
+ * `isFeatureEnabled` reads (route gates, etc.) pick up the value
+ * immediately. Boot-side decisions (schema/resolver composition,
+ * services factory) still need a server restart to fully reappear.
+ */
+export const siteSetFeatureFlag: McpTool = {
+    name: 'site.setFeatureFlag',
+    description: 'Persist a plug-and-play feature toggle override (id + enabled bool). Runtime gates pick it up immediately; boot-side schema/services need a restart to fully reappear.',
+    scopes: ['write:site'],
+    inputSchema: {
+        type: 'object',
+        required: ['id', 'enabled'],
+        properties: {
+            id: {type: 'string', description: 'Feature manifest id, e.g. cart, products.'},
+            enabled: {type: 'boolean'},
+        },
+    },
+    handler: async (args, ctx) => {
+        try {
+            const raw = await getMongoConnection().setFeatureFlag({
+                id: args.id,
+                enabled: !!args.enabled,
+                _session: {email: ctx.actor},
+            });
+            return ok({ok: true, result: JSON.parse(raw)});
+        } catch (err) {
+            return ok({ok: false, error: String((err as Error).message || err)});
+        }
+    },
+};
+
+/**
+ * site.clearFeatureFlag — drop the override row so a feature falls
+ * back to env / default behaviour.
+ */
+export const siteClearFeatureFlag: McpTool = {
+    name: 'site.clearFeatureFlag',
+    description: 'Drop a feature toggle override; the feature falls back to env / default behaviour.',
+    scopes: ['write:site'],
+    inputSchema: {
+        type: 'object',
+        required: ['id'],
+        properties: {id: {type: 'string'}},
+    },
+    handler: async (args, ctx) => {
+        try {
+            const raw = await getMongoConnection().clearFeatureFlag({id: args.id, _session: {email: ctx.actor}});
+            return ok({ok: true, result: JSON.parse(raw)});
+        } catch (err) {
+            return ok({ok: false, error: String((err as Error).message || err)});
+        }
+    },
+};
+
+export const SITE_TOOLS: McpTool[] = [
+    siteRevalidate,
+    siteRegenerateSchema,
+    authResetLockouts,
+    siteFeatureFlags,
+    siteSetFeatureFlag,
+    siteClearFeatureFlag,
+];

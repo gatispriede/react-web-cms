@@ -13,6 +13,7 @@ import {
     MailOutlined,
     PictureOutlined,
     SearchOutlined,
+    SettingOutlined,
     ThunderboltOutlined,
     UserOutlined,
 } from "@client/lib/icons";
@@ -46,8 +47,14 @@ import AdminSettingsSEO from "@admin/features/Seo/SEO";
 import AdminSettingsPublishing from "@admin/features/Publishing/Publishing";
 import BundleSettings from "@admin/features/Bundle/Bundle";
 import AuditTab from "@admin/features/Audit/AuditTab";
+import AdminErrorLog from "@admin/features/Observability/ErrorLogPanel";
+import AnalyticsPanel from "@admin/features/Analytics/AnalyticsPanel";
+import {findAdminPaneById} from "@admin/lib/loaders/adminUILoaderRegistry";
+import {useAdminMode} from "@admin/lib/adminMode";
+import AdminModeSwitcher from "./AdminModeSwitcher";
 import AdminSettingsUsers from "@admin/features/Users/Users";
 import McpTokensPanel from "@admin/features/Mcp/McpTokensPanel";
+import FeatureFlagsPanel from "@admin/features/Platform/FeatureFlagsPanel";
 import AdminSettingsInquiries from "@admin/features/Inquiries/Inquiries";
 import {UserRole} from "@interfaces/IUser";
 
@@ -84,10 +91,14 @@ export type AdminView =
     | 'release/publishing'
     | 'release/bundle'
     | 'release/audit'
+    | 'release/errors'
+    | 'release/analytics'
     | 'system'
     | 'system/users'
     | 'system/mcp'
-    | 'system/inquiries';
+    | 'system/inquiries'
+    | 'system/features'
+    | 'system/agent';
 
 const isInArea = (view: AdminView, area: string) =>
     view === area || view.startsWith(area + '/');
@@ -121,11 +132,15 @@ const buildAreaItems = (
         {path: '/admin/release/publishing', label: tAdmin('Publishing'), icon: <CloudUploadOutlined/>, testidSuffix: 'publishing'},
         {path: '/admin/release/bundle', label: tAdmin('Bundle'), icon: <DownloadOutlined/>, testidSuffix: 'bundle'},
         {path: '/admin/release/audit', label: tAdmin('Audit'), icon: <AuditOutlined/>, testidSuffix: 'audit'},
+        {path: '/admin/release/errors', label: tAdmin('Errors'), icon: <AuditOutlined/>, testidSuffix: 'errors'},
+        {path: '/admin/release/analytics', label: tAdmin('Analytics'), icon: <AuditOutlined/>, testidSuffix: 'analytics', adminOnly: true},
     ],
     system: [
         {path: '/admin/system/users', label: tAdmin('Users'), icon: <UserOutlined/>, testidSuffix: 'users'},
         {path: '/admin/system/mcp', label: tAdmin('MCP'), icon: <AuditOutlined/>, testidSuffix: 'mcp'},
         {path: '/admin/system/inquiries', label: tAdmin('Inquiries'), icon: <MailOutlined/>, testidSuffix: 'inquiries'},
+        {path: '/admin/system/features', label: tAdmin('Feature flags'), icon: <SettingOutlined/>, testidSuffix: 'features', adminOnly: true},
+        {path: '/admin/system/agent', label: tAdmin('AI Agent'), icon: <ThunderboltOutlined/>, testidSuffix: 'agent', adminOnly: true},
     ],
 });
 
@@ -149,12 +164,24 @@ const UserStatusBarInner = ({session, view, tApp}: {
     const {t: tAdmin, i18n: adminI} = useReactTranslation();
     let lang = i18n?.resolvedLanguage ?? (i18n?.language !== 'default' ? i18n?.language : null) ?? 'lv'
     const [blogEnabled, setBlogEnabled] = useState(true);
+    const {mode: adminMode} = useAdminMode();
     const [paletteOpen, setPaletteOpen] = useState(false);
     useCommandPaletteHotkey(setPaletteOpen);
     const {t: tCommon, i18n: i18nCommon} = useTranslation('common');
     i18nCommon.use(Backend);
     useEffect(() => {
         void new SiteFlagsApi().get().then(f => setBlogEnabled(f.blogEnabled !== false));
+    }, []);
+    // Re-install the error reporter with `source: 'admin'` once the admin
+    // shell mounts. _app.tsx already installs with 'client' for public
+    // pages; this overrides the source for the admin tab so error
+    // entries land in the right bucket without a sister listener.
+    useEffect(() => {
+        // Lazy import keeps the public bundle from pulling the admin
+        // imports of this module — admin already pulls it directly here.
+        import('@client/lib/reportError').then(({installErrorReporter}) => {
+            installErrorReporter({source: 'admin'});
+        });
     }, []);
     useEffect(() => {
         const pref = detectStoredOrNavigatorLocale();
@@ -198,9 +225,26 @@ const UserStatusBarInner = ({session, view, tApp}: {
 
     /**
      * Map the view literal to the component to render in the main pane.
-     * This is the single dispatch point — each sub-page is one component.
+     *
+     * Class Loader L4 — first consults the AdminUILoader registry; if
+     * the view matches a registered pane, render through the loader's
+     * descriptor. Falls back to the legacy switch for non-migrated
+     * panes. As more features ship `*AdminUILoader.ts` the switch
+     * shrinks; eventually it disappears.
      */
     const renderPane = (): ReactNode => {
+        const fromRegistry = findAdminPaneById(view);
+        if (fromRegistry) {
+            // Mode-aware resolution (admin-ui-modes 2026-05-02): pick
+            // `modes.simplified` when both the user is in simplified
+            // mode AND the pane has a simplified variant; otherwise
+            // fall back to `modes.advanced` (always defined). The shell
+            // never branches on mode itself — descriptors carry the choice.
+            const Pane = (adminMode === 'simplified' && fromRegistry.modes.simplified)
+                ? fromRegistry.modes.simplified
+                : fromRegistry.modes.advanced;
+            return <Pane/>;
+        }
         switch (view) {
             // Legacy / utility views
             case 'app':
@@ -230,35 +274,11 @@ const UserStatusBarInner = ({session, view, tApp}: {
                 // SEO has no sub-pages — render the SEO component directly.
                 return <AdminSettingsSEO/>;
 
-            // Client config sub-pages
-            case 'client-config/themes':  return <AdminSettingsTheme/>;
-            case 'client-config/logo':    return <AdminSettingsLogo/>;
-            case 'client-config/site-layout':  return <AdminSettingsLayout/>;
-
-            // Content sub-pages
-            case 'content/translations':
-                return (
-                    <AdminSettingsLanguages
-                        translationManager={new TranslationManager()}
-                        i18n={i18nCommon}
-                        tAdmin={tCommon}
-                    />
-                );
-            case 'content/posts':      return <AdminSettingsPosts/>;
-            case 'content/footer':     return <AdminSettingsFooter/>;
-            case 'content/products':   return <AdminSettingsProducts/>;
-            case 'content/inventory':  return <AdminSettingsInventory/>;
-            case 'content/orders':     return <AdminOrders/>;
-
-            // Release sub-pages
-            case 'release/publishing': return <AdminSettingsPublishing/>;
-            case 'release/bundle':     return <BundleSettings t={tAdmin as TFunction<"translation", undefined>}/>;
-            case 'release/audit':      return <AuditTab/>;
-
-            // System sub-pages
-            case 'system/users':      return <AdminSettingsUsers/>;
-            case 'system/mcp':        return <McpTokensPanel/>;
-            case 'system/inquiries':  return <AdminSettingsInquiries/>;
+            // System sub-pages — `system/features` is the only pane that
+            // hasn't been migrated to AdminUILoader yet (its FeatureFlagsPanel
+            // hosts the restart banner + special grid). All other panes are
+            // dispatched through the registry above (Class Loader L4).
+            case 'system/features':   return <FeatureFlagsPanel/>;
         }
     };
 
@@ -344,6 +364,7 @@ const UserStatusBarInner = ({session, view, tApp}: {
                         </Space>
                     </Button>
                 </Dropdown>
+                <AdminModeSwitcher/>
                 <Button type={"link"} icon={<LogoutOutlined/>} href={'#'} onClick={() => signOut()}>{tAdmin("Sign out")}</Button>
             </nav>
             <main id="admin-main" aria-label={tAdmin("Admin workspace")}>

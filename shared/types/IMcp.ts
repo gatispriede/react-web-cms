@@ -23,7 +23,9 @@ export type McpScope =
     | 'write:inventory'
     | 'read:site'
     | 'write:site'
-    | 'read:audit';
+    | 'read:audit'
+    | 'read:analytics'
+    | 'admin:auth';
 
 export const ALL_MCP_SCOPES: readonly McpScope[] = [
     'read:content', 'write:content',
@@ -33,6 +35,12 @@ export const ALL_MCP_SCOPES: readonly McpScope[] = [
     'read:inventory', 'write:inventory',
     'read:site', 'write:site',
     'read:audit',
+    'read:analytics',
+    // Sensitive operator scope — clears login lockouts. Issue sparingly:
+    // a token with `admin:auth` can unlock any account hammered with
+    // wrong passwords (still has to know the right password to actually
+    // sign in afterwards, but skips the brute-force timing penalty).
+    'admin:auth',
 ] as const;
 
 export interface IMcpToken {

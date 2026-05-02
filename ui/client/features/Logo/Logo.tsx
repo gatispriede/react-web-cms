@@ -5,6 +5,7 @@ import {ILogo} from "@interfaces/ILogo";
 import {ELogoStyle} from "@enums/ELogoStyle";
 import Link from "next/link";
 import {TFunction} from "i18next";
+import SizedImage from "@client/lib/SizedImage";
 
 interface ILogoProps {
     admin: boolean,
@@ -68,7 +69,12 @@ class Logo extends Component<ILogoProps> {
                 }
             }}>
                 {this.state.logo.src
-                    ? <img alt={this.state.logo.src} src={`/${this.state.logo.src}`} height={this.state.logo.height}/>
+                    ? <SizedImage
+                        alt={this.state.logo.src}
+                        src={`/${this.state.logo.src}`}
+                        width={this.state.logo.width}
+                        height={this.state.logo.height}
+                    />
                     : <span className="logo-mark" aria-hidden>◆</span>}
                 <LogoEditDialog t={this.props.t} key={`logo-${this.state.open}`} open={this.state.open}
                                 setOpen={(file: File | false): void => {

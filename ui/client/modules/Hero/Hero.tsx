@@ -6,6 +6,7 @@ import {TFunction} from "i18next";
 import {translateOrKeep} from "@utils/translateOrKeep";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import RevealOnScroll from "@client/lib/RevealOnScroll";
+import {slugifyAnchor} from "@utils/stringFunctions";
 import type {IHero, IHeroCta} from "./Hero.types";
 export type {IHero, IHeroCta, IHeroMeta, IHeroCoord} from "./Hero.types";
 export {EHeroStyle} from "./Hero.types";
@@ -125,7 +126,11 @@ const Hero = ({item, tApp}: {
                     </RevealOnScroll>
                 )}
                 {c.headline && (
-                    <RevealOnScroll as="h1" className="hero__headline">
+                    <RevealOnScroll
+                        as="h1"
+                        className="hero__headline"
+                        id={slugifyAnchor(c.headline) || undefined}
+                    >
                         <span style={{color: c.accent || undefined}}>{renderAccentRuns(c.headline, trStr)}</span>
                         {c.headlineSoft && (
                             <>

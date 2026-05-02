@@ -6,6 +6,8 @@ import {ArrowLeftOutlined} from '@client/lib/icons';
 import staticTheme from '@client/features/Themes/themeConfig';
 import CartLineItem from '../../components/cart/CartLineItem';
 import {useCart} from '../../components/cart/useCart';
+import {withFeatureGate} from '@client/lib/featureGate';
+import type {GetServerSideProps} from 'next';
 
 const formatPrice = (amount: number, currency: string | null) => {
     try {
@@ -56,5 +58,7 @@ const CartPage: React.FC = () => {
         </ConfigProvider>
     );
 };
+
+export const getServerSideProps: GetServerSideProps = withFeatureGate('cart') as GetServerSideProps;
 
 export default CartPage;

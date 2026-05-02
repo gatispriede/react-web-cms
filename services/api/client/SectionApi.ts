@@ -7,6 +7,7 @@ import {IConfigSectionAddRemove} from "@interfaces/IConfigSectionAddRemove";
 import {refreshBus} from "@client/lib/refreshBus";
 import {triggerRevalidate} from "@client/lib/triggerRevalidate";
 import {parseMutationResponse} from "@client/lib/conflict";
+import {log} from "@services/infra/logger";
 
 /**
  * Strip audit / server-only fields before sending a section back through
@@ -66,7 +67,7 @@ export class SectionApi {
                 version: typeof (item as any).version === 'number' ? (item as any).version : 0,
                 editedBy: (item as any).editedBy,
                 editedAt: (item as any).editedAt,
-                content: item.content.map((c: IItem) => ({
+                content: (item.content ?? []).map((c: IItem) => ({
                     name: c.name,
                     type: c.type,
                     style: c.style,
@@ -95,7 +96,7 @@ export class SectionApi {
             triggerRevalidate({scope: 'all'});
             return r;
         } catch (err) {
-            console.error('Error deleting section:', err);
+            log.error({scope: 'section.delete', err}, 'section delete failed');
             return '';
         }
     }
@@ -127,7 +128,7 @@ export class SectionApi {
                 return sections;
             }
         } catch (err) {
-            console.error(err);
+            log.error({scope: 'section.add', err}, 'section add response parse failed');
         }
         refreshBus.emit('content');
         // Narrowed page scope — only the edited page's static HTML needs
@@ -148,7 +149,7 @@ export class SectionApi {
     ): Promise<string> {
         const section = sections.find(s => s.id === sectionId);
         if (!section) {
-            console.error('no section to add item to');
+            log.error({scope: 'section.addItem', sectionId}, 'no section to add item to');
             return '';
         }
         section.content[config.index] = {

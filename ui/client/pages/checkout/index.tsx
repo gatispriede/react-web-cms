@@ -7,6 +7,8 @@ import staticTheme from '@client/features/Themes/themeConfig';
 import {useCart} from '@client/components/cart/useCart';
 import {useCheckoutMachine} from '@client/lib/checkout/useCheckoutMachine';
 import {createDraftOrder, formatMoney} from '@client/lib/checkout/api';
+import {withFeatureGate} from '@client/lib/featureGate';
+import type {GetServerSideProps} from 'next';
 
 /**
  * Step 1 — review cart, capture optional guest email, create the
@@ -79,5 +81,7 @@ const CheckoutIndex: React.FC = () => {
         </ConfigProvider>
     );
 };
+
+export const getServerSideProps: GetServerSideProps = withFeatureGate('orders') as GetServerSideProps;
 
 export default CheckoutIndex;

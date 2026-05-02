@@ -1,6 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {GetStaticPaths, GetStaticProps} from 'next';
 import {gqlFetch} from '@client/lib/gqlFetch';
+import {withFeatureGate, withFeatureGatePaths} from '@client/lib/featureGate';
 import Link from 'next/link';
 import Head from 'next/head';
 import {ArrowLeftOutlined} from '@client/lib/icons';
@@ -187,7 +188,7 @@ const ProductPage = ({product, themeTokens, footer, pages}: Props) => {
     );
 };
 
-export const getStaticPaths: GetStaticPaths = async () => {
+export const getStaticPaths = withFeatureGatePaths('products', async () => {
     const data = await gqlFetch<{mongo: {getProducts: string}}>(
         `{ mongo { getProducts(limit: 500) } }`,
     );
@@ -196,9 +197,9 @@ export const getStaticPaths: GetStaticPaths = async () => {
         paths: products.map(p => ({params: {slug: p.slug}})),
         fallback: 'blocking',
     };
-};
+}) as GetStaticPaths;
 
-export const getStaticProps: GetStaticProps<Props> = async ({params, locale}) => {
+export const getStaticProps: GetStaticProps<Props> = withFeatureGate('products', async ({params, locale}: any) => {
     const slug = Array.isArray(params?.slug) ? params.slug[0] : params?.slug;
     let product: IProduct | null = null;
     let themeTokens: any | null = null;
@@ -234,6 +235,6 @@ export const getStaticProps: GetStaticProps<Props> = async ({params, locale}) =>
         },
         revalidate: 3600,
     };
-};
+}) as GetStaticProps<Props>;
 
 export default ProductPage;

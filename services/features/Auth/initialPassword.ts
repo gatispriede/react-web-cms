@@ -2,7 +2,12 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'node:path';
 
-const VAR_DIR = path.join(process.cwd(), 'var');
+// `INITIAL_PASSWORD_DIR` lets ephemeral hosts (e2e build orchestrator,
+// Docker containers, CI runners) point at a fresh per-run dir so a
+// stale artefact left over from a prior dev session doesn't trip the
+// "stale artefact, no admin user" guard against the per-run memory
+// mongo. Local dev still defaults to `<repo>/var/` for continuity.
+const VAR_DIR = process.env.INITIAL_PASSWORD_DIR || path.join(process.cwd(), 'var');
 export const INITIAL_PASSWORD_FILE = path.join(VAR_DIR, 'admin-initial-password.txt');
 
 const BANNER_LINE = '═'.repeat(60);

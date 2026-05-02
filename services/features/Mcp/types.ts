@@ -40,6 +40,14 @@ export interface McpToolContext {
     actor: string;
     /** Audit service handle so the dispatcher can log every call 1:1. */
     audit: AuditService | undefined;
+    /**
+     * Raw bearer secret for the calling MCP token. Set ONLY for tools
+     * that need to call back into the CMS over HTTP (e.g.
+     * `auth.resetLockouts` posts to `/api/auth/reset-lockout` with this
+     * as `Authorization: Bearer …`). The transport layer threads it
+     * through; in-process tools never touch it.
+     */
+    tokenSecret?: string;
 }
 
 export interface McpToolResult {

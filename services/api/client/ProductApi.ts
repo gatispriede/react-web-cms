@@ -3,6 +3,7 @@ import {IProduct, InProduct} from "@interfaces/IProduct";
 import {refreshBus} from "@client/lib/refreshBus";
 import {triggerRevalidate} from "@client/lib/triggerRevalidate";
 import {isConflictError, parseMutationResponse} from "@client/lib/conflict";
+import {log} from "@services/infra/logger";
 
 export class ProductApi {
     async list(opts: {
@@ -23,7 +24,7 @@ export class ProductApi {
             const raw = await resolve(({query}) => (query as any).mongo.getProducts(args));
             return raw ? JSON.parse(raw) : [];
         } catch (err) {
-            console.error('ProductApi.list:', err);
+            log.error({scope: 'product.list', err}, 'product list failed');
             return [];
         }
     }
@@ -33,7 +34,7 @@ export class ProductApi {
             const raw = await resolve(({query}) => (query as any).mongo.getProduct({slug, includeDrafts}));
             return raw ? JSON.parse(raw) : null;
         } catch (err) {
-            console.error('ProductApi.getBySlug:', err);
+            log.error({scope: 'product.getBySlug', err}, 'product getBySlug failed');
             return null;
         }
     }
@@ -43,7 +44,7 @@ export class ProductApi {
             const raw = await resolve(({query}) => (query as any).mongo.searchProducts({q, limit, includeDrafts}));
             return raw ? JSON.parse(raw) : [];
         } catch (err) {
-            console.error('ProductApi.search:', err);
+            log.error({scope: 'product.search', err}, 'product search failed');
             return [];
         }
     }

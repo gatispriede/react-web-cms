@@ -56,6 +56,7 @@ import {
     LayoutDashboard,
     LayoutGrid,
     Lightbulb,
+    Lock,
     Link as LinkIcon,
     Loader2,
     LogOut,
@@ -71,6 +72,7 @@ import {
     RefreshCw,
     Redo2,
     Search,
+    Send,
     Settings,
     Split,
     Trash2,
@@ -167,6 +169,7 @@ export const HistoryOutlined: React.FC<IconBaseProps> = (p) => <IconBase compone
 export const InfoCircleOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Info} {...p}/>;
 export const LayoutOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={LayoutDashboard} {...p}/>;
 export const LinkedinOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={FaLinkedin as any} {...p}/>;
+export const LockOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Lock} {...p}/>;
 export const LinkOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={LinkIcon} {...p}/>;
 export const LoadingOutlined: React.FC<IconBaseProps> = ({spin = true, ...p}) => <IconBase component={Loader2} spin={spin} {...p}/>;
 export const LogoutOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={LogOut} {...p}/>;
@@ -181,6 +184,7 @@ export const ReloadOutlined: React.FC<IconBaseProps> = (p) => <IconBase componen
 export const RollbackOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Undo2} {...p}/>;
 export const ReadOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={BookOpen} {...p}/>;
 export const SearchOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Search} {...p}/>;
+export const SendOutlined:   React.FC<IconBaseProps> = (p) => <IconBase component={Send} {...p}/>;
 export const SettingOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Settings} {...p}/>;
 export const SplitCellsOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Split} {...p}/>;
 export const ThunderboltOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Zap} {...p}/>;

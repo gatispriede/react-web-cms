@@ -3,6 +3,7 @@ import {Cart, CartLineItem, CartOwner, CartWarning, InsufficientStockError} from
 import {ProductService} from '@services/features/Products/ProductService';
 import {nextVersion, requireVersion} from '@services/infra/conflict';
 import type {RedisLike} from '@services/infra/redis';
+import {log} from '@services/infra/logger';
 
 /**
  * Cart service — backs both guest carts (Redis) and customer carts
@@ -81,7 +82,7 @@ export class CartService {
             await this.carts.createIndex({customerId: 1}, {unique: true});
             this.indexesReady = true;
         } catch (err) {
-            console.error('CartService.ensureIndexes:', err);
+            log.error({scope: 'cart.ensureIndexes', err}, 'cart ensureIndexes failed');
         }
     }
 

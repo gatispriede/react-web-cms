@@ -1,7 +1,7 @@
 # Simplified vs Advanced admin UI
 
-Status: Planned
-Last updated: 2026-04-29
+Status: **Foundation shipped 2026-05-02.** Data model (`IUser.adminUiMode`, `siteFlags.defaultAdminUiMode`), GraphQL surface (`myAdminUiMode` / `setMyAdminUiMode`), `useAdminMode()` hook with module-cache + subscriber pattern, top-bar `AdminModeSwitcher` (visible to advanced-mode users only). **All 17 admin panes already respect the mode** — L4 dispatcher resolves `modes.simplified ?? modes.advanced` per user, so the moment a feature ships a simplified variant it lights up automatically. **Remaining**: per-feature simplified-view components (one per pane that wants a cut-down view), MCP execution gate (`enforceModeForTool`), shared "Things to do" panel.
+Last updated: 2026-05-02
 
 ## What it is
 
@@ -82,10 +82,18 @@ This is the AI-agent friendly entry point: an MCP `site.checkOnboarding` tool re
 - Simplified mode is fast to navigate: one nav rail, no search, big primary actions.
 - An operator can bounce a single user from simplified → advanced as a "promote" action without changing their role.
 
-## Open questions
+## Decisions (2026-05-02)
 
-1. **Mode vs role** — is "simplified" really a UI mode or is it a role like `viewer`? The difference: roles gate writes; modes gate complexity. Keep them separate even though they correlate (most simplified users are editor-rank; most advanced users are admin-rank).
-2. **MCP / CLI behaviour** — should the MCP tool surface honour the user's mode? Probably no — MCP callers are always advanced/operator-grade. The mode is a UI affordance.
-3. **Component duplication risk** — providing both `ProductsSimplifiedView` and `ProductsAdvancedView` means two components per feature. Pattern alternative: one component with a `mode` prop and tagged JSX. Decide which scales better — the per-mode component is cleaner; the prop variant is shorter to write.
-4. **First-time setup wizard overlap** — the "Things to do" panel partly overlaps with the queued go-to-market onboarding flow. Build the panel once and have the onboarding wizard reuse it.
-5. **Translation strategy** — simplified labels need their own translation keys (different copy from advanced). New `admin.simplified.*` namespace.
+1. **Mode vs role** — kept separate. Mode is a UI affordance; role gates writes. Most simplified users will be editor-rank; most advanced users will be admin-rank, but they correlate, not coincide.
+2. **Two components per feature** — `ProductsSimplifiedView` + `ProductsAdvancedView` as separate files. Loader declares both. The shell never branches on mode. Clean isolation; advanced view doesn't carry simplified branches.
+3. **MCP behaviour: hybrid** — MCP **always exposes the advanced tool surface** (so an AI agent can help any user with anything), but **execution-time gating** consults the calling user's mode and rejects calls that the user wouldn't be able to perform through the UI. Failure mode: a clean `FeatureRestrictedError('mode: simplified — action requires advanced mode')` so the agent can either explain or escalate. This avoids two MCP surfaces while keeping safety on writes.
+4. **"Things to do" panel — build once, share.** Component lives under `ui/admin/components/ThingsToDo/`. Used by both the simplified-mode dashboard AND the go-to-market onboarding wizard. The wizard wraps the same component with first-run framing.
+5. **Translation strategy: reuse existing `admin.*` keys.** Simplified mode does NOT get its own namespace. Saves translation throughput; cost is occasional copy that's longer/more technical than ideal for simplified users — accept the trade.
+
+## Implementation notes (carry-overs)
+
+- `IUser.adminUiMode: 'simplified' | 'advanced' | null` — null follows site default.
+- `siteSettings.defaultAdminUiMode` — admin sets the install-wide default.
+- Top-bar mode switcher visible only to advanced-mode users.
+- `AdminPaneDescriptor.modes.{simplified, advanced}` — see Class Loader spec; UILoader exports the descriptor.
+- MCP execution gate: a small helper `enforceModeForTool(userId, toolId)` called at the top of every advanced tool's resolver; throws `FeatureRestrictedError` if the user is in simplified mode and the tool is flagged `advancedOnly: true`. Tools default to `advancedOnly: true` for any write that isn't surfaced in the simplified UI.

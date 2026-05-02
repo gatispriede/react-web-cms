@@ -18,6 +18,8 @@
 // the client graph.
 type RedisClientType = unknown;
 
+import {log} from '@services/infra/logger';
+
 export interface RedisLike {
     get(key: string): Promise<string | null>;
     /** `ttlSeconds` is required — every cart write must (re)set the TTL. */
@@ -48,7 +50,7 @@ export class RedisAdapter implements RedisLike {
             const nodeRequire = eval('require') as NodeJS.Require;
             const {createClient} = nodeRequire('redis');
             const client = createClient({url});
-            client.on('error', (err: unknown) => console.error('[redis] client error:', err));
+            client.on('error', (err: unknown) => log.error({scope: 'redis.client', err}, 'redis client error'));
             await client.connect();
             this.client = client;
         })();

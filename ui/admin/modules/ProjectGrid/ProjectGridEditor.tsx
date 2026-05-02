@@ -54,7 +54,13 @@ const ProjectGridEditor: React.FC<IInputContent> = ({content, setContent, t}) =>
                                 <LabeledInput value={p.kind ?? ''} onChange={e => patchItem(i, {kind: e.target.value})} label={t('Kind')} placeholder="Contract<br/>UK / USA"/>
                                 <Space style={{width: '100%'}}>
                                     <LabeledInput value={p.year ?? ''} onChange={e => patchItem(i, {year: e.target.value})} label={t('Year')} placeholder="2024 — PRESENT" wrapperStyle={{width: 280}}/>
-                                    <LabeledInput value={p.coverArt ?? ''} onChange={e => patchItem(i, {coverArt: e.target.value})} label={t('Art')} placeholder="SC" wrapperStyle={{width: 140}}/>
+                                    <LabeledInput
+                                        value={p.coverArt ?? ''}
+                                        onChange={e => patchItem(i, {coverArt: e.target.value})}
+                                        label={t('Cover monogram')}
+                                        placeholder={t('SC') as string}
+                                        wrapperStyle={{width: 180}}
+                                    />
                                 </Space>
                                 <LabeledInput value={p.coverColor ?? ''} onChange={e => patchItem(i, {coverColor: e.target.value})} label={t('Cover CSS')} placeholder="radial-gradient(circle at 20% 80%, #1E5A6B, #0B1E24 70%)"/>
                                 <Space style={{width: '100%'}}>

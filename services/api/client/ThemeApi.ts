@@ -3,6 +3,7 @@ import {ITheme, InTheme} from "@interfaces/ITheme";
 import {refreshBus} from "@client/lib/refreshBus";
 import {triggerRevalidate} from "@client/lib/triggerRevalidate";
 import {isConflictError, parseMutationResponse} from "@client/lib/conflict";
+import {log} from "@services/infra/logger";
 
 // Module-level theme cache. A page navigation may touch 2–3 components that
 // each call `getActive()`; with `maxAge: 0` on the gqty cache every one of
@@ -17,7 +18,7 @@ export class ThemeApi {
             const raw = await resolve(({query}) => (query as any).mongo.getThemes);
             return raw ? JSON.parse(raw) : [];
         } catch (err) {
-            console.error('listThemes:', err);
+            log.error({scope: 'theme.list', err}, 'listThemes failed');
             return [];
         }
     }
@@ -32,7 +33,7 @@ export class ThemeApi {
             cachedTheme = {at: Date.now(), theme};
             return theme;
         } catch (err) {
-            console.error('getActive theme:', err);
+            log.error({scope: 'theme.getActive', err}, 'getActive theme failed');
             return null;
         }
     }

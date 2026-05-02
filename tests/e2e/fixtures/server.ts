@@ -99,6 +99,14 @@ export async function startServer(opts: {mongoUri: string; workerIndex: number})
         // signins (especially with retries) and every subsequent test
         // bounces with "Too many attempts".
         E2E_RUN: '1',
+        // Plug-and-play feature flags default e-commerce + MCP to off so
+        // a fresh install ships content-only. The e2e suite exercises
+        // EVERY surface, so flip them all on for the workers.
+        FEATURE_PRODUCTS: 'true',
+        FEATURE_CART: 'true',
+        FEATURE_INVENTORY: 'true',
+        FEATURE_ORDERS: 'true',
+        FEATURE_MCP: 'true',
         ADMIN_DEFAULT_PASSWORD: 'test-admin-pw',
         ADMIN_EMAIL: 'admin@admin.com',
         ADMIN_USERNAME: 'Admin',

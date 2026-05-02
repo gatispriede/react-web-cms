@@ -18,6 +18,43 @@
 import {slugifyAnchor} from "@utils/stringFunctions";
 import type {ISection} from "@interfaces/ISection";
 import type {IPage} from "@interfaces/IPage";
+import {EItemType} from "@enums/EItemType";
+
+/** Map a section's track count to a friendly width label so the link
+ *  picker shows "Main · 100% · Hero" instead of "Main · <guid>". */
+const sectionWidthLabel = (trackCount: number | undefined): string => {
+    switch (trackCount) {
+        case 1: return '100%';
+        case 2: return '50/50';
+        case 3: return '33/33/33';
+        case 4: return '25×4';
+        default: return trackCount ? `${trackCount}-track` : '';
+    }
+};
+
+/** Best-effort module summary for a section: prefer the dominant item type,
+ *  fall back to a count when items are mixed. Returns '' when the section
+ *  has no items. */
+const sectionModuleSummary = (s: ISection): string => {
+    const items = (s.content ?? []) as Array<{type?: string}>;
+    if (!items.length) return '';
+    const types = items.map(it => it?.type).filter(Boolean) as string[];
+    if (!types.length) return '';
+    const unique = Array.from(new Set(types));
+    if (unique.length === 1) return prettifyType(unique[0]);
+    return `${unique.length} modules`;
+};
+
+/** Convert `PROJECT_GRID` → `Project grid` so the picker reads naturally. */
+const prettifyType = (t: string): string => {
+    // Find a matching EItemType key for canonical casing; fall back to
+    // splitting the underscore form.
+    const match = (Object.keys(EItemType) as Array<keyof typeof EItemType>)
+        .find(k => EItemType[k] === t);
+    const base = match ? String(match) : t;
+    // Insert spaces before capitals and lowercase the rest: "ProjectGrid" → "Project grid".
+    return base.replace(/([A-Z])/g, ' $1').trim().replace(/^./, c => c.toUpperCase()).replace(/(?<=.)\s[A-Z]/g, m => m.toLowerCase());
+};
 
 export interface IAnchorOption {
     /** Stable id for AntD Select `value`. */
@@ -66,9 +103,12 @@ export function setAnchors(
         push({href: `/${slug}`, label: p.page, group: 'Pages'});
 
         const sections = sectionsByPage[p.page] ?? [];
-        for (const s of sections) {
+        sections.forEach((s, idx) => {
             if (s.id) {
-                push({href: `#${s.id}`, label: `${p.page} · ${s.id}`, group: 'Sections'});
+                const width = sectionWidthLabel(s.type);
+                const summary = sectionModuleSummary(s);
+                const parts = [p.page, width, summary || `section ${idx + 1}`].filter(Boolean);
+                push({href: `#${s.id}`, label: parts.join(' → '), group: 'Sections'});
             }
             // Walk content items to surface module-title anchors.
             const items = (s.content ?? []) as Array<{type?: string; content?: string}>;
@@ -91,7 +131,7 @@ export function setAnchors(
                     push({href: `#${anchor}`, label: `${p.page} · ${t}`, group: 'Module titles'});
                 }
             }
-        }
+        });
     }
     cache = out;
     notify();

@@ -3,6 +3,7 @@ import {IMongo, MutationMongo} from "@interfaces/IMongo";
 import {INavigation} from "@interfaces/INavigation";
 import {refreshBus} from "@client/lib/refreshBus";
 import {triggerRevalidate} from "@client/lib/triggerRevalidate";
+import {log} from "@services/infra/logger";
 
 /**
  * Audit fields (`editedBy` / `editedAt`) are output-only — the `InNavigation`
@@ -44,7 +45,7 @@ export class NavigationApi {
             triggerRevalidate({scope: 'all'});
             return r;
         } catch (err) {
-            console.error('Error creating navigation:', err);
+            log.error({scope: 'navigation.create', err}, 'navigation create failed');
             return '';
         }
     }
@@ -62,7 +63,7 @@ export class NavigationApi {
             triggerRevalidate({scope: 'all'});
             return r;
         } catch (err) {
-            console.error('Error replacing/updating navigation:', err);
+            log.error({scope: 'navigation.replace', err}, 'navigation replace failed');
             return '';
         }
     }
@@ -78,7 +79,7 @@ export class NavigationApi {
             triggerRevalidate({scope: 'all'});
             return r;
         } catch (err) {
-            console.error('Error updating navigation:', err);
+            log.error({scope: 'navigation.update', err}, 'navigation update failed');
             return '';
         }
     }
@@ -101,7 +102,7 @@ export class NavigationApi {
             triggerRevalidate({scope: 'all'});
             return r;
         } catch (err) {
-            console.error('Error deleting navigation:', err);
+            log.error({scope: 'navigation.delete', err}, 'navigation delete failed');
             return '';
         }
     }

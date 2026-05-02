@@ -8,6 +8,7 @@ import {validateSectionInput} from "@utils/contentSchemas";
 import {assertNotReservedPageSlug} from "@utils/reservedSlugs";
 import {auditStamp} from "@services/features/Audit/audit";
 import {nextVersion, requireVersion} from "@services/infra/conflict";
+import {log} from "@services/infra/logger";
 
 export class NavigationService implements INavigationService{
     private navigationDB: Collection;
@@ -30,7 +31,7 @@ export class NavigationService implements INavigationService{
             const result = await this.navigationDB.insertOne(newNavigation);
             return result.insertedId?.toString() || '';
         } catch (err) {
-            console.error('Error creating navigation:', err);
+            log.error({scope: 'navigation.create', err, page: newNavigation?.page}, 'createNavigation failed');
             await this.setupClient();
             return JSON.stringify({error: String((err as Error).message || err)});
         }
@@ -59,7 +60,7 @@ export class NavigationService implements INavigationService{
             );
             return 'success';
         } catch (err) {
-            console.error('Error updating navigation:', err);
+            log.error({scope: 'navigation.update', err, page}, 'updateNavigation failed');
             await this.setupClient();
             return '';
         }
@@ -75,7 +76,7 @@ export class NavigationService implements INavigationService{
             const docs = await this.navigationDB.find({type: 'navigation'}).toArray();
             return docs.map(doc => doc as unknown as INavigation);
         } catch (err) {
-            console.error('Error getting navigation collection:', err);
+            log.error({scope: 'navigation.collection', err}, 'getNavigationCollection failed');
             await this.setupClient();
             return [];
         }
@@ -97,9 +98,22 @@ export class NavigationService implements INavigationService{
                 const ib = order.get(b.id as string) ?? Number.MAX_SAFE_INTEGER;
                 return ia - ib;
             });
-            return ordered.map(doc => doc as unknown as ISection);
+            return ordered.map(doc => {
+                // Defensive: sections written by older code paths or a
+                // misbehaving agent can arrive with content: null.  Coerce to
+                // an empty array so no caller ever needs to guard against null,
+                // and log the bad doc so it can be repaired in Mongo.
+                if ((doc as any).content == null) {
+                    log.error(
+                        { scope: 'navigation.sections', sectionId: (doc as any).id },
+                        'section.content is null — corrupt document in Sections collection',
+                    );
+                    (doc as any).content = [];
+                }
+                return doc as unknown as ISection;
+            });
         } catch (err) {
-            console.error('Error getting sections:', err);
+            log.error({scope: 'navigation.sections', err}, 'getSections failed');
             await this.setupClient();
             return [];
         }
@@ -146,7 +160,7 @@ export class NavigationService implements INavigationService{
             // wrapper detects it and serialises the JSON response. Other
             // errors fall through to the generic error path.
             if ((err as {conflict?: boolean})?.conflict) throw err;
-            console.error('Error adding/updating section item:', err);
+            log.error({scope: 'section.addUpdate', err, sectionId: item.section?.id}, 'addUpdateSectionItem failed');
             await this.setupClient();
             return '';
         }
@@ -161,7 +175,7 @@ export class NavigationService implements INavigationService{
             );
             return JSON.stringify({removeSectionItem: {id: sectionId, deleted: result.deletedCount}});
         } catch (err) {
-            console.error('Error removing section item:', err);
+            log.error({scope: 'section.remove', err, sectionId}, 'removeSectionItem failed');
             await this.setupClient();
             return JSON.stringify({error: String((err as Error).message || err)});
         }
@@ -187,7 +201,7 @@ export class NavigationService implements INavigationService{
             );
             return JSON.stringify(result);
         } catch (err) {
-            console.error('Error replacing navigation:', err);
+            log.error({scope: 'navigation.replace', err, oldPageName, newPage: navigation?.page}, 'replaceUpdateNavigation failed');
             await this.setupClient();
             return 'Error while fetching navigation data';
         }
@@ -211,7 +225,7 @@ export class NavigationService implements INavigationService{
             const result = await this.navigationDB.deleteOne({type: 'navigation', page: pageName});
             return JSON.stringify({navigationDeleted: result.deletedCount ?? 0, sectionsDeleted, deletedBy});
         } catch (err) {
-            console.error('Error deleting navigation:', err);
+            log.error({scope: 'navigation.delete', err, pageName}, 'deleteNavigationItem failed');
             await this.setupClient();
             return '';
         }
@@ -245,7 +259,7 @@ export class NavigationService implements INavigationService{
             );
             return JSON.stringify(result);
         } catch (err) {
-            console.error('Error add/update navigation:', err);
+            log.error({scope: 'navigation.addUpdate', err, pageName}, 'addUpdateNavigationItem failed');
             await this.setupClient();
             return '';
         }

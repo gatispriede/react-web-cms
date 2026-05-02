@@ -6,6 +6,7 @@ import {IItem} from "@interfaces/IItem";
 import {ETextPosition} from "@enums/ETextPosition";
 import {TFunction} from "i18next";
 import type {IGallery, IGalleryItem} from "./Gallery.types";
+import SizedImage from "@client/lib/SizedImage";
 export type {IGallery, IGalleryItem} from "./Gallery.types";
 export {EGalleryStyle} from "./Gallery.types";
 
@@ -99,9 +100,18 @@ const Gallery = ({item, t: _t, tApp}: {
         const inner = (
             <>
                 {hasImage && (
-                    <div className={'image'}>
+                    <div
+                        className={'image'}
+                        data-sized={(galleryItem.imgWidth || galleryItem.imgHeight) ? true : undefined}
+                    >
                         {isClone ? (
-                            <img src={'/' + galleryItem.src} alt={galleryItem.alt} style={imgStyle}/>
+                            <SizedImage
+                                src={'/' + galleryItem.src}
+                                alt={galleryItem.alt}
+                                width={galleryItem.imgWidth || undefined}
+                                height={galleryItem.imgHeight || undefined}
+                                style={imgStyle}
+                            />
                         ) : (
                             <Image
                                 preview={data.disablePreview ? false : galleryItem.preview}

@@ -47,6 +47,9 @@ export interface ISiteFlags {
      *  can't drive the checkout-flow mutations — they have to sign in
      *  first. Default true. See docs/features/checkout.md §1. */
     allowGuestCheckout?: boolean;
+    /** Site-wide default admin UI mode (per `docs/features/platform/admin-ui-modes.md`).
+     *  Per-user `IUser.adminUiMode` overrides this when set. Default 'advanced'. */
+    defaultAdminUiMode?: 'simplified' | 'advanced';
     version?: number;
     editedBy?: string;
     editedAt?: string;
@@ -63,6 +66,7 @@ export const DEFAULT_SITE_FLAGS: ISiteFlags = {
     inquiryMaxPerClient: 3,
     inquiryAllowedOrigins: '',
     allowGuestCheckout: true,
+    defaultAdminUiMode: 'advanced',
 };
 
 /** Light validation — keeps obviously-broken values from being saved.
@@ -120,6 +124,9 @@ export class SiteFlagsService {
             allowGuestCheckout: typeof value?.allowGuestCheckout === 'boolean'
                 ? value.allowGuestCheckout
                 : DEFAULT_SITE_FLAGS.allowGuestCheckout,
+            defaultAdminUiMode: (value?.defaultAdminUiMode === 'simplified' || value?.defaultAdminUiMode === 'advanced')
+                ? value.defaultAdminUiMode
+                : DEFAULT_SITE_FLAGS.defaultAdminUiMode,
             version: (doc as any)?.version ?? 0,
             editedBy: (doc as any)?.editedBy,
             editedAt: (doc as any)?.editedAt,
@@ -166,6 +173,9 @@ export class SiteFlagsService {
             allowGuestCheckout: typeof flags.allowGuestCheckout === 'boolean'
                 ? flags.allowGuestCheckout
                 : current.allowGuestCheckout,
+            defaultAdminUiMode: (flags.defaultAdminUiMode === 'simplified' || flags.defaultAdminUiMode === 'advanced')
+                ? flags.defaultAdminUiMode
+                : current.defaultAdminUiMode,
         };
         const version = nextVersion(existingVersion);
         await this.settings.updateOne(

@@ -13,8 +13,16 @@ const BlogFeedEditor = ({content, setContent, t}: IInputContent) => {
     };
     return (
         <div>
-            <label>{t('Post count')}</label>
-            <InputNumber min={1} max={24} value={data.limit} onChange={v => update('limit', Number(v) || 6)}/>
+            <Row gutter={[8, 8]}>
+                <Col xs={24}>
+                    <label>{t('Post count')}</label>
+                    <InputNumber min={1} max={24} value={data.limit} onChange={v => update('limit', Number(v) || 6)}/>
+                </Col>
+                <Col xs={24}>
+                    <label>{t('Section heading (optional)')}</label>
+                    <Input data-testid="module-editor-primary-text-input" value={data.heading} onChange={e => update('heading', e.target.value)} placeholder={t('Latest writing')}/>
+                </Col>
+            </Row>
             <Collapse
                 ghost
                 size="small"
@@ -24,10 +32,6 @@ const BlogFeedEditor = ({content, setContent, t}: IInputContent) => {
                     label: t('More options'),
                     children: (
                         <Row gutter={[8, 8]}>
-                            <Col xs={24}>
-                                <label>{t('Section heading (optional)')}</label>
-                                <Input data-testid="module-editor-primary-text-input" value={data.heading} onChange={e => update('heading', e.target.value)} placeholder={t('Latest writing')}/>
-                            </Col>
                             <Col xs={24}>
                                 <label>{t('Filter by tag (optional)')}</label>
                                 <Input value={data.tag} onChange={e => update('tag', e.target.value)}/>

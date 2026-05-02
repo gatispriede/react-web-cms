@@ -2,6 +2,7 @@ import {Collection, Db} from 'mongodb';
 import guid from '@utils/guid';
 import {IProduct, IProductVariant, InProduct, WarehouseProductInput} from '@interfaces/IProduct';
 import {nextVersion, requireVersion} from '@services/infra/conflict';
+import {log} from '@services/infra/logger';
 
 /**
  * Product service. Mirrors `PostService` for slug/version/conflict handling.
@@ -46,7 +47,7 @@ export class ProductService {
             await this.products.createIndex({draft: 1, publishedAt: -1});
             this.indexesReady = true;
         } catch (err) {
-            console.error('ProductService.ensureIndexes:', err);
+            log.error({scope: 'products.ensureIndexes', err}, 'ProductService ensureIndexes failed');
         }
     }
 
