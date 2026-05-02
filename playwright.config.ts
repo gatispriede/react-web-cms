@@ -24,7 +24,18 @@ export default defineConfig({
     // (10–40 s on Windows for routes that import the admin shell). 90 s gives
     // headroom for the slowest legitimate test without masking real hangs.
     timeout: 90_000,
-    expect: {timeout: 10_000},
+    expect: {
+        timeout: 10_000,
+        // Defaults for the visual project. Specs under tests/e2e/visual/
+        // call `toHaveScreenshot()` directly; this controls the diff budget.
+        // Strict-ish: 1% pixel-ratio cap absorbs subpixel antialias drift
+        // across CI runners without masking real layout regressions.
+        toHaveScreenshot: {
+            maxDiffPixelRatio: 0.01,
+            animations: 'disabled',
+            caret: 'hide',
+        },
+    },
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
     // When reusing an externally-spawned dev server (the default `e2e` /
@@ -54,7 +65,36 @@ export default defineConfig({
     projects: [
         {
             name: 'chromium',
+            testIgnore: '**/visual/**',
             use: {...devices['Desktop Chrome']},
+        },
+        // Visual-regression project — opt-in via `--project=visual`. Runs
+        // only the specs under `tests/e2e/visual/` and uses
+        // `expect.toHaveScreenshot()` against baselines in
+        // `tests/e2e/visual/__snapshots__/`. CI shards this 4× nightly on
+        // master only (see `.github/workflows/ci.yml`); PRs skip it.
+        // See `docs/runbooks/visual-regressions.md` for the full lifecycle.
+        {
+            name: 'visual',
+            testMatch: '**/visual/**/*.spec.ts',
+            // Hard-pin the viewport so a developer running `--update-snapshots`
+            // on a different display can't accidentally rebake every baseline
+            // at a new size. CI matches this exactly.
+            use: {
+                ...devices['Desktop Chrome'],
+                viewport: {width: 1280, height: 800},
+                deviceScaleFactor: 1,
+                // `prefers-reduced-motion: reduce` kills CSS transitions /
+                // animations that would otherwise add a frame of jitter
+                // between captures. AntD's drawer slide + hover ripple are
+                // the worst offenders.
+                reducedMotion: 'reduce',
+                // Force light theme — color-scheme media query flicker is
+                // the second-worst flake source. The visual baselines are
+                // light-only by design; dark-theme coverage is a separate
+                // run if/when we need it.
+                colorScheme: 'light',
+            },
         },
     ],
 });
