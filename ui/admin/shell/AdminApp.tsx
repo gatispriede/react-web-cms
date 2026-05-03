@@ -2,6 +2,7 @@ import React from 'react'
 import {resolve} from "@services/api/generated";
 import {Button, ConfigProvider, Layout, Menu, Popconfirm, Spin, Switch, Tag, message, theme as antdTheme} from 'antd';
 import {BulbFilled, BulbOutlined, CloseOutlined, CloudUploadOutlined, EditOutlined, FileOutlined, PlusOutlined} from "@client/lib/icons";
+import AdminModeSwitcher from "@admin/shell/AdminModeSwitcher";
 import PublishApi from "@services/api/client/PublishApi";
 import AddNewDialogNavigation from "@admin/features/Navigation/AddNewDialogNavigation";
 import DynamicTabsContent from "@client/lib/DynamicTabsContent";
@@ -115,14 +116,23 @@ class AdminApp extends React.Component<{
         if (typeof window !== 'undefined') {
             const saved = window.localStorage.getItem('admin.darkMode');
             if (saved === '1') this.setState({darkMode: true});
+            document.documentElement.setAttribute('data-admin-theme', saved === '1' ? 'dark' : 'light');
         }
         this.refreshUnsub = refreshBus.subscribe(() => this.refreshView());
     }
 
     private async checkFreshInstall(): Promise<void> {
+        // Q7 first-run guard. Hits a REST endpoint instead of gqty so a
+        // missing-schema-field (when `npm run generate-schema` hasn't been
+        // run after Q7 landed) doesn't poison the gqty client and leave
+        // every subsequent query — including the build page's own
+        // navigation fetch — stuck on a stale validation error.
+        if (typeof window === 'undefined') return;
         try {
-            const fresh = await resolve(({query}) => (query as any).mongo.isFreshInstall);
-            if (fresh && typeof window !== 'undefined') {
+            const r = await fetch('/api/onboarding/is-fresh-install', {credentials: 'include'});
+            if (!r.ok) return;
+            const body = await r.json();
+            if (body?.fresh === true) {
                 window.location.replace('/admin/onboarding');
             }
         } catch { /* probe is best-effort — ignore wire errors */ }
@@ -143,6 +153,11 @@ class AdminApp extends React.Component<{
         this.setState({darkMode: on});
         if (typeof window !== 'undefined') {
             window.localStorage.setItem('admin.darkMode', on ? '1' : '0');
+            // Stamp the document so custom SCSS (sider chrome, header
+            // strip, drawer overlays — anything outside AntD's
+            // ConfigProvider scope) can flip via
+            // `[data-admin-theme="dark"]` selectors.
+            document.documentElement.setAttribute('data-admin-theme', on ? 'dark' : 'light');
         }
     };
 
@@ -390,6 +405,7 @@ class AdminApp extends React.Component<{
                                 )}
                             </>
                         )}
+                        <AdminModeSwitcher/>
                         <Switch
                             checked={this.state.darkMode}
                             onChange={this.toggleDarkMode}

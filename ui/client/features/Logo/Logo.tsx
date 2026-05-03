@@ -14,6 +14,7 @@ interface ILogoProps {
 
 class Logo extends Component<ILogoProps> {
     private _mongoApi: MongoApi;
+    private _mounted = false;
     state = {
         logo: {
             src: '',
@@ -29,14 +30,27 @@ class Logo extends Component<ILogoProps> {
         super(props);
         this._mongoApi = new MongoApi();
         this.admin = props.admin;
+    }
+
+    componentDidMount() {
+        // Defer the network call out of the constructor — under React 18+
+        // strict mode the constructor can fire before the fiber is mounted,
+        // which used to log "Can't call setState on a component that is
+        // not yet mounted" (the inner async setState raced the mount).
+        this._mounted = true;
         void this.loadLogo(true);
     }
 
-    async loadLogo(init?: boolean | undefined) {
+    componentWillUnmount() {
+        this._mounted = false;
+    }
+
+    async loadLogo(_init?: boolean | undefined) {
         const logo: ILogo = await this._mongoApi.getLogo()
         if (!logo || !logo.content) {
             return;
         }
+        if (!this._mounted) return;
         try {
             const content = JSON.parse(logo.content)
             this.setState({logo: content});

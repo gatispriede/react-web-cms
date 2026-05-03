@@ -1,0 +1,125 @@
+/**
+ * Admin shell dark-mode overrides — applied via the document attribute
+ * `data-admin-theme="dark"` set from `AdminApp.toggleDarkMode`.
+ *
+ * AntD components flip automatically through `ConfigProvider` +
+ * `darkAlgorithm` — this file targets only the custom SCSS surfaces
+ * (sider chrome, header strip, drawer overlays, custom borders) that
+ * AntD doesn't own.
+ *
+ * Tokens read from CSS custom properties so individual theme presets
+ * can override per-section without touching this file.
+ */
+
+:root {
+    --admin-bg: #ffffff;
+    --admin-fg: #0d0d0d;
+    --admin-muted: #5a5a5a;
+    --admin-border: #e6e6e6;
+    --admin-elevated: #fafafa;
+    --admin-overlay: rgba(0, 0, 0, 0.45);
+}
+
+[data-admin-theme="dark"] {
+    --admin-bg: #1a1a1a;
+    --admin-fg: #f5f5f5;
+    --admin-muted: #a0a0a0;
+    --admin-border: #333333;
+    --admin-elevated: #232323;
+    --admin-overlay: rgba(0, 0, 0, 0.65);
+
+    color-scheme: dark;
+    background: var(--admin-bg);
+    color: var(--admin-fg);
+
+    body {
+        background: var(--admin-bg);
+        color: var(--admin-fg);
+    }
+
+    .admin-app-header {
+        background: var(--admin-elevated) !important;
+        border-bottom-color: var(--admin-border);
+    }
+
+    .admin-sider-item {
+        color: var(--admin-fg);
+    }
+
+    .admin-sider-item:hover {
+        background: var(--admin-elevated);
+    }
+
+    .ant-layout,
+    .ant-layout-sider,
+    .ant-layout-content {
+        background: var(--admin-bg) !important;
+    }
+
+    .ant-layout-sider {
+        border-right: 1px solid var(--admin-border);
+    }
+
+    .ant-tabs-nav,
+    .ant-tabs-content-holder {
+        background: var(--admin-bg);
+    }
+
+    .ant-card {
+        background: var(--admin-elevated);
+        border-color: var(--admin-border);
+    }
+
+    .ant-table-thead > tr > th,
+    .ant-table-tbody > tr > td {
+        background: var(--admin-elevated);
+        border-color: var(--admin-border);
+        color: var(--admin-fg);
+    }
+
+    .ant-table-tbody > tr:hover > td {
+        background: var(--admin-bg) !important;
+    }
+
+    .ant-drawer-content,
+    .ant-drawer-header {
+        background: var(--admin-elevated);
+        color: var(--admin-fg);
+    }
+
+    .ant-drawer-mask {
+        background: var(--admin-overlay);
+    }
+
+    .ant-modal-content,
+    .ant-modal-header {
+        background: var(--admin-elevated);
+        color: var(--admin-fg);
+    }
+
+    .ant-divider {
+        border-color: var(--admin-border) !important;
+    }
+
+    label,
+    .field-label {
+        color: var(--admin-fg);
+    }
+
+    .field-hint,
+    .ant-typography-secondary {
+        color: var(--admin-muted) !important;
+    }
+
+    .image-upload .image-preview img,
+    .image-item__thumb {
+        background: var(--admin-elevated);
+    }
+
+    code,
+    pre {
+        background: var(--admin-elevated);
+        border-color: var(--admin-border);
+        color: var(--admin-fg);
+    }
+}

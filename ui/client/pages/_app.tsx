@@ -4,6 +4,9 @@ import '../styles/globals/global.scss'
 // `_app.tsx`, so we mount it here. Selectors are namespaced under
 // `.marketing` so they don't bleed into the regular CMS site.
 import '../styles/Marketing/landing.scss'
+// Admin dark-mode overrides — applied via `[data-admin-theme="dark"]`
+// on the document. See ui/admin/shell/AdminApp.tsx#toggleDarkMode.
+import '../../admin/styles/Admin/AdminDarkMode.scss'
 import { appWithTranslation } from 'next-i18next/pages'
 import nextI18NextConfig from '../../../next-i18next.config.js'
 import NextApp, {AppContext} from 'next/app';
