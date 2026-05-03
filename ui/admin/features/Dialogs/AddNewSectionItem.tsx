@@ -14,6 +14,13 @@ import {TFunction} from "i18next";
 import {getItemTypeDefinition, itemTypeList, styleEnumFor} from "@admin/lib/itemTypes/registry";
 import TypeDiagram from "@admin/lib/itemTypes/TypeDiagram";
 import ModulePickerDialog from "@admin/features/Dialogs/ModulePickerDialog";
+import {getCachedMode} from "@admin/lib/adminMode";
+
+/** Simplified-mode hides the Action tab + the section transparency
+ *  control (both are advanced-author surfaces). The cached mode is
+ *  read at render time — toggling the mode re-renders the drawer
+ *  through the React tree above. */
+const isSimplifiedMode = (): boolean => getCachedMode() === 'simplified';
 
 interface IAddNewSectionItemProps {
     addSectionItem: (sectionId: string, config: IConfigSectionAddRemove) => void,
@@ -300,7 +307,7 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                             }}/>
                 </div>
             }
-            {this.props.updateSection && (
+            {this.props.updateSection && !isSimplifiedMode() && (
                 <div style={{marginTop: 16, padding: 12, borderRadius: 6, background: 'rgba(0,0,0,0.03)'}}>
                     <h4 style={{marginTop: 0}}>{this.props.t('Section transparency')}</h4>
                     <Space align="center" wrap style={{marginBottom: 12}}>
@@ -382,10 +389,16 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
     }
 
     render() {
-        const tabContent = this.state.tabContent
-        tabContent[0].children = this.generateContentSection()
-        tabContent[1].children = this.generateActionSection()
-        tabContent[2].children = this.generateStyleSection()
+        // Filter the Action tab out of the array under simplified mode —
+        // simplified-mode authors don't get the on-click overlay surface.
+        // Style stays so they can still pick variants.
+        const allTabs = this.state.tabContent;
+        allTabs[0].children = this.generateContentSection()
+        allTabs[1].children = this.generateActionSection()
+        allTabs[2].children = this.generateStyleSection()
+        const tabContent = isSimplifiedMode()
+            ? allTabs.filter(tab => tab.key !== 'action')
+            : allTabs;
         const item = {
             index: this.index,
             style: this.state.style,

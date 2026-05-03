@@ -1,8 +1,7 @@
 import React from 'react'
 import {resolve} from "@services/api/generated";
-import {Button, ConfigProvider, Layout, Menu, Popconfirm, Spin, Switch, Tag, message, theme as antdTheme} from 'antd';
-import {BulbFilled, BulbOutlined, CloseOutlined, CloudUploadOutlined, EditOutlined, FileOutlined, PlusOutlined} from "@client/lib/icons";
-import AdminModeSwitcher from "@admin/shell/AdminModeSwitcher";
+import {Button, ConfigProvider, Layout, Menu, Popconfirm, Spin, Tag, message, theme as antdTheme} from 'antd';
+import {CloseOutlined, CloudUploadOutlined, EditOutlined, FileOutlined, PlusOutlined} from "@client/lib/icons";
 import PublishApi from "@services/api/client/PublishApi";
 import AddNewDialogNavigation from "@admin/features/Navigation/AddNewDialogNavigation";
 import DynamicTabsContent from "@client/lib/DynamicTabsContent";
@@ -405,13 +404,12 @@ class AdminApp extends React.Component<{
                                 )}
                             </>
                         )}
-                        <AdminModeSwitcher/>
-                        <Switch
-                            checked={this.state.darkMode}
-                            onChange={this.toggleDarkMode}
-                            checkedChildren={<BulbFilled/>}
-                            unCheckedChildren={<BulbOutlined/>}
-                        />
+                        {/* Dark-mode toggle + AdminModeSwitcher live in
+                            the top-top bar (UserStatusBar) so they
+                            persist across every admin route, not just
+                            /admin/build. AdminApp still reads the
+                            localStorage flag on mount so the AntD
+                            ConfigProvider's `darkAlgorithm` flips. */}
                     </div>
                     <AddNewDialogNavigation
                         t={this.props.t}

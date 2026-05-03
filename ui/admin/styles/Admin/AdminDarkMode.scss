@@ -37,6 +37,27 @@
         color: var(--admin-fg);
     }
 
+    /* Top-top admin nav (UserStatusBar.app-login-wrapper) — visible on
+       every admin route. AntD's `Button type="link"` flips fine, but the
+       wrapper's own background / border + the User: label outside any
+       AntD component need explicit overrides. */
+    .app-login-wrapper {
+        background: var(--admin-elevated) !important;
+        color: var(--admin-fg);
+        border-bottom: 1px solid var(--admin-border);
+    }
+    .app-login-wrapper p,
+    .app-login-wrapper .container p {
+        color: var(--admin-fg);
+    }
+    .app-login-wrapper .ant-btn-link {
+        color: var(--admin-fg);
+    }
+    .app-login-wrapper .ant-btn-link:hover {
+        color: var(--admin-fg);
+        background: var(--admin-bg);
+    }
+
     .admin-app-header {
         background: var(--admin-elevated) !important;
         border-bottom-color: var(--admin-border);

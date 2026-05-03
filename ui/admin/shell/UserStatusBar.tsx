@@ -52,6 +52,7 @@ import AnalyticsPanel from "@admin/features/Analytics/AnalyticsPanel";
 import {findAdminPaneById} from "@admin/lib/loaders/adminUILoaderRegistry";
 import {useAdminMode} from "@admin/lib/adminMode";
 import AdminModeSwitcher from "./AdminModeSwitcher";
+import DarkModeSwitcher from "./DarkModeSwitcher";
 import AdminSettingsUsers from "@admin/features/Users/Users";
 import McpTokensPanel from "@admin/features/Mcp/McpTokensPanel";
 import FeatureFlagsPanel from "@admin/features/Platform/FeatureFlagsPanel";
@@ -318,9 +319,15 @@ const UserStatusBarInner = ({session, view, tApp}: {
                 {topBarButton('build', '/admin/build', <LayoutOutlined/>, tAdmin('Build'))}
                 {topBarButton('client-config', '/admin/client-config', <BgColorsOutlined/>, tAdmin('Client config'))}
                 {topBarButton('content', '/admin/content', <FileTextOutlined/>, tAdmin('Content'))}
-                {topBarButton('seo', '/admin/seo', <SearchOutlined/>, tAdmin('SEO'))}
-                {topBarButton('release', '/admin/release', <CloudUploadOutlined/>, tAdmin('Release'))}
-                {topBarButton('system', '/admin/system', <UserOutlined/>, tAdmin('System'))}
+                {/* SEO / Release / System are advanced-only — simplified-mode
+                    users get a stripped top bar focused on authoring. The
+                    routes themselves still resolve directly if bookmarked,
+                    but nav surfaces hide them. Per-pane simplified variants
+                    are tracked separately (admin-ui-modes per-feature
+                    simplified components item). */}
+                {adminMode !== 'simplified' && topBarButton('seo', '/admin/seo', <SearchOutlined/>, tAdmin('SEO'))}
+                {adminMode !== 'simplified' && topBarButton('release', '/admin/release', <CloudUploadOutlined/>, tAdmin('Release'))}
+                {adminMode !== 'simplified' && topBarButton('system', '/admin/system', <UserOutlined/>, tAdmin('System'))}
                 <Button type={"link"} icon={<EyeOutlined/>} onClick={(e) => {
                     e.preventDefault();
                     if (typeof window !== 'undefined') {
@@ -365,6 +372,7 @@ const UserStatusBarInner = ({session, view, tApp}: {
                     </Button>
                 </Dropdown>
                 <AdminModeSwitcher/>
+                <DarkModeSwitcher/>
                 <Button type={"link"} icon={<LogoutOutlined/>} href={'#'} onClick={() => signOut()}>{tAdmin("Sign out")}</Button>
             </nav>
             <main id="admin-main" aria-label={tAdmin("Admin workspace")}>

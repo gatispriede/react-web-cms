@@ -4,26 +4,24 @@ import {useTranslation} from 'react-i18next';
 import {useAdminMode} from '@admin/lib/adminMode';
 
 /**
- * Top-bar admin UI mode switcher. Visible only to advanced-mode users
- * — simplified-mode users don't see the toggle (per
- * `docs/features/platform/admin-ui-modes.md`).
+ * Top-bar admin UI mode switcher — visible on every admin route. Both
+ * modes can flip back to the other side (the older "advanced-only"
+ * gate hid the toggle from simplified users, which left them stuck;
+ * user feedback 2026-05-03: "simplified version feature ... need to
+ * go to to very top top").
  *
- * Renders nothing while the initial fetch is in flight (mode === null).
- * Once resolved, advanced-mode users get a two-segment selector;
- * flipping to simplified hides the switcher on next render so the user
- * needs to either stay advanced or have an admin reset their preference.
+ * Defaults to `advanced` while the initial fetch is in flight so the
+ * toggle paints immediately instead of flashing in late.
  */
 const AdminModeSwitcher: React.FC = () => {
     const {t} = useTranslation();
     const {mode, setMode} = useAdminMode();
-
-    if (mode === null) return null;
-    if (mode !== 'advanced') return null;
+    const effective = mode ?? 'advanced';
 
     return (
         <Segmented
             size="small"
-            value={mode}
+            value={effective}
             onChange={(v) => setMode(v as 'simplified' | 'advanced')}
             options={[
                 {value: 'advanced', label: t('Advanced')},

@@ -4,6 +4,25 @@ import {Card, Col, Input, Modal, Radio, Row, Tag, Typography} from "antd";
 import {TFunction} from "i18next";
 import {EItemType} from "@enums/EItemType";
 import {ItemCategory, itemTypeList} from "@admin/lib/itemTypes/registry";
+import {useAdminMode} from "@admin/lib/adminMode";
+
+/**
+ * Modules surfaced in **simplified** mode. Hero is in despite being
+ * editorially complex (per user 2026-05-03: "make the complex ones go
+ * away except for hero"). The rest are the basic authoring set —
+ * everything else (CV-bundle visualisations, ProjectGrid, Manifesto,
+ * StatsStrip, etc.) is hidden until the operator flips to advanced.
+ */
+const SIMPLIFIED_MODULE_TYPES = new Set<string>([
+    EItemType.Hero,
+    EItemType.Text,
+    EItemType.RichText,
+    EItemType.Image,
+    EItemType.Gallery,
+    EItemType.ProjectCard,
+    EItemType.BlogFeed,
+    EItemType.SocialLinks,
+]);
 import TypeDiagram from "@admin/lib/itemTypes/TypeDiagram";
 
 interface Props {
@@ -39,7 +58,15 @@ const ModulePickerDialog: React.FC<Props> = ({open, onClose, onSelect, t, curren
     const searchRef = useRef<any>(null);
     const gridRef = useRef<HTMLDivElement>(null);
 
-    const all = useMemo(() => itemTypeList(), []);
+    const {mode: adminMode} = useAdminMode();
+
+    const all = useMemo(() => {
+        const list = itemTypeList();
+        if (adminMode === 'simplified') {
+            return list.filter(def => SIMPLIFIED_MODULE_TYPES.has(def.key));
+        }
+        return list;
+    }, [adminMode]);
 
     const filtered = useMemo(() => {
         const q = query.trim().toLowerCase();
