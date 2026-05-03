@@ -281,6 +281,7 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
         const transparencyPct = this._transparencyDraft ?? committedPct;
         const transparencyEnabled = committedTransparent || transparencyPct > 0;
 
+        const simplified = isSimplifiedMode();
         return <div>
             <h4>{this.props.t("Style configuration")}</h4>
             <label>{this.props.t("Please select style type")}: </label>
@@ -288,25 +289,29 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                     onSelect={(e) => {
                         this.setState({style: e})
                     }}/>
-            <hr/>
-            <label>{this.props.t("Animation")}: </label>
-            <Select
-                variant={'filled'}
-                value={this.state.animation}
-                options={this.state.animationOptions}
-                onSelect={(e: EAnimation) => this.setState({animation: e})}
-            />
-            {
-                this.state.action &&
-                <div>
-                    <hr/>
-                    <label>{this.props.t("Please select style for action component")}: </label>
-                    <Select variant={'filled'} value={this.state.actionStyle} options={this.state.actionStyleOptions}
-                            onSelect={(e) => {
-                                this.setState({actionStyle: e})
-                            }}/>
-                </div>
-            }
+            {/* Animation + per-action style + section transparency are
+                advanced-only — simplified-mode authors only choose the
+                module's visual style variant. */}
+            {!simplified && <>
+                <hr/>
+                <label>{this.props.t("Animation")}: </label>
+                <Select
+                    variant={'filled'}
+                    value={this.state.animation}
+                    options={this.state.animationOptions}
+                    onSelect={(e: EAnimation) => this.setState({animation: e})}
+                />
+                {this.state.action && (
+                    <div>
+                        <hr/>
+                        <label>{this.props.t("Please select style for action component")}: </label>
+                        <Select variant={'filled'} value={this.state.actionStyle} options={this.state.actionStyleOptions}
+                                onSelect={(e) => {
+                                    this.setState({actionStyle: e})
+                                }}/>
+                    </div>
+                )}
+            </>}
             {this.props.updateSection && !isSimplifiedMode() && (
                 <div style={{marginTop: 16, padding: 12, borderRadius: 6, background: 'rgba(0,0,0,0.03)'}}>
                     <h4 style={{marginTop: 0}}>{this.props.t('Section transparency')}</h4>

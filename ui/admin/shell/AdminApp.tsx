@@ -21,6 +21,7 @@ import UndoStatusPill from "./UndoStatusPill";
 import {refreshBus} from "@client/lib/refreshBus";
 import ImageRailDock from "@admin/features/Navigation/ImageRailDock";
 import {setAnchors} from "@admin/lib/anchorRegistry";
+import {getCachedMode} from "@admin/lib/adminMode";
 
 interface IHomeState {
     loading: boolean,
@@ -381,7 +382,7 @@ class AdminApp extends React.Component<{
                         <div style={{flex: 1}}/>
                         {this.canEditNav && <ImageRailDock/>}
                         {this.canEditNav && <UndoStatusPill t={this.props.t}/>}
-                        {this.canPublish && (
+                        {this.canPublish && getCachedMode() !== 'simplified' && (
                             <>
                                 <Popconfirm
                                     title={this.props.t('Publish to production?')}

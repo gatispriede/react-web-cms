@@ -1,14 +1,18 @@
 /**
  * Admin shell dark-mode overrides — applied via the document attribute
- * `data-admin-theme="dark"` set from `AdminApp.toggleDarkMode`.
+ * `data-admin-theme="dark"` set from `DarkModeSwitcher`.
  *
- * AntD components flip automatically through `ConfigProvider` +
- * `darkAlgorithm` — this file targets only the custom SCSS surfaces
- * (sider chrome, header strip, drawer overlays, custom borders) that
- * AntD doesn't own.
+ * SCOPE NOTE (2026-05-03 user feedback): only the admin **chrome**
+ * (top-top nav, sider, drawer header, modal header, table chrome) flips
+ * to dark. The actual content area (`.ant-layout-content`,
+ * `.content-wrapper`, public-page preview render) MUST stay in the
+ * client-side theme so the operator sees what visitors see — flipping
+ * the body or the layout content background to dark made the build
+ * page look nothing like the public page.
  *
- * Tokens read from CSS custom properties so individual theme presets
- * can override per-section without touching this file.
+ * AntD's `darkAlgorithm` (wired in AdminApp.tsx) handles AntD components
+ * in admin chrome automatically; this file targets only the custom SCSS
+ * rules that AntD doesn't own.
  */
 
 :root {
@@ -29,18 +33,9 @@
     --admin-overlay: rgba(0, 0, 0, 0.65);
 
     color-scheme: dark;
-    background: var(--admin-bg);
-    color: var(--admin-fg);
-
-    body {
-        background: var(--admin-bg);
-        color: var(--admin-fg);
-    }
 
     /* Top-top admin nav (UserStatusBar.app-login-wrapper) — visible on
-       every admin route. AntD's `Button type="link"` flips fine, but the
-       wrapper's own background / border + the User: label outside any
-       AntD component need explicit overrides. */
+       every admin route. */
     .app-login-wrapper {
         background: var(--admin-elevated) !important;
         color: var(--admin-fg);
@@ -58,88 +53,49 @@
         background: var(--admin-bg);
     }
 
+    /* Admin secondary header (per-pane toolbar with publish, last-pub,
+       breadcrumbs). */
     .admin-app-header {
         background: var(--admin-elevated) !important;
+        color: var(--admin-fg);
         border-bottom-color: var(--admin-border);
     }
 
+    /* Sider chrome (page list + section list). */
+    .ant-layout-sider {
+        background: var(--admin-elevated) !important;
+        border-right: 1px solid var(--admin-border);
+    }
     .admin-sider-item {
         color: var(--admin-fg);
     }
-
     .admin-sider-item:hover {
-        background: var(--admin-elevated);
-    }
-
-    .ant-layout,
-    .ant-layout-sider,
-    .ant-layout-content {
-        background: var(--admin-bg) !important;
-    }
-
-    .ant-layout-sider {
-        border-right: 1px solid var(--admin-border);
-    }
-
-    .ant-tabs-nav,
-    .ant-tabs-content-holder {
         background: var(--admin-bg);
     }
 
-    .ant-card {
-        background: var(--admin-elevated);
-        border-color: var(--admin-border);
-    }
-
-    .ant-table-thead > tr > th,
-    .ant-table-tbody > tr > td {
-        background: var(--admin-elevated);
-        border-color: var(--admin-border);
-        color: var(--admin-fg);
-    }
-
-    .ant-table-tbody > tr:hover > td {
-        background: var(--admin-bg) !important;
-    }
-
-    .ant-drawer-content,
-    .ant-drawer-header {
+    /* Drawer + modal chrome — header / footer only. The drawer body
+       stays default so the editor surface (which mirrors public-side
+       components) doesn't take on dark colours. */
+    .ant-drawer-header,
+    .ant-drawer-footer,
+    .ant-modal-header,
+    .ant-modal-footer {
         background: var(--admin-elevated);
         color: var(--admin-fg);
     }
-
-    .ant-drawer-mask {
+    .ant-drawer-mask,
+    .ant-modal-mask {
         background: var(--admin-overlay);
     }
 
-    .ant-modal-content,
-    .ant-modal-header {
+    /* Tables (Posts list, Products list, etc.) — admin chrome, no
+       public surface uses ant-table. */
+    .ant-table-thead > tr > th {
         background: var(--admin-elevated);
+        border-color: var(--admin-border);
         color: var(--admin-fg);
     }
-
-    .ant-divider {
-        border-color: var(--admin-border) !important;
-    }
-
-    label,
-    .field-label {
-        color: var(--admin-fg);
-    }
-
-    .field-hint,
-    .ant-typography-secondary {
-        color: var(--admin-muted) !important;
-    }
-
-    .image-upload .image-preview img,
-    .image-item__thumb {
-        background: var(--admin-elevated);
-    }
-
-    code,
-    pre {
-        background: var(--admin-elevated);
+    .ant-table-tbody > tr > td {
         border-color: var(--admin-border);
         color: var(--admin-fg);
     }

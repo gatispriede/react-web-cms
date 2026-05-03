@@ -6,11 +6,14 @@ import {useRefreshView} from "@client/lib/refreshBus";
 import ConflictDialog from "@client/lib/ConflictDialog";
 import {useViewModel} from "@client/lib/state/observable";
 import {LayoutViewModel} from "./LayoutViewModel";
+import {useAdminMode} from "@admin/lib/adminMode";
 
 /** Render-only Site Layout pane — VM3 (2026-05-02). */
 const AdminSettingsLayout: React.FC = () => {
     const {t} = useTranslation();
     const vm = useViewModel(() => new LayoutViewModel(undefined, t));
+    const {mode: adminMode} = useAdminMode();
+    const simplified = adminMode === 'simplified';
 
     useEffect(() => { void vm.refresh(); }, [vm]);
     useRefreshView(vm.refresh, 'settings');
@@ -50,6 +53,10 @@ const AdminSettingsLayout: React.FC = () => {
                     </Card>
                 </Space>
             </Radio.Group>
+            {/* Simplified-mode authors only pick a layout mode. Inline
+                translation, auto high-contrast, GDPR fonts, and the
+                contact-form configuration are advanced surfaces. */}
+            {!simplified && <>
             <Divider/>
             <Space orientation="vertical" style={{width: '100%'}} size={8}>
                 <Typography.Text strong>{t('Inline translation editing')}</Typography.Text>
@@ -150,6 +157,7 @@ const AdminSettingsLayout: React.FC = () => {
                     >{t('Save')}</Button>
                 </Space.Compact>
             </Space>
+            </>}
             {vm.conflict && (() => {
                 const peer = vm.conflict.error.currentDoc as {editedBy?: string; editedAt?: string} | null;
                 return (

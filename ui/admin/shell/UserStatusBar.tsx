@@ -202,7 +202,17 @@ const UserStatusBarInner = ({session, view, tApp}: {
     const role = ((session?.user as any)?.role ?? 'viewer') as UserRole;
     const isAdmin = role === 'admin';
 
-    const areaItems = buildAreaItems(tAdmin as TFunction<"translation", undefined>);
+    const simplified = adminMode === 'simplified';
+    const allAreaItems = buildAreaItems(tAdmin as TFunction<"translation", undefined>);
+    // Simplified-mode authors don't manage commerce — products / inventory
+    // / orders are advanced-only. The routes themselves still resolve if
+    // bookmarked, but the area-nav drops them.
+    const areaItems = simplified
+        ? {
+            ...allAreaItems,
+            content: allAreaItems.content.filter(it => !['products', 'inventory', 'orders'].includes(it.testidSuffix ?? '')),
+        }
+        : allAreaItems;
     // DECISION: derive currentPath from the view literal — the SSR-rendered
     // page already knows its own URL via the `view` prop; no need to read
     // `window.location` (and SSR-safe).
