@@ -1,0 +1,434 @@
+{
+  "manifest": {
+    "version": 1,
+    "exportedAt": "2026-05-03T05:42:23.043Z",
+    "app": "redis-node-js-cloud"
+  },
+  "site": {
+    "navigation": [
+      {
+        "id": "docs-nav-ai-mcp-workflow",
+        "type": "navigation",
+        "page": "Docs AI / MCP workflow",
+        "seo": {
+          "title": "AI / MCP workflow — Docs",
+          "description": "Documentation: AI / MCP workflow.",
+          "viewport": "width=device-width,initial-scale=1",
+          "charSet": "utf-8",
+          "locale": "en"
+        },
+        "sections": [
+          "docs-sec-ai-mcp-workflow"
+        ]
+      },
+      {
+        "id": "docs-nav-features-build",
+        "type": "navigation",
+        "page": "Docs Build / Pages",
+        "seo": {
+          "title": "Build / Pages — Docs",
+          "description": "Documentation: Build / Pages.",
+          "viewport": "width=device-width,initial-scale=1",
+          "charSet": "utf-8",
+          "locale": "en"
+        },
+        "sections": [
+          "docs-sec-features-build"
+        ]
+      },
+      {
+        "id": "docs-nav-features-bundle",
+        "type": "navigation",
+        "page": "Docs Bundle",
+        "seo": {
+          "title": "Bundle — Docs",
+          "description": "Documentation: Bundle.",
+          "viewport": "width=device-width,initial-scale=1",
+          "charSet": "utf-8",
+          "locale": "en"
+        },
+        "sections": [
+          "docs-sec-features-bundle"
+        ]
+      },
+      {
+        "id": "docs-nav-features-footer",
+        "type": "navigation",
+        "page": "Docs Footer",
+        "seo": {
+          "title": "Footer — Docs",
+          "description": "Documentation: Footer.",
+          "viewport": "width=device-width,initial-scale=1",
+          "charSet": "utf-8",
+          "locale": "en"
+        },
+        "sections": [
+          "docs-sec-features-footer"
+        ]
+      },
+      {
+        "id": "docs-nav-features-grants",
+        "type": "navigation",
+        "page": "Docs Grants (edit levels)",
+        "seo": {
+          "title": "Grants (edit levels) — Docs",
+          "description": "Documentation: Grants (edit levels).",
+          "viewport": "width=device-width,initial-scale=1",
+          "charSet": "utf-8",
+          "locale": "en"
+        },
+        "sections": [
+          "docs-sec-features-grants"
+        ]
+      },
+      {
+        "id": "docs-nav-features-logo",
+        "type": "navigation",
+        "page": "Docs Logo",
+        "seo": {
+          "title": "Logo — Docs",
+          "description": "Documentation: Logo.",
+          "viewport": "width=device-width,initial-scale=1",
+          "charSet": "utf-8",
+          "locale": "en"
+        },
+        "sections": [
+          "docs-sec-features-logo"
+        ]
+      },
+      {
+        "id": "docs-nav-features-modules",
+        "type": "navigation",
+        "page": "Docs Modules",
+        "seo": {
+          "title": "Modules — Docs",
+          "description": "Documentation: Modules.",
+          "viewport": "width=device-width,initial-scale=1",
+          "charSet": "utf-8",
+          "locale": "en"
+        },
+        "sections": [
+          "docs-sec-features-modules"
+        ]
+      },
+      {
+        "id": "docs-nav-features-posts",
+        "type": "navigation",
+        "page": "Docs Posts",
+        "seo": {
+          "title": "Posts — Docs",
+          "description": "Documentation: Posts.",
+          "viewport": "width=device-width,initial-scale=1",
+          "charSet": "utf-8",
+          "locale": "en"
+        },
+        "sections": [
+          "docs-sec-features-posts"
+        ]
+      },
+      {
+        "id": "docs-nav-features-products",
+        "type": "navigation",
+        "page": "Docs Products",
+        "seo": {
+          "title": "Products — Docs",
+          "description": "Documentation: Products.",
+          "viewport": "width=device-width,initial-scale=1",
+          "charSet": "utf-8",
+          "locale": "en"
+        },
+        "sections": [
+          "docs-sec-features-products"
+        ]
+      },
+      {
+        "id": "docs-nav-features-themes",
+        "type": "navigation",
+        "page": "Docs Themes",
+        "seo": {
+          "title": "Themes — Docs",
+          "description": "Documentation: Themes.",
+          "viewport": "width=device-width,initial-scale=1",
+          "charSet": "utf-8",
+          "locale": "en"
+        },
+        "sections": [
+          "docs-sec-features-themes"
+        ]
+      },
+      {
+        "id": "docs-nav-features-translations",
+        "type": "navigation",
+        "page": "Docs Translations",
+        "seo": {
+          "title": "Translations — Docs",
+          "description": "Documentation: Translations.",
+          "viewport": "width=device-width,initial-scale=1",
+          "charSet": "utf-8",
+          "locale": "en"
+        },
+        "sections": [
+          "docs-sec-features-translations"
+        ]
+      },
+      {
+        "id": "docs-nav-features-users",
+        "type": "navigation",
+        "page": "Docs Users",
+        "seo": {
+          "title": "Users — Docs",
+          "description": "Documentation: Users.",
+          "viewport": "width=device-width,initial-scale=1",
+          "charSet": "utf-8",
+          "locale": "en"
+        },
+        "sections": [
+          "docs-sec-features-users"
+        ]
+      },
+      {
+        "id": "docs-nav-setup",
+        "type": "navigation",
+        "page": "Docs Setup",
+        "seo": {
+          "title": "Setup — Docs",
+          "description": "Documentation: Setup.",
+          "viewport": "width=device-width,initial-scale=1",
+          "charSet": "utf-8",
+          "locale": "en"
+        },
+        "sections": [
+          "docs-sec-setup"
+        ]
+      }
+    ],
+    "sections": [
+      {
+        "id": "docs-sec-ai-mcp-workflow",
+        "type": 1,
+        "page": "Docs AI / MCP workflow",
+        "slots": [
+          1
+        ],
+        "content": [
+          {
+            "type": "RICH_TEXT",
+            "style": "default",
+            "name": "AI / MCP workflow",
+            "content": "{\"value\":\"<h1>AI / MCP workflow</h1>\\n<p>The CMS ships an MCP (Model Context Protocol) server. An LLM connected to it can author entire pages — modules, copy, themes, translations — through natural language. This is the core differentiator: the cost of a new page is a prompt, not a developer.</p>\\n<h2>Connecting an MCP client</h2>\\n<ol><li>Open <strong>Admin → System → MCP tokens</strong> and click <strong>Issue token</strong>. Choose a label and an expiry.</li><li>Copy the token (shown once).</li><li>In your MCP-capable client (Claude Desktop, Cursor, an SDK script, etc.) register a server entry pointing to:</li></ol>\\n<pre><code>https://&lt;your-site&gt;/api/mcp\\nAuthorization: Bearer &lt;token&gt;</code></pre>\\n<p>Tokens carry the issuing user's rank and grants — the LLM cannot perform actions the human couldn't.</p>\\n<h2>What the LLM can do</h2>\\n<p>The MCP surface mirrors the admin. Representative tools:</p>\\n<ul><li><code>cms.listPages</code>, <code>cms.createPage</code>, <code>cms.deletePage</code></li><li><code>cms.addModule(pageId, type, content)</code> — drops a module into a page; <code>content</code> is a small JSON shape per module type.</li><li><code>cms.setTheme(themeId)</code>, <code>cms.createTheme(tokens)</code> — themes are just colour + typography token bags.</li><li><code>cms.translate(symbol, key, value)</code> — write into the translations table for a language.</li><li><code>cms.upsertPost</code>, <code>cms.publishPost</code>.</li><li><code>analytics.summary</code>, <code>errors.recent</code>, <code>users.list</code> — read-only introspection.</li></ul>\\n<p>Each tool is gated by the same authz layer as the equivalent UI path. A token issued to an <code>editor</code> cannot create users; one issued to a user in <strong>simplified mode</strong> cannot reach advanced tools.</p>\\n<h2>Authoring loop</h2>\\n<p>A typical prompt:</p>\\n<p>&gt; &quot;Add a 3-section landing page at /pricing. Hero with headline 'Pick your plan', then a 3-column ProjectCard grid for Starter / Pro / Agency with prices 19/49/199 and short feature lists, then an InquiryForm at the bottom. Use the current theme.&quot;</p>\\n<p>The LLM:</p>\\n<ol><li>Calls <code>cms.createPage({page: 'Pricing'})</code>.</li><li>Adds three sections with <code>cms.addModule</code> — Hero, three ProjectCards inside one section, InquiryForm.</li><li>Optionally calls <code>cms.translate</code> to seed copy in other enabled languages.</li></ol>\\n<p>Result: a working page in seconds, fully editable in the admin afterwards.</p>\\n<h2>Guardrails</h2>\\n<ul><li>All MCP mutations go through the same content schema validators as the UI (see <code>shared/utils/contentSchemas.ts</code>). Malformed shapes are rejected before they hit Mongo.</li><li>Every mutation is audit-logged with the issuing token id. Revoke from the MCP tokens pane to cut access immediately.</li><li>The MCP server respects feature flags. A disabled feature's tools 404.</li></ul>\"}"
+          }
+        ]
+      },
+      {
+        "id": "docs-sec-features-build",
+        "type": 1,
+        "page": "Docs Build / Pages",
+        "slots": [
+          1
+        ],
+        "content": [
+          {
+            "type": "RICH_TEXT",
+            "style": "default",
+            "name": "Build / Pages",
+            "content": "{\"value\":\"<h1>Build / Pages</h1>\\n<p>The <strong>Build</strong> pane (<code>/admin/build</code>) is where pages are composed. Each page is a list of <strong>sections</strong>; each section is a 1–10 column slot grid that holds <strong>modules</strong> (also called items).</p>\\n<h2>Anatomy</h2>\\n<ul><li><strong>Page</strong> — a navigation entry. Top-level; appears in the site's nav bar (or as an anchor in scroll mode). Has SEO metadata and an ordered list of section ids.</li><li><strong>Section</strong> — <code>{type: 1–10, slots: [...], content: [items]}</code>. <code>type</code> is the total column width; <code>slots</code> partitions it (e.g. <code>[1, 2]</code> on a <code>type: 3</code> section gives a 1/3 + 2/3 split). <code>content.length</code> must equal <code>slots.length</code>.</li><li><strong>Item / module</strong> — a typed payload (<code>Hero</code>, <code>RichText</code>, <code>ProjectCard</code>, …) rendered by the matching React component under <code>ui/client/modules/&lt;Type&gt;</code>.</li></ul>\\n<h2>Common operations</h2>\\n<ul><li><strong>Add a section</strong> — pick a layout (1–10 columns, optional split). Drops in with empty modules.</li><li><strong>Add a module</strong> — open the module picker on an empty slot. Modules are filtered by enabled features.</li><li><strong>Reorder</strong> — drag sections in the page outline; drag modules between slots in the same section.</li><li><strong>Overlay</strong> — toggle on a section to stack its modules over the previous section (used for hero overlays).</li></ul>\\n<h2>Layout modes</h2>\\n<p>Site-wide setting (Settings → Layout):</p>\\n<ul><li><strong>Tabs</strong> — each page is its own route (<code>/about</code>, <code>/contact</code>).</li><li><strong>Scroll</strong> — every page is a section of <code>/</code>, accessed by <code>#anchor</code>. Useful for single-page sites; page links rewrite to anchors at runtime.</li></ul>\\n<h2>Validation</h2>\\n<p>The schema validator in <code>shared/utils/contentSchemas.ts</code> runs on every section save. RichText cannot exceed 200 KB; image refs must be a local <code>api/</code> path or an <code>https://</code> URL; per-module field types are enforced.</p>\"}"
+          }
+        ]
+      },
+      {
+        "id": "docs-sec-features-bundle",
+        "type": 1,
+        "page": "Docs Bundle",
+        "slots": [
+          1
+        ],
+        "content": [
+          {
+            "type": "RICH_TEXT",
+            "style": "default",
+            "name": "Bundle",
+            "content": "{\"value\":\"<h1>Bundle</h1>\\n<p>The <strong>Bundle</strong> pane (<code>/admin/system/bundle</code>) exports and imports the entire site as a single JSON file. Use it for backups, environment promotion (staging → prod), and scripted seeding (the docs site uses this).</p>\\n<h2>Export</h2>\\n<p>Click <strong>Export bundle</strong> → downloads <code>site-bundle-&lt;timestamp&gt;.json</code>. Contents:</p>\\n<ul><li><code>manifest</code> — version + export timestamp + app id.</li><li><code>site</code> — every authoritative collection: navigation, sections, languages, images, logo, themes (+ active theme id), posts, footer config, site flags, site SEO defaults.</li><li><code>assets</code> — every locally-stored image referenced anywhere in <code>site</code>, base64-encoded as <code>data:</code> URIs.</li></ul>\\n<p>Asset discovery walks every JSON-stringified content blob, so Hero background images, RichText embedded images, etc. are all captured — not just top-level Image entries.</p>\\n<h2>Import</h2>\\n<p>Pick a bundle JSON → confirm. The import is <strong>destructive</strong>: existing collections are wiped and replaced. Order matters; the service handles it transactionally per collection. Image data URIs are decoded back to <code>ui/client/public/images/</code> with safety checks (whitelisted extensions, 25 MB cap, path-traversal rejection).</p>\\n<h2>Validation</h2>\\n<p>Every section runs through <code>validateSectionInput</code> before any write. A malformed bundle is rejected atomically — your existing site stays intact.</p>\\n<h2>Seeded bundles</h2>\\n<p><code>tests/e2e/fixtures/bundles/</code> ships seed bundles:</p>\\n<ul><li><code>cv-latest.json</code> — the showcase CV/portfolio site.</li><li><code>docs-bundle.json</code> — this docs site, generated from <code>docs/site/*.md</code> by <code>tools/seed-docs-bundle.js</code>.</li></ul>\\n<p>Import either to populate a fresh CMS instance for inspection or iteration.</p>\"}"
+          }
+        ]
+      },
+      {
+        "id": "docs-sec-features-footer",
+        "type": 1,
+        "page": "Docs Footer",
+        "slots": [
+          1
+        ],
+        "content": [
+          {
+            "type": "RICH_TEXT",
+            "style": "default",
+            "name": "Footer",
+            "content": "{\"value\":\"<h1>Footer</h1>\\n<p>The <strong>Footer</strong> pane (<code>/admin/client-config/footer</code>) configures the global site footer rendered below every public page.</p>\\n<h2>Fields</h2>\\n<ul><li><strong>Tagline</strong> — short brand line (e.g. &quot;Built in Sigulda&quot;).</li><li><strong>Columns</strong> — up to 4. Each column has a heading and a list of links (<code>{label, href}</code>). Use for site map, legal, social, contact.</li><li><strong>Copyright</strong> — bottom strip text. Supports <code>{year}</code> substitution.</li><li><strong>Show language switcher</strong> — boolean.</li><li><strong>Show theme toggle</strong> — boolean (only meaningful when the active theme exposes a dark variant).</li></ul>\\n<h2>Auto-populated columns</h2>\\n<p>If you leave a column empty, the footer auto-populates one with all top-level navigation pages. Useful for small sites that don't want to maintain a separate site map.</p>\\n<h2>Storage</h2>\\n<p>Footer config is a single <code>SiteSettings</code> document with key <code>footer</code>. Travels with bundles as <code>site.footer</code>.</p>\"}"
+          }
+        ]
+      },
+      {
+        "id": "docs-sec-features-grants",
+        "type": 1,
+        "page": "Docs Grants (edit levels)",
+        "slots": [
+          1
+        ],
+        "content": [
+          {
+            "type": "RICH_TEXT",
+            "style": "default",
+            "name": "Grants (edit levels)",
+            "content": "{\"value\":\"<h1>Grants (edit levels)</h1>\\n<p>Beyond rank, the CMS supports <strong>per-resource grants</strong> — fine-grained permissions on individual pages, posts, or themes. Used when you want an editor to manage one campaign page without giving them the run of the site.</p>\\n<h2>How it composes</h2>\\n<p>A mutation runs only if <strong>all three</strong> layers pass:</p>\\n<ol><li><strong>Rank</strong> — the minimum rank declared on the resolver.</li><li><strong>Functional role</strong> — optional named role (e.g. <code>translator</code>, <code>publisher</code>).</li><li><strong>Resource grant</strong> — for resolvers marked <code>resourceGated</code>, the user must hold a grant for the specific resource extracted from the args.</li></ol>\\n<p>The composition lives in <code>services/features/Auth/authz.ts</code>. Per-request results are cached so repeated checks in one request are cheap.</p>\\n<h2>Granting</h2>\\n<p><code>/admin/system/users</code> → user → <strong>Grants</strong> tab. Pick a scope (<code>page</code>, <code>post</code>, <code>theme</code>) and a resource id; choose <code>view</code> / <code>edit</code> / <code>publish</code>. Save.</p>\\n<h2>Functional roles</h2>\\n<p>Independent of grants; assign on the user record:</p>\\n<ul><li><strong>translator</strong> — write into Translations regardless of page ownership.</li><li><strong>publisher</strong> — flip publish state on otherwise-restricted resources.</li><li><strong>billing</strong> — manage subscriptions / invoices (e-commerce).</li></ul>\\n<h2>Inline-translation migration</h2>\\n<p>When <code>siteFlags.inlineTranslationEdit</code> is on, every editor-rank user is auto-granted <code>translator</code> at boot. The migration is a one-shot; once it lands, the flag will be dropped (see roadmap).</p>\"}"
+          }
+        ]
+      },
+      {
+        "id": "docs-sec-features-logo",
+        "type": 1,
+        "page": "Docs Logo",
+        "slots": [
+          1
+        ],
+        "content": [
+          {
+            "type": "RICH_TEXT",
+            "style": "default",
+            "name": "Logo",
+            "content": "{\"value\":\"<h1>Logo</h1>\\n<p>The <strong>Logo</strong> pane (<code>/admin/client-config/logo</code>) controls the brand mark shown in the public nav and the admin top bar.</p>\\n<h2>Fields</h2>\\n<ul><li><strong>Image</strong> — uploaded SVG/PNG/JPG. Stored under <code>ui/client/public/images/</code>; referenced as <code>api/&lt;filename&gt;</code>.</li><li><strong>Width</strong>, <strong>Height</strong> — render dimensions (px). The admin caps the bounding box at 80×80 in the nav; tweak for dense vs roomy themes.</li><li><strong>Link</strong> — where the logo navigates to (default <code>/</code>).</li><li><strong>Alt text</strong> — accessibility label; leave empty to fall back to the site name.</li></ul>\\n<h2>SVG vs raster</h2>\\n<p>SVGs render inline (so they inherit CSS colour) when small enough. PNG/JPG go through the standard <code>&lt;img&gt;</code> path. For dark/light theme variants, ship two logos and switch via Theme tokens.</p>\\n<h2>Bundle round-trip</h2>\\n<p>Logo travels with bundle exports as a single document in the <code>Logos</code> collection (the schema reserves space for multiple but only the first is rendered). The image asset rides along in the bundle's <code>assets</code> map as a base64 data URI.</p>\"}"
+          }
+        ]
+      },
+      {
+        "id": "docs-sec-features-modules",
+        "type": 1,
+        "page": "Docs Modules",
+        "slots": [
+          1
+        ],
+        "content": [
+          {
+            "type": "RICH_TEXT",
+            "style": "default",
+            "name": "Modules",
+            "content": "{\"value\":\"<h1>Modules</h1>\\n<p>Modules are the typed building blocks that fill a section's slots. Each module has a Display component (<code>ui/client/modules/&lt;Type&gt;/&lt;Type&gt;.tsx</code>) and an Editor (<code>ui/admin/modules/&lt;Type&gt;/&lt;Type&gt;Editor.tsx</code>).</p>\\n<h2>Built-in catalogue</h2>\\n<p>Text &amp; narrative:</p>\\n<ul><li><strong>Text</strong> — single block of plain text.</li><li><strong>RichText</strong> — sanitised HTML; supports headings, lists, links, code blocks. Inline-translatable.</li><li><strong>Manifesto</strong> — long-form prose with chip annotations.</li></ul>\\n<p>Media:</p>\\n<ul><li><strong>Image</strong> — single image with alt text.</li><li><strong>Carousel</strong> — horizontally scrolling image set.</li><li><strong>Gallery</strong> — grid of images with lightbox.</li></ul>\\n<p>Marketing surfaces:</p>\\n<ul><li><strong>Hero</strong> — headline + subtitle + tagline + background image, full-bleed.</li><li><strong>ProjectCard</strong> — title + description + cover + tags + 1–2 CTAs.</li><li><strong>ProjectGrid</strong> — multiple ProjectCards in a responsive grid.</li><li><strong>Services</strong> — numbered service rows with optional CTAs.</li><li><strong>Testimonials</strong> — quote + name + role.</li><li><strong>StatsCard</strong> — KPI strip with optional features list.</li><li><strong>SkillPills</strong> — labelled chips, optional 0–10 score (matrix mode).</li><li><strong>Timeline</strong> — career/event timeline with achievements.</li></ul>\\n<p>Interactive &amp; data:</p>\\n<ul><li><strong>List</strong> — bulleted/numbered list with optional links and tags.</li><li><strong>SocialLinks</strong> — platform-icon link row.</li><li><strong>InquiryForm</strong> — captures contact submissions into the <strong>Inquiries</strong> pane.</li><li><strong>BlogFeed</strong> — pulls latest posts (filterable by tag).</li></ul>\\n<p>Diagrams (CV-bundle):</p>\\n<ul><li><strong>DataModel</strong>, <strong>InfraTopology</strong>, <strong>PipelineFlow</strong>, <strong>RepoTree</strong>, <strong>ArchitectureTiers</strong>, <strong>StatsStrip</strong> — purpose-built for case-study pages.</li></ul>\\n<h2>Adding a new module</h2>\\n<ol><li>Drop a folder under <code>ui/client/modules/&lt;Type&gt;</code> with <code>&lt;Type&gt;.tsx</code>, <code>&lt;Type&gt;.types.ts</code>, optional <code>.scss</code>, optional <code>.test.tsx</code>.</li><li>Add the matching editor under <code>ui/admin/modules/&lt;Type&gt;/&lt;Type&gt;Editor.tsx</code>.</li><li>Register the type in <code>shared/enums/EItemType.ts</code> and add a validator entry to <code>shared/utils/contentSchemas.ts</code>.</li><li>The codegen + registry pick it up on the next <code>npm run codegen</code>.</li></ol>\"}"
+          }
+        ]
+      },
+      {
+        "id": "docs-sec-features-posts",
+        "type": 1,
+        "page": "Docs Posts",
+        "slots": [
+          1
+        ],
+        "content": [
+          {
+            "type": "RICH_TEXT",
+            "style": "default",
+            "name": "Posts",
+            "content": "{\"value\":\"<h1>Posts</h1>\\n<p>The <strong>Posts</strong> pane (<code>/admin/content/posts</code>) is a lightweight blog. Posts are independent of pages — they live in their own <code>Posts</code> collection and render through <code>/blog</code> and <code>/blog/[slug]</code>.</p>\\n<h2>Fields</h2>\\n<ul><li><strong>Title</strong> — required.</li><li><strong>Slug</strong> — auto-derived from the title; editable.</li><li><strong>Excerpt</strong> — optional short summary used in the index card.</li><li><strong>Body</strong> — RichText (HTML).</li><li><strong>Cover image</strong> — <code>api/&lt;filename&gt;</code> path or full URL.</li><li><strong>Tags</strong> — string array; surfaced as filter pills.</li><li><strong>Author</strong> — free-text.</li><li><strong>Published at</strong> — ISO date; posts with a future date or <code>draft: true</code> are hidden from the public feed.</li><li><strong>Draft</strong> — boolean.</li></ul>\\n<h2>Public surface</h2>\\n<ul><li><code>/blog</code> — list, paginated by 50, sorted by <code>publishedAt</code> desc.</li><li><code>/blog/&lt;slug&gt;</code> — single post.</li><li><strong>BlogFeed module</strong> — embed the latest N posts on any CMS page, optionally filtered by tag.</li></ul>\\n<h2>Toggle off</h2>\\n<p>If you don't need a blog, switch off <strong>blogEnabled</strong> in Settings → Site flags. The <code>/blog</code> routes 404 and the BlogFeed module is hidden from the picker.</p>\"}"
+          }
+        ]
+      },
+      {
+        "id": "docs-sec-features-products",
+        "type": 1,
+        "page": "Docs Products",
+        "slots": [
+          1
+        ],
+        "content": [
+          {
+            "type": "RICH_TEXT",
+            "style": "default",
+            "name": "Products",
+            "content": "{\"value\":\"<h1>Products</h1>\\n<p>The <strong>Products</strong> pane (<code>/admin/ecommerce/products</code>) is part of the optional e-commerce feature pack. It's gated behind the <code>FEATURE_ECOMMERCE</code> plug-and-play toggle — off by default until you populate inventory and a checkout flow.</p>\\n<h2>Fields</h2>\\n<ul><li><strong>SKU</strong> — unique identifier.</li><li><strong>Title</strong>, <strong>Description</strong> — display copy.</li><li><strong>Price</strong> — minor units (cents); currency from Site flags.</li><li><strong>Images</strong> — ordered array of <code>api/</code> paths.</li><li><strong>Tags</strong>, <strong>Category</strong> — for filtering.</li><li><strong>Inventory</strong> — managed in the <strong>Inventory</strong> pane (separate; products reference inventory by SKU).</li><li><strong>Status</strong> — <code>draft</code>, <code>active</code>, <code>archived</code>.</li></ul>\\n<h2>Public surface</h2>\\n<ul><li><code>/products</code> — listing.</li><li><code>/products/&lt;slug&gt;</code> — detail page with cart-add.</li><li><code>/cart</code> — line items + totals.</li><li><code>/checkout</code> — multi-step state machine (address → shipping → payment → confirm).</li></ul>\\n<h2>Wiring</h2>\\n<p>Until the e-commerce real-flow specs land (see <code>docs/ROADMAP.md</code> → Queued), the public e-commerce routes render empty states. Inventory and orders panes are functional; checkout is a stub.</p>\\n<p>The MCP surface exposes <code>products.upsert</code>, <code>inventory.adjust</code>, <code>orders.list</code> once the feature is enabled.</p>\"}"
+          }
+        ]
+      },
+      {
+        "id": "docs-sec-features-themes",
+        "type": 1,
+        "page": "Docs Themes",
+        "slots": [
+          1
+        ],
+        "content": [
+          {
+            "type": "RICH_TEXT",
+            "style": "default",
+            "name": "Themes",
+            "content": "{\"value\":\"<h1>Themes</h1>\\n<p>The <strong>Themes</strong> pane (<code>/admin/client-config/themes</code>) controls colour, typography, spacing, and component tokens for the public site. Multiple themes coexist; one is <strong>active</strong> at a time.</p>\\n<h2>Built-in presets</h2>\\n<ul><li><strong>Classic</strong> — neutral, high contrast, serif headings.</li><li><strong>Editorial</strong> — magazine-style, dense, mono accents.</li><li><strong>Mono</strong> — monochrome, minimal.</li><li><strong>Vivid</strong> — saturated, modern.</li></ul>\\n<p>Each preset is just a JSON token bag. Duplicate one to make a custom theme without losing the default.</p>\\n<h2>Tokens</h2>\\n<p>Themes carry an Ant Design–compatible <code>tokens</code> object plus extras:</p>\\n<ul><li><strong>Colour</strong> — <code>colorPrimary</code>, <code>colorBgBase</code>, <code>colorTextBase</code>, plus accent and surface roles.</li><li><strong>Typography</strong> — <code>fontFamily</code>, <code>fontFamilyHeading</code>, <code>fontSize</code> scale, weights.</li><li><strong>Geometry</strong> — <code>borderRadius</code>, <code>controlHeight</code>, <code>padding</code> scale.</li><li><strong>Module-level overrides</strong> — per-module style classes referenced by <code>item.style</code> (e.g. RichText supports <code>editorial</code>, <code>compact</code>, <code>default</code>).</li></ul>\\n<p>Tokens hydrate two layers:</p>\\n<ul><li>The Ant Design <code>ConfigProvider</code> — controls every admin UI control.</li><li>A CSS variable layer — <code>applyThemeCssVars(tokens)</code> writes to <code>:root</code> so module SCSS can reference them.</li></ul>\\n<h2>Switching theme</h2>\\n<p>Pick from the dropdown → click <strong>Set active</strong>. The site re-renders without a reload; ISR refresh fires for the home page.</p>\\n<h2>Fonts</h2>\\n<p>The Font Picker (<code>/admin/client-config/themes</code> → Fonts tab) lists Google Fonts via the cached manifest at <code>tools/scripts/update-google-fonts.ts</code>. Run that script to refresh the list; it reads the public Google Fonts API and writes a static manifest used at runtime.</p>\"}"
+          }
+        ]
+      },
+      {
+        "id": "docs-sec-features-translations",
+        "type": 1,
+        "page": "Docs Translations",
+        "slots": [
+          1
+        ],
+        "content": [
+          {
+            "type": "RICH_TEXT",
+            "style": "default",
+            "name": "Translations",
+            "content": "{\"value\":\"<h1>Translations</h1>\\n<p>The CMS is multilingual end-to-end. Every visible string is keyed; a language switcher in the public nav swaps the active locale.</p>\\n<h2>Languages pane</h2>\\n<p><code>/admin/site/languages</code> — add a language with:</p>\\n<ul><li><strong>Symbol</strong> — ISO code (<code>en</code>, <code>lv</code>, <code>et</code>).</li><li><strong>Label</strong> — display name in the switcher.</li><li><strong>Flag</strong> — emoji or short string.</li><li><strong>Default</strong> — exactly one language is the fallback.</li></ul>\\n<p>Languages are stored in Mongo and mirrored to <code>ui/client/public/locales/&lt;sym&gt;/app.json</code> so <code>next-i18next</code> can serve them at runtime.</p>\\n<h2>Translations pane</h2>\\n<p><code>/admin/site/translations</code> — keyed table. Rows are translation keys (auto-collected from the codebase + content); columns are languages. Edit cells inline; saves on blur.</p>\\n<p>Sources of keys:</p>\\n<ul><li>Static UI strings — <code>t('Sign in')</code> calls; the codegen scans them.</li><li>Content — RichText / Hero / ProjectCard fields run through <code>extractTranslationsFromHTML</code>, which surfaces <code>&lt;i18n&gt;...&lt;/i18n&gt;</code> markers as keys.</li></ul>\\n<h2>Inline editing on the public site</h2>\\n<p>Toggle <strong>Inline translation edit</strong> in Settings → Site flags. Editor-rank users see an overlay on the public site; clicking any translatable string opens an in-place editor that writes back through <code>cms.translate</code>.</p>\\n<h2>Bundle import</h2>\\n<p>Importing a bundle replaces the Languages collection AND writes translations to disk in one step (see <code>BundleService.import</code>). This is the only path that mutates the on-disk <code>locales/&lt;sym&gt;/app.json</code> files outside of admin saves.</p>\"}"
+          }
+        ]
+      },
+      {
+        "id": "docs-sec-features-users",
+        "type": 1,
+        "page": "Docs Users",
+        "slots": [
+          1
+        ],
+        "content": [
+          {
+            "type": "RICH_TEXT",
+            "style": "default",
+            "name": "Users",
+            "content": "{\"value\":\"<h1>Users</h1>\\n<p>The <strong>Users</strong> pane (<code>/admin/system/users</code>) manages who can sign into the admin and what they can do.</p>\\n<h2>Ranks</h2>\\n<p>A user has exactly one <strong>rank</strong>:</p>\\n<ul><li><strong>admin</strong> — full access; can manage users, features, and infrastructure.</li><li><strong>editor</strong> — can author content, themes, translations, posts.</li><li><strong>viewer</strong> — read-only admin (review drafts, see analytics).</li><li><strong>customer</strong> — public-site account (e-commerce); no admin access.</li></ul>\\n<p>Ranks set the floor. Specific mutations may also require <strong>functional roles</strong> (e.g. <code>translator</code>, <code>publisher</code>) and <strong>per-resource grants</strong> (see <code>grants.md</code>).</p>\\n<h2>Customer auth split</h2>\\n<p>Customer accounts (e-commerce sign-ups) live in the same collection but never receive admin access. The split is enforced server-side: <code>kind: 'customer'</code> users fail the admin gate even if their rank is mistakenly elevated.</p>\\n<h2>Fields</h2>\\n<ul><li>Email, display name, avatar.</li><li>Rank, functional roles, grants.</li><li>Last login, created at.</li><li>Mode preference — <code>simplified</code> or <code>advanced</code> (controls which admin UI variant they see).</li></ul>\\n<h2>Onboarding</h2>\\n<p>The first user is created in the onboarding wizard with rank <code>admin</code>. Subsequent admins are added here. Self-service signup is <strong>off</strong> for admin ranks; customer signup is on when e-commerce is enabled.</p>\"}"
+          }
+        ]
+      },
+      {
+        "id": "docs-sec-setup",
+        "type": 1,
+        "page": "Docs Setup",
+        "slots": [
+          1
+        ],
+        "content": [
+          {
+            "type": "RICH_TEXT",
+            "style": "default",
+            "name": "Setup",
+            "content": "{\"value\":\"<h1>Setup</h1>\\n<h2>First install</h2>\\n<p>The CMS ships as a Next.js app backed by MongoDB. Two paths:</p>\\n<ul><li><strong>Docker</strong> — <code>docker compose up</code> builds the Next standalone bundle, starts Mongo, runs migrations, and exposes the site on port 80.</li><li><strong>Local dev</strong> — <code>npm install</code>, then <code>npm run dev</code>. Requires a reachable Mongo (set <code>MONGODB_URI</code>).</li></ul>\\n<p>On first boot the database is empty. Visit <code>/admin</code> and the <strong>onboarding wizard</strong> loads.</p>\\n<h2>Onboarding wizard</h2>\\n<p>Three steps, each saves immediately:</p>\\n<ol><li><strong>Site identity</strong> — name, logo, default language.</li><li><strong>Admin account</strong> — email + password for the first user (rank: <code>admin</code>).</li><li><strong>Theme</strong> — pick one of the built-in presets (Classic, Editorial, Mono, Vivid). You can swap or customise later under <strong>Themes</strong>.</li></ol>\\n<p>After step 3 you're dropped at <code>/admin/build</code>. The site has one empty Home page; add modules from the Modules dialog or import a bundle.</p>\\n<h2>Environment variables</h2>\\n<p>Required:</p>\\n<ul><li><code>MONGODB_URI</code> — connection string. Default: <code>mongodb://localhost:27017/cms</code>.</li><li><code>SESSION_SECRET</code> — signs auth cookies. 32+ random chars.</li></ul>\\n<p>Optional:</p>\\n<ul><li><code>BUILD_PORT</code> — when running the standalone GraphQL server in Docker.</li><li><code>INTERNAL_GRAPHQL_URL</code> — overrides the build-time GraphQL endpoint.</li><li><code>MCP_TOKEN_SECRET</code> — signs MCP issuance tokens.</li><li><code>FEATURE_&lt;NAME&gt;=on|off</code> — env-level override for any plug-and-play feature (see <strong>Feature flags</strong> pane).</li></ul>\\n<p>A boot-bound change (e.g. flipping <code>FEATURE_ECOMMERCE</code>) shows a &quot;Restart required&quot; banner in the admin and exposes a <code>bootId</code> poll that auto-reloads connected admin sessions once the new process is up.</p>\\n<h2>Health check</h2>\\n<p><code>GET /api/health</code> returns <code>{ok: true, bootId: '&lt;uuid&gt;'}</code> once the app is ready. Use it for container probes.</p>\"}"
+          }
+        ]
+      }
+    ],
+    "languages": [
+      {
+        "label": "English",
+        "symbol": "en",
+        "flag": "EN",
+        "default": true,
+        "translations": {}
+      }
+    ],
+    "images": [],
+    "logo": null,
+    "themes": [],
+    "posts": [],
+    "siteFlags": {
+      "blogEnabled": false,
+      "layoutMode": "tabs"
+    }
+  },
+  "assets": {}
+}

@@ -28,6 +28,7 @@ export default defineConfig({
             // are NOT in scope (Vitest would try to run them as unit tests
             // and error). Narrow to `fixtures/**` only.
             'tests/e2e/fixtures/**/*.{test,spec}.ts',
+            'tools/**/*.{test,spec}.{ts,js}',
         ],
         environmentMatchGlobs: [
             ['ui/client/**/*.{test,spec}.{ts,tsx}', 'jsdom'],

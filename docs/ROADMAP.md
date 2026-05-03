@@ -80,7 +80,7 @@ Order by leverage:
 |---|---|
 | Onboarding flow — first-run wizard (site name, admin account, theme pick) | Step 1 shipped (Q7) — see [`features/platform/onboarding.md`](features/platform/onboarding.md) |
 | Landing page — AI angle, positions against Contentful / Builder.io, pricing | Planned |
-| Documentation — setup, feature reference, AI/MCP workflow guide | Planned |
+| Documentation — setup, feature reference, AI/MCP workflow guide | Shipped (Q7 step 3) — markdown source under [`docs/site/`](site/README.md); regenerate the bundle with `node tools/seed-docs-bundle.js` and import via the Bundle pane. Public routes: `/docs` + `/docs/<slug>`. Iterate copy in markdown, regenerate bundle. |
 
 ### Production / ops
 
