@@ -41,16 +41,26 @@ Archive of completed roadmap entries. Latest first. Active backlog lives in [REA
 | # | Date | Notes |
 |---|------|-------|
 | Q1+VM4 | 2026-05-03 | ESLint flat config + VM4 lint rule banning `useState` in `ui/admin/features/**` |
-| Q2 | 2026-05-03 | VM3 — Themes + Translations panes migrated to ViewModel pattern; ~10 sub-panes still carry `eslint-disable` markers (see open backlog) |
+| Q2 | 2026-05-03 | VM3 — Themes + Translations panes migrated (commit b79d221) |
+| **VM3-rest** | **2026-05-03 (commit d942c50)** | VM3 closeout — final 11 panes migrated off `useState`: Agent, Analytics, Bundle×3, ModulePicker, AddNewLanguageDialog, ImageRail, FeatureFlags, RestartRequiredBanner, SEO, FontPicker. **17/17 — zero `eslint-disable-next-line no-restricted-imports` markers remain** in `ui/admin/` |
+| **L4-bulk** | **2026-05-03 (commit 4b56c27)** | `ClientUILoader.publicRoutes` + `gatePath()` helper auto-applies `withFeatureGate`; 4 features migrated (`products`, `posts`, `cart`, `orders`); per-page inline gates dropped from 4 page files. Plus item-types registry composed from per-feature halves: `CLIENT_ITEM_TYPES` (Display) + `ADMIN_ITEM_TYPE_EDITORS` (Editor + metadata); 24 entries split, public API unchanged |
 | Q4 | 2026-05-03 | Visual regression baselines — Playwright `toHaveScreenshot()` config + 58 spec entries (48 module Display+Editor, 9 critical surfaces, 1 Footer); CI shard config; runbook [docs/runbooks/visual-regressions.md](../runbooks/visual-regressions.md). **Image capture pending** — see open backlog |
 | Q5 | 2026-05-03 | Admin-segregation Phase 3 observability — Next edge middleware logs every legacy-route hit via `/api/log/error` (level: warn, scope: legacy-route) before redirect fires. **Deletion pending** — see open backlog |
 | Q6 | 2026-05-03 | Conditional gqty regen on prebuild — `tools/check-schema-stale.js` mtime-checks `services/api/schema.graphql` vs generated client |
+| **mcpAgentTools-fix** | **2026-05-03 (commit 583cfc2)** | Long-standing `services/agent/mcpAgentTools.ts` typecheck error resolved — `mcpToToolDef` narrows `inputSchema: unknown` at the call site with empty fallback |
+| **AppDockerfile-sha** | **2026-05-03 (commit 583cfc2)** | `ARG GIT_SHA=unknown` writes `/app/.git-sha` inside the image; `tools/blue-green-deploy.sh` passes `--build-arg GIT_SHA="$TARGET_SHA"`. Resolves the no-op SHA-verification flagged in P4 |
 
 ## Auth / multi-tenancy
 
 | # | Date | Notes |
 |---|------|-------|
 | Q10 | 2026-05-03 | Edit-levels three-dimension grants (FeatureGrant / PageGrant / LocaleGrant) — intersection semantics, admin-role bypass, Posts wired as the reference. See [docs/architecture/auth-roles.md](../architecture/auth-roles.md) |
+| **EL-feat** | **2026-05-03 (commit 3248e86)** | Per-feature `resourceGated` extended beyond Posts: Products, Inventory, Orders (admin-mutations only), Footer, Themes, Languages (`{feature, locale}` for translator scoping), Bundle (declared, HTTP routes still). **18 admin GraphQL mutations now grant-gated.** 8 `<Loader>.gated.test.ts` files added |
+| **EL-i18n** | **2026-05-03 (commit 3248e86)** | `runI18nGrantMigration(db)` boot-once script wired into `LanguagesServiceLoader.onBoot`. Idempotent: when `siteFlags.inlineTranslationEdit === true`, grants `translator` to every editor-rank user, then sets the flag false. 5 tests covering no-op + on-flip + idempotency |
+| **AUI-mcp** | **2026-05-03 (commit 4b56c27)** | MCP execution gate — `enforceModeForTool(userId, toolId)` + `FeatureRestrictedError` + `ADVANCED_TOOLS` allowlist. **8 MCP tools gated as advanced-only**: `site.{revalidate,regenerateSchema,setFeatureFlag,clearFeatureFlag}`, `auth.resetLockouts`, `inventory.syncDelta`, `theme.{setActive,update}`, `section.delete`. 8 passing tests |
+| **CA-geo** | **2026-05-03 (commit 1bc3fce)** | Client-analytics country lookup — embedded IPv4→country dataset (CC0, IP2Location LITE DB1) at `infra/datasets/ip-to-country.json`; `geoLookup()` does synchronous binary search at ingest; **IP discarded** before Mongo write; admin Analytics gains top-N country table; runbook [docs/runbooks/analytics-geolookup.md](../runbooks/analytics-geolookup.md). 17 tests |
+| **AUI-todo** | **2026-05-03 (commit 4b56c27)** | Things-to-do panel mounts at `/admin` (both modes) — 4 collectors via `Promise.allSettled` for graceful degrade: `draftPosts`, `unpublishedChanges`, `inventoryDeadLetters`, `pendingOrders`. Translations + low-stock noted as next iteration |
+| **grants-UI** | **2026-05-03 (commit 69482ba)** | Grants assignment in Users pane — three free-text `Select mode="tags"` swapped for constrained `mode="multiple"` with options pulled live from `getFeatureFlags` / `getNavigationCollection` / `getLanguages`. Per-source try/catch; `showSearch` + `optionFilterProp="label"`. Coding principle saved to `memory/feedback_predefined_selections.md` |
 
 ## Go-to-market (Q7)
 
