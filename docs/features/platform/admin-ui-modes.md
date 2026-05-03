@@ -1,7 +1,28 @@
 # Simplified vs Advanced admin UI
 
-Status: **Foundation shipped 2026-05-02.** Data model (`IUser.adminUiMode`, `siteFlags.defaultAdminUiMode`), GraphQL surface (`myAdminUiMode` / `setMyAdminUiMode`), `useAdminMode()` hook with module-cache + subscriber pattern, top-bar `AdminModeSwitcher` (visible to advanced-mode users only). **All 17 admin panes already respect the mode** — L4 dispatcher resolves `modes.simplified ?? modes.advanced` per user, so the moment a feature ships a simplified variant it lights up automatically. **Remaining**: per-feature simplified-view components (one per pane that wants a cut-down view), MCP execution gate (`enforceModeForTool`), shared "Things to do" panel.
-Last updated: 2026-05-02
+Status: **Live behavior shipped 2026-05-03.** Foundation (data model + L4 dispatcher) shipped 2026-05-02; this update adds the actual simplified-mode cuts so the toggle visibly changes the UI.
+
+What's live:
+- Data model + GraphQL: `IUser.adminUiMode`, `siteFlags.defaultAdminUiMode`, `myAdminUiMode` / `setMyAdminUiMode` mutations.
+- Client: `useAdminMode()` hook + `getCachedMode()` synchronous read.
+- Top-top bar `<AdminModeSwitcher>` — **always visible** in both modes (the older "advanced-only" gate hid the toggle from simplified users, leaving them stuck).
+- L4 per-pane dispatch: `modes.simplified ?? modes.advanced` resolves per user.
+
+Simplified-mode cuts (2026-05-03):
+- Top-bar areas hidden: SEO, Release, System
+- Content area-nav items hidden: Products, Inventory, Orders
+- Layout pane: only Tabs/Scroll mode chooser; everything past the divider hidden
+- Module picker: limited to 8 types (Hero, Text, RichText, Image, Gallery, ProjectCard, BlogFeed, SocialLinks)
+- AddNewSectionItem drawer: Action tab dropped; Style tab keeps only the style-variant Select; section transparency block hidden
+- Publish button hidden
+- EditWrapper: per-module edit button hidden; click anywhere on the module body opens the edit drawer
+
+Remaining:
+- Per-feature simplified-view components (per pane that wants a cut-down view) — bulk migration backlog
+- MCP execution gate (`enforceModeForTool`)
+- Shared "Things to do" panel for the simplified dashboard
+
+Last updated: 2026-05-03
 
 ## What it is
 
