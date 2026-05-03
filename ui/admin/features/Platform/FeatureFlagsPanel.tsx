@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-restricted-imports -- VM3 migration deferred for this pane.
 import React, {useCallback, useEffect, useState} from 'react';
 import {Alert, Button, Card, Space, Switch, Table, Tag, Tooltip, Typography, message} from 'antd';
 import {useTranslation} from 'react-i18next';

@@ -94,7 +94,7 @@ extend type MutationMongo {
         try {
             const admin = await users.setupAdmin();
             if (admin) {
-                // eslint-disable-next-line no-console
+                 
                 console.log(`[setup] Admin user ready: ${admin.email}`);
             }
         } catch (err) {

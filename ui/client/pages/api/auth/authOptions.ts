@@ -11,7 +11,7 @@ const getBcryptCompare = (() => {
     let cached: ((plain: string, hash: string) => Promise<boolean>) | null = null;
     return () => {
         if (cached) return cached;
-        // eslint-disable-next-line @typescript-eslint/no-implied-eval, no-eval
+         
         const nodeRequire = eval('require') as NodeJS.Require;
         cached = nodeRequire('bcrypt').compare;
         return cached!;
@@ -246,7 +246,7 @@ export const authOptions: NextAuthOptions = {
             const customerId = (user as any)?.id as string | undefined;
             if (account?.provider === 'customer-credentials' && cartId && customerId) {
                 try {
-                    // eslint-disable-next-line @typescript-eslint/no-implied-eval, no-eval
+                     
                     const nodeRequire = eval('require') as NodeJS.Require;
                     const {getMongoConnection} = nodeRequire('@services/infra/mongoDBConnection');
                     await getMongoConnection().cartMergeGuestIntoCustomer(cartId, customerId);

@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-restricted-imports -- Import dialog is a leaf modal; staged CSV state is local.
 import React, {useMemo, useState} from 'react';
 import {Alert, Button, Input, Modal, Select, Space, Typography, message} from 'antd';
 import {UploadOutlined} from '@client/lib/icons';

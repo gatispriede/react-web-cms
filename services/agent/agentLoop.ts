@@ -101,7 +101,9 @@ async function openAICompatChat(opts: {
                 type:     'function',
                 function: { name: t.name, description: t.description, parameters: t.input_schema },
             })),
-            tool_choice: 'auto',
+            // parallel_tool_calls: false is required for llama-3.x models on Groq.
+            // Without it the model may attempt simultaneous calls which Groq rejects with HTTP 400.
+            parallel_tool_calls: false,
             temperature: 0.3,
         }),
         signal: AbortSignal.timeout(timeout),
@@ -109,6 +111,7 @@ async function openAICompatChat(opts: {
 
     if (!res.ok) {
         const raw = await res.text();
+        console.error('[agentLoop] API error raw body:', raw);  // ← temporary debug
         // Extract the human-readable message from Google / Groq / OpenAI error bodies
         let detail = raw;
         try {

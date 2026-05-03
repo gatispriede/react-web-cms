@@ -88,6 +88,19 @@ const nextConfig = {
         tsconfigPath,
     },
     sassOptions: {},
+    // Make webpack watch the shared services/ directory (sits outside ui/client/).
+    // Without this, changes to services/agent/*.ts are not detected in dev mode.
+    webpack: (config, { isServer }) => {
+        if (isServer) {
+            config.watchOptions = {
+                ...config.watchOptions,
+                // On Windows, polling is needed for cross-drive or parent-dir watchers.
+                poll: 1000,
+                ignored: /node_modules/,
+            };
+        }
+        return config;
+    },
     // Locale-prefixed admin URLs from old bookmarks redirect to the prefix-
     // less admin. `locale: false` stops Next.js expanding the source with the
     // active locale. We intentionally skip the defaultLocale (`en`) — Next.js

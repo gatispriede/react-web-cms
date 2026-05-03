@@ -1,5 +1,5 @@
 /**
- * Agent SSE streaming endpoint — POST /api/agent/stream
+ * Agent SSE streaming endpoint — POST /api/agent/stream  (v2)
  *
  * Accepts: { task: string, mode: 'content' | 'both', model?: string }
  * Streams:  SSE frames (text/event-stream), one JSON event per "data: ...\n\n"
@@ -18,6 +18,30 @@ import {getMongoConnection}                   from '@services/infra/mongoDBConne
 import {CMS_TOOL_DEFINITIONS, makeCmsDispatch} from '@services/agent/cmsAgentTools';
 import {runAgentLoop}                          from '@services/agent/agentLoop';
 import type {AgentEvent}                       from '@services/agent/agentTypes';
+
+// ── Groq tool_choice fix ──────────────────────────────────────────────────────
+// llama-3.x on Groq returns HTTP 400 "Failed to call a function" when the
+// request includes tool_choice:'auto' — the model falls back to the legacy
+// <function=...> XML format which Groq then rejects.  Patch global fetch once
+// so every outbound Groq request strips tool_choice and adds the required
+// parallel_tool_calls:false flag regardless of which version of agentLoop is
+// cached in the module registry.
+(function patchGroqFetch() {
+    const orig = global.fetch as typeof fetch;
+    (global as any).fetch = async function(input: RequestInfo | URL, init?: RequestInit) {
+        const url = typeof input === 'string' ? input : (input as Request).url ?? String(input);
+        if (url.includes('groq.com') && init?.body && typeof init.body === 'string') {
+            try {
+                const body = JSON.parse(init.body);
+                if (body.tool_choice !== undefined) delete body.tool_choice;
+                if (body.parallel_tool_calls === undefined) body.parallel_tool_calls = false;
+                return orig(input, { ...init, body: JSON.stringify(body) });
+            } catch { /* parse error — pass through unchanged */ }
+        }
+        return orig(input, init);
+    };
+    (global as any).__groqFetchPatched = true;
+}());
 
 // Disable Next.js default body parser so we can stream the response.
 // (Body parsing still works for the small JSON request body via manual read.)

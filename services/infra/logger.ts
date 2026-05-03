@@ -77,7 +77,7 @@ function emit(level: LogLevel, msg: string, ctx: LogContext): void {
     if (payload.err) payload.err = unwrapErr(payload.err);
 
     if (IS_BROWSER) {
-        // eslint-disable-next-line no-console
+         
         const sink = level === 'error' ? console.error
             : level === 'warn' ? console.warn
             : level === 'debug' ? console.debug

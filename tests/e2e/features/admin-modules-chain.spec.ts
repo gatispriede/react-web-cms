@@ -87,7 +87,7 @@ test.describe.serial('admin chain — page lifecycle across all modules', () => 
         scenario.addOrder = shuffleInPlace([...scenario.samples], mulberry32(RANDOM_SEED));
         // Surfaced in the report so a failed run can be replayed by
         // exporting the same seed.
-        // eslint-disable-next-line no-console
+         
         console.log(
             `[e2e/modules-chain] seed=${RANDOM_SEED} runId=${scenario.runId} ` +
                 `slug=${scenario.pageSlug} order=[${scenario.addOrder.map(s => s.type).join(',')}]`,

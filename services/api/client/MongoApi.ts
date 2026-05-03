@@ -40,7 +40,7 @@ class MongoApi {
             // nodemailer, bcrypt, and every server-only service. The
             // eval'd require is opaque to the bundler, so the chain stops
             // at MongoApi's boundary.
-            // eslint-disable-next-line @typescript-eslint/no-implied-eval, no-eval
+             
             const nodeRequire = eval('require') as NodeJS.Require;
             const {getMongoConnection} = nodeRequire('@services/infra/mongoDBConnection');
             const conn = getMongoConnection() as any;

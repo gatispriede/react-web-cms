@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-restricted-imports -- Compare grid is a Suspense-driven leaf used by TranslationsViewModel.
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {Alert, Button, Input, Popover, Space, Switch, Table, Tag, Tooltip, Typography, message} from 'antd';
 import {DownloadOutlined, EditOutlined, InfoCircleOutlined, SearchOutlined, UploadOutlined} from '@client/lib/icons';

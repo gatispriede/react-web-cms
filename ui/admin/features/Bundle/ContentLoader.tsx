@@ -1,4 +1,5 @@
 import TranslationManager from "@admin/shell/TranslationManager";
+// eslint-disable-next-line no-restricted-imports -- ContentLoader is a Suspense-driven leaf used by TranslationsViewModel.
 import React, {use, useCallback, useEffect, useMemo, useState} from "react";
 import {Checkbox, Input, Space, Switch, Table, Tag, Tooltip, Typography, message} from "antd";
 import {SearchOutlined} from "@client/lib/icons";

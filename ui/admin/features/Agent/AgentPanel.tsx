@@ -7,6 +7,7 @@
  * - Image gallery panel (all server images, toggled from toolbar)
  * - Technical details (raw JSON input) collapsed behind a "Details" toggle
  */
+// eslint-disable-next-line no-restricted-imports -- VM3 migration deferred for this pane.
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Input, Select, Tag, Typography } from 'antd';
 import { SendOutlined, SettingOutlined } from '@client/lib/icons';
@@ -405,7 +406,7 @@ const AgentPanel: React.FC = () => {
                 break;
             }
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
     }, []);
 
     const send = async () => {
@@ -466,7 +467,13 @@ const AgentPanel: React.FC = () => {
 
     return (
         <div data-testid="agent-panel"
-             style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+             style={{
+                 display: 'flex', flexDirection: 'column', minHeight: 0,
+                 // Clamp to viewport so the panel never overflows the screen.
+                 // 82px = ~50px top-nav bar + 16px content padding top + 16px bottom.
+                 height: 'calc(100vh - 82px)',
+                 maxHeight: 'calc(100vh - 82px)',
+             }}>
 
             {/* Toolbar */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px',

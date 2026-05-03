@@ -84,7 +84,7 @@ const InfraTopology = ({item, tApp}: {
                     {c.topologyLabel && <div className="infra-topology__sub">{tr(c.topologyLabel)}</div>}
                     <div
                         className="infra-topology__svg"
-                        // eslint-disable-next-line react/no-danger
+                         
                         dangerouslySetInnerHTML={{__html: sanitisedSvg}}
                     />
                     {c.topologyCaption && (

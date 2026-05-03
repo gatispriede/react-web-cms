@@ -50,7 +50,7 @@ export function reportError(input: ReportInput): Promise<void> | void {
     if (!installed) {
         // Admin / client haven't called installErrorReporter yet. Buffer
         // these into the `error` console fall-back so we don't lose them.
-        // eslint-disable-next-line no-console
+         
         console.error('[reportError pre-install]', input);
         return;
     }

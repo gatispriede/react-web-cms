@@ -143,7 +143,7 @@ function attachHydrationFilter(page: Page): void {
     page.on('pageerror', (err) => {
         const msg = err?.message ?? '';
         if (HYDRATION_PATTERNS.some((p) => p.test(msg))) return;
-        // eslint-disable-next-line no-console
+         
         console.warn('[e2e] page error:', msg);
     });
     // Hide Next dev's floating widgets, error overlay, and toast portals

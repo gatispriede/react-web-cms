@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-restricted-imports -- Banner is a leaf component, not a feature pane.
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {Alert, Button, Modal, Space, Typography, message} from 'antd';
 import {useTranslation} from 'react-i18next';

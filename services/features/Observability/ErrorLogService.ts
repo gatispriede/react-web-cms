@@ -88,7 +88,7 @@ export class ErrorLogService {
         } catch (err) {
             // Avoid logger-of-loggers infinite recursion — write to
             // stderr directly.
-            // eslint-disable-next-line no-console
+             
             console.warn('[ErrorLogService] insert failed:', err);
             return null;
         }

@@ -46,7 +46,7 @@ export class RedisAdapter implements RedisLike {
             const url = this.url ?? process.env.REDIS_URL ?? 'redis://localhost:6379';
             // Dynamic require keeps `redis` off the client bundle graph;
             // bundlers won't statically resolve `eval('require')`.
-            // eslint-disable-next-line @typescript-eslint/no-implied-eval, no-eval
+             
             const nodeRequire = eval('require') as NodeJS.Require;
             const {createClient} = nodeRequire('redis');
             const client = createClient({url});

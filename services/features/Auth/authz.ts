@@ -354,6 +354,6 @@ try {
     // Logger may not be initialised yet at module-eval time; fall
     // through silently — manifest-side authz simply won't apply,
     // but the legacy tables above still gate correctly.
-    // eslint-disable-next-line no-console
+     
     console.warn('[authz] failed to merge composedAuthz contributions:', err);
 }

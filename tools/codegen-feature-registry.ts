@@ -59,7 +59,7 @@ function findManifests(): FoundManifest[] {
         if (!manifest) continue;
         const constName = readExportedConst(manifest);
         if (!constName) {
-            // eslint-disable-next-line no-console
+             
             console.error(`[codegen] ${manifest}: no \`export const <name>Feature\` found — skipping.`);
             continue;
         }
@@ -100,13 +100,13 @@ function main(): void {
 
     if (checkMode) {
         if (!existsSync(OUT_PATH)) {
-            // eslint-disable-next-line no-console
+             
             console.error(`[codegen] ${OUT_PATH} is missing. Run \`npm run features:codegen\`.`);
             process.exit(1);
         }
         const current = readFileSync(OUT_PATH, 'utf8');
         if (current !== next) {
-            // eslint-disable-next-line no-console
+             
             console.error('[codegen] featureRegistry.generated.ts is stale. Run `npm run features:codegen` and commit the result.');
             process.exit(1);
         }

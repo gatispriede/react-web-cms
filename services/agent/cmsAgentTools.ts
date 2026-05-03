@@ -43,7 +43,6 @@ export const CMS_TOOL_DEFINITIONS: ToolDefinition[] = [
                 draft:       { type: 'boolean', description: 'true = draft, false = published' },
                 coverImage:  { type: 'string',  description: 'Cover image path e.g. /api/image.jpg' },
             },
-            required: ['slug', 'title', 'body'],
         },
     },
     {
@@ -62,7 +61,6 @@ export const CMS_TOOL_DEFINITIONS: ToolDefinition[] = [
             properties: {
                 pageName: { type: 'string', description: 'Page name to inspect e.g. "Main"' },
             },
-            required: ['pageName'],
         },
     },
     {
@@ -75,7 +73,6 @@ export const CMS_TOOL_DEFINITIONS: ToolDefinition[] = [
                 type:     { type: 'string', description: 'Page type e.g. "page"' },
                 sections: { type: 'array',  items: { type: 'string' }, description: 'Initial section ids (usually empty)' },
             },
-            required: ['page'],
         },
     },
     {
@@ -100,7 +97,6 @@ export const CMS_TOOL_DEFINITIONS: ToolDefinition[] = [
                     },
                 },
             },
-            required: ['pageName', 'type', 'content'],
         },
     },
     {
@@ -149,7 +145,6 @@ export const CMS_TOOL_DEFINITIONS: ToolDefinition[] = [
             properties: {
                 mode: { type: 'string', enum: ['tabs', 'scroll'], description: '"tabs" = each page is its own URL (per-page mode). "scroll" = all pages stack on one scrolling page.' },
             },
-            required: ['mode'],
         },
     },
 ];
@@ -184,7 +179,8 @@ export function makeCmsDispatch(conn: MongoDBConnection, editedBy: string): Tool
             }
 
             case 'list_sections': {
-                const { pageName } = input as any;
+                // Accept pageName or page_name (models vary on camelCase vs snake_case)
+                const pageName = (input as any).pageName ?? (input as any).page_name ?? (input as any).page;
                 const pages = await conn.navigationService.getNavigationCollection();
                 const page = pages.find((p: any) => p.page === pageName);
                 if (!page) return JSON.stringify({ error: `Page "${pageName}" not found` });
@@ -210,7 +206,8 @@ export function makeCmsDispatch(conn: MongoDBConnection, editedBy: string): Tool
             }
 
             case 'add_section': {
-                const { pageName, type, content } = input as any;
+                const pageName = (input as any).pageName ?? (input as any).page_name ?? (input as any).page;
+                const { type, content } = input as any;
                 // Ensure each item's content is a JSON string — models often send
                 // an object even when instructed to stringify. Coerce here so the
                 // renderer always receives a string it can JSON.parse.

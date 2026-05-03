@@ -56,16 +56,27 @@ const IMAGE_BEARING_TYPES = new Set<string>([
 function hasImage(item: IItem): boolean {
     let data: any = {};
     try { data = item.content ? JSON.parse(item.content) : {}; } catch { /* treat as empty */ }
+    // C18: every image-bearing module now stores `image: IImageRef` (or
+    // `bgImage` / `portraitImage` IImageRef on Hero). Legacy shape (bare
+    // `src` / string `bgImage`) still exists in older saved JSON, so the
+    // probe checks both — this surface is consulted before the renderer
+    // normaliser runs.
+    const heroBg = data?.bgImage;
+    const heroPortrait = data?.portraitImage;
+    const heroBgSrc = typeof heroBg === 'string' ? heroBg : heroBg?.src;
+    const heroPortraitSrc = typeof heroPortrait === 'string' ? heroPortrait : heroPortrait?.src;
+    const projectImage = data?.image;
+    const projectImageSrc = typeof projectImage === 'string' ? projectImage : projectImage?.src;
     switch (item.type) {
         case EItemType.Image:
-            return !!data?.src;
+            return !!data?.src || !!data?.image?.src;
         case EItemType.Gallery:
         case EItemType.Carousel:
-            return Array.isArray(data?.items) && data.items.some((it: any) => !!it?.src);
+            return Array.isArray(data?.items) && data.items.some((it: any) => !!it?.src || !!it?.image?.src);
         case EItemType.Hero:
-            return !!data?.bgImage || !!data?.portraitImage;
+            return !!heroBgSrc || !!heroPortraitSrc;
         case EItemType.ProjectCard:
-            return !!data?.image;
+            return !!projectImageSrc;
         default:
             return false;
     }
@@ -78,37 +89,31 @@ function patchContent(item: IItem, src: string, t: TFunction<"translation", unde
     try { data = item.content ? JSON.parse(item.content) : {}; } catch { data = {}; }
     switch (item.type) {
         case EItemType.Image: {
-            const next = {...data, src};
+            const cur = data?.image && typeof data.image === 'object' ? data.image : {};
+            const next = {...data, image: {...cur, src}};
+            delete next.src;
             return {next: JSON.stringify(next), toast: t('Image replaced')};
         }
         case EItemType.Gallery:
         case EItemType.Carousel: {
             const items = Array.isArray(data?.items) ? [...data.items] : [];
-            // Drop = append. The editor modal still offers per-tile replace;
-            // in-page drops default to "add another" because the user has
-            // no way to point at a specific tile from here.
             items.push({
-                src,
-                alt: '',
+                image: {src},
                 text: '',
-                height: 0,
                 preview: true,
-                imgWidth: '',
-                imgHeight: '',
                 textPosition: 'bottom',
             });
             const next = {...data, items};
             return {next: JSON.stringify(next), toast: t('Image added to gallery')};
         }
         case EItemType.Hero: {
-            // Background wins by default — the big visual slot the operator
-            // is usually staring at. Portrait stays editable via the Edit
-            // modal until per-slot in-page targeting ships.
-            const next = {...data, bgImage: src};
+            const curBg = data?.bgImage && typeof data.bgImage === 'object' ? data.bgImage : {};
+            const next = {...data, bgImage: {...curBg, src}};
             return {next: JSON.stringify(next), toast: t('Hero background replaced')};
         }
         case EItemType.ProjectCard: {
-            const next = {...data, image: src};
+            const curImg = data?.image && typeof data.image === 'object' ? data.image : {};
+            const next = {...data, image: {...curImg, src}};
             return {next: JSON.stringify(next), toast: t('Cover image replaced')};
         }
         default:

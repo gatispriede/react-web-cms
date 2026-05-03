@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-restricted-imports -- ImageRail is a leaf widget; LayoutViewModel owns Navigation pane state.
 import React, {DragEvent, useCallback, useEffect, useMemo, useState} from 'react';
 import {Button, Empty, Input, message, Popconfirm, Spin, Tooltip} from 'antd';
 import {CheckCircleFilled, CloseOutlined, DeleteOutlined, PictureOutlined, SearchOutlined} from '@client/lib/icons';

@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-restricted-imports -- Picker dialog is a leaf modal; search/selection are local interaction state.
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import {Card, Col, Input, Modal, Radio, Row, Tag, Typography} from "antd";
 import {TFunction} from "i18next";
