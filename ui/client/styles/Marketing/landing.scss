@@ -1,0 +1,380 @@
+/* Marketing landing page styles.
+ *
+ * Borrows the Editorial preset's typography rhythm (large display headings,
+ * generous line-height, restrained palette). Tokens read from CSS custom
+ * properties published by the active theme — falls back to neutral defaults
+ * so the page renders even when no theme is installed (fresh install case).
+ */
+
+:root {
+    --m-bg: #ffffff;
+    --m-fg: #0d0d0d;
+    --m-muted: #5a5a5a;
+    --m-line: #e6e6e6;
+    --m-accent: #111;
+    --m-accent-fg: #ffffff;
+    --m-soft: #f6f5f1;
+    --m-popular: #f0e9d6;
+}
+
+.marketing {
+    background: var(--m-bg);
+    color: var(--m-fg);
+    font-family: Georgia, 'Times New Roman', serif;
+    line-height: 1.55;
+
+    a {
+        color: inherit;
+    }
+}
+
+.marketing__shell {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+.marketing__section {
+    padding: 96px 0;
+    border-top: 1px solid var(--m-line);
+
+    &:first-child {
+        border-top: 0;
+    }
+}
+
+.marketing__h2 {
+    font-size: clamp(28px, 3.4vw, 44px);
+    margin: 0 0 32px;
+    letter-spacing: -0.01em;
+}
+
+/* ---------- Hero ---------- */
+
+.hero {
+    padding: 120px 0 96px;
+    background: var(--m-soft);
+}
+
+.hero__grid {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 56px;
+    align-items: center;
+
+    @media (max-width: 880px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.hero__eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 12px;
+    color: var(--m-muted);
+    margin: 0 0 20px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+
+.hero__title {
+    font-size: clamp(36px, 5vw, 64px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0 0 24px;
+}
+
+.hero__sub {
+    font-size: 18px;
+    color: var(--m-muted);
+    margin: 0 0 32px;
+    max-width: 56ch;
+}
+
+.hero__ctas {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.btn {
+    display: inline-block;
+    padding: 14px 22px;
+    border-radius: 4px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid var(--m-accent);
+    transition: transform 80ms ease;
+
+    &:hover {
+        transform: translateY(-1px);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--m-accent);
+        outline-offset: 3px;
+    }
+}
+
+.btn--primary {
+    background: var(--m-accent);
+    color: var(--m-accent-fg);
+}
+
+.btn--ghost {
+    background: transparent;
+    color: var(--m-accent);
+}
+
+/* ---------- Hero demo card with CSS-only prompt cycle ---------- */
+
+.demo {
+    background: #fff;
+    border: 1px solid var(--m-line);
+    border-radius: 10px;
+    padding: 24px;
+    box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.18);
+    font-family: 'JetBrains Mono', 'Menlo', monospace;
+    font-size: 14px;
+    min-height: 220px;
+}
+
+.demo__chrome {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 18px;
+
+    span {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        background: var(--m-line);
+    }
+}
+
+.demo__stage {
+    position: relative;
+    height: 88px;
+    overflow: hidden;
+}
+
+.demo__line {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    animation: demoCycle 12s infinite;
+
+    &::before {
+        content: '> ';
+        color: var(--m-muted);
+    }
+}
+
+.demo__line:nth-child(1) { animation-delay: 0s; }
+.demo__line:nth-child(2) { animation-delay: 4s; }
+.demo__line:nth-child(3) { animation-delay: 8s; }
+
+@keyframes demoCycle {
+    0%   { opacity: 0; transform: translateY(8px); }
+    5%   { opacity: 1; transform: translateY(0); }
+    30%  { opacity: 1; }
+    35%  { opacity: 0; transform: translateY(-8px); }
+    100% { opacity: 0; }
+}
+
+.demo__output {
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--m-line);
+    color: var(--m-muted);
+    font-family: Georgia, serif;
+    font-style: italic;
+}
+
+/* ---------- Comparison strip ---------- */
+
+.compare__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+
+    @media (max-width: 720px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.compare__item {
+    h3 {
+        font-size: 20px;
+        margin: 0 0 10px;
+        letter-spacing: -0.005em;
+    }
+
+    p {
+        margin: 0;
+        color: var(--m-muted);
+    }
+}
+
+/* ---------- Features ---------- */
+
+.features__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+
+    @media (max-width: 960px) { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 600px) { grid-template-columns: 1fr; }
+}
+
+.feature {
+    border: 1px solid var(--m-line);
+    border-radius: 8px;
+    padding: 24px;
+    background: #fff;
+
+    h3 {
+        margin: 0 0 8px;
+        font-size: 18px;
+    }
+
+    p {
+        margin: 0;
+        color: var(--m-muted);
+        font-size: 15px;
+    }
+}
+
+/* ---------- Pricing ---------- */
+
+.pricing__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    max-width: 880px;
+    margin: 0 auto;
+
+    @media (max-width: 720px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.tier {
+    border: 1px solid var(--m-line);
+    border-radius: 10px;
+    padding: 36px;
+    background: #fff;
+    position: relative;
+
+    &--popular {
+        border-color: var(--m-accent);
+        box-shadow: 0 24px 48px -28px rgba(0, 0, 0, 0.25);
+    }
+
+    h3 {
+        margin: 0 0 6px;
+        font-size: 22px;
+    }
+
+    .tier__tag {
+        position: absolute;
+        top: -12px;
+        right: 24px;
+        background: var(--m-popular);
+        color: var(--m-fg);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-family: 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    .tier__price {
+        font-size: 40px;
+        margin: 16px 0 4px;
+        letter-spacing: -0.02em;
+
+        small {
+            font-size: 14px;
+            color: var(--m-muted);
+            margin-left: 6px;
+        }
+    }
+
+    .tier__tag-line {
+        color: var(--m-muted);
+        margin: 0 0 24px;
+    }
+
+    ul {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 24px;
+
+        li {
+            padding: 8px 0;
+            border-top: 1px solid var(--m-line);
+            font-size: 15px;
+        }
+    }
+}
+
+.pricing__footnote {
+    text-align: center;
+    color: var(--m-muted);
+    margin-top: 24px;
+    font-size: 14px;
+}
+
+/* ---------- Final CTA ---------- */
+
+.finalCta {
+    text-align: center;
+    background: var(--m-accent);
+    color: var(--m-accent-fg);
+
+    .marketing__h2 { color: var(--m-accent-fg); }
+
+    p {
+        color: rgba(255, 255, 255, 0.78);
+        max-width: 60ch;
+        margin: 0 auto 28px;
+    }
+
+    .btn--primary {
+        background: var(--m-accent-fg);
+        color: var(--m-accent);
+        border-color: var(--m-accent-fg);
+    }
+}
+
+/* ---------- Marketing footer ---------- */
+
+.mfooter {
+    border-top: 1px solid var(--m-line);
+    padding: 28px 0;
+    color: var(--m-muted);
+    font-size: 14px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+
+    .mfooter__row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    nav {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    a {
+        text-decoration: none;
+        &:hover { color: var(--m-fg); }
+    }
+}

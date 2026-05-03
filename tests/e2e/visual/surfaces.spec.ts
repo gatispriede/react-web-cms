@@ -72,6 +72,12 @@ authTest.describe('visual — public surfaces', () => {
         await page.waitForLoadState('networkidle');
         await snap(page, 'surface-checkout.png');
     });
+
+    authTest('marketing landing · /welcome', async ({anonPage: page}) => {
+        await page.goto('/welcome');
+        await page.waitForLoadState('networkidle');
+        await snap(page, 'surface-marketing-landing.png');
+    });
 });
 
 authTest.describe('visual — admin surfaces', () => {
