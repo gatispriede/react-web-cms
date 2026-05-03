@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useState} from 'react';
 import {GetStaticProps} from 'next';
 import {gqlFetch} from '@client/lib/gqlFetch';
-import {withFeatureGate} from '@client/lib/featureGate';
+import {gatePath} from '@client/lib/loaders/applyPublicGates';
 import Link from 'next/link';
 import Head from 'next/head';
 import {ConfigProvider, Card, Col, Empty, Row, Select, Space, Tag, Typography} from 'antd';
@@ -112,7 +112,7 @@ const ProductsIndex = ({products, themeTokens, footer, pages}: Props) => {
     );
 };
 
-export const getStaticProps: GetStaticProps<Props> = withFeatureGate('products', async ({locale}: {locale?: string}) => {
+export const getStaticProps: GetStaticProps<Props> = gatePath('/products', async ({locale}: {locale?: string}) => {
     let products: IProduct[] = [];
     let themeTokens: any | null = null;
     let footer: IFooterConfig = {...DEFAULT_FOOTER};

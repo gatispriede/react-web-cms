@@ -1,4 +1,5 @@
 import {McpTool} from '../types';
+import {enforceModeForTool} from '../modeEnforcement';
 
 const ok = (data: unknown) => ({content: [{type: 'text' as const, text: JSON.stringify(data)}]});
 const safeParse = (s: string): unknown => { try { return JSON.parse(s); } catch { return {raw: s}; } };
@@ -20,6 +21,7 @@ export const inventorySyncDelta: McpTool = {
     scopes: ['write:inventory'],
     inputSchema: {type: 'object', properties: {}},
     handler: async (_args, ctx) => {
+        await enforceModeForTool(ctx.actor, 'inventory.syncDelta');
         const res = await ctx.services.inventorySyncDelta({_session: {kind: 'admin', role: 'admin', email: ctx.actor}});
         return ok(typeof res === 'string' ? safeParse(res) : res);
     },

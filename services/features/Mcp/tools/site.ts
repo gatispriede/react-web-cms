@@ -2,6 +2,7 @@ import {spawn} from 'node:child_process';
 import * as path from 'node:path';
 import {McpTool} from '../types';
 import {getMongoConnection} from '@services/infra/mongoDBConnection';
+import {enforceModeForTool} from '../modeEnforcement';
 
 const ok = (data: unknown) => ({content: [{type: 'text' as const, text: JSON.stringify(data)}]});
 
@@ -23,7 +24,8 @@ export const siteRevalidate: McpTool = {
             slug: {type: 'string'},
         },
     },
-    handler: async (args, _ctx) => {
+    handler: async (args, ctx) => {
+        await enforceModeForTool(ctx.actor, 'site.revalidate');
         const scope = (args.scope ?? 'all') as 'all' | 'page';
         const host = (process.env.REVALIDATE_HOST || process.env.NEXT_PUBLIC_SITE_URL || '').replace(/\/$/, '');
         if (!host) {
@@ -60,7 +62,8 @@ export const siteRegenerateSchema: McpTool = {
     description: 'Regenerate the gqty client (services/api/generated/) from schema.graphql. Self-spawns a temp graphql server — no dev server required. Run after editing the schema.',
     scopes: ['write:site'],
     inputSchema: {type: 'object', properties: {}},
-    handler: async (_args, _ctx) => {
+    handler: async (_args, ctx) => {
+        await enforceModeForTool(ctx.actor, 'site.regenerateSchema');
         // Resolve the script relative to this file so the tool works from
         // both the bundled MCP server and `npm run mcp:stdio` against the
         // workspace tree.
@@ -108,6 +111,7 @@ export const authResetLockouts: McpTool = {
     scopes: ['admin:auth'],
     inputSchema: {type: 'object', properties: {}},
     handler: async (_args, ctx) => {
+        await enforceModeForTool(ctx.actor, 'auth.resetLockouts');
         const host = (process.env.REVALIDATE_HOST || process.env.NEXT_PUBLIC_SITE_URL || '').replace(/\/$/, '');
         if (!host) {
             return ok({ok: false, reason: 'REVALIDATE_HOST / NEXT_PUBLIC_SITE_URL not set'});
@@ -178,6 +182,7 @@ export const siteSetFeatureFlag: McpTool = {
         },
     },
     handler: async (args, ctx) => {
+        await enforceModeForTool(ctx.actor, 'site.setFeatureFlag');
         try {
             const raw = await getMongoConnection().setFeatureFlag({
                 id: args.id,
@@ -205,6 +210,7 @@ export const siteClearFeatureFlag: McpTool = {
         properties: {id: {type: 'string'}},
     },
     handler: async (args, ctx) => {
+        await enforceModeForTool(ctx.actor, 'site.clearFeatureFlag');
         try {
             const raw = await getMongoConnection().clearFeatureFlag({id: args.id, _session: {email: ctx.actor}});
             return ok({ok: true, result: JSON.parse(raw)});

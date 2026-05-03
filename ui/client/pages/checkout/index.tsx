@@ -7,7 +7,7 @@ import staticTheme from '@client/features/Themes/themeConfig';
 import {useCart} from '@client/features/Cart/useCart';
 import {useCheckoutMachine} from '@client/lib/checkout/useCheckoutMachine';
 import {createDraftOrder, formatMoney} from '@client/lib/checkout/api';
-import {withFeatureGate} from '@client/lib/featureGate';
+import {gatePath} from '@client/lib/loaders/applyPublicGates';
 import type {GetServerSideProps} from 'next';
 
 /**
@@ -82,6 +82,6 @@ const CheckoutIndex: React.FC = () => {
     );
 };
 
-export const getServerSideProps: GetServerSideProps = withFeatureGate('orders') as GetServerSideProps;
+export const getServerSideProps: GetServerSideProps = gatePath('/checkout') as GetServerSideProps;
 
 export default CheckoutIndex;

@@ -1,4 +1,5 @@
 import {McpTool} from '../types';
+import {enforceModeForTool} from '../modeEnforcement';
 
 const ok = (data: unknown) => ({content: [{type: 'text' as const, text: JSON.stringify(data)}]});
 
@@ -92,6 +93,7 @@ export const sectionDelete: McpTool = {
         properties: {id: {type: 'string', minLength: 1}},
     },
     handler: async (args, ctx) => {
+        await enforceModeForTool(ctx.actor, 'section.delete');
         const res = await ctx.services.removeSectionItem({id: args.id, _session: sessionFor(ctx.actor)});
         return ok(typeof res === 'string' ? safeParse(res) : res);
     },

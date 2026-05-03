@@ -1,4 +1,5 @@
 import {McpTool} from '../types';
+import {enforceModeForTool} from '../modeEnforcement';
 
 const ok = (data: unknown) => ({content: [{type: 'text' as const, text: JSON.stringify(data)}]});
 const sessionFor = (actor: string) => ({kind: 'admin' as const, role: 'admin' as const, email: actor});
@@ -29,6 +30,7 @@ export const themeUpdate: McpTool = {
         },
     },
     handler: async (args, ctx) => {
+        await enforceModeForTool(ctx.actor, 'theme.update');
         const res = await ctx.services.saveTheme({
             theme: args.theme,
             expectedVersion: args.expectedVersion ?? null,
@@ -48,6 +50,7 @@ export const themeSetActive: McpTool = {
         properties: {id: {type: 'string', minLength: 1}},
     },
     handler: async (args, ctx) => {
+        await enforceModeForTool(ctx.actor, 'theme.setActive');
         const res = await ctx.services.setActiveTheme({id: args.id, _session: sessionFor(ctx.actor)});
         return ok(typeof res === 'string' ? safeParse(res) : res);
     },
