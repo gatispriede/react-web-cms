@@ -82,6 +82,28 @@ function buildPermissionCheck(): import('@services/features/Auth/authz').Permiss
     return (opts) => svc.can({...opts, cache});
 }
 
+/**
+ * Q10 — request-scoped resolver returning the caller's `grants` array.
+ * Looks up the user once via UsersService; subsequent calls inside the
+ * same request hit the local memo. Returns `[]` when no Users service is
+ * wired or the session has no email (anonymous / customer).
+ */
+function buildGrantResolver(): import('@services/features/Auth/authz').GrantResolver {
+    const conn = getMongoConnection();
+    const users = conn.userService;
+    let memo: Promise<readonly import('@interfaces/IPermission').Grant[]> | null = null;
+    return async (session) => {
+        if (!users || !session.email) return [];
+        if (!memo) {
+            memo = users
+                .getUser({email: session.email})
+                .then(u => ((u as {grants?: readonly import('@interfaces/IPermission').Grant[]} | undefined)?.grants ?? []))
+                .catch(() => [] as readonly import('@interfaces/IPermission').Grant[]);
+        }
+        return memo;
+    };
+}
+
 /** Resolver map for the Next route — mongo proxied through `guardMethods`. */
 export const nextResolvers = {
     Query: {
@@ -98,6 +120,7 @@ export const nextResolvers = {
                 MUTATION_CAPABILITIES,
                 RESOURCE_GATED_METHODS,
                 buildPermissionCheck(),
+                buildGrantResolver(),
             ),
     },
     // The customer-facing schema fields live on QueryMongo / MutationMongo

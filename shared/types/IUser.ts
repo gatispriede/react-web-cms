@@ -87,6 +87,13 @@ export interface IUser {
     /** ISO date — populated on customer creation. Admin docs may not
      *  carry this for legacy reasons. */
     createdAt?: string;
+    /**
+     * Q10 — three-dimension grants (feature / page / locale). A mutation
+     * gated on multiple dimensions requires the user to hold a matching
+     * grant for EACH dimension (intersection). Admin rank bypasses.
+     * See `shared/types/IPermission.ts` + `docs/features/platform/edit-levels.md`.
+     */
+    grants?: import('./IPermission').Grant[];
 }
 
 export interface InUser {
@@ -106,4 +113,5 @@ export interface InUser {
     phone?: string;
     shippingAddresses?: IAddress[];
     createdAt?: string;
+    grants?: import('./IPermission').Grant[];
 }

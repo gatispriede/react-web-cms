@@ -39,6 +39,23 @@ extend type MutationMongo {
             'deletePost',
             'setPostPublished',
         ],
+        // Q10 — gate Posts mutations on {feature, page}. Admin rank bypasses.
+        // Page extracted from `args.post.slug` (savePost) or args.id (deletePost
+        // / setPostPublished — id doubles as slug for the page-grant check).
+        resourceGated: {
+            savePost: (args: any) => ({
+                dimensions: ['feature', 'page'] as const,
+                values: {feature: 'Posts', page: args?.post?.slug ?? args?.pageSlug ?? ''},
+            }),
+            deletePost: (args: any) => ({
+                dimensions: ['feature', 'page'] as const,
+                values: {feature: 'Posts', page: args?.id ?? args?.pageSlug ?? ''},
+            }),
+            setPostPublished: (args: any) => ({
+                dimensions: ['feature', 'page'] as const,
+                values: {feature: 'Posts', page: args?.id ?? args?.pageSlug ?? ''},
+            }),
+        },
     };
 
     /**

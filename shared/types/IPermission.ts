@@ -67,3 +67,52 @@ export interface IUserFunctionalRoles {
     /** Functional role ids the user has been assigned. */
     functionalRoles?: readonly string[];
 }
+
+// ──────────────────────────────────────────────────────────────────────
+// Q10 — three orthogonal grant dimensions composable on a user.
+// Per `docs/features/platform/edit-levels.md` (2026-05-03).
+//
+//   - `{kind:'feature'}` — user can mutate that feature
+//   - `{kind:'page'}`    — user can edit that specific page slug
+//   - `{kind:'locale'}`  — user can edit/translate that language
+//
+// A mutation declares which dimensions it is gated on; the gate
+// composes by intersection — for every declared dimension the user must
+// hold a matching grant (or be `admin` rank, which always passes).
+// ──────────────────────────────────────────────────────────────────────
+
+export type GrantDimension = 'feature' | 'page' | 'locale';
+
+export interface FeatureGrant { kind: 'feature'; feature: string; }
+export interface PageGrant    { kind: 'page';    page: string;    }
+export interface LocaleGrant  { kind: 'locale';  locale: string;  }
+
+export type Grant = FeatureGrant | PageGrant | LocaleGrant;
+
+/** Shape extractors return when declaring `resourceGated` on a manifest. */
+export interface DimensionGrantSpec {
+    feature?: string;
+    page?: string;
+    locale?: string;
+}
+
+/**
+ * Predicate: does the user hold a grant matching `(dimension, value)`?
+ * Admin rank short-circuits to `true` — the role-rank check happens at
+ * the call site (PermissionService / authz), this helper is the pure
+ * grant-array lookup.
+ */
+export function userHasGrant(
+    grants: readonly Grant[] | undefined,
+    dimension: GrantDimension,
+    value: string,
+): boolean {
+    if (!grants || grants.length === 0) return false;
+    for (const g of grants) {
+        if (g.kind !== dimension) continue;
+        if (dimension === 'feature' && (g as FeatureGrant).feature === value) return true;
+        if (dimension === 'page'    && (g as PageGrant).page       === value) return true;
+        if (dimension === 'locale'  && (g as LocaleGrant).locale   === value) return true;
+    }
+    return false;
+}

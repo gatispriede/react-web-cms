@@ -2,6 +2,7 @@ import {message} from 'antd';
 import UserApi from '@services/api/client/UserApi';
 import {IUser, InUser} from '@interfaces/IUser';
 import {observable} from '@client/lib/state/observable';
+import {Grant} from '@interfaces/IPermission';
 
 /** VM3 — Users admin pane state. */
 export class UsersViewModel {
@@ -39,7 +40,23 @@ export class UsersViewModel {
             name: user.name,
             role: user.role,
             canPublishProduction: user.canPublishProduction,
+            grants: user.grants ?? [],
         };
+    }
+
+    /**
+     * Q10 — replace the editing user's grants with the three multiselect
+     * arrays from the admin UI. Stored as a flat `Grant[]` (discriminated
+     * union) so the server can read it without re-deriving the shape.
+     */
+    setGrants(features: string[], pages: string[], locales: string[]): void {
+        if (!this.editing) return;
+        const grants: Grant[] = [
+            ...features.map(f => ({kind: 'feature' as const, feature: f})),
+            ...pages.map(p => ({kind: 'page' as const, page: p})),
+            ...locales.map(l => ({kind: 'locale' as const, locale: l})),
+        ];
+        this.editing = {...this.editing, grants};
     }
 
     close(): void { this.editing = null; }
@@ -59,6 +76,7 @@ export class UsersViewModel {
                 role: values.role,
                 password: values.password || undefined,
                 canPublishProduction: Boolean(values.canPublishProduction),
+                grants: this.editing?.grants ?? values.grants ?? [],
             };
             const result = this.editing?.id
                 ? await this.api.updateUser(payload)

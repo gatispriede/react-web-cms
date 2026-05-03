@@ -1,5 +1,7 @@
 # Multi-level edit granularity
 
+Status: **Q10 three-dimension grants shipped 2026-05-03.** `userHasGrant` helper + `Grant` discriminated union (`feature` / `page` / `locale`) on `IPermission.ts`; `IUser.grants` carries the user's assignments. `guardMethods` now accepts a `GrantResolver` and enforces dimension intersection (admin rank bypasses). `RESOURCE_GATED_METHODS` extractors may return either the legacy `{scope, resourceId}` shape OR the new `{dimensions, values}` shape; both branches coexist. Posts wired as the reference (`savePost` / `deletePost` / `setPostPublished` gated on `{feature: 'Posts', page: <slug>}`). Admin Users pane gained three multi-select fields persisted to `IUser.grants`. Tests in `services/features/Auth/__tests__/grants.test.ts`.
+
 Status: **Foundation + guardMethods integration shipped 2026-05-02.** `Permissions` feature + Loader, `PermissionService` (CRUD + can() predicate + per-request cache + creator-on-create helper), `FunctionalRoleDescriptor` type carried through Loader → manifest → registry, `composedFunctionalRoles()`, GraphQL surface (`grantPermission` / `revokePermission` / `permissionsForUser` / `functionalRoles`). Three roles declared on their owning Loaders: `translator` (Languages), `content-editor` (Posts), `page-owner` (Navigation). **`guardMethods` extended** with `resourceGated` extractors + `permissionCheck` hook; the next-route mutation proxy reads `RESOURCE_GATED_METHODS` from `composedAuthz` and feeds a request-scoped permission predicate. Features opt in by adding `resourceGated` entries to their manifest's `authz`. **Remaining**: feature-by-feature `resourceGated` declarations on actual mutation methods, admin UI for assigning roles + grants, one-shot migration from `siteFlags.inlineTranslationEdit` → `translator` role.
 Last updated: 2026-05-02
 
@@ -56,3 +58,67 @@ Page / module / element grants from §"The three levels" still exist but as **re
 6. **Permission caching — per-request cache in GraphQL context.** First check on a `(userId, scope, resourceId)` triple in a request hits Mongo; subsequent checks in the same request read the request-scoped cache. Cache lifetime ends with the request; no cross-request invalidation needed.
 7. **Functional-role discovery — `assignable: true` opt-in.** Roles default to internal/system; the admin "assign roles to user" picker only lists roles whose Loader declares `functionalRoles: [{id: ..., assignable: true}]`. Keeps internal-only roles hidden.
 8. **Translation flag mapping — drop the shortcut.** `siteFlags.inlineTranslationEdit` is replaced by the `translator` functional role. Editors who used to inherit translation edit through the flag now need an explicit role assignment. One-shot migration: existing installs with the flag ON → grant the `translator` role to every editor-rank user at boot.
+
+## Q10 — three-dimension grants (2026-05-03)
+
+The `Permissions` rows + functional roles described above stay; Q10 adds an
+**orthogonal** lighter-weight surface for the common case "let editor X
+mutate feature Y on page Z in locale W". Three dimensions, composable on
+the user via `IUser.grants`:
+
+```ts
+type FeatureGrant = {kind: 'feature'; feature: string};   // can mutate this feature
+type PageGrant    = {kind: 'page';    page: string};      // can edit this page slug
+type LocaleGrant  = {kind: 'locale';  locale: string};    // can edit/translate this language
+type Grant        = FeatureGrant | PageGrant | LocaleGrant;
+```
+
+### Evaluation contract (intersection semantics)
+
+A mutation declares which dimensions it is gated on through its feature
+manifest's `authz.resourceGated`. The extractor returns
+`{dimensions: ['feature','page',...], values: {feature, page, locale}}`.
+For each declared dimension the user must hold a matching grant — ALL
+of them. If any one is missing, `ResourceForbiddenError` is thrown.
+
+- **Admin rank bypasses.** `session.role === 'admin'` skips the dimension
+  loop entirely. Same rule as the existing per-resource gate.
+- **Missing dimension value is a hard deny.** If the extractor returns
+  `{values: {feature: 'Posts', page: ''}}` for a method gated on `page`,
+  the call is rejected — no "open by default" fallback.
+- **Empty grants are a deny.** A non-admin with `grants: []` cannot pass
+  any gated mutation. Bootstrap a fresh editor with at least the feature
+  grants they need.
+
+### Acceptance per dimension
+
+- **`feature`** — Posts manifest declares `dimensions: ['feature', 'page']`
+  on `savePost` / `deletePost` / `setPostPublished`. An editor with
+  `{kind:'feature', feature:'Posts'}` (and the matching page grant) can
+  call them; without `feature:Posts` they're blocked.
+- **`page`** — same Posts wiring. The page is extracted from
+  `args.post.slug` (savePost) or `args.id` (delete / setPublished). An
+  editor with feature-grant but no matching `{kind:'page', page:'/blog/post-1'}`
+  is denied.
+- **`locale`** — applied analogously by translation-side mutations
+  (Languages feature contributes its own `resourceGated` extractors that
+  pull `args.locale`). Editors without the matching `{kind:'locale'}`
+  grant cannot edit translation keys for that language.
+
+### Wiring
+
+- `services/features/Auth/authz.ts` — `guardMethods` now takes an optional
+  `GrantResolver`. The Next-route resolver (`services/api/graphqlResolvers.ts`
+  → `buildGrantResolver`) resolves the caller's grants once per request via
+  `userService.getUser({email})` and memos the promise.
+- `ui/admin/features/Users/Users.tsx` — modal exposes three `Select mode="tags"`
+  fields (Feature / Page / Locale grants); the VM rebuilds the discriminated
+  `Grant[]` union on save.
+
+### Reference
+
+- One example per dimension — see Posts manifest (`feature` + `page`) for
+  the canonical wiring; Languages translation mutations are the
+  `locale` reference.
+- Users assigned via the admin Users pane (`/admin → Users → Edit`).
+- Tests: `services/features/Auth/__tests__/grants.test.ts`.

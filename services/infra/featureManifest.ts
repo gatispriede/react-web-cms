@@ -113,8 +113,23 @@ export interface FeatureAuthzContribution {
      *
      * Returning `null` from the extractor skips the per-resource check
      * (e.g. for create-flow methods where there's no existing resource yet).
+     *
+     * Q10 (2026-05-03) — extractors may ALSO return the three-dimension
+     * shape `{dimensions: ['feature','page',...], values: {feature, page, locale}}`
+     * for grants composed across feature/page/locale. The proxy accepts
+     * either shape; existing `{scope, resourceId}` callers keep working.
+     * See `docs/features/platform/edit-levels.md`.
      */
-    resourceGated?: Record<string, (args: any) => {scope: 'page' | 'module' | 'element'; resourceId: string} | null>;
+    resourceGated?: Record<
+        string,
+        (args: any) =>
+            | {scope: 'page' | 'module' | 'element'; resourceId: string}
+            | {
+                  dimensions: readonly import('@interfaces/IPermission').GrantDimension[];
+                  values: import('@interfaces/IPermission').DimensionGrantSpec;
+              }
+            | null
+    >;
 }
 
 export interface FeatureManifest {

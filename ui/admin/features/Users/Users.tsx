@@ -4,6 +4,7 @@ import {DeleteOutlined, EditOutlined, PlusOutlined} from "@client/lib/icons";
 import {useTranslation} from "react-i18next";
 import {useSession} from "next-auth/react";
 import {IUser, UserRole} from "@interfaces/IUser";
+import {Grant, FeatureGrant, PageGrant, LocaleGrant} from "@interfaces/IPermission";
 import {useViewModel} from "@client/lib/state/observable";
 import {UsersViewModel} from "./UsersViewModel";
 
@@ -26,6 +27,13 @@ const AdminSettingsUsers = () => {
 
     const onSave = async () => {
         const values = await form.validateFields();
+        // Q10 — fold the three multi-select arrays into vm.editing.grants
+        // before save. The VM rebuilds the discriminated `Grant[]` union.
+        vm.setGrants(
+            values.grantFeatures ?? [],
+            values.grantPages ?? [],
+            values.grantLocales ?? [],
+        );
         await vm.save(values, currentEmail, async () => {
             await updateSession({user: {mustChangePassword: false}});
         });
@@ -112,6 +120,9 @@ const AdminSettingsUsers = () => {
                             name: vm.editing?.name ?? '',
                             role: vm.editing?.role ?? 'viewer',
                             canPublishProduction: Boolean(vm.editing?.canPublishProduction),
+                            grantFeatures: ((vm.editing?.grants ?? []).filter(g => g.kind === 'feature') as FeatureGrant[]).map(g => g.feature),
+                            grantPages: ((vm.editing?.grants ?? []).filter(g => g.kind === 'page') as PageGrant[]).map(g => g.page),
+                            grantLocales: ((vm.editing?.grants ?? []).filter(g => g.kind === 'locale') as LocaleGrant[]).map(g => g.locale),
                         }}
                     >
                         <Form.Item
@@ -146,6 +157,31 @@ const AdminSettingsUsers = () => {
                             rules={vm.editing?.id ? [] : [{required: true, message: t('Password is required')}]}
                         >
                             <Input.Password autoComplete="new-password"/>
+                        </Form.Item>
+                        {/* Q10 — three-dimension grants: feature / page / locale.
+                            Options are free-text tags so admins can grant against
+                            features/pages/locales the codegen feature registry has
+                            not yet surfaced. Stored as a flat Grant[] on save. */}
+                        <Form.Item
+                            name="grantFeatures"
+                            label={t('Feature grants')}
+                            tooltip={t('User can mutate these features (e.g. Posts, Themes).')}
+                        >
+                            <Select mode="tags" allowClear placeholder={t('Posts, Themes, …')}/>
+                        </Form.Item>
+                        <Form.Item
+                            name="grantPages"
+                            label={t('Page grants')}
+                            tooltip={t('Page slugs the user can edit (e.g. /pricing).')}
+                        >
+                            <Select mode="tags" allowClear placeholder={t('/pricing, /about, …')}/>
+                        </Form.Item>
+                        <Form.Item
+                            name="grantLocales"
+                            label={t('Locale grants')}
+                            tooltip={t('Languages the user can edit / translate (e.g. lv, en).')}
+                        >
+                            <Select mode="tags" allowClear placeholder={t('lv, en, …')}/>
                         </Form.Item>
                     </Form>
                 </Modal>

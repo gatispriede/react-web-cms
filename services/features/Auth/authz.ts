@@ -2,6 +2,12 @@ import {getServerSession} from 'next-auth/next';
 import type {NextAuthOptions} from 'next-auth';
 import {UserRole} from '@interfaces/IUser';
 import {composedAuthz} from '@services/infra/featureRegistry';
+import {
+    type Grant,
+    type GrantDimension,
+    type DimensionGrantSpec,
+    userHasGrant,
+} from '@interfaces/IPermission';
 
 export const ROLE_RANK: Record<UserRole, number> = {viewer: 0, editor: 1, admin: 2};
 
@@ -124,7 +130,31 @@ const ANON_OPEN_MUTATIONS: ReadonlySet<string> = new Set<string>();
  * create-flow methods where there's no existing resource).
  * Per `docs/features/platform/edit-levels.md`.
  */
-export type ResourceGateExtractor = (args: any) => {scope: 'page' | 'module' | 'element'; resourceId: string} | null;
+export type ResourceGateExtractor = (
+    args: any,
+) =>
+    | {scope: 'page' | 'module' | 'element'; resourceId: string}
+    | {dimensions: readonly GrantDimension[]; values: DimensionGrantSpec}
+    | null;
+
+/**
+ * Resource-forbidden error — thrown when a per-resource (legacy scope) or
+ * per-dimension (Q10) grant check fails. Distinct subclass so resolvers can
+ * surface it as a 403 rather than a generic AuthzError if needed.
+ */
+export class ResourceForbiddenError extends AuthzError {
+    constructor(message: string) {
+        super(message);
+        this.name = 'ResourceForbiddenError';
+    }
+}
+
+/**
+ * Q10 — request-scoped grant resolver. Looks up the caller's `grants`
+ * array (cached per-request). Returns `[]` when no Permissions/Users
+ * service is wired (gating then no-ops, falling back to role-rank).
+ */
+export type GrantResolver = (session: GraphqlSession) => Promise<readonly Grant[]>;
 
 /** Async predicate the proxy calls after the role/capability check passes. */
 export type PermissionCheck = (opts: {
@@ -141,6 +171,7 @@ export function guardMethods<T extends object>(
     capabilities: Record<string, Capability> = {},
     resourceGated: Record<string, ResourceGateExtractor> = {},
     permissionCheck?: PermissionCheck,
+    grantResolver?: GrantResolver,
 ): T {
     const kind: SessionKind = session.kind ?? 'admin';
 
@@ -251,19 +282,44 @@ export function guardMethods<T extends object>(
             // the service take credit for the bypass) but only when an
             // extractor is registered AND a check function is wired.
             const resourceExtractor = resourceGated[key];
-            if (resourceExtractor && permissionCheck) {
+            if (resourceExtractor) {
                 const bound = value.bind(obj);
                 return async (args: any = {}) => {
-                    const grant = resourceExtractor(args);
-                    if (grant) {
-                        const ok = await permissionCheck({
-                            userId: session.email ?? '',
-                            userRole: session.role,
-                            scope: grant.scope,
-                            resourceId: grant.resourceId,
-                        });
-                        if (!ok) {
-                            throw new AuthzError(`Forbidden: no ${grant.scope} grant on ${grant.resourceId}`);
+                    const extracted = resourceExtractor(args);
+                    if (extracted) {
+                        // Branch A: legacy `{scope, resourceId}` — gated via PermissionService.
+                        if ('scope' in extracted && permissionCheck) {
+                            const ok = await permissionCheck({
+                                userId: session.email ?? '',
+                                userRole: session.role,
+                                scope: extracted.scope,
+                                resourceId: extracted.resourceId,
+                            });
+                            if (!ok) {
+                                throw new ResourceForbiddenError(
+                                    `Forbidden: no ${extracted.scope} grant on ${extracted.resourceId}`,
+                                );
+                            }
+                        }
+                        // Branch B (Q10): three-dimension grants. Admin bypass; otherwise
+                        // every declared dimension must be satisfied (intersection).
+                        if ('dimensions' in extracted) {
+                            if (session.role !== 'admin') {
+                                const grants = grantResolver ? await grantResolver(session) : [];
+                                for (const dim of extracted.dimensions) {
+                                    const value = extracted.values[dim];
+                                    if (!value) {
+                                        throw new ResourceForbiddenError(
+                                            `Forbidden: ${key} requires ${dim} dimension but extractor returned no value`,
+                                        );
+                                    }
+                                    if (!userHasGrant(grants, dim, value)) {
+                                        throw new ResourceForbiddenError(
+                                            `Forbidden: missing ${dim}=${value} grant for ${key}`,
+                                        );
+                                    }
+                                }
+                            }
                         }
                     }
                     if (SESSION_INJECTED_METHODS.has(key)) {
