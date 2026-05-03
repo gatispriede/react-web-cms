@@ -1,7 +1,7 @@
 import React from 'react';
 import type {GetStaticProps} from 'next';
 import {serverSideTranslations} from 'next-i18next/pages/serverSideTranslations';
-import LandingPage from '@client/components/Marketing/LandingPage';
+import LandingPage from '@client/features/Marketing/LandingPage';
 
 /**
  * Always-on marketing landing route. Reachable as `/welcome` regardless of

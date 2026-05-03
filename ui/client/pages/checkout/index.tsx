@@ -4,7 +4,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import {Button, ConfigProvider, Empty, Input, Typography, message} from 'antd';
 import staticTheme from '@client/features/Themes/themeConfig';
-import {useCart} from '@client/components/cart/useCart';
+import {useCart} from '@client/features/Cart/useCart';
 import {useCheckoutMachine} from '@client/lib/checkout/useCheckoutMachine';
 import {createDraftOrder, formatMoney} from '@client/lib/checkout/api';
 import {withFeatureGate} from '@client/lib/featureGate';

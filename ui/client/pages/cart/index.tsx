@@ -4,8 +4,8 @@ import Head from 'next/head';
 import {Button, ConfigProvider, Empty, Typography} from 'antd';
 import {ArrowLeftOutlined} from '@client/lib/icons';
 import staticTheme from '@client/features/Themes/themeConfig';
-import CartLineItem from '../../components/cart/CartLineItem';
-import {useCart} from '../../components/cart/useCart';
+import CartLineItem from '@client/features/Cart/CartLineItem';
+import {useCart} from '@client/features/Cart/useCart';
 import {withFeatureGate} from '@client/lib/featureGate';
 import type {GetServerSideProps} from 'next';
 

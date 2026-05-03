@@ -4,7 +4,7 @@ import {useTranslation} from 'next-i18next/pages';
 import {serverSideTranslations} from 'next-i18next/pages/serverSideTranslations';
 import {usePathname} from 'next/navigation';
 import App from './app';
-import LandingPage from '@client/components/Marketing/LandingPage';
+import LandingPage from '@client/features/Marketing/LandingPage';
 import {fetchInitialPageData, InitialPageData} from '@client/lib/gqlFetch';
 
 interface Props {

@@ -1,7 +1,7 @@
 # Landing page copy
 
 Single source of truth for the marketing landing page text. The TSX in
-`ui/client/components/Marketing/` imports constants from `copy.ts`, which
+`ui/client/features/Marketing/` imports constants from `copy.ts`, which
 mirrors the strings here. Edit both when iterating copy — the markdown
 is the human-readable reference, the `.ts` is what ships.
 

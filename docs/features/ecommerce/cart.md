@@ -195,8 +195,8 @@ The cookie holds only an opaque id — never line items. All cart state lives se
 Location: `ui/client/pages/cart/`.
 
 - `ui/client/pages/cart/index.tsx` — full cart page (line items, qty steppers, remove, subtotal, "proceed to checkout" CTA).
-- `ui/client/components/cart/CartDrawer.tsx` — slide-in drawer triggered from the header cart icon, renders the same line-item component as the page.
-- `ui/client/components/cart/CartLineItem.tsx` — shared row component.
+- `ui/client/features/Cart/CartDrawer.tsx` — slide-in drawer triggered from the header cart icon, renders the same line-item component as the page.
+- `ui/client/features/Cart/CartLineItem.tsx` — shared row component.
 - Client state via a small `useCart()` hook that wraps the GraphQL queries/mutations and exposes optimistic updates.
 - No admin UI is in scope. **Open question:** should admins be able to view a customer's cart for support? See §11.
 
@@ -248,4 +248,4 @@ Implemented per spec. Decisions taken:
 Deferred:
 - Guest-cart merge on Google sign-in callback — `signIn` callback doesn't have request-cookie access for the OAuth redirect path. Credentials path is wired and is the most common flow.
 
-Files: `shared/types/ICart.ts`, `services/features/Cart/{CartService.ts,CartService.test.ts,cartCookie.ts}`, `services/infra/redis.ts`, `services/api/{schema.graphql,graphqlResolvers.ts}`, `services/infra/mongoDBConnection.ts`, `ui/client/pages/api/{graphql.ts,auth/authOptions.ts}`, `ui/client/pages/cart/index.tsx`, `ui/client/pages/products/{index.tsx,[slug].tsx}`, `ui/client/components/cart/{useCart.ts,CartIcon.tsx,CartLineItem.tsx,CartDrawer.tsx}`. Tests: 22 new.
+Files: `shared/types/ICart.ts`, `services/features/Cart/{CartService.ts,CartService.test.ts,cartCookie.ts}`, `services/infra/redis.ts`, `services/api/{schema.graphql,graphqlResolvers.ts}`, `services/infra/mongoDBConnection.ts`, `ui/client/pages/api/{graphql.ts,auth/authOptions.ts}`, `ui/client/pages/cart/index.tsx`, `ui/client/pages/products/{index.tsx,[slug].tsx}`, `ui/client/features/Cart/{useCart.ts,CartIcon.tsx,CartLineItem.tsx,CartDrawer.tsx}`. Tests: 22 new.

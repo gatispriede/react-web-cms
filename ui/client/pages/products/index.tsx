@@ -12,7 +12,7 @@ import {buildThemeConfig} from '@client/features/Themes/buildThemeConfig';
 import {applyThemeCssVars} from '@client/features/Themes/applyThemeCssVars';
 import {IProduct} from '@interfaces/IProduct';
 import Logo from '@client/features/Logo/Logo';
-import CartIcon from '../../components/cart/CartIcon';
+import CartIcon from '@client/features/Cart/CartIcon';
 import RevealOnScroll from '@client/lib/RevealOnScroll';
 import SiteFooter from '@client/features/Footer/SiteFooter';
 import {DEFAULT_FOOTER, IFooterConfig} from '@interfaces/IFooter';

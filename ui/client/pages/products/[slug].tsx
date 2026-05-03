@@ -14,10 +14,10 @@ import {applyThemeCssVars} from '@client/features/Themes/applyThemeCssVars';
 import {sanitizeHtml} from '@utils/sanitize';
 import {IProduct, IProductVariant} from '@interfaces/IProduct';
 import Logo from '@client/features/Logo/Logo';
-import CartIcon from '../../components/cart/CartIcon';
+import CartIcon from '@client/features/Cart/CartIcon';
 import SiteFooter from '@client/features/Footer/SiteFooter';
 import {DEFAULT_FOOTER, IFooterConfig} from '@interfaces/IFooter';
-import {useCart} from '../../components/cart/useCart';
+import {useCart} from '@client/features/Cart/useCart';
 import {message} from 'antd';
 
 interface Props {
