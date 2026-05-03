@@ -1,4 +1,5 @@
 import {Divider, Form, Input, Modal, Tag, Typography} from "antd";
+// eslint-disable-next-line no-restricted-imports -- Dialog is a leaf modal; preset filter is local interaction state.
 import React, {useState} from "react";
 import {TFunction} from "i18next";
 import TranslationManager from "@admin/shell/TranslationManager";

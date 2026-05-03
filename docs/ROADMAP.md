@@ -12,7 +12,7 @@ Platform refactor wave — every spec linked below describes the architecture; t
 |---|---|
 | [service-modularity](features/platform/service-modularity.md) | Phases A/B/C — every feature owns its manifest. |
 | [class-loader](features/platform/class-loader.md) | L1+L2+L3 — 22 ServiceLoader classes. **L4 — all 17 admin panes registry-driven**; legacy switch trimmed to one fallback. |
-| [view-model-classes](features/platform/view-model-classes.md) | VM1+VM2 — bare-Proxy `observable.ts` helper. **VM3 — 15/17 panes migrated** (Themes + Translations remain). |
+| [view-model-classes](features/platform/view-model-classes.md) | VM1+VM2 — bare-Proxy `observable.ts` helper. **VM3 — 17/17 panes migrated** (Themes + Translations landed 2026-05-02). **VM4 — flat-config ESLint rule bans `useState` in `ui/admin/features/**`**. |
 | [plug-and-play-features](features/platform/plug-and-play-features.md) | v1 + v2 — env > Mongo > default precedence, admin UI, MCP tools. v3 (hot-reload) deferred. |
 | [server-restart](features/platform/server-restart.md) | Backend + UI banner + bootId-poll-and-reload, FeatureFlags wiring. |
 | [edit-levels](features/platform/edit-levels.md) | Permissions feature + service, functional roles, `guardMethods` resource-gate hook, request-scoped cache. |
@@ -44,9 +44,9 @@ E-commerce specs ([`docs/features/ecommerce/`](features/ecommerce/)) and the sup
 
 Architecture is settled; these are mechanical follow-ups across many files. Scope per pane is small and well-defined.
 
-1. **VM3 bulk** — migrate the remaining admin panes off inline `useState` to `<Feature>ViewModel.ts`. Done so far (15/17): Posts, Footer, ErrorLog, McpTokens, Audit, Publishing, Logo, Inquiries, Users, Bundle, Orders, Inventory, Products, Layout (Analytics has no useState — already render-only). Remaining (2): Themes (largest — style/font picker complexity, registered through L4 already), Translations (uses TranslationManager, registered through L4 already).
+1. **VM3 bulk — ✅ COMPLETE (17/17).** Posts, Footer, ErrorLog, McpTokens, Audit, Publishing, Logo, Inquiries, Users, Bundle, Orders, Inventory, Products, Layout, Analytics, **Themes** (style/font picker state moved to `ThemesViewModel`), **Translations** (`TranslationsViewModel` wraps the existing `TranslationManager`). Landed 2026-05-02.
 2. **L4 bulk — ✅ COMPLETE.** All 17 admin panes mount through the AdminUILoader registry (`adminUILoaderRegistry.ts`). Legacy `UserStatusBar.renderPane()` trimmed to a single `system/features` fallback (kept inline because FeatureFlagsPanel hosts the restart banner). Mode-aware dispatch picks `modes.simplified ?? modes.advanced` based on `useAdminMode()`.
-3. **VM4** — lint rule against `useState` in `ui/admin/features/**` once VM3 is complete.
+3. **VM4 — ✅ COMPLETE.** Flat-config ESLint at `eslint.config.mjs`; `no-restricted-imports` rule bans `useState` named import from `react` under `ui/admin/features/**` at error level. All other rules emit warnings during the initial rollout. Probed end-to-end. Landed 2026-05-02.
 4. **L4 — public route discovery** — read `ClientUILoader.publicRoutes`, auto-apply `withFeatureGate`, replace per-page wiring in `pages/`.
 5. **L4 — item-types migration** — feature-by-feature move from the flat `ui/admin/lib/itemTypes/registry.ts` to `ClientUILoader.itemTypes` + `AdminUILoader.itemTypeEditors` pairs.
 6. **edit-levels — per-feature `resourceGated` declarations** — each mutation that should be gated declares its `(args) => {scope, resourceId}` extractor in the manifest. Empty by default; add per pane that wants the gate.

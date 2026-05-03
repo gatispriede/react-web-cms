@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-restricted-imports -- FontPicker is a leaf modal (UI primitive), not a feature pane; its search/category/picked state is local interaction state, not view-model state.
 import React, {useEffect, useMemo, useState} from 'react';
 import {Button, Input, Modal, Radio, Space, Tag, Typography} from 'antd';
 import {SearchOutlined} from '@client/lib/icons';
