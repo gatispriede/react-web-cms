@@ -53,6 +53,13 @@ input InNavigation {
     id: String!
     type: String!
     page: String!
+    parent: String
+    """
+    Slug — F1 sub-pages follow-up. JSON scalar: a bare string is the
+    legacy single-locale form; an object `{en: "about", lv: "par-mums"}`
+    carries one slug per active locale.
+    """
+    slug: JSON
     seo: InSeo
     sections: [String]!
 }
@@ -200,6 +207,13 @@ type INavigation {
     id: String
     type: String!
     page: String!
+    parent: String
+    """
+    Slug — F1 sub-pages follow-up. JSON scalar; bare string for the
+    legacy single-locale form, or `{<locale>: <slug>, …}` for the
+    per-locale shape.
+    """
+    slug: JSON
     seo: ISeo
     sections: [String]!
     editedBy: String

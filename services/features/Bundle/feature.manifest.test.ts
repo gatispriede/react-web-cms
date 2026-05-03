@@ -35,9 +35,16 @@ describe('bundleFeature manifest', () => {
         expect(built?.bundle).toBeInstanceOf(BundleService);
     });
 
-    it('omits schemaSDL / resolvers / authz', () => {
-        expect(bundleFeature.schemaSDL).toBeUndefined();
+    it('declares the F2 trash admin SDL + authz (no resolver tree — delegates run on mongoConn)', () => {
+        // Bundle's import/export still flow through HTTP routes — but the
+        // F2 trash surface (`getTrashGroups` / `restoreFromTrash`) lives
+        // here because Bundle is the "site state" feature and owns the
+        // admin neighbourhood. Resolvers stay omitted; the GraphQL layer
+        // dispatches onto the connection's delegate methods.
+        expect(bundleFeature.schemaSDL).toContain('getTrashGroups');
+        expect(bundleFeature.schemaSDL).toContain('restoreFromTrash');
         expect(bundleFeature.resolvers).toBeUndefined();
-        expect(bundleFeature.authz).toBeUndefined();
+        expect(bundleFeature.authz?.queryRequirements?.getTrashGroups).toBe('admin');
+        expect(bundleFeature.authz?.mutationRequirements?.restoreFromTrash).toBe('admin');
     });
 });

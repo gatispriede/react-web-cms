@@ -66,9 +66,11 @@ export class UserApi {
         }
     }
 
-    async removeUser(id: string): Promise<{id?: string; error?: string}> {
+    async removeUser(id: string, opts: {idempotencyKey?: string} = {}): Promise<{id?: string; error?: string}> {
         try {
-            const raw = await resolve(({mutation}) => mutation.mongo.removeUser({id}));
+            const args: any = {id};
+            if (opts.idempotencyKey) args.idempotencyKey = opts.idempotencyKey;
+            const raw = await resolve(({mutation}) => mutation.mongo.removeUser(args as any));
             return JSON.parse(raw || '{}').removeUser ?? JSON.parse(raw || '{}');
         } catch (err) {
             return {error: String(err)};

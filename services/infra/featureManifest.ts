@@ -1,4 +1,4 @@
-import type {Db} from 'mongodb';
+import type {Db, Filter, UpdateFilter} from 'mongodb';
 import type {RedisLike} from './redis';
 
 /**
@@ -223,4 +223,93 @@ export interface FeatureManifest {
      * Type loose by design (see `ServiceLoader.batchAccessors`).
      */
     batchAccessors?: Record<string, (ctx: FeatureContext) => unknown>;
+
+    /**
+     * Declarative cascade rules consumed by the cascade engine
+     * (`services/infra/cascadeDelete.ts`) per F2 / `data-integrity.md`.
+     *
+     * Each rule lives on the feature that OWNS the dependent (child)
+     * data — not on the parent feature. When `cascadeDelete` is invoked
+     * for `parentFeature.parentCollection` + a `parentId`, every active
+     * feature's `cascadeRules` are walked and matching rules move their
+     * `childCollection` rows into a `<childCollection>.trash` collection
+     * with a 24h Mongo TTL. Rules are intentionally side-effect-free
+     * data — no imperative cleanup code in delete handlers.
+     *
+     * `matchByParentId` receives the parent id plus (optionally) the
+     * still-live parent doc — handy for `Navigation -> Sections` where
+     * the child match is `{id: {$in: parentDoc.sections}}` rather than
+     * a direct foreign-key field.
+     */
+    cascadeRules?: readonly AnyCascadeRule[];
 }
+
+/**
+ * Cascade rule kinds — the engine dispatches on `kind`.
+ *
+ *   - `collection-move` (default for back-compat): move every matching
+ *     child row into a `<childCollection>.trash` collection. Restore is
+ *     symmetric — `cascadeRestore` puts the rows back.
+ *   - `doc-mutate`: apply a `$unset` / `$pull` / `$set` to a singleton
+ *     doc (e.g. SiteSettings keyed by `siteSeo`). The mutated state is
+ *     NOT moved to trash — singletons have no clean restore semantics
+ *     so `cascadeRestore` is a NO-OP for these rules. Document the
+ *     consequence at the call site (e.g. SiteSeo.pages.<slug> stays
+ *     dropped on restore).
+ */
+export type CascadeRuleKind = 'collection-move' | 'doc-mutate';
+
+/**
+ * Collection-move rule — declared on the child-owning feature. See the
+ * comment on `FeatureManifest.cascadeRules`.
+ */
+export interface CascadeRule {
+    /** Discriminator. Omit for back-compat — defaults to `collection-move`. */
+    kind?: 'collection-move';
+    /** Parent feature id (matches `FeatureManifest.id`). */
+    parentFeature: string;
+    /** Parent Mongo collection name. */
+    parentCollection: string;
+    /** Child Mongo collection name owned by THIS feature. */
+    childCollection: string;
+    /**
+     * Build a Mongo filter that selects every child row tied to the
+     * deleted parent. `parentDoc` is the still-live parent document
+     * (read just before deletion); `undefined` when the parent has
+     * already been removed but the rule is replayed for restore /
+     * audit.
+     */
+    matchByParentId: (parentId: string, parentDoc?: any) => Filter<any>;
+}
+
+/**
+ * Doc-mutating cascade rule — applies a partial update to a singleton
+ * document instead of moving rows. Used when child data lives as keyed
+ * fields inside a shared singleton (e.g. per-page SEO under
+ * `SiteSettings(key=siteSeo).value.pages.<slug>`).
+ *
+ * IMPORTANT: the mutation is one-way. `cascadeRestore` is a NO-OP for
+ * `doc-mutate` rules — there is no clean restore semantic for a
+ * singleton field. Callers must not expect a deleted SiteSeo entry to
+ * come back when the parent is restored.
+ */
+export interface DocMutateCascadeRule {
+    kind: 'doc-mutate';
+    /** Parent feature id (matches `FeatureManifest.id`). */
+    parentFeature: string;
+    /** Parent Mongo collection name. */
+    parentCollection: string;
+    /** Singleton collection holding the doc to mutate. */
+    targetCollection: string;
+    /** Filter that selects the singleton doc (e.g. `{key: 'siteSeo'}`). */
+    targetFilter: Filter<any>;
+    /**
+     * Build the Mongo update — `$unset`, `$pull`, `$set`, etc. The
+     * optional `parentDoc` is the still-live parent (read just before
+     * deletion) so the update can pull a slug/page key off it.
+     */
+    buildUpdate: (parentId: string, parentDoc?: any) => UpdateFilter<any>;
+}
+
+/** Union — what a feature manifest's `cascadeRules` array actually accepts. */
+export type AnyCascadeRule = CascadeRule | DocMutateCascadeRule;

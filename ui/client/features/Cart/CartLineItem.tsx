@@ -19,7 +19,10 @@ interface Props {
 const CartLineItem: React.FC<Props> = ({line, onUpdateQty, onRemove}) => {
     const lineTotal = line.qty * line.priceSnapshot;
     return (
-        <div style={{display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid var(--theme-borderColor, #eee)'}}>
+        <div
+            data-testid={`cart-item-row-${line.sku}`}
+            style={{display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid var(--theme-borderColor, #eee)'}}
+        >
             <div style={{flex: 1, minWidth: 0}}>
                 <Typography.Text strong style={{display: 'block'}}>{line.sku}</Typography.Text>
                 <Typography.Text type="secondary" style={{fontSize: 12}}>
@@ -28,6 +31,7 @@ const CartLineItem: React.FC<Props> = ({line, onUpdateQty, onRemove}) => {
             </div>
             <Space>
                 <InputNumber
+                    data-testid={`cart-item-qty-input-${line.sku}`}
                     min={0}
                     max={999}
                     value={line.qty}
@@ -35,7 +39,7 @@ const CartLineItem: React.FC<Props> = ({line, onUpdateQty, onRemove}) => {
                     style={{width: 72}}
                 />
                 <Typography.Text>{formatPrice(lineTotal, line.currency)}</Typography.Text>
-                <Button danger type="text" onClick={onRemove}>Remove</Button>
+                <Button data-testid={`cart-item-remove-btn-${line.sku}`} danger type="text" onClick={onRemove}>Remove</Button>
             </Space>
         </div>
     );

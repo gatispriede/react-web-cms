@@ -49,7 +49,7 @@ const ConfirmationPage: React.FC = () => {
                 ) : (
                     <>
                         <Typography.Title level={2}>Thank you!</Typography.Title>
-                        <Typography.Paragraph>Your order <strong>{order.orderNumber}</strong> is confirmed.</Typography.Paragraph>
+                        <Typography.Paragraph>Your order <strong data-testid="order-confirmation-id">{order.orderNumber}</strong> is confirmed.</Typography.Paragraph>
                         <Card title="Summary" style={{marginBottom: 16}}>
                             {order.lineItems.map((line: any) => (
                                 <div key={`${line.productId}:${line.sku}`} style={{display: 'flex', justifyContent: 'space-between'}}>

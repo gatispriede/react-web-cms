@@ -1,0 +1,186 @@
+/* ==========================================================================
+   NavMenu — public top-bar AntD `<Menu mode="horizontal">` styling.
+
+   F1 sub-pages — replaces the hand-rolled tablist with an AntD Menu so
+   nested children render as SubMenu dropdowns. Per docs/roadmap/sub-pages.md
+   decision 6, per-theme styling is in scope from day one — each shipped
+   preset gets its own override block here so existing themes don't
+   visually regress on the swap.
+
+   Class structure:
+     `.nav-menu`                  — base reset (every theme inherits)
+     `.nav-menu--industrial`      — preset overrides
+     `.nav-menu--studio`
+     `.nav-menu--paper`
+     `.nav-menu--high-contrast`
+
+   Tokens come from `applyThemeCssVars` (--font-display, --font-sans,
+   --ink, --accent, --rule, --theme-colorBgBase). No hard-coded colours
+   here — themes own their palette.
+   ========================================================================== */
+
+/* ---- Base reset ---------------------------------------------------------- */
+.nav-menu.ant-menu-horizontal {
+  border-bottom: 0;
+  background: transparent;
+  line-height: 48px;
+
+  /* Anchors inside menu items inherit colour from the parent so theme
+     overrides target one selector instead of fighting `<a>` defaults. */
+  .navigation-item,
+  a.navigation-item {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* Items: thin underline ink-bar driven by the active-trail state, like
+     the previous `<Tabs>` did. SubMenu trigger rows pick up the same. */
+  .ant-menu-item,
+  .ant-menu-submenu {
+    padding-inline: 0;
+
+    + .ant-menu-item,
+    + .ant-menu-submenu {
+      margin-inline-start: 28px;
+    }
+
+    &::after {
+      inset-inline: 0;
+    }
+  }
+
+  .ant-menu-submenu-title {
+    padding-inline: 0;
+  }
+}
+
+/* ---- Industrial ---------------------------------------------------------- */
+[data-theme-name="industrial"] .nav-menu.ant-menu-horizontal,
+.nav-menu--industrial.ant-menu-horizontal {
+  font-family: var(--font-display, 'Barlow Condensed', sans-serif);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--theme-colorBgBase);
+  border-bottom: 1px solid var(--rule);
+
+  .ant-menu-item,
+  .ant-menu-submenu {
+    color: var(--ink-2);
+
+    &:hover,
+    &.ant-menu-item-active,
+    &.ant-menu-submenu-active { color: var(--ink); }
+
+    &.ant-menu-item-selected,
+    &.ant-menu-submenu-selected { color: var(--ink); }
+
+    &.ant-menu-item-selected::after,
+    &.ant-menu-submenu-selected::after {
+      border-bottom: 2px solid var(--accent) !important;
+    }
+  }
+}
+
+/* ---- Studio -------------------------------------------------------------- */
+[data-theme-name="studio"] .nav-menu.ant-menu-horizontal,
+.nav-menu--studio.ant-menu-horizontal {
+  font-family: var(--font-sans, 'Geist', sans-serif);
+  font-size: 14px;
+  letter-spacing: 0;
+  text-transform: none;
+  background: color-mix(in oklch, var(--theme-colorBgBase) 88%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid color-mix(in oklch, var(--ink) 10%, transparent);
+
+  .ant-menu-item,
+  .ant-menu-submenu {
+    color: var(--ink-2);
+
+    &:hover,
+    &.ant-menu-item-selected,
+    &.ant-menu-submenu-selected { color: var(--accent); }
+
+    &.ant-menu-item-selected::after,
+    &.ant-menu-submenu-selected::after {
+      border-bottom: 2px solid var(--accent) !important;
+    }
+  }
+}
+
+/* ---- Paper --------------------------------------------------------------- */
+[data-theme-name="paper"] .nav-menu.ant-menu-horizontal,
+.nav-menu--paper.ant-menu-horizontal {
+  font-family: var(--font-display, 'Crimson Pro', serif);
+  font-weight: 500;
+  font-size: 16px;
+  letter-spacing: 0;
+  text-transform: none;
+  background: var(--theme-colorBgBase);
+  border-bottom: 1px solid var(--rule);
+
+  .ant-menu-item,
+  .ant-menu-submenu {
+    color: var(--ink-2);
+
+    &:hover { color: var(--ink); }
+
+    &.ant-menu-item-selected,
+    &.ant-menu-submenu-selected {
+      color: var(--ink);
+      font-style: italic;
+    }
+
+    &.ant-menu-item-selected::after,
+    &.ant-menu-submenu-selected::after {
+      border-bottom: 1px solid var(--accent) !important;
+    }
+  }
+}
+
+/* ---- High contrast ------------------------------------------------------- */
+[data-theme-name="high-contrast"] .nav-menu.ant-menu-horizontal,
+.nav-menu--high-contrast.ant-menu-horizontal {
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background: var(--theme-colorBgBase);
+  border-bottom: 2px solid var(--ink);
+
+  .ant-menu-item,
+  .ant-menu-submenu {
+    color: var(--ink);
+
+    &:hover,
+    &.ant-menu-item-selected,
+    &.ant-menu-submenu-selected {
+      color: var(--theme-colorBgBase);
+      background: var(--ink);
+    }
+
+    /* High contrast skips the underline ink-bar — the inverted bg fill is
+       a stronger affordance and avoids a 1px-line WCAG contrast hit. */
+    &::after { border-bottom: 0 !important; }
+  }
+}
+
+/* ---- Submenu popup styling (shared, theme-aware via tokens) ------------- */
+.ant-menu-submenu-popup .nav-menu-popup,
+.ant-menu-submenu-popup .ant-menu {
+  background: var(--theme-colorBgBase, #fff);
+  border: 1px solid var(--rule, rgba(0, 0, 0, 0.1));
+
+  .ant-menu-item {
+    color: var(--ink-2);
+
+    &:hover,
+    &.ant-menu-item-selected {
+      color: var(--accent);
+      background: color-mix(in oklch, var(--accent) 8%, transparent);
+    }
+  }
+}

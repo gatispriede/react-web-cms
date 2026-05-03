@@ -31,7 +31,16 @@
 /mongo_data
 
 # Generated first-boot admin credentials (see services/features/Auth/initialPassword.ts)
+# Also catches scratch dumps moved out of repo root: .agent-backup.json, gql_*.json, response.json, etc.
 /var/
+
+# Playwright test artefacts
+/test-results/
+
+# Stray scratch files at repo root (defence in depth — /var/ is the canonical home)
+/.agent-backup.json
+/gql_*.json
+/response.json
 
 # ── Env / secrets ────────────────────────────────────────────────────────────
 .env

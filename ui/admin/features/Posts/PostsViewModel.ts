@@ -1,9 +1,11 @@
 import {message} from 'antd';
 import PostApi from '@services/api/client/PostApi';
 import SiteFlagsApi from '@services/api/client/SiteFlagsApi';
+import NavigationApi from '@services/api/client/NavigationApi';
 import {IPost, InPost} from '@interfaces/IPost';
 import {ConflictError, isConflictError} from '@client/lib/conflict';
 import {observable} from '@client/lib/state/observable';
+import {GuardedAction} from '@admin/lib/useGuardedAction';
 
 /**
  * Posts view-model — proof case for `view-model-classes.md` (VM2).
@@ -32,6 +34,12 @@ export class PostsViewModel {
     loading = false;
     saving = false;
     blogEnabled = true;
+    /**
+     * F2 — list of pages a post can be pinned to. Lives on the VM (not
+     * `useState` per VM4 ban). Populated alongside `posts` on `refresh()`.
+     * Empty array means "no pages exist" — UI shows pin Select disabled.
+     */
+    pages: {id: string; page: string}[] = [];
 
     /** The post currently in the edit drawer; `null` = drawer closed. */
     editing: Partial<InPost> | null = null;
@@ -45,21 +53,34 @@ export class PostsViewModel {
         private readonly postApi: PostApi = new PostApi(),
         private readonly siteFlagsApi: SiteFlagsApi = new SiteFlagsApi(),
         private readonly t: (key: string, opts?: Record<string, unknown>) => string = (k) => k,
+        private readonly navigationApi: NavigationApi = new NavigationApi(),
     ) {
         // Wrap `this` so field writes are observable. The Proxy returned
         // here replaces `this` for everyone holding a reference.
-        return observable(this);
+        const proxy = observable(this);
+        proxy.removeAction = new GuardedAction<[IPost]>(
+            async ({idempotencyKey}, post) => {
+                const result = await proxy.postApi.remove(post.id, {idempotencyKey});
+                if (result.error) { message.error(result.error); return; }
+                message.success(proxy.t('Post deleted'));
+                await proxy.refresh();
+            },
+            {onPendingChange: (v) => { proxy.removePending = v; }},
+        );
+        return proxy;
     }
 
     async refresh(): Promise<void> {
         this.loading = true;
         try {
-            const [list, flags] = await Promise.all([
+            const [list, flags, pages] = await Promise.all([
                 this.postApi.list({includeDrafts: true, limit: 200}),
                 this.siteFlagsApi.get(),
+                this.navigationApi.fetchPageList(),
             ]);
             this.posts = list;
             this.blogEnabled = flags.blogEnabled !== false;
+            this.pages = pages;
         } finally {
             this.loading = false;
         }
@@ -122,6 +143,8 @@ export class PostsViewModel {
             author: values.author,
             body: values.body,
             draft: values.draft ?? false,
+            // F2 — `''` from the AntD Select's allowClear maps to "unpinned".
+            pageId: values.pageId ? String(values.pageId) : undefined,
         };
         this.saving = true;
         try {
@@ -148,11 +171,19 @@ export class PostsViewModel {
         }
     }
 
+    /**
+     * F2 destructive guard — top-level `removePending` mirrors the
+     * `GuardedAction.pending` so the Proxy observability layer sees a
+     * top-level field write and notifies subscribers (nested writes on
+     * `removeAction.pending` would NOT reach the trap). Built in
+     * `constructor` after `observable(this)` so the closure captures
+     * the proxy, not the raw target.
+     */
+    removePending = false;
+    removeAction!: GuardedAction<[IPost]>;
+
     async remove(post: IPost): Promise<void> {
-        const result = await this.postApi.remove(post.id);
-        if (result.error) { message.error(result.error); return; }
-        message.success(this.t('Post deleted'));
-        await this.refresh();
+        await this.removeAction.trigger(post);
     }
 
     async togglePublish(post: IPost): Promise<void> {

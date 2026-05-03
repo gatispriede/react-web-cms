@@ -39,15 +39,15 @@ const AddressStep: React.FC = () => {
             <div style={{maxWidth: 720, margin: '0 auto', padding: '32px 20px 80px'}}>
                 <Typography.Title level={2}>Shipping address</Typography.Title>
                 <Form form={form} layout="vertical" onFinish={onSubmit}>
-                    <Form.Item name="name" label="Full name" rules={[{required: true}]}><Input/></Form.Item>
-                    <Form.Item name="line1" label="Address line 1" rules={[{required: true}]}><Input/></Form.Item>
+                    <Form.Item name="name" label="Full name" rules={[{required: true}]}><Input data-testid="checkout-address-name-input"/></Form.Item>
+                    <Form.Item name="line1" label="Address line 1" rules={[{required: true}]}><Input data-testid="checkout-address-line1-input"/></Form.Item>
                     <Form.Item name="line2" label="Address line 2"><Input/></Form.Item>
-                    <Form.Item name="city" label="City" rules={[{required: true}]}><Input/></Form.Item>
+                    <Form.Item name="city" label="City" rules={[{required: true}]}><Input data-testid="checkout-address-city-input"/></Form.Item>
                     <Form.Item name="region" label="State / region" rules={[{required: true}]}><Input/></Form.Item>
-                    <Form.Item name="postalCode" label="Postal code" rules={[{required: true}]}><Input/></Form.Item>
-                    <Form.Item name="country" label="Country (2-letter)" rules={[{required: true, len: 2}]}><Input maxLength={2}/></Form.Item>
+                    <Form.Item name="postalCode" label="Postal code" rules={[{required: true}]}><Input data-testid="checkout-address-postal-input"/></Form.Item>
+                    <Form.Item name="country" label="Country (2-letter)" rules={[{required: true, len: 2}]}><Input data-testid="checkout-address-country-select" maxLength={2}/></Form.Item>
                     <Form.Item name="phone" label="Phone (optional)"><Input/></Form.Item>
-                    <Button htmlType="submit" type="primary" block size="large" loading={submitting}>Continue</Button>
+                    <Button data-testid="checkout-address-continue-btn" htmlType="submit" type="primary" block size="large" loading={submitting}>Continue</Button>
                 </Form>
             </div>
         </ConfigProvider>

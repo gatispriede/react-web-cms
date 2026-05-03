@@ -24,7 +24,29 @@ export class BundleServiceLoader extends ServiceLoader {
         return {bundle: new BundleService(ctx.db)};
     }
 
+    /**
+     * F2 — Trash (soft-delete) admin surface lives here because Bundle
+     * already owns site-state admin operations (export/import). The
+     * mutations route to the cascade engine on `mongoDBConnection` so
+     * we don't widen Bundle's own service surface for trash semantics.
+     */
+    readonly schemaSDL = `extend type QueryMongo {
+    """Admin — list every soft-deleted cohort (one per trashGroup) with summary counts."""
+    getTrashGroups: String!
+}
+extend type MutationMongo {
+    """Admin — restore every doc tied to a trashGroup (within the 24h TTL window)."""
+    restoreFromTrash(trashGroup: String!): String!
+}`;
+
     readonly authz: FeatureAuthzContribution = {
+        queryRequirements: {
+            getTrashGroups: 'admin',
+        },
+        mutationRequirements: {
+            restoreFromTrash: 'admin',
+        },
+        sessionInjected: ['restoreFromTrash'],
         // Q10 — bundle import/export is a site-wide power tool. Feature
         // dimension only — no per-page/locale slice; either you own the
         // whole bundle or you don't.
@@ -34,6 +56,10 @@ export class BundleServiceLoader extends ServiceLoader {
                 values: {feature: 'Bundle'},
             }),
             export: () => ({
+                dimensions: ['feature'] as const,
+                values: {feature: 'Bundle'},
+            }),
+            restoreFromTrash: () => ({
                 dimensions: ['feature'] as const,
                 values: {feature: 'Bundle'},
             }),

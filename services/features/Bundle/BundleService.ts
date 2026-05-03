@@ -192,16 +192,39 @@ export class BundleService {
 
         await fs.mkdir(PUBLIC_IMAGES_DIR, {recursive: true});
 
-        const SAFE_ASSET_NAME = /^[\w.\-]+\.(jpg|jpeg|png|gif|webp|svg)$/i;
+        // Allowed image extensions only; the body of the basename is sanitized
+        // (spaces / parens / unicode chars are normalized) so common camera +
+        // screenshot filenames like `IMG_0001 (1).jpg` or `Screenshot 2026-04-26.png`
+        // round-trip cleanly. Hard rejects: null byte, control char, empty stem,
+        // `..` segments, path separators, disallowed extension.
+        const ALLOWED_EXT = /\.(jpg|jpeg|png|gif|webp|svg)$/i;
         const MAX_ASSET_BYTES = 25 * 1024 * 1024; // 25 MB per image
         const DATA_URI = /^data:image\/(jpeg|png|gif|webp|svg\+xml);base64,(.*)$/;
+
+        const sanitizeAssetName = (raw: string): string | null => {
+            const base = path.basename(raw);
+            // Hard reject: null byte / control char / traversal / separator.
+            if (/[\x00-\x1f\x7f]/.test(base)) return null;
+            if (base === '..' || base.split(/[\\/]/).some(s => s === '..')) return null;
+            // Sanitize: collapse whitespace, replace any char outside the safe
+            // set (`[a-zA-Z0-9._-]`) with `_`, then collapse repeats.
+            const cleaned = base
+                .replace(/\s+/g, '_')
+                .replace(/[^\w.\-]/g, '_')
+                .replace(/_+/g, '_');
+            if (!cleaned || cleaned === '.' || cleaned === '..') return null;
+            if (!ALLOWED_EXT.test(cleaned)) return null;
+            // Empty stem (e.g. `.png`) — reject.
+            if (cleaned.startsWith('.') && cleaned.indexOf('.', 1) === -1) return null;
+            return cleaned;
+        };
 
         let assetsWritten = 0;
         const skippedAssets: string[] = [];
 
         for (const [name, dataUri] of Object.entries(bundle.assets ?? {})) {
-            const safeName = path.basename(name);
-            if (!SAFE_ASSET_NAME.test(safeName)) {
+            const safeName = sanitizeAssetName(name);
+            if (!safeName) {
                 skippedAssets.push(`${name}: unsafe filename`);
                 continue;
             }

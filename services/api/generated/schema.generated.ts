@@ -81,8 +81,12 @@ export interface InLogo {
 export interface InNavigation {
   id: Scalars["String"]["input"];
   page: Scalars["String"]["input"];
+  parent?: InputMaybe<Scalars["String"]["input"]>;
   sections: Array<InputMaybe<Scalars["String"]["input"]>>;
   seo?: InputMaybe<InSeo>;
+  // F1 follow-up — JSON scalar (bare string for legacy single-locale,
+  // or `Record<locale, slug>` for the per-locale shape).
+  slug?: InputMaybe<Scalars["JSON"]["input"]>;
   type: Scalars["String"]["input"];
 }
 
@@ -201,8 +205,10 @@ export const generatedSchema = {
     editedBy: { __type: "String" },
     id: { __type: "String" },
     page: { __type: "String!" },
+    parent: { __type: "String" },
     sections: { __type: "[String]!" },
     seo: { __type: "ISeo" },
+    slug: { __type: "JSON" },
     type: { __type: "String!" },
   },
   INewLanguage: {
@@ -297,8 +303,10 @@ export const generatedSchema = {
   InNavigation: {
     id: { __type: "String!" },
     page: { __type: "String!" },
+    parent: { __type: "String" },
     sections: { __type: "[String]!" },
     seo: { __type: "InSeo" },
+    slug: { __type: "JSON" },
     type: { __type: "String!" },
   },
   InSection: {
@@ -341,6 +349,7 @@ export const generatedSchema = {
   },
   MutationMongo: {
     __typename: { __type: "String!" },
+    _empty: { __type: "String" },
     addUpdateLanguage: {
       __type: "String!",
       __args: {
@@ -362,85 +371,77 @@ export const generatedSchema = {
       },
     },
     addUser: { __type: "String!", __args: { user: "InUser!" } },
-    adminRefundOrder: {
-      __type: "String!",
-      __args: { amount: "Int", orderId: "String!", reason: "String" },
-    },
-    adminTransitionOrder: {
-      __type: "String!",
-      __args: { next: "String!", note: "String", orderId: "String!" },
-    },
-    attachOrderAddress: {
-      __type: "String!",
-      __args: { billing: "JSON", orderId: "String!", shipping: "JSON!" },
-    },
-    attachOrderShipping: {
-      __type: "String!",
-      __args: { methodCode: "String!", orderId: "String!" },
-    },
-    authorizeOrderPayment: {
-      __type: "String!",
-      __args: { card: "JSON!", idempotencyKey: "String!", orderId: "String!" },
-    },
-    cancelOrder: { __type: "String!", __args: { orderId: "String!" } },
-    cartAddItem: {
-      __type: "String!",
-      __args: { productId: "String!", qty: "Int!", sku: "String!" },
-    },
-    cartClear: { __type: "String!" },
-    cartRemoveItem: {
-      __type: "String!",
-      __args: { productId: "String!", sku: "String!" },
-    },
-    cartUpdateQty: {
-      __type: "String!",
-      __args: { productId: "String!", qty: "Int!", sku: "String!" },
-    },
     changeMyPassword: {
       __type: "String!",
       __args: { newPassword: "String!", oldPassword: "String!" },
     },
-    createDraftOrder: {
-      __type: "String!",
-      __args: { cartId: "String", currency: "String!", guestEmail: "String" },
-    },
+    clearFeatureFlag: { __type: "String!", __args: { id: "String!" } },
     createNavigation: {
       __type: "String!",
       __args: { navigation: "InNavigation!" },
     },
     deleteImage: { __type: "String!", __args: { id: "String!" } },
-    deleteLanguage: { __type: "String!", __args: { language: "InLanguage" } },
+    deleteLanguage: {
+      __type: "String!",
+      __args: { idempotencyKey: "String", language: "InLanguage" },
+    },
     deleteMyAddress: { __type: "String!", __args: { id: "String!" } },
     deleteNavigationItem: {
       __type: "String!",
-      __args: { pageName: "String!" },
+      __args: { idempotencyKey: "String", pageName: "String!" },
     },
-    deletePost: { __type: "String!", __args: { id: "String!" } },
-    deleteProduct: { __type: "String!", __args: { id: "String!" } },
-    deleteTheme: { __type: "String!", __args: { id: "String!" } },
-    finalizeOrder: {
+    deletePost: {
       __type: "String!",
-      __args: { idempotencyKey: "String!", orderId: "String!" },
+      __args: { id: "String!", idempotencyKey: "String" },
     },
-    inventorySaveAdapterConfig: {
+    deleteTheme: {
       __type: "String!",
-      __args: { config: "JSON!" },
+      __args: { id: "String!", idempotencyKey: "String" },
     },
-    inventorySyncAll: { __type: "String!" },
-    inventorySyncDelta: { __type: "String!" },
+    grantPermission: {
+      __type: "String!",
+      __args: { resourceId: "String!", scope: "String!", userId: "String!" },
+    },
     mcpIssueToken: {
       __type: "String!",
       __args: { name: "String!", scopes: "[String!]!", ttlDays: "Int" },
     },
     mcpRevokeToken: { __type: "String!", __args: { id: "String!" } },
+    onboardingBootstrap: {
+      __type: "String!",
+      __args: {
+        adminEmail: "String!",
+        adminPassword: "String!",
+        locale: "String!",
+        siteName: "String!",
+        themeKey: "String",
+      },
+    },
     publishSnapshot: { __type: "String!", __args: { note: "String" } },
-    removeSectionItem: { __type: "String!", __args: { id: "String!" } },
-    removeUser: { __type: "String!", __args: { id: "String!" } },
+    removeSectionItem: {
+      __type: "String!",
+      __args: { id: "String!", idempotencyKey: "String" },
+    },
+    removeUser: {
+      __type: "String!",
+      __args: { id: "String!", idempotencyKey: "String" },
+    },
     replaceUpdateNavigation: {
       __type: "String!",
       __args: { navigation: "InNavigation", oldPageName: "String!" },
     },
+    requestServerRestart: { __type: "String!" },
     resetPreset: { __type: "String!", __args: { id: "String!" } },
+    restoreFromTrash: { __type: "String!", __args: { trashGroup: "String!" } },
+    revokePermission: {
+      __type: "String!",
+      __args: {
+        idempotencyKey: "String",
+        resourceId: "String!",
+        scope: "String!",
+        userId: "String!",
+      },
+    },
     rollbackToSnapshot: { __type: "String!", __args: { id: "String!" } },
     saveFooter: {
       __type: "String!",
@@ -455,10 +456,6 @@ export const generatedSchema = {
     savePost: {
       __type: "String!",
       __args: { expectedVersion: "Int", post: "JSON!" },
-    },
-    saveProduct: {
-      __type: "String!",
-      __args: { expectedVersion: "Int", product: "JSON!" },
     },
     saveSiteFlags: {
       __type: "String!",
@@ -477,15 +474,21 @@ export const generatedSchema = {
       __args: { expectedVersion: "Int", meta: "JSON!" },
     },
     setActiveTheme: { __type: "String!", __args: { id: "String!" } },
+    setFeatureFlag: {
+      __type: "String!",
+      __args: { enabled: "Boolean!", id: "String!" },
+    },
+    setMyAdminUiMode: { __type: "String!", __args: { mode: "String!" } },
+    setParent: {
+      __type: "String!",
+      __args: { pageId: "String!", parentId: "String" },
+    },
     setPostPublished: {
       __type: "String!",
       __args: { id: "String!", publish: "Boolean!" },
     },
-    setProductPublished: {
-      __type: "String!",
-      __args: { id: "String!", publish: "Boolean!" },
-    },
     signUpCustomer: { __type: "String!", __args: { customer: "InUser!" } },
+    trackEvent: { __type: "String!", __args: { events: "[JSON!]!" } },
     updateMyProfile: { __type: "String!", __args: { customer: "InUser!" } },
     updateNavigation: {
       __type: "String!",
@@ -495,16 +498,24 @@ export const generatedSchema = {
   },
   QueryMongo: {
     __typename: { __type: "String!" },
-    adminOrder: { __type: "String", __args: { id: "String!" } },
-    adminOrders: {
-      __type: "String!",
-      __args: { limit: "Int", status: "String" },
-    },
-    cart: { __type: "String!" },
+    _empty: { __type: "String" },
+    analyticsSummary: { __type: "String!", __args: { range: "String!" } },
+    functionalRoles: { __type: "String!" },
     getActiveTheme: { __type: "String" },
     getAuditActors: { __type: "String!" },
     getAuditCollections: { __type: "String!" },
     getAuditLog: { __type: "String!", __args: { filter: "JSON" } },
+    getErrorLog: {
+      __type: "String!",
+      __args: {
+        level: "String",
+        limit: "Int",
+        scope: "String",
+        sinceISO: "String",
+        source: "String",
+      },
+    },
+    getFeatureFlags: { __type: "String!" },
     getFooter: { __type: "String!" },
     getImages: { __type: "[IImage!]!", __args: { tags: "String!" } },
     getLanguages: { __type: "[INewLanguage]" },
@@ -519,44 +530,25 @@ export const generatedSchema = {
       __type: "String!",
       __args: { includeDrafts: "Boolean", limit: "Int" },
     },
-    getProduct: {
-      __type: "String",
-      __args: { includeDrafts: "Boolean", slug: "String!" },
-    },
-    getProducts: {
-      __type: "String!",
-      __args: {
-        category: "String",
-        inStockOnly: "Boolean",
-        includeDrafts: "Boolean",
-        limit: "Int",
-        source: "String",
-      },
-    },
     getPublishedHistory: { __type: "String!", __args: { limit: "Int" } },
     getPublishedMeta: { __type: "String" },
     getPublishedSnapshot: { __type: "String" },
+    getRestartStatus: { __type: "String!" },
     getSections: { __type: "[ISection!]!", __args: { ids: "[String]" } },
     getSiteFlags: { __type: "String!" },
     getSiteSeo: { __type: "String!" },
     getThemes: { __type: "String!" },
     getTranslationMeta: { __type: "String!" },
+    getTrashGroups: { __type: "String!" },
     getUser: { __type: "IUser", __args: { email: "String" } },
     getUsers: { __type: "[IUser!]!" },
-    inventoryReadDeadLetters: { __type: "String!", __args: { limit: "Int" } },
-    inventoryStatus: { __type: "String!" },
+    isFreshInstall: { __type: "Boolean!" },
     loadData: { __type: "[ILoadData!]!" },
     mcpListTokens: { __type: "String!" },
     me: { __type: "ICustomer" },
-    myOrder: { __type: "String", __args: { id: "String!" } },
-    myOrders: { __type: "String!", __args: { limit: "Int" } },
-    orderByToken: { __type: "String", __args: { token: "String!" } },
-    searchProducts: {
-      __type: "String!",
-      __args: { includeDrafts: "Boolean", limit: "Int", q: "String!" },
-    },
+    myAdminUiMode: { __type: "String!" },
+    permissionsForUser: { __type: "String!", __args: { userId: "String!" } },
     setupAdmin: { __type: "IUser" },
-    shippingMethodsFor: { __type: "String!", __args: { orderId: "String!" } },
   },
   mutation: {
     __typename: { __type: "String!" },
@@ -642,8 +634,11 @@ export interface INavigation {
   editedBy?: Maybe<Scalars["String"]["output"]>;
   id?: Maybe<Scalars["String"]["output"]>;
   page?: Scalars["String"]["output"];
+  parent?: Maybe<Scalars["String"]["output"]>;
   sections?: Array<Maybe<Scalars["String"]["output"]>>;
   seo?: Maybe<ISeo>;
+  // F1 follow-up — JSON scalar (bare string OR `Record<locale, slug>`).
+  slug?: Maybe<Scalars["JSON"]["output"]>;
   type?: Scalars["String"]["output"];
 }
 
@@ -714,6 +709,10 @@ export interface IUser {
 
 export interface MutationMongo {
   __typename?: "MutationMongo";
+  /**
+   * Sentinel — see Phase C.3 note on `QueryMongo._empty`.
+   */
+  _empty?: Maybe<Scalars["String"]["output"]>;
   addUpdateLanguage: (args?: {
     expectedVersion?: Maybe<Scalars["Int"]["input"]>;
     language?: Maybe<InLanguage>;
@@ -729,65 +728,15 @@ export interface MutationMongo {
     section: InSection;
   }) => Scalars["String"]["output"];
   addUser: (args: { user: InUser }) => Scalars["String"]["output"];
-  /**
-   * Admin: refund whole order (admin).
-   */
-  adminRefundOrder: (args: {
-    amount?: Maybe<Scalars["Int"]["input"]>;
-    orderId: Scalars["String"]["input"];
-    reason?: Maybe<Scalars["String"]["input"]>;
-  }) => Scalars["String"]["output"];
-  /**
-   * Admin: state-machine transition (editor).
-   */
-  adminTransitionOrder: (args: {
-    next: Scalars["String"]["input"];
-    note?: Maybe<Scalars["String"]["input"]>;
-    orderId: Scalars["String"]["input"];
-  }) => Scalars["String"]["output"];
-  attachOrderAddress: (args: {
-    billing?: Maybe<Scalars["JSON"]["input"]>;
-    orderId: Scalars["String"]["input"];
-    shipping: Scalars["JSON"]["input"];
-  }) => Scalars["String"]["output"];
-  attachOrderShipping: (args: {
-    methodCode: Scalars["String"]["input"];
-    orderId: Scalars["String"]["input"];
-  }) => Scalars["String"]["output"];
-  authorizeOrderPayment: (args: {
-    card: Scalars["JSON"]["input"];
-    idempotencyKey: Scalars["String"]["input"];
-    orderId: Scalars["String"]["input"];
-  }) => Scalars["String"]["output"];
-  cancelOrder: (args: {
-    orderId: Scalars["String"]["input"];
-  }) => Scalars["String"]["output"];
-  cartAddItem: (args: {
-    productId: Scalars["String"]["input"];
-    qty: Scalars["Int"]["input"];
-    sku: Scalars["String"]["input"];
-  }) => Scalars["String"]["output"];
-  cartClear?: Scalars["String"]["output"];
-  cartRemoveItem: (args: {
-    productId: Scalars["String"]["input"];
-    sku: Scalars["String"]["input"];
-  }) => Scalars["String"]["output"];
-  cartUpdateQty: (args: {
-    productId: Scalars["String"]["input"];
-    qty: Scalars["Int"]["input"];
-    sku: Scalars["String"]["input"];
-  }) => Scalars["String"]["output"];
   changeMyPassword: (args: {
     newPassword: Scalars["String"]["input"];
     oldPassword: Scalars["String"]["input"];
   }) => Scalars["String"]["output"];
   /**
-   * Snapshot cart -> Order, reserve stock, status:pending. Customer or guest (when allowGuestCheckout).
+   * Drop a feature toggle override; the feature falls back to its default behaviour.
    */
-  createDraftOrder: (args: {
-    cartId?: Maybe<Scalars["String"]["input"]>;
-    currency: Scalars["String"]["input"];
-    guestEmail?: Maybe<Scalars["String"]["input"]>;
+  clearFeatureFlag: (args: {
+    id: Scalars["String"]["input"];
   }) => Scalars["String"]["output"];
   createNavigation: (args: {
     navigation: InNavigation;
@@ -796,32 +745,32 @@ export interface MutationMongo {
     id: Scalars["String"]["input"];
   }) => Scalars["String"]["output"];
   deleteLanguage: (args?: {
+    idempotencyKey?: Maybe<Scalars["String"]["input"]>;
     language?: Maybe<InLanguage>;
   }) => Scalars["String"]["output"];
   deleteMyAddress: (args: {
     id: Scalars["String"]["input"];
   }) => Scalars["String"]["output"];
   deleteNavigationItem: (args: {
+    idempotencyKey?: Maybe<Scalars["String"]["input"]>;
     pageName: Scalars["String"]["input"];
   }) => Scalars["String"]["output"];
   deletePost: (args: {
     id: Scalars["String"]["input"];
-  }) => Scalars["String"]["output"];
-  deleteProduct: (args: {
-    id: Scalars["String"]["input"];
+    idempotencyKey?: Maybe<Scalars["String"]["input"]>;
   }) => Scalars["String"]["output"];
   deleteTheme: (args: {
     id: Scalars["String"]["input"];
+    idempotencyKey?: Maybe<Scalars["String"]["input"]>;
   }) => Scalars["String"]["output"];
-  finalizeOrder: (args: {
-    idempotencyKey: Scalars["String"]["input"];
-    orderId: Scalars["String"]["input"];
+  /**
+   * Admin — grant a (user, scope, resourceId) permission. Idempotent.
+   */
+  grantPermission: (args: {
+    resourceId: Scalars["String"]["input"];
+    scope: Scalars["String"]["input"];
+    userId: Scalars["String"]["input"];
   }) => Scalars["String"]["output"];
-  inventorySaveAdapterConfig: (args: {
-    config: Scalars["JSON"]["input"];
-  }) => Scalars["String"]["output"];
-  inventorySyncAll?: Scalars["String"]["output"];
-  inventorySyncDelta?: Scalars["String"]["output"];
   /**
    * Admin-only — issue a new MCP token. Secret is returned ONCE in the response.
    */
@@ -836,21 +785,49 @@ export interface MutationMongo {
   mcpRevokeToken: (args: {
     id: Scalars["String"]["input"];
   }) => Scalars["String"]["output"];
+  onboardingBootstrap: (args: {
+    adminEmail: Scalars["String"]["input"];
+    adminPassword: Scalars["String"]["input"];
+    locale: Scalars["String"]["input"];
+    siteName: Scalars["String"]["input"];
+    themeKey?: Maybe<Scalars["String"]["input"]>;
+  }) => Scalars["String"]["output"];
   publishSnapshot: (args?: {
     note?: Maybe<Scalars["String"]["input"]>;
   }) => Scalars["String"]["output"];
   removeSectionItem: (args: {
     id: Scalars["String"]["input"];
+    idempotencyKey?: Maybe<Scalars["String"]["input"]>;
   }) => Scalars["String"]["output"];
   removeUser: (args: {
     id: Scalars["String"]["input"];
+    idempotencyKey?: Maybe<Scalars["String"]["input"]>;
   }) => Scalars["String"]["output"];
   replaceUpdateNavigation: (args: {
     navigation?: Maybe<InNavigation>;
     oldPageName: Scalars["String"]["input"];
   }) => Scalars["String"]["output"];
+  /**
+   * Schedule a graceful server shutdown; supervisor respawns. Returns the current bootId so the caller can poll /api/health for the new process.
+   */
+  requestServerRestart?: Scalars["String"]["output"];
   resetPreset: (args: {
     id: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
+  /**
+   * Admin — restore every doc tied to a trashGroup (within the 24h TTL window).
+   */
+  restoreFromTrash: (args: {
+    trashGroup: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
+  /**
+   * Admin — revoke a (user, scope, resourceId) permission.
+   */
+  revokePermission: (args: {
+    idempotencyKey?: Maybe<Scalars["String"]["input"]>;
+    resourceId: Scalars["String"]["input"];
+    scope: Scalars["String"]["input"];
+    userId: Scalars["String"]["input"];
   }) => Scalars["String"]["output"];
   rollbackToSnapshot: (args: {
     id: Scalars["String"]["input"];
@@ -868,10 +845,6 @@ export interface MutationMongo {
   savePost: (args: {
     expectedVersion?: Maybe<Scalars["Int"]["input"]>;
     post: Scalars["JSON"]["input"];
-  }) => Scalars["String"]["output"];
-  saveProduct: (args: {
-    expectedVersion?: Maybe<Scalars["Int"]["input"]>;
-    product: Scalars["JSON"]["input"];
   }) => Scalars["String"]["output"];
   saveSiteFlags: (args: {
     expectedVersion?: Maybe<Scalars["Int"]["input"]>;
@@ -892,15 +865,34 @@ export interface MutationMongo {
   setActiveTheme: (args: {
     id: Scalars["String"]["input"];
   }) => Scalars["String"]["output"];
+  /**
+   * Persist a plug-and-play feature toggle override. Returns JSON {id, enabled, updatedAt, updatedBy}.
+   */
+  setFeatureFlag: (args: {
+    enabled: Scalars["Boolean"]["input"];
+    id: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
+  /**
+   * Editor or admin self-service — flip own admin UI mode.
+   */
+  setMyAdminUiMode: (args: {
+    mode: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
+  setParent: (args: {
+    pageId: Scalars["String"]["input"];
+    parentId?: Maybe<Scalars["String"]["input"]>;
+  }) => Scalars["String"]["output"];
   setPostPublished: (args: {
     id: Scalars["String"]["input"];
     publish: Scalars["Boolean"]["input"];
   }) => Scalars["String"]["output"];
-  setProductPublished: (args: {
-    id: Scalars["String"]["input"];
-    publish: Scalars["Boolean"]["input"];
-  }) => Scalars["String"]["output"];
   signUpCustomer: (args: { customer: InUser }) => Scalars["String"]["output"];
+  /**
+   * Public — accept a batch of client-side analytics events. Server validates + rate-limits per anonId; rejected rows silently dropped.
+   */
+  trackEvent: (args: {
+    events: Array<Scalars["JSON"]["input"]>;
+  }) => Scalars["String"]["output"];
   updateMyProfile: (args: { customer: InUser }) => Scalars["String"]["output"];
   updateNavigation: (args: {
     page: Scalars["String"]["input"];
@@ -912,29 +904,46 @@ export interface MutationMongo {
 export interface QueryMongo {
   __typename?: "QueryMongo";
   /**
-   * Admin/editor — order detail.
+   * Sentinel — see Phase C.3 note above. All real fields arrive via manifest `extend type QueryMongo` fragments.
    */
-  adminOrder: (args: {
-    id: Scalars["String"]["input"];
-  }) => Maybe<Scalars["String"]["output"]>;
+  _empty?: Maybe<Scalars["String"]["output"]>;
   /**
-   * Admin/editor — paged order list.
+   * Admin — canned analytics summary for the dashboard (top pages, top events). `range`: 24h | 7d | 30d.
    */
-  adminOrders: (args?: {
-    limit?: Maybe<Scalars["Int"]["input"]>;
-    status?: Maybe<Scalars["String"]["input"]>;
+  analyticsSummary: (args: {
+    range: Scalars["String"]["input"];
   }) => Scalars["String"]["output"];
-  cart?: Scalars["String"]["output"];
+  /**
+   * Read — list of functional roles declared by every active feature, with assignable flag.
+   */
+  functionalRoles?: Scalars["String"]["output"];
   getActiveTheme?: Maybe<Scalars["String"]["output"]>;
   getAuditActors?: Scalars["String"]["output"];
   getAuditCollections?: Scalars["String"]["output"];
   getAuditLog: (args?: {
     filter?: Maybe<Scalars["JSON"]["input"]>;
   }) => Scalars["String"]["output"];
+  /**
+   * Recent rows from the structured ErrorLog collection. Filters mirror MCP's audit.errors.
+   */
+  getErrorLog: (args?: {
+    level?: Maybe<Scalars["String"]["input"]>;
+    limit?: Maybe<Scalars["Int"]["input"]>;
+    scope?: Maybe<Scalars["String"]["input"]>;
+    sinceISO?: Maybe<Scalars["String"]["input"]>;
+    source?: Maybe<Scalars["String"]["input"]>;
+  }) => Scalars["String"]["output"];
+  /**
+   * Plug-and-play feature flags — runtime view of which feature manifests are active.
+   */
+  getFeatureFlags?: Scalars["String"]["output"];
   getFooter?: Scalars["String"]["output"];
   getImages: (args: { tags: Scalars["String"]["input"] }) => Array<IImage>;
   getLanguages?: Maybe<Array<Maybe<INewLanguage>>>;
   getLogo?: Maybe<ILogo>;
+  /**
+   * Resolved MongoDB URI — admin-only, surfaces the active connection string for ops introspection.
+   */
   getMongoDBUri?: Maybe<Scalars["String"]["output"]>;
   getNavigationCollection: Array<INavigation>;
   getPost: (args: {
@@ -945,22 +954,15 @@ export interface QueryMongo {
     includeDrafts?: Maybe<Scalars["Boolean"]["input"]>;
     limit?: Maybe<Scalars["Int"]["input"]>;
   }) => Scalars["String"]["output"];
-  getProduct: (args: {
-    includeDrafts?: Maybe<Scalars["Boolean"]["input"]>;
-    slug: Scalars["String"]["input"];
-  }) => Maybe<Scalars["String"]["output"]>;
-  getProducts: (args?: {
-    category?: Maybe<Scalars["String"]["input"]>;
-    inStockOnly?: Maybe<Scalars["Boolean"]["input"]>;
-    includeDrafts?: Maybe<Scalars["Boolean"]["input"]>;
-    limit?: Maybe<Scalars["Int"]["input"]>;
-    source?: Maybe<Scalars["String"]["input"]>;
-  }) => Scalars["String"]["output"];
   getPublishedHistory: (args?: {
     limit?: Maybe<Scalars["Int"]["input"]>;
   }) => Scalars["String"]["output"];
   getPublishedMeta?: Maybe<Scalars["String"]["output"]>;
   getPublishedSnapshot?: Maybe<Scalars["String"]["output"]>;
+  /**
+   * Restart status — current bootId, uptime, supervisor detection, pending restart reasons.
+   */
+  getRestartStatus?: Scalars["String"]["output"];
   getSections: (args?: {
     ids?: Maybe<Array<Maybe<Scalars["String"]["input"]>>>;
   }) => Array<ISection>;
@@ -968,14 +970,18 @@ export interface QueryMongo {
   getSiteSeo?: Scalars["String"]["output"];
   getThemes?: Scalars["String"]["output"];
   getTranslationMeta?: Scalars["String"]["output"];
+  /**
+   * Admin — list every soft-deleted cohort (one per trashGroup) with summary counts.
+   */
+  getTrashGroups?: Scalars["String"]["output"];
   getUser: (args?: {
     email?: Maybe<Scalars["String"]["input"]>;
   }) => Maybe<IUser>;
   getUsers: Array<IUser>;
-  inventoryReadDeadLetters: (args?: {
-    limit?: Maybe<Scalars["Int"]["input"]>;
-  }) => Scalars["String"]["output"];
-  inventoryStatus?: Scalars["String"]["output"];
+  isFreshInstall?: Scalars["Boolean"]["output"];
+  /**
+   * Mongo `listDatabases` projection — sizing + names for the operator dashboard.
+   */
   loadData: Array<ILoadData>;
   /**
    * Admin-only — list issued MCP tokens (no secrets returned).
@@ -983,35 +989,16 @@ export interface QueryMongo {
   mcpListTokens?: Scalars["String"]["output"];
   me?: Maybe<ICustomer>;
   /**
-   * Customer-only — single order by id (IDOR-checked).
+   * Resolved admin UI mode for the calling session. Per-user setting wins; falls back to siteFlags.defaultAdminUiMode then 'advanced'.
    */
-  myOrder: (args: {
-    id: Scalars["String"]["input"];
-  }) => Maybe<Scalars["String"]["output"]>;
+  myAdminUiMode?: Scalars["String"]["output"];
   /**
-   * Customer-only — current customer's order history.
+   * Admin — list every permission grant for a user.
    */
-  myOrders: (args?: {
-    limit?: Maybe<Scalars["Int"]["input"]>;
-  }) => Scalars["String"]["output"];
-  /**
-   * Guest confirmation page — token must match the `order_token` cookie.
-   */
-  orderByToken: (args: {
-    token: Scalars["String"]["input"];
-  }) => Maybe<Scalars["String"]["output"]>;
-  searchProducts: (args: {
-    includeDrafts?: Maybe<Scalars["Boolean"]["input"]>;
-    limit?: Maybe<Scalars["Int"]["input"]>;
-    q: Scalars["String"]["input"];
+  permissionsForUser: (args: {
+    userId: Scalars["String"]["input"];
   }) => Scalars["String"]["output"];
   setupAdmin?: Maybe<IUser>;
-  /**
-   * Static shipping methods table; reserved for future per-order rates.
-   */
-  shippingMethodsFor: (args: {
-    orderId: Scalars["String"]["input"];
-  }) => Scalars["String"]["output"];
 }
 
 export interface Mutation {

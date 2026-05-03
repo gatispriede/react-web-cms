@@ -59,7 +59,7 @@ const AdminOrders: React.FC = () => {
                 loading={vm.loading}
                 pagination={{pageSize: 25}}
                 columns={[
-                    {title: 'Order #', dataIndex: 'orderNumber', render: (n, r) => <a onClick={() => vm.selectDetail(r)}>{n || r.id.slice(0, 8)}</a>},
+                    {title: 'Order #', dataIndex: 'orderNumber', render: (n, r) => <a data-testid={`admin-orders-row-link-${r.id}`} onClick={() => vm.selectDetail(r)}>{n || r.id.slice(0, 8)}</a>},
                     {title: 'Customer', dataIndex: 'customerId', render: (v, r) => v ? v.slice(0, 8) : (r.guestEmail ?? 'guest')},
                     {title: 'Total', dataIndex: 'total', render: (v, r) => formatMoney(v, r.currency)},
                     {title: 'Status', dataIndex: 'status', render: v => <Tag color={statusColor(v as OrderStatus)}>{v}</Tag>},
@@ -90,16 +90,25 @@ const AdminOrders: React.FC = () => {
                         </Card>
                         <Card title="Items" style={{marginBottom: 16}}>
                             {vm.detail.lineItems.map(line => (
-                                <div key={`${line.productId}:${line.sku}`} style={{display: 'flex', justifyContent: 'space-between'}}>
-                                    <span>{line.title} × {line.quantity}</span>
-                                    <span>{formatMoney(line.lineTotal, vm.detail!.currency)}</span>
+                                <div
+                                    key={`${line.productId}:${line.sku}`}
+                                    data-testid={`admin-order-detail-line-${line.sku}`}
+                                    style={{display: 'flex', justifyContent: 'space-between'}}
+                                >
+                                    <span>
+                                        {line.title} ×{' '}
+                                        <span data-testid={`admin-order-detail-line-qty-${line.sku}`}>{line.quantity}</span>
+                                    </span>
+                                    <span data-testid={`admin-order-detail-line-price-${line.sku}`}>
+                                        {formatMoney(line.lineTotal, vm.detail!.currency)}
+                                    </span>
                                 </div>
                             ))}
                             <hr/>
                             <div>Subtotal: {formatMoney(vm.detail.subtotal, vm.detail.currency)}</div>
                             <div>Shipping: {formatMoney(vm.detail.shippingTotal, vm.detail.currency)}</div>
                             <div>Tax: {formatMoney(vm.detail.taxTotal, vm.detail.currency)}</div>
-                            <div><strong>Total: {formatMoney(vm.detail.total, vm.detail.currency)}</strong></div>
+                            <div><strong>Total: <span data-testid="admin-order-detail-total">{formatMoney(vm.detail.total, vm.detail.currency)}</span></strong></div>
                         </Card>
                         {vm.detail.shippingAddress && (
                             <Card title="Shipping address" style={{marginBottom: 16}}>

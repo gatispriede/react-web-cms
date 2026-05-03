@@ -36,7 +36,7 @@ export class LanguagesServiceLoader extends ServiceLoader {
 }
 extend type MutationMongo {
     addUpdateLanguage(language: InLanguage, translations: JSON, expectedVersion: Int): String!
-    deleteLanguage(language: InLanguage): String!
+    deleteLanguage(language: InLanguage, idempotencyKey: String): String!
     saveTranslationMeta(meta: JSON!, expectedVersion: Int): String!
 }`;
 

@@ -3,6 +3,7 @@ import UserApi from '@services/api/client/UserApi';
 import LanguageApi from '@services/api/client/LanguageApi';
 import {IUser, InUser} from '@interfaces/IUser';
 import {observable} from '@client/lib/state/observable';
+import {GuardedAction} from '@admin/lib/useGuardedAction';
 import {Grant} from '@interfaces/IPermission';
 
 /** VM3 — Users admin pane state. */
@@ -24,12 +25,26 @@ export class UsersViewModel {
     pageOptions: string[] = [];
     localeOptions: string[] = [];
 
+    /** F2 — top-level mirror so the Proxy notifies on `pending` changes. */
+    removePending = false;
+    removeAction!: GuardedAction<[IUser]>;
+
     constructor(
         private readonly api: UserApi = new UserApi(),
         private readonly t: (k: string) => string = (k) => k,
         private readonly languageApi: LanguageApi = new LanguageApi(),
     ) {
-        return observable(this);
+        const proxy = observable(this);
+        proxy.removeAction = new GuardedAction<[IUser]>(
+            async ({idempotencyKey}, user) => {
+                const result = await proxy.api.removeUser(user.id, {idempotencyKey});
+                if (result.error) { message.error(result.error); return; }
+                message.success(proxy.t('User removed'));
+                await proxy.refresh();
+            },
+            {onPendingChange: (v) => { proxy.removePending = v; }},
+        );
+        return proxy;
     }
 
     async refresh(): Promise<void> {
@@ -139,9 +154,6 @@ export class UsersViewModel {
     }
 
     async remove(user: IUser): Promise<void> {
-        const result = await this.api.removeUser(user.id);
-        if (result.error) { message.error(result.error); return; }
-        message.success(this.t('User removed'));
-        await this.refresh();
+        await this.removeAction.trigger(user);
     }
 }

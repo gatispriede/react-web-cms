@@ -1,5 +1,5 @@
 import {ServiceLoader} from '@services/infra/ServiceLoader';
-import type {FeatureAuthzContribution, FeatureContext, FeatureIndexSpec} from '@services/infra/featureManifest';
+import type {CascadeRule, FeatureAuthzContribution, FeatureContext, FeatureIndexSpec} from '@services/infra/featureManifest';
 import {PermissionService} from './PermissionService';
 
 /**
@@ -42,7 +42,7 @@ extend type MutationMongo {
     """Admin — grant a (user, scope, resourceId) permission. Idempotent."""
     grantPermission(userId: String!, scope: String!, resourceId: String!): String!
     """Admin — revoke a (user, scope, resourceId) permission."""
-    revokePermission(userId: String!, scope: String!, resourceId: String!): String!
+    revokePermission(userId: String!, scope: String!, resourceId: String!, idempotencyKey: String): String!
 }`;
 
     readonly authz: FeatureAuthzContribution = {
@@ -58,5 +58,35 @@ extend type MutationMongo {
             'grantPermission',
             'revokePermission',
         ],
+        // Q10 — admin-rank already; feature gate is a forward-compat hook
+        // for a future `permissions-manager` functional role.
+        resourceGated: {
+            grantPermission: () => ({
+                dimensions: ['feature'] as const,
+                values: {feature: 'Permissions'},
+            }),
+            revokePermission: () => ({
+                dimensions: ['feature'] as const,
+                values: {feature: 'Permissions'},
+            }),
+        },
     };
+
+    /**
+     * Cascade — when a Navigation page is deleted, drop every
+     * page-scoped permission grant attached to its slug. Lives here
+     * (child-owning side) per the convention. The parent doc carries
+     * `page` (the slug); resource-scoped grants key off `resourceId`.
+     */
+    readonly cascadeRules: readonly CascadeRule[] = [
+        {
+            parentFeature: 'navigation',
+            parentCollection: 'Navigation',
+            childCollection: 'Permissions',
+            matchByParentId: (_parentId: string, parentDoc?: any) => ({
+                scope: 'page',
+                resourceId: parentDoc?.page,
+            }),
+        },
+    ];
 }

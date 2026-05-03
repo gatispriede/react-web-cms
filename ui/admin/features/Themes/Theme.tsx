@@ -38,8 +38,9 @@ const ThemeCard: React.FC<{
     onDuplicate: () => void;
     onDelete: () => void;
     onReset: () => void;
+    deletePending?: boolean;
     t: (k: string) => string;
-}> = ({theme, active, onActivate, onEdit, onDuplicate, onDelete, onReset, t}) => (
+}> = ({theme, active, onActivate, onEdit, onDuplicate, onDelete, onReset, deletePending, t}) => (
     <Card
         data-testid={`themes-list-row-${theme.id}`}
         size="small"
@@ -101,10 +102,10 @@ const ThemeCard: React.FC<{
                     title={t('Delete theme?')}
                     okText={t('Delete')}
                     cancelText={t('Cancel')}
-                    okButtonProps={{danger: true}}
+                    okButtonProps={{danger: true, loading: !!deletePending}}
                     onConfirm={onDelete}
                 >
-                    <Button size="small" danger icon={<DeleteOutlined/>}/>
+                    <Button size="small" danger icon={<DeleteOutlined/>} loading={!!deletePending}/>
                 </Popconfirm>
             )}
         </Space>
@@ -264,6 +265,7 @@ const AdminSettingsTheme: React.FC = () => {
                             onEdit={() => vm.edit(theme)}
                             onDuplicate={() => vm.duplicate(theme)}
                             onDelete={() => vm.remove(theme.id)}
+                            deletePending={vm.removePending}
                             onReset={() => vm.resetPreset(theme.id)}
                             t={t}
                         />

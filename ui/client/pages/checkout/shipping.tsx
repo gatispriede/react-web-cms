@@ -49,7 +49,7 @@ const ShippingStep: React.FC = () => {
                         </div>
                     ))}
                 </Radio.Group>
-                <Button block type="primary" size="large" loading={submitting} onClick={onSubmit} style={{marginTop: 16}}>Continue to payment</Button>
+                <Button data-testid="checkout-shipping-continue-btn" block type="primary" size="large" loading={submitting} onClick={onSubmit} style={{marginTop: 16}}>Continue to payment</Button>
             </div>
         </ConfigProvider>
     );

@@ -220,6 +220,70 @@ export const siteClearFeatureFlag: McpTool = {
     },
 };
 
+export const sitePublish: McpTool = {
+    name: 'site.publish',
+    description: 'Creates a publish snapshot that makes all saved content live. Call this after any write session.',
+    scopes: ['write:site'],
+    inputSchema: {
+        type: 'object',
+        properties: {
+            note: {type: 'string', description: 'Optional human-readable note logged with the snapshot.'},
+        },
+    },
+    handler: async (args, ctx) => {
+        try {
+            const raw = await getMongoConnection().publishSnapshot({note: args.note, _session: {email: ctx.actor}});
+            return ok(JSON.parse(raw));
+        } catch (err) {
+            return ok({ok: false, error: String((err as Error).message || err)});
+        }
+    },
+};
+
+export const siteGetPublishHistory: McpTool = {
+    name: 'site.getPublishHistory',
+    description: 'Returns the N most recent publish snapshots (default 20). Useful for auditing what changed and when.',
+    scopes: ['read:site'],
+    inputSchema: {
+        type: 'object',
+        properties: {
+            limit: {type: 'integer', minimum: 1, maximum: 200, default: 20},
+        },
+    },
+    handler: async (args, ctx) => {
+        try {
+            const raw = await getMongoConnection().getPublishedHistory({limit: args.limit ?? 20});
+            return ok(JSON.parse(raw));
+        } catch (err) {
+            return ok({ok: false, error: String((err as Error).message || err)});
+        }
+    },
+};
+
+export const siteSetLayoutMode: McpTool = {
+    name: 'site.setLayoutMode',
+    description: 'Switch between "tabs" (each page at its own URL) and "scroll" (all pages stacked on one scrolling page). Call site.publish after.',
+    scopes: ['write:site'],
+    inputSchema: {
+        type: 'object',
+        required: ['mode'],
+        properties: {
+            mode: {type: 'string', enum: ['tabs', 'scroll']},
+        },
+    },
+    handler: async (args, ctx) => {
+        try {
+            const raw = await getMongoConnection().saveSiteFlags({
+                flags: {layoutMode: args.mode as 'tabs' | 'scroll'},
+                _session: {email: ctx.actor},
+            });
+            return ok(JSON.parse(raw));
+        } catch (err) {
+            return ok({ok: false, error: String((err as Error).message || err)});
+        }
+    },
+};
+
 export const SITE_TOOLS: McpTool[] = [
     siteRevalidate,
     siteRegenerateSchema,
@@ -227,4 +291,7 @@ export const SITE_TOOLS: McpTool[] = [
     siteFeatureFlags,
     siteSetFeatureFlag,
     siteClearFeatureFlag,
+    sitePublish,
+    siteGetPublishHistory,
+    siteSetLayoutMode,
 ];

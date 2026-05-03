@@ -1,5 +1,17 @@
 {
   "_comment": "Drop this into your Claude Code / Cursor MCP config. Replace <absolute-path-to-repo> with the checkout path on this machine, paste a freshly-issued token from the admin UI into MCP_TOKEN, and point MONGODB_URI at the same Mongo the CMS uses.",
+  "_scopes": {
+    "read:content + write:content": "pages, sections, posts, images",
+    "read:site + write:site":       "publish snapshots, layout mode, ISR revalidate, feature flags",
+    "read:themes + write:themes":   "theme list, update, set-active",
+    "read:i18n + write:i18n":       "languages, translation keys",
+    "read:products + write:products": "product catalog",
+    "read:inventory + write:inventory": "inventory reads + delta sync",
+    "read:audit":                   "audit log",
+    "read:analytics":               "analytics queries",
+    "admin:auth":                   "reset login lockouts (issue sparingly)",
+    "admin:bundle":                 "bundle.export + bundle.import — full-site replace. Issue only to operators seeding or migrating whole sites."
+  },
   "mcpServers": {
     "redis-node-js-cloud-cms": {
       "command": "npm",

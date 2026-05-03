@@ -6,6 +6,7 @@ import {TFunction} from "i18next";
 import {translateOrKeep} from "@utils/translateOrKeep";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import RevealOnScroll from "@client/lib/RevealOnScroll";
+import {slugifyAnchor} from "@utils/stringFunctions";
 import type {ITimeline} from "./Timeline.types";
 export type {ITimeline, ITimelineEntry} from "./Timeline.types";
 export {ETimelineStyle} from "./Timeline.types";
@@ -39,6 +40,12 @@ const Timeline = ({item, tApp}: {
                     || (e.achievements && e.achievements.length > 0)
                     || e.quote,
                 );
+                // C13b — per-entry stable anchor. Source is `${company}-${role}`
+                // (each entry has both); falls back to `${company}-${start}` if
+                // role is empty so two roles at the same company collide last
+                // resort. The link picker walks `entries[]` via the same
+                // composition in `anchorRegistry.ts`.
+                const anchor = slugifyAnchor(`${e.company}-${e.role || e.start}`) || undefined;
                 return (
                     <RevealOnScroll key={i} className="timeline__entry" delay={i * 80}>
                         <div className="timeline__when">
@@ -46,7 +53,7 @@ const Timeline = ({item, tApp}: {
                             {e.location && <span className="timeline__location">{tr(e.location)}</span>}
                         </div>
                         <div className="timeline__body">
-                            <h3 className="timeline__who">
+                            <h3 className="timeline__who" id={anchor}>
                                 {tr(e.company)}
                                 {e.domain && <> <span className="timeline__domain">{e.domain}</span></>}
                             </h3>

@@ -25,7 +25,8 @@ export type McpScope =
     | 'write:site'
     | 'read:audit'
     | 'read:analytics'
-    | 'admin:auth';
+    | 'admin:auth'
+    | 'admin:bundle';
 
 export const ALL_MCP_SCOPES: readonly McpScope[] = [
     'read:content', 'write:content',
@@ -36,11 +37,11 @@ export const ALL_MCP_SCOPES: readonly McpScope[] = [
     'read:site', 'write:site',
     'read:audit',
     'read:analytics',
-    // Sensitive operator scope — clears login lockouts. Issue sparingly:
-    // a token with `admin:auth` can unlock any account hammered with
-    // wrong passwords (still has to know the right password to actually
-    // sign in afterwards, but skips the brute-force timing penalty).
+    // Sensitive operator scope — clears login lockouts. Issue sparingly.
     'admin:auth',
+    // Whole-site replace — export/import the full bundle JSON.
+    // Issue only to operators who need to migrate or seed entire sites.
+    'admin:bundle',
 ] as const;
 
 export interface IMcpToken {

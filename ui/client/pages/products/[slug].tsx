@@ -135,12 +135,12 @@ const ProductPage = ({product, themeTokens, footer, pages}: Props) => {
                         ) : null}
                     </div>
                     <div>
-                        <Typography.Title level={1} style={{marginTop: 0}}>{i18nTitle}</Typography.Title>
-                        <Typography.Title level={2} style={{marginTop: 0}}>
+                        <Typography.Title data-testid="storefront-product-title" level={1} style={{marginTop: 0}}>{i18nTitle}</Typography.Title>
+                        <Typography.Title data-testid="storefront-product-price" level={2} style={{marginTop: 0}}>
                             {formatPrice(effectivePrice, product.currency)}
                         </Typography.Title>
                         {outOfStock
-                            ? <Tag color="red">{t('Out of stock')}</Tag>
+                            ? <Tag data-testid="storefront-out-of-stock-badge" color="red">{t('Out of stock')}</Tag>
                             : <Tag color="green">{t('In stock')}</Tag>}
                         <div ref={ref} className="rich-text" style={{marginTop: 16}}/>
                         {variants.length > 0 && (
@@ -172,6 +172,7 @@ const ProductPage = ({product, themeTokens, footer, pages}: Props) => {
                             />
                         )}
                         <Button
+                            data-testid="storefront-add-to-cart-btn"
                             type="primary"
                             size="large"
                             disabled={outOfStock}

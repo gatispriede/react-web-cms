@@ -130,6 +130,7 @@ export interface INavigationService {
     replaceUpdateNavigation(oldPageName: string, navigation: INavigation, editedBy?: string): Promise<string>;
     deleteNavigationItem(pageName: string, deletedBy?: string): Promise<string>;
     addUpdateNavigationItem(pageName: string, sections?: string[], editedBy?: string): Promise<string>;
+    setParent(pageId: string, parentId: string | null, editedBy?: string): Promise<string>;
 }
 export interface IAssetService {
     getLogo(): Promise<ILogo | undefined>;

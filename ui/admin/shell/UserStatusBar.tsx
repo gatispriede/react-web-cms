@@ -354,6 +354,11 @@ const UserStatusBarInner = ({session, view, tApp}: {
                 <Button type={"link"} icon={<ThunderboltOutlined/>} onClick={() => setPaletteOpen(true)} title="Ctrl+K / ⌘K">
                     {tAdmin("Command")}
                 </Button>
+                {/* Spacer — pushes everything from the language dropdown onward
+                    to the far right. Nav actions (Build / Content / Preview /
+                    Command…) stay left-aligned; account + chrome controls
+                    (language / mode / theme / sign out) sit on the right. */}
+                <span className="app-login-wrapper__spacer" aria-hidden="true"/>
                 <Dropdown
                     menu={{
                         selectedKeys: [currentAdminLocale],

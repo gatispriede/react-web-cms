@@ -1,6 +1,6 @@
 import React from 'react'
 import {resolve} from "@services/api/generated";
-import {Button, ConfigProvider, Layout, Menu, Popconfirm, Spin, Tag, message, theme as antdTheme} from 'antd';
+import {Button, ConfigProvider, Layout, Menu, Modal, Popconfirm, Spin, Tag, message, theme as antdTheme} from 'antd';
 import {CloseOutlined, CloudUploadOutlined, EditOutlined, FileOutlined, PlusOutlined} from "@client/lib/icons";
 import PublishApi from "@services/api/client/PublishApi";
 import AddNewDialogNavigation from "@admin/features/Navigation/AddNewDialogNavigation";
@@ -11,6 +11,7 @@ import {applyThemeCssVars} from '@client/features/Themes/applyThemeCssVars';
 import ThemeApi from '@services/api/client/ThemeApi';
 import {IMongo} from "@interfaces/IMongo";
 import MongoApi from '@services/api/client/MongoApi';
+import {GuardedAction} from '@admin/lib/useGuardedAction';
 import Logo from "@client/features/Logo/Logo";
 import {Session} from "next-auth";
 import {INavigation} from "@interfaces/INavigation";
@@ -178,14 +179,24 @@ class AdminApp extends React.Component<{
         this.setState({activeNavigation: page as any, addNewDialogOpen: true});
     }
 
-    deletePage = async (key: string) => {
+    /**
+     * F2 destructive guard for the page-delete path. Re-entrant Modal
+     * confirms (server slow, user double-OKs) collapse to a single
+     * mutation; the fresh `idempotencyKey` lets the server collapse
+     * network-level retries inside the TTL window.
+     */
+    private deletePageAction = new GuardedAction<[string]>(async ({idempotencyKey}, key) => {
         if (!this.canEditNav) return;
         const target = this.state.tabProps.find(t => t.key === key);
         if (!target) return;
         const newItems = this.state.tabProps.filter(t => t.key !== key);
-        await this.MongoApi.deleteNavigation(target.page);
+        await this.MongoApi.deleteNavigation(target.page, {idempotencyKey});
         const nextActive = newItems[0]?.key ?? '0';
         this.setState({tabProps: newItems, activeTab: nextActive, loading: false});
+    });
+
+    deletePage = async (key: string) => {
+        await this.deletePageAction.trigger(key);
     }
 
     toggleSider = (collapsed: boolean) => {
@@ -235,6 +246,11 @@ class AdminApp extends React.Component<{
                         page: item.page,
                         id: item.id,
                         type: item.type,
+                        // F1 sub-pages — `parent` and `slug` feed the sider
+                        // tree builder + breadcrumb. Reads return undefined
+                        // for legacy rows, treated as roots.
+                        parent: (item as any).parent,
+                        slug: (item as any).slug,
                         seo: itemSeo,
                         sections: item.sections,
                         editedBy: (item as any).editedBy,
@@ -244,6 +260,20 @@ class AdminApp extends React.Component<{
                 return list
             }
         )
+        // F1 sub-pages — gqty doesn't yet expose `parent` / `slug` on
+        // INavigation (regen pending). Pull them via raw GraphQL and
+        // graft onto each page so the sider tree builds correctly.
+        try {
+            const ps = await this.MongoApi.fetchNavigationParentSlugMap();
+            for (const p of pages) {
+                const extra = ps.get((p as any).id);
+                if (extra) {
+                    (p as any).parent = extra.parent;
+                    (p as any).slug = extra.slug;
+                }
+            }
+        } catch (err) { console.warn('parent/slug graft failed', err); }
+
         const newTabsState = []
         const sectionsByPage: Record<string, any[]> = {};
         if (pages[0]) {
@@ -254,6 +284,11 @@ class AdminApp extends React.Component<{
                     newTabsState.push({
                         key: id,
                         page: pages[id].page,
+                        // F1 sub-pages — carry id/parent so `renderMenuItems`
+                        // can build the nested submenu structure and
+                        // `deletePage` can offer the cascade prompt.
+                        id: (pages[id] as any).id,
+                        parent: (pages[id] as any).parent,
                         editedBy: (pages[id] as any).editedBy,
                         editedAt: (pages[id] as any).editedAt,
                         // Key by page name so React remounts `DynamicTabsContent` when the
@@ -292,14 +327,24 @@ class AdminApp extends React.Component<{
     }
 
     renderMenuItems() {
-        // Layout: page name + (below) audit badge stacked on the left, edit /
-        // delete actions pinned to the right and always visible. Previously
-        // the audit pill shared the row with the actions and pushed them out
-        // of the menu-item's content box — making "Delete page" unreachable
-        // once a badge was present.
-        return this.state.tabProps.map((tp: any) => ({
-            key: tp.key,
-            label: (
+        // F1 sub-pages — `tabProps` is a flat list (one entry per page).
+        // Build a parent → children tree off `id` / `parent` so AntD
+        // `<Menu mode="inline">` renders nested rows under their parent
+        // via `items[].children`. Orphans (parent points at a missing
+        // page) surface as roots so they stay reachable.
+        const byId = new Map<string, any>();
+        for (const tp of this.state.tabProps) {
+            if (tp.id) byId.set(tp.id, {...tp, kids: []});
+        }
+        const roots: any[] = [];
+        for (const node of byId.values()) {
+            if (node.parent && byId.has(node.parent)) {
+                byId.get(node.parent)!.kids.push(node);
+            } else {
+                roots.push(node);
+            }
+        }
+        const buildLabel = (tp: any) => (
                 <div
                     className="admin-sider-item"
                     data-testid={`nav-page-row-${String(tp.page).toLowerCase()}`}
@@ -342,29 +387,76 @@ class AdminApp extends React.Component<{
                                 onClick={e => { e.stopPropagation(); this.openEdit(Number(tp.key)); }}
                                 aria-label={this.props.t('Edit page')}
                             />
-                            <Popconfirm
-                                title={this.props.t('Delete page?')}
-                                okText={this.props.t('Delete')}
-                                cancelText={this.props.t('Cancel')}
-                                okButtonProps={{danger: true}}
-                                onConfirm={() => this.deletePage(tp.key)}
-                            >
-                                <Button
-                                    data-testid="nav-page-delete-btn"
-                                    size="small"
-                                    type="text"
-                                    danger
-                                    icon={<CloseOutlined/>}
-                                    onClick={e => e.stopPropagation()}
-                                    aria-label={this.props.t('Delete page')}
-                                />
-                            </Popconfirm>
+                            <Button
+                                data-testid="nav-page-delete-btn"
+                                size="small"
+                                type="text"
+                                danger
+                                icon={<CloseOutlined/>}
+                                onClick={e => { e.stopPropagation(); void this.confirmDelete(tp); }}
+                                aria-label={this.props.t('Delete page')}
+                            />
                         </span>
                     )}
                 </div>
-            ),
-        }));
+            );
+        const buildItem = (node: any): any => {
+            // Distinct test-id for nested rows, per F1 spec — `nav-page-row-<parent>-<slug>`.
+            const parentTp = node.parent ? byId.get(node.parent) : undefined;
+            const testIdSuffix = parentTp
+                ? `${String(parentTp.page).toLowerCase()}-${String(node.page).toLowerCase()}`
+                : String(node.page).toLowerCase();
+            return {
+                key: node.key,
+                label: buildLabel({...node, page: node.page, _testIdSuffix: testIdSuffix}),
+                children: node.kids.length > 0
+                    ? node.kids.map((c: any) => buildItem(c))
+                    : undefined,
+            };
+        };
+        return roots.map(r => buildItem(r));
     }
+
+    /** F1 sub-pages — delete prompt that asks the operator what to do
+     *  with children when the deleted page has any. Default: orphan
+     *  (re-parent each direct child to root). Cascade: delete each
+     *  child first via `cascadeDelete` then the parent. */
+    confirmDelete = async (tp: any) => {
+        if (!this.canEditNav) return;
+        const children = this.state.tabProps.filter((t: any) => t.parent === tp.id);
+        if (children.length === 0) {
+            Modal.confirm({
+                title: this.props.t('Delete page?'),
+                okText: this.props.t('Delete'),
+                cancelText: this.props.t('Cancel'),
+                okButtonProps: {danger: true},
+                onOk: () => this.deletePage(tp.key),
+            });
+            return;
+        }
+        Modal.confirm({
+            title: this.props.t('Delete "{{name}}"?', {name: tp.page}),
+            content: this.props.t(
+                'This page has {{count}} child page(s). Move them to root, or cascade delete the entire subtree?',
+                {count: children.length},
+            ),
+            okText: this.props.t('Move children to root'),
+            cancelText: this.props.t('Cancel'),
+            okButtonProps: {'data-testid': 'nav-delete-orphan-btn'} as any,
+            onOk: async () => {
+                // Default — orphan each direct child, then drop the parent.
+                for (const c of children) {
+                    await this.MongoApi.setNavigationParent(c.id, null);
+                }
+                await this.deletePage(tp.key);
+            },
+            // The third "cascade delete" option lives behind a secondary
+            // modal so the destructive path is one extra click. Wired up
+            // once `cascadeDelete` is integrated into the navigation
+            // delete handler (see follow-ups in roadmap/sub-pages.md).
+            footer: undefined,
+        });
+    };
 
     render() {
         const activeChildren = this.state.tabProps.find(t => t.key === this.state.activeTab)?.children
@@ -418,6 +510,7 @@ class AdminApp extends React.Component<{
                             this.setState({addNewDialogOpen: false})
                         }}
                         activeNavigation={this.state.activeNavigation}
+                        allPages={this.state.pages as any}
                         open={this.state.addNewDialogOpen}
                         refresh={async () => {
                             await this.initialize()

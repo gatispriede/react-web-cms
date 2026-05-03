@@ -15,9 +15,10 @@ import type {NextApiRequest, NextApiResponse} from 'next';
 import {getServerSession}                     from 'next-auth/next';
 import {authOptions}                          from '../auth/authOptions';
 import {getMongoConnection}                   from '@services/infra/mongoDBConnection';
-import {CMS_TOOL_DEFINITIONS, makeCmsDispatch} from '@services/agent/cmsAgentTools';
+import {getMcpToolDefinitions, makeMcpDispatch} from '@services/agent/mcpAgentTools';
+import {SUPPLEMENTAL_TOOL_DEFINITIONS, makeSupplementalDispatch} from '@services/agent/cmsAgentTools';
 import {runAgentLoop}                          from '@services/agent/agentLoop';
-import type {AgentEvent}                       from '@services/agent/agentTypes';
+import type {AgentEvent, ToolDefinition, ToolDispatch} from '@services/agent/agentTypes';
 
 // ── Groq tool_choice fix ──────────────────────────────────────────────────────
 // llama-3.x on Groq returns HTTP 400 "Failed to call a function" when the
@@ -63,9 +64,9 @@ When you finish a task, summarise what you did in one or two simple sentences. E
    - If something went wrong or the user asks to undo → call restore_backup, then publish_site.
 
 1. ALWAYS read before writing.
-   - Before add_section → call list_sections(pageName) to see what is already there.
-   - Before save_post   → call list_posts to check for an existing post with the same slug.
-   - Before create_page → call list_pages to avoid duplicates.
+   - Before section.update → call page.get({page: pageName}) to see what is already there.
+   - Before save_post      → call list_posts to check for an existing post with the same slug.
+   - Before page.create    → call page.list to avoid duplicates.
    - Before setting any image field → call list_images to find real image URLs.
 
    IMAGE RULES — strictly enforced:
@@ -77,28 +78,35 @@ When you finish a task, summarise what you did in one or two simple sentences. E
 
 3. After finishing all writes, call publish_site so changes go live.
 
-4. If the user asks to "check", "read", or "describe" something — use list_* tools and reply with the content. Do NOT create or modify anything unless explicitly asked.
+4. If the user asks to "check", "read", or "describe" something — use page.list, page.get, list_posts, etc. and reply with the content. Do NOT create or modify anything unless explicitly asked.
 
 5. To change how the site looks when navigating between pages, use set_layout_mode:
    - "tabs" = each page gets its own URL (e.g. /about, /portfolio) — this is "per-page mode"
    - "scroll" = all pages are on one long scrolling page with anchors — this is "scroll mode"
    Always call publish_site after set_layout_mode.
 
-═══ SECTION STRUCTURE ═══
+═══ PAGE & SECTION TOOLS ═══
 
-A page is made of sections. Each section has:
-  - type  : number of columns (1 = full-width, 2 = two columns, 3 = three columns, 4 = four columns)
-  - content: array of items, one per column
+page.list                       → list all pages (id, page name, type)
+page.get({ page })              → get one page + all its sections in order
+page.create({ page })           → create a new empty page
 
-Each item has:
+section.update({ section, pageName })
+  → add or update a section. The section object has:
+    type    : column count (1 = full-width, 2 = two columns, 3 = three, 4 = four)
+    page    : page name (must match page.create casing)
+    content : array of items, one per column
+
+section.delete({ id })          → remove a section by its id
+
+═══ SECTION CONTENT STRUCTURE ═══
+
+Each item in the content array has:
   - type    : module type string (see list below)
-  - content : JSON.stringify(moduleContentObject)  ← MUST be a JSON string, not an object
+  - content : module content as a plain object (or JSON string — both work)
   - style   : style variant string (default: "default")
 
-IMPORTANT: item.content can be either a plain object OR a JSON string — both work. Prefer sending it as a plain object:
-  content: { headline: "Welcome", subtitle: "Hello world", tagline: "", bgImage: "", accent: "#e6673d" }
-
-IMPORTANT: pageName in add_section must exactly match the page name you used in create_page (same casing).
+IMPORTANT: section.page and pageName must exactly match the page name used in page.create (same casing).
 
 ═══ MODULE TYPES & CONTENT SHAPES ═══
 
@@ -175,20 +183,34 @@ INQUIRY_FORM — contact form (no config needed)
 
 Task: "Create a simple About page"
 
-1. list_pages              → confirm "About" does not exist
-2. create_page(page:"About", type:"page")
-3. list_sections("About")  → empty, safe to add
-4. add_section(pageName:"About", type:1, content:[{
-     type:"HERO",
-     content: { headline:"About Us", subtitle:"We build great things.", tagline:"", bgImage:"", accent:"#e6673d" },
-     style:"default"
-   }])
-5. add_section(pageName:"About", type:1, content:[{
-     type:"RICH_TEXT",
-     content: { value:"<p>Our story and mission go here.</p>" },
-     style:"default"
-   }])
-6. publish_site(note:"Added About page")
+1. page.list                    → confirm "About" does not exist
+2. page.create({page:"About"})
+3. page.get({page:"About"})     → empty sections, safe to add
+4. section.update({
+     section: {
+       type: 1,
+       page: "About",
+       content: [{
+         type: "HERO",
+         content: { headline:"About Us", subtitle:"We build great things.", tagline:"", bgImage:"", accent:"#e6673d" },
+         style: "default"
+       }]
+     },
+     pageName: "About"
+   })
+5. section.update({
+     section: {
+       type: 1,
+       page: "About",
+       content: [{
+         type: "RICH_TEXT",
+         content: { value:"<p>Our story and mission go here.</p>" },
+         style: "default"
+       }]
+     },
+     pageName: "About"
+   })
+6. publish_site({note:"Added About page"})
 
 Reply with a short summary of what you created when done.`;
 
@@ -230,21 +252,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const send = (event: AgentEvent) => {
         res.write(`data: ${JSON.stringify(event)}\n\n`);
-        // flush — in Node's http module, write() is already unbuffered for chunked responses.
-        // Cast to any to reach res.flush() that next adds in dev mode.
         (res as any).flush?.();
     };
 
     // ── Run agent ─────────────────────────────────────────────────────────────
     try {
-        const conn     = getMongoConnection();
+        const conn = getMongoConnection();
         await conn.ready;
-        const dispatch = makeCmsDispatch(conn, editedBy);
+
+        // MCP tools cover page/section/module/theme/product/i18n/inventory/site/audit/analytics.
+        // Supplemental tools fill the gaps not (yet) in MCP:
+        //   publish_site, create_backup, restore_backup, list_images, list_posts, save_post, set_layout_mode.
+        const mcpTools          = getMcpToolDefinitions(conn);
+        const supplementalTools = SUPPLEMENTAL_TOOL_DEFINITIONS;
+        const tools: ToolDefinition[] = [...mcpTools, ...supplementalTools];
+
+        const mcpDispatch          = makeMcpDispatch(conn);
+        const supplementalDispatch = makeSupplementalDispatch(conn, editedBy);
+
+        // MCP tool names use dotted format (page.list, section.update, …).
+        // Supplemental tools keep underscore names (publish_site, create_backup, …).
+        const mcpToolNames = new Set(mcpTools.map(t => t.name));
+        const dispatch: ToolDispatch = async (name, input) => {
+            if (mcpToolNames.has(name)) return mcpDispatch(name, input);
+            return supplementalDispatch(name, input);
+        };
 
         await runAgentLoop({
             task,
             system:        SYSTEM_CONTENT,
-            tools:         CMS_TOOL_DEFINITIONS,
+            tools,
             dispatch,
             onEvent:       send,
             modelOverride: model ?? undefined,

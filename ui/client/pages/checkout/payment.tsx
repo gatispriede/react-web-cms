@@ -66,7 +66,7 @@ const PaymentStep: React.FC = () => {
                     <Form.Item name="exp" label="Expiration (MM/YY)" rules={[{required: true}]}><Input maxLength={5}/></Form.Item>
                     <Form.Item name="cvc" label="CVC" rules={[{required: true}]}><Input maxLength={4}/></Form.Item>
                     <Form.Item name="name" label="Name on card"><Input/></Form.Item>
-                    <Button htmlType="submit" type="primary" block size="large" loading={submitting}>Place order</Button>
+                    <Button data-testid="checkout-payment-place-order-btn" htmlType="submit" type="primary" block size="large" loading={submitting}>Place order</Button>
                 </Form>
             </div>
         </ConfigProvider>

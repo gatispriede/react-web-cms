@@ -26,7 +26,7 @@ export class ThemesServiceLoader extends ServiceLoader {
 }
 extend type MutationMongo {
     saveTheme(theme: JSON!, expectedVersion: Int): String!
-    deleteTheme(id: String!): String!
+    deleteTheme(id: String!, idempotencyKey: String): String!
     setActiveTheme(id: String!): String!
     resetPreset(id: String!): String!
 }`;

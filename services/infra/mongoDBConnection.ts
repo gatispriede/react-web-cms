@@ -44,12 +44,16 @@ import type {StockReservationService} from '@services/features/Orders/StockReser
 import type {IOrderAddress, OrderStatus} from '@interfaces/IOrder';
 import {ConflictError, isConflictError, serialiseConflict} from '@services/infra/conflict';
 import {log} from '@services/infra/logger';
+import {getIdempotencyService, setIdempotencyService, IdempotencyService, mongoIdempotencyBackend} from '@services/infra/idempotency';
 // Static import despite the cycle (Cart + Orders manifests pull
 // `getMongoConnection` for per-request resolver thunks). ESM hoists
 // the function bindings; nothing here calls `bootFeaturesSync` during
 // module evaluation, so the partial-module phase is safe. The previous
 // `require()` worked under Next's bundler but breaks under tsx ESM.
 import {bootFeaturesSync, bootFeaturesAsync} from '@services/infra/featureRegistry';
+import {cascadeDelete} from '@services/infra/cascadeDelete';
+import {cascadeRestore} from '@services/infra/cascadeRestore';
+import type {FeatureContext} from '@services/infra/featureManifest';
 import {
     defaultSettings,
     ILoadData,
@@ -82,28 +86,37 @@ async function runMutation<T>(
     action: string,
     fn: () => Promise<T>,
     auditTrace?: ((result: T) => AuditTrace | undefined) | AuditTrace,
+    idempotencyKey?: string,
 ): Promise<string> {
-    try {
-        const result = await fn();
-        if (auditTrace) {
-            try {
-                const trace = typeof auditTrace === 'function' ? auditTrace(result) : auditTrace;
-                if (trace) {
-                    const service = getMongoConnection().auditService;
-                    if (service) void service.record({...trace, actor: trace.actor ?? {}});
+    // Idempotency wrap: replays of the same key inside the TTL window
+    // collapse to a single execution. Memoise the *serialised* response
+    // (the wire shape the caller sees) so a replay returns the byte-for-
+    // byte original. Empty / absent keys are a no-op pass-through.
+    const exec = async (): Promise<string> => {
+        try {
+            const result = await fn();
+            if (auditTrace) {
+                try {
+                    const trace = typeof auditTrace === 'function' ? auditTrace(result) : auditTrace;
+                    if (trace) {
+                        const service = getMongoConnection().auditService;
+                        if (service) void service.record({...trace, actor: trace.actor ?? {}});
+                    }
+                } catch (err) {
+                    // Audit must not block the mutation response.
+                    log.error({scope: 'audit.record', err, action}, 'audit record failed');
                 }
-            } catch (err) {
-                // Audit must not block the mutation response.
-                log.error({scope: 'audit.record', err, action}, 'audit record failed');
             }
+            return JSON.stringify({[action]: result});
+        } catch (err) {
+            if (isConflictError(err)) {
+                return serialiseConflict(err as ConflictError<unknown>);
+            }
+            return JSON.stringify({error: String((err as Error).message || err)});
         }
-        return JSON.stringify({[action]: result});
-    } catch (err) {
-        if (isConflictError(err)) {
-            return serialiseConflict(err as ConflictError<unknown>);
-        }
-        return JSON.stringify({error: String((err as Error).message || err)});
-    }
+    };
+    if (!idempotencyKey) return exec();
+    return getIdempotencyService().checkOrRun(idempotencyKey, exec);
 }
 
 // const server = process.env.NODE_SERVER_PORT ? 'mongodb' : 'localhost';
@@ -322,15 +335,17 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
             return JSON.stringify({grantPermission: row});
         } catch (err) { return JSON.stringify({error: String((err as Error).message ?? err)}); }
     }
-    async revokePermission({userId, scope, resourceId}: {userId: string; scope: string; resourceId: string}): Promise<string> {
-        try {
-            const result = await this.permissionService.revoke({
-                userId,
-                scope: scope as 'page' | 'module' | 'element',
-                resourceId,
-            });
-            return JSON.stringify({revokePermission: result});
-        } catch (err) { return JSON.stringify({error: String((err as Error).message ?? err)}); }
+    async revokePermission({userId, scope, resourceId, idempotencyKey}: {userId: string; scope: string; resourceId: string; idempotencyKey?: string}): Promise<string> {
+        return getIdempotencyService().checkOrRun(idempotencyKey, async () => {
+            try {
+                const result = await this.permissionService.revoke({
+                    userId,
+                    scope: scope as 'page' | 'module' | 'element',
+                    resourceId,
+                });
+                return JSON.stringify({revokePermission: result});
+            } catch (err) { return JSON.stringify({error: String((err as Error).message ?? err)}); }
+        });
     }
     async functionalRoles(): Promise<string> {
         // Module-import to avoid a top-of-file cycle through featureRegistry.
@@ -442,6 +457,12 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
      */
     private _hasOpenedClient = true;
 
+    /** Set once on first `setupClient()` so reconnects don't re-construct
+     *  the global `IdempotencyService` (the in-flight map and the Redis
+     *  client connection are both worth preserving across Mongo
+     *  reconnects). */
+    private _idempotencyWired = false;
+
     async setupClient() {
         if (this._hasOpenedClient) {
             // First call after construction — skip close+reopen. Just run
@@ -472,13 +493,28 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
         } catch (err) {
             log.error({scope: 'feature.boot', err}, 'feature registry boot failed');
         }
+
+        // Wire the prod-grade idempotency service on first setup only.
+        // Reconnects keep the existing instance so its in-flight collapse
+        // map and Redis pool survive Mongo blips. Mirrors `cacheVersion`'s
+        // pattern of consuming `cartRedis` as the shared `RedisLike`.
+        if (!this._idempotencyWired && this.db) {
+            try {
+                setIdempotencyService(new IdempotencyService(this.cartRedis, mongoIdempotencyBackend(this.db)));
+                this._idempotencyWired = true;
+            } catch (err) {
+                log.error({scope: 'idempotency.wire', err}, 'idempotency wire failed');
+            }
+        }
     }
 
     // Delegate UserService methods
     async setupAdmin() { return this.userService.setupAdmin(); }
     async addUser({ user }: { user: any }) { return this.userService.addUser({ user }); }
     async updateUser({ user }: { user: any }) { return this.userService.updateUser({ user }); }
-    async removeUser({ id }: { id: string }) { return this.userService.removeUser({ id }); }
+    async removeUser({ id, idempotencyKey }: { id: string, idempotencyKey?: string }) {
+        return getIdempotencyService().checkOrRun(idempotencyKey, () => this.userService.removeUser({ id }));
+    }
     async getUser({ email }: { email: string }) { return this.userService.getUser({ email }); }
     async getUsers() { return this.userService.getUsers(); }
 
@@ -533,15 +569,17 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
             }),
         );
     }
-    async deleteLanguage({ language, _session }: { language: INewLanguage, _session?: {email?: string} }) {
-        const res = await this.languageService.deleteLanguage({ language, deletedBy: _session?.email });
-        try {
-            void this.auditService?.record({
-                collection: 'Language', docId: language.symbol, op: 'delete',
-                actor: {email: _session?.email},
-            });
-        } catch (err) { log.error({scope: 'audit.deleteLanguage', err, symbol: language?.symbol}, 'audit deleteLanguage failed'); }
-        return res;
+    async deleteLanguage({ language, idempotencyKey, _session }: { language: INewLanguage, idempotencyKey?: string, _session?: {email?: string} }) {
+        return getIdempotencyService().checkOrRun(idempotencyKey, async () => {
+            const res = await this.languageService.deleteLanguage({ language, deletedBy: _session?.email });
+            try {
+                void this.auditService?.record({
+                    collection: 'Language', docId: language.symbol, op: 'delete',
+                    actor: {email: _session?.email},
+                });
+            } catch (err) { log.error({scope: 'audit.deleteLanguage', err, symbol: language?.symbol}, 'audit deleteLanguage failed'); }
+            return res;
+        });
     }
 
     // Delegate AssetService methods (IMongoDBConnection signatures)
@@ -586,15 +624,90 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
             throw err;
         }
     }
-    async removeSectionItem({ id, _session }: { id: string, _session?: {email?: string} }): Promise<string> {
-        const res = await this.navigationService.removeSectionItem(id);
+    async removeSectionItem({ id, idempotencyKey, _session }: { id: string, idempotencyKey?: string, _session?: {email?: string} }): Promise<string> {
+        return getIdempotencyService().checkOrRun(idempotencyKey, async () => {
+            try {
+                const ctx = this.cascadeContext();
+                // Soft-delete via cascade engine — section moves to
+                // Sections.trash with TTL. Pull the id out of the
+                // owning Navigation row(s) to keep `nav.sections` clean.
+                const cas = await cascadeDelete('navigation', 'Sections', id, ctx);
+                await ctx.db.collection('Navigation').updateMany(
+                    {sections: id},
+                    {$pull: {sections: id}} as any,
+                );
+                void this.auditService?.record({
+                    collection: 'Section', docId: id, op: 'delete',
+                    actor: {email: _session?.email}, tag: 'cascade',
+                });
+                return JSON.stringify({removeSectionItem: {id, deleted: cas.counts.Sections ?? 0, trashGroup: cas.trashGroup}});
+            } catch (err) {
+                log.error({scope: 'section.remove', err, sectionId: id}, 'removeSectionItem cascade failed');
+                return JSON.stringify({error: String((err as Error).message || err)});
+            }
+        });
+    }
+
+    /** Build a `FeatureContext` snapshot for cascade-engine calls. */
+    private cascadeContext(): FeatureContext {
+        return {
+            db: this.db!,
+            redis: this.cartRedis,
+            services: this.featureServices,
+            reconnect: this.setupClient.bind(this),
+        };
+    }
+
+    /** Admin — restore a previously soft-deleted cohort by trashGroup id. */
+    async restoreFromTrash({trashGroup, _session}: {trashGroup: string; _session?: {email?: string}}): Promise<string> {
         try {
+            const res = await cascadeRestore(trashGroup, this.cascadeContext());
             void this.auditService?.record({
-                collection: 'Section', docId: id, op: 'delete',
-                actor: {email: _session?.email},
+                collection: 'Trash', docId: trashGroup, op: 'update',
+                actor: {email: _session?.email}, tag: 'restore',
             });
-        } catch (err) { log.error({scope: 'audit.section.remove', err, sectionId: id}, 'audit removeSectionItem failed'); }
-        return res;
+            return JSON.stringify({restoreFromTrash: {trashGroup, counts: res.counts}});
+        } catch (err) {
+            log.error({scope: 'trash.restore', err, trashGroup}, 'restoreFromTrash failed');
+            return JSON.stringify({error: String((err as Error).message || err)});
+        }
+    }
+
+    /**
+     * Admin — list every soft-deleted cohort across `*.trash` collections,
+     * grouped by `trashGroup` with per-collection counts and the earliest
+     * `deletedAt`. Returns a JSON array.
+     */
+    async getTrashGroups(): Promise<string> {
+        try {
+            const db = this.db!;
+            const all = await db.listCollections({}, {nameOnly: true}).toArray();
+            const trashColls = all.map(c => c.name).filter(n => n.endsWith('.trash'));
+            type Group = {trashGroup: string; deletedAt: string; summary: Record<string, number>};
+            const byGroup = new Map<string, Group>();
+            for (const trashName of trashColls) {
+                const originName = trashName.slice(0, -'.trash'.length);
+                const docs = await db.collection(trashName)
+                    .find({}, {projection: {trashGroup: 1, deletedAt: 1}}).toArray();
+                for (const d of docs as any[]) {
+                    const tg = String(d.trashGroup ?? '');
+                    if (!tg) continue;
+                    const at = d.deletedAt instanceof Date ? d.deletedAt.toISOString() : String(d.deletedAt ?? '');
+                    const cur = byGroup.get(tg);
+                    if (!cur) {
+                        byGroup.set(tg, {trashGroup: tg, deletedAt: at, summary: {[originName]: 1}});
+                    } else {
+                        cur.summary[originName] = (cur.summary[originName] ?? 0) + 1;
+                        if (at && (!cur.deletedAt || at < cur.deletedAt)) cur.deletedAt = at;
+                    }
+                }
+            }
+            const list = [...byGroup.values()].sort((a, b) => (b.deletedAt || '').localeCompare(a.deletedAt || ''));
+            return JSON.stringify(list);
+        } catch (err) {
+            log.error({scope: 'trash.list', err}, 'getTrashGroups failed');
+            return '[]';
+        }
     }
 
     async loadData(): Promise<ILoadData[]> {
@@ -606,8 +719,30 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
     async replaceUpdateNavigation({oldPageName, navigation, _session}: { oldPageName: string, navigation: INavigation, _session?: {email?: string} }): Promise<string> {
         return this.navigationService.replaceUpdateNavigation(oldPageName, navigation, _session?.email);
     }
-    async deleteNavigationItem({pageName, _session}: { pageName: string, _session?: {email?: string} }): Promise<string> {
-        return this.navigationService.deleteNavigationItem(pageName, _session?.email);
+    async deleteNavigationItem({pageName, idempotencyKey, _session}: { pageName: string, idempotencyKey?: string, _session?: {email?: string} }): Promise<string> {
+        return getIdempotencyService().checkOrRun(idempotencyKey, async () => {
+            try {
+                const ctx = this.cascadeContext();
+                const row = await ctx.db.collection('Navigation').findOne({type: 'navigation', page: pageName}) as any;
+                if (!row?.id) {
+                    return JSON.stringify({error: 'no navigation found for page:' + pageName});
+                }
+                const cas = await cascadeDelete('navigation', 'Navigation', row.id, ctx);
+                void this.auditService?.record({
+                    collection: 'Navigation', docId: row.id, op: 'delete',
+                    actor: {email: _session?.email}, tag: 'cascade',
+                });
+                return JSON.stringify({
+                    navigationDeleted: cas.counts.Navigation ?? 0,
+                    sectionsDeleted: cas.counts.Sections ?? 0,
+                    trashGroup: cas.trashGroup,
+                    deletedBy: _session?.email,
+                });
+            } catch (err) {
+                log.error({scope: 'navigation.delete', err, pageName}, 'deleteNavigationItem cascade failed');
+                return JSON.stringify({error: String((err as Error).message || err)});
+            }
+        });
     }
 
     async publishSnapshot({note, _session}: {note?: string; _session?: {email?: string}} = {}): Promise<string> {
@@ -678,16 +813,18 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
             }),
         );
     }
-    async deleteTheme({id, _session}: {id: string; _session?: {email?: string}}): Promise<string> {
-        try {
-            const payload = await this.themeService.deleteTheme(id, _session?.email);
-            void this.auditService?.record({
-                collection: 'Theme', docId: id, op: 'delete',
-                actor: {email: _session?.email},
-            });
-            return JSON.stringify({deleteTheme: payload});
-        }
-        catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    async deleteTheme({id, idempotencyKey, _session}: {id: string; idempotencyKey?: string; _session?: {email?: string}}): Promise<string> {
+        return getIdempotencyService().checkOrRun(idempotencyKey, async () => {
+            try {
+                const payload = await this.themeService.deleteTheme(id, _session?.email);
+                void this.auditService?.record({
+                    collection: 'Theme', docId: id, op: 'delete',
+                    actor: {email: _session?.email},
+                });
+                return JSON.stringify({deleteTheme: payload});
+            }
+            catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+        });
     }
     async setActiveTheme({id, _session}: {id: string; _session?: {email?: string}}): Promise<string> {
         try {
@@ -734,16 +871,21 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
             }),
         );
     }
-    async deletePost({id, _session}: {id: string; _session?: {email?: string}}): Promise<string> {
-        try {
-            const payload = await this.postService.remove(id, _session?.email);
-            void this.auditService?.record({
-                collection: 'Post', docId: id, op: 'delete',
-                actor: {email: _session?.email},
-            });
-            return JSON.stringify({deletePost: payload});
-        }
-        catch (err) { return JSON.stringify({error: String((err as Error).message || err)}); }
+    async deletePost({id, idempotencyKey, _session}: {id: string; idempotencyKey?: string; _session?: {email?: string}}): Promise<string> {
+        return getIdempotencyService().checkOrRun(idempotencyKey, async () => {
+            try {
+                const cas = await cascadeDelete('posts', 'Posts', id, this.cascadeContext());
+                void this.auditService?.record({
+                    collection: 'Post', docId: id, op: 'delete',
+                    actor: {email: _session?.email}, tag: 'cascade',
+                });
+                return JSON.stringify({deletePost: {id, deleted: cas.counts.Posts ?? 0, trashGroup: cas.trashGroup}});
+            }
+            catch (err) {
+                log.error({scope: 'posts.delete', err, postId: id}, 'deletePost cascade failed');
+                return JSON.stringify({error: String((err as Error).message || err)});
+            }
+        });
     }
     async setPostPublished({id, publish, _session}: {id: string; publish: boolean; _session?: {email?: string}}): Promise<string> {
         try {

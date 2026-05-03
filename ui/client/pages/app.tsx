@@ -1,6 +1,6 @@
 import React from 'react'
 import {resolve} from "@services/api/generated";
-import {ConfigProvider, Dropdown, MenuProps, Space, Spin, Tabs, Typography} from 'antd';
+import {ConfigProvider, Dropdown, MenuProps, Space, Spin, Typography} from 'antd';
 import DynamicTabsContent from "@client/lib/DynamicTabsContent";
 import {IPage} from "@interfaces/IPage";
 import staticTheme from '@client/features/Themes/themeConfig';
@@ -28,6 +28,8 @@ import type {InitialPageData} from "@client/lib/gqlFetch";
 import {PostsProvider} from "@client/lib/PostsContext";
 import {refreshBus} from "@client/lib/refreshBus";
 import ScrollNav from "@client/features/Navigation/ScrollNav";
+import MainMenu from "@client/features/Navigation/MainMenu";
+import type {IMenuPage} from "@client/features/Navigation/menuItems";
 import MobileNav, {MobileNavLink} from "@client/features/MobileNav/MobileNav";
 
 interface IHomeState {
@@ -47,6 +49,10 @@ interface IHomeProps {
     t: TFunction<string, undefined>,
     i18n: i18n,
     pathname: string,
+    /** F1 sub-pages — full slug chain (root → leaf) for the current
+     *  route. Drives MainMenu trail-highlight and feeds `activeChain`
+     *  on first paint without waiting on `router.query`. */
+    slugChain?: string[],
     initialData?: InitialPageData,
 }
 
@@ -203,8 +209,13 @@ class App extends React.Component<IHomeProps> {
     }
 
     buildStateFromInitialData(data: InitialPageData): IHomeState {
-        const pages: IPage[] = (data.pages ?? []).map(p => ({
+        const pages: IPage[] = (data.pages ?? []).map((p: any) => ({
             page: p.page,
+            // F1 sub-pages — preserve parent/slug so MainMenu can render
+            // nested SubMenus. Older builds without these fields fall
+            // through to undefined and render flat.
+            parent: p.parent,
+            slug: p.slug,
             seo: p.seo,
             sections: p.sections,
         }));
@@ -308,6 +319,8 @@ class App extends React.Component<IHomeProps> {
         if (snapshot && snapshot.navigation?.length) {
             pages = snapshot.navigation.map((n: any) => ({
                 page: n.page,
+                parent: n.parent,
+                slug: n.slug,
                 seo: n.seo,
                 sections: n.sections,
             }));
@@ -401,6 +414,38 @@ class App extends React.Component<IHomeProps> {
                 }
             }
         }
+    }
+
+    /** Build the mobile-nav link list once. Mirrors the desktop Menu's
+     *  tree (root pages with children render expandable, matching F1
+     *  sub-pages). Walks the same `IMenuPage[]` shape via the shared
+     *  `buildMenuItems` builder so the structure can't drift. Blog is
+     *  appended last as a flat row (it's a route, not a page-tree leaf). */
+    buildMobileLinks(): MobileNavLink[] {
+        // Lazy import to keep this method's runtime cost low for sites
+        // without sub-pages.
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const {buildMenuItems} = require('@client/features/Navigation/menuItems') as typeof import('@client/features/Navigation/menuItems');
+        const menuPages: IMenuPage[] = this.state.pages.map((p: any) => ({
+            id: p.page,
+            page: p.page,
+            parent: p.parent,
+            slug: p.slug,
+        }));
+        const tree = buildMenuItems(menuPages, {
+            translate: (s: string) => translateOrKeep(this.props.t, s) as string,
+        });
+        const toMobile = (n: any): MobileNavLink => ({
+            key: n.key,
+            href: n.href,
+            label: typeof n.label === 'string' ? n.label : String(n.label ?? ''),
+            children: n.children?.length ? n.children.map(toMobile) : undefined,
+        });
+        const list: MobileNavLink[] = tree.map(toMobile);
+        if (this.state.blogEnabled && this.state.hasPosts) {
+            list.push({key: 'blog', href: '/blog', label: this.props.t('Blog') as string});
+        }
+        return list;
     }
 
     findIdForActiveTab() {
@@ -555,73 +600,91 @@ class App extends React.Component<IHomeProps> {
                                 </main>
                             </>
                         ) : (
-                            <Tabs
-                                className="site-tabs"
-                                onChange={(value) => this.setState({activeTab: value})}
-                                activeKey={"" + activeKey}
-                                defaultActiveKey={"0"}
-                                items={this.state.tabProps}
-                                tabBarExtraContent={{
-                                    left: (
-                                        <div className="site-tabs-left-cluster">
-                                            <Logo t={this.props.t} admin={false}/>
-                                            <MobileNav
-                                                links={[
-                                                    ...this.state.tabProps.map<MobileNavLink>(tp => ({
-                                                        key: tp.key,
-                                                        href: `/${tp.page.replace(/\s+/g, '-').toLowerCase()}`,
-                                                        label: translateOrKeep(this.props.t, tp.page),
-                                                    })),
-                                                    ...(this.state.blogEnabled && this.state.hasPosts ? [{key: 'blog', href: '/blog', label: this.props.t('Blog')}] : []),
-                                                ]}
-                                                activeKey={"" + activeKey}
-                                                onNavigate={(link) => {
-                                                    // Delegate to the Tabs onChange so AntD updates its own
-                                                    // active-tab state + URL stays in sync with the rest of
-                                                    // the app. Using the tab's key (not slug) keeps parity.
-                                                    this.setState({activeTab: link.key});
-                                                    if (typeof window !== 'undefined') window.location.assign(link.href);
-                                                }}
+                            // F1 sub-pages — the outer AntD `<Tabs>` was
+                            // already decorative once `<Menu>` took over the
+                            // nav. Render a plain header + active page content
+                            // switcher instead. Tab transitions weren't doing
+                            // anything visible before this either (no animation
+                            // configured), so dropping them is a no-op for users.
+                            (() => {
+                                const menuPages: IMenuPage[] = this.state.pages.map((p: any) => ({
+                                    id: p.page,
+                                    page: p.page,
+                                    parent: p.parent,
+                                    slug: p.slug,
+                                }));
+                                // Prefer SSR-known slug chain (full root→leaf so
+                                // SubMenu trail-highlight works) over the
+                                // single-segment derivation we used to do here.
+                                const propsChain = this.props.slugChain ?? [];
+                                const activePage: any = this.state.pages[activeKey];
+                                const fallbackChain = activePage
+                                    ? [(activePage.slug || activePage.page).toString().replace(/\s+/g, '-').toLowerCase()]
+                                    : [];
+                                const activeChain = propsChain.length > 0 ? propsChain : fallbackChain;
+                                // SSR: themeConfig may be unset on first paint;
+                                // fall back to the SSR-provided theme tokens (which
+                                // also drove the `<body data-theme-name>` attribute
+                                // in `_document.tsx`).
+                                const themeName = (this.state.themeConfig as any)?.token?.themeName
+                                    || (this.props.initialData?.themeTokens as any)?.themeSlug
+                                    || (typeof document !== 'undefined' ? document.body.dataset.themeName : undefined);
+                                const activeContent = this.state.tabProps[activeKey]?.children;
+                                return (
+                                    <div className="site-tabs">
+                                        <div className="site-tabs-bar" style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px'}}>
+                                            <div className="site-tabs-left-cluster" style={{display: 'flex', alignItems: 'center', gap: 12}}>
+                                                <Logo t={this.props.t} admin={false}/>
+                                                <MobileNav
+                                                    links={this.buildMobileLinks()}
+                                                    activeKey={"" + activeKey}
+                                                    onNavigate={(link) => {
+                                                        this.setState({activeTab: link.key});
+                                                        if (typeof window !== 'undefined') window.location.assign(link.href);
+                                                    }}
+                                                />
+                                            </div>
+                                            <MainMenu
+                                                pages={menuPages}
+                                                activeChain={activeChain}
+                                                themeName={themeName}
+                                                translate={(s) => translateOrKeep(this.props.t, s) as string}
                                             />
-                                        </div>
-                                    ),
-                                    // Blog moved out of the LEFT cluster (where it sat
-                                    // before the tabs) into RIGHT — placed AFTER the tab
-                                    // strip and BEFORE the language dropdown so it reads
-                                    // as the last nav entry. Matches AntD's Tabs visual
-                                    // rhythm via the `.navigation-item` class.
-                                    right: (
-                                        <div style={{display: 'flex', alignItems: 'center', gap: 12}}>
-                                            {this.state.blogEnabled && this.state.hasPosts && (
-                                                <Link
-                                                    href="/blog"
-                                                    className="navigation-item"
-                                                    style={{textTransform: 'uppercase', fontWeight: 400, opacity: 0.7, textDecoration: 'none'}}
-                                                >
-                                                    {this.props.t('Blog')}
-                                                </Link>
-                                            )}
-                                            {items.length > 1 && (
-                                                <Dropdown className="language-dropdown" overlayClassName="lang-popup" menu={{items}}>
-                                                    <Typography.Link>
-                                                        <Space size={6}>
-                                                            {activeLang?.flag
-                                                                ? <span className="lang-glyph" aria-hidden>{activeLang.flag}</span>
-                                                                : <span className="lang-glyph lang-glyph--symbol">
-                                                                    {(activeLang?.symbol ?? this.props.i18n.language).toUpperCase()}
+                                            <div style={{display: 'flex', alignItems: 'center', gap: 12}}>
+                                                {this.state.blogEnabled && this.state.hasPosts && (
+                                                    <Link
+                                                        href="/blog"
+                                                        className="navigation-item"
+                                                        style={{textTransform: 'uppercase', fontWeight: 400, opacity: 0.7, textDecoration: 'none'}}
+                                                    >
+                                                        {this.props.t('Blog')}
+                                                    </Link>
+                                                )}
+                                                {items.length > 1 && (
+                                                    <Dropdown className="language-dropdown" overlayClassName="lang-popup" menu={{items}}>
+                                                        <Typography.Link>
+                                                            <Space size={6}>
+                                                                {activeLang?.flag
+                                                                    ? <span className="lang-glyph" aria-hidden>{activeLang.flag}</span>
+                                                                    : <span className="lang-glyph lang-glyph--symbol">
+                                                                        {(activeLang?.symbol ?? this.props.i18n.language).toUpperCase()}
+                                                                    </span>
+                                                                }
+                                                                <span className="lang-label">
+                                                                    {activeLang?.label ?? this.props.i18n.language}
                                                                 </span>
-                                                            }
-                                                            <span className="lang-label">
-                                                                {activeLang?.label ?? this.props.i18n.language}
-                                                            </span>
-                                                        </Space>
-                                                    </Typography.Link>
-                                                </Dropdown>
-                                            )}
+                                                            </Space>
+                                                        </Typography.Link>
+                                                    </Dropdown>
+                                                )}
+                                            </div>
                                         </div>
-                                    ),
-                                }}
-                            />
+                                        <div className="site-tabs-content">
+                                            {activeContent}
+                                        </div>
+                                    </div>
+                                );
+                            })()
                         )}
                         <SiteFooter
                             config={this.state.footer}

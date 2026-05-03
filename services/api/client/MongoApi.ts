@@ -68,7 +68,10 @@ class MongoApi {
     replaceUpdateNavigation = (oldPageName: string, nav: INavigation) =>
         this.navigationApi.replaceUpdateNavigation(oldPageName, nav);
     updateNavigation = (page: string, sections: string[]) => this.navigationApi.updateNavigation(page, sections);
-    deleteNavigation = (pageName: string) => this.navigationApi.deleteNavigation(pageName);
+    deleteNavigation = (pageName: string, opts?: {idempotencyKey?: string}) =>
+        this.navigationApi.deleteNavigation(pageName, opts);
+    setNavigationParent = (pageId: string, parentId: string | null) => this.navigationApi.setParent(pageId, parentId);
+    fetchNavigationParentSlugMap = () => this.navigationApi.fetchParentSlugMap();
 
     loadSections = (pageName: string, pages: IPage[]): Promise<ISection[]> =>
         this.sectionApi.loadSections(pageName, pages);

@@ -45,7 +45,7 @@ export class UsersServiceLoader extends ServiceLoader {
 extend type MutationMongo {
     addUser(user: InUser!): String!
     updateUser(user: InUser!): String!
-    removeUser(id: String!): String!
+    removeUser(id: String!, idempotencyKey: String): String!
     """Editor or admin self-service — flip own admin UI mode."""
     setMyAdminUiMode(mode: String!): String!
 }`;
@@ -67,6 +67,24 @@ extend type MutationMongo {
             'setMyAdminUiMode',
             'myAdminUiMode',
         ],
+        // Q10 — `addUser`/`updateUser`/`removeUser` are admin-rank already;
+        // feature gate is a forward-compat hook for a future `user-manager`
+        // functional role. `setMyAdminUiMode` is intentionally NOT gated —
+        // it's self-service over the caller's own row.
+        resourceGated: {
+            addUser: () => ({
+                dimensions: ['feature'] as const,
+                values: {feature: 'Users'},
+            }),
+            updateUser: () => ({
+                dimensions: ['feature'] as const,
+                values: {feature: 'Users'},
+            }),
+            removeUser: () => ({
+                dimensions: ['feature'] as const,
+                values: {feature: 'Users'},
+            }),
+        },
     };
 
     buildServices(ctx: FeatureContext): Record<string, unknown> {

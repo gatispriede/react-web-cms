@@ -43,9 +43,10 @@ const AdminSettingsPosts: React.FC = () => {
                 author: vm.editing.author ?? '',
                 body: vm.editing.body ?? '',
                 draft: vm.editing.draft ?? false,
+                pageId: vm.editing.pageId ?? undefined,
             });
         } else {
-            form.setFieldsValue({draft: true, tags: []});
+            form.setFieldsValue({draft: true, tags: [], pageId: undefined});
         }
     }, [vm.editing, form]);
 
@@ -124,10 +125,10 @@ const AdminSettingsPosts: React.FC = () => {
                         title={t('Delete post?')}
                         onConfirm={() => vm.remove(post)}
                         okText={t('Delete')}
-                        okButtonProps={{danger: true}}
+                        okButtonProps={{danger: true, loading: vm.removeAction.pending}}
                         cancelText={t('Cancel')}
                     >
-                        <Button size="small" danger icon={<DeleteOutlined/>}/>
+                        <Button size="small" danger icon={<DeleteOutlined/>} loading={vm.removeAction.pending}/>
                     </Popconfirm>
                 </Space>
             ),
@@ -181,6 +182,23 @@ const AdminSettingsPosts: React.FC = () => {
                     </Form.Item>
                     <Form.Item name="tags" label={t('Tags')}>
                         <Select mode="tags" tokenSeparators={[',', ';']}/>
+                    </Form.Item>
+                    <Form.Item
+                        name="pageId"
+                        label={t('Pin to page')}
+                        tooltip={t('Pinning a post to a page means it cascades to trash when that page is deleted (and is restored together). The public URL stays /blog/<slug> regardless.')}
+                    >
+                        <Select
+                            data-testid="posts-page-pin-select"
+                            allowClear
+                            showSearch
+                            optionFilterProp="label"
+                            placeholder={vm.pages.length === 0
+                                ? t('No pages exist yet — create a page first')
+                                : t('Unpinned (lives at /blog root)')}
+                            disabled={vm.pages.length === 0}
+                            options={vm.pages.map(p => ({value: p.id, label: p.page}))}
+                        />
                     </Form.Item>
                     <Form.Item name="body" label={t('Body (HTML or Markdown)')} rules={[{required: true, message: t('Body is required')}]}>
                         <Input.TextArea data-testid="posts-body-textarea" rows={12}/>

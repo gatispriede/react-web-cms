@@ -111,7 +111,7 @@ const AdminSettingsProducts: React.FC = () => {
     return (
         <div style={{padding: 16}}>
             <Space style={{marginBottom: 16}} align="center" wrap>
-                <Button type="primary" icon={<PlusOutlined/>} onClick={vm.openCreate}>{t('New product')}</Button>
+                <Button data-testid="admin-products-create-btn" type="primary" icon={<PlusOutlined/>} onClick={vm.openCreate}>{t('New product')}</Button>
                 <Button onClick={vm.refresh} loading={vm.loading}>{t('Refresh')}</Button>
                 <Input.Search
                     placeholder={t('Search title or SKU')}
@@ -128,6 +128,7 @@ const AdminSettingsProducts: React.FC = () => {
                 columns={columns}
                 pagination={{pageSize: 20}}
                 size="middle"
+                onRow={(p: IProduct) => ({'data-testid': `admin-products-row-${p.slug}`} as any)}
             />
             <Drawer
                 open={vm.editing !== null}
@@ -135,7 +136,7 @@ const AdminSettingsProducts: React.FC = () => {
                 title={vm.editing?.id ? t('Edit product') : t('New product')}
                 width={720}
                 destroyOnClose
-                extra={<Button type="primary" onClick={onSave} loading={vm.saving}>{t('Save')}</Button>}
+                extra={<Button data-testid="admin-products-save-btn" type="primary" onClick={onSave} loading={vm.saving}>{t('Save')}</Button>}
             >
                 {vm.isWarehouse && (
                     <Typography.Paragraph type="secondary" style={{marginBottom: 12}}>
@@ -144,7 +145,7 @@ const AdminSettingsProducts: React.FC = () => {
                 )}
                 <Form form={form} layout="vertical">
                     <Form.Item name="title" label={t('Title')} rules={[{required: true, message: t('Title is required')}]}>
-                        <Input/>
+                        <Input data-testid="admin-products-name-input"/>
                     </Form.Item>
                     <Form.Item name="slug" label={t('Slug')} tooltip={t('Leave blank to auto-generate from the title.')}>
                         <Input placeholder="my-product"/>
@@ -157,13 +158,13 @@ const AdminSettingsProducts: React.FC = () => {
                     </Form.Item>
                     <Space>
                         <Form.Item name="price" label={t('Price (minor units)')} rules={[{required: true, message: t('Price is required')}]}>
-                            <InputNumber min={0} step={1} disabled={vm.fieldDisabled('price' as keyof InProduct)}/>
+                            <InputNumber data-testid="admin-products-price-input" min={0} step={1} disabled={vm.fieldDisabled('price' as keyof InProduct)}/>
                         </Form.Item>
                         <Form.Item name="currency" label={t('Currency')} rules={[{required: true}]}>
                             <Input style={{width: 90}} maxLength={3}/>
                         </Form.Item>
                         <Form.Item name="stock" label={t('Stock')}>
-                            <InputNumber min={0} step={1} disabled={vm.fieldDisabled('stock' as keyof InProduct)}/>
+                            <InputNumber data-testid="admin-products-stock-input" min={0} step={1} disabled={vm.fieldDisabled('stock' as keyof InProduct)}/>
                         </Form.Item>
                     </Space>
                     <Form.Item name="categories" label={t('Categories')}>
@@ -174,7 +175,7 @@ const AdminSettingsProducts: React.FC = () => {
                         label={t('Images (one URL per line)')}
                         tooltip={t('Reuse the existing assets picker by pasting URLs returned from the Assets manager.')}
                     >
-                        <Input.TextArea rows={4} disabled={vm.fieldDisabled('images' as keyof InProduct)} placeholder="https://…"/>
+                        <Input.TextArea data-testid="admin-products-image-input" rows={4} disabled={vm.fieldDisabled('images' as keyof InProduct)} placeholder="https://…"/>
                     </Form.Item>
                     <Form.Item name="draft" label={t('Draft')} valuePropName="checked">
                         <Switch/>

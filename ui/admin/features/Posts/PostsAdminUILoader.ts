@@ -1,13 +1,13 @@
 import {AdminUILoader, AdminPaneDescriptor} from '@admin/lib/loaders/AdminUILoader';
 import Posts from './Posts';
+import PostsSimplifiedView from './PostsSimplifiedView';
 
 /**
- * Posts admin pane — first AdminUILoader proof case (Class Loader L4).
+ * Posts admin pane.
  *
- * For now only the `advanced` mode is wired; `simplified` will be a
- * cut-down view (single-column, fewer fields) once `admin-ui-modes` is
- * implemented. Both will read from the same `PostsViewModel` per
- * `docs/features/platform/admin-ui-modes.md` (decision 4 — VM is shared).
+ * Both modes share `PostsViewModel` (admin-ui-modes decision 4).
+ * Simplified strips draft / slug / tags / author / excerpt / blog-visible;
+ * every save publishes. Advanced is the full surface.
  */
 export class PostsAdminUILoader extends AdminUILoader {
     readonly id = 'posts';
@@ -19,6 +19,7 @@ export class PostsAdminUILoader extends AdminUILoader {
         route: '/admin/content/posts',
         modes: {
             advanced: Posts,
+            simplified: PostsSimplifiedView,
         },
     };
 }

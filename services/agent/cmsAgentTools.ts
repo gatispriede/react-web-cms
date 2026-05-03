@@ -4,7 +4,11 @@
  * Uses the service layer directly (same process) rather than the GraphQL API.
  * This avoids auth overhead and gives the agent access to draft/admin-only data.
  *
- * Tools mirror the external cms-tools.js schema so system prompts are identical.
+ * CMS_TOOL_DEFINITIONS — full legacy set (kept for reference / standalone use).
+ * SUPPLEMENTAL_TOOL_DEFINITIONS — tools NOT covered by the MCP server that
+ *   the agent still needs: publish_site, create_backup, restore_backup,
+ *   list_images, list_posts, save_post, set_layout_mode.
+ * makeSupplementalDispatch — dispatch for the supplemental tools only.
  */
 
 import fs   from 'fs';
@@ -280,5 +284,39 @@ export function makeCmsDispatch(conn: MongoDBConnection, editedBy: string): Tool
             default:
                 throw new Error(`Unknown tool: ${name}`);
         }
+    };
+}
+
+// ── Supplemental tools (not covered by the MCP server) ───────────────────────
+//
+// The MCP server exposes page/section/module/theme/product/i18n/inventory/site/
+// audit/analytics tools. The following tools fill the gaps that are unique to
+// the inline agent workflow or not yet in the MCP surface:
+//   publish_site   — snapshot publishing
+//   create_backup  — full bundle export to disk
+//   restore_backup — full bundle restore from disk
+//   list_images    — asset listing
+//   list_posts     — blog post listing
+//   save_post      — blog post create/update
+//   set_layout_mode — tabs vs scroll layout
+
+const SUPPLEMENTAL_NAMES = new Set([
+    'publish_site', 'create_backup', 'restore_backup',
+    'list_images', 'list_posts', 'save_post', 'set_layout_mode',
+]);
+
+export const SUPPLEMENTAL_TOOL_DEFINITIONS: ToolDefinition[] =
+    CMS_TOOL_DEFINITIONS.filter(t => SUPPLEMENTAL_NAMES.has(t.name));
+
+/**
+ * Dispatch for the supplemental tools only.
+ * Throws for any tool name not in SUPPLEMENTAL_NAMES (caller should route
+ * MCP tool names to makeMcpDispatch instead).
+ */
+export function makeSupplementalDispatch(conn: MongoDBConnection, editedBy: string): ToolDispatch {
+    const full = makeCmsDispatch(conn, editedBy);
+    return async (name, input) => {
+        if (!SUPPLEMENTAL_NAMES.has(name)) throw new Error(`Unknown supplemental tool: ${name}`);
+        return full(name, input);
     };
 }

@@ -113,13 +113,15 @@ C9 cache-tag header includes both the parent and the child feature versions when
 - [ ] Breadcrumb renders on child pages, hides on root
 - [ ] No content schema migration required
 
-## Open questions for the design call
+## Decisions (resolved 2026-05-03)
 
-1. **Slug source of truth** — slugified `page` name (collide on rename) or a separate explicit `slug` field on `IPage`? Recommend: explicit `slug`, defaulting to slugified `page`.
-2. **Cycle prevention** — server rejects `setParent(A.id, A.id)` and any cycle (A→B, then setParent(A, B's-grandchild)). Validation lives in NavigationService.
-3. **Move-with-children** — moving a parent under a different parent moves all its children too. Confirm or split-child option.
-4. **Depth cap** — lock to 2 levels in v1, or allow N? Recommend 2 levels first.
-5. **Public nav rendering** — dropdown (current visual convention) or accordion or click-into-the-parent-page-and-show-children-there? Theme-dependent. Recommend dropdown default with theme override.
+1. **Slug source of truth** — explicit `slug: string` field on `IPage`. Defaults to slugified `page` on first save; never auto-updates on rename. A separate "Change slug" action triggers an explicit redirect-old → new shim.
+   - **Per-locale slugs (open follow-up)** — multilingual sites likely need a localized slug per language (`/lv/par-mums` ≠ `/en/about-us`). Field shape would evolve from `slug: string` to `slug: string | Record<LocaleCode, string>`, with the bare-string form treated as `{[defaultLocale]: slug}` for back-compat. Per-locale fallback rule: missing locale falls through to the default-locale slug. Catch-all router walks the slug-chain in the request locale first, then default. Decide at implementation time whether to ship per-locale slugs in v1 or defer to v2 once the basic sub-page model is stable; the data shape upgrade is non-breaking either way.
+2. **Cycle prevention** — both sides. Server-side rejection in `NavigationService` is the source of truth (covers MCP / API callers). Admin UI also disables invalid parent options in the Select for UX.
+3. **Move-with-children** — subtree relocates together. No split option; detaching a child is an explicit per-child parent change.
+4. **Depth cap** — max 3 levels (root + 2 child levels). Server enforces in the same `setParent` validation as cycle prevention.
+5. **Public nav rendering** — dropdown. Standard visual convention; per-theme override is a follow-up if requested.
+6. **Nav primitive** — AntD `<Menu mode="horizontal">` with `SubMenu` for nested children. Replaces the hand-rolled tablist. Per-theme styling (CSS custom properties / theme-scoped SCSS) is in scope from day one — not a follow-up — so the existing themes don't visually regress on the swap.
 
 ## Effort
 

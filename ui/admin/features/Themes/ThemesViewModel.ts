@@ -3,6 +3,7 @@ import ThemeApi from '@services/api/client/ThemeApi';
 import {ITheme, IThemeTokens, InTheme} from '@interfaces/ITheme';
 import {ConflictError, isConflictError} from '@client/lib/conflict';
 import {observable} from '@client/lib/state/observable';
+import {GuardedAction} from '@admin/lib/useGuardedAction';
 import type {FontPickerSlot} from './FontPicker';
 
 /**
@@ -63,11 +64,25 @@ export class ThemesViewModel {
 
     conflict: ThemesConflictState | null = null;
 
+    /** F2 — top-level mirror so the Proxy notifies on `pending` changes. */
+    removePending = false;
+    removeAction!: GuardedAction<[string]>;
+
     constructor(
         private readonly themeApi: ThemeApi = new ThemeApi(),
         private readonly t: Translator = (k) => k,
     ) {
-        return observable(this);
+        const proxy = observable(this);
+        proxy.removeAction = new GuardedAction<[string]>(
+            async ({idempotencyKey}, id) => {
+                const result = await proxy.themeApi.deleteTheme(id, {idempotencyKey});
+                if (result.error) { message.error(result.error); return; }
+                message.success(proxy.t('Theme deleted'));
+                await proxy.refresh();
+            },
+            {onPendingChange: (v) => { proxy.removePending = v; }},
+        );
+        return proxy;
     }
 
     async refresh(): Promise<void> {
@@ -93,10 +108,7 @@ export class ThemesViewModel {
     }
 
     async remove(id: string): Promise<void> {
-        const result = await this.themeApi.deleteTheme(id);
-        if (result.error) { message.error(result.error); return; }
-        message.success(this.t('Theme deleted'));
-        await this.refresh();
+        await this.removeAction.trigger(id);
     }
 
     async resetPreset(id: string): Promise<void> {

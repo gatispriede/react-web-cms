@@ -24,6 +24,7 @@ export const ADVANCED_ONLY_TOOLS: ReadonlySet<string> = new Set<string>([
     'site.regenerateSchema',
     'site.setFeatureFlag',
     'site.clearFeatureFlag',
+    'site.setLayoutMode',
     'auth.resetLockouts',
     // inventory writes (sync runs across every adapter)
     'inventory.syncDelta',
@@ -32,4 +33,7 @@ export const ADVANCED_ONLY_TOOLS: ReadonlySet<string> = new Set<string>([
     'theme.update',
     // page-tree structural mutations
     'section.delete',
+    // whole-site replace — never expose in simplified mode
+    'bundle.import',
+    'bundle.export',
 ]);

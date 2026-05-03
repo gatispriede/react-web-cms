@@ -43,10 +43,11 @@
     }
   }
 
-  // Push the language selector + sign-out to the far right
-  > button:last-child,
-  > .ant-dropdown-trigger:last-of-type {
-    margin-left: auto;
+  // Spacer — splits the bar into a left group (nav actions) and a right
+  // group (language / mode / theme / sign out). The right group starts at
+  // the language dropdown which immediately follows the spacer in JSX.
+  .app-login-wrapper__spacer {
+    flex: 1 1 auto;
   }
 
   button {

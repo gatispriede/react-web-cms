@@ -53,9 +53,11 @@ export class PostApi {
         }
     }
 
-    async remove(id: string): Promise<{id?: string; deleted?: number; error?: string}> {
+    async remove(id: string, opts: {idempotencyKey?: string} = {}): Promise<{id?: string; deleted?: number; error?: string}> {
         try {
-            const raw = await resolve(({mutation}) => (mutation as any).mongo.deletePost({id}));
+            const args: any = {id};
+            if (opts.idempotencyKey) args.idempotencyKey = opts.idempotencyKey;
+            const raw = await resolve(({mutation}) => (mutation as any).mongo.deletePost(args));
             const parsed = JSON.parse(raw || '{}');
             refreshBus.emit('settings');
             // Delete removes a `/blog/<slug>` path — regenerating /blog

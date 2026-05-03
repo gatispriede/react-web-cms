@@ -20,14 +20,23 @@ describe('ProductsServiceLoader', () => {
     it('toManifest() reproduces the same shape the registry sees', () => {
         // The exported `productsFeature` IS the loader's toManifest().
         // A second loader instance should produce a structurally equal
-        // manifest (apart from function identity).
+        // manifest. `authz.resourceGated` extractors are arrow functions
+        // recreated per instance, so `toEqual` on the whole authz block
+        // would fail on identity even when shapes match — assert the
+        // primitive sub-fields directly and verify extractor output
+        // structure separately.
         const loader = new ProductsServiceLoader();
         const fresh = loader.toManifest();
         expect(fresh.id).toBe(productsFeature.id);
         expect(fresh.displayName).toBe(productsFeature.displayName);
         expect(fresh.indexes).toEqual(productsFeature.indexes);
         expect(fresh.schemaSDL).toBe(productsFeature.schemaSDL);
-        expect(fresh.authz).toEqual(productsFeature.authz);
+        expect(fresh.authz?.mutationRequirements).toEqual(productsFeature.authz?.mutationRequirements);
+        expect(fresh.authz?.queryRequirements).toEqual(productsFeature.authz?.queryRequirements);
+        expect(fresh.authz?.sessionInjected).toEqual(productsFeature.authz?.sessionInjected);
+        // resourceGated keys must match; extractor identity differs by design.
+        expect(Object.keys(fresh.authz?.resourceGated ?? {}).sort())
+            .toEqual(Object.keys(productsFeature.authz?.resourceGated ?? {}).sort());
         // services + onBoot are functions; just check presence parity.
         expect(typeof fresh.services).toBe(typeof productsFeature.services);
         expect(typeof fresh.onBoot).toBe(typeof productsFeature.onBoot);

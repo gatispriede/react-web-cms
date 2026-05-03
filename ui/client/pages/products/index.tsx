@@ -78,7 +78,7 @@ const ProductsIndex = ({products, themeTokens, footer, pages}: Props) => {
                     {visible.map((p, i) => (
                         <Col xs={24} md={12} lg={8} key={p.id}>
                             <RevealOnScroll delay={i * 60}>
-                                <Link href={`/products/${p.slug}`} style={{textDecoration: 'none'}}>
+                                <Link href={`/products/${p.slug}`} style={{textDecoration: 'none'}} data-testid={`storefront-product-card-${p.slug}`}>
                                     <Card
                                         className="product-card"
                                         hoverable

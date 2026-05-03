@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+ 
 const {mdToHtml, buildBundle} = require('../seed-docs-bundle.js');
 
 describe('seed-docs-bundle: mdToHtml', () => {

@@ -7,8 +7,19 @@ import {log} from "@services/infra/logger";
 
 export class SiteFlagsApi {
     async get(): Promise<ISiteFlags> {
+        // Direct-route bug: `gqty.resolve(({query}) => query.mongo.getSiteFlags)`
+        // returns an empty payload on cold load (gqty client not always
+        // hydrated). Raw POST always returns the correct String! payload.
+        // `gqty.resolve` is reserved for SPA paths that pre-warmed the client.
         try {
-            const raw = await resolve(({query}) => (query as any).mongo.getSiteFlags);
+            const r = await fetch('/api/graphql', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({query: `{ mongo { getSiteFlags } }`}),
+            });
+            const json = await r.json();
+            const raw = json?.data?.mongo?.getSiteFlags;
             return raw ? JSON.parse(raw) : {...DEFAULT_SITE_FLAGS};
         } catch (err) {
             log.error({scope: 'siteFlags.get', err}, 'site flags get failed');

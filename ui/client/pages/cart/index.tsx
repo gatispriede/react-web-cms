@@ -30,10 +30,10 @@ const CartPage: React.FC = () => {
                 {loading ? (
                     <Typography.Text type="secondary">Loading…</Typography.Text>
                 ) : cart.items.length === 0 ? (
-                    <Empty description="Your cart is empty"/>
+                    <Empty data-testid="cart-empty-state" description="Your cart is empty"/>
                 ) : (
                     <>
-                        <div>
+                        <div data-testid="cart-line-count" data-count={cart.items.length}>
                             {cart.items.map(line => (
                                 <CartLineItem
                                     key={`${line.productId}:${line.sku}`}
@@ -50,7 +50,7 @@ const CartPage: React.FC = () => {
                             </Typography.Title>
                         </div>
                         <Link href="/checkout" style={{display: 'block', marginTop: 16}}>
-                            <Button block type="primary" size="large">Proceed to checkout</Button>
+                            <Button data-testid="cart-checkout-btn" block type="primary" size="large">Proceed to checkout</Button>
                         </Link>
                     </>
                 )}

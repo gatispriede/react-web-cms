@@ -2,6 +2,7 @@ import {message} from 'antd';
 import McpTokenApi from '@services/api/client/McpTokenApi';
 import {ALL_MCP_SCOPES, IMcpIssuedToken, IMcpTokenSummary, McpScope} from '@interfaces/IMcp';
 import {observable} from '@client/lib/state/observable';
+import {GuardedAction} from '@admin/lib/useGuardedAction';
 
 export type McpPreset = 'read-only' | 'translations-only' | 'full-access' | 'custom';
 
@@ -22,8 +23,22 @@ export class McpTokensViewModel {
     scopes: McpScope[] = PRESET_SCOPES['full-access'];
     ttlDays: number | null = 90;
 
+    /** F2 — top-level mirror so the Proxy notifies on `pending` changes. */
+    revokePending = false;
+    revokeAction!: GuardedAction<[string]>;
+
     constructor(private readonly api: McpTokenApi = new McpTokenApi()) {
-        return observable(this);
+        const proxy = observable(this);
+        proxy.revokeAction = new GuardedAction<[string]>(
+            async (_g, id) => {
+                const res = await proxy.api.revoke(id);
+                if ('error' in res && res.error) { void message.error(res.error); return; }
+                void message.success('Revoked');
+                await proxy.refresh();
+            },
+            {onPendingChange: (v) => { proxy.revokePending = v; }},
+        );
+        return proxy;
     }
 
     async refresh(): Promise<void> {
@@ -61,10 +76,7 @@ export class McpTokensViewModel {
     }
 
     async revoke(id: string): Promise<void> {
-        const res = await this.api.revoke(id);
-        if ('error' in res && res.error) { void message.error(res.error); return; }
-        void message.success('Revoked');
-        await this.refresh();
+        await this.revokeAction.trigger(id);
     }
 
     async copySecret(): Promise<void> {

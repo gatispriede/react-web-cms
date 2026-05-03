@@ -38,6 +38,7 @@ import {LanguagesAdminUILoader} from '@admin/features/Languages/LanguagesAdminUI
 import {AgentAdminUILoader}     from '@admin/features/Agent/AgentAdminUILoader';
 import {OnboardingAdminUILoader} from '@admin/features/Onboarding/OnboardingAdminUILoader';
 import {ThingsToDoAdminUILoader} from '@admin/features/ThingsToDo/ThingsToDoAdminUILoader';
+import {TrashAdminUILoader} from '@admin/features/Trash/TrashAdminUILoader';
 
 const REGISTERED: AdminUILoader[] = [
     new PostsAdminUILoader(),
@@ -60,6 +61,7 @@ const REGISTERED: AdminUILoader[] = [
     new AgentAdminUILoader(),
     new OnboardingAdminUILoader(),
     new ThingsToDoAdminUILoader(),
+    new TrashAdminUILoader(),
 ];
 
 /**

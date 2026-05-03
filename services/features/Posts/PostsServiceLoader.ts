@@ -1,5 +1,5 @@
 import {ServiceLoader} from '@services/infra/ServiceLoader';
-import type {FeatureAuthzContribution, FeatureContext} from '@services/infra/featureManifest';
+import type {CascadeRule, FeatureAuthzContribution, FeatureContext} from '@services/infra/featureManifest';
 import type {FunctionalRoleDescriptor} from '@interfaces/IPermission';
 import {BatchLoader} from '@services/infra/BatchLoader';
 import {PostService} from './PostService';
@@ -24,7 +24,7 @@ export class PostsServiceLoader extends ServiceLoader {
 }
 extend type MutationMongo {
     savePost(post: JSON!, expectedVersion: Int): String!
-    deletePost(id: String!): String!
+    deletePost(id: String!, idempotencyKey: String): String!
     setPostPublished(id: String!, publish: Boolean!): String!
 }`;
 
@@ -80,6 +80,22 @@ extend type MutationMongo {
             });
         },
     };
+
+    /**
+     * F2 cascade — when a Navigation page is deleted, every post pinned
+     * to it (`pageId === parentDoc.id`) is moved to trash with the page.
+     * Restoring the page brings the pinned posts back. Posts without a
+     * `pageId` (the common case — they live at the `/blog` root) are
+     * untouched. Public URLs remain `/blog/${slug}` regardless of pin.
+     */
+    readonly cascadeRules: readonly CascadeRule[] = [
+        {
+            parentFeature: 'navigation',
+            parentCollection: 'Navigation',
+            childCollection: 'Posts',
+            matchByParentId: (parentId: string) => ({pageId: parentId}),
+        },
+    ];
 
     /**
      * `content-editor` functional role — declared here because Posts is

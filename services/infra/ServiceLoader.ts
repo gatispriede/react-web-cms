@@ -1,5 +1,6 @@
 import {Loader} from './Loader';
 import type {
+    AnyCascadeRule,
     FeatureAuthzContribution,
     FeatureContext,
     FeatureIndexSpec,
@@ -72,6 +73,12 @@ export abstract class ServiceLoader extends Loader {
      */
     readonly batchAccessors?: Record<string, (ctx: FeatureContext) => unknown>;
 
+    /**
+     * Declarative cascade rules — see `FeatureManifest.cascadeRules`.
+     * Declared on the feature that owns the CHILD collection.
+     */
+    readonly cascadeRules?: readonly AnyCascadeRule[];
+
     /** One-shot lifecycle hook after services are built and indexes applied. */
     onBoot?(ctx: FeatureContext): Promise<void> | void;
 
@@ -102,6 +109,7 @@ export abstract class ServiceLoader extends Loader {
         if (this.functionalRoles) m.functionalRoles = this.functionalRoles;
         if (this.cacheVersionKeys) (m as any).cacheVersionKeys = this.cacheVersionKeys;
         if (this.batchAccessors) (m as any).batchAccessors = this.batchAccessors;
+        if (this.cascadeRules) m.cascadeRules = this.cascadeRules;
         return m;
     }
 }

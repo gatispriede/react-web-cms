@@ -70,7 +70,7 @@ const AdminSettingsUsers = () => {
                         title={t('Remove user?')}
                         description={t('This cannot be undone.')}
                         okText={t('Remove')}
-                        okButtonProps={{danger: true}}
+                        okButtonProps={{danger: true, loading: vm.removePending}}
                         cancelText={t('Cancel')}
                         disabled={user.email === currentEmail}
                         onConfirm={() => vm.remove(user)}
@@ -80,6 +80,7 @@ const AdminSettingsUsers = () => {
                             danger
                             icon={<DeleteOutlined/>}
                             disabled={user.email === currentEmail}
+                            loading={vm.removePending}
                         >{t('Remove')}</Button>
                     </Popconfirm>
                 </Space>

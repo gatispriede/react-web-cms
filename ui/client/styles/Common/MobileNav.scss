@@ -120,6 +120,84 @@
   font-weight: 400;
 }
 
+/* --- F1 sub-pages: nested rows ------------------------------------------
+   When a top-level link carries `children` (F1 sub-pages) the row renders
+   as `[ <a> | <toggle> ]` so the label still navigates while the chevron
+   toggles a child list rendered as `.mobile-nav-children`. Styling mirrors
+   the existing flat-row look — same dashed `--rule` separator, same mono
+   12-13px / uppercase / `--ink` colour, same `--accent` hover — and just
+   adds an indent + a smaller font for hierarchy. */
+.mobile-nav-row {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px dashed var(--rule, rgba(0, 0, 0, 0.1));
+
+  &:last-child { border-bottom: 0; }
+
+  // The inner `<a>` already carries its own bottom-border; collapse it so
+  // the row's border is the single visible separator.
+  > .mobile-nav-item {
+    flex: 1 1 auto;
+    border-bottom: 0;
+  }
+}
+.mobile-nav-toggle {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  padding: 0 12px;
+  background: transparent;
+  border: 0;
+  border-left: 1px dashed var(--rule, rgba(0, 0, 0, 0.1));
+  cursor: pointer;
+  color: var(--ink-3, var(--theme-colorInkTertiary, rgba(0, 0, 0, 0.45)));
+  font: inherit;
+  font-size: 12px;
+  line-height: 1;
+  transition: color 120ms ease, background 120ms ease;
+
+  > span {
+    display: inline-block;
+    transition: transform 180ms ease;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary, inherit)));
+    outline: none;
+  }
+}
+// Rotate the chevron when its parent row is expanded — matches the trigger
+// caret's `aria-expanded` rotate above. Targets the inner `<span>` so the
+// JSX glyph swap (▾ → ▴) and CSS rotation co-operate gracefully.
+.mobile-nav-row.is-expanded .mobile-nav-toggle > span {
+  transform: rotate(180deg);
+}
+
+.mobile-nav-children {
+  display: flex;
+  flex-direction: column;
+  // Subtle inset background to visually nest under the parent row. Falls
+  // back to transparent if the var is unset by the active theme.
+  background: var(--ink-bg-soft, rgba(0, 0, 0, 0.02));
+  border-bottom: 1px dashed var(--rule, rgba(0, 0, 0, 0.1));
+
+  &:last-child { border-bottom: 0; }
+}
+.mobile-nav-item.is-child {
+  // Indent ~24 px past the parent's 18 px left padding so the hierarchy
+  // reads at a glance. Slightly smaller type + lower-case letter-spacing
+  // to differentiate from top-level rows without losing the mono voice.
+  padding: 12px 18px 12px 42px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  border-bottom: 1px dashed var(--rule, rgba(0, 0, 0, 0.1));
+
+  &:last-child { border-bottom: 0; }
+}
+
 /* --- Mobile activation breakpoint -----------------------------------------
    Reveal the hamburger trigger + hide the desktop tab/scroll nav. Matches
    v5 design's 980 px breakpoint (see `public/design-v5/Portfolio.html`):

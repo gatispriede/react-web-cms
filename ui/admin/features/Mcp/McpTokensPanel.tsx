@@ -31,9 +31,9 @@ const McpTokensPanel: React.FC = () => {
         {title: 'Actions', key: 'actions',
             render: (_: unknown, row: IMcpTokenSummary) => row.status === 'active' ? (
                 <Popconfirm title="Revoke this token? Active MCP clients will be cut off."
-                            okText="Revoke" okButtonProps={{danger: true, 'data-testid': 'mcp-revoke-confirm-btn'} as any}
+                            okText="Revoke" okButtonProps={{danger: true, loading: vm.revokePending, 'data-testid': 'mcp-revoke-confirm-btn'} as any}
                             onConfirm={() => vm.revoke(row.id)}>
-                    <Button data-testid="mcp-revoke-btn" danger size="small">Revoke</Button>
+                    <Button data-testid="mcp-revoke-btn" danger size="small" loading={vm.revokePending}>Revoke</Button>
                 </Popconfirm>
             ) : null},
     ], [vm]);

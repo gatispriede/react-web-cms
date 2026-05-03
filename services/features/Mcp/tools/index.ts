@@ -8,11 +8,13 @@ import {INVENTORY_TOOLS} from './inventory';
 import {SITE_TOOLS} from './site';
 import {AUDIT_TOOLS} from './audit';
 import {ANALYTICS_TOOLS} from './analytics';
+import {POST_TOOLS} from './posts';
+import {IMAGE_TOOLS} from './images';
+import {BUNDLE_TOOLS} from './bundle';
 
 /**
  * Out of scope (defer):
  *   - inventory.syncAll  (reserved for v2 once we have a "are you sure?" confirmation flow)
- *   - bundle.export / bundle.import  (entire-site replace; needs a separate `admin:bundle` scope)
  *   - MCP Resources (`cms://...`)
  *   - MCP Prompts (`add-blog-post` / `localize-page` / `roll-out-theme`)
  *   - Orders / cart tool surface  (admin uses the admin UI for those for now)
@@ -27,6 +29,9 @@ export const ALL_MCP_TOOLS: McpTool[] = [
     ...SITE_TOOLS,
     ...AUDIT_TOOLS,
     ...ANALYTICS_TOOLS,
+    ...POST_TOOLS,
+    ...IMAGE_TOOLS,
+    ...BUNDLE_TOOLS,
 ];
 
 export function buildToolRegistry(): Map<string, McpTool> {
