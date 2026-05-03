@@ -41,6 +41,7 @@
 /.agent-backup.json
 /gql_*.json
 /response.json
+/map-not-territory-post.html
 
 # ── Env / secrets ────────────────────────────────────────────────────────────
 .env
