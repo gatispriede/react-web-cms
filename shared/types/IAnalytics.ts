@@ -30,7 +30,20 @@ export interface IAnalyticsEvent {
     ua?: {device: 'mobile' | 'tablet' | 'desktop'; browser?: string};
     viewport?: {w: number; h: number};
     locale?: string;
-    /** Server-derived 2-letter country code (ISO 3166-1 alpha-2). */
+    /**
+     * Server-derived 2-letter country code (ISO 3166-1 alpha-2).
+     *
+     * Privacy: this is the ONLY geo-identifying field on a row. The
+     * client IP is read once at ingest, passed to `geoLookup()`, and
+     * discarded — it is never persisted, logged, or returned. The IP
+     * field that lived here in earlier drafts was removed for GDPR
+     * minimisation: a 2-letter country is sufficient for the canned
+     * dashboard and avoids the data-controller burden of storing IPs.
+     *
+     * `undefined` when the IP is missing, IPv6 (DB1 is IPv4-only), or
+     * not in the bundled dataset — surfaced in the dashboard as
+     * "Unknown".
+     */
     country?: string;
 }
 

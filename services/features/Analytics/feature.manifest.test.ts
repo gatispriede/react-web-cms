@@ -94,4 +94,49 @@ describe('AnalyticsService', () => {
         expect(summary.topPages.find((p: any) => p.path === '/products')?.count).toBe(2);
         expect(summary.topEvents.find((e: any) => e.name === 'cart.add')?.count).toBe(1);
     });
+
+    it('stamps server-derived country from the request IP and never persists the IP', async () => {
+        // The seed dataset bundled at infra/datasets/ip-to-country.json
+        // includes 8.8.8.0/24 → US. Use it directly (no env override).
+        const svc = new AnalyticsService(db);
+        await svc.ingest([
+            {id: 'g1', ts: Date.now(), anonId: 'x', sessionId: 's', name: 'pageview', type: 'pageview', path: '/'},
+            // Client-supplied `country` field is ignored — server wins.
+            {id: 'g2', ts: Date.now(), anonId: 'x', sessionId: 's', name: 'pageview', type: 'pageview', path: '/', country: 'XX'},
+        ], undefined, '8.8.8.8');
+        const stored = await db.collection('Analytics').find({}).toArray() as any[];
+        expect(stored).toHaveLength(2);
+        for (const row of stored) {
+            expect(row.country).toBe('US');
+            expect(row.ip).toBeUndefined();
+        }
+    });
+
+    it('omits country (and never persists IP) when the IP is not in the dataset', async () => {
+        const svc = new AnalyticsService(db);
+        await svc.ingest([
+            {id: 'g3', ts: Date.now(), anonId: 'x', sessionId: 's', name: 'pageview', type: 'pageview', path: '/'},
+        ], undefined, '203.0.113.99'); // TEST-NET-3, not in seed
+        const stored = await db.collection('Analytics').findOne({id: 'g3'}) as any;
+        expect(stored.country).toBeUndefined();
+        expect(stored.ip).toBeUndefined();
+    });
+
+    it('summary includes a topCountries breakdown grouped under "Unknown" for missing values', async () => {
+        const svc = new AnalyticsService(db);
+        const now = Date.now();
+        await svc.ingest([
+            {id: 'c1', ts: now, anonId: 'a', sessionId: 's', name: 'pageview', type: 'pageview', path: '/'},
+            {id: 'c2', ts: now, anonId: 'b', sessionId: 's', name: 'pageview', type: 'pageview', path: '/'},
+        ], undefined, '8.8.8.8');
+        await svc.ingest([
+            {id: 'c3', ts: now, anonId: 'c', sessionId: 's', name: 'pageview', type: 'pageview', path: '/'},
+        ], undefined, undefined); // no IP → no country
+        const summary = JSON.parse(await svc.summary('7d'));
+        expect(summary.topCountries).toBeDefined();
+        const us = summary.topCountries.find((c: any) => c.country === 'US');
+        const unknown = summary.topCountries.find((c: any) => c.country === 'Unknown');
+        expect(us?.count).toBe(2);
+        expect(unknown?.count).toBe(1);
+    });
 });

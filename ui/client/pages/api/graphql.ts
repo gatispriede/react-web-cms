@@ -146,6 +146,11 @@ const handler = startServerAndCreateNextHandler<NextApiRequest, GqlContext>(apol
                     console.error('[cart] setCartCookie failed:', err);
                 }
             },
+            // Analytics: expose the request IP for country derivation
+            // ONLY. `AnalyticsService.ingest` resolves it to a 2-letter
+            // country and discards the IP — see geoLookup.ts +
+            // docs/runbooks/analytics-geolookup.md.
+            getClientIp: () => ip,
             getOrderTokenCookie: () => orderTokenCookie,
             setOrderTokenCookie: (token: string) => {
                 try {

@@ -1,6 +1,7 @@
 import {Collection, Db} from 'mongodb';
 import {IAnalyticsEvent, ANALYTICS_LIMITS} from '@interfaces/IAnalytics';
 import {log} from '@services/infra/logger';
+import {geoLookup} from './geoLookup';
 
 /**
  * Lightweight analytics ingest + canned summaries.
@@ -12,9 +13,13 @@ import {log} from '@services/infra/logger';
  *
  * Privacy: customer email / name NEVER on a row. `userId` is the only
  * user-identifying field; correlation lives in the Users collection.
- * IP is captured in the request log but discarded post-ingest after the
- * country-code lookup (deferred to a follow-up — for now `country` is
- * passed-through if the client's `Accept-Language` helper supplies it).
+ *
+ * IP handling: the request IP is read at the GraphQL boundary, passed
+ * to `ingest(events, userId, ip)` once, resolved to a 2-letter country
+ * via the bundled GeoLite dataset, and DISCARDED. It is never written
+ * to a row, never logged, never returned. A client-supplied `country`
+ * field on the raw event is ignored — the server-derived value wins.
+ * See `docs/runbooks/analytics-geolookup.md`.
  */
 
 const RETENTION_DAYS = Number(process.env.ANALYTICS_RETENTION_DAYS) || 90;
@@ -92,7 +97,9 @@ function sanitiseEvent(raw: any, userId: string | undefined): IAnalyticsEvent | 
         event.viewport = {w: raw.viewport.w | 0, h: raw.viewport.h | 0};
     }
     if (raw.locale && typeof raw.locale === 'string') event.locale = raw.locale.slice(0, 16);
-    if (raw.country && typeof raw.country === 'string' && /^[A-Z]{2}$/.test(raw.country)) event.country = raw.country;
+    // NOTE: client-supplied `raw.country` is intentionally ignored. The
+    // server stamps `country` from the resolved IP in `ingest()` so
+    // dashboard buckets can't be skewed by a malicious or buggy client.
     return event;
 }
 
@@ -107,15 +114,24 @@ export class AnalyticsService {
      * Ingest a batch of client-supplied events. Returns the number of
      * events accepted; rejected rows (rate limit, validation) are
      * silently dropped — no client-visible error so abusers can't probe.
+     *
+     * `ip` is consumed once for country derivation and discarded. Do
+     * not pass it to anything else downstream, do not log it, do not
+     * persist it. See class doc + IAnalytics.country comment.
      */
-    async ingest(rawEvents: unknown[], userId?: string): Promise<{accepted: number}> {
+    async ingest(rawEvents: unknown[], userId?: string, ip?: string): Promise<{accepted: number}> {
         if (!Array.isArray(rawEvents) || rawEvents.length === 0) return {accepted: 0};
         const batch = rawEvents.slice(0, ANALYTICS_LIMITS.BATCH_SIZE);
+        // Resolve the country ONCE per batch — every event in the batch
+        // shares the same source IP. The IP variable goes out of scope
+        // when this method returns; nothing further reads it.
+        const country = geoLookup(ip);
         const cleaned: IAnalyticsEvent[] = [];
         for (const raw of batch) {
             const ev = sanitiseEvent(raw, userId);
             if (!ev) continue;
             if (!ratelimitOk(ev.anonId)) continue;
+            if (country) ev.country = country;
             cleaned.push(ev);
         }
         if (cleaned.length === 0) return {accepted: 0};
@@ -137,7 +153,7 @@ export class AnalyticsService {
     async summary(range: string): Promise<string> {
         const since = new Date(Date.now() - rangeMs(range));
         try {
-            const [topPages, topEvents] = await Promise.all([
+            const [topPages, topEvents, topCountries] = await Promise.all([
                 this.col.aggregate([
                     {$match: {type: 'pageview', ts: {$gte: since.getTime()}}},
                     {$group: {_id: '$path', count: {$sum: 1}}},
@@ -152,8 +168,18 @@ export class AnalyticsService {
                     {$limit: 10},
                     {$project: {_id: 0, name: '$_id', count: 1}},
                 ]).toArray(),
+                // Country breakdown — `null`/missing rolled up as
+                // "Unknown" so the dashboard can show the share of
+                // un-resolvable IPs without a separate query.
+                this.col.aggregate([
+                    {$match: {ts: {$gte: since.getTime()}}},
+                    {$group: {_id: {$ifNull: ['$country', 'Unknown']}, count: {$sum: 1}}},
+                    {$sort: {count: -1}},
+                    {$limit: 10},
+                    {$project: {_id: 0, country: '$_id', count: 1}},
+                ]).toArray(),
             ]);
-            return JSON.stringify({range, since: since.toISOString(), topPages, topEvents});
+            return JSON.stringify({range, since: since.toISOString(), topPages, topEvents, topCountries});
         } catch (err) {
             log.error({scope: 'analytics.summary', err}, 'summary failed');
             return JSON.stringify({error: 'summary failed'});

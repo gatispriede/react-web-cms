@@ -38,6 +38,14 @@ export interface ResolverHooks {
      */
     getOrderTokenCookie?: () => string | null;
     setOrderTokenCookie?: (token: string) => void;
+    /**
+     * Client IP for analytics country derivation. Read once at the
+     * GraphQL boundary; the trackEvent resolver passes it to
+     * `AnalyticsService.ingest`, which derives a 2-letter country and
+     * discards the IP. NEVER persisted, NEVER logged. See
+     * `services/features/Analytics/geoLookup.ts` + the runbook.
+     */
+    getClientIp?: () => string | undefined;
 }
 
 // Cart owner derivation moved to services/features/Cart/feature.manifest.ts
@@ -153,6 +161,12 @@ export const nextResolvers = {
                 return JSON.stringify({error: `Too many sign-up attempts, try again in ${Math.ceil(limit.retryAfterMs / 1000)}s`});
             }
             return parent.signUpCustomer(args);
+        },
+        trackEvent: (parent: any, args: {events: unknown[]}, ctx: {hooks?: ResolverHooks}) => {
+            // Read the IP off the hook once and pass it down. The
+            // service consumes it for country lookup and discards it.
+            const ip = ctx.hooks?.getClientIp?.();
+            return parent.trackEvent({events: args.events, ip});
         },
         // Cart mutations (cartAddItem / cartUpdateQty / cartRemoveItem /
         // cartClear) are owned by the Cart feature manifest and merged in

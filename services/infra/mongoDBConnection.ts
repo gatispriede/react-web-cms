@@ -281,13 +281,15 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
     public get analyticsService(): import('@services/features/Analytics/AnalyticsService').AnalyticsService | undefined {
         return this.featureServices.analytics as import('@services/features/Analytics/AnalyticsService').AnalyticsService | undefined;
     }
-    async trackEvent({events, _session}: {events: unknown[]; _session?: {kind?: string; email?: string; customerId?: string}}): Promise<string> {
+    async trackEvent({events, ip, _session}: {events: unknown[]; ip?: string; _session?: {kind?: string; email?: string; customerId?: string}}): Promise<string> {
         const svc = this.analyticsService;
         if (!svc) return JSON.stringify({accepted: 0, error: 'analytics disabled'});
         // `userId` only stamped for logged-in customer sessions; admin
         // session traffic is intentionally NOT analytics-tracked.
         const userId = _session?.kind === 'customer' ? _session.customerId : undefined;
-        const result = await svc.ingest(events, userId);
+        // `ip` is consumed by `ingest` for country derivation only and
+        // never persisted. Do not capture it into a closure or log.
+        const result = await svc.ingest(events, userId, ip);
         return JSON.stringify(result);
     }
     async analyticsSummary({range}: {range: string}): Promise<string> {

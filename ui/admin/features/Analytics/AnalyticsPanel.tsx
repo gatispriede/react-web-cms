@@ -1,7 +1,8 @@
-// eslint-disable-next-line no-restricted-imports -- VM3 migration deferred for this pane.
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useEffect} from 'react';
 import {Alert, Button, Card, Col, Empty, Radio, Row, Space, Statistic, Table, Typography} from 'antd';
 import {useTranslation} from 'react-i18next';
+import {useViewModel} from '@client/lib/state/observable';
+import {AnalyticsPanelViewModel, type AnalyticsRange, type CountryRow, type EventRow, type PageRow} from './AnalyticsPanelViewModel';
 
 /**
  * Admin analytics dashboard — `/admin/release/analytics`.
@@ -19,35 +20,6 @@ import {useTranslation} from 'react-i18next';
  *   - Drill-down by user / anonId.
  */
 
-interface PageRow { path: string; count: number }
-interface EventRow { name: string; count: number }
-interface SummaryResult {
-    range: string;
-    since: string;
-    topPages: PageRow[];
-    topEvents: EventRow[];
-    error?: string;
-}
-
-async function fetchSummary(range: string): Promise<SummaryResult | null> {
-    try {
-        const r = await fetch('/api/graphql', {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                query: `query Summary($range: String!) { mongo { analyticsSummary(range: $range) } }`,
-                variables: {range},
-            }),
-        });
-        const json = await r.json();
-        const raw = json?.data?.mongo?.analyticsSummary;
-        return raw ? JSON.parse(raw) : null;
-    } catch {
-        return null;
-    }
-}
-
 const RANGE_OPTIONS = [
     {value: '24h', label: '24h'},
     {value: '7d', label: '7d'},
@@ -56,24 +28,11 @@ const RANGE_OPTIONS = [
 
 const AnalyticsPanel: React.FC = () => {
     const {t} = useTranslation();
-    const [range, setRange] = useState<'24h' | '7d' | '30d'>('7d');
-    const [summary, setSummary] = useState<SummaryResult | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [loadedAt, setLoadedAt] = useState<Date | null>(null);
+    const vm = useViewModel(() => new AnalyticsPanelViewModel());
 
-    const refresh = useCallback(async () => {
-        setLoading(true);
-        try {
-            const result = await fetchSummary(range);
-            setSummary(result);
-            setLoadedAt(new Date());
-        } finally {
-            setLoading(false);
-        }
-    }, [range]);
+    useEffect(() => { void vm.refresh(); }, [vm, vm.range]);
 
-    useEffect(() => { void refresh(); }, [refresh]);
-
+    const summary = vm.summary;
     const totalPageviews = (summary?.topPages ?? []).reduce((acc, r) => acc + r.count, 0);
     const totalEvents = (summary?.topEvents ?? []).reduce((acc, r) => acc + r.count, 0);
 
@@ -84,14 +43,14 @@ const AnalyticsPanel: React.FC = () => {
                 extra={
                     <Space>
                         <Radio.Group
-                            value={range}
-                            onChange={(e) => setRange(e.target.value)}
+                            value={vm.range}
+                            onChange={(e) => vm.setRange(e.target.value as AnalyticsRange)}
                             options={RANGE_OPTIONS as unknown as {value: string; label: string}[]}
                             optionType="button"
                             buttonStyle="solid"
                             size="small"
                         />
-                        <Button onClick={refresh} loading={loading}>{t('Refresh')}</Button>
+                        <Button onClick={() => void vm.refresh()} loading={vm.loading}>{t('Refresh')}</Button>
                     </Space>
                 }
             >
@@ -148,9 +107,28 @@ const AnalyticsPanel: React.FC = () => {
                                 />
                             </Col>
                         </Row>
-                        {loadedAt && (
+                        <Row gutter={16} style={{marginTop: 16}}>
+                            <Col span={12}>
+                                <Typography.Title level={5}>{t('Top countries')}</Typography.Title>
+                                <Table<CountryRow>
+                                    rowKey="country"
+                                    size="small"
+                                    pagination={false}
+                                    dataSource={summary.topCountries ?? []}
+                                    columns={[
+                                        {title: t('Country'), dataIndex: 'country', key: 'country'},
+                                        {title: t('Hits'), dataIndex: 'count', key: 'count', width: 80, align: 'right'},
+                                    ]}
+                                    locale={{emptyText: t('No country data')}}
+                                />
+                                <Typography.Text type="secondary" style={{display: 'block', marginTop: 4, fontSize: 11}}>
+                                    {t('Derived from request IP at ingest; the IP itself is never stored.')}
+                                </Typography.Text>
+                            </Col>
+                        </Row>
+                        {vm.loadedAt && (
                             <Typography.Text type="secondary" style={{display: 'block', marginTop: 12, fontSize: 12}}>
-                                {t('Loaded at {{time}}', {time: loadedAt.toLocaleTimeString()})}
+                                {t('Loaded at {{time}}', {time: vm.loadedAt.toLocaleTimeString()})}
                             </Typography.Text>
                         )}
                     </>
