@@ -1,76 +1,66 @@
 # Seamless deployment (zero-downtime)
 
-**Status:** Open.
+**Status:** Shipped (2026-05-03). Runbook: [docs/runbooks/seamless-deployment.md](../../runbooks/seamless-deployment.md).
 
-## Problem
+## Problem (recap)
 
-Current deploy flow: GitHub Actions SSH into the droplet → `git pull` → `docker compose up --build -d`. The `app` (Next.js) container rebuilds from scratch on every deploy — Next.js build runs inside the container at start time, taking 2–4 minutes on a 1–2 GB droplet. During that window Nginx gets 502s.
+P2 deploy flow does a stop-the-world restart of the `app` container.
+During the rebuild + boot window (15–60 s) Caddy returns 502s (mitigated
+in production by the maintenance page + 30 s `lb_try_duration` retry
+budget already in the Caddyfile, but visitors still see a delayed page).
 
-## Goal
+## Approach (shipped)
 
-Users on funisimo.pro see no downtime or degraded responses during a deploy.
+**Blue/green with Caddy upstream switch — option B from the original
+plan.** Option A (CI-built image pushed to GHCR) is still on the table
+as a future optimization, but it doesn't by itself eliminate the cutover
+moment — only blue/green does. The two are complementary.
 
-## Options
+## Implementation
 
-### A — Pre-build image in CI, push to registry (recommended)
+- **`infra/compose.yaml`** — added `app-blue` + `app-green` services
+  under the `seamless` Compose profile (off by default; opted into by
+  `docker compose --profile seamless ...`). Both mirror `app` exactly,
+  share the same Mongo/uploads/secrets volumes. `IS_LEADER=1` only on
+  blue so boot-once code (font cache warm, scheduled task registration)
+  doesn't double-fire.
+- **`infra/Caddyfile`** — `reverse_proxy` now uses `{$ACTIVE_UPSTREAM:app:80}`.
+  Default `app:80` keeps the legacy single-instance path working; in
+  production it's set to `app-blue:80` or `app-green:80` and rewritten
+  by the deploy script.
+- **`tools/blue-green-deploy.sh`** — runs on the droplet during deploy.
+  Builds + starts the inactive side, polls its `/api/health` directly
+  via `docker exec`, verifies the running container's git SHA matches
+  the target commit (security gate), then rewrites `ACTIVE_UPSTREAM` in
+  `.env` and `docker compose up -d --no-deps caddy` for a graceful
+  reload. Drains for `DRAIN_SECONDS` (default 30 s) before declaring
+  the deploy complete.
+- **`.github/workflows/deploy.yml`** — gated by `vars.SEAMLESS_DEPLOY`
+  (off by default). When set, calls the blue/green script over SSH;
+  otherwise falls through to the legacy P2 path. Post-flip, also
+  verifies `/api/health` from outside the droplet.
 
-Build the Next.js image in GitHub Actions (fast runner, plenty of RAM), push to GitHub Container Registry (`ghcr.io`), then on the droplet just `docker pull` + `docker compose up -d` (no build step). The old container keeps serving until the new one is healthy.
+## Boot-leader strategy
 
-- No build step on the droplet — deploy takes ~30 s instead of 3+ min.
-- Requires `depends_on: service_healthy` already in place (✓).
-- Add a `healthcheck` to the `app` service so Compose waits before cutting over.
-
-### B — Blue/green with two app containers + Nginx upstream swap
-
-Run two app containers (`app-blue`, `app-green`); deploy writes to the idle slot, then atomically rewrites the Nginx upstream. More complex, overkill for a single-server setup.
-
-### C — Keep build on server but add a warm-up period
-
-Build in a separate `docker compose build` step before `up`, so the old container keeps running during build. Less reliable — any build failure leaves the old image stale.
-
-## Recommended approach (A)
-
-1. **CI: build & push image**
-   ```yaml
-   - name: Build and push app image
-     uses: docker/build-push-action@v5
-     with:
-       context: .
-       file: AppDockerfile
-       push: true
-       tags: ghcr.io/${{ github.repository }}/app:latest
-   ```
-
-2. **compose.yaml: pull instead of build**
-   ```yaml
-   app:
-     image: ghcr.io/gatispriede/react-web-cms/app:latest
-     # remove: build: { context: ., dockerfile: AppDockerfile }
-   ```
-
-3. **App healthcheck** (add to compose.yaml):
-   ```yaml
-   healthcheck:
-     test: curl -f http://localhost:80/ || exit 1
-     interval: 15s
-     retries: 5
-     start_period: 30s
-   ```
-
-4. **Deploy step on droplet**: `docker compose pull && docker compose up -d`
-
-## Files to touch
-
-- `.github/workflows/deploy.yml` — add build/push step, pass `GHCR_TOKEN` secret.
-- `compose.yaml` — swap `build:` for `image:` on `app` service; add `healthcheck`.
-- `AppDockerfile` — no changes needed; build just moves to CI runner.
+Env flag (`IS_LEADER=1` on blue) NOT a Redis lock. Reasoning in the
+runbook — TL;DR: one less moving part, deterministic at boot, blue is
+canonically the default-active side anyway.
 
 ## Acceptance
 
-- Deploy completes in < 60 s end-to-end.
-- No 502s observed during deploy (Nginx continues serving old container until new one is healthy).
-- Rollback: `docker compose pull ghcr.io/.../app:<prev-sha> && docker compose up -d`.
+- Deploy completes with no public 502s (Caddy keeps serving old upstream
+  until reload).
+- Rollback flips `ACTIVE_UPSTREAM` back in `<5 s` (no rebuild needed —
+  the previous instance is still running its old image).
+- Dev path (`npm run dev`, single-instance docker) unaffected.
+- Failed health check on the inactive side aborts WITHOUT flipping.
+- Commit-SHA verification refuses the flip if the running container
+  doesn't match the target commit.
 
-## Effort
+## Effort (actual)
 
-**S · 2–3 h** — CI yaml change + compose tweak. The Dockerfile already works; this is purely plumbing.
+**S–M · ~3 h** — Caddyfile env switch + compose profile + orchestration
+script + workflow gate + runbook. No new dependencies, no app-code
+changes (boot-once code already keys on env, so adding `IS_LEADER`
+plumbing is the only follow-up if any module currently runs unguarded
+boot work).

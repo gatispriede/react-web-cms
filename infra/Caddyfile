@@ -64,7 +64,16 @@
     # hiccup because the retry wins before they notice. The separate
     # `fail_duration 0s` keeps Caddy optimistic — we don't want it to
     # mark the sole backend as permanently bad after a single miss.
-    reverse_proxy app:80 {
+    # --- P4: blue/green upstream switch ---
+    # `{$ACTIVE_UPSTREAM}` is sourced from `.env` and toggled by
+    # `tools/blue-green-deploy.sh` between `app-blue:80` and
+    # `app-green:80`. Default `app:80` (single-instance dev / pre-P4
+    # production) preserves the legacy P2 path — when both `app-blue`
+    # and `app-green` services are running and `ACTIVE_UPSTREAM` is
+    # set, deploys flip the marker + `caddy reload` (graceful, drains
+    # in-flight requests on the old upstream over `${DRAIN_SECONDS:-30}` s).
+    # See `docs/runbooks/seamless-deployment.md`.
+    reverse_proxy {$ACTIVE_UPSTREAM:app:80} {
         lb_try_duration 30s
         lb_try_interval 500ms
         fail_duration 0s

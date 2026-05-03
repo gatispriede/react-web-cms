@@ -131,6 +131,99 @@ services:
       timeout: 5s
       retries: 5
       start_period: 90s
+  # --- P4: blue/green app instances ---
+  # These live behind the same Caddy upstream switch — only ONE serves
+  # traffic at any moment (selected by `ACTIVE_UPSTREAM`). They're gated
+  # by the `seamless` Compose profile so single-instance dev (and the
+  # legacy P2 production path, which still uses the `app` service above)
+  # are unaffected. To opt in:
+  #   docker compose --profile seamless -f infra/compose.yaml up -d
+  # Each instance mirrors `app` exactly except:
+  #   * Distinct container_name (so `docker exec` / log reads target
+  #     the right side).
+  #   * `IS_LEADER` env — boot-once code (font cache warm, scheduled
+  #     task registration, restart-required marker reset) ONLY runs on
+  #     the blue instance. We picked the env-flag strategy (NOT a Redis
+  #     leader-election lock) because:
+  #       - one less moving part: no lease renewal, no split-brain
+  #         window, no extra Redis traffic per boot
+  #       - blue is canonically the "default active" (matches Caddy's
+  #         fallback `app-blue:80`), so the leader always exists at
+  #         boot regardless of which side is currently serving traffic
+  #       - the failure mode (green never runs boot-once code) is
+  #         exactly what we want — green is a hot standby for traffic,
+  #         not a second writer of singleton state
+  #     Trade-off: if blue is down during a deploy, boot-once code
+  #     won't run until blue comes back. Acceptable because boot-once
+  #     code is idempotent and the next blue boot picks it up.
+  app-blue:
+    profiles: ['seamless']
+    image: node-app
+    container_name: app-blue
+    depends_on:
+      mongodb: { condition: service_started }
+      server: { condition: service_healthy }
+    command: npm run start-docker
+    build:
+      context: ..
+      dockerfile: infra/AppDockerfile
+    env_file:
+      - ../.env
+    environment:
+      - BUILD_PORT=3000
+      - IS_LEADER=1
+      - SMTP_HOST_FILE=/run/secrets/smtp_host
+      - SMTP_PORT_FILE=/run/secrets/smtp_port
+      - SMTP_USER_FILE=/run/secrets/smtp_user
+      - SMTP_PASS_FILE=/run/secrets/smtp_pass
+      - MAIL_FROM_FILE=/run/secrets/mail_from
+    secrets: [smtp_host, smtp_port, smtp_user, smtp_pass, mail_from]
+    volumes:
+      - ../uploads/images:/app/ui/client/public/images
+      - ../uploads/bundles:/app/ui/client/public/bundles
+      - ../uploads/design-v2:/app/ui/client/public/design-v2
+    networks: [db, front-end, back-end]
+    expose: ['80']
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:80/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 90s
+  app-green:
+    profiles: ['seamless']
+    image: node-app
+    container_name: app-green
+    depends_on:
+      mongodb: { condition: service_started }
+      server: { condition: service_healthy }
+    command: npm run start-docker
+    build:
+      context: ..
+      dockerfile: infra/AppDockerfile
+    env_file:
+      - ../.env
+    environment:
+      - BUILD_PORT=3000
+      - IS_LEADER=0
+      - SMTP_HOST_FILE=/run/secrets/smtp_host
+      - SMTP_PORT_FILE=/run/secrets/smtp_port
+      - SMTP_USER_FILE=/run/secrets/smtp_user
+      - SMTP_PASS_FILE=/run/secrets/smtp_pass
+      - MAIL_FROM_FILE=/run/secrets/mail_from
+    secrets: [smtp_host, smtp_port, smtp_user, smtp_pass, mail_from]
+    volumes:
+      - ../uploads/images:/app/ui/client/public/images
+      - ../uploads/bundles:/app/ui/client/public/bundles
+      - ../uploads/design-v2:/app/ui/client/public/design-v2
+    networks: [db, front-end, back-end]
+    expose: ['80']
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:80/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 90s
   caddy:
     image: caddy:2-alpine
     container_name: caddy
@@ -147,6 +240,12 @@ services:
       # for a hostname the operator hasn't declared. See P3 in
       # docs/runbooks/digitalocean-domain.md.
       - SITE_DOMAIN_WWW=${SITE_DOMAIN_WWW:-www.localhost}
+      # P4 — blue/green upstream marker. `tools/blue-green-deploy.sh`
+      # rewrites `.env`'s `ACTIVE_UPSTREAM` line + `docker compose up
+      # -d --no-deps caddy` (or `caddy reload`) on every flip. Default
+      # `app:80` keeps the legacy single-instance path working when
+      # the seamless profile is off.
+      - ACTIVE_UPSTREAM=${ACTIVE_UPSTREAM:-app:80}
     ports:
       - "80:80"
       - "443:443"

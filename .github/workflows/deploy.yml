@@ -65,7 +65,32 @@ jobs:
           USER: ${{ secrets.DEPLOY_USER }}
           SITE_URL: ${{ secrets.SITE_URL }}
           SHA: ${{ github.sha }}
+          # P4 — opt into seamless (blue/green) deploy. Default off so
+          # the legacy P2 stop-the-world path keeps working until the
+          # operator has provisioned `app-blue` + `app-green` on the
+          # droplet (one-time `docker compose --profile seamless ...
+          # up -d`). See docs/runbooks/seamless-deployment.md.
+          SEAMLESS_DEPLOY: ${{ vars.SEAMLESS_DEPLOY }}
+          DEPLOY_HEALTH_TIMEOUT: ${{ vars.DEPLOY_HEALTH_TIMEOUT || '60' }}
+          DRAIN_SECONDS: ${{ vars.DRAIN_SECONDS || '30' }}
         run: |
+          if [ "${SEAMLESS_DEPLOY:-}" = "1" ] || [ "${SEAMLESS_DEPLOY:-}" = "true" ]; then
+            echo "[deploy] mode: seamless (blue/green)"
+            ssh -i ~/.ssh/id_ed25519 "$USER@$HOST" \
+              "TARGET_SHA='$SHA' DEPLOY_HEALTH_TIMEOUT='$DEPLOY_HEALTH_TIMEOUT' DRAIN_SECONDS='$DRAIN_SECONDS' bash /opt/cms/tools/blue-green-deploy.sh"
+            # Post-flip: confirm public health from outside the droplet.
+            echo "[deploy] verifying public health on $SITE_URL/api/health"
+            for i in $(seq 1 30); do
+              if curl -fsS --max-time 5 "$SITE_URL/api/health" >/dev/null; then
+                echo "[deploy] public health OK after ${i}s"; exit 0
+              fi
+              sleep 2
+            done
+            echo "[deploy] public health FAILED — flip back manually with the runbook"
+            exit 1
+          fi
+
+          echo "[deploy] mode: legacy (single-instance, brief outage on restart)"
           ssh -i ~/.ssh/id_ed25519 "$USER@$HOST" bash -s <<'REMOTE'
             set -euo pipefail
             cd /opt/cms
