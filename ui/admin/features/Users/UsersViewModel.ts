@@ -1,5 +1,6 @@
 import {message} from 'antd';
 import UserApi from '@services/api/client/UserApi';
+import LanguageApi from '@services/api/client/LanguageApi';
 import {IUser, InUser} from '@interfaces/IUser';
 import {observable} from '@client/lib/state/observable';
 import {Grant} from '@interfaces/IPermission';
@@ -11,9 +12,22 @@ export class UsersViewModel {
     saving = false;
     editing: Partial<InUser> | null = null;
 
+    /**
+     * Q10 grant-option catalogues — populated once on first refresh.
+     * Drive the three constrained `Select mode="multiple"` controls
+     * in the edit modal so admins pick from real values instead of
+     * typing strings that don't match any registered feature/page/locale.
+     * Per coding-principle (2026-05-03): predefined selections beat
+     * free-text inputs.
+     */
+    featureOptions: string[] = [];
+    pageOptions: string[] = [];
+    localeOptions: string[] = [];
+
     constructor(
         private readonly api: UserApi = new UserApi(),
         private readonly t: (k: string) => string = (k) => k,
+        private readonly languageApi: LanguageApi = new LanguageApi(),
     ) {
         return observable(this);
     }
@@ -22,11 +36,42 @@ export class UsersViewModel {
         this.loading = true;
         try {
             this.users = await this.api.listUsers();
+            await this.refreshGrantOptions();
         } catch (err) {
             message.error(String(err));
         } finally {
             this.loading = false;
         }
+    }
+
+    /** Pull the three option catalogues used by the grants Selects. Failures
+     *  are swallowed per-source — partial catalogues are better than crashing
+     *  the whole pane on a missing endpoint. */
+    private async refreshGrantOptions(): Promise<void> {
+        try {
+            const flags = await fetch('/api/graphql', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({query: `{ mongo { getFeatureFlags } }`}),
+            }).then(r => r.json());
+            const list: Array<{id: string}> = JSON.parse(flags?.data?.mongo?.getFeatureFlags ?? '[]');
+            this.featureOptions = list.map(f => f.id).sort();
+        } catch { /* keep last-known list */ }
+        try {
+            const navResp = await fetch('/api/graphql', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({query: `{ mongo { getNavigationCollection { page } } }`}),
+            }).then(r => r.json());
+            const navList: Array<{page: string}> = navResp?.data?.mongo?.getNavigationCollection ?? [];
+            this.pageOptions = navList.map(p => p.page).sort();
+        } catch { /* keep last-known list */ }
+        try {
+            const langs = await this.languageApi.getLanguages();
+            this.localeOptions = Object.keys(langs).sort();
+        } catch { /* keep last-known list */ }
     }
 
     openCreate(): void {

@@ -159,29 +159,53 @@ const AdminSettingsUsers = () => {
                             <Input.Password autoComplete="new-password"/>
                         </Form.Item>
                         {/* Q10 — three-dimension grants: feature / page / locale.
-                            Options are free-text tags so admins can grant against
-                            features/pages/locales the codegen feature registry has
-                            not yet surfaced. Stored as a flat Grant[] on save. */}
+                            Constrained multi-selects (not free-text tags) — options
+                            come from the live registries (feature flags / pages /
+                            languages) so admins pick from real values instead of
+                            typing strings that don't match anything registered.
+                            Per coding-principle (2026-05-03): predefined selections
+                            beat free text wherever the value space is enumerable. */}
                         <Form.Item
                             name="grantFeatures"
                             label={t('Feature grants')}
                             tooltip={t('User can mutate these features (e.g. Posts, Themes).')}
                         >
-                            <Select mode="tags" allowClear placeholder={t('Posts, Themes, …')}/>
+                            <Select
+                                mode="multiple"
+                                allowClear
+                                placeholder={t('Pick features…')}
+                                options={vm.featureOptions.map(id => ({label: id, value: id}))}
+                                showSearch
+                                optionFilterProp="label"
+                            />
                         </Form.Item>
                         <Form.Item
                             name="grantPages"
                             label={t('Page grants')}
-                            tooltip={t('Page slugs the user can edit (e.g. /pricing).')}
+                            tooltip={t('Pages the user can edit.')}
                         >
-                            <Select mode="tags" allowClear placeholder={t('/pricing, /about, …')}/>
+                            <Select
+                                mode="multiple"
+                                allowClear
+                                placeholder={t('Pick pages…')}
+                                options={vm.pageOptions.map(p => ({label: p, value: p}))}
+                                showSearch
+                                optionFilterProp="label"
+                            />
                         </Form.Item>
                         <Form.Item
                             name="grantLocales"
                             label={t('Locale grants')}
-                            tooltip={t('Languages the user can edit / translate (e.g. lv, en).')}
+                            tooltip={t('Languages the user can edit / translate.')}
                         >
-                            <Select mode="tags" allowClear placeholder={t('lv, en, …')}/>
+                            <Select
+                                mode="multiple"
+                                allowClear
+                                placeholder={t('Pick locales…')}
+                                options={vm.localeOptions.map(l => ({label: l, value: l}))}
+                                showSearch
+                                optionFilterProp="label"
+                            />
                         </Form.Item>
                     </Form>
                 </Modal>
