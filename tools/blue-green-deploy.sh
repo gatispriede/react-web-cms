@@ -92,8 +92,10 @@ fi
 # --- 2. Build + start ONLY the inactive instance ---
 # `--no-deps` so we don't bounce Mongo / server / caddy.
 # `--profile seamless` brings the blue/green services into scope.
-log "building $SERVICE"
-docker compose --profile seamless -f "$COMPOSE_FILE" build "$SERVICE"
+# Pass GIT_SHA as a build-arg so AppDockerfile stamps /app/.git-sha,
+# which the SHA verification at step 3 (below) reads back via docker exec.
+log "building $SERVICE (GIT_SHA=$TARGET_SHA)"
+GIT_SHA="$TARGET_SHA" docker compose --profile seamless -f "$COMPOSE_FILE" build --build-arg GIT_SHA="$TARGET_SHA" "$SERVICE"
 log "starting $SERVICE"
 docker compose --profile seamless -f "$COMPOSE_FILE" up -d --no-deps "$SERVICE"
 
