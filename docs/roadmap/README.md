@@ -31,10 +31,10 @@ Tracked separately under [production/](production/) so the two streams can be sc
 | # | Item | Status |
 |---|------|--------|
 | P1 | [production/first-boot-admin-password.md](production/first-boot-admin-password.md) | **Shipped** |
-| P2 | [production/automatic-deployment.md](production/automatic-deployment.md) | Planned |
-| P3 | [production/digitalocean-domain-wiring.md](production/digitalocean-domain-wiring.md) | Planned |
-| P4 | [production/seamless-deployment.md](production/seamless-deployment.md) | Planned |
-| P5 | [production/mongodb-auth.md](production/mongodb-auth.md) | Planned |
+| P2 | [production/automatic-deployment.md](production/automatic-deployment.md) | **Shipped (2026-05-03)** — `.github/workflows/deploy.yml`, gated on `vars.DEPLOY_ENABLED`; runbook `docs/runbooks/automatic-deployment.md` |
+| P3 | [production/digitalocean-domain-wiring.md](production/digitalocean-domain-wiring.md) | **Shipped (2026-05-03)** — Caddyfile env-driven (`DOMAIN`, `SITE_DOMAIN_WWW`), auto-HTTPS; runbook `docs/runbooks/digitalocean-domain.md` |
+| P4 | [production/seamless-deployment.md](production/seamless-deployment.md) | Planned (depends on P2) |
+| P5 | [production/mongodb-auth.md](production/mongodb-auth.md) | **Shipped (2026-05-03)** — `tools/mongo-bootstrap.sh` + `mongoConfig.buildMongoUri`; runbook `docs/runbooks/mongo-auth-setup.md` (dev path preserved) |
 
 ### Feature / UX queue
 

@@ -12,6 +12,17 @@ services:
     image: 'mongo:7.0'
     container_name: mongodb
     restart: always
+    # P5 — when MONGO_INITDB_ROOT_USERNAME + MONGO_INITDB_ROOT_PASSWORD
+    # are set (in `../.env`), Mongo's official entrypoint enables `--auth`
+    # automatically AND seeds the root user on the very first boot
+    # (against an empty data dir). On subsequent boots it just enforces
+    # auth — the seeded user already exists. App-side reads are wired by
+    # `MONGO_USER`/`MONGO_PASS` (built into the URI by mongoConfig.ts).
+    # Leaving all four unset preserves the unauthenticated dev path
+    # — the dev compose file doesn't set them.
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME:-}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD:-}
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongo mongodb://mongodb:27017/ --quiet
       interval: 30s
@@ -131,6 +142,11 @@ services:
       # (e.g. DOMAIN=skyclimber.pro). Falls back to :80 so the proxy still
       # works without a domain — useful when DNS isn't wired up yet.
       - DOMAIN=${DOMAIN:-:80}
+      # Optional `www` vhost — Caddy 301s it to the apex. Defaults to a
+      # harmless `www.localhost` so dev boots don't try to obtain a cert
+      # for a hostname the operator hasn't declared. See P3 in
+      # docs/runbooks/digitalocean-domain.md.
+      - SITE_DOMAIN_WWW=${SITE_DOMAIN_WWW:-www.localhost}
     ports:
       - "80:80"
       - "443:443"

@@ -1,5 +1,13 @@
 # Automatic deployment + easy first-time setup
 
+**Status: Shipped (with caveat: see runbook)** — `docs/runbooks/automatic-deployment.md`.
+
+Caveat: workflow is **gated by `vars.DEPLOY_ENABLED`** — wiring secrets
+without flipping the toggle does NOT trigger a live deploy. The
+bootstrap script + welcome wizard from the original plan are NOT
+included in this batch (out of scope for Q8-ops); only the CI/CD
+pipeline + health-gated rollback are shipped here.
+
 ## Goal
 
 One command from cold machine to running CMS. Today deployment is manual: clone, fill env vars, `docker compose up`, hope nothing drifts. Target: a bootstrap script + CI/CD pipeline that makes deployment repeatable and a fresh server trivial to stand up.

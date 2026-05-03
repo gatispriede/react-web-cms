@@ -1,3 +1,22 @@
+# --- P3: production domain + automatic HTTPS ---
+# `{$DOMAIN}` is sourced from `.env` (see compose.yaml — defaults to `:80`
+# when unset, so dev / un-DNSed boxes still serve plain HTTP). When set
+# to a real hostname (e.g. `example.com`), Caddy:
+#   * obtains + renews a Let's Encrypt cert automatically
+#   * redirects HTTP → HTTPS
+#   * serves HTTP/3 (UDP/443 is published in compose.yaml)
+# Cert state lives in the `caddy_data` named volume so reissues survive
+# `docker compose down`. See `docs/runbooks/digitalocean-domain.md` for
+# DNS + firewall setup.
+#
+# `{$SITE_DOMAIN_WWW:www.localhost}` — separate vhost that 301s to the
+# canonical apex. We default to a harmless `www.localhost` so dev boots
+# don't try to obtain a cert for an apex+www pair the operator hasn't
+# declared yet. In prod, set `SITE_DOMAIN_WWW=www.example.com` in `.env`.
+{$SITE_DOMAIN_WWW:www.localhost} {
+    redir https://{$DOMAIN}{uri} 301
+}
+
 {$DOMAIN} {
     encode zstd gzip
 

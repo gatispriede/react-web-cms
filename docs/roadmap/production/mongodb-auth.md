@@ -1,5 +1,12 @@
 # MongoDB authentication
 
+**Status: Shipped (with caveat: see runbook)** — `docs/runbooks/mongo-auth-setup.md`.
+
+Caveat: the unauthenticated path is preserved when `MONGO_USER` /
+`MONGO_PASS` are unset, so dev (`compose.dev.yaml`) keeps working
+unchanged. Production must set both — `tools/mongo-bootstrap.sh`
+generates them and writes a `0600` env file.
+
 Add a password to the MongoDB instance on the production droplet and update the connection string.
 
 ## What to do
