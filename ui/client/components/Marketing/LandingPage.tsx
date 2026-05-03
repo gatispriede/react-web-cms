@@ -6,7 +6,9 @@ import Features from './Features';
 import Pricing from './Pricing';
 import FinalCta from './FinalCta';
 import FooterMarketing from './FooterMarketing';
-import '@client/styles/Marketing/landing.scss';
+// landing.scss is mounted from ui/client/pages/_app.tsx (Next forbids
+// global CSS imports outside _app.tsx). Class selectors are namespaced
+// under `.marketing` so they don't leak into the CMS site.
 
 /**
  * Composes the marketing landing page. Stateless, server-renderable.

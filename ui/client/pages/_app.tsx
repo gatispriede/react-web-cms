@@ -1,4 +1,9 @@
 import '../styles/globals/global.scss'
+// Marketing landing styles are global (`:root` custom-property tokens +
+// `.marketing` class selectors). Next forbids global CSS imports outside
+// `_app.tsx`, so we mount it here. Selectors are namespaced under
+// `.marketing` so they don't bleed into the regular CMS site.
+import '../styles/Marketing/landing.scss'
 import { appWithTranslation } from 'next-i18next/pages'
 import nextI18NextConfig from '../../../next-i18next.config.js'
 import NextApp, {AppContext} from 'next/app';
