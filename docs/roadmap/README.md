@@ -42,12 +42,12 @@ Estimates assume one focused engineer already familiar with the codebase. Double
 | VM3-rest | sub-panes still on useState | M | ~10 panes carry explicit `eslint-disable-next-line no-restricted-imports` markers: Agent, Analytics, Bundle helpers, ModulePicker, AddNewLanguageDialog, ImageRail, FeatureFlags, RestartRequiredBanner, SEO, FontPicker |
 | L4-routes | public route discovery | S | Read `ClientUILoader.publicRoutes`; auto-apply `withFeatureGate`; replace per-page wiring in `pages/` |
 | L4-items | item-types migration | M | Move per-feature off the flat `ui/admin/lib/itemTypes/registry.ts` to `ClientUILoader.itemTypes` + `AdminUILoader.itemTypeEditors` pairs |
-| EL-feat | edit-levels per-feature `resourceGated` | S each | Posts is wired as the reference (Q10). Other features opt in via manifest |
-| EL-i18n | edit-levels i18n migration | S | Boot-once: when `siteFlags.inlineTranslationEdit` is ON, grant `translator` to every editor-rank user. Then drop the flag |
+| EL-feat | edit-levels per-feature `resourceGated` | Shipped (in progress) | Posts (reference, Q10) ✓ · Products ✓ · Inventory ✓ · Orders (admin-only mutations) ✓ · Footer ✓ · Themes ✓ · Languages (`{feature, locale}`) ✓ · Bundle (declared, routes still HTTP) ✓ — 18 mutations now `resourceGated` across the codebase. Remaining surfaces (Sections / Navigation / Seo / Permissions / Users / Audit) opt in via the same manifest pattern |
+| EL-i18n | edit-levels i18n migration | Shipped | Boot-once: `LanguagesServiceLoader.onBoot` runs `runI18nGrantMigration(db)` — when `siteFlags.inlineTranslationEdit === true`, grants `translator` to every editor-rank user, then sets the flag to `false`. Idempotent — re-runs on every boot are no-ops once the flag is dropped |
 | AUI-mode | per-feature simplified components | M each | The shell already dispatches via `modes.simplified ?? modes.advanced`; per-pane simplified variants ship the moment they're registered |
 | AUI-mcp | MCP execution gate | S | `enforceModeForTool(userId, toolId)` helper at the top of advanced-only MCP tool resolvers; throws `FeatureRestrictedError` when the calling user is in simplified mode |
 | AUI-todo | "Things to do" panel | M | Shared component used by simplified dashboard + the queued onboarding wizard |
-| CA-geo | client-analytics country lookup | S | Bundled GeoLite at deploy time; ingest derives a 2-letter country and discards the IP |
+| ~~CA-geo~~ | ~~client-analytics country lookup~~ | S | **Shipped** 2026-05-03 — IP2Location LITE DB1 (CC0) seed at `infra/datasets/ip-to-country.json`; `geoLookup()` derives a 2-letter country at ingest and discards the IP. See [runbook](../runbooks/analytics-geolookup.md). |
 
 ### Visual + observability
 

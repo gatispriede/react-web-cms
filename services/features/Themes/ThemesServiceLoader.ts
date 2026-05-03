@@ -44,6 +44,25 @@ extend type MutationMongo {
             'setActiveTheme',
             'resetPreset',
         ],
+        // Q10 — themes are site-wide; no per-page slice. Feature dimension only.
+        resourceGated: {
+            saveTheme: () => ({
+                dimensions: ['feature'] as const,
+                values: {feature: 'Themes'},
+            }),
+            deleteTheme: () => ({
+                dimensions: ['feature'] as const,
+                values: {feature: 'Themes'},
+            }),
+            setActiveTheme: () => ({
+                dimensions: ['feature'] as const,
+                values: {feature: 'Themes'},
+            }),
+            resetPreset: () => ({
+                dimensions: ['feature'] as const,
+                values: {feature: 'Themes'},
+            }),
+        },
     };
 
     async onBoot(ctx: FeatureContext): Promise<void> {

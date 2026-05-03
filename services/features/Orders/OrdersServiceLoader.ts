@@ -201,6 +201,20 @@ extend type MutationMongo {
             'finalizeOrder',
             'cancelOrder',
         ],
+        // Q10 — order-state mutations gate on the Orders feature only.
+        // Customer-facing checkout-flow mutations (createDraftOrder etc.)
+        // are NOT resourceGated — they're customer/anonymous endpoints
+        // that bypass the admin grant model entirely.
+        resourceGated: {
+            adminTransitionOrder: () => ({
+                dimensions: ['feature'] as const,
+                values: {feature: 'Orders'},
+            }),
+            adminRefundOrder: () => ({
+                dimensions: ['feature'] as const,
+                values: {feature: 'Orders'},
+            }),
+        },
     };
 
     readonly resolvers = {

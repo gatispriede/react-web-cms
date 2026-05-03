@@ -71,5 +71,22 @@ extend type MutationMongo {
             'deleteProduct',
             'setProductPublished',
         ],
+        // Q10 — Products has no per-page surface (catalog grid lives at a
+        // single admin route), so the gate is the feature dimension only.
+        // Locale-scoped translators don't get product mutation rights.
+        resourceGated: {
+            saveProduct: () => ({
+                dimensions: ['feature'] as const,
+                values: {feature: 'Products'},
+            }),
+            deleteProduct: () => ({
+                dimensions: ['feature'] as const,
+                values: {feature: 'Products'},
+            }),
+            setProductPublished: () => ({
+                dimensions: ['feature'] as const,
+                values: {feature: 'Products'},
+            }),
+        },
     };
 }

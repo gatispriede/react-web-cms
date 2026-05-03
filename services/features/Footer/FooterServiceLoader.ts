@@ -27,5 +27,12 @@ extend type MutationMongo {
             saveFooter: 'editor',
         },
         sessionInjected: ['saveFooter'],
+        // Q10 — footer is a single site-wide surface; feature dimension only.
+        resourceGated: {
+            saveFooter: () => ({
+                dimensions: ['feature'] as const,
+                values: {feature: 'Footer'},
+            }),
+        },
     };
 }

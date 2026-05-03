@@ -3,6 +3,8 @@ import type {FeatureAuthzContribution, FeatureContext} from '@services/infra/fea
 import type {FunctionalRoleDescriptor} from '@interfaces/IPermission';
 import {LanguageService} from './LanguageService';
 import {TranslationMetaService} from './TranslationMetaService';
+import {runI18nGrantMigration} from './i18nGrantMigration';
+import {log} from '@services/infra/logger';
 
 /**
  * Languages Loader — Class Loader L3 migration of `languagesFeature`.
@@ -49,6 +51,31 @@ extend type MutationMongo {
             'deleteLanguage',
             'saveTranslationMeta',
         ],
+        // Q10 — translation mutations gate on `{feature, locale}` so a
+        // translator with a `{kind:'locale', locale:'lv'}` grant can only
+        // touch the Latvian language row. `saveTranslationMeta` covers the
+        // shared meta surface (no per-language scope) so it stays on the
+        // feature dimension only.
+        resourceGated: {
+            addUpdateLanguage: (args: any) => ({
+                dimensions: ['feature', 'locale'] as const,
+                values: {
+                    feature: 'Languages',
+                    locale: args?.language?.symbol ?? '',
+                },
+            }),
+            deleteLanguage: (args: any) => ({
+                dimensions: ['feature', 'locale'] as const,
+                values: {
+                    feature: 'Languages',
+                    locale: args?.language?.symbol ?? '',
+                },
+            }),
+            saveTranslationMeta: () => ({
+                dimensions: ['feature'] as const,
+                values: {feature: 'Languages'},
+            }),
+        },
     };
 
     /**
@@ -74,4 +101,19 @@ extend type MutationMongo {
             },
         },
     ];
+
+    /**
+     * One-shot i18n migration — when `siteFlags.inlineTranslationEdit` is
+     * still true (the legacy switch), grant the `translator` functional
+     * role to every editor-rank user, then drop the flag. Idempotent —
+     * already-translator users are skipped, and once the flag is off the
+     * migration short-circuits.
+     */
+    async onBoot(ctx: FeatureContext): Promise<void> {
+        try {
+            await runI18nGrantMigration(ctx.db);
+        } catch (err) {
+            log.error({scope: 'languages.i18nGrantMigration', err}, 'i18n grant migration failed');
+        }
+    }
 }

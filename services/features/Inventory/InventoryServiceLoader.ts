@@ -102,5 +102,21 @@ extend type MutationMongo {
             'inventorySyncDelta',
             'inventorySaveAdapterConfig',
         ],
+        // Q10 — inventory is a single back-of-house surface; no per-page
+        // or per-locale concept. Feature dimension only.
+        resourceGated: {
+            inventorySyncAll: () => ({
+                dimensions: ['feature'] as const,
+                values: {feature: 'Inventory'},
+            }),
+            inventorySyncDelta: () => ({
+                dimensions: ['feature'] as const,
+                values: {feature: 'Inventory'},
+            }),
+            inventorySaveAdapterConfig: () => ({
+                dimensions: ['feature'] as const,
+                values: {feature: 'Inventory'},
+            }),
+        },
     };
 }
