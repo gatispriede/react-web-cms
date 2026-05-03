@@ -1,9 +1,10 @@
 import {Divider, Form, Input, Modal, Tag, Typography} from "antd";
-// eslint-disable-next-line no-restricted-imports -- Dialog is a leaf modal; preset filter is local interaction state.
-import React, {useState} from "react";
+import React from "react";
 import {TFunction} from "i18next";
 import TranslationManager from "@admin/shell/TranslationManager";
-import {LANGUAGE_PRESETS, LanguagePreset} from "./languagePresets";
+import {LanguagePreset} from "./languagePresets";
+import {useViewModel} from "@client/lib/state/observable";
+import {AddNewLanguageDialogViewModel} from "./AddNewLanguageDialogViewModel";
 
 interface AddNewLanguageDialogProps {
     t: TFunction<"common", undefined>,
@@ -14,7 +15,7 @@ interface AddNewLanguageDialogProps {
 const AddNewLanguageDialog = ({t, open, close}: AddNewLanguageDialogProps) => {
     const translationManage = new TranslationManager();
     const [form] = Form.useForm();
-    const [presetFilter, setPresetFilter] = useState('');
+    const vm = useViewModel(() => new AddNewLanguageDialogViewModel());
 
     const onFinish = async (values: any) => {
         await translationManage.saveNewLanguage(values);
@@ -25,12 +26,6 @@ const AddNewLanguageDialog = ({t, open, close}: AddNewLanguageDialogProps) => {
     const pickPreset = (p: LanguagePreset) => {
         form.setFieldsValue({symbol: p.symbol, label: p.label, flag: p.flag});
     };
-
-    const filtered = presetFilter.trim()
-        ? LANGUAGE_PRESETS.filter(p =>
-            p.label.toLowerCase().includes(presetFilter.trim().toLowerCase()) ||
-            p.symbol.includes(presetFilter.trim().toLowerCase()))
-        : LANGUAGE_PRESETS;
 
     return (
         <Modal
@@ -49,11 +44,11 @@ const AddNewLanguageDialog = ({t, open, close}: AddNewLanguageDialogProps) => {
                 size="small"
                 placeholder={t('Filter presets')}
                 style={{marginTop: 8, marginBottom: 8}}
-                value={presetFilter}
-                onChange={e => setPresetFilter(e.target.value)}
+                value={vm.presetFilter}
+                onChange={e => vm.setFilter(e.target.value)}
             />
             <div style={{maxHeight: 160, overflowY: 'auto', marginBottom: 8}}>
-                {filtered.map(p => (
+                {vm.filteredPresets.map(p => (
                     <Tag.CheckableTag
                         key={p.symbol + '-' + p.label}
                         checked={false}

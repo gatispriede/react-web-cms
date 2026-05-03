@@ -7,46 +7,21 @@
  * - Image gallery panel (all server images, toggled from toolbar)
  * - Technical details (raw JSON input) collapsed behind a "Details" toggle
  */
-// eslint-disable-next-line no-restricted-imports -- VM3 migration deferred for this pane.
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { Button, Input, Select, Tag, Typography } from 'antd';
 import { SendOutlined, SettingOutlined } from '@client/lib/icons';
+import { useViewModel } from '@client/lib/state/observable';
+import {
+    AgentPanelViewModel,
+    ApiKeyPanelViewModel,
+    ToggleViewModel,
+    type AgentEvent,
+    type AgentMode,
+    type AgentModel,
+    type ChatMessage,
+} from './AgentPanelViewModel';
 
 const { Text } = Typography;
-
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-type AgentMode  = 'content' | 'both';
-type AgentModel = '' | 'claude-opus-4-5' | 'claude-sonnet-4-5' | 'llama-3.3-70b-versatile' | 'gemini-2.0-flash' | 'qwen2.5:14b' | 'qwen2.5:32b';
-
-interface AgentEvent {
-    type:        'text' | 'tool_call' | 'tool_result' | 'warn' | 'done' | 'error';
-    text?:       string;
-    name?:       string;
-    input?:      Record<string, unknown>;
-    result?:     string;
-    isWrite?:    boolean;
-    isError?:    boolean;
-    message?:    string;
-    turns?:      number;
-    durationMs?: number;
-}
-
-type MsgKind = 'user' | 'agent' | 'tool' | 'info';
-
-interface ChatMessage {
-    id:       number;
-    kind:     MsgKind;
-    text?:    string;
-    tool?:    string;
-    input?:   string;
-    result?:  string;
-    isWrite?: boolean;
-    isError?: boolean;
-}
-
-let seq = 0;
-const nextId = () => ++seq;
 
 const TOOL_LABELS: Record<string, string> = {
     list_posts:      'Reading blog posts…',
@@ -68,7 +43,7 @@ const TOOL_LABELS: Record<string, string> = {
 const SmartResult: React.FC<{ toolName: string; result: string; isError?: boolean }> = ({
     toolName, result, isError,
 }) => {
-    const [showRaw, setShowRaw] = useState(false);
+    const vm = useViewModel(() => new ToggleViewModel());
     if (!result || result === '…') return null;
 
     if (isError) return (
@@ -89,11 +64,11 @@ const SmartResult: React.FC<{ toolName: string; result: string; isError?: boolea
                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: 5 }}>
                     <Text style={{ fontSize: 11, color: '#888' }}>{imgs.length} images found</Text>
                     <span style={{ marginLeft: 'auto', fontSize: 10, color: '#bbb', cursor: 'pointer' }}
-                          onClick={() => setShowRaw(x => !x)}>
-                        {showRaw ? 'thumbnails' : 'raw'}
+                          onClick={vm.toggle}>
+                        {vm.on ? 'thumbnails' : 'raw'}
                     </span>
                 </div>
-                {showRaw
+                {vm.on
                     ? <pre style={{ margin: 0, fontSize: 10, color: '#999', whiteSpace: 'pre-wrap',
                                     wordBreak: 'break-all', maxHeight: 120, overflow: 'auto' }}>
                         {result}
@@ -176,11 +151,11 @@ const SmartResult: React.FC<{ toolName: string; result: string; isError?: boolea
                     <span style={{ fontSize: 10, color: '#bfbfbf', cursor: 'pointer',
                                    padding: '0 4px', border: '1px solid #e8e8e8', borderRadius: 3,
                                    background: '#fff', userSelect: 'none', flexShrink: 0 }}
-                          onClick={() => setShowRaw(x => !x)}>
-                        {showRaw ? 'collapse' : 'expand'}
+                          onClick={vm.toggle}>
+                        {vm.on ? 'collapse' : 'expand'}
                     </span>
                 </div>
-                {showRaw && (
+                {vm.on && (
                     <pre style={{ margin: 0, padding: '4px 10px 6px', fontSize: 10, color: '#999',
                                   whiteSpace: 'pre-wrap', wordBreak: 'break-all',
                                   maxHeight: 200, overflow: 'auto', borderTop: '1px solid #f5f5f5' }}>
@@ -199,14 +174,14 @@ const SmartResult: React.FC<{ toolName: string; result: string; isError?: boolea
             <div style={{ display: 'flex', alignItems: 'flex-start', padding: '4px 10px', gap: 6 }}>
                 <span style={{ fontSize: 11, color: '#555', flex: 1,
                                whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                    {showRaw || !isLong ? result : result.slice(0, SHORT_LIMIT) + '…'}
+                    {vm.on || !isLong ? result : result.slice(0, SHORT_LIMIT) + '…'}
                 </span>
                 {isLong && (
                     <span style={{ fontSize: 10, color: '#bfbfbf', cursor: 'pointer',
                                    padding: '0 4px', border: '1px solid #e8e8e8', borderRadius: 3,
                                    background: '#fff', userSelect: 'none', flexShrink: 0 }}
-                          onClick={() => setShowRaw(x => !x)}>
-                        {showRaw ? 'less' : 'more'}
+                          onClick={vm.toggle}>
+                        {vm.on ? 'less' : 'more'}
                     </span>
                 )}
             </div>
@@ -218,9 +193,6 @@ const SmartResult: React.FC<{ toolName: string; result: string; isError?: boolea
 // Compact settings panel for managing Groq / Gemini / Claude API keys.
 // Keys are saved to .env.local server-side and applied to process.env immediately.
 
-interface KeyStatus { set: boolean; masked: string; label: string; }
-type KeyMap = Record<string, KeyStatus>;
-
 const KEY_ROWS: { varName: string; label: string; placeholder: string; docsUrl: string }[] = [
     { varName: 'GROQ_API_KEY',      label: 'Groq',   placeholder: 'gsk_…',   docsUrl: 'https://console.groq.com/keys' },
     { varName: 'GEMINI_API_KEY',    label: 'Gemini', placeholder: 'AIza…',   docsUrl: 'https://ai.google.dev/gemini-api/docs/api-key' },
@@ -228,35 +200,9 @@ const KEY_ROWS: { varName: string; label: string; placeholder: string; docsUrl: 
 ];
 
 const ApiKeyPanel: React.FC = () => {
-    const [keys,    setKeys]    = useState<KeyMap>({});
-    const [inputs,  setInputs]  = useState<Record<string, string>>({});
-    const [saving,  setSaving]  = useState<string | null>(null);
-    const [error,   setError]   = useState<string | null>(null);
+    const vm = useViewModel(() => new ApiKeyPanelViewModel());
 
-    useEffect(() => {
-        fetch('/api/agent/keys')
-            .then(r => r.json())
-            .then(setKeys)
-            .catch(() => setError('Could not load key status'));
-    }, []);
-
-    const save = async (varName: string) => {
-        const value = inputs[varName]?.trim() ?? '';
-        setSaving(varName);
-        setError(null);
-        try {
-            const res  = await fetch('/api/agent/keys', {
-                method:  'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body:    JSON.stringify({ varName, value }),
-            });
-            const data = await res.json();
-            if (!res.ok) { setError(data.error ?? 'Save failed'); return; }
-            setKeys(prev => ({ ...prev, [varName]: { ...prev[varName], set: data.set, masked: data.masked } }));
-            setInputs(prev => ({ ...prev, [varName]: '' }));
-        } catch { setError('Network error'); }
-        finally  { setSaving(null); }
-    };
+    useEffect(() => { void vm.load(); }, [vm]);
 
     return (
         <div style={{ borderTop: '2px solid #f0f0f0', background: '#fafafa',
@@ -264,10 +210,10 @@ const ApiKeyPanel: React.FC = () => {
             <Text style={{ fontSize: 11, color: '#aaa', display: 'block', marginBottom: 8 }}>
                 API Keys — saved to server, applied immediately (no restart needed)
             </Text>
-            {error && <div style={{ color: '#ff4d4f', fontSize: 11, marginBottom: 6 }}>{error}</div>}
+            {vm.error && <div style={{ color: '#ff4d4f', fontSize: 11, marginBottom: 6 }}>{vm.error}</div>}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {KEY_ROWS.map(({ varName, label, placeholder, docsUrl }) => {
-                    const status = keys[varName];
+                    const status = vm.keys[varName];
                     return (
                         <div key={varName} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <span style={{ fontSize: 11, color: '#666', width: 52, flexShrink: 0 }}>{label}</span>
@@ -280,22 +226,22 @@ const ApiKeyPanel: React.FC = () => {
                             <Input.Password
                                 size="small"
                                 placeholder={placeholder}
-                                value={inputs[varName] ?? ''}
-                                onChange={e => setInputs(prev => ({ ...prev, [varName]: e.target.value }))}
+                                value={vm.inputs[varName] ?? ''}
+                                onChange={e => vm.setInput(varName, e.target.value)}
                                 style={{ flex: 2, fontSize: 11, maxWidth: 240 }}
-                                onPressEnter={() => save(varName)}
+                                onPressEnter={() => vm.save(varName)}
                             />
                             <Button size="small" type="primary"
-                                    loading={saving === varName}
-                                    disabled={!inputs[varName]?.trim()}
-                                    onClick={() => save(varName)}
+                                    loading={vm.saving === varName}
+                                    disabled={!vm.inputs[varName]?.trim()}
+                                    onClick={() => vm.save(varName)}
                                     style={{ fontSize: 11 }}>
                                 Save
                             </Button>
                             {status?.set && (
                                 <Button size="small" danger
-                                        loading={saving === varName}
-                                        onClick={() => { setInputs(prev => ({ ...prev, [varName]: ' ' })); save(varName); }}
+                                        loading={vm.saving === varName}
+                                        onClick={() => vm.clear(varName)}
                                         style={{ fontSize: 11 }}>
                                     Clear
                                 </Button>
@@ -315,13 +261,7 @@ const ApiKeyPanel: React.FC = () => {
 // ── AgentPanel ────────────────────────────────────────────────────────────────
 
 const AgentPanel: React.FC = () => {
-    const [messages,      setMessages]      = useState<ChatMessage[]>([]);
-    const [input,         setInput]         = useState('');
-    const [running,       setRunning]       = useState(false);
-    const [mode,          setMode]          = useState<AgentMode>('content');
-    const [model,         setModel]         = useState<AgentModel>('');
-    const [statusMsg,     setStatusMsg]     = useState('');
-    const [showSettings,  setShowSettings]  = useState(false);
+    const vm = useViewModel(() => new AgentPanelViewModel());
 
     const scrollRef      = useRef<HTMLDivElement>(null);
     const agentMsgRef    = useRef<number | null>(null);
@@ -329,24 +269,10 @@ const AgentPanel: React.FC = () => {
     const abortRef       = useRef<AbortController | null>(null);
     const autoScrollRef  = useRef(true);
 
-    const push = (msg: Omit<ChatMessage, 'id'>): number => {
-        const id = nextId();
-        setMessages(prev => [...prev, { id, ...msg }]);
-        return id;
-    };
-
-    const updateById = (id: number, patch: Partial<ChatMessage> | ((m: ChatMessage) => Partial<ChatMessage>)) => {
-        setMessages(prev => prev.map(m => {
-            if (m.id !== id) return m;
-            const resolved = typeof patch === 'function' ? patch(m) : patch;
-            return { ...m, ...resolved };
-        }));
-    };
-
     useEffect(() => {
         if (!autoScrollRef.current) return;
         scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-    }, [messages]);
+    }, [vm.messages]);
 
     const onScroll = () => {
         const el = scrollRef.current;
@@ -363,16 +289,16 @@ const AgentPanel: React.FC = () => {
         switch (ev.type) {
             case 'text': {
                 if (agentMsgRef.current === null) {
-                    agentMsgRef.current = push({ kind: 'agent', text: ev.text ?? '' });
+                    agentMsgRef.current = vm.push({ kind: 'agent', text: ev.text ?? '' });
                 } else {
-                    updateById(agentMsgRef.current, m => ({ text: (m.text ?? '') + '\n\n' + (ev.text ?? '') }));
+                    vm.updateById(agentMsgRef.current, m => ({ text: (m.text ?? '') + '\n\n' + (ev.text ?? '') }));
                 }
                 scrollBottom();
                 break;
             }
             case 'tool_call': {
                 agentMsgRef.current = null;
-                const id = push({ kind: 'tool', tool: ev.name ?? '?',
+                const id = vm.push({ kind: 'tool', tool: ev.name ?? '?',
                     input: JSON.stringify(ev.input, null, 2), result: '…', isWrite: ev.isWrite });
                 pendingToolRef.current = { id, name: ev.name ?? '' };
                 scrollBottom();
@@ -381,41 +307,37 @@ const AgentPanel: React.FC = () => {
             case 'tool_result': {
                 const pending = pendingToolRef.current;
                 if (pending && pending.name === ev.name) {
-                    updateById(pending.id, { result: ev.result ?? '', isError: ev.isError });
+                    vm.updateById(pending.id, { result: ev.result ?? '', isError: ev.isError });
                     pendingToolRef.current = null;
                 }
                 scrollBottom();
                 break;
             }
-            case 'warn':  push({ kind: 'info', text: `⚠ ${ev.message ?? ''}` }); scrollBottom(); break;
+            case 'warn':  vm.push({ kind: 'info', text: `⚠ ${ev.message ?? ''}` }); scrollBottom(); break;
             case 'done': {
                 const secs = ((ev.durationMs ?? 0) / 1000).toFixed(1);
-                push({ kind: 'info', text: `✓ Done — ${ev.turns} turn${ev.turns === 1 ? '' : 's'}, ${secs}s` });
-                setRunning(false);
-                setStatusMsg(`Finished in ${secs}s`);
+                vm.push({ kind: 'info', text: `✓ Done — ${ev.turns} turn${ev.turns === 1 ? '' : 's'}, ${secs}s` });
+                vm.finish(`Finished in ${secs}s`);
                 agentMsgRef.current = null;
                 scrollBottom();
                 break;
             }
             case 'error': {
-                push({ kind: 'info', text: `✗ ${ev.message ?? 'Unknown error'}` });
-                setRunning(false);
-                setStatusMsg(`Error: ${ev.message}`);
+                vm.push({ kind: 'info', text: `✗ ${ev.message ?? 'Unknown error'}` });
+                vm.finish(`Error: ${ev.message}`);
                 agentMsgRef.current = null;
                 scrollBottom();
                 break;
             }
         }
-     
-    }, []);
+    }, [vm]);
 
     const send = async () => {
-        const task = input.trim();
-        if (!task || running) return;
-        push({ kind: 'user', text: task });
-        setInput('');
-        setRunning(true);
-        setStatusMsg('Running…');
+        const task = vm.input.trim();
+        if (!task || vm.running) return;
+        vm.push({ kind: 'user', text: task });
+        vm.setInput('');
+        vm.start();
         agentMsgRef.current    = null;
         pendingToolRef.current = null;
         autoScrollRef.current  = true;
@@ -427,7 +349,7 @@ const AgentPanel: React.FC = () => {
             const res = await fetch('/api/agent/stream', {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body:    JSON.stringify({ task, mode, model: model || null }),
+                body:    JSON.stringify({ task, mode: vm.mode, model: vm.model || null }),
                 signal:  ctrl.signal,
             });
             if (!res.ok) {
@@ -455,12 +377,12 @@ const AgentPanel: React.FC = () => {
                 handleEvent({ type: 'error', message: (err as Error).message });
             }
         } finally {
-            setRunning(false);
+            vm.running = false;
             abortRef.current = null;
         }
     };
 
-    const cancel = () => { abortRef.current?.abort(); setRunning(false); setStatusMsg('Cancelled'); };
+    const cancel = () => { abortRef.current?.abort(); vm.finish('Cancelled'); };
     const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send(); }
     };
@@ -480,7 +402,7 @@ const AgentPanel: React.FC = () => {
                           borderBottom: '1px solid #f0f0f0', flexShrink: 0, flexWrap: 'nowrap', minWidth: 0 }}>
                 <Select<AgentMode>
                     data-testid="agent-mode-select"
-                    value={mode} onChange={setMode} disabled={running} size="small" style={{ width: 140 }}
+                    value={vm.mode} onChange={vm.setMode} disabled={vm.running} size="small" style={{ width: 140 }}
                     options={[
                         { value: 'content', label: '💬 Chat only' },
                         { value: 'both',    label: '✏️ Can make changes' },
@@ -488,7 +410,7 @@ const AgentPanel: React.FC = () => {
                 />
                 <Select<AgentModel>
                     data-testid="agent-model-select"
-                    value={model} onChange={setModel} disabled={running} size="small" style={{ width: 160 }}
+                    value={vm.model} onChange={vm.setModel} disabled={vm.running} size="small" style={{ width: 160 }}
                     options={[
                         { value: '',                         label: '⚡ Auto' },
                         { value: 'claude-opus-4-5',          label: '☁️ Claude Opus' },
@@ -500,17 +422,17 @@ const AgentPanel: React.FC = () => {
                     ]}
                 />
                 <Button size="small" icon={<SettingOutlined />}
-                        type={showSettings ? 'primary' : 'default'}
-                        onClick={() => setShowSettings(x => !x)}
+                        type={vm.showSettings ? 'primary' : 'default'}
+                        onClick={vm.toggleSettings}
                         style={{ marginLeft: 'auto' }} />
-                {statusMsg && (
+                {vm.statusMsg && (
                     <Text data-testid="agent-status" type="secondary"
                           style={{ fontSize: 11, whiteSpace: 'nowrap',
                                    overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 200 }}>
-                        {statusMsg}
+                        {vm.statusMsg}
                     </Text>
                 )}
-                {running && (
+                {vm.running && (
                     <Button data-testid="agent-cancel-btn" size="small" danger onClick={cancel}>Cancel</Button>
                 )}
             </div>
@@ -519,7 +441,7 @@ const AgentPanel: React.FC = () => {
             <div data-testid="agent-messages" ref={scrollRef} onScroll={onScroll}
                  style={{ flex: 1, overflowY: 'auto', padding: '12px 16px',
                           display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 }}>
-                {messages.length === 0 && (
+                {vm.messages.length === 0 && (
                     <div data-testid="agent-empty-state"
                          style={{ margin: 'auto', textAlign: 'center', color: '#bfbfbf',
                                   userSelect: 'none', maxWidth: 360 }}>
@@ -534,34 +456,34 @@ const AgentPanel: React.FC = () => {
                         </Text>
                     </div>
                 )}
-                {messages.map(msg => <MessageRow key={msg.id} msg={msg} />)}
+                {vm.messages.map(msg => <MessageRow key={msg.id} msg={msg} />)}
             </div>
 
             {/* API Key settings panel */}
-            {showSettings && <ApiKeyPanel />}
+            {vm.showSettings && <ApiKeyPanel />}
 
             {/* Compose */}
             <div style={{ display: 'flex', gap: 8, padding: '10px 16px',
                           borderTop: '1px solid #f0f0f0', flexShrink: 0 }}>
                 <textarea
                     data-testid="agent-task-input"
-                    value={input}
-                    onChange={e => setInput(e.target.value)}
+                    value={vm.input}
+                    onChange={e => vm.setInput(e.target.value)}
                     onKeyDown={onKeyDown}
-                    disabled={running}
+                    disabled={vm.running}
                     placeholder="Ask anything or give instructions… (Shift+Enter for new line)"
                     rows={2}
                     style={{ flex: 1, resize: 'none', padding: '8px 10px',
                              border: '1px solid #d9d9d9', borderRadius: 6,
                              fontFamily: 'inherit', fontSize: 14, lineHeight: 1.5,
-                             outline: 'none', background: running ? '#fafafa' : '#fff' }}
+                             outline: 'none', background: vm.running ? '#fafafa' : '#fff' }}
                 />
                 <Button
                     data-testid="agent-send-btn"
                     type="primary" icon={<SendOutlined />}
                     onClick={() => void send()}
-                    disabled={running || !input.trim()}
-                    loading={running}
+                    disabled={vm.running || !vm.input.trim()}
+                    loading={vm.running}
                     style={{ alignSelf: 'flex-end', height: 38 }}
                 >
                     Send
@@ -574,7 +496,7 @@ const AgentPanel: React.FC = () => {
 // ── MessageRow ────────────────────────────────────────────────────────────────
 
 const MessageRow: React.FC<{ msg: ChatMessage }> = ({ msg }) => {
-    const [showDetails, setShowDetails] = useState(false);
+    const vm = useViewModel(() => new ToggleViewModel());
 
     if (msg.kind === 'user') return (
         <div style={{ alignSelf: 'flex-end', maxWidth: '75%' }}>
@@ -614,13 +536,13 @@ const MessageRow: React.FC<{ msg: ChatMessage }> = ({ msg }) => {
                 <span style={{ marginLeft: 'auto', fontSize: 10, color: '#bfbfbf', cursor: 'pointer',
                                padding: '1px 5px', border: '1px solid #e8e8e8', borderRadius: 3,
                                background: '#fff', userSelect: 'none' }}
-                      onClick={() => setShowDetails(x => !x)}>
-                    {showDetails ? 'hide details' : 'details'}
+                      onClick={vm.toggle}>
+                    {vm.on ? 'hide details' : 'details'}
                 </span>
             </div>
 
             {/* Technical details (raw input) — hidden by default */}
-            {showDetails && (
+            {vm.on && (
                 <pre style={{ margin: 0, padding: '6px 10px', color: '#aaa', background: '#fff',
                               maxHeight: 160, overflow: 'auto', whiteSpace: 'pre-wrap',
                               wordBreak: 'break-all', borderBottom: '1px solid #f0f0f0', fontSize: 11 }}>

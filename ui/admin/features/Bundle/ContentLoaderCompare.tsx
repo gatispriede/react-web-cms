@@ -1,14 +1,13 @@
-// eslint-disable-next-line no-restricted-imports -- Compare grid is a Suspense-driven leaf used by TranslationsViewModel.
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import React, {useEffect, useMemo} from 'react';
 import {Alert, Button, Input, Popover, Space, Switch, Table, Tag, Tooltip, Typography, message} from 'antd';
 import {DownloadOutlined, EditOutlined, InfoCircleOutlined, SearchOutlined, UploadOutlined} from '@client/lib/icons';
 import TranslationManager from '@admin/shell/TranslationManager';
 import CsvImportDialog from './CsvImportDialog';
-import TranslationMetaApi from '@services/api/client/TranslationMetaApi';
-import {ITranslationMetaEntry, ITranslationMetaMap, hashSource} from '@services/features/Languages/TranslationMetaService';
+import {ITranslationMetaEntry, hashSource} from '@services/features/Languages/TranslationMetaService';
 import ConflictDialog from '@client/lib/ConflictDialog';
-import {ConflictError, isConflictError} from '@client/lib/conflict';
 import {useTranslation} from 'react-i18next';
+import {useViewModel} from '@client/lib/state/observable';
+import {ContentLoaderCompareViewModel, MetaCellViewModel} from './ContentLoaderCompareViewModel';
 
 interface Row {
     key: string;
@@ -22,22 +21,6 @@ interface Row {
     staleAccepted: string[];
 }
 
-interface LanguageEntry {
-    symbol: string;
-    label: string;
-    default?: boolean;
-}
-
-const fetchLocale = async (lang: string): Promise<Record<string, string>> => {
-    try {
-        const r = await fetch(`/locales/${lang}/app.json`);
-        if (!r.ok) return {};
-        return await r.json();
-    } catch {
-        return {};
-    }
-};
-
 /**
  * Per-row inline editor for translator notes. Empty on both fields → row
  * renders a subtle "add note" pencil; populated → renders the description as
@@ -48,34 +31,29 @@ const MetaCell = ({entry, onSave}: {
     entry: ITranslationMetaEntry | undefined;
     onSave: (next: ITranslationMetaEntry) => Promise<void> | void;
 }) => {
-    const [open, setOpen] = useState(false);
-    const [description, setDescription] = useState(entry?.description ?? '');
-    const [context, setContext] = useState(entry?.context ?? '');
+    const vm = useViewModel(() => new MetaCellViewModel());
 
     useEffect(() => {
-        if (open) {
-            setDescription(entry?.description ?? '');
-            setContext(entry?.context ?? '');
-        }
-    }, [open, entry?.description, entry?.context]);
+        if (vm.open) vm.syncFromEntry(entry);
+    }, [vm, vm.open, entry?.description, entry?.context]);
 
     const commit = async () => {
-        const nextDesc = description.trim();
-        const nextCtx = context.trim();
+        const nextDesc = vm.description.trim();
+        const nextCtx  = vm.context.trim();
         const prevDesc = entry?.description ?? '';
-        const prevCtx = entry?.context ?? '';
+        const prevCtx  = entry?.context ?? '';
         if (nextDesc !== prevDesc || nextCtx !== prevCtx) {
             await onSave({description: nextDesc, context: nextCtx});
         }
-        setOpen(false);
+        vm.setOpen(false);
     };
 
     const popoverContent = (
         <div style={{width: 300}}>
             <div style={{marginBottom: 6, fontWeight: 500}}>Short description</div>
             <Input
-                value={description}
-                onChange={e => setDescription(e.target.value)}
+                value={vm.description}
+                onChange={e => vm.setDescription(e.target.value)}
                 placeholder="e.g. 'CTA on the homepage hero'"
                 maxLength={120}
                 onPressEnter={() => { void commit(); }}
@@ -83,14 +61,14 @@ const MetaCell = ({entry, onSave}: {
             />
             <div style={{margin: '10px 0 6px', fontWeight: 500}}>Longer context</div>
             <Input.TextArea
-                value={context}
-                onChange={e => setContext(e.target.value)}
+                value={vm.context}
+                onChange={e => vm.setContext(e.target.value)}
                 placeholder="Background, tone hints, where the string appears…"
                 rows={3}
                 maxLength={600}
             />
             <div style={{display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 10}}>
-                <Button size="small" onClick={() => setOpen(false)}>Cancel</Button>
+                <Button size="small" onClick={() => vm.setOpen(false)}>Cancel</Button>
                 <Button size="small" type="primary" onClick={() => { void commit(); }}>Save</Button>
             </div>
         </div>
@@ -103,7 +81,7 @@ const MetaCell = ({entry, onSave}: {
                 type="link"
                 size="small"
                 style={{padding: 0, height: 'auto', textAlign: 'left', maxWidth: '100%'}}
-                onClick={() => setOpen(true)}
+                onClick={() => vm.setOpen(true)}
             >
                 <span style={{
                     display: 'inline-block',
@@ -125,7 +103,7 @@ const MetaCell = ({entry, onSave}: {
             size="small"
             icon={<EditOutlined/>}
             style={{padding: 0, height: 'auto', color: '#bbb'}}
-            onClick={() => setOpen(true)}
+            onClick={() => vm.setOpen(true)}
         >
             Add note
         </Button>
@@ -136,8 +114,8 @@ const MetaCell = ({entry, onSave}: {
             content={popoverContent}
             title="Translator notes"
             trigger="click"
-            open={open}
-            onOpenChange={setOpen}
+            open={vm.open}
+            onOpenChange={vm.setOpen}
             destroyTooltipOnHide
         >
             {trigger}
@@ -156,106 +134,18 @@ export const ContentLoaderCompare = ({translationManager, dataPromise}: {
     translationManager: TranslationManager,
     dataPromise: Promise<unknown>,
 }) => {
-    const [sourceMap] = useState<Record<string, string>>(() => ({}));
-    const [langs, setLangs] = useState<LanguageEntry[]>([]);
-    const [resources, setResources] = useState<Record<string, Record<string, string>>>({});
-    const [filter, setFilter] = useState('');
-    const [missingOnly, setMissingOnly] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [importOpen, setImportOpen] = useState(false);
-    const [meta, setMeta] = useState<ITranslationMetaMap>({});
-    const [metaVersion, setMetaVersion] = useState<number>(0);
-    const [conflict, setConflict] = useState<{error: ConflictError<any>; retry: () => Promise<void>} | null>(null);
-    const metaApi = useMemo(() => new TranslationMetaApi(), []);
+    const vm = useViewModel(() => new ContentLoaderCompareViewModel(translationManager, dataPromise));
     const {t} = useTranslation();
 
-    const loadAll = useCallback(async () => {
-        setLoading(true);
-        try {
-            await dataPromise;
-            Object.assign(sourceMap, translationManager.getTranslations());
-            const raw = await translationManager.getLanguages() as unknown;
-            const list: LanguageEntry[] = Array.isArray(raw)
-                ? (raw as LanguageEntry[])
-                : Object.values((raw ?? {}) as Record<string, LanguageEntry>);
-            setLangs(list);
-            const loaded: Record<string, Record<string, string>> = {};
-            await Promise.all(list.map(async l => {
-                loaded[l.symbol] = await fetchLocale(l.symbol);
-            }));
-            setResources(loaded);
-            const current = await metaApi.get();
-            setMeta(current.value);
-            setMetaVersion(current.version);
-        } finally {
-            setLoading(false);
-        }
-    }, [translationManager, dataPromise, sourceMap, metaApi]);
+    useEffect(() => { void vm.loadAll(); }, [vm]);
 
-    const reloadMeta = useCallback(async () => {
-        const current = await metaApi.get();
-        setMeta(current.value);
-        setMetaVersion(current.version);
-    }, [metaApi]);
-
-    const performMetaSave = useCallback(async (patch: ITranslationMetaMap, expectedVersion: number | undefined) => {
-        const result = await metaApi.save(patch, expectedVersion);
-        if ((result as any)?.error) {
-            message.error(String((result as any).error));
-            await reloadMeta();
-            return false;
-        }
-        if (typeof (result as any).version === 'number') setMetaVersion((result as any).version);
-        if ((result as any).value) setMeta((result as any).value as ITranslationMetaMap);
-        return true;
-    }, [metaApi, reloadMeta]);
-
-    const persistMeta = useCallback(async (key: string, entry: ITranslationMetaEntry) => {
-        // Optimistic update so the row reflects the edit instantly.
-        setMeta(prev => {
-            const next = {...prev};
-            const description = entry.description?.trim() ?? '';
-            const context = entry.context?.trim() ?? '';
-            if (!description && !context) delete next[key];
-            else next[key] = {
-                ...(description ? {description} : {}),
-                ...(context ? {context} : {}),
-            };
-            return next;
-        });
-        const patch = {[key]: entry};
-        try {
-            await performMetaSave(patch, metaVersion);
-        } catch (err) {
-            if (isConflictError(err)) {
-                setConflict({
-                    error: err,
-                    retry: async () => {
-                        try {
-                            await performMetaSave(patch, err.currentVersion);
-                            setConflict(null);
-                        } catch (e) {
-                            message.error(String((e as Error)?.message ?? e));
-                            setConflict(null);
-                        }
-                    },
-                });
-            } else {
-                message.error(String((err as Error)?.message ?? err));
-                await reloadMeta();
-            }
-        }
-    }, [performMetaSave, metaVersion, reloadMeta]);
-
-    useEffect(() => { void loadAll(); }, [loadAll]);
-
-    const nonDefaultLangs = useMemo(() => langs.filter(l => !l.default), [langs]);
+    const nonDefaultLangs = useMemo(() => vm.langs.filter(l => !l.default), [vm.langs]);
 
     const rows: Row[] = useMemo(() => {
-        const lower = filter.trim().toLowerCase();
-        return Object.entries(sourceMap)
+        const lower = vm.filter.trim().toLowerCase();
+        return Object.entries(vm.sourceMap)
             .map(([key, source]) => {
-                const entry = meta[key];
+                const entry = vm.meta[key];
                 const storedHash = entry?.acceptedSourceHash;
                 const hashStale = Boolean(storedHash && storedHash !== hashSource(source));
                 const rawAccepted = entry?.acceptedSources ?? [];
@@ -264,7 +154,7 @@ export const ContentLoaderCompare = ({translationManager, dataPromise}: {
                 const accepted: string[] = [];
                 const staleAccepted: string[] = [];
                 for (const lang of nonDefaultLangs) {
-                    const v = resources[lang.symbol]?.[key];
+                    const v = vm.resources[lang.symbol]?.[key];
                     const wasAccepted = rawAccepted.includes(lang.symbol);
                     if (wasAccepted && hashStale) {
                         staleAccepted.push(lang.symbol);
@@ -278,8 +168,8 @@ export const ContentLoaderCompare = ({translationManager, dataPromise}: {
                 return {key, source, values, missing, accepted, staleAccepted};
             })
             .filter(r => !lower || r.key.toLowerCase().includes(lower) || r.source?.toLowerCase().includes(lower))
-            .filter(r => !missingOnly || r.missing.length > 0 || r.staleAccepted.length > 0);
-    }, [sourceMap, nonDefaultLangs, resources, filter, missingOnly, meta]);
+            .filter(r => !vm.missingOnly || r.missing.length > 0 || r.staleAccepted.length > 0);
+    }, [vm.sourceMap, nonDefaultLangs, vm.resources, vm.filter, vm.missingOnly, vm.meta]);
 
     const downloadCsv = () => {
         const header = ['key', 'source', ...nonDefaultLangs.map(l => l.symbol)];
@@ -318,11 +208,11 @@ export const ContentLoaderCompare = ({translationManager, dataPromise}: {
             key: 'meta',
             width: 240,
             render: (_: unknown, row: Row) => {
-                const entry = meta[row.key];
+                const entry = vm.meta[row.key];
                 return (
                     <MetaCell
                         entry={entry}
-                        onSave={(next) => persistMeta(row.key, next)}
+                        onSave={(next) => vm.persistMeta(row.key, next)}
                     />
                 );
             },
@@ -357,50 +247,51 @@ export const ContentLoaderCompare = ({translationManager, dataPromise}: {
                     allowClear
                     placeholder="Search keys or source"
                     prefix={<SearchOutlined/>}
-                    value={filter}
-                    onChange={e => setFilter(e.target.value)}
+                    value={vm.filter}
+                    onChange={e => vm.setFilter(e.target.value)}
                     style={{width: 280}}
                 />
                 <Space>
-                    <Switch checked={missingOnly} onChange={setMissingOnly}/>
+                    <Switch checked={vm.missingOnly} onChange={vm.setMissingOnly}/>
                     <span>Missing only</span>
                 </Space>
                 <Button icon={<DownloadOutlined/>} onClick={downloadCsv} disabled={rows.length === 0}>Export CSV</Button>
-                <Button icon={<UploadOutlined/>} onClick={() => setImportOpen(true)} disabled={nonDefaultLangs.length === 0}>Import CSV</Button>
+                <Button icon={<UploadOutlined/>} onClick={vm.openImport} disabled={nonDefaultLangs.length === 0}>Import CSV</Button>
                 <Typography.Text type="secondary">{rows.length} keys × {nonDefaultLangs.length} languages</Typography.Text>
             </Space>
             <CsvImportDialog
-                open={importOpen}
+                open={vm.importOpen}
                 close={async (didImport) => {
-                    setImportOpen(false);
-                    if (didImport) { await loadAll(); }
+                    vm.closeImport();
+                    if (didImport) { await vm.loadAll(); }
                 }}
                 translationManager={translationManager}
                 languages={nonDefaultLangs}
             />
             <Table
                 rowKey="key"
-                loading={loading}
+                loading={vm.loading}
                 columns={columns as any}
                 dataSource={rows}
                 pagination={{pageSize: 25, showSizeChanger: true}}
                 size="small"
                 scroll={{x: 'max-content'}}
             />
-            {conflict && (() => {
-                const peer = conflict.error.currentDoc as {editedBy?: string; editedAt?: string} | null;
+            {vm.conflict && (() => {
+                const c = vm.conflict;
+                const peer = c.error.currentDoc as {editedBy?: string; editedAt?: string} | null;
                 return (
                     <ConflictDialog
                         open
                         docKind={t('Translator notes')}
-                        peerVersion={conflict.error.currentVersion}
+                        peerVersion={c.error.currentVersion}
                         peerEditedBy={peer?.editedBy}
                         peerEditedAt={peer?.editedAt}
-                        onCancel={() => setConflict(null)}
-                        onTakeTheirs={async () => { setConflict(null); await reloadMeta(); }}
+                        onCancel={vm.dismissConflict}
+                        onTakeTheirs={async () => { vm.dismissConflict(); await vm.reloadMeta(); }}
                         onKeepMine={async () => {
-                            try { await conflict.retry(); }
-                            catch (err) { message.error(String((err as Error)?.message ?? err)); setConflict(null); }
+                            try { await c.retry(); }
+                            catch (err) { message.error(String((err as Error)?.message ?? err)); vm.dismissConflict(); }
                         }}
                     />
                 );

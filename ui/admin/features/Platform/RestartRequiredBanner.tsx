@@ -1,7 +1,8 @@
-// eslint-disable-next-line no-restricted-imports -- Banner is a leaf component, not a feature pane.
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {useEffect, useRef} from 'react';
 import {Alert, Button, Modal, Space, Typography, message} from 'antd';
 import {useTranslation} from 'react-i18next';
+import {useViewModel} from '@client/lib/state/observable';
+import {RestartRequiredBannerViewModel, postRestart, waitForRestart} from './RestartRequiredBannerViewModel';
 
 /**
  * Restart-required banner — surfaces the runtime restart-reason registry
@@ -17,91 +18,20 @@ import {useTranslation} from 'react-i18next';
  *     `/api/health` until `bootId` changes → reload the admin page.
  */
 
-interface RestartReason {
-    source: string;
-    detail: string;
-    since: string;
-    key?: string;
-}
-
-interface RestartStatus {
-    bootId: string;
-    uptimeMs: number;
-    supervised: boolean;
-    restartEnabled: boolean;
-    reasons: RestartReason[];
-}
-
-async function fetchStatus(): Promise<RestartStatus | null> {
-    try {
-        const r = await fetch('/api/graphql', {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({query: `{ mongo { getRestartStatus } }`}),
-        });
-        const json = await r.json();
-        const raw = json?.data?.mongo?.getRestartStatus;
-        return raw ? JSON.parse(raw) : null;
-    } catch {
-        return null;
-    }
-}
-
-async function postRestart(): Promise<{ok: boolean; bootId?: string; error?: string}> {
-    try {
-        const r = await fetch('/api/graphql', {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({query: `mutation { mongo { requestServerRestart } }`}),
-        });
-        const json = await r.json();
-        if (json.errors?.length) return {ok: false, error: json.errors[0].message};
-        const raw = json?.data?.mongo?.requestServerRestart;
-        return raw ? JSON.parse(raw) : {ok: false, error: 'invalid response'};
-    } catch (err) {
-        return {ok: false, error: String(err)};
-    }
-}
-
-/** Poll `/api/health` until `bootId` differs from `oldBootId` or timeout. */
-async function waitForRestart(oldBootId: string, timeoutMs = 60_000): Promise<boolean> {
-    const start = Date.now();
-    while (Date.now() - start < timeoutMs) {
-        await new Promise(r => setTimeout(r, 1000));
-        try {
-            const r = await fetch('/api/health', {cache: 'no-store'});
-            if (r.ok) {
-                const j = await r.json();
-                if (j?.bootId && j.bootId !== oldBootId) return true;
-            }
-        } catch {
-            // 503 / network drop while shutdown is in progress — keep polling.
-        }
-    }
-    return false;
-}
-
 const RestartRequiredBanner: React.FC = () => {
     const {t} = useTranslation();
-    const [status, setStatus] = useState<RestartStatus | null>(null);
-    const [restarting, setRestarting] = useState(false);
+    const vm = useViewModel(() => new RestartRequiredBannerViewModel());
     const pollRef = useRef<NodeJS.Timeout | null>(null);
 
-    const refresh = useCallback(async () => {
-        const s = await fetchStatus();
-        setStatus(s);
-    }, []);
-
     useEffect(() => {
-        void refresh();
+        void vm.refresh();
         // Light polling — pick up restart-required marks made by other
         // tabs / MCP without a manual refresh.
-        pollRef.current = setInterval(() => { void refresh(); }, 15_000);
+        pollRef.current = setInterval(() => { void vm.refresh(); }, 15_000);
         return () => { if (pollRef.current) clearInterval(pollRef.current); };
-    }, [refresh]);
+    }, [vm]);
 
+    const status = vm.status;
     if (!status || status.reasons.length === 0) return null;
 
     const onRestart = () => {
@@ -122,11 +52,11 @@ const RestartRequiredBanner: React.FC = () => {
             okButtonProps: {danger: true},
             cancelText: t('Cancel'),
             onOk: async () => {
-                setRestarting(true);
+                vm.setRestarting(true);
                 const result = await postRestart();
                 if (!result.ok || !result.bootId) {
                     message.error(result.error ?? t('Restart failed'));
-                    setRestarting(false);
+                    vm.setRestarting(false);
                     return;
                 }
                 const oldBootId = result.bootId;
@@ -137,7 +67,7 @@ const RestartRequiredBanner: React.FC = () => {
                     setTimeout(() => window.location.reload(), 800);
                 } else {
                     message.error({content: t('Server did not return within 60 seconds — check the server logs'), key: 'restart', duration: 6});
-                    setRestarting(false);
+                    vm.setRestarting(false);
                 }
             },
         });
@@ -179,7 +109,7 @@ const RestartRequiredBanner: React.FC = () => {
             message={headline}
             description={<Typography.Text>{subline}</Typography.Text>}
             action={
-                <Button danger loading={restarting} onClick={onRestart}>
+                <Button danger loading={vm.restarting} onClick={onRestart}>
                     {t('Restart server')}
                 </Button>
             }

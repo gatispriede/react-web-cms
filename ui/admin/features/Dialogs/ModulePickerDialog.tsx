@@ -1,10 +1,11 @@
-// eslint-disable-next-line no-restricted-imports -- Picker dialog is a leaf modal; search/selection are local interaction state.
-import React, {useEffect, useMemo, useRef, useState} from "react";
+import React, {useEffect, useMemo, useRef} from "react";
 import {Card, Col, Input, Modal, Radio, Row, Tag, Typography} from "antd";
 import {TFunction} from "i18next";
 import {EItemType} from "@enums/EItemType";
-import {ItemCategory, itemTypeList} from "@admin/lib/itemTypes/registry";
+import {itemTypeList, ItemCategory} from "@admin/lib/itemTypes/registry";
 import {useAdminMode} from "@admin/lib/adminMode";
+import {useViewModel} from "@client/lib/state/observable";
+import {CategoryFilter, ModulePickerDialogViewModel} from "./ModulePickerDialogViewModel";
 
 /**
  * Modules surfaced in **simplified** mode. Hero is in despite being
@@ -34,8 +35,6 @@ interface Props {
     current?: EItemType;
 }
 
-type CategoryFilter = 'all' | ItemCategory;
-
 const CATEGORY_LABELS: Record<CategoryFilter, string> = {
     all: 'All',
     hero: 'Hero',
@@ -52,9 +51,7 @@ const CATEGORY_TAG_COLOR: Record<ItemCategory, string> = {
 };
 
 const ModulePickerDialog: React.FC<Props> = ({open, onClose, onSelect, t, current}) => {
-    const [query, setQuery] = useState('');
-    const [category, setCategory] = useState<CategoryFilter>('all');
-    const [focusIndex, setFocusIndex] = useState(0);
+    const vm = useViewModel(() => new ModulePickerDialogViewModel());
     const searchRef = useRef<any>(null);
     const gridRef = useRef<HTMLDivElement>(null);
 
@@ -69,29 +66,25 @@ const ModulePickerDialog: React.FC<Props> = ({open, onClose, onSelect, t, curren
     }, [adminMode]);
 
     const filtered = useMemo(() => {
-        const q = query.trim().toLowerCase();
+        const q = vm.query.trim().toLowerCase();
         return all.filter(def => {
-            if (category !== 'all' && def.category !== category) return false;
+            if (vm.category !== 'all' && def.category !== vm.category) return false;
             if (!q) return true;
             const label = t(def.labelKey).toLowerCase();
             const desc = t(def.descriptionKey).toLowerCase();
             return label.includes(q) || desc.includes(q) || def.key.toLowerCase().includes(q);
         });
-    }, [all, query, category, t]);
+    }, [all, vm.query, vm.category, t]);
 
     useEffect(() => {
         if (!open) return;
-        setQuery('');
-        setCategory('all');
         const startIdx = current ? all.findIndex(d => d.key === current) : 0;
-        setFocusIndex(startIdx >= 0 ? startIdx : 0);
+        vm.reset(startIdx >= 0 ? startIdx : 0);
         const id = window.setTimeout(() => searchRef.current?.focus?.(), 50);
         return () => window.clearTimeout(id);
-    }, [open, current, all]);
+    }, [open, current, all, vm]);
 
-    useEffect(() => {
-        if (focusIndex >= filtered.length) setFocusIndex(Math.max(0, filtered.length - 1));
-    }, [filtered, focusIndex]);
+    useEffect(() => { vm.clamp(filtered.length); }, [filtered, vm]);
 
     const pick = (type: EItemType) => {
         onSelect(type);
@@ -101,20 +94,20 @@ const ModulePickerDialog: React.FC<Props> = ({open, onClose, onSelect, t, curren
     const onKeyDown = (e: React.KeyboardEvent) => {
         if (!filtered.length) return;
         const cols = gridRef.current ? Math.max(1, Math.floor(gridRef.current.offsetWidth / 220)) : 3;
-        let next = focusIndex;
-        if (e.key === 'ArrowRight') next = Math.min(filtered.length - 1, focusIndex + 1);
-        else if (e.key === 'ArrowLeft') next = Math.max(0, focusIndex - 1);
-        else if (e.key === 'ArrowDown') next = Math.min(filtered.length - 1, focusIndex + cols);
-        else if (e.key === 'ArrowUp') next = Math.max(0, focusIndex - cols);
+        let next = vm.focusIndex;
+        if (e.key === 'ArrowRight') next = Math.min(filtered.length - 1, vm.focusIndex + 1);
+        else if (e.key === 'ArrowLeft') next = Math.max(0, vm.focusIndex - 1);
+        else if (e.key === 'ArrowDown') next = Math.min(filtered.length - 1, vm.focusIndex + cols);
+        else if (e.key === 'ArrowUp') next = Math.max(0, vm.focusIndex - cols);
         else if (e.key === 'Enter') {
-            const def = filtered[focusIndex];
+            const def = filtered[vm.focusIndex];
             if (def) pick(def.key);
             return;
         } else {
             return;
         }
         e.preventDefault();
-        setFocusIndex(next);
+        vm.setFocusIndex(next);
     };
 
     return (
@@ -132,13 +125,13 @@ const ModulePickerDialog: React.FC<Props> = ({open, onClose, onSelect, t, curren
                         ref={searchRef}
                         placeholder={t('Search modules')}
                         allowClear
-                        value={query}
-                        onChange={e => setQuery(e.target.value)}
+                        value={vm.query}
+                        onChange={e => vm.setQuery(e.target.value)}
                         style={{maxWidth: 320, flex: '1 1 240px'}}
                     />
                     <Radio.Group
-                        value={category}
-                        onChange={e => setCategory(e.target.value)}
+                        value={vm.category}
+                        onChange={e => vm.setCategory(e.target.value)}
                         optionType="button"
                         buttonStyle="solid"
                         options={(Object.keys(CATEGORY_LABELS) as CategoryFilter[]).map(c => ({
@@ -150,7 +143,7 @@ const ModulePickerDialog: React.FC<Props> = ({open, onClose, onSelect, t, curren
                 <div ref={gridRef}>
                     <Row gutter={[12, 12]}>
                         {filtered.map((def, i) => {
-                            const isFocused = i === focusIndex;
+                            const isFocused = i === vm.focusIndex;
                             const isCurrent = def.key === current;
                             return (
                                 <Col xs={24} sm={12} md={8} key={def.key}>
@@ -159,7 +152,7 @@ const ModulePickerDialog: React.FC<Props> = ({open, onClose, onSelect, t, curren
                                         hoverable
                                         size="small"
                                         onClick={() => pick(def.key)}
-                                        onMouseEnter={() => setFocusIndex(i)}
+                                        onMouseEnter={() => vm.setFocusIndex(i)}
                                         style={{
                                             borderColor: isFocused
                                                 ? 'var(--theme-colorPrimary, #1677ff)'

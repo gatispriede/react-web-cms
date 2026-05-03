@@ -1,9 +1,10 @@
-// eslint-disable-next-line no-restricted-imports -- VM3 migration deferred for this pane.
-import React, {useCallback, useEffect, useState} from 'react';
-import {Alert, Button, Card, Space, Switch, Table, Tag, Tooltip, Typography, message} from 'antd';
+import React, {useEffect} from 'react';
+import {Alert, Button, Card, Space, Switch, Table, Tag, Tooltip, Typography} from 'antd';
 import {useTranslation} from 'react-i18next';
 import {LockOutlined} from '@client/lib/icons';
 import RestartRequiredBanner from './RestartRequiredBanner';
+import {useViewModel} from '@client/lib/state/observable';
+import {FeatureFlagsPanelViewModel, type FlagRow} from './FeatureFlagsPanelViewModel';
 
 /**
  * Feature flags panel — `/admin/system/features`.
@@ -23,94 +24,11 @@ import RestartRequiredBanner from './RestartRequiredBanner';
  * top makes that clear.
  */
 
-interface FlagRow {
-    id: string;
-    displayName: string;
-    enabled: boolean;
-    coreInfrastructure: boolean;
-    requires: readonly string[];
-    envKey: string;
-    envSet: boolean;
-    mongoOverride: boolean;
-}
-
-async function fetchFlags(): Promise<FlagRow[]> {
-    const r = await fetch('/api/graphql', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({query: `{ mongo { getFeatureFlags } }`}),
-    });
-    const json = await r.json();
-    try { return JSON.parse(json?.data?.mongo?.getFeatureFlags ?? '[]'); } catch { return []; }
-}
-
-async function setFlag(id: string, enabled: boolean): Promise<{ok: boolean; error?: string}> {
-    const r = await fetch('/api/graphql', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-            query: `mutation Set($id: String!, $enabled: Boolean!) { mongo { setFeatureFlag(id: $id, enabled: $enabled) } }`,
-            variables: {id, enabled},
-        }),
-    });
-    const json = await r.json();
-    if (json.errors?.length) return {ok: false, error: json.errors[0].message};
-    try {
-        const parsed = JSON.parse(json?.data?.mongo?.setFeatureFlag ?? '{}');
-        if (parsed?.error) return {ok: false, error: parsed.error};
-        return {ok: true};
-    } catch { return {ok: false, error: 'invalid response'}; }
-}
-
-async function clearFlag(id: string): Promise<{ok: boolean; error?: string}> {
-    const r = await fetch('/api/graphql', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-            query: `mutation Clear($id: String!) { mongo { clearFeatureFlag(id: $id) } }`,
-            variables: {id},
-        }),
-    });
-    const json = await r.json();
-    if (json.errors?.length) return {ok: false, error: json.errors[0].message};
-    return {ok: true};
-}
-
 const FeatureFlagsPanel: React.FC = () => {
     const {t} = useTranslation();
-    const [rows, setRows] = useState<FlagRow[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [savingId, setSavingId] = useState<string | null>(null);
+    const vm = useViewModel(() => new FeatureFlagsPanelViewModel(t));
 
-    const refresh = useCallback(async () => {
-        setLoading(true);
-        try { setRows(await fetchFlags()); } finally { setLoading(false); }
-    }, []);
-
-    useEffect(() => { void refresh(); }, [refresh]);
-
-    const onToggle = async (row: FlagRow, next: boolean) => {
-        setSavingId(row.id);
-        try {
-            const res = await setFlag(row.id, next);
-            if (!res.ok) { message.error(res.error ?? t('Save failed')); return; }
-            message.success(next ? t('{{name}} enabled', {name: row.displayName}) : t('{{name}} disabled', {name: row.displayName}));
-            await refresh();
-        } finally { setSavingId(null); }
-    };
-
-    const onReset = async (row: FlagRow) => {
-        setSavingId(row.id);
-        try {
-            const res = await clearFlag(row.id);
-            if (!res.ok) { message.error(res.error ?? t('Reset failed')); return; }
-            message.success(t('Reset to default'));
-            await refresh();
-        } finally { setSavingId(null); }
-    };
+    useEffect(() => { void vm.refresh(); }, [vm]);
 
     const columns = [
         {
@@ -139,9 +57,9 @@ const FeatureFlagsPanel: React.FC = () => {
             render: (enabled: boolean, row: FlagRow) => (
                 <Switch
                     checked={enabled}
-                    disabled={row.coreInfrastructure || row.envSet || savingId === row.id}
-                    loading={savingId === row.id}
-                    onChange={(next) => onToggle(row, next)}
+                    disabled={row.coreInfrastructure || row.envSet || vm.savingId === row.id}
+                    loading={vm.savingId === row.id}
+                    onChange={(next) => vm.toggle(row, next)}
                 />
             ),
         },
@@ -169,7 +87,7 @@ const FeatureFlagsPanel: React.FC = () => {
             key: 'actions',
             width: 100,
             render: (_: unknown, row: FlagRow) => row.mongoOverride && !row.coreInfrastructure ? (
-                <Button size="small" onClick={() => onReset(row)} loading={savingId === row.id}>{t('Reset')}</Button>
+                <Button size="small" onClick={() => vm.reset(row)} loading={vm.savingId === row.id}>{t('Reset')}</Button>
             ) : null,
         },
     ];
@@ -179,7 +97,7 @@ const FeatureFlagsPanel: React.FC = () => {
             <RestartRequiredBanner/>
             <Card
                 title={t('Feature flags')}
-                extra={<Button onClick={refresh} loading={loading}>{t('Refresh')}</Button>}
+                extra={<Button onClick={() => void vm.refresh()} loading={vm.loading}>{t('Refresh')}</Button>}
             >
                 <Alert
                     type="info"
@@ -190,8 +108,8 @@ const FeatureFlagsPanel: React.FC = () => {
                 <Table<FlagRow>
                     rowKey="id"
                     size="small"
-                    loading={loading}
-                    dataSource={rows}
+                    loading={vm.loading}
+                    dataSource={vm.rows}
                     columns={columns as any}
                     pagination={false}
                 />
