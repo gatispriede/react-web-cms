@@ -5,7 +5,7 @@
   "type": "esnext",
   "scripts": {
     "predev": "npm run features:codegen && node tools/dev-predev.js",
-    "prebuild": "npm run features:codegen",
+    "prebuild": "npm run features:codegen && node tools/check-schema-stale.js",
     "features:codegen": "npx tsx --tsconfig services/tsconfig.custom.json tools/codegen-feature-registry.ts",
     "features:codegen:check": "npx tsx --tsconfig services/tsconfig.custom.json tools/codegen-feature-registry.ts --check",
     "dev": "next dev --turbo -p 80 ui/client",
