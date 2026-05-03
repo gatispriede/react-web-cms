@@ -36,6 +36,7 @@ import {LayoutAdminUILoader} from '@admin/features/Navigation/LayoutAdminUILoade
 import {ThemeAdminUILoader} from '@admin/features/Themes/ThemeAdminUILoader';
 import {LanguagesAdminUILoader} from '@admin/features/Languages/LanguagesAdminUILoader';
 import {AgentAdminUILoader}     from '@admin/features/Agent/AgentAdminUILoader';
+import {OnboardingAdminUILoader} from '@admin/features/Onboarding/OnboardingAdminUILoader';
 
 const REGISTERED: AdminUILoader[] = [
     new PostsAdminUILoader(),
@@ -56,6 +57,7 @@ const REGISTERED: AdminUILoader[] = [
     new ThemeAdminUILoader(),
     new LanguagesAdminUILoader(),
     new AgentAdminUILoader(),
+    new OnboardingAdminUILoader(),
 ];
 
 /**

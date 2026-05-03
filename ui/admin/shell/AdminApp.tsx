@@ -98,6 +98,17 @@ class AdminApp extends React.Component<{
     private refreshUnsub?: () => void;
 
     componentDidMount() {
+        // Q7 — first-run guard. If the install is fresh (no admin yet),
+        // bounce straight to the wizard. Runs once, on initial mount only,
+        // and only when the user is on `/admin` or `/admin/build` (the two
+        // landing routes a brand-new install can reach). The wizard route
+        // itself short-circuits before this guard ever sees it.
+        if (typeof window !== 'undefined') {
+            const path = window.location.pathname;
+            if (path === '/admin' || path === '/admin/build') {
+                void this.checkFreshInstall();
+            }
+        }
         void this.initialize()
         void this.loadPublishedMeta()
         void this.loadThemeVars()
@@ -106,6 +117,15 @@ class AdminApp extends React.Component<{
             if (saved === '1') this.setState({darkMode: true});
         }
         this.refreshUnsub = refreshBus.subscribe(() => this.refreshView());
+    }
+
+    private async checkFreshInstall(): Promise<void> {
+        try {
+            const fresh = await resolve(({query}) => (query as any).mongo.isFreshInstall);
+            if (fresh && typeof window !== 'undefined') {
+                window.location.replace('/admin/onboarding');
+            }
+        } catch { /* probe is best-effort — ignore wire errors */ }
     }
 
     componentWillUnmount() {

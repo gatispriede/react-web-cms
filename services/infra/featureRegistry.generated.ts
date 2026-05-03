@@ -16,6 +16,7 @@ import {languagesFeature} from '../features/Languages/feature.manifest';
 import {mcpFeature} from '../features/Mcp/feature.manifest';
 import {navigationFeature} from '../features/Navigation/feature.manifest';
 import {observabilityFeature} from '../features/Observability/feature.manifest';
+import {onboardingFeature} from '../features/Onboarding/feature.manifest';
 import {ordersFeature} from '../features/Orders/feature.manifest';
 import {permissionsFeature} from '../features/Permissions/feature.manifest';
 import {platformFeature} from '../features/Platform/feature.manifest';
@@ -42,6 +43,7 @@ export const featureRegistry: readonly FeatureManifest[] = [
     mcpFeature,
     navigationFeature,
     observabilityFeature,
+    onboardingFeature,
     ordersFeature,
     permissionsFeature,
     platformFeature,

@@ -78,7 +78,7 @@ Order by leverage:
 
 | Item | Status |
 |---|---|
-| Onboarding flow — first-run wizard (site name, admin account, theme pick) | Planned |
+| Onboarding flow — first-run wizard (site name, admin account, theme pick) | Step 1 shipped (Q7) — see [`features/platform/onboarding.md`](features/platform/onboarding.md) |
 | Landing page — AI angle, positions against Contentful / Builder.io, pricing | Planned |
 | Documentation — setup, feature reference, AI/MCP workflow guide | Planned |
 
