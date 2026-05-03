@@ -1,6 +1,17 @@
-export interface IHeroCta {
-    label: string;
+import {IImageRef} from "@interfaces/IImageRef";
+import {ILinkRef} from "@interfaces/ILinkRef";
+
+/** Hero CTA — link reference with sibling render hints (`primary` flag). */
+export interface IHeroCta extends ILinkRef {
+    /** Visual emphasis hint — only the primary button gets the accent fill. */
+    primary?: boolean;
+}
+
+/** Pre-C18 CTA shape — kept for the read-side normaliser. */
+export interface IHeroCtaLegacy {
+    label?: string;
     href?: string;
+    url?: string;
     primary?: boolean;
 }
 
@@ -12,52 +23,61 @@ export interface IHeroMeta {
 export interface IHeroCoord {
     label: string;
     value: string;
-    /** When true the value is rendered live as the current time in Europe/Riga.
-     * Any string value becomes the fallback until JS mounts. */
     liveTime?: boolean;
 }
 
 export interface IHero {
-    /** Small caps eyebrow above the headline (e.g. "DOSSIER № 001 / SIGULDA, LATVIA / EST. 2009"). */
     eyebrow?: string;
     headline: string;
-    /** Second part of the headline, rendered italic/soft next to the main headline. */
     headlineSoft?: string;
-    /** Titles array rendered as "A / B / C" with separators. */
     titles?: string[];
     subtitle: string;
     tagline: string;
-    /** Quote attribution under the tagline, e.g. "— personal motto". */
     taglineAttribution?: string;
-    bgImage: string;
-    /** Background image transparency, 0 (fully visible) – 100 (fully invisible).
-     *  Rendered on a dedicated `.hero__bg` layer so text stays at full opacity
-     *  while the image fades behind it. Missing / 0 = historical behaviour. */
+    /** Background image. Width/height are render-irrelevant for `<div
+     *  background-image>` so they're typically left unset; alt is non-meaningful
+     *  (decorative image, marked aria-hidden by the renderer). */
+    bgImage: IImageRef;
+    /** Background image transparency, 0–100. Sibling render hint — not part
+     *  of image identity. */
     bgOpacity?: number;
     accent: string;
     /** Short label drawn inside a portrait placeholder tile, e.g. "GP". */
     portraitLabel?: string;
-    /** Optional real portrait image — overrides the diagonal placeholder. */
-    portraitImage?: string;
-    /** Portrait image transparency, 0 – 100. Applied via inline `opacity` on
-     *  the `<img>` itself — the placeholder chrome (corners, 4:5 badge) is
-     *  not affected. */
+    /** Portrait image — overrides the placeholder. `width` / `height` on the
+     *  ref drive the tile size. */
+    portraitImage?: IImageRef;
+    /** Portrait image transparency, 0–100. Sibling render hint. */
     portraitOpacity?: number;
-    /** Portrait tile width override. Plain number = pixels; a string with a
-     *  unit suffix (e.g. "320px", "20rem", "30%") is passed through as-is.
-     *  When unset the SCSS defaults govern. */
-    portraitWidth?: number | string;
-    /** Portrait tile height override. Same shape as `portraitWidth`. Useful
-     *  when the source image isn't 4:5 and the author wants a tighter or
-     *  taller frame than the placeholder ratio gives. */
-    portraitHeight?: number | string;
-    /** Definition-list pairs below the hero (Based / Years / Mode / Stack). */
     meta?: IHeroMeta[];
-    /** Bottom coordinate strip (LAT / LON / ELEV / LOCAL / UPDATED). */
     coords?: IHeroCoord[];
     ctaPrimary?: IHeroCta;
     ctaSecondary?: IHeroCta;
     ctaTertiary?: IHeroCta;
+}
+
+/** Pre-C18 stored shape — read-side fallback only. */
+export interface IHeroLegacy {
+    eyebrow?: string;
+    headline?: string;
+    headlineSoft?: string;
+    titles?: string[];
+    subtitle?: string;
+    tagline?: string;
+    taglineAttribution?: string;
+    bgImage?: string | IImageRef;
+    bgOpacity?: number;
+    accent?: string;
+    portraitLabel?: string;
+    portraitImage?: string | IImageRef;
+    portraitOpacity?: number;
+    portraitWidth?: number | string;
+    portraitHeight?: number | string;
+    meta?: IHeroMeta[];
+    coords?: IHeroCoord[];
+    ctaPrimary?: IHeroCtaLegacy;
+    ctaSecondary?: IHeroCtaLegacy;
+    ctaTertiary?: IHeroCtaLegacy;
 }
 
 export enum EHeroStyle {
@@ -65,9 +85,5 @@ export enum EHeroStyle {
     Centered = "centered",
     Compact = "compact",
     Editorial = "editorial",
-    /** Readable-over-photo style: big white display headline on a
-     *  semi-opaque dark "card" that sits over any background image.
-     *  Designed for overlay-style heroes where the image is busy and
-     *  the default `is-fullbleed` scrim + text-shadow isn't enough. */
     Poster = "poster",
 }

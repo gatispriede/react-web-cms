@@ -1,14 +1,10 @@
 import React from "react";
 import {Col, Collapse, Input, Row, Select} from "antd";
-import ImageUrlInput from "@client/lib/ImageUrlInput";
 import {IInputContent} from "@interfaces/IInputContent";
 import {EItemType} from "@enums/EItemType";
-import {IProjectCard, IProjectLink, ProjectCardContent} from "@client/modules/ProjectCard";
-
-const linkPatch = (existing: IProjectLink | undefined, patch: Partial<IProjectLink>): IProjectLink => ({
-    url: patch.url ?? existing?.url ?? '',
-    label: patch.label ?? existing?.label ?? '',
-});
+import {IProjectCard, ProjectCardContent} from "@client/modules/ProjectCard";
+import ImageRefInput from "@admin/lib/ImageRefInput";
+import LinkRefInput from "@admin/lib/LinkRefInput";
 
 const ProjectCardEditor = ({content, setContent, t}: IInputContent) => {
     const card = new ProjectCardContent(EItemType.ProjectCard, content);
@@ -25,11 +21,11 @@ const ProjectCardEditor = ({content, setContent, t}: IInputContent) => {
                     <Input data-testid="module-editor-primary-text-input" value={data.title} onChange={e => update('title', e.target.value)}/>
                 </Col>
                 <Col xs={24} md={8}>
-                    <label>{t('Cover image URL')}</label>
-                    <ImageUrlInput
+                    <label>{t('Cover image')}</label>
+                    <ImageRefInput
                         t={t}
                         value={data.image}
-                        onChange={v => update('image', v)}
+                        onChange={(image) => update('image', image)}
                         placeholder="api/project.jpg"
                     />
                 </Col>
@@ -58,31 +54,21 @@ const ProjectCardEditor = ({content, setContent, t}: IInputContent) => {
                     children: (
                         <Row gutter={[8, 8]}>
                             <Col xs={24} md={12}>
-                                <label>{t('Primary link URL')}</label>
-                                <Input
-                                    value={data.primaryLink?.url ?? ''}
-                                    onChange={e => update('primaryLink', linkPatch(data.primaryLink, {url: e.target.value}))}
+                                <label>{t('Primary link')}</label>
+                                <LinkRefInput
+                                    t={t}
+                                    value={data.primaryLink ?? {url: ''}}
+                                    onChange={(link) => update('primaryLink', link.url || link.label ? link : undefined)}
                                     placeholder="https://…"
-                                />
-                                <Input
-                                    value={data.primaryLink?.label ?? ''}
-                                    onChange={e => update('primaryLink', linkPatch(data.primaryLink, {label: e.target.value}))}
-                                    placeholder={t('Label (e.g. Live)')}
-                                    style={{marginTop: 4}}
                                 />
                             </Col>
                             <Col xs={24} md={12}>
-                                <label>{t('Secondary link URL')}</label>
-                                <Input
-                                    value={data.secondaryLink?.url ?? ''}
-                                    onChange={e => update('secondaryLink', linkPatch(data.secondaryLink, {url: e.target.value}))}
+                                <label>{t('Secondary link')}</label>
+                                <LinkRefInput
+                                    t={t}
+                                    value={data.secondaryLink ?? {url: ''}}
+                                    onChange={(link) => update('secondaryLink', link.url || link.label ? link : undefined)}
                                     placeholder="https://github.com/…"
-                                />
-                                <Input
-                                    value={data.secondaryLink?.label ?? ''}
-                                    onChange={e => update('secondaryLink', linkPatch(data.secondaryLink, {label: e.target.value}))}
-                                    placeholder={t('Label (e.g. GitHub)')}
-                                    style={{marginTop: 4}}
                                 />
                             </Col>
                         </Row>

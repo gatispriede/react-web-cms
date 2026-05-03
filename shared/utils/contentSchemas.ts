@@ -29,7 +29,14 @@ const validateRichText = (content: any): ValidationResult => {
 };
 
 const IMAGE_PATH = /^(api\/|\/api\/|https?:\/\/|data:image\/|[^:]*$)/i;
-const validateImagePath = (src: unknown, field: string): ValidationResult => {
+// Accepts the C18 IImageRef shape `{src, alt?, width?, height?}` as well as
+// the legacy bare-string shape — the renderer's normaliser tolerates both,
+// so the validator must too.
+const validateImagePath = (raw: unknown, field: string): ValidationResult => {
+    if (!raw) return {valid: true};
+    const src = isObject(raw) && 'src' in (raw as Record<string, unknown>)
+        ? (raw as Record<string, unknown>).src
+        : raw;
     if (!src) return {valid: true};
     if (!isString(src)) return {valid: false, error: `${field} must be a string`};
     if (!IMAGE_PATH.test(src)) return {valid: false, error: `${field} must be a local api/ path or https URL`};
@@ -58,7 +65,7 @@ const validateItemsList = (content: any, kind: string): ValidationResult => {
         if (it.text !== undefined && !isString(it.text)) {
             return {valid: false, error: `${kind}.items[${i}].text must be a string`};
         }
-        const srcField = it.imageLink ?? it.src ?? it.image;
+        const srcField = it.image ?? it.imageLink ?? it.src;
         const check = validateImagePath(srcField, `${kind}.items[${i}].src`);
         if (!check.valid) return check;
     }

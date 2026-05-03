@@ -4,11 +4,39 @@ import {EItemType} from "@enums/EItemType";
 import {Carousel, Image} from "antd";
 import {IItem} from "@interfaces/IItem";
 import {ETextPosition} from "@enums/ETextPosition";
-import {IGalleryItem} from "../Gallery";
+import {IGalleryItem, IGalleryItemLegacy} from "../Gallery/Gallery.types";
 import {TFunction} from "i18next";
 import type {ICarousel} from "./Carousel.types";
+import {toImageRef} from "@interfaces/IImageRef";
+import {toLinkRef} from "@interfaces/ILinkRef";
 export type {ICarousel} from "./Carousel.types";
 export {ECarouselStyle} from "./Carousel.types";
+
+const defaultItem = (): IGalleryItem => ({
+    image: {src: ''},
+    preview: true,
+    text: '',
+    textPosition: ETextPosition.Bottom,
+});
+
+const normalizeItem = (raw: IGalleryItem | IGalleryItemLegacy | undefined): IGalleryItem => {
+    const r = (raw ?? {}) as IGalleryItemLegacy;
+    const image = toImageRef(r.image, {
+        src: r.src,
+        alt: r.alt,
+        width: r.imgWidth,
+        height: r.imgHeight,
+    });
+    const item: IGalleryItem = {
+        image,
+        preview: r.preview ?? true,
+        text: r.text ?? '',
+        textPosition: r.textPosition ?? ETextPosition.Bottom,
+    };
+    if (r.link) item.link = toLinkRef(r.link);
+    else if (r.href) item.link = toLinkRef(undefined, {url: r.href});
+    return item;
+};
 
 export class CarouselContent extends ContentManager {
     public _parsedContent: ICarousel = {
@@ -22,11 +50,18 @@ export class CarouselContent extends ContentManager {
     }
 
     get data(): ICarousel {
-        if(!this._parsedContent.items){
-            this._parsedContent.items = []
-        }
         this.parse();
-        return this._parsedContent
+        const c = this._parsedContent ?? {} as ICarousel;
+        this._parsedContent = {
+            items: Array.isArray(c.items) ? c.items.map(normalizeItem) : [],
+            autoplay: !!c.autoplay,
+            infinity: !!c.infinity,
+            autoplaySpeed: c.autoplaySpeed ?? 3000,
+            dots: !!c.dots,
+            arrows: !!c.arrows,
+            disablePreview: !!c.disablePreview,
+        };
+        return this._parsedContent;
     }
 
     set data(value: ICarousel) {
@@ -34,56 +69,20 @@ export class CarouselContent extends ContentManager {
     }
 
     addItem(value?: IGalleryItem) {
-        if(!this._parsedContent.items){
-            this._parsedContent.items = []
-        }
-        if (value) {
-            this._parsedContent.items.push(value)
-        } else {
-            this._parsedContent.items.push({
-                alt: '',
-                height: 0,
-                preview: true,
-                src: '',
-                text: '',
-                imgHeight: '',
-                imgWidth: '',
-                textPosition: ETextPosition.Bottom
-            })
-        }
+        if (!this._parsedContent.items) this._parsedContent.items = [];
+        this._parsedContent.items.push(value ?? defaultItem());
     }
-    setAutoplay(value: boolean){
-        this._parsedContent.autoplay = value
-    }
-    setAutoplaySpeed(value: number){
-        this._parsedContent.autoplaySpeed = value
-    }
-    setInfinity(value: boolean){
-        this._parsedContent.infinity = value
-    }
-
-    setDots(value: boolean){
-        this._parsedContent.dots = value
-    }
-
-    setArrows(value: boolean){
-        this._parsedContent.arrows = value
-    }
-
-    removeItem(index: number) {
-        this._parsedContent.items.splice(index, 1)
-    }
-
-    setItem(index: number, value: IGalleryItem) {
-        this._parsedContent.items[index] = value
-    }
-
-    setDisablePreview(value: boolean) {
-        this._parsedContent.disablePreview = value
-    }
+    setAutoplay(value: boolean){ this._parsedContent.autoplay = value }
+    setAutoplaySpeed(value: number){ this._parsedContent.autoplaySpeed = value }
+    setInfinity(value: boolean){ this._parsedContent.infinity = value }
+    setDots(value: boolean){ this._parsedContent.dots = value }
+    setArrows(value: boolean){ this._parsedContent.arrows = value }
+    removeItem(index: number) { this._parsedContent.items.splice(index, 1) }
+    setItem(index: number, value: IGalleryItem) { this._parsedContent.items[index] = value }
+    setDisablePreview(value: boolean) { this._parsedContent.disablePreview = value }
 }
 
-const CarouselView = ({item, t, tApp}: {
+const CarouselView = ({item, t: _t, tApp: _tApp}: {
     item: IItem,
     t: TFunction<"translation", undefined>,
     tApp: TFunction<string, undefined>
@@ -91,34 +90,31 @@ const CarouselView = ({item, t, tApp}: {
     const gallery = new CarouselContent(EItemType.Image, item.content);
     gallery.setDisablePreview(item.action !== "onClick");
     const data = gallery.data;
-    const children= data.items.map((item: IGalleryItem, index: number) => {
+    const children = data.items.map((it: IGalleryItem, index: number) => {
+        const img = it.image;
+        const src = img.src && (img.src.startsWith('/') || /^https?:\/\//.test(img.src)) ? img.src : `/${img.src}`;
         return (
-            <li key={index} className={`container text-${item.textPosition}`}>
+            <li key={index} className={`container text-${it.textPosition}`}>
                 <div
                     className={'image'}
-                    data-sized={(item.imgWidth || item.imgHeight) ? true : undefined}
+                    data-sized={(img.width || img.height) ? true : undefined}
                 >
                     <Image
                         preview={false}
-                        src={item.src && (item.src.startsWith('/') || /^https?:\/\//.test(item.src)) ? item.src : `/${item.src}`}
-                        alt={item.alt}
-                        width={item.imgWidth || undefined}
-                        height={item.imgHeight || undefined}
+                        src={src}
+                        alt={img.alt}
+                        width={img.width || undefined}
+                        height={img.height || undefined}
                     />
                 </div>
-                {item.text && (
+                {it.text && (
                     <div className={'text'}>
-                        <p>{item.text}</p>
+                        <p>{it.text}</p>
                     </div>
                 )}
             </li>
         )
     })
-    // `item.style` carries the ECarouselStyle value the author picked in the
-    // admin Style dropdown. Attach it as a class so per-style SCSS rules
-    // (`.carousel-wrapper.cinematic`, `.polaroid`, `.ribbon`, `.editorial`)
-    // can layer on top of the shared base treatment. Empty / default falls
-    // back to no extra class (base `default` layout applies unconditionally).
     const styleClass = item.style && item.style !== 'default' ? ` ${item.style}` : '';
     return (
         <div >

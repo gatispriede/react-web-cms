@@ -6,28 +6,14 @@ import {EItemType} from "@enums/EItemType";
 import {ETextPosition} from "@enums/ETextPosition";
 import {GalleryContent, IGalleryItem} from "@client/modules/Gallery";
 import {GALLERY_ASPECT_RATIOS, GalleryAspectRatio} from "@client/modules/Gallery/Gallery.types";
-import ImageUpload from "@admin/lib/ImageUpload";
 import BulkImageUploadModal, {BulkRatio} from "@admin/lib/BulkImageUploadModal";
 import {PUBLIC_IMAGE_PATH} from "@utils/imgPath";
 import {ImageDropPayload} from "@client/lib/useImageDrop";
 import ImageDropTarget from "@client/lib/ImageDropTarget";
 import type IImage from "@interfaces/IImage";
-import LinkTargetPicker from "@admin/lib/LinkTargetPicker";
-import {normalizeCssDimension} from "@utils/stringFunctions";
+import ImageRefInput from "@admin/lib/ImageRefInput";
+import LinkRefInput from "@admin/lib/LinkRefInput";
 
-/**
- * Gallery editor — reshaped to mirror the rendered gallery grid so the
- * admin view feels like "the same gallery, but editable":
- *
- *  - Items render as compact tile cards with a real thumbnail preview.
- *  - Required-ish controls (Set Image, reorder, delete) live on the tile.
- *  - Optional fields (Description, Image width / height, Link) are
- *    collapsed under a per-tile "Show more" toggle to keep the column
- *    skim-readable when an editor is just sequencing images.
- */
-
-// CSS-in-JS for the editor-only grid. Keeping these inline avoids a sccs
-// touch — the runtime gallery preview owns the public-facing styles.
 const styles = {
     grid: {
         display: 'grid',
@@ -105,49 +91,35 @@ const fileNameFromSrc = (src: string | undefined): string => {
     return parts[parts.length - 1] || src;
 };
 
-// `normalizeCssDimension` lives in `@utils/stringFunctions` — shared with
-// PlainImageEditor (and any other editor that surfaces free-form CSS
-// width/height fields) so the "type a number, get px" behaviour is uniform.
-
 const GalleryEditor = ({content, setContent, t}: IInputContent) => {
     const galleryContent = new GalleryContent(EItemType.Image, content);
     const data = galleryContent.data;
 
-    // Per-tile "show more" state. Keyed by index — cheap and stable enough
-    // for the editor's reorder/delete cadence (we don't preserve which
-    // tile was expanded after a reorder; that'd surprise the operator more
-    // than help).
     const [expanded, setExpanded] = useState<Record<number, boolean>>({});
     const [bulkOpen, setBulkOpen] = useState(false);
 
-    // Drop at the "add new" footer creates a fresh item with the dropped
-    // image's src, mirroring the "Add New Image" button + immediate pick.
     const handleAppendFromDrop = (img: ImageDropPayload) => {
         galleryContent.addItem();
         const items = galleryContent.data.items ?? [];
         const lastIndex = items.length - 1;
         if (lastIndex >= 0) {
-            galleryContent.setItem(lastIndex, {...items[lastIndex], src: PUBLIC_IMAGE_PATH + img.name});
+            const cur = items[lastIndex];
+            galleryContent.setItem(lastIndex, {...cur, image: {...cur.image, src: PUBLIC_IMAGE_PATH + img.name}});
         }
         setContent(galleryContent.stringData);
     };
 
     const totalItems = data.items?.length ?? 0;
 
-    // Feed each successfully-uploaded image into the gallery as a new item.
     const handleBulkUploaded = (images: IImage[]) => {
         for (const img of images) {
             const src = img.location && img.location.startsWith(PUBLIC_IMAGE_PATH)
                 ? img.location
                 : `${PUBLIC_IMAGE_PATH}${img.name}`;
             galleryContent.addItem({
-                src,
-                alt: img.name ?? '',
-                text: '',
-                height: 0,
+                image: {src, alt: img.name ?? undefined},
                 preview: true,
-                imgWidth: '',
-                imgHeight: '',
+                text: '',
                 textPosition: ETextPosition.Bottom,
             });
         }
@@ -159,7 +131,6 @@ const GalleryEditor = ({content, setContent, t}: IInputContent) => {
 
     return (
         <div className={'gallery-wrapper admin'}>
-            {/* Gallery-level toolbar — aspect-ratio lock + bulk upload. */}
             <Space style={{margin: '0 16px 12px 16px', flexWrap: 'wrap'}} align="center">
                 <Typography.Text strong>{t('Aspect ratio')}</Typography.Text>
                 <Select<GalleryAspectRatio>
@@ -186,40 +157,26 @@ const GalleryEditor = ({content, setContent, t}: IInputContent) => {
                 }}
             />
 
-            {/* Tile grid — mirrors the rendered gallery so the editor view
-                feels like "the same gallery, but editable". */}
             <div className={'images-container'} style={styles.grid}>
                 {(data.items ?? []).map((item: IGalleryItem, index) => {
-                    const setFile = (file: File) => {
-                        galleryContent.setItem(index, {
-                            ...item,
-                            src: PUBLIC_IMAGE_PATH + file.name,
-                        });
-                        setContent(galleryContent.stringData);
-                    };
                     const onDropImage = (img: ImageDropPayload) => {
                         galleryContent.setItem(index, {
                             ...item,
-                            src: PUBLIC_IMAGE_PATH + img.name,
+                            image: {...item.image, src: PUBLIC_IMAGE_PATH + img.name},
                         });
                         setContent(galleryContent.stringData);
                     };
                     const isExpanded = !!expanded[index];
-                    // `item.src` is stored as `api/<file>` — the runtime
-                    // gallery resolves that to `/api/<file>` (or Caddy in
-                    // prod). Adding the leading slash here gives us a
-                    // working preview in `next dev` too, where our local
-                    // `pages/api/[name].ts` shim serves the bytes.
-                    const previewUrl = item.src ? `/${item.src}` : null;
+                    const previewUrl = item.image.src ? `/${item.image.src}` : null;
 
                     return (
                         <div key={index} style={styles.tile}>
-                            <ImageDropTarget onImage={onDropImage} filled={!!item.src}>
+                            <ImageDropTarget onImage={onDropImage} filled={!!item.image.src}>
                                 <div style={styles.thumbWrap}>
                                     {previewUrl ? (
                                         <img
                                             src={previewUrl}
-                                            alt={item.alt ?? ''}
+                                            alt={item.image.alt ?? ''}
                                             style={styles.thumb}
                                             loading="lazy"
                                         />
@@ -232,10 +189,18 @@ const GalleryEditor = ({content, setContent, t}: IInputContent) => {
                             </ImageDropTarget>
 
                             <div style={styles.tileBody}>
-                                <div style={styles.caption} title={item.src}>
-                                    {fileNameFromSrc(item.src) || t('Empty slot')}
+                                <div style={styles.caption} title={item.image.src}>
+                                    {fileNameFromSrc(item.image.src) || t('Empty slot')}
                                 </div>
-                                <ImageUpload t={t} setFile={setFile}/>
+                                <ImageRefInput
+                                    t={t}
+                                    value={item.image}
+                                    onChange={(image) => {
+                                        galleryContent.setItem(index, {...item, image});
+                                        setContent(galleryContent.stringData);
+                                    }}
+                                    hideAlt
+                                />
                                 <div style={styles.actionsRow}>
                                     <Button
                                         size="small"
@@ -292,50 +257,20 @@ const GalleryEditor = ({content, setContent, t}: IInputContent) => {
                                             }}
                                         />
                                     </div>
-                                    <Space.Compact style={{width: '100%'}}>
-                                        <Input
-                                            placeholder={t('Image width')}
-                                            value={item.imgWidth}
-                                            onChange={({target: {value}}) => {
-                                                galleryContent.setItem(index, {...item, imgWidth: value});
-                                                setContent(galleryContent.stringData);
-                                            }}
-                                            // Auto-append `px` on blur when the operator
-                                            // typed a bare number — otherwise CSS drops the
-                                            // value and the size field appears to do nothing.
-                                            onBlur={({target: {value}}) => {
-                                                const norm = normalizeCssDimension(value);
-                                                if (norm !== value) {
-                                                    galleryContent.setItem(index, {...item, imgWidth: norm});
-                                                    setContent(galleryContent.stringData);
-                                                }
-                                            }}
-                                        />
-                                        <Input
-                                            placeholder={t('Image height')}
-                                            value={item.imgHeight}
-                                            onChange={({target: {value}}) => {
-                                                galleryContent.setItem(index, {...item, imgHeight: value});
-                                                setContent(galleryContent.stringData);
-                                            }}
-                                            onBlur={({target: {value}}) => {
-                                                const norm = normalizeCssDimension(value);
-                                                if (norm !== value) {
-                                                    galleryContent.setItem(index, {...item, imgHeight: norm});
-                                                    setContent(galleryContent.stringData);
-                                                }
-                                            }}
-                                        />
-                                    </Space.Compact>
                                     <div>
                                         <div style={styles.fieldLabel}>{t('Link (optional)')}</div>
-                                        <LinkTargetPicker
-                                            placeholder={'https://…'}
-                                            value={item.href ?? ''}
-                                            onChange={(value) => {
-                                                galleryContent.setItem(index, {...item, href: value || undefined});
+                                        <LinkRefInput
+                                            t={t}
+                                            value={item.link ?? {url: ''}}
+                                            onChange={(link) => {
+                                                galleryContent.setItem(index, {
+                                                    ...item,
+                                                    link: link.url ? link : undefined,
+                                                });
                                                 setContent(galleryContent.stringData);
                                             }}
+                                            placeholder={'https://…'}
+                                            hideLabel
                                         />
                                     </div>
                                 </div>

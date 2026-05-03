@@ -7,17 +7,34 @@ import ContentManager from "@client/lib/ContentManager";
 import {TFunction} from "i18next";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import {slugifyAnchor} from "@utils/stringFunctions";
-import type {IProjectCard} from "./ProjectCard.types";
+import {toImageRef} from "@interfaces/IImageRef";
+import {toLinkRef} from "@interfaces/ILinkRef";
+import type {IProjectCard, IProjectCardLegacy} from "./ProjectCard.types";
 export type {IProjectCard, IProjectLink} from "./ProjectCard.types";
 export {EProjectCardStyle} from "./ProjectCard.types";
 
-const defaultCard: IProjectCard = {title: '', description: '', image: '', tags: []};
+const defaults = (): IProjectCard => ({title: '', description: '', image: {src: ''}, tags: []});
+
+const normalize = (raw: IProjectCard | IProjectCardLegacy | undefined): IProjectCard => {
+    const r = (raw ?? {}) as IProjectCardLegacy;
+    const result: IProjectCard = {
+        ...defaults(),
+        title: r.title ?? '',
+        description: r.description ?? '',
+        tags: Array.isArray(r.tags) ? r.tags : [],
+        image: toImageRef(r.image),
+    };
+    if (r.primaryLink) result.primaryLink = toLinkRef(r.primaryLink);
+    if (r.secondaryLink) result.secondaryLink = toLinkRef(r.secondaryLink);
+    return result;
+};
 
 export class ProjectCardContent extends ContentManager {
-    public _parsedContent: IProjectCard = {...defaultCard};
+    public _parsedContent: IProjectCard = defaults();
     get data(): IProjectCard {
         this.parse();
-        return {...defaultCard, ...this._parsedContent, tags: this._parsedContent?.tags ?? []};
+        this._parsedContent = normalize(this._parsedContent as unknown as IProjectCard | IProjectCardLegacy);
+        return this._parsedContent;
     }
     set data(v: IProjectCard) { this._parsedContent = v; }
     setField<K extends keyof IProjectCard>(k: K, v: IProjectCard[K]) { this._parsedContent[k] = v; }
@@ -30,10 +47,7 @@ const iconFor = (url: string) => {
 };
 
 // `PUBLIC_IMAGE_PATH` is `'api/'` (no leading slash) — the picker writes
-// values like `api/foo.jpg`. Browsers resolve that *relative to the current
-// page*, so `/admin/pages/...` produces `/admin/pages/.../api/foo.jpg`
-// (broken). Other modules prepend `/`; ProjectCard didn't, hence the broken
-// thumbnail in the live preview. Pass through absolute / data / http(s) as-is.
+// values like `api/foo.jpg`. Pass through absolute / data / http(s) as-is.
 const resolveCoverSrc = (raw: string): string => {
     if (!raw) return raw;
     if (/^(https?:|data:|blob:|\/)/i.test(raw)) return raw;
@@ -48,11 +62,23 @@ const ProjectCard = ({item, tApp}: {
     const c = new ProjectCardContent(EItemType.ProjectCard, item.content).data;
     const tr = (v: string) => <InlineTranslatable tApp={tApp as any} source={v}/>;
     const anchorId = slugifyAnchor(c.title) || undefined;
+    const cover = c.image.src ? (
+        <img
+            alt={c.image.alt ?? c.title}
+            src={resolveCoverSrc(c.image.src)}
+            style={{
+                objectFit: 'cover',
+                maxHeight: 200,
+                width: c.image.width ? (typeof c.image.width === 'number' ? `${c.image.width}px` : c.image.width) : undefined,
+                height: c.image.height ? (typeof c.image.height === 'number' ? `${c.image.height}px` : c.image.height) : undefined,
+            }}
+        />
+    ) : undefined;
     return (
         <Card
             id={anchorId}
             className={`project-card ${item.style ?? ''}`}
-            cover={c.image ? <img alt={c.title} src={resolveCoverSrc(c.image)} style={{objectFit: 'cover', maxHeight: 200}}/> : undefined}
+            cover={cover}
             hoverable
         >
             <Card.Meta

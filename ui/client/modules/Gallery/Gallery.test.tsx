@@ -10,13 +10,17 @@ import type {IGallery} from './Gallery.types';
 
 const t = ((k: string) => k) as any;
 
-const fixture: IGallery = {
+// Pre-C18 stored shape (`src` / `imgWidth` / `imgHeight` flat on each item).
+// The normaliser in `GalleryContent.data` maps them into the IImageRef shape
+// at read time so existing saved JSON keeps working — this fixture pins that
+// behaviour and stops a regression from reverting the read-side fallback.
+const fixture = {
     disablePreview: true,
     items: [
         {src: 'images/a.jpg', alt: 'A', height: 0, preview: true, text: 'Caption A', imgWidth: '', imgHeight: '', textPosition: ETextPosition.Bottom},
         {src: 'images/b.jpg', alt: 'B', height: 0, preview: true, text: '', imgWidth: '200', imgHeight: '200', textPosition: ETextPosition.Top},
     ],
-};
+} as unknown as IGallery;
 
 describe('Gallery render', () => {
     it('renders one tile per item with a src prefixed by "/"', () => {
@@ -69,12 +73,12 @@ describe('Gallery render', () => {
     });
 
     it('per-tile href: wraps the tile in an anchor, clones stay as plain divs', () => {
-        const withHref: IGallery = {
+        const withHref = {
             disablePreview: true,
             items: [
                 {src: 'images/a.jpg', alt: 'A', height: 0, preview: true, text: 'Caption A', imgWidth: '', imgHeight: '', textPosition: ETextPosition.Bottom, href: '/blog/a'},
             ],
-        };
+        } as unknown as IGallery;
         const {container} = render(
             <Gallery item={{type: EItemType.Image, content: JSON.stringify(withHref), style: 'default'}} t={t} tApp={t}/>,
         );
