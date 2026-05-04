@@ -55,6 +55,10 @@ export interface EmailSendResult {
 interface ResolvedConfig {
     provider: 'smtp' | 'resend' | 'disabled' | 'env-smtp';
     from?: string;
+    /** Populated when the operator picked a provider but creds are
+     *  missing or undecryptable. Surfaced in the test-send error so
+     *  the admin sees exactly which field to fill. */
+    missing?: string[];
     smtp?: {
         host: string;
         port: number;
@@ -108,18 +112,28 @@ export function resolveMailConfig(mail: ISiteMailConfig | undefined): ResolvedCo
             const host = mail.smtpHost ?? '';
             const user = mail.smtpUser ?? '';
             const port = mail.smtpPort ?? 0;
-            if (!host || !port || !user || !pass) {
-                // DB block present but incomplete. Rather than silently
-                // falling through to env (which would mask the
-                // misconfiguration) we surface a disabled provider
-                // with a clear error path.
-                return {provider: 'disabled', from: mail.from};
+            const missing = [
+                !host && 'SMTP host',
+                !port && 'SMTP port',
+                !user && 'SMTP user',
+                !pass && (mail.smtpPassEncrypted ? 'SMTP password (decrypt failed — check SECRETBOX_KEY)' : 'SMTP password'),
+            ].filter(Boolean) as string[];
+            if (missing.length) {
+                return {provider: 'disabled', from: mail.from, missing};
             }
             return {provider: 'smtp', from: mail.from, smtp: {host, port, user, pass}};
         }
         if (mail.provider === 'resend') {
             const apiKey = mail.resendApiKeyEncrypted ? safeDecrypt(mail.resendApiKeyEncrypted) : '';
-            if (!apiKey) return {provider: 'disabled', from: mail.from};
+            if (!apiKey) {
+                return {
+                    provider: 'disabled',
+                    from: mail.from,
+                    missing: [mail.resendApiKeyEncrypted
+                        ? 'Resend API key (decrypt failed — check SECRETBOX_KEY)'
+                        : 'Resend API key'],
+                };
+            }
             return {provider: 'resend', from: mail.from, resend: {apiKey}};
         }
     }
@@ -228,10 +242,13 @@ export async function sendEmail(
     const started = Date.now();
 
     if (cfg.provider === 'disabled') {
+        const error = cfg.missing?.length
+            ? `${mail?.provider ?? 'Email'} provider selected but missing: ${cfg.missing.join(', ')}.`
+            : 'Email is disabled. Pick a provider in admin → System → Email and fill in credentials, or set SMTP_* env vars.';
         return {
             ok: false,
             provider: 'disabled',
-            error: 'Email is disabled. Configure a provider in admin → SEO → Email or set SMTP_* env vars.',
+            error,
             durationMs: Date.now() - started,
         };
     }
