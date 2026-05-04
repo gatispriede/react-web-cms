@@ -480,23 +480,25 @@ jobs:
             done
             fi
 
-            echo "==> Smoke check: public domain returns 200"
-            # Hit the public origin via Caddy, not localhost:80 — catches
-            # TLS / reverse-proxy regressions as well as app health.
+            echo "==> Smoke check: HTTPS via Caddy returns 200"
+            # Hit Caddy via 127.0.0.1 + --resolve so SNI stays correct
+            # (= the public domain) but the TCP connection goes to the
+            # local docker-proxy instead of round-tripping through the
+            # droplet's own public IP. DigitalOcean's NAT doesn't always
+            # hairpin properly — `curl https://skyclimber.pro/` from the
+            # droplet itself returns a TLS internal-error alert even
+            # while external clients get clean 200s. The --resolve
+            # path tests the same Caddy → app upstream chain that real
+            # public traffic uses, just without the cloud round-trip.
             SMOKE_URL="${SMOKE_URL:-https://funisimo.pro/}"
-            # -L follows redirects (Caddy may 301 http→https or /→/en),
-            # we count "final landing returned 200" as healthy. On
-            # failure dump headers + first 500 chars of body + the
-            # localhost:80 result so the log tells us whether the
-            # problem is the app, Caddy, TLS or DNS.
-            smoke_code=$(curl -sSL -o /dev/null -w "%{http_code}" --max-time 20 "$SMOKE_URL" || echo "000")
+            SMOKE_HOST=$(echo "$SMOKE_URL" | sed -E 's|^https?://([^/]+).*|\1|')
+            smoke_code=$(curl -sSL --resolve "${SMOKE_HOST}:443:127.0.0.1" -o /dev/null -w "%{http_code}" --max-time 20 "$SMOKE_URL" || echo "000")
             if [ "$smoke_code" != "200" ]; then
               echo "!! Smoke check failed: $SMOKE_URL returned $smoke_code" >&2
-              # Compact diagnostics: status line of the public URL,
-              # localhost bypass code, and the last 20 app log lines.
-              # Trim further if log noise becomes a problem.
-              curl -sSIL --max-time 20 "$SMOKE_URL" 2>&1 | head -1 >&2 || true
+              # Diagnostics: localhost (no SNI), the same --resolve probe
+              # again with -I for headers, and the last 20 app log lines.
               curl -sS -o /dev/null -w "localhost http_code: %{http_code}\n" --max-time 10 http://localhost/ >&2 || true
+              curl -sSIL --resolve "${SMOKE_HOST}:443:127.0.0.1" --max-time 10 "$SMOKE_URL" 2>&1 | head -1 >&2 || true
               docker compose -p cms -f infra/compose.yaml --env-file .env logs --tail=20 app >&2 || true
               exit 1
             fi
