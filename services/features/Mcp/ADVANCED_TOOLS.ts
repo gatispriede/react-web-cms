@@ -39,6 +39,9 @@ export const ADVANCED_ONLY_TOOLS: ReadonlySet<string> = new Set<string>([
     // inquiry-management writes — destructive or sends mail
     'inquiry.delete',
     'email.send',
+    // F8 follow-up — email-provider config (encrypted secrets)
+    'email.config.update',
+    'email.config.test',
     // whole-site replace — never expose in simplified mode
     'bundle.import',
     'bundle.export',

@@ -193,7 +193,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
     }
 
-    const recipient = flags.inquiryRecipientEmail || 'gatiss.priede@inbox.lv';
+    // Recipient resolves from the new mail block first; falls back to the
+    // legacy top-level field so existing deployments keep working until
+    // they migrate via admin → SEO → Email.
+    const recipient = flags.mail?.inquiryRecipient || flags.inquiryRecipientEmail || 'gatiss.priede@inbox.lv';
 
     // Compose email — plain text is required, HTML is the rich version.
     // Header-bound fields (subject) get CR/LF + control chars stripped to
@@ -242,7 +245,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         text,
         html,
         replyTo: email,
-    });
+    }, flags.mail);
 
     // Audit insert is best-effort. We log even on success so the operator
     // has a backup of the email content in Mongo, and we log on failure

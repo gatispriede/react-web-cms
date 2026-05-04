@@ -20,6 +20,7 @@ import {TRASH_TOOLS} from './trash';
 import {ORDER_TOOLS} from './orders';
 import {DIAGNOSTICS_TOOLS} from './diagnostics';
 import {DISCOVERY_TOOLS} from './discovery';
+import {EMAIL_TOOLS} from './email';
 
 /**
  * Out of scope (defer):
@@ -49,6 +50,7 @@ export const ALL_MCP_TOOLS: McpTool[] = [
     ...ORDER_TOOLS,
     ...DIAGNOSTICS_TOOLS,
     ...DISCOVERY_TOOLS,
+    ...EMAIL_TOOLS,
 ];
 
 /**

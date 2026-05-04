@@ -40,6 +40,7 @@ import {OnboardingAdminUILoader} from '@admin/features/Onboarding/OnboardingAdmi
 import {ThingsToDoAdminUILoader} from '@admin/features/ThingsToDo/ThingsToDoAdminUILoader';
 import {TrashAdminUILoader} from '@admin/features/Trash/TrashAdminUILoader';
 import {DiagnosticsAdminUILoader} from '@admin/features/Diagnostics/DiagnosticsAdminUILoader';
+import {EmailAdminUILoader} from '@admin/features/Email/EmailAdminUILoader';
 
 const REGISTERED: AdminUILoader[] = [
     new PostsAdminUILoader(),
@@ -64,6 +65,7 @@ const REGISTERED: AdminUILoader[] = [
     new ThingsToDoAdminUILoader(),
     new TrashAdminUILoader(),
     new DiagnosticsAdminUILoader(),
+    new EmailAdminUILoader(),
 ];
 
 /**

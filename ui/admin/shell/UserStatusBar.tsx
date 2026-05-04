@@ -101,7 +101,8 @@ export type AdminView =
     | 'system/inquiries'
     | 'system/features'
     | 'system/agent'
-    | 'system/info';
+    | 'system/info'
+    | 'system/email';
 
 const isInArea = (view: AdminView, area: string) =>
     view === area || view.startsWith(area + '/');
@@ -145,6 +146,7 @@ const buildAreaItems = (
         {path: '/admin/system/features', label: tAdmin('Feature flags'), icon: <SettingOutlined/>, testidSuffix: 'features', adminOnly: true},
         {path: '/admin/system/agent', label: tAdmin('AI Agent'), icon: <ThunderboltOutlined/>, testidSuffix: 'agent', adminOnly: true},
         {path: '/admin/system/info', label: tAdmin('Diagnostics'), icon: <InfoCircleOutlined/>, testidSuffix: 'info', adminOnly: true},
+        {path: '/admin/system/email', label: tAdmin('Email'), icon: <MailOutlined/>, testidSuffix: 'email', adminOnly: true},
     ],
 });
 
