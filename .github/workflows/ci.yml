@@ -55,15 +55,18 @@ jobs:
       - name: Tests
         run: npm test -- --reporter=dot
 
-  # Visual regression — opt-in via schedule + workflow_dispatch + master
-  # pushes. Skipped on PR runs to keep the per-PR feedback loop fast and
-  # avoid baseline-noise blocking unrelated changes. See
-  # docs/runbooks/visual-regressions.md for how to update baselines.
+  # Visual regression — opt-in via schedule + workflow_dispatch only.
+  # Skipped on PR runs (per-PR feedback loop) and on master pushes
+  # (Q4-cap roadmap item — no baselines committed yet, so every run
+  # fails loudly until baselines land). Re-add `(github.event_name ==
+  # 'push' && github.ref == 'refs/heads/master')` once the initial
+  # baselines are captured + committed via the Q4-cap workflow.
+  # See docs/runbooks/visual-regressions.md.
   visual:
     name: Visual regression (shard ${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/master')
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
       matrix:
