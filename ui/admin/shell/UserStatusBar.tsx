@@ -140,13 +140,17 @@ const buildAreaItems = (
         {path: '/admin/release/analytics', label: tAdmin('Analytics'), icon: <AuditOutlined/>, testidSuffix: 'analytics', adminOnly: true},
     ],
     system: [
+        // User-facing operator concerns first — accounts, transactional
+        // mail, customer inquiries — then platform-config, then the
+        // power-user / observability surfaces.
         {path: '/admin/system/users', label: tAdmin('Users'), icon: <UserOutlined/>, testidSuffix: 'users'},
-        {path: '/admin/system/mcp', label: tAdmin('MCP'), icon: <AuditOutlined/>, testidSuffix: 'mcp'},
+        {path: '/admin/system/email', label: tAdmin('Email'), icon: <MailOutlined/>, testidSuffix: 'email', adminOnly: true},
         {path: '/admin/system/inquiries', label: tAdmin('Inquiries'), icon: <MailOutlined/>, testidSuffix: 'inquiries'},
         {path: '/admin/system/features', label: tAdmin('Feature flags'), icon: <SettingOutlined/>, testidSuffix: 'features', adminOnly: true},
+        // Power-user / observability — the rest below.
+        {path: '/admin/system/mcp', label: tAdmin('MCP'), icon: <AuditOutlined/>, testidSuffix: 'mcp'},
         {path: '/admin/system/agent', label: tAdmin('AI Agent'), icon: <ThunderboltOutlined/>, testidSuffix: 'agent', adminOnly: true},
         {path: '/admin/system/info', label: tAdmin('Diagnostics'), icon: <InfoCircleOutlined/>, testidSuffix: 'info', adminOnly: true},
-        {path: '/admin/system/email', label: tAdmin('Email'), icon: <MailOutlined/>, testidSuffix: 'email', adminOnly: true},
     ],
 });
 
