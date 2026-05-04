@@ -340,15 +340,52 @@ jobs:
               # matches TARGET_SHA, then atomically flips Caddy's
               # `ACTIVE_UPSTREAM` and reloads. Active instance keeps
               # serving live traffic the whole time — no 502 window.
-              # PRECONDITION: app-blue + app-green containers must
-              # already exist on the droplet (one-time
-              # `docker compose --profile seamless ... up -d`).
               # See docs/runbooks/seamless-deployment.md.
+
+              # Auto-bootstrap if app-blue / app-green don't exist yet.
+              # The pre-flight used to abort here with instructions for a
+              # manual `docker compose --profile seamless ... up -d` run,
+              # but operators can't always SSH the droplet in band; the
+              # workflow already has a shell on the box, so do it.
+              # Idempotent: compose up is a no-op when both containers
+              # exist + are healthy.
               if ! docker inspect app-blue >/dev/null 2>&1 || ! docker inspect app-green >/dev/null 2>&1; then
-                echo "!! seamless requested but app-blue / app-green not bootstrapped on droplet" >&2
-                echo "   bootstrap once: docker compose --profile seamless -p cms -f infra/compose.yaml --env-file .env up -d" >&2
-                echo "   then re-run this deploy. Aborting." >&2
-                exit 1
+                echo "==> First-run seamless bootstrap (app-blue + app-green missing)"
+                # Caddy needs ACTIVE_UPSTREAM to know which slot to
+                # proxy at boot. Default to blue if the line is missing
+                # — the blue-green-deploy.sh below tracks this same
+                # default and will flip to green on the first deploy.
+                if ! grep -q '^ACTIVE_UPSTREAM=' .env 2>/dev/null; then
+                  echo 'ACTIVE_UPSTREAM=app-blue:80' >> .env
+                  echo "    seeded ACTIVE_UPSTREAM=app-blue:80 in .env"
+                fi
+                docker compose --profile seamless -p cms -f infra/compose.yaml --env-file .env up -d --build
+                # Wait for both slots to report healthy via compose's
+                # built-in healthcheck. 10-min ceiling matches the
+                # legacy front-container loop below; bootstrap is the
+                # only one-time slow path (cold next build for both
+                # slots). Same poll cadence + log shape.
+                for slot in app-blue app-green; do
+                  echo "==> Waiting for $slot to report healthy"
+                  for i in $(seq 1 120); do
+                    status=$(docker inspect --format '{{.State.Health.Status}}' "$slot" 2>/dev/null || echo starting)
+                    if [ "$status" = "healthy" ]; then
+                      echo "    $slot healthy after ${i} checks"
+                      break
+                    fi
+                    if [ "$i" = "120" ]; then
+                      echo "!! $slot failed to become healthy within 10 minutes" >&2
+                      docker logs --tail=200 "$slot" >&2 || true
+                      exit 1
+                    fi
+                    sleep 5
+                  done
+                done
+                # Caddy reload so the freshly-rendered Caddyfile picks
+                # up the new upstream targets.
+                docker exec caddy caddy reload --config /etc/caddy/Caddyfile 2>/dev/null || \
+                  docker compose -p cms -f infra/compose.yaml --env-file .env restart caddy
+                echo "==> Bootstrap complete; proceeding with first seamless flip"
               fi
               TARGET_SHA="$CUR_SHA" \
                 DEPLOY_HEALTH_TIMEOUT="${DEPLOY_HEALTH_TIMEOUT:-60}" \
