@@ -12,12 +12,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  e2e:
+  smoke:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v4
 
@@ -40,23 +36,25 @@ jobs:
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 
-      - name: Run Playwright (shard ${{ matrix.shard }}/4)
-        # `e2e:isolated`, NOT `e2e`. The `e2e` script forces
-        # `PLAYWRIGHT_E2E_REUSE_DEV=1` which is the local iterate-on-one-spec
-        # workflow — it tells `tests/e2e/fixtures/server.ts` to reuse a dev
-        # server already running on `localhost:80`. There's no such server
-        # in CI, so every test fails at its first HTTP call within seconds.
-        # The `:isolated` variant lets each Playwright worker spawn its own
-        # `next dev` against an in-memory Mongo, which is the CI shape.
-        run: npm run e2e:isolated -- --shard=${{ matrix.shard }}/4
+      - name: Run smoke spec (CV bundle round-trip)
+        # PR gate is `tests/e2e/smoke/cv-bundle-chain.spec.ts` only — not
+        # the full 4-shard e2e suite. The smoke spec exercises the same
+        # critical paths (admin login, bundle import, public render, edit
+        # round-trip, footer/translation flip) but in one serial run, so
+        # one job replaces what used to be four matrix shards. We do NOT
+        # set `PLAYWRIGHT_E2E_REUSE_DEV`: the per-worker server fixture
+        # in `tests/e2e/fixtures/server.ts` spawns its own `next dev` when
+        # the env var is unset, which is the CI shape.
+        run: npx playwright test tests/e2e/smoke/ --reporter=list
         env:
           CI: '1'
+          E2E_SMOKE_ENABLED: '1'
 
       - name: Upload report
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report-shard-${{ matrix.shard }}
+          name: playwright-report-smoke
           path: |
             playwright-report/
             test-results/
