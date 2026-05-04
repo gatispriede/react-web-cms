@@ -1,3 +1,8 @@
+// Admin navigation editor chrome. Owner class is `.navigation-container`;
+// the file stem stays `Navigation` to mirror the React component name.
+//
+// AUDIT-OWNERS: .navigation-container
+
 .navigation-container{
   position: relative;
   .edit-button-container {

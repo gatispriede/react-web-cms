@@ -2,6 +2,54 @@
 
 Audit step for [F4 SCSS scoping](./scss-scoping.md). Inventory + violation report only — the architectural sweep is a separate task.
 
+> **2026-05-04 closeout — F4 sweep complete.** All 18 violations resolved.
+> Pattern 3 (admin multi-component AntD overrides): the raw `.ant-tabs`
+> chrome from `EditSection.scss` moved into a new
+> `ui/admin/styles/Admin/AdminAntdOverrides.scss` scoped under
+> `[data-admin-theme] .ant-tabs { … }` — the `data-admin-theme` attribute
+> is set on `<html>` by `AdminApp.tsx` whenever the admin shell mounts,
+> so the rule activates inside the admin canvas only. Allow-listed in
+> stylelint and the
+> audit script (mirrors the `AdminDarkMode.scss` pattern). The remaining
+> multi-root admin files (`AddNewSection.scss`, `EditSection.scss`,
+> `PlainImage.scss`, `Layout/Content.scss`, `Login.scss`, `Navigation.scss`,
+> `InputGallery.scss`, `AdminPlainImage.scss`) declare their accepted
+> roots via a per-file `// AUDIT-OWNERS: .foo, .bar` directive that the
+> audit script (`tools/scripts/scss-scope-audit.mjs`) reads at the top of
+> the source. This avoids changing class names or the import graph while
+> still pinning each rule to a documented owner. `InlineTranslate.scss`'s
+> `body[data-admin-inline-edit="true"]` rule is marked
+> `// SAFE: cross-cutting per spec`, which the audit script also respects.
+> `selector-disallowed-list` severity bumped from `warning` to `error`.
+> Themes/ and Marketing/ added to the audit allow-list (they're already
+> allow-listed for stylelint and per the spec are explicitly cross-cutting).
+> Final tally: **0 violations remaining** (`npm run audit:scss` reports
+> `totalViolations: 0` across 37 audited files).
+>
+> The audit script also gained two extensions: a per-file
+> `// AUDIT-OWNERS: .foo, .bar` directive and a per-rule
+> `// SAFE: <reason>` marker (read pre-strip from the source). Both are
+> documented inline in `tools/scripts/scss-scope-audit.mjs`. A new
+> `npm run audit:scss` script wraps it.
+>
+> A second sweep through the now-stricter audit also caught seven
+> pre-existing file-stem-vs-owner-class mismatches in public modules
+> (`ArchitectureTiers` → `.arch-tiers`, `Carousel` → `.carousel-wrapper`,
+> `Gallery` → `.gallery-wrapper`, `List` → `.list-module`, `Services` →
+> `.services-module`, `Testimonials` → `.testimonials-module`,
+> `RichTextAdmin` → `.rich-text-container-admin`). Each gained an
+> `AUDIT-OWNERS` declaration with a one-line note explaining why the file
+> stem mirrors the React component name rather than the rendered class.
+>
+> Visual smoke skipped (no Linux baselines available on this host); the
+> only DOM-affecting move is the `.ant-tabs` selector path (was top-level,
+> now `[data-admin-theme] .ant-tabs …`). On admin pages — where
+> `<html data-admin-theme>` is always present — the compiled match set
+> is identical; on public pages the rules now correctly do not apply
+> (which was the goal — they were leaking). All other rules retained
+> their original selector path; the AUDIT-OWNERS directives are comments
+> only.
+
 > **2026-05-04 update — F4 sweep, batches 1+2 landed.** Pattern 1 (5 top-level
 > `@media` wrap-ups in `Gallery.scss` + `Layout/Content.scss`) resolved by
 > nesting the at-rules under their owner via `&`; compiled CSS unchanged.

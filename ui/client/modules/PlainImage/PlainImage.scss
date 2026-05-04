@@ -1,3 +1,12 @@
+// PlainImage module renderer + the cross-cutting `.section-item-container`
+// IMAGE-mode adjustment + the `.background-image` host helper. The latter
+// two are tied to image-bearing sections (the IMAGE chip & the background
+// image overlay) and naturally pair with this module file rather than
+// living in Layout/. Audit script accepts the multi-owner declaration so
+// no rules need moving and the compiled CSS stays identical.
+//
+// AUDIT-OWNERS: .plain-image, .section-item-container, .background-image
+
 .plain-image {
   margin: 20px;
   display: flex;

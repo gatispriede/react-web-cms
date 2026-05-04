@@ -20,19 +20,25 @@ const TrashPane: React.FC = () => {
             dataIndex: 'trashGroup',
             key: 'trashGroup',
             ellipsis: true,
-            render: (v: string) => <Typography.Text code style={{fontSize: 11}}>{v}</Typography.Text>,
+            render: (v: string) => (
+                <Typography.Text code style={{fontSize: 11}} data-testid={`trash-group-${v}`}>{v}</Typography.Text>
+            ),
         },
         {
             title: t('Contents'),
             dataIndex: 'summary',
             key: 'summary',
-            render: (s: Record<string, number>) => (
-                <Space size={4} wrap>
-                    {Object.entries(s || {}).map(([coll, n]) => (
-                        <Tag key={coll}>{coll}: {n}</Tag>
-                    ))}
-                </Space>
-            ),
+            render: (s: Record<string, number>, row: TrashGroupSummary) => {
+                const total = Object.values(s || {}).reduce((a, b) => a + (b ?? 0), 0);
+                return (
+                    <Space size={4} wrap>
+                        <span data-testid={`trash-group-${row.trashGroup}-child-count`} data-count={total} style={{display: 'none'}}>{total}</span>
+                        {Object.entries(s || {}).map(([coll, n]) => (
+                            <Tag key={coll}>{coll}: {n}</Tag>
+                        ))}
+                    </Space>
+                );
+            },
         },
         {
             title: t('Age'),
@@ -80,6 +86,9 @@ const TrashPane: React.FC = () => {
                     dataSource={vm.groups}
                     size="small"
                     pagination={false}
+                    onRow={(row: TrashGroupSummary) => ({
+                        'data-testid': `trash-group-${row.trashGroup}`,
+                    } as any)}
                 />
             )}
         </div>

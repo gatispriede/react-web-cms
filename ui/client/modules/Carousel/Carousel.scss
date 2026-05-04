@@ -1,3 +1,7 @@
+// Owner class is `.carousel-wrapper` (the rendered root); file stem stays
+// `Carousel` to mirror the React module name.
+//
+// AUDIT-OWNERS: .carousel-wrapper
 
 .carousel-wrapper{
   color: var(--theme-colorTextBase, #151313);

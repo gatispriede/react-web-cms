@@ -1,5 +1,5 @@
 {
-  "//": "F4 SCSS scoping — see docs/roadmap/scss-scoping.md. Severity is `warning` until the architectural sweep lands; bumped to `error` afterwards.",
+  "//": "F4 SCSS scoping — see docs/roadmap/scss-scoping.md. F4 sweep complete (docs/roadmap/scss-audit-2026-05-03.md, 2026-05-04 closeout): severity bumped to `error` for selector-disallowed-list now that the audit reports 0 violations.",
   "plugins": ["stylelint-scss"],
   "customSyntax": "postcss-scss",
   "rules": {
@@ -13,8 +13,8 @@
     "selector-disallowed-list": [
       [],
       {
-        "severity": "warning",
-        "message": "Top-level bare element selectors must be wrapped under the file's owning component class — see docs/roadmap/scss-scoping.md. List populated after the F4 sweep."
+        "severity": "error",
+        "message": "Top-level bare element selectors must be wrapped under the file's owning component class — see docs/roadmap/scss-scoping.md. The audit script (tools/scripts/scss-scope-audit.mjs) enforces the per-file owner-class rule; this stylelint hook gates additional patterns added to the list."
       }
     ]
   },
@@ -29,6 +29,7 @@
     "ui/client/styles/Common/**",
     "ui/client/styles/Themes/**",
     "ui/client/styles/Marketing/**",
-    "ui/admin/styles/Admin/AdminDarkMode.scss"
+    "ui/admin/styles/Admin/AdminDarkMode.scss",
+    "ui/admin/styles/Admin/AdminAntdOverrides.scss"
   ]
 }

@@ -429,7 +429,7 @@ class AdminApp extends React.Component<{
                 title: this.props.t('Delete page?'),
                 okText: this.props.t('Delete'),
                 cancelText: this.props.t('Cancel'),
-                okButtonProps: {danger: true},
+                okButtonProps: {danger: true, 'data-testid': 'nav-page-delete-confirm-btn'} as any,
                 onOk: () => this.deletePage(tp.key),
             });
             return;
@@ -442,7 +442,7 @@ class AdminApp extends React.Component<{
             ),
             okText: this.props.t('Move children to root'),
             cancelText: this.props.t('Cancel'),
-            okButtonProps: {'data-testid': 'nav-delete-orphan-btn'} as any,
+            okButtonProps: {'data-testid': 'nav-page-delete-confirm-btn'} as any,
             onOk: async () => {
                 // Default — orphan each direct child, then drop the parent.
                 for (const c of children) {

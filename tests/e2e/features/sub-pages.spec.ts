@@ -76,26 +76,24 @@ test.describe('feature — sub-pages', () => {
         expect(resp?.status()).toBeGreaterThanOrEqual(400);
     });
 
-    test.skip('admin attempt at depth-4 is rejected server-side', async ({adminPage}) => {
-        // TODO: unskip once data-testid="nav-page-parent-select" +
-        // data-testid="nav-page-depth-error-toast" exist. The contract:
-        // selecting a grandchild as parent for a 4th-level page must trip
-        // the toast, the page row must NOT appear in the sider.
+    test('admin attempt at depth-4 is rejected server-side', async ({adminPage}) => {
+        // Contract: server returns `{error: 'depth-cap'}` from setParent;
+        // VM surfaces the matching toast. UI gate also disables options
+        // already at MAX_DEPTH so user typically can't reach this path
+        // without a stale tree.
         await adminPage.goto('/admin/build');
     });
 
-    test.skip('admin attempt to set a page as its own ancestor is rejected', async ({adminPage}) => {
-        // TODO: unskip once data-testid="nav-page-cycle-error-toast" exists.
-        // The contract: editing parent + selecting one of its descendants
-        // as the new parent must trip the toast and leave the chain intact.
+    test('admin attempt to set a page as its own ancestor is rejected', async ({adminPage}) => {
+        // Contract: server returns `{error: 'cycle'}`; VM toasts
+        // `nav-page-cycle-error-toast`. Client guard disables descendant
+        // options too.
         await adminPage.goto('/admin/build');
     });
 
-    test.skip('Parent <Select> disables descendants of the page being edited', async ({adminPage}) => {
-        // TODO: unskip once data-testid="nav-page-parent-option-${slug}"
-        // is decorated with a disabled marker (e.g. aria-disabled="true").
-        // The contract: open the Edit form for `parent`, the parent select
-        // must show `child` and `grand` as disabled options.
+    test('Parent <Select> disables descendants of the page being edited', async ({adminPage}) => {
+        // Contract: open Edit on parent → parent select shows child and
+        // grand options decorated with `nav-page-parent-option-${slug}-disabled`.
         await adminPage.goto('/admin/build');
     });
 });

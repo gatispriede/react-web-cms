@@ -33,9 +33,7 @@ test.describe('e2e — cart happy-path', () => {
         await expect(anonPage.getByTestId(`cart-item-row-${p.sku}`)).toBeVisible({timeout: 15_000});
     });
 
-    test.skip('anon customer updates item quantity', async ({mongo, anonPage}) => {
-        // GAP: current /cart UI has no `cart-item-qty-input-${sku}` stepper.
-        // See docs/runbooks/e2e-coverage-matrix.md (Cart row).
+    test('anon customer updates item quantity', async ({mongo, anonPage}) => {
         const p = await seedProduct(mongo.uri);
         cleanups.register(p.cleanup);
         await anonPage.goto(`/products/${p.slug}`);
@@ -47,8 +45,7 @@ test.describe('e2e — cart happy-path', () => {
         await expect(qty).toHaveValue('2');
     });
 
-    test.skip('anon customer removes item from cart', async ({mongo, anonPage}) => {
-        // GAP: current /cart UI has no per-row `cart-item-remove-btn-${sku}`.
+    test('anon customer removes item from cart', async ({mongo, anonPage}) => {
         const p = await seedProduct(mongo.uri);
         cleanups.register(p.cleanup);
         await anonPage.goto(`/products/${p.slug}`);

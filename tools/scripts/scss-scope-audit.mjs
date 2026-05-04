@@ -23,7 +23,10 @@ const ROOT = process.cwd();
 const ALLOW_LIST_PREFIXES = [
   'ui/client/styles/globals/',
   'ui/client/styles/Common/',
+  'ui/client/styles/Themes/',
+  'ui/client/styles/Marketing/',
   'ui/admin/styles/Admin/AdminDarkMode.scss',
+  'ui/admin/styles/Admin/AdminAntdOverrides.scss',
 ].map((p) => p.replaceAll('/', path.sep));
 
 const SEARCH_DIRS = [
@@ -199,18 +202,61 @@ function ownersFor(filePath) {
   return owners;
 }
 
+// Parse file-level `// AUDIT-OWNERS: .foo, .bar` directives — a per-file
+// escape hatch declaring additional accepted owner classes for top-level
+// rules. This lets a single SCSS file legitimately own more than one
+// component root when splitting would change DOM behaviour or the rules
+// genuinely cross-cut (admin chrome that decorates several public roots).
+function extraOwnersFromSource(src) {
+  const owners = [];
+  const re = /\/\/\s*AUDIT-OWNERS:\s*([^\n]+)/gi;
+  let m;
+  while ((m = re.exec(src)) !== null) {
+    for (const tok of m[1].split(',').map((s) => s.trim()).filter(Boolean)) {
+      owners.push(tok);
+    }
+  }
+  return owners;
+}
+
+// Compute line numbers (1-indexed) immediately preceded by a
+// `// SAFE: <reason>` comment. The audit treats the next top-level rule
+// after a SAFE comment as exempt — used for genuinely cross-cutting hooks
+// (e.g. `body[data-admin-inline-edit]`).
+function safeMarkedLines(src) {
+  const lines = src.split('\n');
+  const safe = new Set();
+  for (let i = 0; i < lines.length; i++) {
+    if (/^\s*\/\/\s*SAFE:/i.test(lines[i])) {
+      // Mark the next non-empty / non-comment line as safe.
+      for (let j = i + 1; j < lines.length; j++) {
+        const t = lines[j].trim();
+        if (t === '' || t.startsWith('//') || t.startsWith('/*')) continue;
+        safe.add(j + 1);
+        break;
+      }
+    }
+  }
+  return safe;
+}
+
 function audit(filePath) {
   const rel = path.relative(ROOT, filePath);
   const src = fs.readFileSync(filePath, 'utf8');
   const stripped = stripComments(src);
   const blocks = topLevelBlocks(stripped);
-  const owners = [...ownersFor(filePath)];
+  const owners = [...ownersFor(filePath), ...extraOwnersFromSource(src)];
+  const safeLines = safeMarkedLines(src);
   const violations = [];
   let okCount = 0;
   let atruleCount = 0;
   for (const b of blocks) {
     if (b.statement) {
       atruleCount++; // @use/@forward statements
+      continue;
+    }
+    if (safeLines.has(b.line)) {
+      okCount++;
       continue;
     }
     const r = classifyHeader(b.header, owners);

@@ -1,3 +1,9 @@
+// Admin login screen. The owner class is `.login-wrapper`, which doesn't
+// match the file stem — keeping the file name to avoid touching the import
+// graph. Audit script accepts the explicit owner declaration.
+//
+// AUDIT-OWNERS: .login-wrapper
+
 .login-wrapper{
   margin: auto;
   width: 100%;

@@ -1,5 +1,7 @@
 import {message} from 'antd';
 import InventoryApi from '@services/api/client/InventoryApi';
+import ProductApi from '@services/api/client/ProductApi';
+import type {IProduct, InProduct} from '@interfaces/IProduct';
 import type {
     IAdapterConfig,
     IInventoryDeadLetter,
@@ -39,11 +41,76 @@ export class InventoryViewModel {
     fieldMapJson = DEFAULT_FIELD_MAP;
     savingCfg = false;
 
+    // Per-product stock editor state.
+    products: IProduct[] = [];
+    loadingProducts = false;
+    pendingSaves: Set<string> = new Set();
+    stockDrafts: Record<string, number> = {};
+    lastSavedSlug: string | null = null;
+
     constructor(
         private readonly api: InventoryApi = new InventoryApi(),
         private readonly t: (k: string) => string = (k) => k,
+        private readonly productApi: ProductApi = new ProductApi(),
     ) {
         return observable(this);
+    }
+
+    isPendingSave(slug: string): boolean { return this.pendingSaves.has(slug); }
+
+    setStockDraft(slug: string, qty: number): void {
+        this.stockDrafts = {...this.stockDrafts, [slug]: qty};
+    }
+
+    async refreshProducts(): Promise<void> {
+        this.loadingProducts = true;
+        try {
+            this.products = await this.productApi.list({includeDrafts: true, limit: 200});
+            const drafts: Record<string, number> = {};
+            for (const p of this.products) drafts[p.slug] = typeof p.stock === 'number' ? p.stock : 0;
+            this.stockDrafts = drafts;
+        } finally {
+            this.loadingProducts = false;
+        }
+    }
+
+    async saveProductStock(slug: string, qty: number): Promise<void> {
+        const product = this.products.find(p => p.slug === slug);
+        if (!product) { message.error(this.t('Product not found')); return; }
+        const next = new Set(this.pendingSaves);
+        next.add(slug);
+        this.pendingSaves = next;
+        try {
+            const payload: InProduct = {
+                id: product.id,
+                title: product.title,
+                slug: product.slug,
+                sku: product.sku,
+                description: product.description,
+                price: product.price,
+                currency: product.currency,
+                stock: Math.max(0, Math.floor(qty)),
+                categories: product.categories ?? [],
+                images: product.images ?? [],
+                attributes: product.attributes ?? {},
+                variants: product.variants ?? [],
+                source: product.source ?? 'manual',
+                externalId: product.externalId,
+                manualOverrides: product.manualOverrides,
+                draft: product.draft ?? false,
+            };
+            const result = await this.productApi.save(payload, typeof product.version === 'number' ? product.version : undefined);
+            if (result.error) { message.error(result.error); return; }
+            message.success(this.t('Stock updated'));
+            this.lastSavedSlug = slug;
+            await this.refreshProducts();
+        } catch (err) {
+            message.error(String((err as Error)?.message ?? err));
+        } finally {
+            const after = new Set(this.pendingSaves);
+            after.delete(slug);
+            this.pendingSaves = after;
+        }
     }
 
     setKind(k: IAdapterConfig['kind']): void { this.kind = k; }

@@ -1,0 +1,28 @@
+// Admin-shell AntD overrides — raw `.ant-*` selectors are scoped under
+// `[data-admin-theme]` (set on `<html>` by `AdminApp.tsx` whenever the admin
+// shell mounts) so they only kick in inside the admin canvas and don't bleed
+// onto public pages that also load this stylesheet bundle. Allow-listed
+// alongside `AdminDarkMode.scss` (see scss-scope-audit.mjs); the file is
+// genuinely cross-cutting by design — every rule here decorates AntD chrome
+// that AntD itself owns the markup for.
+//
+// SAFE: cross-cutting admin AntD overrides, allow-listed at audit level.
+
+[data-admin-theme] {
+  // Section-edit tabs nav — keeps the pencil/delete chips right of the
+  // tab label without breaking AntD's flex layout. Moved out of
+  // `EditSection.scss` (F4 SCSS scoping sweep, Pattern 3 — see
+  // docs/roadmap/scss-audit-2026-05-03.md).
+  .ant-tabs {
+    .ant-tabs-nav-list {
+      .edit-wrapper {
+        display: flex;
+        .edit-container {
+          left: 0;
+          position: relative;
+          margin-right: 10px;
+        }
+      }
+    }
+  }
+}

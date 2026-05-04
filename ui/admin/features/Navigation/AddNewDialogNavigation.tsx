@@ -1,5 +1,5 @@
 import React from "react";
-import {Button, Input, Modal, Select} from "antd";
+import {Button, Input, message, Modal, Select, Tooltip} from "antd";
 import {DownOutlined, UpOutlined} from "@client/lib/icons";
 import MongoApi from "@services/api/client/MongoApi";
 import {ISeo} from "@interfaces/ISeo";
@@ -162,10 +162,30 @@ class AddNewDialogNavigation extends React.Component<IProps, {}> {
                 // cycles + depth-cap on every call.
                 const currentParent = this.state.activeNavigation.parent ?? null;
                 if (currentParent !== this.state.parentId) {
-                    await this.MongoApi.setNavigationParent(
+                    const res = await this.MongoApi.setNavigationParent(
                         this.state.activeNavigation.id,
                         this.state.parentId,
                     );
+                    // F1 — surface server-side cycle / depth-cap rejections
+                    // as toasts. The client guard already disables invalid
+                    // options on the Parent <Select>, but a stale tree
+                    // (concurrent edits) can still trip the server check.
+                    if (res && res.ok === false) {
+                        if (res.error === 'cycle') {
+                            message.error({
+                                content: this.props.t('Cannot move a page under its own descendant'),
+                                'data-testid': 'nav-page-cycle-error-toast',
+                            } as any);
+                        } else if (res.error === 'depth-cap') {
+                            message.error({
+                                content: this.props.t('Maximum nesting depth is 3 levels'),
+                                'data-testid': 'nav-page-depth-error-toast',
+                            } as any);
+                        } else {
+                            message.error(String(res.error));
+                        }
+                        return;
+                    }
                 }
             }
 
@@ -269,15 +289,34 @@ class AddNewDialogNavigation extends React.Component<IProps, {}> {
         const allPages = this.props.allPages ?? [];
         const editingId = this.inEditMode ? this.state.activeNavigation.id : '';
         const parentOptions = [
-            {value: '__root__', label: this.props.t('(top level)'), disabled: false},
+            {
+                value: '__root__',
+                label: <span data-testid="nav-page-parent-option-__root__">{this.props.t('(top level)')}</span>,
+                disabled: false,
+            },
             ...allPages.map(p => {
                 const wouldCycle = !!editingId && isDescendantOrSelf(allPages, editingId, p.id);
                 const tooDeep = depthOf(allPages, p.id) >= MAX_DEPTH;
                 const indent = '  '.repeat(depthOf(allPages, p.id));
+                const disabled = wouldCycle || tooDeep;
+                // F1 — slug-based testid hooks. Mirrors `nav-page-row-${page}`
+                // keying. Disabled descendants get a paired `-disabled` testid
+                // and a Tooltip explaining why the option is locked.
+                const baseTestId = `nav-page-parent-option-${p.page}`;
+                const text = `${indent}${p.page}`;
+                const labelEl = disabled ? (
+                    <Tooltip title={wouldCycle ? this.props.t('Would create a cycle') : this.props.t('Maximum nesting depth reached')}>
+                        <span data-testid={baseTestId}>
+                            <span data-testid={`${baseTestId}-disabled`}>{text}</span>
+                        </span>
+                    </Tooltip>
+                ) : (
+                    <span data-testid={baseTestId}>{text}</span>
+                );
                 return {
                     value: p.id,
-                    label: `${indent}${p.page}`,
-                    disabled: wouldCycle || tooDeep,
+                    label: labelEl,
+                    disabled,
                 };
             }),
         ];

@@ -1,3 +1,16 @@
+// Admin section-edit chrome.
+//
+// Owns several admin chrome roots: `.section-item-container` hover affordance,
+// `.new-section-wrapper` empty-state, and the cross-cutting `.dynamic-content`
+// container that hosts every section in admin mode. These cross-cut rather
+// than nest under a single `.edit-section` root, so the audit script accepts
+// them via the per-file owner declaration below.
+//
+// `.ant-tabs` overrides moved to `AdminAntdOverrides.scss` (F4 SCSS scoping
+// sweep, Pattern 3 — docs/roadmap/scss-audit-2026-05-03.md).
+//
+// AUDIT-OWNERS: .section-item-container, .new-section-wrapper, .dynamic-content
+
 .section-item-container:hover{
   .edit-button-container{
     display: block;
@@ -14,19 +27,6 @@
   button{
     height: 100px;
     width: 100%;
-  }
-}
-.ant-tabs{
-  .ant-tabs-nav-list{
-    .edit-wrapper{
-      display: flex;
-      .edit-container{
-        left: 0;
-        position: relative;
-        margin-right: 10px;
-      }
-    }
-
   }
 }
 .dynamic-content {

@@ -19,6 +19,7 @@
     "postbuild": "next-sitemap --config next-sitemap.config.cjs",
     "lint": "eslint \"./**/*.{ts,tsx}\" --fix",
     "lint:scss": "stylelint \"ui/**/*.scss\" --allow-empty-input",
+    "audit:scss": "node tools/scripts/scss-scope-audit.mjs",
     "clean": "rm -rf ui/client/.next",
     "dev-server": "nodemon --config ./nodemon.json",
     "standalone-graphql": "cross-env npx tsx --tsconfig services/tsconfig.custom.json services/index.ts",

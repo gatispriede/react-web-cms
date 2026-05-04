@@ -3,6 +3,8 @@
 // `ui/client/modules/RichText/RichText.scss` as a second top-level root,
 // which leaked admin-only CSS into every public render. Split out per the
 // F4 SCSS scoping sweep (docs/roadmap/scss-audit-2026-05-03.md, Pattern 2).
+//
+// AUDIT-OWNERS: .rich-text-container-admin
 .rich-text-container-admin{
   max-height: 500px;
   // `overflow: auto` was clipping CKEditor's toolbar dropdown panels

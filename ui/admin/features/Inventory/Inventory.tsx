@@ -1,8 +1,10 @@
 import React, {useEffect, useMemo} from "react";
-import {Alert, Badge, Button, Drawer, Form, Input, Modal, Popconfirm, Select, Space, Table, Tag, Typography} from "antd";
+import {Alert, Badge, Button, Drawer, Form, Input, InputNumber, Modal, Popconfirm, Select, Space, Table, Tag, Typography} from "antd";
 import {ReloadOutlined} from "@client/lib/icons";
 import {useTranslation} from "react-i18next";
 import type {IInventoryRun} from "@interfaces/IInventory";
+import type {IProduct} from "@interfaces/IProduct";
+import AuditBadge from "@admin/shell/AuditBadge";
 import {useViewModel} from "@client/lib/state/observable";
 import {InventoryViewModel} from "./InventoryViewModel";
 
@@ -22,7 +24,45 @@ const AdminSettingsInventory: React.FC = () => {
     const {t} = useTranslation();
     const vm = useViewModel(() => new InventoryViewModel(undefined, t));
 
-    useEffect(() => { void vm.refreshStatus(); }, [vm]);
+    useEffect(() => { void vm.refreshStatus(); void vm.refreshProducts(); }, [vm]);
+
+    const stockColumns = useMemo(() => [
+        {title: t('Product'), key: 'p',
+            render: (_: unknown, p: IProduct) => (
+                <Space direction="vertical" size={0}>
+                    <Typography.Text strong>{p.title}</Typography.Text>
+                    <Typography.Text type="secondary" style={{fontSize: '.85em'}}>/products/{p.slug}</Typography.Text>
+                </Space>
+            )},
+        {title: t('Stock'), key: 'stock', width: 160,
+            render: (_: unknown, p: IProduct) => (
+                <InputNumber
+                    min={0}
+                    data-testid={`admin-inventory-stock-input-${p.slug}`}
+                    value={vm.stockDrafts[p.slug] ?? (typeof p.stock === 'number' ? p.stock : 0)}
+                    onChange={v => vm.setStockDraft(p.slug, Number(v ?? 0))}
+                />
+            )},
+        {title: t('Last edited'), key: 'audit', width: 200,
+            render: (_: unknown, p: IProduct) => (
+                <Space size={6}>
+                    <AuditBadge editedBy={p.editedBy} editedAt={p.editedAt ?? p.updatedAt} compact/>
+                    {vm.lastSavedSlug === p.slug && (
+                        <Tag color="green" data-testid={`admin-inventory-just-saved-${p.slug}`}>{t('Updated by you')}</Tag>
+                    )}
+                </Space>
+            )},
+        {title: t('Actions'), key: 'a', width: 120,
+            render: (_: unknown, p: IProduct) => (
+                <Button
+                    type="primary"
+                    size="small"
+                    data-testid={`admin-inventory-save-btn-${p.slug}`}
+                    loading={vm.isPendingSave(p.slug)}
+                    onClick={() => vm.saveProductStock(p.slug, vm.stockDrafts[p.slug] ?? (typeof p.stock === 'number' ? p.stock : 0))}
+                >{t('Save')}</Button>
+            )},
+    ], [t, vm]);
 
     const runColumns = useMemo(() => [
         {title: t('Kind'), dataIndex: 'kind', key: 'kind', width: 90},
@@ -85,6 +125,27 @@ const AdminSettingsInventory: React.FC = () => {
                     message={`${t('Last run')}: ${vm.lastReport.itemsCreated} ${t('created')}, ${vm.lastReport.itemsUpdated} ${t('updated')}, ${vm.lastReport.itemsArchived} ${t('archived')}, ${vm.lastReport.errors.length} ${t('errors')}`}
                 />
             )}
+
+            <Space style={{marginBottom: 8}}>
+                <Typography.Title level={5} style={{margin: 0}}>{t('Stock by product')}</Typography.Title>
+                <Button
+                    size="small"
+                    icon={<ReloadOutlined/>}
+                    data-testid="admin-inventory-stock-refresh-btn"
+                    loading={vm.loadingProducts}
+                    onClick={() => vm.refreshProducts()}
+                >{t('Refresh')}</Button>
+            </Space>
+            <Table
+                rowKey="slug"
+                size="small"
+                pagination={{pageSize: 10}}
+                columns={stockColumns as any}
+                dataSource={vm.products}
+                loading={vm.loadingProducts}
+                style={{marginBottom: 24}}
+                data-testid="admin-inventory-stock-table"
+            />
 
             <Typography.Title level={5}>{t('Run log')}</Typography.Title>
             <Table

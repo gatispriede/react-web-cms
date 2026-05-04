@@ -1,3 +1,10 @@
+// Layout primitives: the outer `.content-wrapper` (page chrome) and
+// `.section-item-container` width modifiers (per-cell sizing). Splitting
+// these into two files would just shuffle imports — they're already paired
+// in every layout that loads this stylesheet.
+//
+// AUDIT-OWNERS: .content-wrapper, .section-item-container
+
 .content-wrapper{
   &.action-enabled{
     cursor: pointer;
