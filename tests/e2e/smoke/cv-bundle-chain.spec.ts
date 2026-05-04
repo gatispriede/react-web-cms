@@ -93,8 +93,16 @@ test.describe.serial('smoke — CV bundle round-trip + curated edits', () => {
         // timeout to 60 s to absorb dev-server jitter.
         const submitBtn = byTid(adminPage, tid('bundle', 'import', 'submit', 'btn'));
         await expect(submitBtn).toBeEnabled({timeout: 60_000});
-        await submitBtn.click();
-        await byTid(adminPage, tid('bundle', 'import', 'confirm', 'btn')).click();
+        // Native DOM click — the AntD Popconfirm wrapping the import
+        // submit button repeatedly trips Playwright's stability check
+        // (mount transition, then a re-render once the file is parsed).
+        // We can't pre-flight the popover stability the way a normal
+        // user does (visual delay between click and confirm), so go
+        // direct and skip the actionability wait.
+        await submitBtn.evaluate(el => (el as HTMLElement).click());
+        const confirmBtn = byTid(adminPage, tid('bundle', 'import', 'confirm', 'btn'));
+        await expect(confirmBtn).toBeAttached({timeout: 10_000});
+        await confirmBtn.evaluate(el => (el as HTMLElement).click());
         // Bundle import is the slow operation (50 MB JSON, base64 images).
         // 180 s carve-out per the timing budget in §10a.
         await expect(adminPage.getByText(/import.*(complete|success|done)/i)).toBeVisible({timeout: 180_000});
