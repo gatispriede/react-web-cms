@@ -66,68 +66,74 @@ const EditWrapper = (
             btn.click();
         }
     };
+    const hasEdit = !!(edit && editContent && !simplified);
+    const hasDelete = !!(del && deleteAction);
+    const hasReorder = !!(moveUp || moveDown);
+    // Single inline strip: [label] [edit] [up] [down] [delete]. Same DOM
+    // shape at both section and module levels — only the SCSS positioning
+    // differs (section strip sits top-right with bigger buttons, module
+    // strip sits top-left with compact 24px buttons; both anchored by the
+    // existing `.edit-button-container` rules).
+    const strip = (hasEdit || hasDelete || hasReorder) ? (
+        <div className={'edit-button-container edit-action-strip'} onClick={e => e.stopPropagation()}>
+            {label && (
+                <span className="edit-button-label" data-testid="section-module-row-label">
+                    {label}
+                </span>
+            )}
+            {hasEdit && (
+                <span className="edit-button">{editContent}</span>
+            )}
+            {hasReorder && (
+                <Button
+                    size="small"
+                    data-testid="section-module-move-up-btn"
+                    aria-label={t('Move up')}
+                    title={t('Move up')}
+                    disabled={!canMoveUp || !moveUp}
+                    icon={<UpOutlined/>}
+                    onClick={async (e) => { e.stopPropagation(); if (moveUp) await moveUp(); }}
+                />
+            )}
+            {hasReorder && (
+                <Button
+                    size="small"
+                    data-testid="section-module-move-down-btn"
+                    aria-label={t('Move down')}
+                    title={t('Move down')}
+                    disabled={!canMoveDown || !moveDown}
+                    icon={<DownOutlined/>}
+                    onClick={async (e) => { e.stopPropagation(); if (moveDown) await moveDown(); }}
+                />
+            )}
+            {hasDelete && (
+                <Popconfirm
+                    title={t("Delete")}
+                    description={t("Are you sure to delete?")}
+                    onConfirm={async () => { await deleteAction!(); }}
+                    okText={t("Delete")}
+                    cancelText={t("Cancel")}
+                >
+                    <Button danger size="small" icon={<DeleteOutlined/>} aria-label={t('Delete')}/>
+                </Popconfirm>
+            )}
+        </div>
+    ) : null;
     return (
         <div className={wrapperClass} ref={wrapperRef}>
             {
                 admin ?
                     <div className={'edit-wrapper'}>
-                        {(edit && editContent) && (
-                            simplified
-                                ? <div style={{display: 'none'}} aria-hidden>{editContent}</div>
-                                : <div className={'edit-button-container edit-container'}>
-                                    <div className={'edit-button'}>{editContent}</div>
-                                </div>
+                        {/* Simplified mode keeps `editContent` mounted (hidden)
+                            so the body-click handler can still find + click
+                            the edit button programmatically. */}
+                        {simplified && edit && editContent && (
+                            <div style={{display: 'none'}} aria-hidden>{editContent}</div>
                         )}
+                        {!simplified && strip}
                         {
                             children && <div onClick={onBodyClick} style={simplified ? {cursor: 'pointer'} : undefined}>{children}</div>
                         }
-                        {
-                            (moveUp || moveDown) && <div className={'edit-button-container reorder-container'} onClick={e => e.stopPropagation()}>
-                                {label && (
-                                    <span className="edit-button-label" data-testid="section-module-row-label">
-                                        {label}
-                                    </span>
-                                )}
-                                <div className="edit-button" style={{display: 'inline-flex', gap: 4}}>
-                                    <Button
-                                        size="small"
-                                        data-testid="section-module-move-up-btn"
-                                        aria-label={t('Move up')}
-                                        title={t('Move up')}
-                                        disabled={!canMoveUp || !moveUp}
-                                        icon={<UpOutlined/>}
-                                        onClick={async (e) => { e.stopPropagation(); if (moveUp) await moveUp(); }}
-                                    />
-                                    <Button
-                                        size="small"
-                                        data-testid="section-module-move-down-btn"
-                                        aria-label={t('Move down')}
-                                        title={t('Move down')}
-                                        disabled={!canMoveDown || !moveDown}
-                                        icon={<DownOutlined/>}
-                                        onClick={async (e) => { e.stopPropagation(); if (moveDown) await moveDown(); }}
-                                    />
-                                </div>
-                            </div>
-                        }
-                        {
-                            (del && deleteAction) && <div className={'edit-button-container delete-container'}>
-                                <Popconfirm
-                                    title={t("Delete")}
-                                    description={t("Are you sure to delete?")}
-                                    onConfirm={async () => {
-                                        await deleteAction()
-                                    }}
-                                    okText={t("Delete")}
-                                    cancelText={t("Cancel")}
-                                >
-                                    <Button danger>
-                                        <DeleteOutlined/>
-                                    </Button>
-                                </Popconfirm>
-                            </div>
-                        }
-
                     </div>
                     :
                     <div>{children}</div>
