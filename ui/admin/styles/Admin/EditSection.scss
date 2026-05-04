@@ -58,7 +58,40 @@
         height: 24px;
       }
     }
-    &:hover .delete-container, &:hover .edit-container{
+    // Section-level reorder cluster (different proportions than the
+    // per-item one — sections are bigger objects so a wider, taller
+    // strip makes the affordance match the row height). Top-LEFT to
+    // pair with the section's own admin strip; the edit / delete
+    // chips already sit in the top-right corner of the section.
+    .reorder-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      background: rgba(0, 0, 0, 0.7);
+      border-bottom-right-radius: 6px;
+      z-index: 100;
+      pointer-events: auto;
+      .edit-button-label {
+        font-size: 12px;
+        line-height: 1;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #fff;
+        font-weight: 500;
+        padding: 0 4px;
+      }
+      .ant-btn {
+        height: 28px;
+        width: 28px;
+        min-width: 28px;
+        padding: 0;
+      }
+    }
+    &:hover .delete-container, &:hover .edit-container, &:hover .reorder-container {
       display: flex;
     }
   }
@@ -83,18 +116,19 @@
     // Per-item reorder cluster — up/down arrows + module-type label.
     // Replaces the broken drag-reorder; chevron buttons at boundaries
     // disable themselves so the operator can see they've hit the top or
-    // bottom of the section. Sits in the same absolute-positioned
-    // top-left strip as the edit/delete containers; reveals on hover.
+    // bottom of the section. Sits in the TOP-RIGHT corner so it doesn't
+    // overlap the top-left edit / delete chips. Reveals on hover.
     .reorder-container {
       position: absolute;
       top: 0;
-      left: 0;
+      right: 0;
+      left: auto;
       display: none;
       align-items: center;
       gap: 6px;
       padding: 4px 6px;
       background: rgba(0, 0, 0, 0.65);
-      border-bottom-right-radius: 6px;
+      border-bottom-left-radius: 6px;
       z-index: 100;
       pointer-events: auto;
       .edit-button-label {
