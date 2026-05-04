@@ -50,9 +50,30 @@ export interface ISiteFlags {
     /** Site-wide default admin UI mode (per `docs/features/platform/admin-ui-modes.md`).
      *  Per-user `IUser.adminUiMode` overrides this when set. Default 'advanced'. */
     defaultAdminUiMode?: 'simplified' | 'advanced';
+    /** Email-provider configuration. When the whole block is absent
+     *  the mailer falls back to the legacy `SMTP_*` env-var path so
+     *  pre-migration deployments keep working. Secrets are
+     *  AES-GCM-wrapped via `secretBox` when SECRETBOX_KEY is set. */
+    mail?: ISiteMailConfig;
     version?: number;
     editedBy?: string;
     editedAt?: string;
+}
+
+export type SiteMailProvider = 'smtp' | 'resend' | 'disabled';
+
+export interface ISiteMailConfig {
+    provider: SiteMailProvider;
+    /** RFC-5322 from header, e.g. `Funisimo <noreply@funisimo.pro>` */
+    from?: string;
+    /** Inquiry recipient. Wins over the top-level
+     *  `inquiryRecipientEmail` when set. */
+    inquiryRecipient?: string;
+    smtpHost?: string;
+    smtpPort?: number;
+    smtpUser?: string;
+    smtpPassEncrypted?: string;
+    resendApiKeyEncrypted?: string;
 }
 
 export const DEFAULT_SITE_FLAGS: ISiteFlags = {
@@ -82,6 +103,30 @@ const sanitizeMaxPerClient = (n: unknown): number => {
     if (!Number.isFinite(x) || x < 0) return 0;
     return Math.min(Math.floor(x), 100);
 };
+
+/** Sanitise `mail` block: bound provider to the enum, drop unknown
+ *  fields, normalise port to a number. Encryption envelope strings are
+ *  passed through opaquely — the EmailService decrypts on use. */
+function sanitizeMailConfig(raw: unknown): ISiteMailConfig | undefined {
+    if (!raw || typeof raw !== 'object') return undefined;
+    const r = raw as Partial<ISiteMailConfig>;
+    const provider: SiteMailProvider = r.provider === 'smtp' || r.provider === 'resend' || r.provider === 'disabled'
+        ? r.provider
+        : 'disabled';
+    const port = typeof r.smtpPort === 'number'
+        ? r.smtpPort
+        : (typeof r.smtpPort === 'string' ? Number(r.smtpPort) : undefined);
+    return {
+        provider,
+        from: typeof r.from === 'string' ? r.from.trim() : undefined,
+        inquiryRecipient: isPlausibleEmail(r.inquiryRecipient) ? r.inquiryRecipient : undefined,
+        smtpHost: typeof r.smtpHost === 'string' ? r.smtpHost.trim() : undefined,
+        smtpPort: Number.isFinite(port) && port! > 0 ? Math.floor(port!) : undefined,
+        smtpUser: typeof r.smtpUser === 'string' ? r.smtpUser.trim() : undefined,
+        smtpPassEncrypted: typeof r.smtpPassEncrypted === 'string' ? r.smtpPassEncrypted : undefined,
+        resendApiKeyEncrypted: typeof r.resendApiKeyEncrypted === 'string' ? r.resendApiKeyEncrypted : undefined,
+    };
+}
 
 const KEY = 'siteFlags';
 
@@ -127,6 +172,7 @@ export class SiteFlagsService {
             defaultAdminUiMode: (value?.defaultAdminUiMode === 'simplified' || value?.defaultAdminUiMode === 'advanced')
                 ? value.defaultAdminUiMode
                 : DEFAULT_SITE_FLAGS.defaultAdminUiMode,
+            mail: sanitizeMailConfig(value?.mail),
             version: (doc as any)?.version ?? 0,
             editedBy: (doc as any)?.editedBy,
             editedAt: (doc as any)?.editedAt,
@@ -176,6 +222,7 @@ export class SiteFlagsService {
             defaultAdminUiMode: (flags.defaultAdminUiMode === 'simplified' || flags.defaultAdminUiMode === 'advanced')
                 ? flags.defaultAdminUiMode
                 : current.defaultAdminUiMode,
+            mail: flags.mail !== undefined ? sanitizeMailConfig(flags.mail) : current.mail,
         };
         const version = nextVersion(existingVersion);
         await this.settings.updateOne(
