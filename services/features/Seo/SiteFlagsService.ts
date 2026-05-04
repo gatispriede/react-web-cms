@@ -1,6 +1,7 @@
 import {Collection, Db} from 'mongodb';
 import {auditStamp} from '@services/features/Audit/audit';
 import {nextVersion, requireVersion} from '@services/infra/conflict';
+import {encrypt as secretBoxEncrypt} from '@services/infra/secretBox';
 
 export type SiteLayoutMode = 'tabs' | 'scroll';
 
@@ -109,13 +110,24 @@ const sanitizeMaxPerClient = (n: unknown): number => {
  *  passed through opaquely — the EmailService decrypts on use. */
 function sanitizeMailConfig(raw: unknown): ISiteMailConfig | undefined {
     if (!raw || typeof raw !== 'object') return undefined;
-    const r = raw as Partial<ISiteMailConfig>;
+    const r = raw as Partial<ISiteMailConfig> & {smtpPass?: string; resendApiKey?: string};
     const provider: SiteMailProvider = r.provider === 'smtp' || r.provider === 'resend' || r.provider === 'disabled'
         ? r.provider
         : 'disabled';
     const port = typeof r.smtpPort === 'number'
         ? r.smtpPort
         : (typeof r.smtpPort === 'string' ? Number(r.smtpPort) : undefined);
+    // Encrypt plaintext on the way in. The admin form (and the
+    // `email.config.update` MCP tool) sends `smtpPass` / `resendApiKey`
+    // plaintext exactly once — we encrypt and persist as `*Encrypted`.
+    // When neither plaintext nor pre-encrypted is supplied, leave the
+    // field undefined so `save()` can preserve the prior encrypted blob.
+    const smtpPassEncrypted = typeof r.smtpPass === 'string' && r.smtpPass.length > 0
+        ? secretBoxEncrypt(r.smtpPass)
+        : (typeof r.smtpPassEncrypted === 'string' && r.smtpPassEncrypted.length > 0 ? r.smtpPassEncrypted : undefined);
+    const resendApiKeyEncrypted = typeof r.resendApiKey === 'string' && r.resendApiKey.length > 0
+        ? secretBoxEncrypt(r.resendApiKey)
+        : (typeof r.resendApiKeyEncrypted === 'string' && r.resendApiKeyEncrypted.length > 0 ? r.resendApiKeyEncrypted : undefined);
     return {
         provider,
         from: typeof r.from === 'string' ? r.from.trim() : undefined,
@@ -123,8 +135,8 @@ function sanitizeMailConfig(raw: unknown): ISiteMailConfig | undefined {
         smtpHost: typeof r.smtpHost === 'string' ? r.smtpHost.trim() : undefined,
         smtpPort: Number.isFinite(port) && port! > 0 ? Math.floor(port!) : undefined,
         smtpUser: typeof r.smtpUser === 'string' ? r.smtpUser.trim() : undefined,
-        smtpPassEncrypted: typeof r.smtpPassEncrypted === 'string' ? r.smtpPassEncrypted : undefined,
-        resendApiKeyEncrypted: typeof r.resendApiKeyEncrypted === 'string' ? r.resendApiKeyEncrypted : undefined,
+        smtpPassEncrypted,
+        resendApiKeyEncrypted,
     };
 }
 
