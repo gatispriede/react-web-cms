@@ -117,9 +117,16 @@ async function main() {
     // Inject env directly instead of going through `cross-env` — saves a
     // child shell and dodges Windows EINVAL on spawning .cmd entrypoints.
     const nextBin = path.join(REPO_ROOT, 'node_modules/next/dist/bin/next');
+    // Next 16 enables Turbopack by default for `next build` too. Our
+    // `ui/client/next.config.js` carries a `webpack:` block (server-side
+    // watcher tweak for the shared `services/` dir). Without an explicit
+    // bundler flag the build aborts with a "Turbopack with webpack config
+    // and no turbopack config" error before any pages are emitted. Pin
+    // `--webpack` so the existing config is honoured. Same flag the
+    // dev-mode fixture passes via `tests/e2e/fixtures/server.ts`.
     const build = spawn(
         process.execPath,
-        [nextBin, 'build', 'ui/client'],
+        [nextBin, 'build', '--webpack', 'ui/client'],
         {
             cwd: REPO_ROOT,
             stdio: 'inherit',

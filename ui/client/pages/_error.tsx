@@ -1,7 +1,6 @@
 import React from 'react';
 import type {NextPage, NextPageContext} from 'next';
 import {useTranslation} from 'next-i18next/pages';
-import {serverSideTranslations} from 'next-i18next/pages/serverSideTranslations';
 import ErrorScreen from '@client/features/ErrorScreen/ErrorScreen';
 
 interface ErrorPageProps {
@@ -13,6 +12,17 @@ interface ErrorPageProps {
  * either a 404 (handled by `404.tsx`) or a hard 500 hit during SSR
  * (handled by `500.tsx`). Same `<ErrorScreen/>` shell so the brand and
  * theme stay consistent across every error state.
+ *
+ * No `serverSideTranslations` here on purpose. `_error.tsx` runs through
+ * `getInitialProps`, which fires both server- AND client-side — and
+ * `next-i18next/pages/serverSideTranslations` imports `node:module`,
+ * which webpack can't bundle for the browser (Module not found: 'module').
+ * Including it crashes every route that hits the error path,
+ * `/auth/signin` included. The `appWithTranslation` HOC in `_app.tsx`
+ * keeps the i18next instance live across navigations; copy keys missing
+ * from the cold-render bundle fall back to the source string (per
+ * `fallbackLng: false` in next-i18next.config.js), which for an error
+ * page is fine — the message stays readable.
  */
 const ErrorPage: NextPage<ErrorPageProps> = ({statusCode}) => {
     const {t} = useTranslation('app');
@@ -32,13 +42,9 @@ const ErrorPage: NextPage<ErrorPageProps> = ({statusCode}) => {
     );
 };
 
-ErrorPage.getInitialProps = async (ctx: NextPageContext) => {
+ErrorPage.getInitialProps = async (ctx: NextPageContext): Promise<ErrorPageProps> => {
     const statusCode = ctx.res?.statusCode ?? ctx.err?.statusCode ?? 404;
-    const locale = ctx.locale ?? 'en';
-    return {
-        statusCode,
-        ...(await serverSideTranslations(locale, ['app', 'common'])),
-    } as any;
+    return {statusCode};
 };
 
 export default ErrorPage;

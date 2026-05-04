@@ -182,6 +182,40 @@ const HeroEditor = ({content, setContent, t}: IInputContent) => {
                                         data-testid="module-editor-hero-portrait-image-input"
                                     />
                                 </Col>
+                                <Col xs={12}>
+                                    <label>{t('Portrait width (px) — optional override')}</label>
+                                    <Input
+                                        data-testid="module-editor-hero-portrait-width-input"
+                                        type="number"
+                                        min={0}
+                                        value={(data.portraitImage?.width as number | undefined) ?? ''}
+                                        onChange={e => {
+                                            const raw = e.target.value;
+                                            const n = raw === '' ? undefined : Number(raw);
+                                            const cur = data.portraitImage ?? {src: ''};
+                                            const nextImg = {...cur, width: n};
+                                            update('portraitImage', nextImg.src || nextImg.width || nextImg.height ? nextImg : undefined);
+                                        }}
+                                        placeholder={t('auto')}
+                                    />
+                                </Col>
+                                <Col xs={12}>
+                                    <label>{t('Portrait height (px) — optional override')}</label>
+                                    <Input
+                                        data-testid="module-editor-hero-portrait-height-input"
+                                        type="number"
+                                        min={0}
+                                        value={(data.portraitImage?.height as number | undefined) ?? ''}
+                                        onChange={e => {
+                                            const raw = e.target.value;
+                                            const n = raw === '' ? undefined : Number(raw);
+                                            const cur = data.portraitImage ?? {src: ''};
+                                            const nextImg = {...cur, height: n};
+                                            update('portraitImage', nextImg.src || nextImg.width || nextImg.height ? nextImg : undefined);
+                                        }}
+                                        placeholder={t('auto')}
+                                    />
+                                </Col>
                                 <Col xs={24} onPointerDown={e => e.stopPropagation()}>
                                     <Typography.Text type="secondary" style={{fontSize: 12}}>
                                         {t('Portrait image transparency')}: {data.portraitOpacity ?? 0}%

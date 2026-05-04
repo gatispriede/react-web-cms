@@ -134,11 +134,22 @@ export async function startServer(opts: {mongoUri: string; workerIndex: number})
     // dev mode → `next dev`; prod mode → `next start` against the shared
     // `.next-e2e/` build. Both invoke the same binary entrypoint with
     // different verbs.
+    // Next 16 enables Turbopack by default. Our `ui/client/next.config.js`
+    // still has a `webpack:` block (server-side watcher tweak for the
+    // shared `services/` dir). Without an explicit bundler flag Next
+    // boots Turbopack, prints a fatal `⨯ ERROR: This build is using
+    // Turbopack, with a webpack config and no turbopack config`, and the
+    // dev process dies right after the "Ready in Xms" line — leaving
+    // `waitForReady` polling a closed port for the full 120 s timeout.
+    // Pin `--webpack` for dev so the existing config is honoured.
+    // Doesn't apply to `next start` (no bundler flag accepted).
+    const bundlerFlag: string[] = isProd ? [] : ['--webpack'];
     const child: ChildProcess = spawn(
         process.execPath,
         [
             path.join(REPO_ROOT, 'node_modules/next/dist/bin/next'),
             isProd ? 'start' : 'dev',
+            ...bundlerFlag,
             '-p', String(port),
             NEXT_DIR,
         ],
