@@ -1,7 +1,7 @@
 import React from 'react'
 import {resolve} from "@services/api/generated";
 import {Button, ConfigProvider, Layout, Menu, Modal, Popconfirm, Spin, Tag, message, theme as antdTheme} from 'antd';
-import {CloseOutlined, CloudUploadOutlined, EditOutlined, FileOutlined, PlusOutlined} from "@client/lib/icons";
+import {CloseOutlined, CloudUploadOutlined, DownOutlined, EditOutlined, FileOutlined, PlusOutlined} from "@client/lib/icons";
 import PublishApi from "@services/api/client/PublishApi";
 import AddNewDialogNavigation from "@admin/features/Navigation/AddNewDialogNavigation";
 import DynamicTabsContent from "@client/lib/DynamicTabsContent";
@@ -35,6 +35,13 @@ interface IHomeState {
     publishing?: boolean,
     darkMode: boolean,
     siderCollapsed: boolean,
+    /** Sider parent rows that are currently expanded. Manual flattening
+     *  (we don't pass `children` to AntD `<Menu items>`) means AntD's
+     *  built-in SubMenu expand-on-title-click doesn't fire. That
+     *  bought us option B from the click-parent design choice: the
+     *  title click navigates (sets `activeTab`), the chevron button in
+     *  the label toggles `openKeys`. */
+    openKeys: string[],
 }
 
 class AdminApp extends React.Component<{
@@ -66,6 +73,7 @@ class AdminApp extends React.Component<{
         activeTab: '0',
         darkMode: false,
         siderCollapsed: typeof window !== 'undefined' && window.localStorage.getItem('admin.sider.collapsed') === '1',
+        openKeys: [],
     }
 
     constructor(props: { session: any, t: TFunction<"translation", undefined>, tApp: TFunction<"translation", undefined> }) {
@@ -215,6 +223,7 @@ class AdminApp extends React.Component<{
             activeTab: this.state.activeTab,
             darkMode: this.state.darkMode,
             siderCollapsed: this.state.siderCollapsed,
+            openKeys: this.state.openKeys,
             activeNavigation: {
                 id: '',
                 page: '',
@@ -316,6 +325,14 @@ class AdminApp extends React.Component<{
 
         newState.tabProps = newTabsState
         newState.pages = pages
+        // Default-expand any sider row that has children, but only on
+        // first load (don't clobber the operator's choice on refresh).
+        if (this.state.openKeys.length === 0) {
+            const parentKeys = newTabsState
+                .filter((tp: any) => newTabsState.some((c: any) => c.parent && c.parent === tp.id))
+                .map((tp: any) => tp.key);
+            newState.openKeys = parentKeys;
+        }
         // Refresh the link-target picker's options. Cheap walk over already-
         // loaded data — no extra fetches. See `anchorRegistry` + `LinkTargetPicker`.
         try {
@@ -326,12 +343,26 @@ class AdminApp extends React.Component<{
         this.setState(newState)
     }
 
+    toggleOpenKey = (key: string) => {
+        this.setState((s: IHomeState) => ({
+            openKeys: s.openKeys.includes(key)
+                ? s.openKeys.filter(k => k !== key)
+                : [...s.openKeys, key],
+        }));
+    };
+
     renderMenuItems() {
-        // F1 sub-pages — `tabProps` is a flat list (one entry per page).
-        // Build a parent → children tree off `id` / `parent` so AntD
-        // `<Menu mode="inline">` renders nested rows under their parent
-        // via `items[].children`. Orphans (parent points at a missing
-        // page) surface as roots so they stay reachable.
+        // F1 sub-pages + click-parent-edits (option B) — `tabProps` is a
+        // flat list (one entry per page). Build a parent → children tree
+        // off `id` / `parent`, then *flatten back to a single-level list*
+        // with depth-based indent. The flatten is deliberate: if we hand
+        // AntD `<Menu items[].children>`, AntD renders a SubMenu and
+        // intercepts the title click for expand/collapse — meaning a
+        // click on a parent page can no longer set `activeTab` (i.e.
+        // navigate to edit the parent itself). We want title click =
+        // navigate, separate chevron = expand. Doing the flatten here
+        // gives us full control over both interactions. Orphans
+        // (parent points at a missing page) surface as roots.
         const byId = new Map<string, any>();
         for (const tp of this.state.tabProps) {
             if (tp.id) byId.set(tp.id, {...tp, kids: []});
@@ -344,12 +375,13 @@ class AdminApp extends React.Component<{
                 roots.push(node);
             }
         }
-        const buildLabel = (tp: any) => (
+        const buildLabel = (tp: any, depth: number, hasKids: boolean, isOpen: boolean) => (
                 <div
                     className="admin-sider-item"
                     data-testid={`nav-page-row-${String(tp.page).toLowerCase()}`}
                     style={{
                         display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'space-between',
+                        paddingLeft: depth * 20,
                     }}
                 >
                     <div style={{flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2}}>
@@ -363,9 +395,29 @@ class AdminApp extends React.Component<{
                             gap: 8,
                             lineHeight: 1.3,
                         }}>
-                            {/* Generic per-page icon. A future per-page `iconName`
-                                (set via the navigation editor) would slot in here. */}
-                            <FileOutlined aria-hidden="true" style={{flex: '0 0 auto', opacity: 0.7}}/>
+                            {hasKids ? (
+                                <Button
+                                    size="small"
+                                    type="text"
+                                    aria-label={isOpen ? this.props.t('Collapse') : this.props.t('Expand')}
+                                    aria-expanded={isOpen}
+                                    data-testid={`nav-page-toggle-${String(tp.page).toLowerCase()}`}
+                                    onClick={e => { e.stopPropagation(); this.toggleOpenKey(tp.key); }}
+                                    icon={
+                                        <DownOutlined
+                                            style={{
+                                                transition: 'transform 120ms',
+                                                transform: isOpen ? 'rotate(0deg)' : 'rotate(-90deg)',
+                                            }}
+                                        />
+                                    }
+                                    style={{flex: '0 0 auto', width: 20, height: 20, padding: 0, opacity: 0.7}}
+                                />
+                            ) : (
+                                /* Generic per-page icon. A future per-page `iconName`
+                                   (set via the navigation editor) would slot in here. */
+                                <FileOutlined aria-hidden="true" style={{flex: '0 0 auto', opacity: 0.7}}/>
+                            )}
                             <span style={{overflow: 'hidden', textOverflow: 'ellipsis'}}>{tp.page}</span>
                         </span>
                         {!this.state.siderCollapsed && this.admin && tp.editedAt && (
@@ -400,21 +452,20 @@ class AdminApp extends React.Component<{
                     )}
                 </div>
             );
-        const buildItem = (node: any): any => {
-            // Distinct test-id for nested rows, per F1 spec — `nav-page-row-<parent>-<slug>`.
-            const parentTp = node.parent ? byId.get(node.parent) : undefined;
-            const testIdSuffix = parentTp
-                ? `${String(parentTp.page).toLowerCase()}-${String(node.page).toLowerCase()}`
-                : String(node.page).toLowerCase();
-            return {
+        const out: any[] = [];
+        const walk = (node: any, depth: number) => {
+            const hasKids = node.kids.length > 0;
+            const isOpen = this.state.openKeys.includes(node.key);
+            out.push({
                 key: node.key,
-                label: buildLabel({...node, page: node.page, _testIdSuffix: testIdSuffix}),
-                children: node.kids.length > 0
-                    ? node.kids.map((c: any) => buildItem(c))
-                    : undefined,
-            };
+                label: buildLabel(node, depth, hasKids, isOpen),
+            });
+            if (hasKids && isOpen) {
+                for (const c of node.kids) walk(c, depth + 1);
+            }
         };
-        return roots.map(r => buildItem(r));
+        for (const r of roots) walk(r, 0);
+        return out;
     }
 
     /** F1 sub-pages — delete prompt that asks the operator what to do
