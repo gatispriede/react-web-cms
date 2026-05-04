@@ -283,7 +283,7 @@ class AdminApp extends React.Component<{
             }
         } catch (err) { console.warn('parent/slug graft failed', err); }
 
-        const newTabsState = []
+        const newTabsState: any[] = []
         const sectionsByPage: Record<string, any[]> = {};
         if (pages[0]) {
             for (let id in pages) {
