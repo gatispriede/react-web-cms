@@ -33,7 +33,14 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run Playwright (shard ${{ matrix.shard }}/4)
-        run: npm run e2e -- --shard=${{ matrix.shard }}/4
+        # `e2e:isolated`, NOT `e2e`. The `e2e` script forces
+        # `PLAYWRIGHT_E2E_REUSE_DEV=1` which is the local iterate-on-one-spec
+        # workflow — it tells `tests/e2e/fixtures/server.ts` to reuse a dev
+        # server already running on `localhost:80`. There's no such server
+        # in CI, so every test fails at its first HTTP call within seconds.
+        # The `:isolated` variant lets each Playwright worker spawn its own
+        # `next dev` against an in-memory Mongo, which is the CI shape.
+        run: npm run e2e:isolated -- --shard=${{ matrix.shard }}/4
         env:
           CI: '1'
 
