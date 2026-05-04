@@ -30,15 +30,16 @@ import {rateLimit as slidingWindowRateLimit} from '@client/pages/api/_rateLimit'
 import {FeatureRestrictedError} from '../modeEnforcement';
 import {McpError, McpTool, McpToolContext, McpToolResult} from '../types';
 
-export type RawHandler<T = unknown> = (
-    args: Record<string, unknown>,
-    ctx: McpToolContext,
-) => Promise<T>;
+// `args` is intentionally `any` — the dispatcher validates against
+// `inputSchema` before calling, but the in-handler property reads are
+// loose (mirrors the existing `McpTool.handler` signature which also
+// accepts `any`). Tightening here would force every handler to add
+// runtime casts for already-validated fields.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type RawHandler<T = unknown> = (args: any, ctx: McpToolContext) => Promise<T>;
 
-export type ToolHandler = (
-    args: Record<string, unknown>,
-    ctx: McpToolContext,
-) => Promise<McpToolResult>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ToolHandler = (args: any, ctx: McpToolContext) => Promise<McpToolResult>;
 
 export type ErrorCode =
     | 'RATE_LIMITED'
@@ -80,7 +81,7 @@ export class IdempotencyConflictError extends Error {
     }
 }
 
-const SECRET_KEY_RE = /password|secret|token|key/i;
+const SECRET_KEY_RE = /password|secret|token|key|authorization|bearer/i;
 const REDACTED = '[REDACTED]';
 
 /**
@@ -288,6 +289,23 @@ export function defaultRateLimit(tool: ComposeOpts['tool']): number {
 }
 
 /**
+ * Convenience builder — declare an `McpTool` whose handler is wrapped by
+ * `compose(...)` automatically. Lets call sites avoid the awkward
+ * "spread metadata twice" pattern. The raw handler returns the inner
+ * data; the wrapper turns it into the MCP envelope shape.
+ */
+export function defineTool<T = unknown>(
+    meta: Omit<McpTool, 'handler'>,
+    raw: RawHandler<T>,
+    extra?: {logUnknown?: ComposeOpts['logUnknown']},
+): McpTool {
+    return {
+        ...meta,
+        handler: compose<T>(raw, {tool: meta, logUnknown: extra?.logUnknown}),
+    };
+}
+
+/**
  * Wrap a raw handler with all four primitives in the documented order.
  * The returned function still produces a `McpToolResult`; the envelope
  * is JSON-serialised into `result.content[0].text` so existing
@@ -299,14 +317,15 @@ export function compose<T = unknown>(
 ): ToolHandler {
     const toolName = opts.tool.name;
     const maxPerMinute = opts.maxPerMinute ?? defaultRateLimit(opts.tool);
-    // Build innermost-out: handler → audit → idempotency → rate-limit,
-    // then wrap the whole thing in error-envelope so RateLimitError
-    // emitted by the outermost wrapper still maps to the envelope.
-    const audited = withAudit(handler, {
-        toolName,
-        auditScope: opts.tool.auditScope,
-    });
-    const idempotent = withIdempotency(audited, {
+    // Build innermost-out: handler → idempotency → rate-limit, then wrap
+    // the whole thing in error-envelope so RateLimitError emitted by the
+    // outermost wrapper still maps to the envelope.
+    //
+    // NOTE: `withAudit` is exported separately and exercised in tests,
+    // but is NOT inserted here — `McpServer.dispatch` already records a
+    // single audit row per call (with redaction) at the dispatcher
+    // level, so adding withAudit here would double-log every tool call.
+    const idempotent = withIdempotency(handler, {
         toolName,
         enabled: opts.tool.idempotent === true,
     });

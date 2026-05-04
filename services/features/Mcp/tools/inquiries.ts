@@ -14,8 +14,7 @@
 import {McpTool} from '../types';
 import {enforceModeForTool} from '../modeEnforcement';
 import {getMongoConnection} from '@services/infra/mongoDBConnection';
-
-const ok = (data: unknown) => ({content: [{type: 'text' as const, text: JSON.stringify(data)}]});
+import {defineTool} from './_shared';
 
 const COLLECTION = 'Inquiries';
 
@@ -26,7 +25,8 @@ async function inquiriesCollection() {
     return db.collection(COLLECTION);
 }
 
-export const inquiryList: McpTool = {
+export const inquiryList: McpTool = defineTool({
+    // SAFE: not a GraphQL mutation
     name: 'inquiry.list',
     description: 'List public contact-form submissions, newest first. Returns id/name/email/topic/preview/createdAt/read.',
     scopes: ['read:content'],
@@ -37,75 +37,86 @@ export const inquiryList: McpTool = {
             offset: {type: 'integer', minimum: 0},
         },
     },
-    handler: async (args) => {
-        const col = await inquiriesCollection();
-        const limit = Math.min(200, Math.max(1, Number(args.limit ?? 50)));
-        const offset = Math.max(0, Number(args.offset ?? 0));
-        const rows = await col
-            .find({}, {projection: {_id: 0}})
-            .sort({createdAt: -1})
-            .skip(offset)
-            .limit(limit)
-            .toArray();
-        return ok({
-            rows: rows.map((r: any) => ({
-                id: r.id,
-                createdAt: r.createdAt,
-                name: r.name,
-                email: r.email,
-                topic: r.topic,
-                preview: typeof r.message === 'string' ? r.message.slice(0, 240) : '',
-                message: r.message,
-                read: r.read === true,
-                recipient: r.recipient,
-                mail: r.mail ?? null,
-            })),
-        });
-    },
-};
+}, async (args) => {
+    const col = await inquiriesCollection();
+    const limit = Math.min(200, Math.max(1, Number(args.limit ?? 50)));
+    const offset = Math.max(0, Number(args.offset ?? 0));
+    const rows = await col
+        .find({}, {projection: {_id: 0}})
+        .sort({createdAt: -1})
+        .skip(offset)
+        .limit(limit)
+        .toArray();
+    return {
+        rows: rows.map((r: any) => ({
+            id: r.id,
+            createdAt: r.createdAt,
+            name: r.name,
+            email: r.email,
+            topic: r.topic,
+            preview: typeof r.message === 'string' ? r.message.slice(0, 240) : '',
+            message: r.message,
+            read: r.read === true,
+            recipient: r.recipient,
+            mail: r.mail ?? null,
+        })),
+    };
+});
 
-export const inquiryDelete: McpTool = {
+export const inquiryDelete: McpTool = defineTool({
+    // SAFE: not a GraphQL mutation — direct collection write
     name: 'inquiry.delete',
     description: 'Delete one inquiry by id.',
     scopes: ['write:content'],
+    idempotent: true,
+    auditScope: 'inquiry',
     inputSchema: {
         type: 'object',
         required: ['id'],
-        properties: {id: {type: 'string', minLength: 1}},
+        properties: {
+            id: {type: 'string', minLength: 1},
+            idempotencyKey: {type: 'string'},
+        },
     },
-    handler: async (args, ctx) => {
-        await enforceModeForTool(ctx.actor, 'inquiry.delete');
-        const col = await inquiriesCollection();
-        const res = await col.deleteOne({id: args.id});
-        return ok({deleted: res.deletedCount ?? 0});
-    },
-};
+}, async (args, ctx) => {
+    await enforceModeForTool(ctx.actor, 'inquiry.delete');
+    const col = await inquiriesCollection();
+    const res = await col.deleteOne({id: args.id});
+    return {deleted: res.deletedCount ?? 0};
+});
 
-export const inquiryMarkRead: McpTool = {
+export const inquiryMarkRead: McpTool = defineTool({
+    // SAFE: not a GraphQL mutation — direct collection write
     name: 'inquiry.markRead',
     description: 'Mark an inquiry as read (or unread when read=false).',
     scopes: ['write:content'],
+    idempotent: true,
+    auditScope: 'inquiry',
     inputSchema: {
         type: 'object',
         required: ['id'],
         properties: {
             id: {type: 'string', minLength: 1},
             read: {type: 'boolean'},
+            idempotencyKey: {type: 'string'},
         },
     },
-    handler: async (args) => {
-        const col = await inquiriesCollection();
-        const read = args.read === undefined ? true : !!args.read;
-        const res = await col.updateOne({id: args.id}, {$set: {read}});
-        return ok({matched: res.matchedCount ?? 0, modified: res.modifiedCount ?? 0, read});
-    },
-};
+}, async (args) => {
+    const col = await inquiriesCollection();
+    const read = args.read === undefined ? true : !!args.read;
+    const res = await col.updateOne({id: args.id}, {$set: {read}});
+    return {matched: res.matchedCount ?? 0, modified: res.modifiedCount ?? 0, read};
+});
 
-export const emailSend: McpTool = {
+export const emailSend: McpTool = defineTool({
+    // SAFE: not a GraphQL mutation — direct SMTP transport
     name: 'email.send',
     description: 'Send an arbitrary email through the configured SMTP transport. Useful for replying to inquiries.',
     // SMTP is operator-grade infra; reuse the same scope as auth.resetLockouts.
     scopes: ['admin:auth'],
+    idempotent: true,
+    rateLimit: {maxPerMinute: 20},
+    auditScope: 'email',
     inputSchema: {
         type: 'object',
         required: ['to', 'subject', 'body'],
@@ -115,29 +126,29 @@ export const emailSend: McpTool = {
             body: {type: 'string', minLength: 1, maxLength: 20000},
             bodyHtml: {type: 'string', maxLength: 40000},
             replyTo: {type: 'string'},
+            idempotencyKey: {type: 'string'},
         },
     },
-    handler: async (args, ctx) => {
-        await enforceModeForTool(ctx.actor, 'email.send');
-        // Dynamic import so the services package doesn't compile-time
-        // depend on Next's `pages/` path; mirrors OrdersServiceLoader.
-        const mod: any = await import('@client/pages/api/_inquiryMailer').catch(() => null);
-        if (!mod || typeof mod.sendInquiryEmail !== 'function') {
-            return ok({ok: false, error: 'mailer not available (SMTP not configured or _inquiryMailer not loadable)'});
-        }
-        const html = typeof args.bodyHtml === 'string' && args.bodyHtml.length > 0
-            ? args.bodyHtml
-            : `<p style="white-space:pre-wrap">${escapeHtml(String(args.body))}</p>`;
-        const result = await mod.sendInquiryEmail({
-            to: String(args.to),
-            subject: String(args.subject),
-            text: String(args.body),
-            html,
-            replyTo: args.replyTo ? String(args.replyTo) : undefined,
-        });
-        return ok({ok: !!result?.ok, error: result?.error, messageId: result?.messageId});
-    },
-};
+}, async (args, ctx) => {
+    await enforceModeForTool(ctx.actor, 'email.send');
+    // Dynamic import so the services package doesn't compile-time
+    // depend on Next's `pages/` path; mirrors OrdersServiceLoader.
+    const mod: any = await import('@client/pages/api/_inquiryMailer').catch(() => null);
+    if (!mod || typeof mod.sendInquiryEmail !== 'function') {
+        return {ok: false, error: 'mailer not available (SMTP not configured or _inquiryMailer not loadable)'};
+    }
+    const html = typeof args.bodyHtml === 'string' && args.bodyHtml.length > 0
+        ? args.bodyHtml
+        : `<p style="white-space:pre-wrap">${escapeHtml(String(args.body))}</p>`;
+    const result = await mod.sendInquiryEmail({
+        to: String(args.to),
+        subject: String(args.subject),
+        text: String(args.body),
+        html,
+        replyTo: args.replyTo ? String(args.replyTo) : undefined,
+    });
+    return {ok: !!result?.ok, error: result?.error, messageId: result?.messageId};
+});
 
 function escapeHtml(s: string): string {
     return s

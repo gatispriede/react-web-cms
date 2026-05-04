@@ -1,10 +1,11 @@
 import {McpTool} from '../types';
+import {defineTool} from './_shared';
 
-const ok = (data: unknown) => ({content: [{type: 'text' as const, text: JSON.stringify(data)}]});
 const sessionFor = (actor: string) => ({kind: 'admin' as const, role: 'admin' as const, email: actor});
 const safeParse = (s: string): unknown => { try { return JSON.parse(s); } catch { return {raw: s}; } };
 
-export const productList: McpTool = {
+export const productList: McpTool = defineTool({
+    // SAFE: not a GraphQL mutation
     name: 'product.list',
     description: 'Lists products. Honours draft/category/inStockOnly/source filters.',
     scopes: ['read:products'],
@@ -18,13 +19,10 @@ export const productList: McpTool = {
             source: {type: 'string', enum: ['manual', 'warehouse']},
         },
     },
-    handler: async (args, ctx) => {
-        const products = await ctx.services.productService.list(args ?? {});
-        return ok(products);
-    },
-};
+}, async (args, ctx) => ctx.services.productService.list(args ?? {}));
 
-export const productGet: McpTool = {
+export const productGet: McpTool = defineTool({
+    // SAFE: not a GraphQL mutation
     name: 'product.get',
     description: 'Returns one product by slug.',
     scopes: ['read:products'],
@@ -36,11 +34,9 @@ export const productGet: McpTool = {
             includeDrafts: {type: 'boolean'},
         },
     },
-    handler: async (args, ctx) => {
-        const product = await ctx.services.productService.getBySlug(args.slug, {includeDrafts: args.includeDrafts});
-        return ok(product);
-    },
-};
+}, async (args, ctx) =>
+    ctx.services.productService.getBySlug(args.slug, {includeDrafts: args.includeDrafts}),
+);
 
 const productInputProps = {
     title: {type: 'string' as const, minLength: 1},
@@ -54,28 +50,31 @@ const productInputProps = {
     slug: {type: 'string' as const},
 };
 
-export const productCreate: McpTool = {
+export const productCreate: McpTool = defineTool({
     name: 'product.create',
     description: 'Creates a new product. Returns id, slug, version.',
     scopes: ['write:products'],
+    idempotent: true,
+    gqlMutation: 'saveProduct',
     inputSchema: {
         type: 'object',
         required: ['title', 'sku', 'price', 'currency'],
-        properties: productInputProps,
+        properties: {...productInputProps, idempotencyKey: {type: 'string'}},
     },
-    handler: async (args, ctx) => {
-        const res = await ctx.services.saveProduct({
-            product: args,
-            _session: sessionFor(ctx.actor),
-        });
-        return ok(typeof res === 'string' ? safeParse(res) : res);
-    },
-};
+}, async (args, ctx) => {
+    const res = await ctx.services.saveProduct({
+        product: args,
+        _session: sessionFor(ctx.actor),
+    });
+    return typeof res === 'string' ? safeParse(res) : res;
+});
 
-export const productUpdate: McpTool = {
+export const productUpdate: McpTool = defineTool({
     name: 'product.update',
     description: 'Updates an existing product by id (optimistic concurrency via expectedVersion).',
     scopes: ['write:products'],
+    idempotent: true,
+    gqlMutation: 'saveProduct',
     inputSchema: {
         type: 'object',
         required: ['id'],
@@ -83,39 +82,41 @@ export const productUpdate: McpTool = {
             id: {type: 'string', minLength: 1},
             ...productInputProps,
             expectedVersion: {type: 'integer'},
+            idempotencyKey: {type: 'string'},
         },
     },
-    handler: async (args, ctx) => {
-        const {expectedVersion, ...rest} = args;
-        const res = await ctx.services.saveProduct({
-            product: rest,
-            expectedVersion: expectedVersion ?? null,
-            _session: sessionFor(ctx.actor),
-        });
-        return ok(typeof res === 'string' ? safeParse(res) : res);
-    },
-};
+}, async (args, ctx) => {
+    const {expectedVersion, ...rest} = args;
+    const res = await ctx.services.saveProduct({
+        product: rest,
+        expectedVersion: expectedVersion ?? null,
+        _session: sessionFor(ctx.actor),
+    });
+    return typeof res === 'string' ? safeParse(res) : res;
+});
 
-export const productPublish: McpTool = {
+export const productPublish: McpTool = defineTool({
     name: 'product.publish',
     description: 'Publishes (or unpublishes when `publish: false`) a product.',
     scopes: ['write:products'],
+    idempotent: true,
+    gqlMutation: 'setProductPublished',
     inputSchema: {
         type: 'object',
         required: ['id'],
         properties: {
             id: {type: 'string', minLength: 1},
             publish: {type: 'boolean', default: true},
+            idempotencyKey: {type: 'string'},
         },
     },
-    handler: async (args, ctx) => {
-        const res = await ctx.services.setProductPublished({
-            id: args.id,
-            publish: args.publish ?? true,
-            _session: sessionFor(ctx.actor),
-        });
-        return ok(typeof res === 'string' ? safeParse(res) : res);
-    },
-};
+}, async (args, ctx) => {
+    const res = await ctx.services.setProductPublished({
+        id: args.id,
+        publish: args.publish ?? true,
+        _session: sessionFor(ctx.actor),
+    });
+    return typeof res === 'string' ? safeParse(res) : res;
+});
 
 export const PRODUCT_TOOLS: McpTool[] = [productList, productGet, productCreate, productUpdate, productPublish];

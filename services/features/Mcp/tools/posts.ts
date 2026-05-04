@@ -1,10 +1,11 @@
 import {McpTool} from '../types';
 import {getMongoConnection} from '@services/infra/mongoDBConnection';
+import {defineTool} from './_shared';
 
-const ok = (data: unknown) => ({content: [{type: 'text' as const, text: JSON.stringify(data)}]});
 const sessionFor = (actor: string) => ({kind: 'admin' as const, role: 'admin' as const, email: actor});
 
-export const postList: McpTool = {
+export const postList: McpTool = defineTool({
+    // SAFE: not a GraphQL mutation
     name: 'post.list',
     description: 'Lists blog posts. includeDrafts=true (default) returns drafts too. Useful before post.upsert to check for slug conflicts.',
     scopes: ['read:content'],
@@ -15,20 +16,20 @@ export const postList: McpTool = {
             limit: {type: 'integer', minimum: 1, maximum: 500, default: 100},
         },
     },
-    handler: async (args) => {
-        try {
-            const raw = await getMongoConnection().getPosts({
-                includeDrafts: args.includeDrafts ?? true,
-                limit: args.limit ?? 100,
-            });
-            return ok(JSON.parse(raw));
-        } catch (err) {
-            return ok({ok: false, error: String((err as Error).message || err)});
-        }
-    },
-};
+}, async (args) => {
+    try {
+        const raw = await getMongoConnection().getPosts({
+            includeDrafts: args.includeDrafts ?? true,
+            limit: args.limit ?? 100,
+        });
+        return JSON.parse(raw);
+    } catch (err) {
+        return {ok: false, error: String((err as Error).message || err)};
+    }
+});
 
-export const postGet: McpTool = {
+export const postGet: McpTool = defineTool({
+    // SAFE: not a GraphQL mutation
     name: 'post.get',
     description: 'Returns a single blog post by slug, including its full body HTML.',
     scopes: ['read:content'],
@@ -40,20 +41,21 @@ export const postGet: McpTool = {
             includeDrafts: {type: 'boolean', default: true},
         },
     },
-    handler: async (args) => {
-        try {
-            const raw = await getMongoConnection().getPost({slug: args.slug, includeDrafts: args.includeDrafts ?? true});
-            return ok(raw ? JSON.parse(raw) : {found: false, slug: args.slug});
-        } catch (err) {
-            return ok({ok: false, error: String((err as Error).message || err)});
-        }
-    },
-};
+}, async (args) => {
+    try {
+        const raw = await getMongoConnection().getPost({slug: args.slug, includeDrafts: args.includeDrafts ?? true});
+        return raw ? JSON.parse(raw) : {found: false, slug: args.slug};
+    } catch (err) {
+        return {ok: false, error: String((err as Error).message || err)};
+    }
+});
 
-export const postUpsert: McpTool = {
+export const postUpsert: McpTool = defineTool({
     name: 'post.upsert',
     description: 'Create or update a blog post. Omit `id` to create. `body` is HTML — use semantic tags (<h2>, <p>, <ul>, <strong>). `draft: false` publishes immediately.',
     scopes: ['write:content'],
+    idempotent: true,
+    gqlMutation: 'savePost',
     inputSchema: {
         type: 'object',
         required: ['slug', 'title', 'body'],
@@ -67,50 +69,52 @@ export const postUpsert: McpTool = {
             coverImage:  {type: 'string',  description: 'Image path e.g. "api/photo.jpg"'},
             draft:       {type: 'boolean', default: false},
             expectedVersion: {type: 'integer', description: 'Optimistic-concurrency guard — include if updating'},
+            idempotencyKey: {type: 'string'},
         },
     },
-    handler: async (args, ctx) => {
-        try {
-            const raw = await getMongoConnection().savePost({
-                post: {
-                    id:         args.id,
-                    slug:       args.slug,
-                    title:      args.title,
-                    excerpt:    args.excerpt,
-                    body:       args.body,
-                    tags:       args.tags,
-                    coverImage: args.coverImage,
-                    draft:      args.draft ?? false,
-                },
-                expectedVersion: args.expectedVersion ?? null,
-                _session: sessionFor(ctx.actor),
-            });
-            return ok(JSON.parse(raw));
-        } catch (err) {
-            return ok({ok: false, error: String((err as Error).message || err)});
-        }
-    },
-};
+}, async (args, ctx) => {
+    try {
+        const raw = await getMongoConnection().savePost({
+            post: {
+                id:         args.id,
+                slug:       args.slug,
+                title:      args.title,
+                excerpt:    args.excerpt,
+                body:       args.body,
+                tags:       args.tags,
+                coverImage: args.coverImage,
+                draft:      args.draft ?? false,
+            },
+            expectedVersion: args.expectedVersion ?? null,
+            _session: sessionFor(ctx.actor),
+        });
+        return JSON.parse(raw);
+    } catch (err) {
+        return {ok: false, error: String((err as Error).message || err)};
+    }
+});
 
-export const postDelete: McpTool = {
+export const postDelete: McpTool = defineTool({
     name: 'post.delete',
     description: 'Permanently deletes a blog post by id. Irreversible — back up first.',
     scopes: ['write:content'],
+    idempotent: true,
+    gqlMutation: 'deletePost',
     inputSchema: {
         type: 'object',
         required: ['id'],
         properties: {
             id: {type: 'string', minLength: 1},
+            idempotencyKey: {type: 'string'},
         },
     },
-    handler: async (args, ctx) => {
-        try {
-            const raw = await getMongoConnection().deletePost({id: args.id, _session: sessionFor(ctx.actor)});
-            return ok(JSON.parse(raw));
-        } catch (err) {
-            return ok({ok: false, error: String((err as Error).message || err)});
-        }
-    },
-};
+}, async (args, ctx) => {
+    try {
+        const raw = await getMongoConnection().deletePost({id: args.id, _session: sessionFor(ctx.actor)});
+        return JSON.parse(raw);
+    } catch (err) {
+        return {ok: false, error: String((err as Error).message || err)};
+    }
+});
 
 export const POST_TOOLS: McpTool[] = [postList, postGet, postUpsert, postDelete];

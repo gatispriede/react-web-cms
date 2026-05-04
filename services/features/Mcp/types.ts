@@ -80,6 +80,14 @@ export interface McpTool {
     auditScope?: string;
     /** Per-token sliding-window rate limit applied by `withRateLimit`. */
     rateLimit?: McpToolRateLimit;
+    /**
+     * F8 phase-2 — explicit GraphQL mutation hint for the drift CI.
+     * When set, `tools/scripts/mcp-schema-drift.mjs` matches this tool
+     * against the named mutation (instead of name-prefix heuristics).
+     * Leave unset for tools that don't route through a single GraphQL
+     * mutation (read-only direct queries, audit log reads, etc.).
+     */
+    gqlMutation?: string;
 }
 
 export class McpError extends Error {

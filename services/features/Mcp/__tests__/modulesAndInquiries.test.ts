@@ -60,7 +60,11 @@ const makeCtx = (overrides: Partial<any> = {}) => ({
     ...overrides,
 });
 
-const parse = (out: any) => JSON.parse(out.content[0].text);
+const parse = (out: any) => {
+    const env = JSON.parse(out.content[0].text);
+    // F8 phase-2: compose() wraps successful results in {ok: true, data: ...}
+    return env && typeof env === 'object' && 'ok' in env && env.ok === true ? env.data : env;
+};
 
 describe('module.add', () => {
     it('appends a module to a section.content array and persists via addUpdateSectionItem', async () => {

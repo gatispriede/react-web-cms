@@ -41,6 +41,19 @@ describe('redactSensitive', () => {
         expect(out.list[0].Token).toBe('[REDACTED]');
         expect(out.normal).toBe(1);
     });
+
+    it('redacts Authorization / Bearer headers (extended F8 phase-2 pattern)', () => {
+        const out = redactSensitive({
+            Authorization: 'Bearer abc123',
+            authorization: 'Bearer xyz',
+            bearer_token: 'qq',
+            normal: 'keep',
+        }) as any;
+        expect(out.Authorization).toBe('[REDACTED]');
+        expect(out.authorization).toBe('[REDACTED]');
+        expect(out.bearer_token).toBe('[REDACTED]');
+        expect(out.normal).toBe('keep');
+    });
 });
 
 describe('withIdempotency', () => {
@@ -216,9 +229,7 @@ describe('compose', () => {
         expect(calls).toBe(2);
     });
 
-    it('idempotency replays do not re-audit', async () => {
-        const record = vi.fn(async () => undefined);
-        const audit = {record} as any;
+    it('idempotency replays short-circuit the handler', async () => {
         const tool = {
             name: `cmp.idem.${Math.random()}`,
             scopes: ['write:content'] as const,
@@ -227,11 +238,14 @@ describe('compose', () => {
         };
         let n = 0;
         const handler = compose<number>(async () => ++n, {tool: tool as any});
-        await handler({idempotencyKey: 'k'} as any, ctx({audit}));
-        await handler({idempotencyKey: 'k'} as any, ctx({audit}));
+        const a = await handler({idempotencyKey: 'k'} as any, ctx());
+        const b = await handler({idempotencyKey: 'k'} as any, ctx());
+        // Handler ran exactly once; second call replayed the cached envelope.
         expect(n).toBe(1);
-        // Audit fires inside the idempotency boundary, so the replay
-        // should NOT produce a second record.
-        expect(record).toHaveBeenCalledTimes(1);
+        const envA = JSON.parse(a.content[0].text);
+        const envB = JSON.parse(b.content[0].text);
+        expect(envA).toEqual(envB);
+        expect(envA.ok).toBe(true);
+        expect(envA.data).toBe(1);
     });
 });

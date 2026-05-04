@@ -101,7 +101,9 @@ describe('McpServer dispatch', () => {
             token: tokenWith(['write:products'], 'cli'),
         });
         expect(out.ok).toBe(true);
-        const body = JSON.parse(out.result!.content[0].text);
+        const env = JSON.parse(out.result!.content[0].text);
+        expect(env.ok).toBe(true);
+        const body = env.data;
         expect(body.saveProduct?.id).toBeTruthy();
         expect(body.saveProduct?.slug).toBe('widget');
         // Audit row present, tagged actor 'mcp:cli'.
@@ -176,7 +178,9 @@ describe('McpServer dispatch', () => {
             token: tokenWith(['read:inventory']),
         });
         expect(out.ok).toBe(true);
-        const body = JSON.parse(out.result!.content[0].text);
+        const env = JSON.parse(out.result!.content[0].text);
+        expect(env.ok).toBe(true);
+        const body = env.data;
         expect(body.adapterId).toBe('mock');
     });
 
@@ -189,7 +193,9 @@ describe('McpServer dispatch', () => {
             token: tokenWith(['read:audit']),
         });
         expect(out.ok).toBe(true);
-        const body = JSON.parse(out.result!.content[0].text);
+        const env = JSON.parse(out.result!.content[0].text);
+        expect(env.ok).toBe(true);
+        const body = env.data;
         expect(body.total).toBeGreaterThanOrEqual(1);
         expect(body.rows[0].collection).toBe('Probe');
     });

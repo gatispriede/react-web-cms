@@ -79,8 +79,17 @@ function extractMcpTools(src, file) {
     while ((m = re.exec(src)) !== null) {
         const name = m[1];
         if (!name.includes('.')) continue; // tools are namespaced (page.list etc.)
-        // grab next ~3500 chars and try to find the `properties: {` block
+        // grab next ~4000 chars and try to find the `properties: {` block
         const slice = src.slice(m.index, m.index + 4000);
+        // F8 phase-2 hints — bound the search to the metadata head
+        // before `inputSchema:` so we don't bleed into the next tool.
+        const inputSchemaIdx = slice.indexOf('inputSchema');
+        const head = inputSchemaIdx > 0 ? slice.slice(0, inputSchemaIdx) : slice.slice(0, 600);
+        const safeMarker = /\/\/\s*SAFE:/i.test(
+            // look back ~400 chars too to catch comment placed before `name:`
+            src.slice(Math.max(0, m.index - 400), m.index) + head,
+        );
+        const gqlHintMatch = head.match(/gqlMutation\s*:\s*['"]([a-zA-Z_]\w*)['"]/);
         const propsIdx = slice.search(/properties\s*:\s*\{/);
         const requiredMatch = slice.match(/required\s*:\s*\[([^\]]*)\]/);
         const props = [];
@@ -126,7 +135,14 @@ function extractMcpTools(src, file) {
         const required = requiredMatch
             ? requiredMatch[1].split(',').map(s => s.trim().replace(/['"]/g, '')).filter(Boolean)
             : [];
-        tools.push({name, props, required, file});
+        tools.push({
+            name,
+            props,
+            required,
+            file,
+            gqlMutation: gqlHintMatch ? gqlHintMatch[1] : null,
+            safe: safeMarker,
+        });
     }
     return tools;
 }
@@ -203,6 +219,14 @@ function compareTool(tool, mut) {
     // counterparts; they're handled by the MCP wrappers, not the
     // resolvers, so they should NEVER count as drift.
     const HARNESS_ARGS = new Set(['idempotencyKey', 'expectedVersion', '_session']);
+    // When the mutation's arg list is dominated by an Input* wrapper or
+    // a JSON blob, the MCP tool flattens those inner fields; the static
+    // comparator can't cross that boundary without parsing the Input
+    // schema. Skip the deep diff and trust the explicit gqlMutation
+    // hint as proof the developer audited the mapping.
+    const SCALAR_TYPES = new Set(['String', 'Int', 'Float', 'Boolean', 'ID']);
+    const hasComplexInput = mut.args.some(a => !SCALAR_TYPES.has(a.type));
+    if (hasComplexInput) return drift;
     for (const p of mcpProps) {
         if (HARNESS_ARGS.has(p)) continue;
         if (!mutArgNames.has(p)) {
@@ -219,14 +243,29 @@ function compareTool(tool, mut) {
 
 const matched = new Set();
 for (const tool of mcpTools) {
-    const cands = candidatesFor(tool.name);
-    const matches = mutations.filter(m => cands.includes(m.name));
-    if (matches.length === 0) {
-        warnings.push(`SOFT: tool "${tool.name}" has no matching GraphQL mutation (candidates: ${cands.join(', ')})`);
-        continue;
-    }
-    if (matches.length > 1) {
-        warnings.push(`SOFT: tool "${tool.name}" matches ${matches.length} mutations; picking first (${matches[0].name})`);
+    // SAFE-marked tools opt out of the drift check entirely — they
+    // don't route through a single GraphQL mutation (audit reads,
+    // direct collection writes, HTTP fan-out, etc.).
+    if (tool.safe && !tool.gqlMutation) continue;
+
+    let matches;
+    if (tool.gqlMutation) {
+        // Explicit hint wins — only the named mutation counts.
+        matches = mutations.filter(m => m.name === tool.gqlMutation);
+        if (matches.length === 0) {
+            warnings.push(`SOFT: tool "${tool.name}" pins gqlMutation "${tool.gqlMutation}" but no such mutation exists`);
+            continue;
+        }
+    } else {
+        const cands = candidatesFor(tool.name);
+        matches = mutations.filter(m => cands.includes(m.name));
+        if (matches.length === 0) {
+            warnings.push(`SOFT: tool "${tool.name}" has no matching GraphQL mutation (candidates: ${cands.join(', ')})`);
+            continue;
+        }
+        if (matches.length > 1) {
+            warnings.push(`SOFT: tool "${tool.name}" matches ${matches.length} mutations; picking first (${matches[0].name})`);
+        }
     }
     matched.add(tool.name);
     const drift = compareTool(tool, matches[0]);

@@ -1,9 +1,9 @@
 import {McpTool} from '../types';
 import {getMongoConnection} from '@services/infra/mongoDBConnection';
+import {defineTool} from './_shared';
 
-const ok = (data: unknown) => ({content: [{type: 'text' as const, text: JSON.stringify(data)}]});
-
-export const auditList: McpTool = {
+export const auditList: McpTool = defineTool({
+    // SAFE: not a GraphQL mutation
     name: 'audit.list',
     description: 'Reads the audit log with optional filters (actorEmail, collection, docId, op, since, until).',
     scopes: ['read:audit'],
@@ -20,23 +20,22 @@ export const auditList: McpTool = {
             offset: {type: 'integer', minimum: 0},
         },
     },
-    handler: async (args, ctx) => {
-        const since = args.since ? new Date(args.since) : undefined;
-        const until = args.until ? new Date(args.until) : undefined;
-        if (!ctx.audit) return ok({rows: [], total: 0});
-        const {rows, total} = await ctx.audit.list({
-            actorEmail: args.actorEmail,
-            collection: args.collection,
-            docId: args.docId,
-            op: args.op,
-            since,
-            until,
-            limit: args.limit,
-            offset: args.offset,
-        });
-        return ok({rows, total});
-    },
-};
+}, async (args, ctx) => {
+    const since = args.since ? new Date(args.since) : undefined;
+    const until = args.until ? new Date(args.until) : undefined;
+    if (!ctx.audit) return {rows: [], total: 0};
+    const {rows, total} = await ctx.audit.list({
+        actorEmail: args.actorEmail,
+        collection: args.collection,
+        docId: args.docId,
+        op: args.op,
+        since,
+        until,
+        limit: args.limit,
+        offset: args.offset,
+    });
+    return {rows, total};
+});
 
 /**
  * audit.errors — query the recent ErrorLog collection. Mirrors the
@@ -44,7 +43,8 @@ export const auditList: McpTool = {
  * recent failures without opening a browser. TTL on the collection
  * (30 days) bounds the search space.
  */
-export const auditErrors: McpTool = {
+export const auditErrors: McpTool = defineTool({
+    // SAFE: not a GraphQL mutation
     name: 'audit.errors',
     description: 'Query the structured error log. Filter by source (client/admin/server/mcp), level (error/warn), scope, or since-date. Defaults to the latest 50 entries.',
     scopes: ['read:audit'],
@@ -58,18 +58,17 @@ export const auditErrors: McpTool = {
             limit: {type: 'integer', minimum: 1, maximum: 500},
         },
     },
-    handler: async (args, _ctx) => {
-        const mongo = getMongoConnection();
-        if (!mongo?.errorLogService) return ok({rows: [], total: 0});
-        const rows = await mongo.errorLogService.list({
-            source: args.source,
-            level: args.level,
-            scope: args.scope,
-            sinceISO: args.since,
-            limit: args.limit ?? 50,
-        });
-        return ok({rows, total: rows.length});
-    },
-};
+}, async (args, _ctx) => {
+    const mongo = getMongoConnection();
+    if (!mongo?.errorLogService) return {rows: [], total: 0};
+    const rows = await mongo.errorLogService.list({
+        source: args.source,
+        level: args.level,
+        scope: args.scope,
+        sinceISO: args.since,
+        limit: args.limit ?? 50,
+    });
+    return {rows, total: rows.length};
+});
 
 export const AUDIT_TOOLS: McpTool[] = [auditList, auditErrors];
