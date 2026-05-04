@@ -127,13 +127,30 @@ jobs:
             host_secret: DEPLOY_HOST_1
             env_secret: DEPLOY_ENV_FILE_1
             smoke_url: https://funisimo.pro/
+            seamless: false
           - name: skyclimber.pro
             host_secret: DEPLOY_HOST_2
             env_secret: DEPLOY_ENV_FILE_2
             smoke_url: https://skyclimber.pro/
+            # Per-target seamless (blue/green) opt-in. Skyclimber runs
+            # the P4 path (`tools/blue-green-deploy.sh`) so the `app`
+            # container flip is atomic via Caddy's ACTIVE_UPSTREAM swap.
+            # Funisimo stays on the legacy single-instance path until
+            # the operator chooses to flip it. Per-target flag (rather
+            # than a repo-wide `vars.SEAMLESS_DEPLOY`) avoids the
+            # secret-edit constraint — the matrix entry is in version
+            # control, no GitHub Settings round-trip.
+            #
+            # PRECONDITION: the droplet must have `app-blue` +
+            # `app-green` containers from the `seamless` compose
+            # profile. Bootstrap once: `docker compose --profile
+            # seamless -p cms -f infra/compose.yaml --env-file .env
+            # up -d`. See docs/runbooks/seamless-deployment.md.
+            seamless: true
     env:
       DEPLOY_ENV_FILE: ${{ secrets[matrix.target.env_secret] }}
       SMOKE_URL: ${{ matrix.target.smoke_url }}
+      SEAMLESS: ${{ matrix.target.seamless }}
 
     steps:
       - name: Deploy via SSH
@@ -142,7 +159,7 @@ jobs:
           host: ${{ secrets[matrix.target.host_secret] }}
           username: root
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          envs: DEPLOY_ENV_FILE,SMOKE_URL
+          envs: DEPLOY_ENV_FILE,SMOKE_URL,SEAMLESS
           script_stop: true
           # Default appleboy/ssh-action command_timeout is 10m, which fires
           # before the inner app-healthy loop on cold deploys (image pull +
@@ -315,15 +332,60 @@ jobs:
               sleep 5
             done
 
-            echo "==> Rebuilding and restarting app (zero-downtime)"
-            # `--no-deps app` leaves mongodb / server / caddy running
-            # untouched, so TLS doesn't blip and the DB connection pool
-            # survives. Caddy keeps serving the previous container's
-            # port 80 until the new `app` is healthy, then Docker
-            # swaps them. BuildKit picks up layer cache from the prior
-            # build automatically on the same host.
-            docker compose -p cms -f infra/compose.yaml --env-file .env up --no-deps --build -d app
+            if [ "${SEAMLESS:-}" = "true" ] || [ "${SEAMLESS:-}" = "1" ]; then
+              echo "==> Seamless (blue/green) app deploy"
+              # P4 path: the script identifies which of `app-blue` /
+              # `app-green` is idle, builds + starts the new image
+              # there, health-checks it, verifies its `.git-sha`
+              # matches TARGET_SHA, then atomically flips Caddy's
+              # `ACTIVE_UPSTREAM` and reloads. Active instance keeps
+              # serving live traffic the whole time — no 502 window.
+              # PRECONDITION: app-blue + app-green containers must
+              # already exist on the droplet (one-time
+              # `docker compose --profile seamless ... up -d`).
+              # See docs/runbooks/seamless-deployment.md.
+              if ! docker inspect app-blue >/dev/null 2>&1 || ! docker inspect app-green >/dev/null 2>&1; then
+                echo "!! seamless requested but app-blue / app-green not bootstrapped on droplet" >&2
+                echo "   bootstrap once: docker compose --profile seamless -p cms -f infra/compose.yaml --env-file .env up -d" >&2
+                echo "   then re-run this deploy. Aborting." >&2
+                exit 1
+              fi
+              TARGET_SHA="$CUR_SHA" \
+                DEPLOY_HEALTH_TIMEOUT="${DEPLOY_HEALTH_TIMEOUT:-60}" \
+                DRAIN_SECONDS="${DRAIN_SECONDS:-30}" \
+                bash tools/blue-green-deploy.sh
+              # blue-green script exits 0 on a successful flip; its own
+              # health check covers the inactive→active transition. We
+              # still run the public smoke check below to verify Caddy
+              # is honouring the new upstream from the outside.
+              echo "==> Seamless flip complete; falling through to public smoke check"
+              # Skip the legacy compose-up path that follows.
+              SKIP_LEGACY_APP_UP=1
+            else
+              SKIP_LEGACY_APP_UP=
+            fi
 
+            if [ -z "${SKIP_LEGACY_APP_UP:-}" ]; then
+              echo "==> Rebuilding and restarting app (legacy stop-the-world; brief 502 window)"
+              # `--no-deps app` leaves mongodb / server / caddy running
+              # untouched, so TLS doesn't blip and the DB connection pool
+              # survives. Caddy keeps serving the previous container's
+              # port 80 until the new `app` is healthy, then Docker
+              # swaps them. BuildKit picks up layer cache from the prior
+              # build automatically on the same host.
+              docker compose -p cms -f infra/compose.yaml --env-file .env up --no-deps --build -d app
+            fi
+
+            # Skip the `front` health loop when seamless ran — the
+            # blue-green script already health-checked its inactive
+            # instance + verified the SHA before flipping Caddy, and
+            # `front` doesn't exist in the seamless compose profile
+            # anyway (replaced by app-blue + app-green). The public
+            # smoke check below covers the post-flip Caddy path.
+            if [ -n "${SKIP_LEGACY_APP_UP:-}" ]; then
+              echo '==> Skipping legacy front-container health loop (seamless path; already health-checked pre-flip)'
+              i=0
+            else
             echo "==> Waiting for app to report healthy"
             # Poll the compose healthcheck (defined in compose.yaml) for
             # up to 10 minutes before giving up. Cold builds (no
@@ -346,6 +408,7 @@ jobs:
               fi
               sleep 5
             done
+            fi
 
             echo "==> Smoke check: public domain returns 200"
             # Hit the public origin via Caddy, not localhost:80 — catches
