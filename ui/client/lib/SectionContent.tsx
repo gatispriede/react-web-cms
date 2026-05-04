@@ -160,6 +160,25 @@ class SectionContent extends React.Component<IPropsSectionContent> {
         await this.saveSlots(newSlots, newContent);
     }
 
+    /**
+     * Move slot `index` one step in `direction` ('up' = earlier in
+     * `content`, 'down' = later). Adjacent items swap positions AND
+     * their slot widths so a 2-column module stays 2 columns after the
+     * shuffle. Persists via `saveSlots` so the optimistic update +
+     * undo stack behave the same as merge / split.
+     */
+    moveItem = async (index: number, direction: 'up' | 'down'): Promise<void> => {
+        const section = this.state.section;
+        const slots = resolveSlots(section);
+        const target = direction === 'up' ? index - 1 : index + 1;
+        if (index < 0 || target < 0 || target >= slots.length) return;
+        const newSlots = [...slots];
+        [newSlots[index], newSlots[target]] = [newSlots[target], newSlots[index]];
+        const newContent = [...section.content];
+        [newContent[index], newContent[target]] = [newContent[target], newContent[index]];
+        await this.saveSlots(newSlots, newContent);
+    }
+
     /** Undo a merge — split the slot back into single-unit columns, padding
      *  the freed slots with Empty items. */
     splitSlot = async (index: number): Promise<void> => {
@@ -244,6 +263,11 @@ class SectionContent extends React.Component<IPropsSectionContent> {
                                     key={id}
                                     del={item.type !== EItemType.Empty}
                                     edit={item.type !== EItemType.Empty}
+                                    label={item.type !== EItemType.Empty ? String(item.type) : undefined}
+                                    moveUp={item.type !== EItemType.Empty ? () => this.moveItem(id, 'up') : undefined}
+                                    moveDown={item.type !== EItemType.Empty ? () => this.moveItem(id, 'down') : undefined}
+                                    canMoveUp={id > 0}
+                                    canMoveDown={id < slots.length - 1}
                                     editContent={
                                         item.type !== EItemType.Empty ? <AddNewSectionItem
                                                 t={this.props.t}

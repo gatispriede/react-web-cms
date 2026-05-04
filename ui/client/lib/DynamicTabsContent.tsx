@@ -381,6 +381,11 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
                     <EditWrapper
                         t={this.props.t}
                         admin={this.admin}
+                        label={this.props.t('Section {{n}}', {n: index + 1}) as string}
+                        moveUp={() => this.getChangedPos(index, index - 1)}
+                        moveDown={() => this.getChangedPos(index, index + 1)}
+                        canMoveUp={index > 0}
+                        canMoveDown={index < this.state.sections.length - 1}
                         deleteAction={async () => {
                             if (section.id) {
                                 await this.MongoApi.deleteSection(section.id);

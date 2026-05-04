@@ -31,56 +31,79 @@
 }
 .dynamic-content {
   position: relative;
+  // Unified inline action strip: `[label] [edit] [up] [down] [delete]`.
+  // Single DOM container, single positioning rule — section vs module
+  // sizes only differ in button height + label size below.
+  .edit-action-strip {
+    position: absolute;
+    top: 0;
+    display: none;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 100;
+    pointer-events: auto;
+    .edit-button-label {
+      font-size: 11px;
+      line-height: 1;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #fff;
+      font-weight: 500;
+      padding: 0 4px;
+      white-space: nowrap;
+    }
+    .ant-btn {
+      padding: 0;
+      margin: 0;
+    }
+  }
   .edit-wrapper{
     width: 100%;
     position: relative;
-    // Section-level edit / delete chips. Bumped from 40px → 48px so the
-    // affordance is unambiguous at a glance — the previous size was
-    // close enough to the button's own border that admins were missing
-    // the click target on first try.
-    .delete-container, .edit-container {
-      display: none;
-      position: absolute;
-      z-index: 100;
-      top: 0;
-      margin-left: calc(100% - 48px);
-      button{
-        height: 48px;
-        width: 48px;
-        border: 1px solid gray;
-        padding: 0;
-        margin: 0;
-        font-size: 18px;
+    // Section-level strip — top-right of the wrap, bigger buttons so
+    // the affordance matches a section-sized row.
+    .edit-action-strip {
+      right: 0;
+      left: auto;
+      border-bottom-left-radius: 6px;
+      .ant-btn {
+        height: 32px;
+        width: 32px;
+        min-width: 32px;
+        font-size: 14px;
       }
-      .edit-button{
-        margin-left: 25px;
-        width: 48px;
-        height: 24px;
+      .edit-button {
+        display: inline-flex;
+        align-items: center;
       }
     }
-    &:hover .delete-container, &:hover .edit-container{
+    &:hover > .edit-action-strip {
       display: flex;
     }
   }
   .section-item-container{
     flex: 1 1 auto;
-    // Per-item chips. 20px was a phone-keypad-sized target; bumped to
-    // 32px so editors can hit them on a touchpad without tab-fishing.
-    .delete-container, .edit-container {
-      top: 0;
-      display: none;
+    // Module-level strip — top-left, compact buttons (modules can be
+    // narrow columns; tighter geometry keeps the strip from spilling
+    // past the row's content edge).
+    .edit-action-strip {
       left: 0;
-      margin-left: 0;
-      button{
-        height: 32px;
-        width: 32px;
-        border: 1px solid gray;
-        padding: 0;
-        margin: 0;
-        font-size: 14px;
+      right: auto;
+      border-bottom-right-radius: 6px;
+      .ant-btn {
+        height: 24px;
+        width: 24px;
+        min-width: 24px;
+        font-size: 12px;
+      }
+      .edit-button {
+        display: inline-flex;
+        align-items: center;
       }
     }
-    &:hover .delete-container, &:hover .edit-container{
+    &:hover > .edit-wrapper > .edit-action-strip {
       display: flex;
     }
   }
