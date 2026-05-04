@@ -116,9 +116,9 @@ jobs:
     needs: test-and-typecheck
     # Only deploy on direct pushes to master, not on PRs
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    # Holds the appleboy/ssh-action command_timeout (30m) plus the
+    # Holds the appleboy/ssh-action command_timeout (35m) plus the
     # workflow setup/teardown around it.
-    timeout-minutes: 40
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
@@ -166,7 +166,7 @@ jobs:
           # `next build` regularly take 6-8m alone). Bumped to 30m so the
           # SSH session outlasts the inner timeouts; the GHA job timeout
           # (timeout-minutes: 30 above) is the real upper bound.
-          command_timeout: 30m
+          command_timeout: 35m
           script: |
             set -euo pipefail
 
@@ -413,14 +413,14 @@ jobs:
                 # the legacy front-container poll.
                 for slot in app-blue app-green; do
                   echo "==> Waiting for $slot to report healthy"
-                  for i in $(seq 1 120); do
+                  for i in $(seq 1 216); do
                     status=$(docker inspect --format '{{.State.Health.Status}}' "$slot" 2>/dev/null || echo starting)
                     if [ "$status" = "healthy" ]; then
                       echo "    $slot healthy after ${i} checks"
                       break
                     fi
                     if [ "$i" = "120" ]; then
-                      echo "!! $slot failed to become healthy within 10 minutes" >&2
+                      echo "!! $slot failed to become healthy within 18 minutes" >&2
                       docker logs --tail=200 "$slot" >&2 || true
                       exit 1
                     fi
@@ -447,13 +447,13 @@ jobs:
                 # and front can be `docker rm -f`'d in a follow-up
                 # housekeeping task once the seamless path is stable.
               fi
-              # 600s ceiling matches the legacy front-container health
+              # 1080s (18 min) ceiling matches the legacy front-container health
               # loop. Cold `next build` inside the freshly-recreated
               # slot takes 5-8 min on the droplet's CPU budget; the
               # previous 60s default aborted flips that would have
               # eventually succeeded.
               TARGET_SHA="$CUR_SHA" \
-                DEPLOY_HEALTH_TIMEOUT="${DEPLOY_HEALTH_TIMEOUT:-600}" \
+                DEPLOY_HEALTH_TIMEOUT="${DEPLOY_HEALTH_TIMEOUT:-1080}" \
                 DRAIN_SECONDS="${DRAIN_SECONDS:-30}" \
                 bash tools/blue-green-deploy.sh
               # blue-green script exits 0 on a successful flip; its own
@@ -485,21 +485,21 @@ jobs:
             else
             echo "==> Waiting for app to report healthy"
             # Poll the compose healthcheck (defined in compose.yaml) for
-            # up to 10 minutes before giving up. Cold builds (no
+            # up to 18 minutes before giving up. Cold builds (no
             # BuildKit cache, fresh `next build` SSG pass) routinely run
             # 6-8 min on the droplet's small CPU budget; the previous
             # 3-min cap was tripping legitimate deploys. The
-            # appleboy/ssh-action `command_timeout: 30m` set above
+            # appleboy/ssh-action `command_timeout: 35m` set above
             # gives this loop room to run plus the server-rebuild loop
             # plus image pulls.
-            for i in $(seq 1 120); do
+            for i in $(seq 1 216); do
               status=$(docker inspect --format '{{.State.Health.Status}}' front 2>/dev/null || echo "starting")
               if [ "$status" = "healthy" ]; then
                 echo "    app healthy after ${i} checks"
                 break
               fi
               if [ "$i" = "120" ]; then
-                echo "!! app failed to become healthy within 10 minutes" >&2
+                echo "!! app failed to become healthy within 18 minutes" >&2
                 docker compose -p cms -f infra/compose.yaml --env-file .env logs --tail=200 app >&2 || true
                 exit 1
               fi
