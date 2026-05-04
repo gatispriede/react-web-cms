@@ -643,7 +643,14 @@ class App extends React.Component<IHomeProps> {
                             // configured), so dropping them is a no-op for users.
                             (() => {
                                 const menuPages: IMenuPage[] = this.state.pages.map((p: any) => ({
-                                    id: p.page,
+                                    // F7 — match `parent` refs by id (not display
+                                    // name) so sub-pages nest under the right root.
+                                    // Fall back to `page` for legacy rows without
+                                    // an id; those never have `parent` either, so
+                                    // they stay flat. Same shape as the mobile
+                                    // builder above and the menuPages projection
+                                    // earlier in this file.
+                                    id: p.id || p.page,
                                     page: p.page,
                                     parent: p.parent,
                                     slug: p.slug,
