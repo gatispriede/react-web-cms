@@ -27,7 +27,15 @@ jobs:
           cache: npm
 
       - name: Install deps
-        run: npm ci
+        # Match `ci.yml`'s install incantation. `npm ci` is strict and
+        # trips on the antd v5↔v6 peer-dep chain (`@ant-design/compatible`
+        # pins to antd v5; we're on v6). `--legacy-peer-deps` is how we
+        # install locally and how `test-and-typecheck` installs in CI.
+        # `--ignore-scripts` skips the bcrypt native-compile that doesn't
+        # work on the GHA image without extra packages — Playwright doesn't
+        # need bcrypt at install time, and the per-worker servers spawn
+        # bcrypt-light paths via E2E_RUN.
+        run: npm install --legacy-peer-deps --ignore-scripts --no-audit --no-fund
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
