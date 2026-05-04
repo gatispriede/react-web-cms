@@ -188,18 +188,36 @@ async function readTrashOverview(db: Db): Promise<TrashOverview[]> {
         const out: TrashOverview[] = [];
         for (const c of trashCols) {
             const col = db.collection(c.name);
-            const rowCount = await col.countDocuments({});
-            const oldestDoc = await col.find({}).sort({deletedAt: 1}).limit(1).toArray();
-            const oldestDeletedAt = oldestDoc[0]?.deletedAt instanceof Date
-                ? (oldestDoc[0].deletedAt as Date).toISOString()
-                : (typeof oldestDoc[0]?.deletedAt === 'string' ? oldestDoc[0].deletedAt : null);
-            const groups = await col.distinct('trashGroup');
-            out.push({
-                collection: c.name,
-                rowCount,
-                oldestDeletedAt,
-                distinctTrashGroups: Array.isArray(groups) ? groups.length : 0,
-            });
+            // `estimatedDocumentCount()` reads from collection metadata
+            // (instant) instead of `countDocuments({})` which does a full
+            // scan on collections without a covering index. Diagnostics
+            // does NOT need exact counts — an estimate is enough for the
+            // operator-facing dashboard, and the difference between
+            // metadata and live count is at most one TTL eviction.
+            const rowCount = await col.estimatedDocumentCount();
+            // `oldestDeletedAt` + `distinctTrashGroups` go full-scan on
+            // collections without `deletedAt` / `trashGroup` indexes,
+            // which is the case on production droplets that haven't
+            // run the (post-2026-05-04) trash-index migration yet.
+            // Wrap each call in its own try so one slow scan can't take
+            // the whole snapshot down — partial data beats no data.
+            let oldestDeletedAt: string | null = null;
+            try {
+                const oldestDoc = await col.find({}).sort({deletedAt: 1}).limit(1).toArray();
+                oldestDeletedAt = oldestDoc[0]?.deletedAt instanceof Date
+                    ? (oldestDoc[0].deletedAt as Date).toISOString()
+                    : (typeof oldestDoc[0]?.deletedAt === 'string' ? oldestDoc[0].deletedAt : null);
+            } catch (err) {
+                log.warn({scope: 'diagnostics.trash.oldest', collection: c.name, err}, 'oldest-deletedAt query failed');
+            }
+            let distinctTrashGroups = 0;
+            try {
+                const groups = await col.distinct('trashGroup');
+                distinctTrashGroups = Array.isArray(groups) ? groups.length : 0;
+            } catch (err) {
+                log.warn({scope: 'diagnostics.trash.distinct', collection: c.name, err}, 'distinct(trashGroup) failed');
+            }
+            out.push({collection: c.name, rowCount, oldestDeletedAt, distinctTrashGroups});
         }
         return out.sort((a, b) => a.collection.localeCompare(b.collection));
     } catch (err) {
@@ -237,12 +255,39 @@ async function readAuthorizationSnapshot(deps: DiagnosticsDeps): Promise<Authori
     return {grantsByScope, functionalRolesRegistered, grantTotal};
 }
 
+/**
+ * Race a section against a timeout — diagnostics is operator-facing
+ * status, NOT a hard dependency. A slow section returning a fallback
+ * keeps the page useful; the missing data shows up as an empty card.
+ *
+ * Caught a real prod incident on 2026-05-04 where `readTrashOverview`
+ * hung indefinitely on production trash collections that lacked the
+ * `deletedAt` + `trashGroup` indexes the dev fixtures have. Without a
+ * per-section race the whole snapshot — `build` identity included —
+ * never returned and the UI sat on "Loading…".
+ */
+async function withTimeout<T>(label: string, p: Promise<T>, fallback: T, ms = 5000): Promise<T> {
+    return Promise.race([
+        p,
+        new Promise<T>(resolve => setTimeout(() => {
+            log.warn({scope: `diagnostics.timeout.${label}`}, `${label} exceeded ${ms}ms — using fallback`);
+            resolve(fallback);
+        }, ms)),
+    ]);
+}
+
 export async function composeDiagnostics(deps: DiagnosticsDeps): Promise<DiagnosticsSnapshot> {
     const features = deps.featureRegistry.map(f => summarizeFeature(f, deps.resolveEnabled(f)));
+    const FALLBACK_STORAGE = {
+        mongo: {connected: false, replicaSet: false, transactionsSupported: false},
+        redis: {available: false, dbSize: null as number | null},
+        cacheVersions: {} as Record<string, number>,
+    };
+    const FALLBACK_AUTHZ = {grantsByScope: {} as Record<string, number>, functionalRolesRegistered: 0, grantTotal: 0};
     const [storage, trash, authorization] = await Promise.all([
-        readStorageHealth(deps),
-        readTrashOverview(deps.db),
-        readAuthorizationSnapshot(deps),
+        withTimeout('storage', readStorageHealth(deps), FALLBACK_STORAGE),
+        withTimeout('trash', readTrashOverview(deps.db), [] as TrashOverview[]),
+        withTimeout('authz', readAuthorizationSnapshot(deps), FALLBACK_AUTHZ),
     ]);
     return {
         build: readBuildIdentity(),

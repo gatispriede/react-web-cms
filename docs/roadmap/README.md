@@ -24,6 +24,19 @@ Shipped items live in [`shipped.md`](shipped.md) — kept for archaeology, not a
 
 Estimates assume one focused engineer already familiar with the codebase. Double for context-switching / review loops.
 
+## Current status (2026-05-04, late)
+
+- **Last master merge:** `2c7be30` (prod-mode smoke + Next 16 dev fixes + themed errors + admin click-parent + F7 sweep + Hero portrait dimension inputs).
+- **PROD HOTFIX inbound on develop:** `0390491` — `--webpack` flag on `next build` (`build`, `build-docker`, `start-docker`). Production deploys to funisimo.pro / skyclimber.pro failed health checks because Next 16 defaults `next build` to Turbopack, which rejects the existing `webpack:` block in `ui/client/next.config.js`. Pinning `--webpack` keeps the config honoured. **Awaiting PR develop → master → redeploy.**
+- **Develop ahead of master by 7 commits** (one prod-blocker + admin polish + CI-only):
+  - `0390491` prod hotfix `--webpack` ← merge first
+  - `3959851` admin mode switcher hard-reloads after flip
+  - `a12c7b6` unified `[label] [edit] [up] [down] [delete]` action strip
+  - `576b212` section-level reorder + module-cluster reposition (superseded by `a12c7b6` but harmless)
+  - `cc306a7` initial per-module up/down arrows + label
+  - `9373e02` drop master-push trigger from visual regression CI (no baselines yet)
+  - `43409e7` smoke spec uses native DOM click on bundle-import confirm (CI flake fix)
+
 ## Open queue
 
 ### Content editor
@@ -32,8 +45,11 @@ Estimates assume one focused engineer already familiar with the codebase. Double
 |---|------|------|-------|
 | C13b | link-target stable-anchor — Manifesto only | S | Timeline portion shipped 2026-05-03. Manifesto still needs a per-row anchor model (single body paragraph today, no row identity) |
 | C17 | [field-level sample audit](./samples-audit.md) | S | Broad per-EItemType coverage already exists; open when a client surfaces a specific gap |
-| F6 | [site-mode-toggle.md](site-mode-toggle.md) | M | Per-site flag: scroll (single-page sections) vs multipage (current default). Footer nav, header nav, and SSR routing branch on it |
+| F6 | [site-mode-toggle.md](site-mode-toggle.md) | M | Per-site flag: scroll (single-page sections) vs multipage (current default). Footer nav, header nav, and SSR routing branch on it. Phased plan: (1) unify scroll/multipage shell incl. mobile menu — fixes the visible styling drift; (2) `SiteFooter` mode prop with hash-anchor rewrite; (3) proper `siteMode` enum flag (`scroll \| multipage \| auto`) + admin Select; (4) `getStaticProps` mode branch in catch-all + `index.tsx` |
+| Mobile column behavior | per-module flag for stack-order or keep-ratio | S | Today every multi-column section collapses 50/50 → 100/100 on mobile in DOM order. Per-module flag (probably 3 values: `stack` default, `keep-ratio`, `reorder-N`) gives authors control over whether a row collapses + which side comes first. Filed 2026-05-04 by client feedback; no spec doc yet, just a note |
 | Bundle-import restart | bundle-import → `markRestartRequired()` hook | S | Currently a successful import doesn't surface the "restart to pick up new modules" hint. Wire through the existing flag |
+| Section drag-reorder bug | original report; up/down arrows are the workaround | M | Drag-reorder for both sections and per-module rows stopped working at some point. The new explicit up/down + label cluster (commits `a12c7b6` + `cc306a7`) is the immediate user-facing fix. Root cause investigation deferred — find why the existing `getChangedPos` + `DraggableWrapper` chain stopped firing |
+| Deploy auto-rollback on health-check fail | keep previous container alive until new one is healthy | S | The default (non-seamless) deploy path runs `docker compose up --no-deps --build -d app` which recreates the `front` container atomically — but if `next build` fails inside the new image (as it just did with the `--webpack` hotfix), the old container is gone and the site is down until the next deploy. Two paths: (a) tag the previous `app:current` image before rebuild, restore it if the new container's health check fails; or (b) promote `SEAMLESS_DEPLOY=1` to default since `tools/blue-green-deploy.sh` already keeps both slots alive. Filed 2026-05-04 after the `--webpack` prod outage |
 
 ### Bulk migrations
 
@@ -72,10 +88,13 @@ Estimates assume one focused engineer already familiar with the codebase. Double
 
 ## Suggested ordering
 
-1. **F6 site-mode toggle** — biggest open feature; scroll vs multipage flag with footer/header/routing branches
-2. **Q4-cap** — capture visual baselines so subsequent refactors have a safety net
-3. **Bundle-import restart hook** — XS wiring, removes a real operator paper-cut after each import
-4. **F8 deferred (streaming + plugin SDK + E2E un-skip)** — interleave; streaming is highest-value for the long-running tools
-5. **AUI-mode per-pane simplified variants** — Themes + Posts proved the dispatch; pick the next high-traffic pane
-6. **E-commerce real-flow specs** — unblocks the e-commerce wiring queue
-7. **Q5-del** — only after observation window; pure cleanup
+0. **PROD HOTFIX 0390491** — push develop → merge to master → redeploy. Blocking until prod is healthy again.
+1. **F6 site-mode toggle** — biggest open feature; scroll vs multipage flag with footer/header/routing branches. Phase 1 (shell unification, including mobile menu) also resolves the standing scroll-vs-menu styling drift the operator flagged on 2026-05-04
+2. **Section drag-reorder root cause** — the up/down arrows mitigate but the underlying drag flow needs an explanation; pair with reordering UX cleanup
+3. **Mobile column behavior** — per-module stack/keep-ratio/reorder flag
+4. **Q4-cap** — capture visual baselines so subsequent refactors have a safety net
+5. **Bundle-import restart hook** — XS wiring, removes a real operator paper-cut after each import
+6. **F8 deferred (streaming + plugin SDK + E2E un-skip)** — interleave; streaming is highest-value for the long-running tools
+7. **AUI-mode per-pane simplified variants** — Themes + Posts proved the dispatch; pick the next high-traffic pane
+8. **E-commerce real-flow specs** — unblocks the e-commerce wiring queue
+9. **Q5-del** — only after observation window; pure cleanup

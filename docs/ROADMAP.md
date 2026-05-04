@@ -4,6 +4,14 @@ Forward-looking only. Architecture: [PROJECT_ANALYSIS.md](PROJECT_ANALYSIS.md) +
 
 ---
 
+## Status (2026-05-04, late)
+
+- **Master HEAD:** `2c7be30` — F7 slug source-of-truth, F8 MCP coverage, email config, admin nav reorg, admin click-parent (option B), themed 404/500, e2e prod-mode smoke, Hero portrait dimension inputs, mode-aware click handling.
+- **🚨 Prod hotfix on develop, awaiting merge:** `0390491` pins `--webpack` on every `next build` invocation in `package.json`. Next 16 defaults `next build` to Turbopack and rejects the existing `webpack:` block in `ui/client/next.config.js` — production deploy on funisimo.pro / skyclimber.pro failed health checks. Once merged to master, `deploy.yml` redeploys both droplets.
+- **Develop is 8 commits ahead of master** (1 prod-blocker + 4 admin polish + 2 CI hygiene + 1 roadmap update). See [roadmap/README.md](roadmap/README.md#current-status-2026-05-04-late) for the per-commit list.
+
+---
+
 ## Architecture skeleton — what every new feature plugs into
 
 A feature added today wires through these primitives — no architectural decisions left to make:
@@ -33,18 +41,41 @@ Import bundle into local build → open public client → walk every page side-b
 
 ### Forward work
 
-- [F6 — site-mode toggle: scroll vs multipage](roadmap/site-mode-toggle.md) — `siteFlags.siteMode` switch so sites can render as single-page-scroll (legacy/portfolio sites) or multipage-routed (F1, multi-section operations). Skyclimber.pro is scroll-era authored; bundle import + multipage forced incorrect rendering. **M** (1-2 days). 3 open questions in spec.
-- [F7 — slug single source of truth](roadmap/slug-source-of-truth.md) — one canonical `normalizeSlug` helper consumed by every site (server + SSR + client active-tab matcher + admin picker + footer + sitemap). Plus pass `pageId` from `[...slug].tsx` → `app.tsx` so the client never re-derives which page is active. Skyclimber's empty-page bug ("Jaunumi un aktualitātes ") was caused by three separate slug normalisers doing slightly different things. **S** (2-4 hr). User feedback: "either way we always should see on client side what we see on admin side, it's unacceptable to not match."
-- **F8 — MCP coverage to real-world-ready** — shipped 2026-05-04. Registry grew **38 → 87 tools** across 14 surfaces. W1 hardening primitives (`compose(...)` with rate-limit → idempotency → error-envelope, drift CI 0/0). W2 P0+P1 (page lifecycle, users, permissions, languages, site content, trash). W3 P2 (themes/images/orders/diagnostics/discovery) + 10-step agent runbook ([runbooks/mcp-onboarding-walkthrough.md](runbooks/mcp-onboarding-walkthrough.md)) + end-to-end CI spec. 24 destructive tools idempotent + mode-gated. Drift CI exits 0 hard / 0 soft. **Pending follow-ups:** streaming transport for bundle/image ops, plugin SDK for third-party tools, E2E un-skip post Windows-fanout fix. See [roadmap/mcp-real-world-ready.md](roadmap/mcp-real-world-ready.md).
+- [F6 — site-mode toggle: scroll vs multipage](roadmap/site-mode-toggle.md) — `siteFlags.siteMode` switch so sites can render as single-page-scroll (legacy/portfolio sites) or multipage-routed (F1, multi-section operations). Skyclimber.pro is scroll-era authored; bundle import + multipage forced incorrect rendering. **M** (1-2 days). Phased plan now in [roadmap/README.md](roadmap/README.md): (1) unify scroll/multipage shell incl. mobile menu — also fixes the visible styling drift the operator flagged 2026-05-04; (2) `SiteFooter` mode prop with hash-anchor rewrite; (3) proper enum `siteMode` flag + admin Select; (4) routing branch in `getStaticProps`. Phase 1 is the highest-impact slice.
+- **Mobile column behavior** — per-module flag governing what happens to multi-column sections on narrow viewports. Three values envisaged: `stack` (current default — every section collapses to 100% rows in DOM order), `keep-ratio` (rare — keep 50/50 horizontally, content has to fit), `reorder-N` (stack but flip which side comes first). Filed by client feedback 2026-05-04; no spec doc yet, design + spec when picked up. **S**.
+- **Section + module drag-reorder root cause** — drag-reorder for both section and per-module rows stopped firing at some point. The 2026-05-04 commits `cc306a7` + `a12c7b6` ship explicit up/down + label arrow buttons as the immediate fix; the underlying drag flow (`getChangedPos` + `DraggableWrapper`) needs an actual diagnosis. **M**.
+- **Deploy auto-rollback on health-check fail** — the default (non-seamless) deploy path runs `docker compose up --no-deps --build -d app` which atomically recreates the `front` container. If the new image fails to boot (as it did with the `--webpack` hotfix on 2026-05-04), the old container is gone and the public site is down until the next deploy lands. Either tag `app:current` before rebuild and restore on health-check failure, or promote `SEAMLESS_DEPLOY=1` (P4 blue/green) to default — that path already keeps both slots alive and only flips Caddy on success. **S**.
 - **Bundle-import → markRestartRequired() hook** — when imported bundle's language symbol set differs from current `next-i18next.config.js` locales, set the existing restart banner. Avoids the locale-stale errors seen on skyclimber import. **S** (1-2 hr).
 - **Visual baseline capture** — `--workers=1` run failed with 1ms instant errors per spec; needs spec-load diagnosis (separate from `--workers` setup).
+- **F8 — MCP coverage** — shipped 2026-05-04. **Pending follow-ups:** streaming transport for bundle/image ops, plugin SDK for third-party tools, E2E un-skip post Windows-fanout fix. See [roadmap/mcp-real-world-ready.md](roadmap/mcp-real-world-ready.md).
 - **2 lingering `test.skip`s** — Trash restore-flow (Popconfirm OK button needs a stable testid) + idempotency reusable-button (no non-destructive guarded button candidate exists). Low priority.
 
 ---
 
 ## What landed recently
 
-See [`roadmap/shipped.md`](roadmap/shipped.md) for the full archive. Headline this week (2026-04-30 → 2026-05-03):
+See [`roadmap/shipped.md`](roadmap/shipped.md) for the full archive.
+
+### 2026-05-04 — F7 + UX polish + dev-loop hardening
+
+- **F7 slug source of truth** — canonical `normalizeSlugForMatch` in `shared/utils/slug.ts`, re-exported by server and client modules. `pageId` threaded `[...slug].tsx` → `app.tsx`; `findIdForActiveTab` rewritten to exact id-based lookup. Three `menuPages` projections in `app.tsx` rekeyed off `p.id` so sub-pages nest under the right root. 17 new tests; 790 total green. Commits `0d9de06` + `f510beb`.
+- **email config** — SMTP / Resend / Disabled providers behind a `mailConfig` site-flag, AES-GCM encryption via `SECRETBOX_KEY`. Admin pane at System → Email with provider switcher, test-send button, per-provider validation, specific missing-fields error surfacing. 4 commits including a sanitizer-encrypt fix (`5cf5cd8`) and missing-fields surfacing (`1fb8ebb`).
+- **Admin click-parent edit (option B)** — sider parent-row title click navigates/edits like any leaf; explicit chevron button toggles expand/collapse via controlled `openKeys[]`. Tree flattened manually so AntD SubMenu can't intercept clicks. Commit `bad78a9`.
+- **Themed error pages** — `404.tsx` + new `500.tsx` + new `_error.tsx` share a `<ErrorScreen/>` component that pulls `--background` / `--ink` / `--accent` / `--font-display` / `--theme-borderRadius` from the active theme; leads with `<Logo/>` so the brand mark mirrors the favicon. Commit `8711f37`.
+- **e2e prod-mode smoke** — workflow switched from `next dev` per worker to `next build` once + `next start` per worker, eliminating the dev-mode flake surface (Turbopack-vs-webpack churn, drawer-DOM detachment from rebuilds). Smoke spec rewrite — 5 active tests (bundle import, public render, Hero portrait dims, translation flip, publish), no `scrollIntoViewIfNeeded` calls anywhere, native DOM clicks where Playwright's auto-scroll stability wait flaked. Steps removed from smoke per design call: 4 (footer race), 7 (theme switch), 10 (blog post draft). `mongodb-memory-server` binary pre-warmed in CI to avoid parallel-download race. Commit `2c7be30`.
+- **Hero portrait dimension inputs** — width/height number inputs added to HeroEditor's Portrait tab, bind to `portraitImage.width` / `portraitImage.height` on the existing IImageRef shape (no schema change). Testids `module-editor-hero-portrait-{width,height}-input`. Same commit as smoke.
+- **Admin nav reorg** — System area-nav (users → email → inquiries → flags → rest); SEO becomes its own area; Errors → System; Bundle first in Release. Commits `1c4dece` + `10d0f03`.
+- **roadmap tidy** — moved F7/F8/email-config/admin-nav/click-parent/themed-errors/mcp-call helper into `roadmap/shipped.md`; dropped F1/EL-feat-rest/tests-remaining from the open queue (already shipped 2026-05-03). Commit `fab0eb6`.
+
+### 2026-05-04 (late) — develop-only, awaiting master merge
+
+- **🚨 Prod hotfix `0390491`** — `--webpack` flag on every `next build` invocation in `package.json`. Critical: production deploys are failing without this.
+- **Mode switcher hard-reload** — `AdminModeSwitcher` reloads the page after a successful flip so per-loader `modes` dispatch picks up the new variants. Commit `3959851`.
+- **Unified inline action strip** — `[label] [edit] [up] [down] [delete]` rendered as one container per row at both section and module levels; section strip top-right with 32px buttons, module strip top-left with 24px buttons. Replaces three separate floating clusters that used to overlap each other. Section-level reorder calls back to the existing `getChangedPos` path. Commits `cc306a7` + `576b212` + `a12c7b6`.
+- **Visual regression CI noise fix** — drop master-push trigger from the visual job until baselines are committed (Q4-cap). Commit `9373e02`.
+- **Smoke spec native click on bundle-import confirm** — same auto-scroll stability flake we hit on per-module edit; native DOM `.click()` via `evaluate`. Commit `43409e7`.
+
+### 2026-04-30 → 2026-05-03 — F1/F2/F4/F5 blitz
 
 - **Production:** caching (C9 — bootId + per-feature versions + Caddy SWR + DataLoader), Mongo auth (P5), DO domain wiring (P3), automatic deploy (P2), seamless blue/green (P4)
 - **Auth:** Q10 three-dimension grants + **30 admin mutations gated** across every editable surface (Posts / Products / Inventory / Orders / Footer / Themes / Languages / Bundle / Navigation / Seo / Permissions / Users), i18n grant migration on boot — EL-feat-rest closed
