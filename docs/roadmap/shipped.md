@@ -2,6 +2,18 @@
 
 Archive of completed roadmap entries. Latest first. Active backlog lives in [README.md](README.md).
 
+## 2026-05-04 — F7 slug source-of-truth + F8 MCP coverage + email-config + UX polish
+
+| # | Notes |
+|---|---|
+| **F7** | Slug single source of truth — canonical `normalizeSlugForMatch` in `shared/utils/slug.ts`, re-exported by `services/features/Navigation/NavigationService.ts` and `ui/client/lib/slugChain.ts`. `pageId` threaded `[...slug].tsx` → `app.tsx`; `findIdForActiveTab` rewritten to exact `tab.id === pageId` lookup (no string matching). Three `menuPages` projections in `app.tsx` rekeyed off `p.id` — fixes the bug where a sub-page rendered as a flat sibling instead of under its root. Two commits: `0d9de06` (canonical helper + initial sweep), `f510beb` (third desktop-MainMenu projection missed by sweep). 17 new tests; 790 total green. See [slug-source-of-truth.md](slug-source-of-truth.md). |
+| **F8** | MCP coverage to real-world-ready — 38 → 87 tools, drift CI 0/0. `compose(...)` wrappers for idempotency, audit, rate-limit, error envelope, validation. `defineTool({...meta}, handler)` registration pattern. Four commits: `1ac5d0d` (W1), `073a59e` (W1 phase 2 — sweep all 45 tools onto compose), `152e2c0` (W2 — P0+P1, registry 66/70), `e300c9a` (W3 — P2 + runbook + E2E spec, registry 87/70). Roadmap snapshot at `bf957e9`. See [mcp-real-world-ready.md](mcp-real-world-ready.md). Streaming transport + plugin SDK + E2E un-skip deferred to post-merge. |
+| **email-config** | SMTP / Resend / Disabled providers behind a `mailConfig` site-flag, AES-GCM encryption via `SECRETBOX_KEY`. Admin pane at System → Email with provider switcher, test-send button, per-provider validation, specific missing-fields error surfacing. Four commits: `1c9cd8a` (foundation — SecretBox + EmailService + SiteFlags shape), `ea09fcd` (admin UI + MCP tools + Resend), `1fb8ebb` (specific missing-fields error), `5cf5cd8` (sanitizeMailConfig encrypts plaintext on save — admin form sent `resendApiKey` plaintext, server was dropping it). |
+| **admin click-parent edits (option B)** | Admin sider parent-row title click now navigates/edits like any leaf; a chevron Button in the label toggles expand/collapse via a controlled `openKeys[]` state. Tree is flattened manually (no AntD `items[].children` so SubMenu can't intercept clicks). Default-expand all parents on first load; subsequent reloads preserve operator's choice. `bad78a9`. |
+| **themed error pages** | `404.tsx` (replaces "Not found" div), new `500.tsx`, new `_error.tsx` catch-all — all share `<ErrorScreen/>` (`ui/client/features/ErrorScreen/`). Pulls `--background` / `--ink` / `--accent` / `--font-display` / `--theme-borderRadius` from active theme; leads with `<Logo/>` so the brand mark mirrors the favicon role. `8711f37`. |
+| **admin nav reorg** | System area-nav reordered (users → email → inquiries → flags → rest below); SEO becomes its own area (Analytics moves there); Errors → System; Bundle first in Release. Two commits: `1c4dece` + `10d0f03`. |
+| **mcp-call helper** | `tools/scripts/mcp-call.mjs` — drives any MCP tool against the local dev DB through actual `McpServer.dispatch`. Used to apply skyclimber bundle patches via real `module.add` instead of editing JSON. `c78171e`. |
+
 ## 2026-05-03 — F1 sub-pages + F2 data integrity blitz
 
 | # | Notes |
