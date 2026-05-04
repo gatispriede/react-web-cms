@@ -332,7 +332,18 @@ jobs:
               sleep 5
             done
 
-            if [ "${SEAMLESS:-}" = "true" ] || [ "${SEAMLESS:-}" = "1" ]; then
+            # Decide deploy mode without `||`-chained tests — appleboy/
+            # ssh-action's `script_stop: true` mode aborts on any `[`
+            # returning nonzero, even inside `if`/`||` constructs that
+            # standard bash treats as conditional. Use a single case
+            # statement so the test runs once and returns 0.
+            DEPLOY_MODE=legacy
+            case "${SEAMLESS:-}" in
+              true|1) DEPLOY_MODE=seamless ;;
+            esac
+            echo "==> Deploy mode: $DEPLOY_MODE"
+
+            if [ "$DEPLOY_MODE" = "seamless" ]; then
               echo "==> Seamless (blue/green) app deploy"
               # P4 path: the script identifies which of `app-blue` /
               # `app-green` is idle, builds + starts the new image
@@ -343,28 +354,36 @@ jobs:
               # See docs/runbooks/seamless-deployment.md.
 
               # Auto-bootstrap if app-blue / app-green don't exist yet.
-              # The pre-flight used to abort here with instructions for a
-              # manual `docker compose --profile seamless ... up -d` run,
-              # but operators can't always SSH the droplet in band; the
-              # workflow already has a shell on the box, so do it.
-              # Idempotent: compose up is a no-op when both containers
-              # exist + are healthy.
+              # CRITICAL: this is the first-time transition from the
+              # legacy single-instance path (front container, Caddy
+              # pointing at `app:80`) to the seamless path (blue/green,
+              # Caddy pointing at app-blue:80 or app-green:80). It must
+              # NOT cause public downtime — `front` keeps serving live
+              # traffic the whole time. Two specific bugs the previous
+              # version hit on skyclimber 2026-05-04:
+              #   1. `docker compose ... up -d --build` without service
+              #      names recreated `front` AND `caddy` along with
+              #      creating blue/green. Front went down for the cold
+              #      next-build window.
+              #   2. Pre-seeding `ACTIVE_UPSTREAM=app-blue:80` in `.env`
+              #      pointed Caddy at blue while blue was still mid-cold-
+              #      build → "Shipping a fresh version" maintenance page
+              #      for the duration of the build.
+              # Fix: build ONLY the two new slots (explicit service names),
+              # leave the legacy stack untouched, defer the Caddy flip
+              # until blue is healthy + verified.
               if ! docker inspect app-blue >/dev/null 2>&1 || ! docker inspect app-green >/dev/null 2>&1; then
                 echo "==> First-run seamless bootstrap (app-blue + app-green missing)"
-                # Caddy needs ACTIVE_UPSTREAM to know which slot to
-                # proxy at boot. Default to blue if the line is missing
-                # — the blue-green-deploy.sh below tracks this same
-                # default and will flip to green on the first deploy.
-                if ! grep -q '^ACTIVE_UPSTREAM=' .env 2>/dev/null; then
-                  echo 'ACTIVE_UPSTREAM=app-blue:80' >> .env
-                  echo "    seeded ACTIVE_UPSTREAM=app-blue:80 in .env"
-                fi
-                docker compose --profile seamless -p cms -f infra/compose.yaml --env-file .env up -d --build
-                # Wait for both slots to report healthy via compose's
-                # built-in healthcheck. 10-min ceiling matches the
-                # legacy front-container loop below; bootstrap is the
-                # only one-time slow path (cold next build for both
-                # slots). Same poll cadence + log shape.
+                echo "    legacy front container keeps serving until app-blue is healthy"
+
+                # Build + start ONLY the new slots. No `--build` cascade,
+                # no implicit recreate of front/caddy. Both blue + green
+                # come up in parallel so we eat the cold-build cost once.
+                docker compose --profile seamless -p cms -f infra/compose.yaml --env-file .env up -d --build app-blue app-green
+
+                # Wait for BOTH slots — blue to be the new active, green
+                # to be ready for the next deploy. 10-min ceiling matches
+                # the legacy front-container poll.
                 for slot in app-blue app-green; do
                   echo "==> Waiting for $slot to report healthy"
                   for i in $(seq 1 120); do
@@ -381,11 +400,25 @@ jobs:
                     sleep 5
                   done
                 done
-                # Caddy reload so the freshly-rendered Caddyfile picks
-                # up the new upstream targets.
+
+                # NOW flip Caddy to blue. blue is healthy; this is the
+                # only public-facing change in the bootstrap. Atomic
+                # Caddy reload (graceful — finishes in-flight requests
+                # on the legacy upstream first).
+                if grep -q '^ACTIVE_UPSTREAM=' .env 2>/dev/null; then
+                  sed -i 's|^ACTIVE_UPSTREAM=.*|ACTIVE_UPSTREAM=app-blue:80|' .env
+                else
+                  echo 'ACTIVE_UPSTREAM=app-blue:80' >> .env
+                fi
+                echo "    flipped ACTIVE_UPSTREAM → app-blue:80"
                 docker exec caddy caddy reload --config /etc/caddy/Caddyfile 2>/dev/null || \
                   docker compose -p cms -f infra/compose.yaml --env-file .env restart caddy
-                echo "==> Bootstrap complete; proceeding with first seamless flip"
+                echo "==> Bootstrap complete; legacy front retired, blue is now serving traffic"
+                # Optional cleanup: legacy front container is no longer
+                # in the routing path. Leave it running for now — blue/
+                # green-deploy.sh handles its own flips from here on,
+                # and front can be `docker rm -f`'d in a follow-up
+                # housekeeping task once the seamless path is stable.
               fi
               TARGET_SHA="$CUR_SHA" \
                 DEPLOY_HEALTH_TIMEOUT="${DEPLOY_HEALTH_TIMEOUT:-60}" \
@@ -396,13 +429,9 @@ jobs:
               # still run the public smoke check below to verify Caddy
               # is honouring the new upstream from the outside.
               echo "==> Seamless flip complete; falling through to public smoke check"
-              # Skip the legacy compose-up path that follows.
-              SKIP_LEGACY_APP_UP=1
-            else
-              SKIP_LEGACY_APP_UP=
             fi
 
-            if [ -z "${SKIP_LEGACY_APP_UP:-}" ]; then
+            if [ "$DEPLOY_MODE" = "legacy" ]; then
               echo "==> Rebuilding and restarting app (legacy stop-the-world; brief 502 window)"
               # `--no-deps app` leaves mongodb / server / caddy running
               # untouched, so TLS doesn't blip and the DB connection pool
@@ -419,9 +448,8 @@ jobs:
             # `front` doesn't exist in the seamless compose profile
             # anyway (replaced by app-blue + app-green). The public
             # smoke check below covers the post-flip Caddy path.
-            if [ -n "${SKIP_LEGACY_APP_UP:-}" ]; then
+            if [ "$DEPLOY_MODE" = "seamless" ]; then
               echo '==> Skipping legacy front-container health loop (seamless path; already health-checked pre-flip)'
-              i=0
             else
             echo "==> Waiting for app to report healthy"
             # Poll the compose healthcheck (defined in compose.yaml) for
