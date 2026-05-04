@@ -2,7 +2,7 @@ import {describe, it, expect, vi} from 'vitest';
 
 // Mock the connection so inquiry-tool calls hit an in-memory collection
 // instead of a real Mongo. This mirrors `modeEnforcement.test.ts`'s approach.
-const mailerSpy = vi.fn(async () => ({ok: true, messageId: 'mock-msg'}));
+const mailerSpy = vi.fn(async (_p: unknown) => ({ok: true, messageId: 'mock-msg'}));
 vi.mock('@client/pages/api/_inquiryMailer', () => ({
     sendInquiryEmail: (p: unknown) => mailerSpy(p),
 }));

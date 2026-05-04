@@ -77,14 +77,17 @@ describe('composeDiagnostics', () => {
     });
 
     it('counts trash collections by suffix and aggregates Permissions by scope', async () => {
+        // Mongo's `_id` is typed `ObjectId` by default; the in-memory stub
+        // accepts numbers at runtime but the typedef rejects them. Cast the
+        // doc shape to bypass without changing behaviour.
         await db.collection('Foo.trash').insertMany([
             {_id: 1, deletedAt: new Date('2025-01-01'), trashGroup: 'g1'},
             {_id: 2, deletedAt: new Date('2025-02-01'), trashGroup: 'g1'},
             {_id: 3, deletedAt: new Date('2025-03-01'), trashGroup: 'g2'},
-        ]);
+        ] as any);
         await db.collection('Bar.trash').insertMany([
             {_id: 1, deletedAt: new Date('2024-12-01'), trashGroup: 'g3'},
-        ]);
+        ] as any);
         await db.collection('Permissions').insertMany([
             {userId: 'u1', scope: 'page', resourceId: 'p1'},
             {userId: 'u2', scope: 'page', resourceId: 'p2'},
