@@ -43,6 +43,15 @@ jobs:
         # resolve `vitest/globals`.
         run: npx tsc --noEmit -p tsconfig.test.json
 
+      - name: Pre-warm mongodb-memory-server binary
+        # ~30 test files call `MongoMemoryServer.create()` and vitest fans
+        # them out in parallel. On a cold CI cache, multiple workers race
+        # on the same partial-download rename — one wins, the others ENOENT
+        # (see services/features/Inventory/InventoryService.test.ts hook
+        # timeout). Downloading once here populates `~/.cache/mongodb-binaries/`
+        # so every worker hits the cache.
+        run: node tools/scripts/prewarm-mongo-binary.mjs
+
       - name: Tests
         run: npm test -- --reporter=dot
 
