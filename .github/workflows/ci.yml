@@ -420,8 +420,13 @@ jobs:
                 # and front can be `docker rm -f`'d in a follow-up
                 # housekeeping task once the seamless path is stable.
               fi
+              # 600s ceiling matches the legacy front-container health
+              # loop. Cold `next build` inside the freshly-recreated
+              # slot takes 5-8 min on the droplet's CPU budget; the
+              # previous 60s default aborted flips that would have
+              # eventually succeeded.
               TARGET_SHA="$CUR_SHA" \
-                DEPLOY_HEALTH_TIMEOUT="${DEPLOY_HEALTH_TIMEOUT:-60}" \
+                DEPLOY_HEALTH_TIMEOUT="${DEPLOY_HEALTH_TIMEOUT:-600}" \
                 DRAIN_SECONDS="${DRAIN_SECONDS:-30}" \
                 bash tools/blue-green-deploy.sh
               # blue-green script exits 0 on a successful flip; its own
