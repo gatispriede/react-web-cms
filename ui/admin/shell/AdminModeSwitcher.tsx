@@ -12,17 +12,33 @@ import {useAdminMode} from '@admin/lib/adminMode';
  *
  * Defaults to `advanced` while the initial fetch is in flight so the
  * toggle paints immediately instead of flashing in late.
+ *
+ * After a successful flip, hard-reload the page. Per-loader `modes`
+ * dispatch is read once at component mount (the loader registry maps
+ * `pane.modes.simplified ?? pane.modes.advanced` at construction
+ * time), so a soft mode change leaves stale variants on screen until
+ * the next route navigation. A reload is the simplest path to the
+ * correct paint without threading a "remount everything" signal
+ * through every loader.
  */
 const AdminModeSwitcher: React.FC = () => {
     const {t} = useTranslation();
     const {mode, setMode} = useAdminMode();
     const effective = mode ?? 'advanced';
 
+    const handleChange = async (v: 'simplified' | 'advanced') => {
+        if (v === effective) return;
+        await setMode(v);
+        if (typeof window !== 'undefined') {
+            window.location.reload();
+        }
+    };
+
     return (
         <Segmented
             size="small"
             value={effective}
-            onChange={(v) => setMode(v as 'simplified' | 'advanced')}
+            onChange={(v) => { void handleChange(v as 'simplified' | 'advanced'); }}
             options={[
                 {value: 'advanced', label: t('Advanced')},
                 {value: 'simplified', label: t('Simplified')},
