@@ -90,3 +90,26 @@ describe('LanguageService.addUpdateLanguage', () => {
         expect(diskByLocale['it']).toEqual({});
     });
 });
+
+describe('LanguageService.setDefault (F8 W2)', () => {
+    it('promotes one language and demotes any prior default', async () => {
+        await languages.insertMany([
+            {symbol: 'en', label: 'English', default: true, translations: {}},
+            {symbol: 'lv', label: 'Latviešu', default: false, translations: {}},
+        ] as any);
+
+        const res = await service.setDefault({symbol: 'lv', editedBy: 'tester'});
+        expect(JSON.parse(res)).toEqual({setDefault: {symbol: 'lv'}});
+
+        const en = await languages.findOne({symbol: 'en'}) as any;
+        const lv = await languages.findOne({symbol: 'lv'}) as any;
+        expect(en.default).toBe(false);
+        expect(lv.default).toBe(true);
+    });
+
+    it('errors when the language does not exist', async () => {
+        const res = await service.setDefault({symbol: 'zz'});
+        expect(JSON.parse(res).error).toBe('language-not-found');
+    });
+});
+

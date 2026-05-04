@@ -108,4 +108,131 @@ export const sectionDelete: McpTool = defineTool({
     return typeof res === 'string' ? safeParse(res) : res;
 });
 
-export const PAGE_TOOLS: McpTool[] = [pageList, pageGet, pageCreate, sectionUpdate, sectionDelete];
+export const pageUpdate: McpTool = defineTool({
+    // SAFE: routes through navigationService.addUpdateNavigationItem +
+    // setParent — no single matching mutation. Drift CI will soft-warn.
+    name: 'page.update',
+    description: 'Updates a page: rename (`page`), set/clear parent, change slug. Cycle + 3-level depth-cap enforced server-side when `parent` is provided.',
+    scopes: ['write:content'],
+    idempotent: true,
+    inputSchema: {
+        type: 'object',
+        required: ['id'],
+        properties: {
+            id: {type: 'string', minLength: 1},
+            page: {type: 'string', minLength: 1},
+            slug: {type: 'string'},
+            parent: {type: 'string'},
+            expectedVersion: {type: 'integer'},
+            idempotencyKey: {type: 'string'},
+        },
+    },
+}, async (args, ctx) => {
+    await enforceModeForTool(ctx.actor, 'page.update');
+    const navs = await ctx.services.navigationService.getNavigationCollection();
+    const row = (navs ?? []).find((n: any) => n.id === args.id);
+    if (!row) return {error: 'page-not-found', id: args.id};
+    let renameRes: unknown;
+    if (typeof args.page === 'string' && args.page !== row.page) {
+        const merged = {...row, page: args.page, slug: args.slug ?? row.slug};
+        const res = await ctx.services.navigationService.replaceUpdateNavigation(
+            row.page, merged as any, ctx.actor,
+        );
+        renameRes = typeof res === 'string' ? safeParse(res) : res;
+    } else if (typeof args.slug === 'string' && args.slug !== row.slug) {
+        const merged = {...row, slug: args.slug};
+        const res = await ctx.services.navigationService.replaceUpdateNavigation(
+            row.page, merged as any, ctx.actor,
+        );
+        renameRes = typeof res === 'string' ? safeParse(res) : res;
+    }
+    let parentRes: unknown;
+    if (Object.prototype.hasOwnProperty.call(args, 'parent')) {
+        const parentId = args.parent === null || args.parent === '' ? null : args.parent;
+        const res = await ctx.services.navigationService.setParent(args.id, parentId, ctx.actor);
+        parentRes = typeof res === 'string' ? safeParse(res) : res;
+    }
+    return {id: args.id, rename: renameRes, parent: parentRes};
+});
+
+export const pageDelete: McpTool = defineTool({
+    // SAFE: routes through cascadeDelete — not a 1:1 GraphQL mutation
+    name: 'page.delete',
+    description: 'Soft-deletes a page (cascade). Returns the trashGroup so the caller can restore via trash.restore.',
+    scopes: ['write:content'],
+    idempotent: true,
+    inputSchema: {
+        type: 'object',
+        required: ['id'],
+        properties: {
+            id: {type: 'string', minLength: 1},
+            idempotencyKey: {type: 'string'},
+        },
+    },
+}, async (args, ctx) => {
+    await enforceModeForTool(ctx.actor, 'page.delete');
+    const navs = await ctx.services.navigationService.getNavigationCollection();
+    const row = (navs ?? []).find((n: any) => n.id === args.id);
+    if (!row) return {error: 'page-not-found', id: args.id};
+    // Use the existing connection-level deleteNavigationItem which goes
+    // through the cascade engine and pulls trashGroup back out.
+    const conn: any = ctx.services;
+    const res = await conn.deleteNavigationItem({
+        pageName: row.page,
+        _session: {email: ctx.actor},
+    });
+    return typeof res === 'string' ? safeParse(res) : res;
+});
+
+export const pageSetParent: McpTool = defineTool({
+    // SAFE: NavigationService.setParent — no top-level GraphQL mutation
+    name: 'page.setParent',
+    description: 'Move a page under a new parent (or to root with parentId=null). Cycle + 3-level depth-cap enforced server-side.',
+    scopes: ['write:content'],
+    idempotent: true,
+    inputSchema: {
+        type: 'object',
+        required: ['pageId'],
+        properties: {
+            pageId: {type: 'string', minLength: 1},
+            parentId: {type: 'string'},
+            idempotencyKey: {type: 'string'},
+        },
+    },
+}, async (args, ctx) => {
+    await enforceModeForTool(ctx.actor, 'page.setParent');
+    const parentId = args.parentId === null || args.parentId === undefined || args.parentId === ''
+        ? null
+        : args.parentId;
+    const res = await ctx.services.navigationService.setParent(args.pageId, parentId, ctx.actor);
+    return typeof res === 'string' ? safeParse(res) : res;
+});
+
+export const pageReorder: McpTool = defineTool({
+    // SAFE: not a GraphQL mutation — new service method
+    name: 'page.reorder',
+    description: 'Set the display order of children under a parent (or root with parentId=null). `orderedIds` is the new sequence.',
+    scopes: ['write:content'],
+    idempotent: true,
+    inputSchema: {
+        type: 'object',
+        required: ['orderedIds'],
+        properties: {
+            parentId: {type: 'string'},
+            orderedIds: {type: 'array', items: {type: 'string'}},
+            idempotencyKey: {type: 'string'},
+        },
+    },
+}, async (args, ctx) => {
+    await enforceModeForTool(ctx.actor, 'page.reorder');
+    const parentId = args.parentId === null || args.parentId === undefined || args.parentId === ''
+        ? null
+        : args.parentId;
+    const res = await ctx.services.navigationService.reorderPages(parentId, args.orderedIds ?? [], ctx.actor);
+    return typeof res === 'string' ? safeParse(res) : res;
+});
+
+export const PAGE_TOOLS: McpTool[] = [
+    pageList, pageGet, pageCreate, pageUpdate, pageDelete, pageSetParent, pageReorder,
+    sectionUpdate, sectionDelete,
+];

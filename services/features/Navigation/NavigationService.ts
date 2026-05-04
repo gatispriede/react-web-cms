@@ -449,6 +449,48 @@ export class NavigationService implements INavigationService{
     }
 
     /**
+     * F8 — set the order of children under a parent (or root). Writes a
+     * numeric `order` field on each row matching its index in
+     * `orderedIds`. Rows passed in `orderedIds` that don't currently sit
+     * under `parentId` are skipped (defensive — the caller should
+     * never include them, but a stale UI race could). Bumps each row's
+     * version so optimistic-concurrency callers see the change.
+     *
+     * Returns the count of rows actually updated.
+     */
+    async reorderPages(parentId: string | null, orderedIds: string[], editedBy?: string): Promise<string> {
+        try {
+            if (!Array.isArray(orderedIds)) throw new Error('orderedIds-required');
+            const filter: any = {
+                type: 'navigation',
+                ...(parentId === null
+                    ? {$or: [{parent: {$exists: false}}, {parent: null}]}
+                    : {parent: parentId}),
+            };
+            const live = await this.navigationDB.find(filter).toArray();
+            const liveIds = new Set(live.map((d: any) => d.id as string));
+            let updated = 0;
+            const audit = auditStamp(editedBy);
+            for (let i = 0; i < orderedIds.length; i++) {
+                const id = orderedIds[i];
+                if (!liveIds.has(id)) continue;
+                const row = live.find((d: any) => d.id === id) as any;
+                const version = nextVersion(row?.version as number | undefined);
+                const res = await this.navigationDB.updateOne(
+                    {type: 'navigation', id},
+                    {$set: {order: i, version, ...audit}},
+                );
+                updated += res.modifiedCount ?? 0;
+            }
+            return JSON.stringify({reorderPages: {parentId, updated}});
+        } catch (err) {
+            log.error({scope: 'navigation.reorder', err, parentId}, 'reorderPages failed');
+            await this.setupClient();
+            return JSON.stringify({error: String((err as Error).message || err)});
+        }
+    }
+
+    /**
      * F1 sub-pages — resolve a public URL slug-chain to a Navigation row.
      *
      * Walks the chain root-first: for `['services', 'cleaning']` finds a

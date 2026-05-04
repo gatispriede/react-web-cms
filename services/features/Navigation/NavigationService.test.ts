@@ -418,3 +418,35 @@ describe('NavigationService.addUpdateNavigationItem — slug backfill (F1)', () 
         expect(doc.slug).toBe('original-slug');
     });
 });
+
+describe("NavigationService.reorderPages (F8 W2)", () => {
+    it("writes order index onto each row matching its position in orderedIds", async () => {
+        await navigation.insertMany([
+            {type: "navigation", id: "p1", page: "A", sections: [], seo: {}},
+            {type: "navigation", id: "p2", page: "B", sections: [], seo: {}},
+            {type: "navigation", id: "p3", page: "C", sections: [], seo: {}},
+        ] as any);
+        const res = await service.reorderPages(null, ["p3", "p1", "p2"], "tester");
+        expect(JSON.parse(res).reorderPages.updated).toBe(3);
+        const docs = await navigation.find({type: "navigation"}).toArray() as any[];
+        const byId = Object.fromEntries(docs.map(d => [d.id, d.order]));
+        expect(byId).toEqual({p1: 1, p2: 2, p3: 0});
+    });
+
+    it("scopes by parentId and ignores ids not under that parent", async () => {
+        await navigation.insertMany([
+            {type: "navigation", id: "root1", page: "R1", sections: [], seo: {}},
+            {type: "navigation", id: "c1", page: "C1", parent: "root1", sections: [], seo: {}},
+            {type: "navigation", id: "c2", page: "C2", parent: "root1", sections: [], seo: {}},
+            {type: "navigation", id: "alien", page: "X", parent: "other", sections: [], seo: {}},
+        ] as any);
+        const res = await service.reorderPages("root1", ["c2", "c1", "alien"], "tester");
+        // alien is silently skipped — only 2 updated.
+        expect(JSON.parse(res).reorderPages.updated).toBe(2);
+        const c1 = await navigation.findOne({id: "c1"}) as any;
+        const c2 = await navigation.findOne({id: "c2"}) as any;
+        expect(c1.order).toBe(1);
+        expect(c2.order).toBe(0);
+    });
+});
+

@@ -42,4 +42,23 @@ export const ADVANCED_ONLY_TOOLS: ReadonlySet<string> = new Set<string>([
     // whole-site replace — never expose in simplified mode
     'bundle.import',
     'bundle.export',
+    // F8 — page lifecycle (structural mutations) — advanced only
+    'page.update',
+    'page.delete',
+    'page.setParent',
+    'page.reorder',
+    // F8 — site-wide content writes — advanced only
+    'footer.update',
+    'seo.update',
+    'logo.update',
+    // F8 — auth surface — advanced only
+    'permission.grant',
+    'permission.revoke',
+    'user.setRole',
+    // F8 — i18n CRUD — advanced only
+    'language.add',
+    'language.remove',
+    'language.setDefault',
+    // F8 — trash — destructive restore is advanced only
+    'trash.restore',
 ]);

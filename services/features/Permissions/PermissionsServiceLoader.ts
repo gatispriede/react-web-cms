@@ -88,5 +88,14 @@ extend type MutationMongo {
                 resourceId: parentDoc?.page,
             }),
         },
+        // F8 — when a user is removed, drop every grant they hold. The
+        // `users` feature owns the parent doc (`Users` collection); the
+        // grant rows are keyed by the user id.
+        {
+            parentFeature: 'users',
+            parentCollection: 'Users',
+            childCollection: 'Permissions',
+            matchByParentId: (parentId: string) => ({userId: parentId}),
+        },
     ];
 }

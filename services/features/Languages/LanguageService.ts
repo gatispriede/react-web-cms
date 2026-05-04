@@ -84,6 +84,34 @@ export class LanguageService implements ILanguageService {
         return {symbol: language.symbol, version};
     }
 
+    /**
+     * F8 — flip the `default` flag onto one language; demote all others.
+     * The collection invariant is "at most one default"; this is the
+     * dedicated setter used by the MCP `language.setDefault` tool when
+     * the caller wants to promote without re-sending the full payload
+     * via `addUpdateLanguage`.
+     */
+    async setDefault({symbol, editedBy}: { symbol: string; editedBy?: string }): Promise<string> {
+        try {
+            if (!symbol) throw new Error('symbol-required');
+            const target = await this.languagesDB.findOne({symbol});
+            if (!target) throw new Error('language-not-found');
+            await this.languagesDB.updateMany(
+                {symbol: {$ne: symbol}, default: true},
+                {$set: {default: false}},
+            );
+            await this.languagesDB.updateOne(
+                {symbol},
+                {$set: {default: true, ...auditStamp(editedBy)}},
+            );
+            return JSON.stringify({setDefault: {symbol}});
+        } catch (err) {
+            log.error({scope: 'languages.setDefault', err, symbol}, 'setDefault failed');
+            await this.setupClient();
+            return JSON.stringify({error: String((err as Error).message || err)});
+        }
+    }
+
     async deleteLanguage({language, deletedBy}: { language: INewLanguage, deletedBy?: string }): Promise<string> {
         try {
             const result = await this.languagesDB.deleteOne({symbol: language.symbol});

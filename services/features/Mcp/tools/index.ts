@@ -13,6 +13,10 @@ import {POST_TOOLS} from './posts';
 import {IMAGE_TOOLS} from './images';
 import {BUNDLE_TOOLS} from './bundle';
 import {INQUIRY_TOOLS} from './inquiries';
+import {SITE_CONTENT_TOOLS} from './siteContent';
+import {PERMISSION_TOOLS} from './permissions';
+import {USER_TOOLS} from './users';
+import {TRASH_TOOLS} from './trash';
 
 /**
  * Out of scope (defer):
@@ -35,6 +39,10 @@ export const ALL_MCP_TOOLS: McpTool[] = [
     ...IMAGE_TOOLS,
     ...BUNDLE_TOOLS,
     ...INQUIRY_TOOLS,
+    ...SITE_CONTENT_TOOLS,
+    ...PERMISSION_TOOLS,
+    ...USER_TOOLS,
+    ...TRASH_TOOLS,
 ];
 
 /**
