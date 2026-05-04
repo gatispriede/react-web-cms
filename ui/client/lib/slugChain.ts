@@ -109,7 +109,13 @@ export function resolveSlugChain(
     let parentId: string | undefined = undefined; // root
     let current: NavRow | null = null;
     for (const raw of chain) {
-        const seg = String(raw).toLowerCase();
+        // Normalise the URL segment the same way as the candidate slug
+        // (decodeURIComponent + NFKD + strip combining marks + lowercase
+        // + collapse `-`). Without this the URL side keeps its
+        // percent-encoded diacritics and trailing dashes, so live prod
+        // URLs like `/jaunumi-un-aktualit%C4%81tes-` never match the
+        // page whose `resolveSlug` returns `jaunumi-un-aktualitates`.
+        const seg = normalizeSlugForMatch(String(raw));
         const candidates = pages.filter(p =>
             parentId === undefined ? isRoot(p) : p.parent === parentId,
         );

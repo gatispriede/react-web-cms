@@ -1,0 +1,43 @@
+// Top admin status bar — sticky strip rendered by `<UserStatusBar>`
+// (`ui/admin/shell/UserStatusBar.tsx`). Hosts the user-name label, language
+// dropdown, mode/theme toggles, and sign-out. Lived previously inside
+// `Login.scss` as a second top-level root; split out per the F4 SCSS scoping
+// sweep (docs/roadmap/scss-audit-2026-05-03.md, Pattern 2).
+.app-login-wrapper {
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 12px;
+  background: #fff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+
+  // "User: Name" label
+  .container {
+    margin-right: 8px;
+    p {
+      line-height: 16px;
+      font-size: 12px;
+      padding: 0;
+      margin: 0;
+      white-space: nowrap;
+      color: #555;
+    }
+  }
+
+  // Spacer — splits the bar into a left group (nav actions) and a right
+  // group (language / mode / theme / sign out). The right group starts at
+  // the language dropdown which immediately follows the spacer in JSX.
+  .app-login-wrapper__spacer {
+    flex: 1 1 auto;
+  }
+
+  button {
+    height: 28px;
+    font-size: 13px;
+  }
+}

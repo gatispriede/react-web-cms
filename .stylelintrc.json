@@ -4,10 +4,10 @@
   "customSyntax": "postcss-scss",
   "rules": {
     "selector-no-qualifying-type": [true, {
-      "severity": "warning",
+      "severity": "error",
       "ignore": ["attribute", "class"]
     }],
-    "scss/at-rule-no-unknown": [true, { "severity": "warning" }],
+    "scss/at-rule-no-unknown": [true, { "severity": "error" }],
     "no-descending-specificity": null,
     "selector-class-pattern": null,
     "selector-disallowed-list": [

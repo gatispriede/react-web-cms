@@ -1,0 +1,36 @@
+// Admin in-page drop host (see `ui/admin/lib/AdminItemDropHost.tsx`).
+// The wrapper always exists for image-bearing modules in admin mode; the
+// `.is-empty` modifier kicks in when the module has no src yet so the
+// operator sees a drop-able silhouette even though the public `Display`
+// component would otherwise render nothing. 100×100 floor matches the
+// user's request — "at least 100 x 100 as empty place". The filled state
+// relies on the default `&[data-drop-active]` outline declared by
+// `.image-drop-target` (see `ImageDropTarget.scss`), which traces the
+// natural bounds of whatever image is rendered inside.
+//
+// Split out of `ImageDropTarget.scss` per the F4 SCSS scoping sweep
+// (docs/roadmap/scss-audit-2026-05-03.md, Pattern 2).
+.admin-item-drop-host {
+    // Guarantee a visible hit area even when the inner Display renders
+    // nothing. `min-height` alone would collapse on flex parents, so we
+    // also set `display:block` to keep the box measurable.
+    &.is-empty {
+        display: block;
+        min-width: 100px;
+        min-height: 100px;
+        outline: 2px dashed rgba(0, 0, 0, 0.18);
+        outline-offset: 0;
+        background: repeating-linear-gradient(
+            45deg,
+            rgba(0, 0, 0, 0.02) 0,
+            rgba(0, 0, 0, 0.02) 6px,
+            transparent 6px,
+            transparent 12px
+        );
+
+        &[data-drop-active='true'] {
+            outline-color: var(--theme-colorPrimary, #1677ff);
+            background-color: color-mix(in srgb, var(--theme-colorPrimary, #1677ff) 10%, transparent);
+        }
+    }
+}

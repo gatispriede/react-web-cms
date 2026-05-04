@@ -6,6 +6,7 @@ import AuditBadge from "@admin/shell/AuditBadge";
 import {useRefreshView} from "@client/lib/refreshBus";
 import ConflictDialog from "@client/lib/ConflictDialog";
 import {useViewModel} from "@client/lib/state/observable";
+import LinkTargetPicker from "@admin/lib/LinkTargetPicker";
 import {FooterViewModel} from "./FooterViewModel";
 
 /** Render-only Footer pane — state lives on `FooterViewModel`. VM3 (2026-05-02). */
@@ -46,29 +47,50 @@ const AdminSettingsFooter: React.FC = () => {
                             extra={<Button danger size="small" icon={<DeleteOutlined/>} onClick={() => vm.removeColumn(i)}/>}
                         >
                             <Space orientation="vertical" size={6} style={{width: '100%'}}>
-                                {col.entries.map((entry, j) => (
-                                    <Row key={j} gutter={4} align="middle">
-                                        <Col xs={10}>
-                                            <Input
-                                                size="small"
-                                                value={entry.label}
-                                                onChange={e => vm.patchEntry(i, j, {label: e.target.value})}
-                                                placeholder={t('Label')}
-                                            />
-                                        </Col>
-                                        <Col xs={12}>
-                                            <Input
-                                                size="small"
-                                                value={entry.url ?? ''}
-                                                onChange={e => vm.patchEntry(i, j, {url: e.target.value})}
-                                                placeholder={t('URL (optional)')}
-                                            />
-                                        </Col>
-                                        <Col xs={2}>
-                                            <Button size="small" danger icon={<DeleteOutlined/>} onClick={() => vm.removeEntry(i, j)}/>
-                                        </Col>
-                                    </Row>
-                                ))}
+                                {col.entries.map((entry, j) => {
+                                    const mode = vm.getRowMode(i, j, entry.url);
+                                    const nextMode = mode === 'picker' ? 'free-text' : 'picker';
+                                    return (
+                                        <Row key={j} gutter={4} align="middle">
+                                            <Col xs={8}>
+                                                <Input
+                                                    size="small"
+                                                    value={entry.label}
+                                                    onChange={e => vm.patchEntry(i, j, {label: e.target.value})}
+                                                    placeholder={t('Label')}
+                                                />
+                                            </Col>
+                                            <Col xs={11}>
+                                                {mode === 'picker' ? (
+                                                    <LinkTargetPicker
+                                                        value={entry.url ?? ''}
+                                                        onChange={(v) => vm.patchEntry(i, j, {url: v})}
+                                                        placeholder={t('Pick page or anchor')}
+                                                    />
+                                                ) : (
+                                                    <Input
+                                                        size="small"
+                                                        value={entry.url ?? ''}
+                                                        onChange={e => vm.patchEntry(i, j, {url: e.target.value})}
+                                                        placeholder="https:// or mailto: or #anchor"
+                                                    />
+                                                )}
+                                            </Col>
+                                            <Col xs={3}>
+                                                <Button
+                                                    size="small"
+                                                    onClick={() => vm.setRowMode(i, j, nextMode)}
+                                                    title={t('Toggle picker / free-text')}
+                                                >
+                                                    {mode === 'picker' ? t('Type') : t('Pick')}
+                                                </Button>
+                                            </Col>
+                                            <Col xs={2}>
+                                                <Button size="small" danger icon={<DeleteOutlined/>} onClick={() => vm.removeEntry(i, j)}/>
+                                            </Col>
+                                        </Row>
+                                    );
+                                })}
                                 <Button size="small" icon={<PlusOutlined/>} onClick={() => vm.addEntry(i)}>{t('Add entry')}</Button>
                             </Space>
                         </Card>

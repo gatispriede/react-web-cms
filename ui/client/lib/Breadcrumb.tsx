@@ -2,6 +2,24 @@ import React from 'react';
 import Link from 'next/link';
 import {Breadcrumb as AntBreadcrumb} from 'antd';
 import {INavigation} from '@interfaces/INavigation';
+import {slugifyAnchor} from '@utils/stringFunctions';
+
+/** Pick a plain-string slug from a `string | Record<LocaleCode, string>`
+ *  shape. Per-locale slugs (F1 follow-up) widened the field; this helper
+ *  collapses to a single segment for the breadcrumb's URL composition.
+ *  Empty / missing → falls through to slugifyAnchor(page). Mirrors the
+ *  resolver's fallback rules but keeps Breadcrumb dependency-free of the
+ *  server-side `resolveSlug`. */
+function slugSegment(p: Pick<INavigation, 'slug' | 'page'>): string {
+    const s = p.slug as unknown;
+    if (typeof s === 'string' && s.length > 0) return s;
+    if (s && typeof s === 'object' && !Array.isArray(s)) {
+        const map = s as Record<string, string>;
+        const any = Object.values(map).find(v => typeof v === 'string' && v.length > 0);
+        if (any) return any;
+    }
+    return slugifyAnchor(p.page) || p.page;
+}
 
 /**
  * F1 sub-pages — public-side breadcrumb. Walks the parent chain from
@@ -48,7 +66,7 @@ function pageHref(pages: INavigation[], page: INavigation, prefix: string): stri
     const seen = new Set<string>();
     while (cur && !seen.has(cur.id)) {
         seen.add(cur.id);
-        parts.unshift(cur.slug ?? cur.page);
+        parts.unshift(slugSegment(cur));
         cur = cur.parent ? byId.get(cur.parent) : undefined;
     }
     return `${prefix}/${parts.join('/')}`;

@@ -43,6 +43,31 @@ describe('resolveSlugChain', () => {
         const legacyOnly: NavRow[] = [{id: 'h', page: 'Home', slug: 'home'}];
         expect(resolveSlugChain(legacyOnly, ['home'], 'lv', 'en')?.id).toBe('h');
     });
+
+    // Legacy URL tolerance — see NavigationService.test.ts equivalents.
+    it('resolves a legacy URL with percent-encoded diacritics + trailing dash', () => {
+        const legacy: NavRow[] = [
+            {id: 'n', page: 'Jaunumi un aktualitātes ', slug: 'jaunumi-un-aktualitates'},
+        ];
+        expect(resolveSlugChain(legacy, ['jaunumi-un-aktualit%C4%81tes-'])?.id).toBe('n');
+    });
+
+    it('resolves a chain whose segment differs only in case', () => {
+        const legacy: NavRow[] = [{id: 'p', page: 'Pakalpojumi', slug: 'pakalpojumi'}];
+        expect(resolveSlugChain(legacy, ['Pakalpojumi'])?.id).toBe('p');
+    });
+
+    it('resolves a chain with raw (decoded) diacritics and no trailing dash', () => {
+        const legacy: NavRow[] = [
+            {id: 'n', page: 'Jaunumi un aktualitātes', slug: 'jaunumi-un-aktualitates'},
+        ];
+        expect(resolveSlugChain(legacy, ['jaunumi-un-aktualitātes'])?.id).toBe('n');
+    });
+
+    it('returns null for a nonexistent chain (negative case)', () => {
+        const legacy: NavRow[] = [{id: 'h', page: 'Home', slug: 'home'}];
+        expect(resolveSlugChain(legacy, ['nonexistent'])).toBeNull();
+    });
 });
 
 describe('slugChainForPage', () => {

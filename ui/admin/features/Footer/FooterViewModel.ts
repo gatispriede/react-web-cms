@@ -10,11 +10,25 @@ export interface FooterConflictState {
     retry: () => Promise<void>;
 }
 
+export type FooterUrlMode = 'picker' | 'free-text';
+
+const FREE_TEXT_URL_RE = /^(https?:\/\/|mailto:|tel:|#)/i;
+
+/** Auto-mode heuristic for legacy bundles: external schemes + bare `#anchor`
+ *  fall back to free-text; everything else (e.g. `/services`) uses the picker. */
+export function detectFooterUrlMode(url: string | undefined): FooterUrlMode {
+    if (!url) return 'picker';
+    return FREE_TEXT_URL_RE.test(url) ? 'free-text' : 'picker';
+}
+
 export class FooterViewModel {
     config: IFooterConfig = {...DEFAULT_FOOTER};
     loading = false;
     saving = false;
     conflict: FooterConflictState | null = null;
+    /** Per-row URL input mode override. Key: `${columnIdx}-${entryIdx}`.
+     *  Absence means "use auto-detect from current url value". VM4 — no `useState`. */
+    urlModeOverrides: Map<string, FooterUrlMode> = new Map();
 
     constructor(
         private readonly api: FooterApi = new FooterApi(),
@@ -106,4 +120,17 @@ export class FooterViewModel {
     }
 
     dismissConflict(): void { this.conflict = null; }
+
+    rowKey(i: number, j: number): string { return `${i}-${j}`; }
+
+    getRowMode(i: number, j: number, currentUrl: string | undefined): FooterUrlMode {
+        const override = this.urlModeOverrides.get(this.rowKey(i, j));
+        return override ?? detectFooterUrlMode(currentUrl);
+    }
+
+    setRowMode(i: number, j: number, mode: FooterUrlMode): void {
+        const next = new Map(this.urlModeOverrides);
+        next.set(this.rowKey(i, j), mode);
+        this.urlModeOverrides = next;
+    }
 }

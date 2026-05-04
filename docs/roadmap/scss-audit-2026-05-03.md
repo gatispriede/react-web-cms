@@ -2,6 +2,22 @@
 
 Audit step for [F4 SCSS scoping](./scss-scoping.md). Inventory + violation report only — the architectural sweep is a separate task.
 
+> **2026-05-04 update — F4 sweep, batches 1+2 landed.** Pattern 1 (5 top-level
+> `@media` wrap-ups in `Gallery.scss` + `Layout/Content.scss`) resolved by
+> nesting the at-rules under their owner via `&`; compiled CSS unchanged.
+> Pattern 2 (3 second-root splits) resolved by extracting
+> `.rich-text-container-admin` → `Admin/RichTextAdmin.scss`,
+> `.admin-item-drop-host` → `Admin/AdminItemDropHost.scss`, and
+> `.app-login-wrapper` → `Admin/AppLoginWrapper.scss`, each `@use`-imported
+> from `globals/global.scss`. Pattern 3 (multi-component admin files —
+> `AddNewSection.scss`, `EditSection.scss`, plus `Login.scss`'s remaining
+> `.login-wrapper`-vs-file-stem mismatch) is deferred pending a dedicated
+> `Admin/AdminAntdOverrides.scss` destination for the raw `.ant-tabs` chrome
+> in `EditSection.scss`. `selector-no-qualifying-type` and
+> `scss/at-rule-no-unknown` bumped to severity `error`;
+> `selector-disallowed-list` stays at `warning` until the per-file owner-class
+> rule is in place.
+
 ## Method
 
 A "violation" is a **top-level** rule whose first compound selector does not start with the file's owning component class (or is not an at-rule / variable). Nested rules under the owner are fine, even if they declare bare element selectors. This matches the spec.
