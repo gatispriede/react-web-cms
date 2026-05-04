@@ -36,6 +36,16 @@ ENV_FILE="${ENV_FILE:-.env}"
 DEPLOY_HEALTH_TIMEOUT="${DEPLOY_HEALTH_TIMEOUT:-60}"
 DRAIN_SECONDS="${DRAIN_SECONDS:-30}"
 TARGET_SHA="${TARGET_SHA:?TARGET_SHA must be set (the commit the new instance should run)}"
+# Pin the compose project to `cms` so this script targets the same
+# container set as the legacy + bootstrap paths in `ci.yml` (both
+# use `-p cms`). Without it, compose v2 infers the project from the
+# `-f infra/compose.yaml` parent dir → `infra` — which means
+# `docker compose up app-green` tries to create a fresh `app-green`
+# under project `infra` and immediately conflicts with the existing
+# one already running under project `cms` (container_name is global).
+# Caught on skyclimber's first-ever blue-green flip on 2026-05-04.
+COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-cms}"
+export COMPOSE_PROJECT_NAME
 
 cd "$REPO_DIR"
 
