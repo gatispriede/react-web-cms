@@ -9,6 +9,7 @@ import {auditFeature} from '../features/Audit/feature.manifest';
 import {bundleFeature} from '../features/Bundle/feature.manifest';
 import {cartFeature} from '../features/Cart/feature.manifest';
 import {customerAuthFeature} from '../features/CustomerAuth/feature.manifest';
+import {diagnosticsFeature} from '../features/Diagnostics/feature.manifest';
 import {featureFlagsFeature} from '../features/FeatureFlags/feature.manifest';
 import {footerFeature} from '../features/Footer/feature.manifest';
 import {inventoryFeature} from '../features/Inventory/feature.manifest';
@@ -36,6 +37,7 @@ export const featureRegistry: readonly FeatureManifest[] = [
     bundleFeature,
     cartFeature,
     customerAuthFeature,
+    diagnosticsFeature,
     featureFlagsFeature,
     footerFeature,
     inventoryFeature,

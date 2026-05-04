@@ -20,32 +20,22 @@ A feature added today wires through these primitives — no architectural decisi
 
 ## Open queue
 
-### New (2026-05-03)
+### Pre-merge verification
 
-- **F1 — sub-pages** — shipped 2026-05-03. Full surface: foundation (data model, slug-chain resolver, sitemap, AntD Menu, admin sider nesting, breadcrumb), plumbing (slug chain through `app.tsx`, SSR theme-name on `<body>`, mobile drawer nested rendering, decorative outer `<Tabs>` retired, gqty regen, `parent` on `InNavigation`), mobile-drawer SCSS polish (chevron rotate, child-row indent, dark-mode parity via existing CSS vars), **per-locale slugs** (`slug: string | Record<LocaleCode, string>` via JSON scalar — non-breaking SDL; locale-first → default-locale → slugified-page fallback resolver; sitemap with hreflang alternates; admin per-locale slug editor with bare-string→Record promote button). 51/51 Navigation+slugChain+dialog tests. See [roadmap/sub-pages.md](roadmap/sub-pages.md).
-- **F2 — data integrity** — shipped 2026-05-03. Foundation (idempotency engine + cascade engine + `*.trash` + Trash pane), follow-ups (recursive Navigation→Navigation cascade, `useGuardedAction` hook + `GuardedAction` VM class wired into 5 destructive flows), Seo doc-mutating cascade (engine `kind: 'doc-mutate'` discriminator + Seo rule unsetting `SiteSeo.pages.<slug>` on Navigation cascade), Posts→page pinning (`pageId?` on `IPost`, cascade rule, admin Pin Select). See [roadmap/data-integrity.md](roadmap/data-integrity.md).
-- **F3 — `/v1/**` namespace migration** — in flight 2026-05-03 (paused on `git mv` permission). Decisions resolved: prefix `/v1/`, redirect window 1 release cycle, `public/` untouched (it's the user's temp-file directory), sharp break is OK, **URL-only — backend `services/` source layout untouched**. Scope: 30 files under `pages/admin/` + 29 under `pages/api/` move to `pages/v1/`; ~200 internal callsites swept (`fetch('/api/')`, `<Link href="/admin/">`); existing `next.config.js` `redirects()` extends with 308 v1 rules; existing `rewrites()` retargets `/v1/api/robots.txt` and `/v1/api/sitemap.xml`; locale-prefix admin redirects retarget `/v1/admin`. Rationale per user: per-route version splits enable mixed-version deployments. See [roadmap/v1-url-namespace.md](roadmap/v1-url-namespace.md).
-- [F4 — SCSS scoping audit + sweep](roadmap/scss-scoping.md) — every per-component SCSS file styles only its own component. No bare-element rules escaping a module's root class. Stylelint enforcement + per-file sweep across `ui/client/modules/`, `ui/client/features/`, `ui/admin/features/`. **L** (2-3 days). 3 open questions in the spec.
+Two prod sites need a 1:1 sanity pass before master merges. Bundles exported 2026-05-03:
 
-### Bulk migrations (mechanical)
+| Domain | Bundle | Verify against |
+|---|---|---|
+| **funisimo.pro** | [`public/CV/site-2026-05-03.json`](../public/CV/site-2026-05-03.json) (51 MB) | live site at funisimo.pro |
+| **skyclimber** | [`public/Skyclimber/site-2026-05-03.json`](../public/Skyclimber/site-2026-05-03.json) (68 MB) | live skyclimber domain |
 
-Empty. AUI-mode simplified components landed for Themes (preset gallery — no token editor) and Posts (title + body + cover, auto-publish) on 2026-05-03. Remaining panes ship a simplified variant on demand when a real UX gap surfaces; the shell's `modes.simplified ?? modes.advanced` fallback covers everything else.
+Import bundle into local build → open public client → walk every page side-by-side with the live domain. Content + visual must match 1:1. Any drift is a regression to fix before merge. Runbook: [runbooks/upgrade-droplets.md](runbooks/upgrade-droplets.md). Smoke checklist: [runbooks/upgrade-smoke-checklist.md](runbooks/upgrade-smoke-checklist.md).
 
-### E2E backlog
+### Forward work
 
-| # | Notes |
-|---|---|
-| 1 | **E-commerce flow tests — wire data-testids + seed fixtures** — 5 spec files exist with mount-level assertions; deeper flows are `test.skip()` pending data-testids on Products/Cart/Checkout/Inventory/Orders components plus `seedProduct`/`seedOrder` fixtures. See top of each `tests/e2e/ecommerce/*.spec.ts` for the TODO list |
-| 2 | **Visual baseline image capture** — `npm run e2e:isolated -- tests/e2e/visual/ --update-snapshots`, then commit `tests/e2e/visual/__snapshots__/`. Reference: live site at funisimo.pro + `public/CV/site-2026-05-03.json` |
-| 3 | **gqty cold-load anti-pattern sweep** — Themes pane fix (`ThemeApi.listThemes` → raw fetch) revealed 5 candidate APIs with the same direct-route empty-payload risk: `SiteFlagsApi.get`, `FooterApi.get`, `SiteSeoApi.get`, `TranslationMetaApi.get`, `AuditApi.getAuditCollections`/`getAuditActors`. Apply same pattern proactively or wait for first failure report |
-
-### Cleanup / debt
-
-Empty. Three items closed 2026-05-03:
-
-- **Admin-segregation Phase 3 deletion** — gated on observation, runbook is the durable handle: [runbooks/admin-segregation-phase3.md](runbooks/admin-segregation-phase3.md). Re-add to this list when the observation window closes with zero `scope: legacy-route` hits.
-- **C13b stable-anchor** — closed. Timeline now emits `#${company}-${role}` per entry (Timeline.tsx + anchorRegistry.ts). Manifesto is intentionally section-only (single body paragraph, no row model).
-- **C17 field-level sample audit** — closed deferred-on-demand. Broad per-EItemType coverage already exists; re-open if a client surfaces a specific gap.
+- [F4 SCSS sweep](roadmap/scss-scoping.md) — audit shipped (18 violations across 9 files in [scss-audit-2026-05-03.md](roadmap/scss-audit-2026-05-03.md)); stylelint scaffold at warning severity. Sweep remaining — attack patterns in audit doc order: `@media` queries → second-root splits → multi-component admin files. **M** (1-2 days).
+- **E-commerce deeper flows** — 5 mount-level specs running; deeper flows still `test.skip()` pending the 5 UI-design gaps in [runbooks/e2e-coverage-matrix.md](runbooks/e2e-coverage-matrix.md): cart row controls, Trash row keying (groups not slugs), sub-page cycle/depth toasts, delete-confirm testid, admin Inventory per-row editor.
+- **Visual baseline capture** — Windows worker fanout was blocking. Try Linux CI or `--workers=1` against the Skyclimber + CV bundles as reference state.
 
 ---
 
@@ -62,7 +52,10 @@ See [`roadmap/shipped.md`](roadmap/shipped.md) for the full archive. Headline th
 - **Bundle import:** filename sanitizer accepts spaces, parens, unicode (collapsed to `_`); rejects only on null byte, control char, `..`, disallowed extension
 - **Bug fixes:** Themes direct-route gqty cold-load empty payload (raw fetch fallback in `ThemeApi.listThemes`); Products manifest test deep-equal on arrow-function identity
 - **F1 sub-pages:** `parent`/`slug` on `IPage`+`INavigation`, `setParent` mutation with cycle/depth-cap server validation, slug backfill on save, `findPageBySlugChain` resolver, parent-scoped slug uniqueness, `[...slug].tsx` catch-all with full slug-chain prop, locale-aware sitemap, AntD `<Menu mode="horizontal">` with `SubMenu` + 4-theme SCSS overrides, anchor registry walks parent chain, admin sider nested rendering, Add-page Parent Select with client cycle guard, Breadcrumb component, delete-with-children prompt, mobile drawer nested rendering, SSR theme-name on `<body>`, decorative outer `<Tabs>` retired, gqty client regenerated with `parent`/`slug`/`setParent`, `parent` round-trips through `InNavigation` (no admin-side workaround)
-- **F2 data integrity:** idempotency engine (Redis primary + Mongo fallback) boot-wired in `setupClient`; `idempotencyKey: String` on 7 destructive mutations (deletePost, deleteNavigationItem, removeSectionItem, deleteLanguage, deleteTheme, removeUser, revokePermission); cascade engine + `cascadeRules` on FeatureManifest; soft-delete to `*.trash` collections with 24h Mongo TTL; depth-bounded recursive Navigation→Navigation cascade (3-level cap, visited-set cycle safety); `cascadeRestore` + restore mutation; admin Trash pane at `/admin/release/trash`; Permissions cascade rule; `useGuardedAction` hook + `GuardedAction` VM class wired into Posts/Themes/Users/MCP/AdminApp delete flows; 652/652 tests green
+- **F2 data integrity:** idempotency engine (Redis primary + Mongo fallback) boot-wired in `setupClient`; `idempotencyKey: String` on 7 destructive mutations; cascade engine + `cascadeRules` on FeatureManifest with `kind` discriminator (collection-move + doc-mutate); soft-delete to `*.trash` collections with 24h Mongo TTL; depth-bounded recursive Navigation→Navigation cascade; `cascadeRestore` + restore mutation; admin Trash pane at `/admin/release/trash`; cascade rules for Permissions / Seo / Posts; `useGuardedAction` hook + `GuardedAction` VM class wired into 5 destructive flows
+- **F5 admin diagnostics:** `Diagnostics` feature + admin pane at `/admin/system/info` (7 sections: build identity, route registry HEAD-probes, feature manifest summary, storage health, trash overview, idempotency snapshot, authorization snapshot); public `/api/info` endpoint exposing only `{version, bootId, buildTimestamp}` (env-secret audited); `IdempotencyService.stats()` (counts only)
+- **Tests:** **685/685 green** across 106 files (was 644 pre-blitz; +41 new tests across F1/F2/F5/sub-pages/cascade/idempotency/guarded-action/Diagnostics/per-locale-slugs)
+- **Roadmap items:** F1 / F2 / F5 shipped; F3 cancelled (see [v1-url-namespace.md](roadmap/v1-url-namespace.md) postmortem); F4 audit shipped, sweep pending; runbooks for upgrade-droplets + upgrade-smoke-checklist + scss-audit-2026-05-03 + scss-scoping
 - **E2E:** e-commerce mount-level specs (5 files) for products/cart/checkout/inventory/orders; deeper flows guarded by `test.skip` pending data-testids
 - **Visual:** regression baselines scaffold (58 specs)
 - **Go-to-market:** onboarding wizard + marketing landing + docs site

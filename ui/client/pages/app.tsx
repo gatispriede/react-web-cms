@@ -634,7 +634,11 @@ class App extends React.Component<IHomeProps> {
                                     <div className="site-tabs">
                                         <div className="site-tabs-bar" style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px'}}>
                                             <div className="site-tabs-left-cluster" style={{display: 'flex', alignItems: 'center', gap: 12}}>
-                                                <Logo t={this.props.t} admin={false}/>
+                                                {/* MobileNav lives here so on mobile the hamburger sits at
+                                                 *  the far left. Hidden on desktop via MobileNav.scss media
+                                                 *  rule. Logo follows the menu cluster (centered) on desktop
+                                                 *  to mirror the live funisimo.pro layout — see the next
+                                                 *  cluster below. */}
                                                 <MobileNav
                                                     links={this.buildMobileLinks()}
                                                     activeKey={"" + activeKey}
@@ -643,23 +647,33 @@ class App extends React.Component<IHomeProps> {
                                                         if (typeof window !== 'undefined') window.location.assign(link.href);
                                                     }}
                                                 />
+                                                {/* Mobile: logo also rides in the left cluster so it stays
+                                                 *  visible next to the hamburger. Hidden on desktop via the
+                                                 *  matching `.site-tabs-left-cluster .site-logo` rule. */}
+                                                <span className="site-tabs-left-cluster__logo">
+                                                    <Logo t={this.props.t} admin={false}/>
+                                                </span>
                                             </div>
-                                            <MainMenu
-                                                pages={menuPages}
-                                                activeChain={activeChain}
-                                                themeName={themeName}
-                                                translate={(s) => translateOrKeep(this.props.t, s) as string}
-                                            />
-                                            <div style={{display: 'flex', alignItems: 'center', gap: 12}}>
-                                                {this.state.blogEnabled && this.state.hasPosts && (
-                                                    <Link
-                                                        href="/blog"
-                                                        className="navigation-item"
-                                                        style={{textTransform: 'uppercase', fontWeight: 400, opacity: 0.7, textDecoration: 'none'}}
-                                                    >
-                                                        {this.props.t('Blog')}
-                                                    </Link>
-                                                )}
+                                            <div className="site-tabs-center-cluster" style={{display: 'flex', alignItems: 'center', gap: 16}}>
+                                                {/* Desktop: logo sits inline with the menu (centered cluster
+                                                 *  matches funisimo.pro layout). Hidden on mobile via the
+                                                 *  `.site-tabs-center-cluster .site-logo` mobile rule. */}
+                                                <span className="site-tabs-center-cluster__logo">
+                                                    <Logo t={this.props.t} admin={false}/>
+                                                </span>
+                                                <MainMenu
+                                                    pages={menuPages}
+                                                    activeChain={activeChain}
+                                                    themeName={themeName}
+                                                    translate={(s) => translateOrKeep(this.props.t, s) as string}
+                                                    extraItems={
+                                                        this.state.blogEnabled && this.state.hasPosts
+                                                            ? [{key: 'blog', href: '/blog', label: this.props.t('Blog') as string}]
+                                                            : undefined
+                                                    }
+                                                />
+                                            </div>
+                                            <div style={{display: 'flex', alignItems: 'center', gap: 12}}>{/* Blog moved into the menu via `extraItems` (was a standalone Link). */}
                                                 {items.length > 1 && (
                                                     <Dropdown className="language-dropdown" overlayClassName="lang-popup" menu={{items}}>
                                                         <Typography.Link>

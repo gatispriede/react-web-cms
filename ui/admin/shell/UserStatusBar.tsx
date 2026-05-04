@@ -8,6 +8,7 @@ import {
     EyeOutlined,
     FileTextOutlined,
     GlobalOutlined,
+    InfoCircleOutlined,
     LayoutOutlined,
     LogoutOutlined,
     MailOutlined,
@@ -99,7 +100,8 @@ export type AdminView =
     | 'system/mcp'
     | 'system/inquiries'
     | 'system/features'
-    | 'system/agent';
+    | 'system/agent'
+    | 'system/info';
 
 const isInArea = (view: AdminView, area: string) =>
     view === area || view.startsWith(area + '/');
@@ -142,6 +144,7 @@ const buildAreaItems = (
         {path: '/admin/system/inquiries', label: tAdmin('Inquiries'), icon: <MailOutlined/>, testidSuffix: 'inquiries'},
         {path: '/admin/system/features', label: tAdmin('Feature flags'), icon: <SettingOutlined/>, testidSuffix: 'features', adminOnly: true},
         {path: '/admin/system/agent', label: tAdmin('AI Agent'), icon: <ThunderboltOutlined/>, testidSuffix: 'agent', adminOnly: true},
+        {path: '/admin/system/info', label: tAdmin('Diagnostics'), icon: <InfoCircleOutlined/>, testidSuffix: 'info', adminOnly: true},
     ],
 });
 

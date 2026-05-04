@@ -24,6 +24,23 @@ if (!resolvedBuildId) {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     distDir,
+    // Server-only packages that should NEVER be bundled into the browser
+    // chunk. The redis client + @node-rs/xxhash native digest helper are
+    // imported transitively from `services/infra/redisConnection.ts` →
+    // `services/api/graphqlResolvers.ts` → `pages/api/graphql.ts`.
+    // Without this list, Turbopack tries to resolve their browser entry
+    // (which chains to WASM/WASI variants that don't exist in this
+    // dependency tree) and fails the build.
+    serverExternalPackages: [
+        'redis',
+        '@redis/client',
+        '@redis/bloom',
+        '@redis/graph',
+        '@redis/json',
+        '@redis/search',
+        '@redis/time-series',
+        '@node-rs/xxhash',
+    ],
     transpilePackages: [
         //
         "@glidejs",
@@ -109,6 +126,7 @@ const nextConfig = {
     // 307-redirect to itself (internal canonicalization loop). Admin language
     // is driven by `preferredAdminLocale`, not the URL.
     redirects: async () => [
+        // Locale-prefixed admin URLs from old bookmarks → prefix-stripped admin.
         {source: '/lv/admin', destination: '/admin', permanent: false, locale: false},
         {source: '/lv/admin/:path*', destination: '/admin/:path*', permanent: false, locale: false},
         {source: '/it/admin', destination: '/admin', permanent: false, locale: false},
@@ -117,9 +135,7 @@ const nextConfig = {
         {source: '/lt/admin/:path*', destination: '/admin/:path*', permanent: false, locale: false},
         {source: '/ru/admin', destination: '/admin', permanent: false, locale: false},
         {source: '/ru/admin/:path*', destination: '/admin/:path*', permanent: false, locale: false},
-        // Phase 2 of admin segregation — legacy URLs jump to the new area
-        // structure. Keep `/admin/settings` reachable only as a redirect
-        // target (the file remains for the AdminSettings legacy fallback).
+        // Phase 2 of admin segregation — legacy URLs jump to the new area structure.
         {source: '/admin/settings', destination: '/admin/build', permanent: false},
         {source: '/admin/languages', destination: '/admin/content/translations', permanent: false},
         {source: '/admin/modules-preview', destination: '/admin/build/modules-preview', permanent: false},

@@ -347,6 +347,22 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
             } catch (err) { return JSON.stringify({error: String((err as Error).message ?? err)}); }
         });
     }
+    /**
+     * F5 — Diagnostics snapshot. Admin-only (gated via the manifest's
+     * `queryRequirements.getDiagnostics = 'admin'`). Returns a JSON blob
+     * the admin pane decodes; never contains env secrets, key strings,
+     * or PII (see DiagnosticsService.test.ts for the audit assertion).
+     */
+    async getDiagnostics(): Promise<string> {
+        const svc = this.featureServices.diagnostics as
+            import('@services/features/Diagnostics/DiagnosticsService').DiagnosticsService | undefined;
+        if (!svc) return JSON.stringify({error: 'diagnostics service unavailable'});
+        try {
+            return JSON.stringify(await svc.snapshot());
+        } catch (err) {
+            return JSON.stringify({error: String((err as Error).message ?? err)});
+        }
+    }
     async functionalRoles(): Promise<string> {
         // Module-import to avoid a top-of-file cycle through featureRegistry.
         // eslint-disable-next-line @typescript-eslint/no-require-imports

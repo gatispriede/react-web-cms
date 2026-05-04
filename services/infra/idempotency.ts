@@ -207,6 +207,16 @@ export class IdempotencyService {
             this.inFlight.delete(key);
         }
     }
+
+    /**
+     * F5 Diagnostics surface — counts only, NEVER the keys themselves.
+     * Returns the in-flight collapse-map size + the configured TTL.
+     * Cheap (no Redis round-trip): the in-flight map is process-local
+     * and `ttlSeconds()` reads `process.env`.
+     */
+    stats(): {inFlight: number; ttlSeconds: number} {
+        return {inFlight: this.inFlight.size, ttlSeconds: ttlSeconds()};
+    }
 }
 
 // Module-level default — wired at boot from `mongoDBConnection`. Tests

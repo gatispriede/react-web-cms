@@ -1,47 +1,42 @@
 import {test, expect} from '../fixtures/auth';
+import {createCleanupRegistry, seedOrder} from '../fixtures/seedFactories';
 
 // ──────────────────────────────────────────────────────────────────
 // E2E happy-path — Orders (admin)
 //
 // FLOW
-//   1. Admin opens /admin/content/orders — page mounts (regression guard).
-//   2. After a fixture-seeded order exists, admin clicks into its detail
-//      page and sees correct line items + total (SKIPPED — needs testids
-//      and seedOrder fixture).
-//
-// DATA STATE
-//   This spec must NOT depend on `checkout.spec.ts` having run — order
-//   data is seeded directly via seedFactories.seedOrder (TODO). The seed
-//   inserts a single order with one line of "e2e-product" × 1 at €19.99
-//   so total = 1999 cents.
-//
-// SELECTOR GAPS (TODO — wire data-testids):
-//   - data-testid="admin-orders-row-${id}"             → table row
-//   - data-testid="admin-orders-row-link-${id}"        → opens detail
-//   - data-testid="admin-order-detail-line-${slug}"    → line row in detail
-//   - data-testid="admin-order-detail-line-qty-${slug}"
-//   - data-testid="admin-order-detail-line-price-${slug}"
-//   - data-testid="admin-order-detail-total"           → total summary
+//   1. Admin opens /admin/content/orders — index mounts.
+//   2. Seeded order (one line, qty 1, €19.99) → admin clicks the row,
+//      detail Drawer opens with the line + total. The current Orders UI
+//      uses a Drawer, NOT URL navigation — so we assert the drawer
+//      content rather than `/orders/[id]` URL.
 // ──────────────────────────────────────────────────────────────────
 
 test.describe('e2e — orders happy-path', () => {
+    const cleanups = createCleanupRegistry();
+    test.afterEach(() => cleanups.flush());
+
     test('admin can open the orders page', async ({adminPage}) => {
         await adminPage.goto('/admin/content/orders');
         await expect(adminPage.locator('body')).toBeVisible({timeout: 15_000});
         await expect(adminPage).toHaveURL(/\/admin\/content\/orders\/?$/);
     });
 
-    test.skip('admin opens an order and sees correct line items + total', async ({adminPage}) => {
-        // TODO: unskip once seedOrder fixture exists and the order/detail
-        // testids in the header block are wired. The fixture should expose
-        // the inserted order id so this test stays self-contained.
-        const seededOrderId = 'TODO-order-id';
-        await adminPage.goto('/admin/content/orders');
-        await adminPage.getByTestId(`admin-orders-row-link-${seededOrderId}`).click();
+    test('admin opens a seeded order and sees correct line items + total', async ({mongo, adminPage}) => {
+        const order = await seedOrder(mongo.uri, {
+            customerEmail: 'orders-spec@e2e.local',
+            lines: [{productSlug: 'orders-spec-prod', qty: 1, unitPrice: 1999, sku: 'ORDERS-SPEC-PROD'}],
+        });
+        cleanups.register(order.cleanup);
 
-        await expect(adminPage).toHaveURL(new RegExp(`/admin/content/orders/${seededOrderId}$`));
-        await expect(adminPage.getByTestId('admin-order-detail-line-e2e-product')).toBeVisible();
-        await expect(adminPage.getByTestId('admin-order-detail-line-qty-e2e-product')).toHaveText('1');
+        await adminPage.goto('/admin/content/orders');
+        const link = adminPage.getByTestId(`admin-orders-row-link-${order.id}`);
+        await expect(link).toBeVisible({timeout: 15_000});
+        await link.click();
+
+        // Drawer (not URL nav). Detail testids live inside the drawer.
+        await expect(adminPage.getByTestId('admin-order-detail-line-ORDERS-SPEC-PROD')).toBeVisible({timeout: 15_000});
+        await expect(adminPage.getByTestId('admin-order-detail-line-qty-ORDERS-SPEC-PROD')).toHaveText('1');
         await expect(adminPage.getByTestId('admin-order-detail-total')).toContainText(/19[.,]99/);
     });
 });

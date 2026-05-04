@@ -1,0 +1,34 @@
+{
+  "//": "F4 SCSS scoping — see docs/roadmap/scss-scoping.md. Severity is `warning` until the architectural sweep lands; bumped to `error` afterwards.",
+  "plugins": ["stylelint-scss"],
+  "customSyntax": "postcss-scss",
+  "rules": {
+    "selector-no-qualifying-type": [true, {
+      "severity": "warning",
+      "ignore": ["attribute", "class"]
+    }],
+    "scss/at-rule-no-unknown": [true, { "severity": "warning" }],
+    "no-descending-specificity": null,
+    "selector-class-pattern": null,
+    "selector-disallowed-list": [
+      [],
+      {
+        "severity": "warning",
+        "message": "Top-level bare element selectors must be wrapped under the file's owning component class — see docs/roadmap/scss-scoping.md. List populated after the F4 sweep."
+      }
+    ]
+  },
+  "ignoreFiles": [
+    "node_modules/**",
+    ".next/**",
+    "public/**",
+    "data/**",
+    "var/**",
+    "mongo_data/**",
+    "ui/client/styles/globals/**",
+    "ui/client/styles/Common/**",
+    "ui/client/styles/Themes/**",
+    "ui/client/styles/Marketing/**",
+    "ui/admin/styles/Admin/AdminDarkMode.scss"
+  ]
+}

@@ -111,31 +111,34 @@
 }
 
 /* ---- Paper --------------------------------------------------------------- */
+/* Paper sites differ visually in font + case (funisimo.pro → uppercase via
+ * data; skyclimber.pro → title case via data; both use this same theme).
+ * SCSS does NOT force `text-transform` — the page title strings drive
+ * the case as authored. Active state shifts to `--accent` (each site's
+ * theme tokens decide the actual hue) with a thin underline. */
 [data-theme-name="paper"] .nav-menu.ant-menu-horizontal,
 .nav-menu--paper.ant-menu-horizontal {
   font-family: var(--font-display, 'Crimson Pro', serif);
   font-weight: 500;
   font-size: 16px;
   letter-spacing: 0;
-  text-transform: none;
-  background: var(--theme-colorBgBase);
-  border-bottom: 1px solid var(--rule);
+  background: transparent;
+  border-bottom: 0;
 
   .ant-menu-item,
   .ant-menu-submenu {
     color: var(--ink-2);
 
-    &:hover { color: var(--ink); }
+    &:hover,
+    &.ant-menu-item-active,
+    &.ant-menu-submenu-active { color: var(--ink); }
 
     &.ant-menu-item-selected,
-    &.ant-menu-submenu-selected {
-      color: var(--ink);
-      font-style: italic;
-    }
+    &.ant-menu-submenu-selected { color: var(--accent); }
 
     &.ant-menu-item-selected::after,
     &.ant-menu-submenu-selected::after {
-      border-bottom: 1px solid var(--accent) !important;
+      border-bottom: 2px solid var(--accent) !important;
     }
   }
 }

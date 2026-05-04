@@ -33,6 +33,10 @@ export interface IMainMenuProps {
     locale?: string;
     /** Translator for visible labels — typically `next-i18next`'s `t`. */
     translate?: (s: string) => string;
+    /** Flat menu entries appended after the page tree. Used for routes that
+     *  aren't `INavigation` rows (e.g. `/blog`). Keep `key` unique against
+     *  page slugs. Empty/undefined when the caller has nothing to append. */
+    extraItems?: IMenuNode[];
 }
 
 const toAntdItems = (nodes: IMenuNode[]): NonNullable<MenuProps['items']> =>
@@ -56,12 +60,20 @@ export const MainMenu: React.FC<IMainMenuProps> = ({
     themeName,
     locale,
     translate,
+    extraItems,
 }) => {
     // Memoize: pages array identity changes on every parent re-render but
-    // its content is stable across navigation events.
+    // its content is stable across navigation events. Extra (non-page-tree)
+    // routes append after the tree so they sit on the right of the page
+    // links — matches the legacy "Blog at the end of the nav" placement.
     const items = useMemo(
-        () => toAntdItems(buildMenuItems(pages, {locale, translate})),
-        [pages, locale, translate],
+        () => {
+            const tree = toAntdItems(buildMenuItems(pages, {locale, translate}));
+            return extraItems?.length
+                ? [...tree, ...toAntdItems(extraItems)]
+                : tree;
+        },
+        [pages, locale, translate, extraItems],
     );
     const selectedKeys = useMemo(
         () => activeKeysForPath(pages, activeChain),

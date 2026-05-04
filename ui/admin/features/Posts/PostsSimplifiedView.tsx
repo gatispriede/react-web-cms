@@ -108,17 +108,17 @@ const PostsSimplifiedView: React.FC = () => {
                 title={vm.editing?.id ? t('Edit post') : t('New post')}
                 width={640}
                 destroyOnClose
-                extra={<Button type="primary" onClick={onSave} loading={vm.saving}>{t('Save')}</Button>}
+                extra={<Button data-testid="posts-form-save-btn" type="primary" onClick={onSave} loading={vm.saving}>{t('Save')}</Button>}
             >
                 <Form form={form} layout="vertical">
                     <Form.Item name="title" label={t('Title')} rules={[{required: true, message: t('Title is required')}]}>
-                        <Input/>
+                        <Input data-testid="posts-form-title-input"/>
                     </Form.Item>
                     <Form.Item name="coverImage" label={t('Cover image URL')}>
-                        <ImageUrlInput t={t} placeholder="api/cover.jpg"/>
+                        <ImageUrlInput data-testid="posts-form-cover-input" t={t} placeholder="api/cover.jpg"/>
                     </Form.Item>
                     <Form.Item name="body" label={t('Body')} rules={[{required: true, message: t('Body is required')}]}>
-                        <Input.TextArea rows={12}/>
+                        <Input.TextArea data-testid="posts-form-body-input" rows={12}/>
                     </Form.Item>
                 </Form>
             </Drawer>
