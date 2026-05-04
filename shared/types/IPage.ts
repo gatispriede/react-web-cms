@@ -1,6 +1,14 @@
 import {ISeo} from "./ISeo";
 
 export interface IPage {
+    /**
+     * Stable id from `INavigation.id`. Optional because legacy callers
+     * that build an `IPage` from a display-name list don't have one.
+     * F7 — threaded through the public shell so the menu builder can
+     * key parent ↔ child relationships off the canonical id (instead
+     * of accidentally using the display name as both key and label).
+     */
+    id?: string,
     page: string,
     /**
      * Parent page reference (`INavigation.id`). `undefined` = root page.

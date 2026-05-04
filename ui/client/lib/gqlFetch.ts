@@ -52,6 +52,11 @@ export interface InitialPageData {
         id?: string;
         type?: string;
         page: string;
+        /** F1 sub-pages — parent id chain so the menu builder can
+         *  produce nested SubMenus on first paint. */
+        parent?: string | null;
+        /** F1 — explicit URL slug; bare string or per-locale Record. */
+        slug?: string | Record<string, string> | null;
         sections: string[];
         seo?: any;
     }>;
@@ -79,7 +84,7 @@ const EMPTY_INITIAL: InitialPageData = {
 const NAV_AND_META_QUERY = `{
   mongo {
     getNavigationCollection {
-      id type page sections
+      id type page parent slug sections
       seo {
         description keywords viewport charSet url image image_alt
         published_time modified_time author locale

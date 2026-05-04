@@ -11,12 +11,17 @@ import {resolveSlugChain, slugChainForPage, NavRow} from '@client/lib/slugChain'
 interface Props {
     initialData: InitialPageData;
     page: string;
+    /** F7 — server-resolved page id for the current route. Threaded into
+     *  `<App>` so the client never re-derives the active page from the
+     *  display name. `undefined` only for legacy single-page mounts that
+     *  bypass the catch-all. */
+    pageId?: string;
     /** Full slug chain (root → leaf). Threaded into `<App>` so MainMenu's
      *  active-trail highlight works for nested routes. F1 sub-pages. */
     slugChain: string[];
 }
 
-const Slug: React.FC<Props> = ({initialData, page, slugChain}) => {
+const Slug: React.FC<Props> = ({initialData, page, pageId, slugChain}) => {
     const router = useRouter();
     const {t, i18n} = useTranslation('app');
     const pathname = usePathname();
@@ -51,6 +56,7 @@ const Slug: React.FC<Props> = ({initialData, page, slugChain}) => {
             t={t}
             i18n={i18n}
             page={routerPage ?? page}
+            pageId={pageId}
             slugChain={routerChain}
             initialData={initialData}
         />
@@ -106,6 +112,10 @@ export const getStaticProps: GetStaticProps<Props> = async ({params, locale, def
             initialData,
             // `App` keys content lookup off `page` (display name).
             page: matched.page,
+            // F7 — server-resolved id is the canonical handle for the
+            // active page. Client uses it for exact id-based lookup
+            // instead of re-deriving from the display name.
+            pageId: matched.id,
             // Full slug chain so SSR + first paint can pre-compute the
             // SubMenu trail highlight without waiting on `router.query`.
             slugChain: chain,

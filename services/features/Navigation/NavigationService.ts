@@ -10,6 +10,7 @@ import {auditStamp} from "@services/features/Audit/audit";
 import {nextVersion, requireVersion} from "@services/infra/conflict";
 import {log} from "@services/infra/logger";
 import {slugifyAnchor} from "@utils/stringFunctions";
+import {normalizeSlugForMatch} from "@utils/slug";
 
 /**
  * F1 sub-pages — depth cap is root + 2 child levels = max chain length 3.
@@ -51,39 +52,10 @@ export function resolveSlug(
     return slugifyAnchor(page);
 }
 
-/**
- * Loose normalisation for slug-chain *comparison*. Used by the resolver
- * so existing prod URLs keep working when their generation rules differ
- * from `slugifyAnchor` (the live skyclimber.pro had pages titled with
- * trailing whitespace + diacritics; the URL preserved both via legacy
- * `encodeURIComponent(name.replace(/\s+/g,'-').toLowerCase())`, which
- * doesn't match `slugifyAnchor`'s strip-diacritics + trim output).
- *
- * Normalisation rules (applied to BOTH sides of the comparison):
- *   - decodeURIComponent (URL-encoded diacritics → raw)
- *   - lowercase
- *   - NFKD + strip combining marks (`ā` → `a`)
- *   - whitespace → `-`
- *   - collapse repeated `-`
- *   - strip leading/trailing `-`
- *
- * The output is for COMPARISON only, never stored or rendered.
- */
-export function normalizeSlugForMatch(input: string): string {
-    let s: string;
-    try {
-        s = decodeURIComponent(input);
-    } catch {
-        s = input;
-    }
-    return s
-        .normalize('NFKD')
-        .replace(/[̀-ͯ]/g, '')
-        .toLowerCase()
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-')
-        .replace(/^-|-$/g, '');
-}
+// `normalizeSlugForMatch` lives in `@utils/slug` (F7 — single source of
+// truth). Re-exported here so existing imports against this module keep
+// resolving (admin / SDK callers).
+export {normalizeSlugForMatch};
 
 export class NavigationService implements INavigationService{
     private navigationDB: Collection;

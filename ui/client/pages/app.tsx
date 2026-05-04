@@ -46,6 +46,13 @@ interface IHomeState {
 
 interface IHomeProps {
     page: string,
+    /** F7 — server-resolved page id for the current route (the canonical
+     *  `INavigation.id` like `sc7-nav-sakums`). When present, the active
+     *  tab is looked up by id (exact match). Falls back to the first
+     *  tab when undefined (legacy single-page mount that bypasses the
+     *  catch-all). Removes the brittle display-name re-normalisation
+     *  that used to live in `findIdForActiveTab`. */
+    pageId?: string,
     t: TFunction<string, undefined>,
     i18n: i18n,
     pathname: string,
@@ -210,6 +217,11 @@ class App extends React.Component<IHomeProps> {
 
     buildStateFromInitialData(data: InitialPageData): IHomeState {
         const pages: IPage[] = (data.pages ?? []).map((p: any) => ({
+            // F7 — thread the canonical id through so the menu builder
+            // can use it for parent-child lookup. Without it, parent
+            // refs point to the page name and a child's `parent: 'sc7-nav-sakums'`
+            // never finds its root.
+            id: p.id,
             page: p.page,
             // F1 sub-pages — preserve parent/slug so MainMenu can render
             // nested SubMenus. Older builds without these fields fall
@@ -221,6 +233,8 @@ class App extends React.Component<IHomeProps> {
         }));
         const tabProps = pages.map((p, id) => ({
             key: String(id),
+            // F7 — id-based active-tab lookup keys off this field.
+            id: p.id,
             page: p.page,
             seo: p.seo,
             label: (
@@ -279,7 +293,12 @@ class App extends React.Component<IHomeProps> {
                         }
                     }
                     return list.push({
+                        // F7 — thread `id` so the menu builder can match
+                        // parent ↔ child by canonical id, not display name.
+                        id: (item as any).id,
                         page: item.page,
+                        parent: (item as any).parent,
+                        slug: (item as any).slug,
                         seo: itemSeo,
                         sections: item.sections
                     })
@@ -318,6 +337,9 @@ class App extends React.Component<IHomeProps> {
         const snapshot = await this.PublishApi.getSnapshot();
         if (snapshot && snapshot.navigation?.length) {
             pages = snapshot.navigation.map((n: any) => ({
+                // F7 — id flows from snapshot so the menu builder
+                // matches parent refs (which are ids) to roots.
+                id: n.id,
                 page: n.page,
                 parent: n.parent,
                 slug: n.slug,
@@ -357,6 +379,8 @@ class App extends React.Component<IHomeProps> {
                     }
                     newTabsState.push({
                         key: id,
+                        // F7 — id-based active-tab lookup keys off this.
+                        id: pages[id].id,
                         page: pages[id].page,
                         seo: pages[id].seo,
                         label: (
@@ -427,7 +451,10 @@ class App extends React.Component<IHomeProps> {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const {buildMenuItems} = require('@client/features/Navigation/menuItems') as typeof import('@client/features/Navigation/menuItems');
         const menuPages: IMenuPage[] = this.state.pages.map((p: any) => ({
-            id: p.page,
+            // F7 — id is the canonical match for `parent` refs. Falling
+            // back to `page` lets legacy rows without an id still render
+            // (they'll never have a `parent` either, so they stay flat).
+            id: p.id || p.page,
             page: p.page,
             parent: p.parent,
             slug: p.slug,
@@ -449,30 +476,21 @@ class App extends React.Component<IHomeProps> {
     }
 
     findIdForActiveTab() {
-        // Source-of-truth match: the same normaliser server-side
-        // `findPageBySlugChain` uses (decodeURIComponent → strip diacritics
-        // → space-to-dash → trim trailing dash). Without this, asymmetric
-        // transforms — tab side did `replace(/ /g,'-')` THEN encode while
-        // props side just encoded — caused "Jaunumi un aktualitātes "
-        // (trailing space) to render empty body even though the page WAS
-        // resolved correctly server-side. TODO(F1 follow-up): pass the
-        // resolved page id from `[...slug].tsx` → `app.tsx` instead of
-        // re-deriving from the display name. One source of truth = the
-        // server's resolved row.
-        const norm = (s: string): string => {
-            try { s = decodeURIComponent(s); } catch { /* not encoded */ }
-            return s
-                .normalize('NFKD')
-                .replace(/[̀-ͯ]/g, '')
-                .toLowerCase()
-                .replace(/\s+/g, '-')
-                .replace(/-+/g, '-')
-                .replace(/^-|-$/g, '');
-        };
-        const firstTab = this.state.tabProps[0]?.page ?? '';
-        const propsPage = this.props.page !== '/' ? this.props.page : firstTab;
-        const target = norm(propsPage);
-        return this.state.tabProps.findIndex(tab => norm(tab.page) === target);
+        // F7 — server already resolved which page is active and passed
+        // its canonical id through SSR props. Look it up exactly,
+        // no string transforms involved. Eliminates the class of bugs
+        // where tab-side and props-side normalisation rules drift apart
+        // (the original was: tab did `replace(/ /g,'-').toLowerCase()`,
+        // props side did `encodeURIComponent(...).toLowerCase()` — they
+        // didn't match for "Jaunumi un aktualitātes ").
+        if (this.props.pageId) {
+            const idx = this.state.tabProps.findIndex(tab => tab.id === this.props.pageId);
+            if (idx >= 0) return idx;
+        }
+        // Fallback: legacy single-page mounts (`/`) that don't go
+        // through `[...slug].tsx` and so don't carry a `pageId`. Land
+        // on the first tab — preserves the pre-F7 behaviour for `/`.
+        return this.state.tabProps.length > 0 ? 0 : -1;
     }
 
     render() {

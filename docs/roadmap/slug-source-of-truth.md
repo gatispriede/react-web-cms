@@ -1,5 +1,12 @@
 # F7 — slug single source of truth
 
+> **Shipped 2026-05-04.** Canonical helper at `shared/utils/slug.ts`,
+> `pageId` threaded `[...slug].tsx` → `app.tsx`, `findIdForActiveTab`
+> uses exact id-based lookup. The two `menuPages` projections in
+> `app.tsx` now key off `p.id` (was `p.page`) — fixes the bug where a
+> sub-page rendered as a flat sibling instead of under its root.
+> 17 new tests; 790 total green.
+
 ## Goal
 
 One canonical slug helper, consumed by every site (server resolver, SSR builder, public-side active-tab matcher, admin link picker, footer URL builder, sitemap generator). Today the same string travels through three different transforms in three different files; mismatches silently render empty pages.
@@ -112,8 +119,13 @@ No string matching at all. The id-based lookup is exact. The display-name-based 
 - Pairs with F1 (sub-pages). The server resolver already does the right thing; this just removes the client's re-derivation.
 - Doesn't depend on F6 (site-mode toggle) — site-mode is orthogonal to slug discipline.
 
-## Open questions
+## Resolved questions
 
-1. **Should the shared helper live in `shared/utils/` or `shared/types/`?** Recommend `shared/utils/slug.ts` — it's a function, not a type. Mirror the existing `stringFunctions.ts` pattern.
-2. **Drop `slugifyAnchor` and merge with the new helper?** No — generation and match-tolerance have different rules by design. Keep two.
-3. **`activePageId` prop name** — `activePageId`, `pageId`, or `resolvedPageId`? Recommend `pageId` (shortest, unambiguous in this context).
+1. **Shared helper location** — `shared/utils/slug.ts`. Mirrors the
+   existing `stringFunctions.ts` pattern. Re-exported from
+   `services/features/Navigation/NavigationService.ts` and
+   `ui/client/lib/slugChain.ts` so existing import paths keep resolving.
+2. **Merge with `slugifyAnchor`?** No — generation and match-tolerance
+   have different rules by design. Kept two.
+3. **Prop name** — `pageId`. Shortest, unambiguous in `[...slug].tsx`
+   → `app.tsx` context.
