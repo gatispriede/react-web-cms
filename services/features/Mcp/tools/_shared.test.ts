@@ -95,7 +95,7 @@ describe('withIdempotency', () => {
 
 describe('withAudit', () => {
     it('writes one audit row with redacted args on success', async () => {
-        const record = vi.fn(async () => undefined);
+        const record = vi.fn(async (_entry: any) => undefined);
         const audit = {record} as any;
         const wrapped = withAudit<{x: number}>(
             async () => ({x: 1}),
@@ -113,7 +113,7 @@ describe('withAudit', () => {
     });
 
     it('still audits on failure (with err tag)', async () => {
-        const record = vi.fn(async () => undefined);
+        const record = vi.fn(async (_entry: any) => undefined);
         const audit = {record} as any;
         const wrapped = withAudit(
             async () => { throw new Error('boom'); },

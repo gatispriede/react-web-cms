@@ -13,6 +13,7 @@
  */
 
 import {beforeEach, describe, expect, it, vi} from 'vitest';
+import type {ToolDefinition} from './agentTypes';
 
 // ── Anthropic SDK stub ────────────────────────────────────────────────────────
 
@@ -37,10 +38,18 @@ function oaiTextResponse(text: string) {
     };
 }
 
+/** Minimal fetch-Response shape consumed by agentLoop's HTTP backends. */
+interface FakeResponse {
+    ok: boolean;
+    status: number;
+    json: () => Promise<unknown>;
+    text: () => Promise<string>;
+}
+
 /** Build an OpenAI-compatible response that calls one tool, then stop on next turn. */
 function oaiToolThenStopResponse(callId: string, name: string, args: Record<string, unknown>) {
     let call = 0;
-    return vi.fn(async () => {
+    return vi.fn(async (): Promise<FakeResponse> => {
         call++;
         if (call === 1) {
             return {
@@ -64,10 +73,10 @@ function oaiToolThenStopResponse(callId: string, name: string, args: Record<stri
 }
 
 /** Minimal tool definitions for tests. */
-const TEST_TOOLS = [{
+const TEST_TOOLS: ToolDefinition[] = [{
     name:         'list_pages',
     description:  'List CMS pages',
-    input_schema: { type: 'object', properties: {} },
+    input_schema: { type: 'object' as const, properties: {} },
 }];
 
 /** No-op dispatch — records calls. */
@@ -131,7 +140,7 @@ describe('Groq backend', () => {
         await runAgentLoop({ task: 'list pages', system: 'sys', tools: TEST_TOOLS, dispatch, onEvent: e => events.push(e), modelOverride: 'llama-3.3-70b-versatile' });
 
         expect(fetchMock).toHaveBeenCalledOnce();
-        const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+        const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
         expect(url).toContain('groq.com');
         expect(url).toContain('/chat/completions');
 
@@ -166,7 +175,7 @@ describe('Groq backend', () => {
         expect(toolResultEvent?.isError).toBe(false);
 
         // Second fetch should include the tool result in messages
-        const [, secondInit] = fetchImpl.mock.calls[1] as [string, RequestInit];
+        const [, secondInit] = fetchImpl.mock.calls[1] as unknown as [string, RequestInit];
         const secondBody = JSON.parse(secondInit.body as string);
         const toolMsg = secondBody.messages.find((m: any) => m.role === 'tool');
         expect(toolMsg?.content).toBe('{"pages":["Home"]}');
@@ -217,7 +226,7 @@ describe('Gemini backend', () => {
         await runAgentLoop({ task: 'hello', system: 'sys', tools: TEST_TOOLS, dispatch, onEvent: e => events.push(e), modelOverride: 'gemini-2.0-flash' });
 
         expect(fetchMock).toHaveBeenCalledOnce();
-        const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+        const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
         expect(url).toContain('generativelanguage.googleapis.com');
         expect(url).toContain('/chat/completions');
 
@@ -289,7 +298,7 @@ describe('Ollama backend', () => {
         await runAgentLoop({ task: 'hi', system: 'sys', tools: TEST_TOOLS, dispatch, onEvent: e => events.push(e), modelOverride: 'qwen2.5:14b' });
 
         expect(fetchMock).toHaveBeenCalledOnce();
-        const [url] = fetchMock.mock.calls[0] as [string, RequestInit];
+        const [url] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
         expect(url).toContain('localhost:11434');
         expect(url).toContain('/v1/chat/completions');
     });
@@ -389,7 +398,7 @@ describe('Backend auto-selection', () => {
         const { dispatch } = makeDispatch();
         await runAgentLoop({ task: 'hi', system: 'sys', tools: TEST_TOOLS, dispatch, onEvent: () => {} });
 
-        const [url] = fetchMock.mock.calls[0] as [string];
+        const [url] = fetchMock.mock.calls[0] as unknown as [string];
         expect(url).toContain('groq.com');
     });
 
@@ -408,7 +417,7 @@ describe('Backend auto-selection', () => {
         const { dispatch } = makeDispatch();
         await runAgentLoop({ task: 'hi', system: 'sys', tools: TEST_TOOLS, dispatch, onEvent: () => {} });
 
-        const [url] = fetchMock.mock.calls[0] as [string];
+        const [url] = fetchMock.mock.calls[0] as unknown as [string];
         expect(url).toContain('generativelanguage.googleapis.com');
     });
 });
