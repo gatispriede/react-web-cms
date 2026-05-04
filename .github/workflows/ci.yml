@@ -332,15 +332,15 @@ jobs:
               sleep 5
             done
 
-            # Decide deploy mode without `||`-chained tests — appleboy/
-            # ssh-action's `script_stop: true` mode aborts on any `[`
-            # returning nonzero, even inside `if`/`||` constructs that
-            # standard bash treats as conditional. Use a single case
-            # statement so the test runs once and returns 0.
+            # Decide deploy mode without || or case constructs.
+            # appleboy/ssh-action sends the script as one string to
+            # bash -c. Some bash versions on the droplets choke on
+            # case statements with ;; inside that string (line 327 /
+            # 350 syntax error near unexpected token ; on 2026-05-04).
+            # Plain sequential ifs are the safe path.
             DEPLOY_MODE=legacy
-            case "${SEAMLESS:-}" in
-              true|1) DEPLOY_MODE=seamless ;;
-            esac
+            if [ "${SEAMLESS:-}" = "true" ]; then DEPLOY_MODE=seamless; fi
+            if [ "${SEAMLESS:-}" = "1" ]; then DEPLOY_MODE=seamless; fi
             echo "==> Deploy mode: $DEPLOY_MODE"
 
             if [ "$DEPLOY_MODE" = "seamless" ]; then
