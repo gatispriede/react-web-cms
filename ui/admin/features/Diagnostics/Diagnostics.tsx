@@ -153,6 +153,22 @@ const DiagnosticsPane: React.FC = () => {
                         ) : <Typography.Text type="secondary">{t('Loading…')}</Typography.Text>}
                     </Card>
 
+                    {d?.mcpCoverage && (
+                        <Card data-testid="section-mcp-coverage" type="inner" title={t('MCP coverage')}>
+                            <Space direction="vertical">
+                                <div><b>{t('Tools')}:</b> {d.mcpCoverage.toolCount}</div>
+                                <div>
+                                    <b>{t('Categories')}:</b>{' '}
+                                    <Space wrap>
+                                        {Object.entries(d.mcpCoverage.categories).sort((a, b) => a[0].localeCompare(b[0])).map(([k, v]) => (
+                                            <Tag key={k}>{k}: {v}</Tag>
+                                        ))}
+                                    </Space>
+                                </div>
+                            </Space>
+                        </Card>
+                    )}
+
                     <Card data-testid="section-authz" type="inner" title={t('Authorization snapshot')}>
                         {d ? (
                             <Space direction="vertical">

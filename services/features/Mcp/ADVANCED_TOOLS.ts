@@ -61,4 +61,20 @@ export const ADVANCED_ONLY_TOOLS: ReadonlySet<string> = new Set<string>([
     'language.setDefault',
     // F8 — trash — destructive restore is advanced only
     'trash.restore',
+    // F8 W3 — destructive deferred + P2 sweep
+    'trash.purge',
+    'translation.set',
+    'translation.delete',
+    'user.create',
+    'user.update',
+    'user.delete',
+    'theme.create',
+    'theme.delete',
+    'theme.resetPreset',
+    'image.upload',
+    'image.delete',
+    'image.rescan',
+    'order.markFulfilled',
+    'order.refund',
+    'cache.bumpVersion',
 ]);

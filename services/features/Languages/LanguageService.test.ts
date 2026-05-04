@@ -113,3 +113,44 @@ describe('LanguageService.setDefault (F8 W2)', () => {
     });
 });
 
+describe('LanguageService.setKey / deleteKey (F8 W3)', () => {
+    it('setKey updates Mongo and (when on-disk locale exists) the disk file', async () => {
+        await languages.insertOne({symbol: 'en', label: 'English', translations: {existing: 'old'}});
+        diskByLocale['en'] = {existing: 'old'};
+
+        await service.setKey({symbol: 'en', key: 'fresh', value: 'NEW', editedBy: 't'});
+
+        const after = await languages.findOne({symbol: 'en'}) as any;
+        expect(after.translations.existing).toBe('old');
+        expect(after.translations.fresh).toBe('NEW');
+        expect(typeof after.version).toBe('number');
+        expect(diskByLocale['en'].fresh).toBe('NEW');
+    });
+
+    it('setKey upserts the language doc when the symbol is new (Mongo-only)', async () => {
+        await service.setKey({symbol: 'fr', key: 'hello', value: 'bonjour'});
+        const after = await languages.findOne({symbol: 'fr'}) as any;
+        expect(after.translations.hello).toBe('bonjour');
+        // No on-disk locale exists for fr → no disk side-effect.
+        expect(diskByLocale['fr']).toBeUndefined();
+    });
+
+    it('deleteKey removes the entry from both Mongo and the on-disk file', async () => {
+        await languages.insertOne({symbol: 'en', label: 'English', translations: {a: '1', b: '2'}});
+        diskByLocale['en'] = {a: '1', b: '2'};
+
+        await service.deleteKey({symbol: 'en', key: 'a'});
+
+        const after = await languages.findOne({symbol: 'en'}) as any;
+        expect(after.translations.a).toBeUndefined();
+        expect(after.translations.b).toBe('2');
+        expect(diskByLocale['en'].a).toBeUndefined();
+        expect(diskByLocale['en'].b).toBe('2');
+    });
+
+    it('setKey errors on missing symbol/key', async () => {
+        await expect(service.setKey({symbol: '', key: 'x', value: 'y'})).rejects.toThrow();
+        await expect(service.setKey({symbol: 'en', key: '', value: 'y'})).rejects.toThrow();
+    });
+});
+

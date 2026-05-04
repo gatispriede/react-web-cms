@@ -9,6 +9,8 @@
 import {McpTool} from '../types';
 import {enforceModeForTool} from '../modeEnforcement';
 import {defineTool} from './_shared';
+import {cascadePurge} from '@services/infra/cascadePurge';
+import {getMongoConnection} from '@services/infra/mongoDBConnection';
 
 function safeParse(s: unknown): unknown {
     if (typeof s !== 'string') return s;
@@ -60,4 +62,34 @@ export const trashRestore: McpTool = defineTool({
     return safeParse(res);
 });
 
-export const TRASH_TOOLS: McpTool[] = [trashList, trashRestore];
+export const trashPurge: McpTool = defineTool({
+    // SAFE: not a GraphQL mutation — direct cascadePurge engine
+    name: 'trash.purge',
+    description: 'IRREVERSIBLY hard-delete a trash group. Cannot be restored. Admin-only, audited, idempotent.',
+    scopes: ['write:content'],
+    idempotent: true,
+    rateLimit: {maxPerMinute: 10},
+    inputSchema: {
+        type: 'object',
+        required: ['trashGroup'],
+        properties: {
+            trashGroup: {type: 'string', minLength: 1},
+            idempotencyKey: {type: 'string'},
+        },
+    },
+}, async (args, ctx) => {
+    await enforceModeForTool(ctx.actor, 'trash.purge');
+    const conn: any = getMongoConnection();
+    const db = conn?.database;
+    if (!db) throw new Error('Database not ready');
+    const featureCtx = {
+        db,
+        redis: conn.cartRedis ?? null,
+        services: conn.featureServices ?? {},
+        reconnect: typeof conn.setupClient === 'function' ? conn.setupClient.bind(conn) : async () => {/* noop */},
+    } as any;
+    const res = await cascadePurge(args.trashGroup, featureCtx);
+    return {trashGroup: args.trashGroup, ...res};
+});
+
+export const TRASH_TOOLS: McpTool[] = [trashList, trashRestore, trashPurge];

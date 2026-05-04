@@ -144,7 +144,53 @@ export const languageSetDefault: McpTool = defineTool({
     return safeParse(res);
 });
 
+export const translationSet: McpTool = defineTool({
+    // SAFE: new service method, no matching GraphQL mutation yet
+    name: 'translation.set',
+    description: 'Set a single translation key for a language. Mongo + on-disk locale stay in sync.',
+    scopes: ['write:i18n'],
+    idempotent: true,
+    inputSchema: {
+        type: 'object',
+        required: ['symbol', 'key', 'value'],
+        properties: {
+            symbol: {type: 'string', minLength: 1},
+            key: {type: 'string', minLength: 1},
+            value: {type: 'string'},
+            idempotencyKey: {type: 'string'},
+        },
+    },
+}, async (args, ctx) => {
+    const res = await ctx.services.languageService.setKey({
+        symbol: args.symbol, key: args.key, value: args.value, editedBy: ctx.actor,
+    });
+    return res;
+});
+
+export const translationDelete: McpTool = defineTool({
+    // SAFE: new service method, no matching GraphQL mutation yet
+    name: 'translation.delete',
+    description: 'Delete a single translation key for a language. Mongo + on-disk locale stay in sync.',
+    scopes: ['write:i18n'],
+    idempotent: true,
+    inputSchema: {
+        type: 'object',
+        required: ['symbol', 'key'],
+        properties: {
+            symbol: {type: 'string', minLength: 1},
+            key: {type: 'string', minLength: 1},
+            idempotencyKey: {type: 'string'},
+        },
+    },
+}, async (args, ctx) => {
+    const res = await ctx.services.languageService.deleteKey({
+        symbol: args.symbol, key: args.key, editedBy: ctx.actor,
+    });
+    return res;
+});
+
 export const TRANSLATION_TOOLS: McpTool[] = [
     i18nListLanguages, i18nUpsertKeys,
     languageAdd, languageRemove, languageSetDefault,
+    translationSet, translationDelete,
 ];

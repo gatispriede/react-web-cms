@@ -17,6 +17,9 @@ import {SITE_CONTENT_TOOLS} from './siteContent';
 import {PERMISSION_TOOLS} from './permissions';
 import {USER_TOOLS} from './users';
 import {TRASH_TOOLS} from './trash';
+import {ORDER_TOOLS} from './orders';
+import {DIAGNOSTICS_TOOLS} from './diagnostics';
+import {DISCOVERY_TOOLS} from './discovery';
 
 /**
  * Out of scope (defer):
@@ -43,6 +46,9 @@ export const ALL_MCP_TOOLS: McpTool[] = [
     ...PERMISSION_TOOLS,
     ...USER_TOOLS,
     ...TRASH_TOOLS,
+    ...ORDER_TOOLS,
+    ...DIAGNOSTICS_TOOLS,
+    ...DISCOVERY_TOOLS,
 ];
 
 /**

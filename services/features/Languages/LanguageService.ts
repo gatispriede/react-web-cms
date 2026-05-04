@@ -112,6 +112,69 @@ export class LanguageService implements ILanguageService {
         }
     }
 
+    /**
+     * F8 W3 — single-key translation set. Updates Mongo's translation map
+     * for `symbol` and (best-effort) syncs the on-disk locale file. Atomic
+     * write via tmp+rename to avoid half-written JSON if i18next reads
+     * mid-write. If the on-disk file doesn't exist, we don't create it
+     * (treat the locale as Mongo-only, mirroring `addUpdateLanguage`'s
+     * disk-merge precedence rule).
+     */
+    async setKey({symbol, key, value, editedBy}: {symbol: string; key: string; value: string; editedBy?: string}): Promise<{symbol: string; key: string}> {
+        if (!symbol) throw new Error('symbol-required');
+        if (!key) throw new Error('key-required');
+        const existing = await this.languagesDB.findOne({symbol}) as any;
+        const merged: Record<string, string> = {
+            ...((existing?.translations as Record<string, string> | undefined) ?? {}),
+            [key]: value ?? '',
+        };
+        const existingVersion = typeof existing?.version === 'number' ? existing.version : 0;
+        const version = nextVersion(existingVersion);
+        await this.languagesDB.updateOne(
+            {symbol},
+            {$set: {translations: merged, version, ...auditStamp(editedBy)}},
+            {upsert: true},
+        );
+        // On-disk sync — only if the locale folder already exists. Avoids
+        // accidentally creating new on-disk locales from a one-key call.
+        try {
+            const onDisk = this.fileManager.readTranslation(symbol);
+            if (onDisk && Object.keys(onDisk).length > 0) {
+                this.fileManager.saveTranslation(symbol, {...onDisk, [key]: value ?? ''} as unknown as JSON);
+            }
+        } catch (err) {
+            log.error({scope: 'languages.setKey', err, symbol, key}, 'setKey disk write failed');
+        }
+        return {symbol, key};
+    }
+
+    /** F8 W3 — single-key translation delete. Symmetric to `setKey`. */
+    async deleteKey({symbol, key, editedBy}: {symbol: string; key: string; editedBy?: string}): Promise<{symbol: string; key: string}> {
+        if (!symbol) throw new Error('symbol-required');
+        if (!key) throw new Error('key-required');
+        const existing = await this.languagesDB.findOne({symbol}) as any;
+        const map: Record<string, string> = {...((existing?.translations as Record<string, string> | undefined) ?? {})};
+        delete map[key];
+        const existingVersion = typeof existing?.version === 'number' ? existing.version : 0;
+        const version = nextVersion(existingVersion);
+        await this.languagesDB.updateOne(
+            {symbol},
+            {$set: {translations: map, version, ...auditStamp(editedBy)}},
+            {upsert: true},
+        );
+        try {
+            const onDisk = this.fileManager.readTranslation(symbol);
+            if (onDisk && Object.keys(onDisk).length > 0) {
+                const next = {...onDisk};
+                delete next[key];
+                this.fileManager.saveTranslation(symbol, next as unknown as JSON);
+            }
+        } catch (err) {
+            log.error({scope: 'languages.deleteKey', err, symbol, key}, 'deleteKey disk write failed');
+        }
+        return {symbol, key};
+    }
+
     async deleteLanguage({language, deletedBy}: { language: INewLanguage, deletedBy?: string }): Promise<string> {
         try {
             const result = await this.languagesDB.deleteOne({symbol: language.symbol});

@@ -42,6 +42,13 @@ export interface DiagnosticsSnapshot {
         functionalRolesRegistered: number;
         grantTotal: number;
     };
+    /** F8 W3 — MCP tool coverage. Optional: present when the snapshot
+     *  was built via the `diagnostics.health` MCP tool, absent on the
+     *  legacy `getDiagnostics` query. */
+    mcpCoverage?: {
+        toolCount: number;
+        categories: Record<string, number>;
+    };
     generatedAt: string;
 }
 
