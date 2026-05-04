@@ -6,7 +6,7 @@ import {buildAdminSsr} from '@client/lib/adminSsr';
 
 const Page = ({session}: {session: Session}) => (
     <SessionProvider session={session}>
-        <LoginBtn view="release/analytics"/>
+        <LoginBtn view="system/errors"/>
     </SessionProvider>
 );
 

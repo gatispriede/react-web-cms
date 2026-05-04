@@ -6,9 +6,9 @@ export class ErrorLogAdminUILoader extends AdminUILoader {
     readonly displayName = 'Error log';
 
     readonly adminPane: AdminPaneDescriptor = {
-        id: 'release/errors',
+        id: 'system/errors',
         title: 'Error log',
-        route: '/admin/release/errors',
+        route: '/admin/system/errors',
         modes: {advanced: ErrorLogPanel},
         advancedOnly: true,
     };

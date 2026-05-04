@@ -89,12 +89,11 @@ export type AdminView =
     | 'content/inventory'
     | 'content/orders'
     | 'seo'
+    | 'seo/analytics'
     | 'release'
     | 'release/publishing'
     | 'release/bundle'
     | 'release/audit'
-    | 'release/errors'
-    | 'release/analytics'
     | 'system'
     | 'system/users'
     | 'system/mcp'
@@ -102,7 +101,8 @@ export type AdminView =
     | 'system/features'
     | 'system/agent'
     | 'system/info'
-    | 'system/email';
+    | 'system/email'
+    | 'system/errors';
 
 const isInArea = (view: AdminView, area: string) =>
     view === area || view.startsWith(area + '/');
@@ -132,12 +132,16 @@ const buildAreaItems = (
         {path: '/admin/content/inventory', label: tAdmin('Inventory'), icon: <CloudUploadOutlined/>, testidSuffix: 'inventory', adminOnly: true},
         {path: '/admin/content/orders', label: tAdmin('Orders'), icon: <AppstoreOutlined/>, testidSuffix: 'orders'},
     ],
+    seo: [
+        {path: '/admin/seo', label: tAdmin('SEO'), icon: <SearchOutlined/>, testidSuffix: 'seo'},
+        {path: '/admin/seo/analytics', label: tAdmin('Analytics'), icon: <AuditOutlined/>, testidSuffix: 'analytics', adminOnly: true},
+    ],
     release: [
-        {path: '/admin/release/publishing', label: tAdmin('Publishing'), icon: <CloudUploadOutlined/>, testidSuffix: 'publishing'},
+        // Bundle (export / import) is the most-used release surface,
+        // surface it first.
         {path: '/admin/release/bundle', label: tAdmin('Bundle'), icon: <DownloadOutlined/>, testidSuffix: 'bundle'},
+        {path: '/admin/release/publishing', label: tAdmin('Publishing'), icon: <CloudUploadOutlined/>, testidSuffix: 'publishing'},
         {path: '/admin/release/audit', label: tAdmin('Audit'), icon: <AuditOutlined/>, testidSuffix: 'audit'},
-        {path: '/admin/release/errors', label: tAdmin('Errors'), icon: <AuditOutlined/>, testidSuffix: 'errors'},
-        {path: '/admin/release/analytics', label: tAdmin('Analytics'), icon: <AuditOutlined/>, testidSuffix: 'analytics', adminOnly: true},
     ],
     system: [
         // User-facing operator concerns first — accounts, transactional
@@ -150,6 +154,7 @@ const buildAreaItems = (
         // Power-user / observability — the rest below.
         {path: '/admin/system/mcp', label: tAdmin('MCP'), icon: <AuditOutlined/>, testidSuffix: 'mcp'},
         {path: '/admin/system/agent', label: tAdmin('AI Agent'), icon: <ThunderboltOutlined/>, testidSuffix: 'agent', adminOnly: true},
+        {path: '/admin/system/errors', label: tAdmin('Errors'), icon: <AuditOutlined/>, testidSuffix: 'errors', adminOnly: true},
         {path: '/admin/system/info', label: tAdmin('Diagnostics'), icon: <InfoCircleOutlined/>, testidSuffix: 'info', adminOnly: true},
     ],
 });
@@ -239,6 +244,7 @@ const UserStatusBarInner = ({session, view, tApp}: {
         isInArea(view, 'build') ? 'build'
         : isInArea(view, 'client-config') ? 'client-config'
         : isInArea(view, 'content') ? 'content'
+        : isInArea(view, 'seo') ? 'seo'
         : isInArea(view, 'release') ? 'release'
         : isInArea(view, 'system') ? 'system'
         : null;
