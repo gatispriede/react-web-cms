@@ -1,5 +1,12 @@
 # Digital Ocean — domain + TLS wiring
 
+**Status: Shipped (with caveat: see runbook)** — `docs/runbooks/digitalocean-domain.md`.
+
+Caveat: the production domain is **env-driven** (`DOMAIN` +
+`SITE_DOMAIN_WWW` in `.env`), not hardcoded — same image serves any
+site. DNS / firewall steps stay manual; Caddy handles cert acquisition
++ renewal automatically once `DOMAIN` is a real hostname.
+
 ## Goal
 
 `gatispriede.com` (or the chosen apex) points at the Digital Ocean droplet running the CMS, over HTTPS with auto-renewing Let's Encrypt certs, `www` → apex redirect, and zero manual cert rotation.

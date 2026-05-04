@@ -1,3 +1,10 @@
+// Admin gallery input chrome — augments the public `.gallery-wrapper` root
+// with `&.admin` modifier rules. Same root by design (the admin editor
+// renders into the same DOM the public Gallery module does, with `.admin`
+// toggled on).
+//
+// AUDIT-OWNERS: .gallery-wrapper
+
 .gallery-wrapper {
   &.admin {
     height: 100%;

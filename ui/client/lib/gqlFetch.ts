@@ -14,9 +14,17 @@ import {IThemeTokens} from '@interfaces/ITheme';
 // In Docker the standalone GraphQL server is at http://server:<BUILD_PORT>/
 // (root path). In local dev there's no BUILD_PORT and Next.js handles GraphQL
 // at /api/graphql via its own Apollo route.
+//
+// E2E full-suite workers each listen on a random free port and need to fetch
+// from THEIR OWN server, not localhost:80 (which would either hit the dev
+// server or nothing). `INTERNAL_GRAPHQL_URL` is set per-worker by
+// `tests/e2e/fixtures/server.ts` so getStaticProps + the on-demand revalidate
+// handler talk to the right Mongo. Empty/unset in dev → fall through to the
+// `localhost/api/graphql` default.
 const _bp = process.env.BUILD_PORT;
 const RESOLVED_ENDPOINT: string =
-    process.env.GRAPHQL_ENDPOINT
+    process.env.INTERNAL_GRAPHQL_URL
+    || process.env.GRAPHQL_ENDPOINT
     || (_bp ? `http://server:${_bp}/` : 'http://localhost/api/graphql');
 
 export async function gqlFetch<T>(query: string, variables?: Record<string, unknown>): Promise<T | null> {
@@ -44,6 +52,11 @@ export interface InitialPageData {
         id?: string;
         type?: string;
         page: string;
+        /** F1 sub-pages — parent id chain so the menu builder can
+         *  produce nested SubMenus on first paint. */
+        parent?: string | null;
+        /** F1 — explicit URL slug; bare string or per-locale Record. */
+        slug?: string | Record<string, string> | null;
         sections: string[];
         seo?: any;
     }>;
@@ -71,7 +84,7 @@ const EMPTY_INITIAL: InitialPageData = {
 const NAV_AND_META_QUERY = `{
   mongo {
     getNavigationCollection {
-      id type page sections
+      id type page parent slug sections
       seo {
         description keywords viewport charSet url image image_alt
         published_time modified_time author locale

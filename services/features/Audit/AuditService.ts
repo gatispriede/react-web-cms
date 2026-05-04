@@ -1,5 +1,6 @@
 import {Collection, Db} from 'mongodb';
 import guid from '@utils/guid';
+import {log} from '@services/infra/logger';
 
 /**
  * Append-only audit log for mutation traceability. Complements the inline
@@ -14,7 +15,7 @@ import guid from '@utils/guid';
  * single 50 MB doc.
  *
  * Writes are fire-and-forget from the caller's perspective — any error
- * inside `record()` is swallowed with a console.error so an audit-system
+ * inside `record()` is swallowed via the structured logger so an audit-system
  * outage never blocks the underlying mutation.
  */
 export interface AuditActor {
@@ -62,7 +63,7 @@ export class AuditService {
             await this.audit.createIndex({at: 1}, {expireAfterSeconds: retentionSeconds()});
             this.indexesReady = true;
         } catch (err) {
-            console.error('AuditService.ensureIndexes:', err);
+            log.error({scope: 'audit.ensureIndexes', err}, 'audit ensureIndexes failed');
         }
     }
 
@@ -83,7 +84,7 @@ export class AuditService {
             await this.audit.insertOne(row as any);
         } catch (err) {
             // Never let audit failures block the caller's mutation.
-            console.error('AuditService.record:', err);
+            log.error({scope: 'audit.record', err}, 'audit record failed');
         }
     }
 

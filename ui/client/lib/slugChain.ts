@@ -1,0 +1,126 @@
+import {slugifyAnchor} from '@utils/stringFunctions';
+import {normalizeSlugForMatch} from '@utils/slug';
+
+// Re-export so existing imports against this module keep resolving (the
+// SSR helper used to own this; F7 moved it to `@utils/slug` as the
+// single source of truth).
+export {normalizeSlugForMatch};
+
+/**
+ * F1 sub-pages — client-side slug-chain resolution.
+ *
+ * `findPageBySlugChain` lives on the server (`NavigationService`) for
+ * GraphQL/MCP callers, but the public catch-all route already pulls
+ * the full navigation collection at build/revalidate time, so we
+ * resolve in-memory here rather than adding a new GraphQL field. The
+ * algorithm matches the server: walk root → leaf, segment by segment,
+ * matching `slug` (or slugified `page` for legacy rows pre-`slug`).
+ */
+
+export interface NavRow {
+    id: string;
+    page: string;
+    parent?: string | null;
+    /**
+     * Bare string for legacy single-locale rows; `Record<locale, slug>`
+     * for the per-locale shape (F1 follow-up). Server stores either
+     * shape; SDL transports as JSON scalar.
+     */
+    slug?: string | Record<string, string> | null;
+}
+
+/**
+ * Pick the slug for the given locale with the documented fallback
+ * chain: `slug[locale] → slug[defaultLocale] → bare slug → slugifyAnchor(page)`.
+ * `locale` / `defaultLocale` are optional so legacy callers that don't
+ * pass a locale see the bare slug (or slugified page) — preserving
+ * the pre-F1 behaviour exactly.
+ */
+export function resolveSlugForLocale(
+    row: NavRow,
+    locale?: string,
+    defaultLocale?: string,
+): string {
+    const s = row.slug;
+    if (s && typeof s === 'object') {
+        const map = s as Record<string, string>;
+        if (locale && typeof map[locale] === 'string' && map[locale].length > 0) return map[locale];
+        if (defaultLocale && typeof map[defaultLocale] === 'string' && map[defaultLocale].length > 0) {
+            return map[defaultLocale];
+        }
+        const anyEntry = Object.values(map).find(v => typeof v === 'string' && v.length > 0);
+        if (anyEntry) return anyEntry;
+        return slugifyAnchor(row.page);
+    }
+    if (typeof s === 'string' && s.length > 0) return s;
+    return slugifyAnchor(row.page);
+}
+
+const segmentOf = (row: NavRow, locale?: string, defaultLocale?: string): string =>
+    normalizeSlugForMatch(resolveSlugForLocale(row, locale, defaultLocale));
+
+const isRoot = (row: NavRow): boolean =>
+    row.parent === undefined || row.parent === null || row.parent === '';
+
+/**
+ * Walk a slug-chain to a `NavRow` or return `null` on any miss.
+ * `['services','cleaning']` → root row with slug `services`, then a
+ * child of that row with slug `cleaning`.
+ *
+ * Single-segment chains (`['home']`) resolve as before — the only
+ * candidate set is the root pages, which is exactly the legacy lookup.
+ */
+export function resolveSlugChain(
+    pages: NavRow[],
+    chain: string[],
+    locale?: string,
+    defaultLocale?: string,
+): NavRow | null {
+    if (!Array.isArray(chain) || chain.length === 0) return null;
+    let parentId: string | undefined = undefined; // root
+    let current: NavRow | null = null;
+    for (const raw of chain) {
+        // Normalise the URL segment the same way as the candidate slug
+        // (decodeURIComponent + NFKD + strip combining marks + lowercase
+        // + collapse `-`). Without this the URL side keeps its
+        // percent-encoded diacritics and trailing dashes, so live prod
+        // URLs like `/jaunumi-un-aktualit%C4%81tes-` never match the
+        // page whose `resolveSlug` returns `jaunumi-un-aktualitates`.
+        const seg = normalizeSlugForMatch(String(raw));
+        const candidates = pages.filter(p =>
+            parentId === undefined ? isRoot(p) : p.parent === parentId,
+        );
+        const match = candidates.find(p => segmentOf(p, locale, defaultLocale) === seg);
+        if (!match) return null;
+        current = match;
+        parentId = match.id;
+    }
+    return current;
+}
+
+/**
+ * Build the URL slug-chain for a page by walking up the parent chain.
+ * Returns an empty array if a parent reference is dangling (orphan) so
+ * `getStaticPaths` can skip it instead of emitting a partial URL.
+ */
+export function slugChainForPage(
+    page: NavRow,
+    pages: NavRow[],
+    locale?: string,
+    defaultLocale?: string,
+): string[] {
+    const byId = new Map(pages.map(p => [p.id, p]));
+    const chain: string[] = [];
+    let cursor: NavRow | undefined = page;
+    const seen = new Set<string>();
+    while (cursor) {
+        if (seen.has(cursor.id)) return []; // cycle guard — defensive
+        seen.add(cursor.id);
+        chain.unshift(segmentOf(cursor, locale, defaultLocale));
+        if (isRoot(cursor)) return chain;
+        const next = byId.get(cursor.parent as string);
+        if (!next) return []; // dangling parent — skip
+        cursor = next;
+    }
+    return chain;
+}

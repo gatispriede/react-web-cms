@@ -40,6 +40,21 @@ export class PostService {
         return doc ? this.normalize(doc) : null;
     }
 
+    /**
+     * Batched read used by the BatchLoader fold-in (C9). Returns a
+     * parallel array of values aligned with `ids`, with `null` slots
+     * for misses — same shape `BatchLoader<K,V>` requires.
+     */
+    async getManyByIds(ids: readonly string[]): Promise<(IPost | null)[]> {
+        if (ids.length === 0) return [];
+        const docs = await this.posts
+            .find({id: {$in: [...ids]}}, {projection: {_id: 0}})
+            .toArray();
+        const byId = new Map<string, IPost>();
+        for (const d of docs) byId.set((d as any).id, this.normalize(d));
+        return ids.map(id => byId.get(id) ?? null);
+    }
+
     async save(post: InPost, editedBy?: string, expectedVersion?: number | null): Promise<{id: string; version: number; slug: string}> {
         const title = (post.title || '').trim();
         if (!title) throw new Error('title is required');
@@ -74,11 +89,22 @@ export class PostService {
                 body: post.body ?? '',
                 updatedAt: now,
                 version,
+                // F2 — round-trip the optional pin. `undefined` clears it
+                // (Mongo `$set: {pageId: undefined}` is a no-op, but the
+                // explicit assignment keeps the in-memory shape honest).
+                pageId: post.pageId,
             };
             if (editedBy) update.editedBy = editedBy;
             if (post.publishedAt !== undefined) update.publishedAt = post.publishedAt;
             if (update.draft === false && !(existing as any).publishedAt) update.publishedAt = now;
-            await this.posts.updateOne({id: post.id}, {$set: update});
+            // F2 — clearing the pin needs an explicit `$unset`; `$set: {pageId: undefined}`
+            // is dropped by the driver and the previous value would survive.
+            const writeOp: any = {$set: update};
+            if (post.pageId === undefined || post.pageId === null || post.pageId === '') {
+                delete update.pageId;
+                writeOp.$unset = {pageId: ''};
+            }
+            await this.posts.updateOne({id: post.id}, writeOp);
             return {id: post.id, version, slug};
         }
         const id = guid();
@@ -97,6 +123,9 @@ export class PostService {
             createdAt: now,
             updatedAt: now,
             version: 1,
+            // F2 — only persist `pageId` when actually set; absent means
+            // unpinned (lives at `/blog` root conceptually).
+            ...(post.pageId ? {pageId: post.pageId} : {}),
             ...(editedBy ? {editedBy} : {}),
         };
         await this.posts.insertOne(doc as any);
@@ -135,6 +164,7 @@ export class PostService {
             version: d.version ?? 0,
             editedBy: d.editedBy,
             editedAt: d.editedAt ?? d.updatedAt,
+            pageId: d.pageId,
         };
     }
 }

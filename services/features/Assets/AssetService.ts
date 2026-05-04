@@ -8,6 +8,7 @@ import {IAssetService} from "@services/infra/mongoConfig";
 import {auditStamp} from "@services/features/Audit/audit";
 import {nextVersion, requireVersion} from "@services/infra/conflict";
 import {PUBLIC_IMAGE_PATH} from "@utils/imgPath";
+import {log} from "@services/infra/logger";
 
 const IMAGE_EXT = /\.(jpe?g|png|gif|webp|svg|avif|bmp)$/i;
 const IMAGES_DIR = path.join(process.cwd(), 'ui/client/public/images');
@@ -39,7 +40,7 @@ export class AssetService  implements IAssetService {
                 editedAt: rest.editedAt,
             };
         } catch (err) {
-            console.error('Error getting logo:', err);
+            log.error({scope: 'asset.getLogo', err}, 'getLogo failed');
             await this.setupClient();
             return undefined;
         }
@@ -90,7 +91,7 @@ export class AssetService  implements IAssetService {
             const result = await this.imagesDB.insertOne({...image, tags: withAll});
             return JSON.stringify(result);
         } catch (err) {
-            console.error('Error saving image:', err);
+            log.error({scope: 'asset.saveImage', err}, 'saveImage failed');
             await this.setupClient();
             return '';
         }
@@ -129,7 +130,7 @@ export class AssetService  implements IAssetService {
             }
             return {added, skipped, total: files.length};
         } catch (err) {
-            console.error('Error rescanning disk images:', err);
+            log.error({scope: 'asset.rescanDiskImages', err}, 'rescanDiskImages failed');
             await this.setupClient();
             return {added: 0, skipped: 0, total: 0};
         }
@@ -140,7 +141,7 @@ export class AssetService  implements IAssetService {
             const result = await this.imagesDB.deleteOne({ id });
             return JSON.stringify(result);
         } catch (err) {
-            console.error('Error deleting image:', err);
+            log.error({scope: 'asset.deleteImage', err}, 'deleteImage failed');
             await this.setupClient();
             return '';
         }
@@ -153,7 +154,7 @@ export class AssetService  implements IAssetService {
                 : {tags: {$regex: tags, $options: 'i'}};
             return await this.imagesDB.find(query).toArray() as unknown as IImage[];
         } catch (err) {
-            console.error('Error getting images:', err);
+            log.error({scope: 'asset.getImages', err}, 'getImages failed');
             await this.setupClient();
             return [];
         }

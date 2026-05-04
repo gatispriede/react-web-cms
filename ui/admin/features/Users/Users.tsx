@@ -1,10 +1,14 @@
-import React, {useCallback, useEffect, useMemo, useState} from "react";
-import {Button, Form, Input, Modal, Popconfirm, Select, Space, Switch, Table, Tag, message} from "antd";
+import React, {useEffect, useMemo} from "react";
+import {Button, Form, Input, Modal, Popconfirm, Select, Space, Switch, Table, Tag} from "antd";
 import {DeleteOutlined, EditOutlined, PlusOutlined} from "@client/lib/icons";
 import {useTranslation} from "react-i18next";
 import {useSession} from "next-auth/react";
-import UserApi from "@services/api/client/UserApi";
-import {IUser, InUser, UserRole} from "@interfaces/IUser";
+import {IUser, UserRole} from "@interfaces/IUser";
+import {Grant, FeatureGrant, PageGrant, LocaleGrant} from "@interfaces/IPermission";
+import {useViewModel} from "@client/lib/state/observable";
+import {UsersViewModel} from "./UsersViewModel";
+
+/** Render-only Users pane — VM3 (2026-05-02). */
 
 const ROLE_OPTIONS: {value: UserRole; label: string; color: string}[] = [
     {value: 'viewer', label: 'Viewer', color: 'default'},
@@ -12,246 +16,201 @@ const ROLE_OPTIONS: {value: UserRole; label: string; color: string}[] = [
     {value: 'admin', label: 'Admin', color: 'volcano'},
 ];
 
-const userApi = new UserApi();
-
 const AdminSettingsUsers = () => {
     const {t} = useTranslation();
     const {data: session, update: updateSession} = useSession();
     const currentEmail = session?.user?.email ?? '';
-
-    const [users, setUsers] = useState<IUser[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [editing, setEditing] = useState<Partial<InUser> | null>(null);
-    const [saving, setSaving] = useState(false);
+    const vm = useViewModel(() => new UsersViewModel(undefined, t));
     const [form] = Form.useForm();
 
-    const refresh = useCallback(async () => {
-        setLoading(true);
-        try {
-            setUsers(await userApi.listUsers());
-        } catch (err) {
-            message.error(String(err));
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+    useEffect(() => { void vm.refresh(); }, [vm]);
 
-    useEffect(() => {
-        void refresh();
-    }, [refresh]);
-
-    const openCreate = () => {
-        setEditing({role: 'viewer', canPublishProduction: false});
-    };
-
-    const openEdit = (user: IUser) => {
-        setEditing({
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            role: user.role,
-            canPublishProduction: user.canPublishProduction,
-        });
-    };
-
-    // Modal is `preserve={false}`, which unmounts the inner Form when
-    // closed — so calling `form.setFieldsValue(...)` inside the open*
-    // handlers above used to no-op on the **first** open of an edit
-    // session (form not yet mounted), then succeed on the second open
-    // because the previously-mounted instance was still around. Effect
-    // runs after the Form is in the tree, so the values land every time.
-    useEffect(() => {
-        if (editing === null) return;
-        form.resetFields();
-        if (editing.id) {
-            form.setFieldsValue({
-                email: editing.email ?? '',
-                name: editing.name ?? '',
-                role: editing.role ?? 'viewer',
-                canPublishProduction: Boolean(editing.canPublishProduction),
-            });
-        } else {
-            form.setFieldsValue({role: 'viewer', canPublishProduction: false});
-        }
-    }, [editing, form]);
-
-    const close = () => {
-        setEditing(null);
-        form.resetFields();
-    };
-
-    const save = async () => {
+    const onSave = async () => {
         const values = await form.validateFields();
-        setSaving(true);
-        try {
-            const payload: InUser = {
-                id: editing?.id,
-                email: values.email,
-                name: values.name,
-                role: values.role,
-                password: values.password || undefined,
-                canPublishProduction: Boolean(values.canPublishProduction),
-            };
-            const result = editing?.id
-                ? await userApi.updateUser(payload)
-                : await userApi.addUser(payload);
-            if (result.error) {
-                message.error(result.error);
-                return;
-            }
-            // If the current user changed their own password, refresh the JWT
-            // so mustChangePassword clears immediately without re-login.
-            if (editing?.id && values.password && editing.email === currentEmail) {
-                await updateSession({user: {mustChangePassword: false}});
-            }
-            message.success(editing?.id ? t('User updated') : t('User created'));
-            close();
-            await refresh();
-        } finally {
-            setSaving(false);
-        }
+        // Q10 — fold the three multi-select arrays into vm.editing.grants
+        // before save. The VM rebuilds the discriminated `Grant[]` union.
+        vm.setGrants(
+            values.grantFeatures ?? [],
+            values.grantPages ?? [],
+            values.grantLocales ?? [],
+        );
+        await vm.save(values, currentEmail, async () => {
+            await updateSession({user: {mustChangePassword: false}});
+        });
+        form.resetFields();
     };
 
-    const remove = async (user: IUser) => {
-        const result = await userApi.removeUser(user.id);
-        if (result.error) {
-            message.error(result.error);
-            return;
-        }
-        message.success(t('User removed'));
-        await refresh();
+    const onClose = () => {
+        vm.close();
+        form.resetFields();
     };
 
     const columns = useMemo(() => [
-        {
-            title: t('Email'),
-            dataIndex: 'email',
-            key: 'email',
+        {title: t('Email'), dataIndex: 'email', key: 'email',
             render: (email: string) => (
                 <span>
                     {email}
                     {email === currentEmail ? <Tag style={{marginLeft: 8}} color="green">{t('you')}</Tag> : null}
                 </span>
-            ),
-        },
+            )},
         {title: t('Name'), dataIndex: 'name', key: 'name'},
-        {
-            title: t('Role'),
-            dataIndex: 'role',
-            key: 'role',
+        {title: t('Role'), dataIndex: 'role', key: 'role',
             render: (role: UserRole = 'viewer') => {
                 const r = ROLE_OPTIONS.find(o => o.value === role) ?? ROLE_OPTIONS[0];
                 return <Tag color={r.color}>{t(r.label)}</Tag>;
-            },
-        },
-        {
-            title: t('Can publish'),
-            dataIndex: 'canPublishProduction',
-            key: 'canPublishProduction',
-            width: 130,
+            }},
+        {title: t('Can publish'), dataIndex: 'canPublishProduction', key: 'canPublishProduction', width: 130,
             render: (canPublish: boolean) =>
-                canPublish ? <Tag color="green">{t('Yes')}</Tag> : <Tag>{t('No')}</Tag>,
-        },
-        {
-            title: t('Actions'),
-            key: 'actions',
-            width: 180,
+                canPublish ? <Tag color="green">{t('Yes')}</Tag> : <Tag>{t('No')}</Tag>},
+        {title: t('Actions'), key: 'actions', width: 180,
             render: (_: unknown, user: IUser) => (
                 <Space>
-                    <Button size="small" icon={<EditOutlined/>} onClick={() => openEdit(user)}>
-                        {t('Edit')}
-                    </Button>
+                    <Button size="small" icon={<EditOutlined/>} onClick={() => vm.openEdit(user)}>{t('Edit')}</Button>
                     <Popconfirm
                         title={t('Remove user?')}
                         description={t('This cannot be undone.')}
                         okText={t('Remove')}
-                        okButtonProps={{danger: true}}
+                        okButtonProps={{danger: true, loading: vm.removePending}}
                         cancelText={t('Cancel')}
                         disabled={user.email === currentEmail}
-                        onConfirm={() => remove(user)}
+                        onConfirm={() => vm.remove(user)}
                     >
                         <Button
                             size="small"
                             danger
                             icon={<DeleteOutlined/>}
                             disabled={user.email === currentEmail}
-                        >
-                            {t('Remove')}
-                        </Button>
+                            loading={vm.removePending}
+                        >{t('Remove')}</Button>
                     </Popconfirm>
                 </Space>
-            ),
-        },
-    ], [t, currentEmail]);
+            )},
+    ], [t, currentEmail, vm]);
 
     return (
         <div style={{padding: 16}}>
             <Space style={{marginBottom: 16}}>
-                <Button type="primary" icon={<PlusOutlined/>} onClick={openCreate}>
-                    {t('Add user')}
-                </Button>
-                <Button onClick={refresh} loading={loading}>{t('Refresh')}</Button>
+                <Button type="primary" icon={<PlusOutlined/>} onClick={vm.openCreate}>{t('Add user')}</Button>
+                <Button onClick={vm.refresh} loading={vm.loading}>{t('Refresh')}</Button>
             </Space>
             <Table
                 rowKey="id"
-                loading={loading}
-                dataSource={users}
+                loading={vm.loading}
+                dataSource={vm.users}
                 columns={columns}
                 pagination={{pageSize: 10}}
                 size="middle"
             />
-            <Modal
-                title={editing?.id ? t('Edit user') : t('Add user')}
-                open={editing !== null}
-                onCancel={close}
-                onOk={save}
-                confirmLoading={saving}
-                okText={editing?.id ? t('Save') : t('Create')}
-                // antd lazy-mounts modal children on first open. Without
-                // forceRender, the `useEffect` that calls
-                // form.setFieldsValue fires before the <Form> is in the
-                // tree on the FIRST edit, leaving fields blank — second
-                // open then works because the Form is mounted from the
-                // previous render. forceRender mounts the Form eagerly
-                // so values land every time.
-                forceRender
-            >
-                <Form form={form} layout="vertical" preserve={false}>
-                    <Form.Item
-                        name="email"
-                        label={t('Email')}
-                        rules={[
-                            {required: true, message: t('Email is required')},
-                            {type: 'email', message: t('Enter a valid email')},
-                        ]}
+            {vm.editing !== null && (
+                <Modal
+                    title={vm.editing?.id ? t('Edit user') : t('Add user')}
+                    open
+                    onCancel={onClose}
+                    onOk={onSave}
+                    confirmLoading={vm.saving}
+                    okText={vm.editing?.id ? t('Save') : t('Create')}
+                    destroyOnClose
+                >
+                    <Form
+                        form={form}
+                        layout="vertical"
+                        preserve={false}
+                        key={vm.editing?.id ?? 'new'}
+                        initialValues={{
+                            email: vm.editing?.email ?? '',
+                            name: vm.editing?.name ?? '',
+                            role: vm.editing?.role ?? 'viewer',
+                            canPublishProduction: Boolean(vm.editing?.canPublishProduction),
+                            grantFeatures: ((vm.editing?.grants ?? []).filter(g => g.kind === 'feature') as FeatureGrant[]).map(g => g.feature),
+                            grantPages: ((vm.editing?.grants ?? []).filter(g => g.kind === 'page') as PageGrant[]).map(g => g.page),
+                            grantLocales: ((vm.editing?.grants ?? []).filter(g => g.kind === 'locale') as LocaleGrant[]).map(g => g.locale),
+                        }}
                     >
-                        <Input disabled={!!editing?.id} autoComplete="off"/>
-                    </Form.Item>
-                    <Form.Item name="name" label={t('Name')}>
-                        <Input autoComplete="off"/>
-                    </Form.Item>
-                    <Form.Item name="role" label={t('Role')}>
-                        <Select
-                            options={ROLE_OPTIONS.map(r => ({value: r.value, label: t(r.label)}))}
-                        />
-                    </Form.Item>
-                    <Form.Item
-                        name="canPublishProduction"
-                        label={t('Can publish to production')}
-                        valuePropName="checked"
-                        tooltip={t('Allows copying the draft site state into the live published snapshot.')}
-                    >
-                        <Switch/>
-                    </Form.Item>
-                    <Form.Item
-                        name="password"
-                        label={editing?.id ? t('New password (leave blank to keep)') : t('Password')}
-                        rules={editing?.id ? [] : [{required: true, message: t('Password is required')}]}
-                    >
-                        <Input.Password autoComplete="new-password"/>
-                    </Form.Item>
-                </Form>
-            </Modal>
+                        <Form.Item
+                            name="email"
+                            label={t('Email')}
+                            rules={[
+                                {required: true, message: t('Email is required')},
+                                {type: 'email', message: t('Enter a valid email')},
+                            ]}
+                        >
+                            <Input disabled={!!vm.editing?.id} autoComplete="off"/>
+                        </Form.Item>
+                        <Form.Item name="name" label={t('Name')}>
+                            <Input autoComplete="off"/>
+                        </Form.Item>
+                        <Form.Item name="role" label={t('Role')}>
+                            <Select
+                                options={ROLE_OPTIONS.map(r => ({value: r.value, label: t(r.label)}))}
+                            />
+                        </Form.Item>
+                        <Form.Item
+                            name="canPublishProduction"
+                            label={t('Can publish to production')}
+                            valuePropName="checked"
+                            tooltip={t('Allows copying the draft site state into the live published snapshot.')}
+                        >
+                            <Switch/>
+                        </Form.Item>
+                        <Form.Item
+                            name="password"
+                            label={vm.editing?.id ? t('New password (leave blank to keep)') : t('Password')}
+                            rules={vm.editing?.id ? [] : [{required: true, message: t('Password is required')}]}
+                        >
+                            <Input.Password autoComplete="new-password"/>
+                        </Form.Item>
+                        {/* Q10 — three-dimension grants: feature / page / locale.
+                            Constrained multi-selects (not free-text tags) — options
+                            come from the live registries (feature flags / pages /
+                            languages) so admins pick from real values instead of
+                            typing strings that don't match anything registered.
+                            Per coding-principle (2026-05-03): predefined selections
+                            beat free text wherever the value space is enumerable. */}
+                        <Form.Item
+                            name="grantFeatures"
+                            label={t('Feature grants')}
+                            tooltip={t('User can mutate these features (e.g. Posts, Themes).')}
+                        >
+                            <Select
+                                mode="multiple"
+                                allowClear
+                                placeholder={t('Pick features…')}
+                                options={vm.featureOptions.map(id => ({label: id, value: id}))}
+                                showSearch
+                                optionFilterProp="label"
+                            />
+                        </Form.Item>
+                        <Form.Item
+                            name="grantPages"
+                            label={t('Page grants')}
+                            tooltip={t('Pages the user can edit.')}
+                        >
+                            <Select
+                                mode="multiple"
+                                allowClear
+                                placeholder={t('Pick pages…')}
+                                options={vm.pageOptions.map(p => ({label: p, value: p}))}
+                                showSearch
+                                optionFilterProp="label"
+                            />
+                        </Form.Item>
+                        <Form.Item
+                            name="grantLocales"
+                            label={t('Locale grants')}
+                            tooltip={t('Languages the user can edit / translate.')}
+                        >
+                            <Select
+                                mode="multiple"
+                                allowClear
+                                placeholder={t('Pick locales…')}
+                                options={vm.localeOptions.map(l => ({label: l, value: l}))}
+                                showSearch
+                                optionFilterProp="label"
+                            />
+                        </Form.Item>
+                    </Form>
+                </Modal>
+            )}
         </div>
     );
 };

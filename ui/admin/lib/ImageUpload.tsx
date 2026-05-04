@@ -7,6 +7,7 @@ import MongoApi from "@services/api/client/MongoApi";
 import {TFunction} from "i18next";
 import IImage from "@interfaces/IImage";
 import {useRefreshView} from "@client/lib/refreshBus";
+import BulkImageUploadModal from "@admin/lib/BulkImageUploadModal";
 
 /**
  * Picker sort modes. `recent` is the backend default; the others sort
@@ -82,6 +83,7 @@ const ImageUpload = ({setFile, t}: { setFile: (file: File) => void, t: TFunction
     // the operator enters/leaves it implicitly by toggling the check circle.
     const [selected, setSelected] = useState<Set<string>>(new Set())
     const [bulkBusy, setBulkBusy] = useState(false)
+    const [bulkOpen, setBulkOpen] = useState(false)
     const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
     const selectMode = selected.size > 0
     const toggleSelect = (id: string) => {
@@ -316,9 +318,19 @@ const ImageUpload = ({setFile, t}: { setFile: (file: File) => void, t: TFunction
                                 </div>
                             </div>
                             <Space wrap>
-                                <Button ref={buttonRef} type="primary" icon={<CloudUploadOutlined/>}>
-                                    {t("Upload New Image")}
-                                </Button>
+                                <Tooltip title={t("Pick one image, crop and edit before saving.")}>
+                                    <Button ref={buttonRef} type="primary" icon={<CloudUploadOutlined/>}>
+                                        {t("Upload one image")}
+                                    </Button>
+                                </Tooltip>
+                                <Tooltip title={t("Drop many files at once, or import from a URL (S3, Cloudinary, Unsplash, …). Server applies the same ratio + EXIF strip.")}>
+                                    <Button
+                                        icon={<CloudUploadOutlined/>}
+                                        onClick={() => setBulkOpen(true)}
+                                    >
+                                        {t("Upload many / from URL")}
+                                    </Button>
+                                </Tooltip>
                                 <Tooltip title={t("Scan public/images on the server and add any files missing from the library.")}>
                                     <Button
                                         onClick={rescanDisk}
@@ -590,6 +602,12 @@ const ImageUpload = ({setFile, t}: { setFile: (file: File) => void, t: TFunction
                     </div>
                 </div>
             </Modal>
+            <BulkImageUploadModal
+                open={bulkOpen}
+                onClose={() => setBulkOpen(false)}
+                onUploaded={async () => { await loadImages(); }}
+                t={t}
+            />
             {/* Preview portal lives OUTSIDE the selection Modal so AntD's
                 preview overlay stacks above everything (rendering it inside
                 left the Modal header visible as a thin strip on top). */}

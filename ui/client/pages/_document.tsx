@@ -51,7 +51,7 @@ const preloadData = async () => {
                     ({query}) => {
                         const list: ISection[] = (query as unknown as IMongo).mongo.getSections({ids: sectionIds}).map(item => {
                             let content: IItem[];
-                            content = item.content.map((value: IItem) => {
+                            content = (item.content ?? []).map((value: IItem) => {
                                 return {
                                     name: value.name,
                                     type: value.type,
@@ -100,6 +100,14 @@ class MyDocument extends Document<MyDocProps> {
             <Html lang={currentLocale}>
                 <Head>
                     <meta charSet="utf-8" />
+                    {/* Favicon — served from `/api/favicon` so the active site
+                        Logo (or theme override) drives it dynamically. Falls
+                        back to a static `/favicon.svg` shipped in public/ for
+                        cold boots before any DB read.
+                        See `ui/client/pages/api/favicon.ts`. */}
+                    <link rel="icon" href="/api/favicon" type="image/svg+xml"/>
+                    <link rel="alternate icon" href="/favicon.svg" type="image/svg+xml"/>
+                    <link rel="apple-touch-icon" href="/api/favicon"/>
                     {/* Fonts: bundled preset families plus whatever the active
                         theme picked via the FontPicker are loaded up front so
                         theme switches don't FOUC. URL is composed in

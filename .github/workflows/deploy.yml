@@ -1,0 +1,134 @@
+# P2 — Automatic deployment to the Digital Ocean droplet.
+#
+# Gated by `vars.DEPLOY_ENABLED == 'true'` so wiring the secrets without
+# flipping the toggle does NOT trigger a live deploy. To enable:
+#   1. Set repository secrets DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY,
+#      SITE_URL.
+#   2. Set repository variable DEPLOY_ENABLED=true.
+#   3. Push to master.
+#
+# Build + tests run on the GitHub runner. The droplet then pulls the
+# already-tested commit and rebuilds in place — keeps the image-registry
+# story out of v1. (Switch to GHCR push + `docker compose pull` later
+# when image size or droplet CPU becomes the bottleneck.)
+#
+# Health-gated: if `/api/health` doesn't return 200 within ~60s of the
+# restart, we roll back to the previous commit and restart again. Status
+# is surfaced in the Actions log; a failed deploy fails the workflow so
+# branch-protection / notifications fire.
+#
+# See `docs/runbooks/automatic-deployment.md` for the one-time setup
+# (SSH key generation, droplet `authorized_keys`, secret naming).
+
+name: deploy
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: Typecheck + build
+        run: npm run build
+      - name: Unit tests
+        run: npm test
+
+  deploy:
+    needs: build-test
+    runs-on: ubuntu-latest
+    if: vars.DEPLOY_ENABLED == 'true'
+    environment: production
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Deploy + health-check + rollback on failure
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+          SHA: ${{ github.sha }}
+          # P4 — opt into seamless (blue/green) deploy. Default off so
+          # the legacy P2 stop-the-world path keeps working until the
+          # operator has provisioned `app-blue` + `app-green` on the
+          # droplet (one-time `docker compose --profile seamless ...
+          # up -d`). See docs/runbooks/seamless-deployment.md.
+          SEAMLESS_DEPLOY: ${{ vars.SEAMLESS_DEPLOY }}
+          DEPLOY_HEALTH_TIMEOUT: ${{ vars.DEPLOY_HEALTH_TIMEOUT || '60' }}
+          DRAIN_SECONDS: ${{ vars.DRAIN_SECONDS || '30' }}
+        run: |
+          if [ "${SEAMLESS_DEPLOY:-}" = "1" ] || [ "${SEAMLESS_DEPLOY:-}" = "true" ]; then
+            echo "[deploy] mode: seamless (blue/green)"
+            ssh -i ~/.ssh/id_ed25519 "$USER@$HOST" \
+              "TARGET_SHA='$SHA' DEPLOY_HEALTH_TIMEOUT='$DEPLOY_HEALTH_TIMEOUT' DRAIN_SECONDS='$DRAIN_SECONDS' bash /opt/cms/tools/blue-green-deploy.sh"
+            # Post-flip: confirm public health from outside the droplet.
+            echo "[deploy] verifying public health on $SITE_URL/api/health"
+            for i in $(seq 1 30); do
+              if curl -fsS --max-time 5 "$SITE_URL/api/health" >/dev/null; then
+                echo "[deploy] public health OK after ${i}s"; exit 0
+              fi
+              sleep 2
+            done
+            echo "[deploy] public health FAILED — flip back manually with the runbook"
+            exit 1
+          fi
+
+          echo "[deploy] mode: legacy (single-instance, brief outage on restart)"
+          ssh -i ~/.ssh/id_ed25519 "$USER@$HOST" bash -s <<'REMOTE'
+            set -euo pipefail
+            cd /opt/cms
+            PREV_SHA="$(git rev-parse HEAD)"
+            echo "[deploy] previous commit: $PREV_SHA"
+
+            git fetch --depth=50 origin master
+            git checkout master
+            git reset --hard origin/master
+
+            # Build new images + restart only what changed. `--no-deps`
+            # so we don't bounce Mongo on every deploy (P5 auth state
+            # lives in its data volume but the connection is cheap).
+            docker compose -f infra/compose.yaml build app server
+            docker compose -f infra/compose.yaml up -d --no-deps app server
+          REMOTE
+
+          echo "[deploy] waiting for health on $SITE_URL/api/health"
+          OK=0
+          for i in $(seq 1 30); do
+            if curl -fsS --max-time 5 "$SITE_URL/api/health" >/dev/null; then
+              echo "[deploy] healthy after ${i}s"
+              OK=1; break
+            fi
+            sleep 2
+          done
+
+          if [ "$OK" != "1" ]; then
+            echo "[deploy] health check failed — rolling back"
+            ssh -i ~/.ssh/id_ed25519 "$USER@$HOST" bash -s <<'ROLLBACK'
+              set -euo pipefail
+              cd /opt/cms
+              # `git reflog` keeps the previous commit reachable for at
+              # least 90 days, so this is safe even after the master ref
+              # has moved on the droplet.
+              git reset --hard HEAD@{1}
+              docker compose -f infra/compose.yaml build app server
+              docker compose -f infra/compose.yaml up -d --no-deps app server
+ROLLBACK
+            exit 1
+          fi

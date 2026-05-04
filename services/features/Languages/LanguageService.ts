@@ -4,6 +4,7 @@ import {ILanguageService} from "@services/infra/mongoConfig";
 import FileManager from "@services/infra/fileManager";
 import {auditStamp} from "@services/features/Audit/audit";
 import {nextVersion, requireVersion} from "@services/infra/conflict";
+import {log} from "@services/infra/logger";
 
 /**
  * Translations live in two places that must stay in sync:
@@ -29,7 +30,7 @@ export class LanguageService implements ILanguageService {
             const docs = await this.languagesDB.find({}).toArray();
             return docs.map(doc => doc as unknown as INewLanguage);
         } catch (err) {
-            console.error('Error getting languages:', err);
+            log.error({scope: 'languages.list', err}, 'getLanguages failed');
             await this.setupClient();
             return [];
         }
@@ -65,7 +66,7 @@ export class LanguageService implements ILanguageService {
                     {$set: {default: false}}
                 );
             } catch (err) {
-                console.error('Error demoting previous default language:', err);
+                log.error({scope: 'languages.demoteDefault', err, symbol: language.symbol}, 'demote previous default failed');
             }
         }
         await this.languagesDB.updateOne(
@@ -77,10 +78,101 @@ export class LanguageService implements ILanguageService {
             try {
                 this.fileManager.saveTranslation(language.symbol, merged as unknown as JSON);
             } catch (err) {
-                console.error('Error writing translation JSON to disk:', err);
+                log.error({scope: 'languages.writeJson', err, symbol: language.symbol}, 'write translation JSON failed');
             }
         }
         return {symbol: language.symbol, version};
+    }
+
+    /**
+     * F8 — flip the `default` flag onto one language; demote all others.
+     * The collection invariant is "at most one default"; this is the
+     * dedicated setter used by the MCP `language.setDefault` tool when
+     * the caller wants to promote without re-sending the full payload
+     * via `addUpdateLanguage`.
+     */
+    async setDefault({symbol, editedBy}: { symbol: string; editedBy?: string }): Promise<string> {
+        try {
+            if (!symbol) throw new Error('symbol-required');
+            const target = await this.languagesDB.findOne({symbol});
+            if (!target) throw new Error('language-not-found');
+            await this.languagesDB.updateMany(
+                {symbol: {$ne: symbol}, default: true},
+                {$set: {default: false}},
+            );
+            await this.languagesDB.updateOne(
+                {symbol},
+                {$set: {default: true, ...auditStamp(editedBy)}},
+            );
+            return JSON.stringify({setDefault: {symbol}});
+        } catch (err) {
+            log.error({scope: 'languages.setDefault', err, symbol}, 'setDefault failed');
+            await this.setupClient();
+            return JSON.stringify({error: String((err as Error).message || err)});
+        }
+    }
+
+    /**
+     * F8 W3 — single-key translation set. Updates Mongo's translation map
+     * for `symbol` and (best-effort) syncs the on-disk locale file. Atomic
+     * write via tmp+rename to avoid half-written JSON if i18next reads
+     * mid-write. If the on-disk file doesn't exist, we don't create it
+     * (treat the locale as Mongo-only, mirroring `addUpdateLanguage`'s
+     * disk-merge precedence rule).
+     */
+    async setKey({symbol, key, value, editedBy}: {symbol: string; key: string; value: string; editedBy?: string}): Promise<{symbol: string; key: string}> {
+        if (!symbol) throw new Error('symbol-required');
+        if (!key) throw new Error('key-required');
+        const existing = await this.languagesDB.findOne({symbol}) as any;
+        const merged: Record<string, string> = {
+            ...((existing?.translations as Record<string, string> | undefined) ?? {}),
+            [key]: value ?? '',
+        };
+        const existingVersion = typeof existing?.version === 'number' ? existing.version : 0;
+        const version = nextVersion(existingVersion);
+        await this.languagesDB.updateOne(
+            {symbol},
+            {$set: {translations: merged, version, ...auditStamp(editedBy)}},
+            {upsert: true},
+        );
+        // On-disk sync — only if the locale folder already exists. Avoids
+        // accidentally creating new on-disk locales from a one-key call.
+        try {
+            const onDisk = this.fileManager.readTranslation(symbol);
+            if (onDisk && Object.keys(onDisk).length > 0) {
+                this.fileManager.saveTranslation(symbol, {...onDisk, [key]: value ?? ''} as unknown as JSON);
+            }
+        } catch (err) {
+            log.error({scope: 'languages.setKey', err, symbol, key}, 'setKey disk write failed');
+        }
+        return {symbol, key};
+    }
+
+    /** F8 W3 — single-key translation delete. Symmetric to `setKey`. */
+    async deleteKey({symbol, key, editedBy}: {symbol: string; key: string; editedBy?: string}): Promise<{symbol: string; key: string}> {
+        if (!symbol) throw new Error('symbol-required');
+        if (!key) throw new Error('key-required');
+        const existing = await this.languagesDB.findOne({symbol}) as any;
+        const map: Record<string, string> = {...((existing?.translations as Record<string, string> | undefined) ?? {})};
+        delete map[key];
+        const existingVersion = typeof existing?.version === 'number' ? existing.version : 0;
+        const version = nextVersion(existingVersion);
+        await this.languagesDB.updateOne(
+            {symbol},
+            {$set: {translations: map, version, ...auditStamp(editedBy)}},
+            {upsert: true},
+        );
+        try {
+            const onDisk = this.fileManager.readTranslation(symbol);
+            if (onDisk && Object.keys(onDisk).length > 0) {
+                const next = {...onDisk};
+                delete next[key];
+                this.fileManager.saveTranslation(symbol, next as unknown as JSON);
+            }
+        } catch (err) {
+            log.error({scope: 'languages.deleteKey', err, symbol, key}, 'deleteKey disk write failed');
+        }
+        return {symbol, key};
     }
 
     async deleteLanguage({language, deletedBy}: { language: INewLanguage, deletedBy?: string }): Promise<string> {
@@ -90,12 +182,12 @@ export class LanguageService implements ILanguageService {
                 try {
                     this.fileManager.deleteTranslation(language.symbol);
                 } catch (err) {
-                    console.error('Error resetting translation JSON on disk:', err);
+                    log.error({scope: 'languages.deleteJson', err, symbol: language.symbol}, 'delete translation JSON failed');
                 }
             }
             return JSON.stringify({...result, ...(deletedBy ? {deletedBy} : {})});
         } catch (err) {
-            console.error('Error deleting language:', err);
+            log.error({scope: 'languages.delete', err, symbol: language.symbol}, 'delete language failed');
             await this.setupClient();
             return '';
         }

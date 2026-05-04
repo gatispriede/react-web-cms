@@ -1,65 +1,21 @@
-import React, {useCallback, useEffect, useState} from "react";
+import React, {useEffect} from "react";
 import {Alert, Button, Col, Input, Row, Space, Typography, message} from "antd";
 import {useTranslation} from "react-i18next";
 import ImageUrlInput from "@client/lib/ImageUrlInput";
-import SiteSeoApi from "@services/api/client/SiteSeoApi";
-import {DEFAULT_SITE_SEO, ISiteSeoDefaults} from "@interfaces/ISiteSeo";
 import AuditBadge from "@admin/shell/AuditBadge";
 import {useRefreshView} from "@client/lib/refreshBus";
 import ConflictDialog from "@client/lib/ConflictDialog";
-import {ConflictError, isConflictError} from "@client/lib/conflict";
-
-const seoApi = new SiteSeoApi();
+import {useViewModel} from "@client/lib/state/observable";
+import {SEOViewModel} from "./SEOViewModel";
 
 const AdminSettingsSEO: React.FC = () => {
     const {t} = useTranslation();
-    const [seo, setSeo] = useState<ISiteSeoDefaults>({...DEFAULT_SITE_SEO});
-    const [loading, setLoading] = useState(false);
-    const [saving, setSaving] = useState(false);
-    const [conflict, setConflict] = useState<{error: ConflictError<any>; retry: () => Promise<void>} | null>(null);
+    const vm = useViewModel(() => new SEOViewModel(undefined, t));
 
-    const refresh = useCallback(async () => {
-        setLoading(true);
-        try { setSeo(await seoApi.get()); }
-        finally { setLoading(false); }
-    }, []);
+    useEffect(() => { void vm.refresh(); }, [vm]);
+    useRefreshView(() => void vm.refresh(), 'settings');
 
-    useEffect(() => { void refresh(); }, [refresh]);
-    useRefreshView(refresh, 'settings');
-
-    const update = (patch: Partial<ISiteSeoDefaults>) => setSeo(s => ({...s, ...patch}));
-
-    const performSave = useCallback(async (payload: ISiteSeoDefaults, expectedVersion: number | undefined) => {
-        const result = await seoApi.save(payload, expectedVersion);
-        if ((result as any).error) { message.error((result as any).error); return false; }
-        message.success(t('SEO defaults saved'));
-        if (typeof (result as any).version === 'number') {
-            setSeo(s => ({...s, version: (result as any).version}));
-        }
-        return true;
-    }, [t]);
-
-    const save = async () => {
-        setSaving(true);
-        try {
-            await performSave(seo, seo.version);
-        } catch (err) {
-            if (isConflictError(err)) {
-                setConflict({
-                    error: err,
-                    retry: async () => {
-                        setSaving(true);
-                        try {
-                            await performSave(seo, err.currentVersion);
-                            setConflict(null);
-                        } finally { setSaving(false); }
-                    },
-                });
-            } else {
-                message.error(String((err as Error)?.message ?? err));
-            }
-        } finally { setSaving(false); }
-    };
+    const seo = vm.seo;
 
     return (
         <div style={{padding: 16, maxWidth: 720}}>
@@ -74,7 +30,7 @@ const AdminSettingsSEO: React.FC = () => {
                     <Typography.Text strong>{t('Site name')}</Typography.Text>
                     <Input
                         value={seo.siteName ?? ''}
-                        onChange={e => update({siteName: e.target.value})}
+                        onChange={e => vm.update({siteName: e.target.value})}
                         placeholder="Acme Co."
                     />
                 </Col>
@@ -82,7 +38,7 @@ const AdminSettingsSEO: React.FC = () => {
                     <Typography.Text strong>{t('Primary domain')}</Typography.Text>
                     <Input
                         value={seo.primaryDomain ?? ''}
-                        onChange={e => update({primaryDomain: e.target.value})}
+                        onChange={e => vm.update({primaryDomain: e.target.value})}
                         placeholder="https://example.com"
                     />
                 </Col>
@@ -90,7 +46,7 @@ const AdminSettingsSEO: React.FC = () => {
                     <Typography.Text strong>{t('Default description')}</Typography.Text>
                     <Input.TextArea
                         value={seo.defaultDescription ?? ''}
-                        onChange={e => update({defaultDescription: e.target.value})}
+                        onChange={e => vm.update({defaultDescription: e.target.value})}
                         rows={3}
                         maxLength={500}
                         showCount
@@ -100,7 +56,7 @@ const AdminSettingsSEO: React.FC = () => {
                     <Typography.Text strong>{t('Default keywords')}</Typography.Text>
                     <Input
                         value={seo.defaultKeywords ?? ''}
-                        onChange={e => update({defaultKeywords: e.target.value})}
+                        onChange={e => vm.update({defaultKeywords: e.target.value})}
                         placeholder="react, next.js, cms"
                     />
                 </Col>
@@ -108,7 +64,7 @@ const AdminSettingsSEO: React.FC = () => {
                     <Typography.Text strong>{t('Default author')}</Typography.Text>
                     <Input
                         value={seo.defaultAuthor ?? ''}
-                        onChange={e => update({defaultAuthor: e.target.value})}
+                        onChange={e => vm.update({defaultAuthor: e.target.value})}
                     />
                 </Col>
                 <Col xs={24} md={12}>
@@ -116,7 +72,7 @@ const AdminSettingsSEO: React.FC = () => {
                     <ImageUrlInput
                         t={t}
                         value={seo.defaultImage ?? ''}
-                        onChange={v => update({defaultImage: v})}
+                        onChange={v => vm.update({defaultImage: v})}
                         placeholder="api/og-default.png or https://…"
                     />
                 </Col>
@@ -124,7 +80,7 @@ const AdminSettingsSEO: React.FC = () => {
                     <Typography.Text strong>{t('Twitter handle')}</Typography.Text>
                     <Input
                         value={seo.twitterHandle ?? ''}
-                        onChange={e => update({twitterHandle: e.target.value})}
+                        onChange={e => vm.update({twitterHandle: e.target.value})}
                         placeholder="@example"
                     />
                 </Col>
@@ -132,30 +88,31 @@ const AdminSettingsSEO: React.FC = () => {
                     <Typography.Text strong>{t('Default locale')}</Typography.Text>
                     <Input
                         value={seo.defaultLocale ?? ''}
-                        onChange={e => update({defaultLocale: e.target.value})}
+                        onChange={e => vm.update({defaultLocale: e.target.value})}
                         placeholder="en_US"
                     />
                 </Col>
             </Row>
             <Space style={{marginTop: 24}} align="center">
-                <Button type="primary" onClick={save} loading={saving}>{t('Save')}</Button>
-                <Button onClick={refresh} loading={loading}>{t('Refresh')}</Button>
+                <Button type="primary" onClick={() => void vm.save()} loading={vm.saving}>{t('Save')}</Button>
+                <Button onClick={() => void vm.refresh()} loading={vm.loading}>{t('Refresh')}</Button>
                 <AuditBadge editedBy={seo.editedBy} editedAt={seo.editedAt}/>
             </Space>
-            {conflict && (() => {
-                const peer = conflict.error.currentDoc as {editedBy?: string; editedAt?: string} | null;
+            {vm.conflict && (() => {
+                const c = vm.conflict;
+                const peer = c.error.currentDoc as {editedBy?: string; editedAt?: string} | null;
                 return (
                     <ConflictDialog
                         open
                         docKind={t('SEO defaults')}
-                        peerVersion={conflict.error.currentVersion}
+                        peerVersion={c.error.currentVersion}
                         peerEditedBy={peer?.editedBy}
                         peerEditedAt={peer?.editedAt}
-                        onCancel={() => setConflict(null)}
-                        onTakeTheirs={async () => { setConflict(null); await refresh(); }}
+                        onCancel={vm.dismissConflict}
+                        onTakeTheirs={async () => { vm.dismissConflict(); await vm.refresh(); }}
                         onKeepMine={async () => {
-                            try { await conflict.retry(); }
-                            catch (err) { message.error(String((err as Error)?.message ?? err)); setConflict(null); }
+                            try { await c.retry(); }
+                            catch (err) { message.error(String((err as Error)?.message ?? err)); vm.dismissConflict(); }
                         }}
                     />
                 );

@@ -30,6 +30,7 @@ const ManifestoEditor: React.FC<IInputContent> = ({content, setContent, t}) => {
             <div>
                 <label>{t('Body — supports *italic* and {{chip:KEY:LABEL}} tokens')}</label>
                 <Input.TextArea
+                    data-testid="module-editor-primary-text-input"
                     value={data.body}
                     onChange={e => update({body: e.target.value})}
                     rows={6}
@@ -52,13 +53,58 @@ const ManifestoEditor: React.FC<IInputContent> = ({content, setContent, t}) => {
 
             <div>
                 <div style={{marginBottom: 6, fontWeight: 500}}>{t('Chip definitions')}</div>
+                <Typography.Text type="secondary" style={{fontSize: 12, display: 'block', marginBottom: 6}}>
+                    {t('Thumb background — any CSS background value. Click an example to insert it:')}
+                </Typography.Text>
+                {/* CSS example chips. Clicking one would patch every chip with the
+                    same value, which we don't want — so the only behaviour is
+                    "show me what works". Operators copy by selecting the text. */}
+                <div style={{display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10}}>
+                    {[
+                        '#1677ff',
+                        'crimson',
+                        'linear-gradient(135deg, #61DAFB, #0D1117)',
+                        'radial-gradient(circle, #61DAFB22, #0D1117)',
+                        'url(/images/react.svg) center/cover',
+                    ].map(ex => (
+                        <code
+                            key={ex}
+                            style={{
+                                fontSize: 11,
+                                padding: '2px 8px',
+                                borderRadius: 4,
+                                background: '#f5f5f5',
+                                border: '1px solid #e0e0e0',
+                                userSelect: 'all',
+                                cursor: 'text',
+                            }}
+                            title={t('Click to select, then copy')}
+                        >
+                            {ex}
+                        </code>
+                    ))}
+                </div>
                 <SortableList ids={chipIds} onReorder={reorderChips}>
                 <Space orientation="vertical" style={{width: '100%'}} size={6}>
                     {chips.map((c, i) => (
                         <SortableHandleItem key={chipIds[i]} id={chipIds[i]}>
                             <LabeledInput value={c.key} onChange={e => patchChip(i, {key: e.target.value})} placeholder="react" label={t('Key')} wrapperStyle={{width: 220}}/>
                             <LabeledInput value={c.thumb} onChange={e => patchChip(i, {thumb: e.target.value})} placeholder="REACT" label={t('Thumb')} wrapperStyle={{width: 200}}/>
-                            <LabeledInput value={c.color ?? ''} onChange={e => patchChip(i, {color: e.target.value})} placeholder="radial-gradient(circle, #61DAFB22, #0D1117)" label={t('CSS')} wrapperStyle={{width: 380}}/>
+                            <LabeledInput value={c.color ?? ''} onChange={e => patchChip(i, {color: e.target.value})} placeholder="linear-gradient(135deg, #61DAFB, #0D1117)" label={t('Thumb background (CSS)')} wrapperStyle={{flex: 1, minWidth: 280}}/>
+                            {/* Live swatch — same `background` rule the renderer
+                                uses, so invalid values silently render as the
+                                default and valid ones preview instantly. */}
+                            <span
+                                aria-label={t('Background preview') as string}
+                                style={{
+                                    display: 'inline-block',
+                                    width: 28,
+                                    height: 28,
+                                    borderRadius: 4,
+                                    border: '1px solid #d9d9d9',
+                                    background: c.color || undefined,
+                                }}
+                            />
                             <Button danger size="small" icon={<DeleteOutlined/>} onClick={() => removeChip(i)}/>
                         </SortableHandleItem>
                     ))}

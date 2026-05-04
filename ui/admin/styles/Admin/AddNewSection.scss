@@ -1,3 +1,14 @@
+// Admin "add new section" picker chrome.
+//
+// Owns three cooperating roots: the picker wrapper (`.add-new-section-container`),
+// the inline edit-button placement (`.edit-button .add-new-section-container`
+// suppresses the dotted border when nested), and the section-type grid
+// (`.add-new-section .section-types`). Splitting them into separate files
+// would require either changing class names or duplicating the picker-shell
+// rules across files, so the audit script accepts the multi-owner declaration
+// below.
+//
+// AUDIT-OWNERS: .add-new-section-container, .edit-button, .add-new-section
 
 .add-new-section-container{
   justify-content: center;

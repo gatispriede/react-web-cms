@@ -29,14 +29,50 @@ export interface ILoadData {
 const server = process.env.NODE_SERVER_PORT ? 'mongodb' : 'localhost';
 
 /**
+ * P5 — Compose an authenticated `mongodb://user:pass@host:port/db?authSource=…`
+ * URI when both `MONGO_USER` + `MONGO_PASS` are set in the environment.
+ *
+ * Precedence:
+ *   1. `MONGODB_URI` (full string set by ops)        — wins, no munging
+ *   2. `MONGO_USER` + `MONGO_PASS` present           — synthesize auth URI
+ *   3. fallback to `mongodb://<host>:27017`          — preserved unauth path
+ *
+ * The unauthenticated fallback is intentional: dev runs `compose.dev.yaml`
+ * which does NOT enable `--auth`, so `npm run dev` Just Works with no env.
+ * Production sets `MONGO_USER`/`MONGO_PASS` (or the full `MONGODB_URI`) per
+ * `docs/runbooks/mongo-auth-setup.md`.
+ */
+function buildMongoUri(): string {
+    const explicit = (process.env.MONGODB_URI ?? '').trim();
+    if (explicit) return explicit;
+
+    const user = (process.env.MONGO_USER ?? '').trim();
+    const pass = (process.env.MONGO_PASS ?? '').trim();
+    const host = process.env.MONGO_HOST ?? server;
+    const port = process.env.MONGO_PORT ?? '27017';
+    const db = process.env.MONGODB_DB ?? 'MAIN-DB';
+    const authSource = process.env.MONGO_AUTH_SOURCE ?? 'admin';
+
+    if (user && pass) {
+        const u = encodeURIComponent(user);
+        const p = encodeURIComponent(pass);
+        return `mongodb://${u}:${p}@${host}:${port}/${db}?authSource=${authSource}`;
+    }
+    return `mongodb://${host}:${port}`;
+}
+
+/**
  * All sensitive defaults now come from environment variables.
  * Fall back to empty strings so a missing env var fails loudly on first DB call
  * rather than silently using a real stolen credential committed to history.
  *
  * Required env in production:
- *   MONGODB_URI              full connection string (overrides local/cluster below)
+ *   MONGODB_URI              full connection string (overrides everything below)
  *   ADMIN_DEFAULT_PASSWORD   seed password for the admin user on first boot
- * Optional:
+ * Recommended (P5 — see docs/runbooks/mongo-auth-setup.md):
+ *   MONGO_USER + MONGO_PASS  service account; URI is built automatically
+ *   MONGO_AUTH_SOURCE        defaults to `admin`
+ * Optional / legacy:
  *   MONGODB_USER             legacy Atlas user (for mongoDBClusterUrl path)
  *   MONGODB_PASSWORD         legacy Atlas password
  *   MONGODB_CLUSTER_URL      legacy Atlas cluster hostname
@@ -50,7 +86,7 @@ export const defaultSettings: ISettings = {
     mongodbUser: process.env.MONGODB_USER ?? '',
     mongodbPassword: process.env.MONGODB_PASSWORD ?? '',
     mongoDBClusterUrl: process.env.MONGODB_CLUSTER_URL ?? '',
-    mongoDBLocalUrl: process.env.MONGODB_URI ?? `mongodb://${server}:27017`,
+    mongoDBLocalUrl: buildMongoUri(),
     mongoDBDatabaseUrl: ''
 };
 
@@ -94,6 +130,7 @@ export interface INavigationService {
     replaceUpdateNavigation(oldPageName: string, navigation: INavigation, editedBy?: string): Promise<string>;
     deleteNavigationItem(pageName: string, deletedBy?: string): Promise<string>;
     addUpdateNavigationItem(pageName: string, sections?: string[], editedBy?: string): Promise<string>;
+    setParent(pageId: string, parentId: string | null, editedBy?: string): Promise<string>;
 }
 export interface IAssetService {
     getLogo(): Promise<ILogo | undefined>;

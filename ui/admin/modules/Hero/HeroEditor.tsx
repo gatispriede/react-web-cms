@@ -1,8 +1,7 @@
 import React from "react";
 import {Button, Checkbox, Col, Collapse, ColorPicker, Divider, Input, Row, Slider, Space, Typography} from "antd";
-import ImageUrlInput from "@client/lib/ImageUrlInput";
-import {LabeledInput} from "@client/lib/LabeledInput";
-import LinkTargetPicker from "@admin/lib/LinkTargetPicker";
+import ImageRefInput from "@admin/lib/ImageRefInput";
+import LinkRefInput from "@admin/lib/LinkRefInput";
 import {DeleteOutlined, PlusOutlined} from "@client/lib/icons";
 import {IInputContent} from "@interfaces/IInputContent";
 import {EItemType} from "@enums/EItemType";
@@ -10,12 +9,6 @@ import {HeroContent, IHero, IHeroCoord, IHeroCta, IHeroMeta} from "@client/modul
 
 const toHex = (v: any): string => (typeof v === 'string' ? v : v?.toHexString?.() ?? '');
 
-/**
- * Full Hero editor — every field that drives the rendered output is surfaced
- * here so no translatable text gets stranded in the JSON. Primary fields
- * (Headline / Subtitle / Tagline) live at the top; everything else sits under
- * collapsible "More options" groups to keep the form approachable.
- */
 const HeroEditor = ({content, setContent, t}: IInputContent) => {
     const hero = new HeroContent(EItemType.Hero, content);
     const data = hero.data;
@@ -43,15 +36,13 @@ const HeroEditor = ({content, setContent, t}: IInputContent) => {
     // ---- Titles ----
     const titles: string[] = Array.isArray(data.titles) ? data.titles : [];
     const patchTitle = (i: number, v: string) =>
-        update('titles', titles.map((t, j) => j === i ? v : t));
+        update('titles', titles.map((tt, j) => j === i ? v : tt));
     const addTitle = () => update('titles', [...titles, '']);
     const removeTitle = (i: number) => update('titles', titles.filter((_, j) => j !== i));
 
     // ---- CTAs ----
-    const ctaPrimary: IHeroCta = data.ctaPrimary ?? {label: '', href: '', primary: true};
-    const ctaSecondary: IHeroCta = data.ctaSecondary ?? {label: '', href: ''};
-    const patchCta = (key: 'ctaPrimary' | 'ctaSecondary', patch: Partial<IHeroCta>) =>
-        update(key, {...(key === 'ctaPrimary' ? ctaPrimary : ctaSecondary), ...patch});
+    const ctaPrimary: IHeroCta = data.ctaPrimary ?? {url: '', label: '', primary: true};
+    const ctaSecondary: IHeroCta = data.ctaSecondary ?? {url: '', label: ''};
 
     return (
         <div className={'hero-editor'}>
@@ -67,6 +58,7 @@ const HeroEditor = ({content, setContent, t}: IInputContent) => {
                 <Col xs={12}>
                     <label>{t('Headline')}</label>
                     <Input
+                        data-testid="module-editor-primary-text-input"
                         value={data.headline}
                         onChange={e => update('headline', e.target.value)}
                         placeholder="Gatis"
@@ -148,44 +140,28 @@ const HeroEditor = ({content, setContent, t}: IInputContent) => {
                             <Row gutter={[12, 8]}>
                                 <Col xs={12}>
                                     <Divider titlePlacement="left" plain style={{fontSize: 12}}>{t('Primary')}</Divider>
-                                    <LabeledInput
-                                        value={ctaPrimary.label}
-                                        onChange={e => patchCta('ctaPrimary', {label: e.target.value, primary: true})}
-                                        placeholder="View work ↘"
-                                        label={t('Label')}
+                                    <LinkRefInput
+                                        t={t}
+                                        value={ctaPrimary}
+                                        onChange={(link) => update('ctaPrimary', {...ctaPrimary, ...link, primary: true})}
+                                        placeholder="#career-record"
                                     />
-                                    <div style={{marginTop: 6}}>
-                                        <LinkTargetPicker
-                                            value={ctaPrimary.href ?? ''}
-                                            onChange={(v) => patchCta('ctaPrimary', {href: v})}
-                                            placeholder="#career-record"
-                                            label={t('Link')}
-                                        />
-                                    </div>
                                 </Col>
                                 <Col xs={12}>
                                     <Divider titlePlacement="left" plain style={{fontSize: 12}}>{t('Secondary')}</Divider>
-                                    <LabeledInput
-                                        value={ctaSecondary.label}
-                                        onChange={e => patchCta('ctaSecondary', {label: e.target.value})}
-                                        placeholder="Get in touch"
-                                        label={t('Label')}
+                                    <LinkRefInput
+                                        t={t}
+                                        value={ctaSecondary}
+                                        onChange={(link) => update('ctaSecondary', {...ctaSecondary, ...link})}
+                                        placeholder="mailto:you@example.com"
                                     />
-                                    <div style={{marginTop: 6}}>
-                                        <LinkTargetPicker
-                                            value={ctaSecondary.href ?? ''}
-                                            onChange={(v) => patchCta('ctaSecondary', {href: v})}
-                                            placeholder="mailto:you@example.com"
-                                            label={t('Link')}
-                                        />
-                                    </div>
                                 </Col>
                             </Row>
                         ),
                     },
                     {
                         key: 'portrait',
-                        label: t('Portrait tile'),
+                        label: <span data-testid="module-editor-hero-tab-portrait">{t('Portrait tile')}</span>,
                         children: (
                             <Row gutter={[12, 8]}>
                                 <Col xs={12}>
@@ -197,55 +173,15 @@ const HeroEditor = ({content, setContent, t}: IInputContent) => {
                                     />
                                 </Col>
                                 <Col xs={12}>
-                                    <label>{t('Portrait image URL (overrides placeholder)')}</label>
-                                    <ImageUrlInput
+                                    <label>{t('Portrait image (overrides placeholder)')}</label>
+                                    <ImageRefInput
                                         t={t}
-                                        value={data.portraitImage ?? ''}
-                                        onChange={v => update('portraitImage', v)}
+                                        value={data.portraitImage ?? {src: ''}}
+                                        onChange={(image) => update('portraitImage', image.src || image.width || image.height ? image : undefined)}
                                         placeholder="api/portrait.jpg"
+                                        data-testid="module-editor-hero-portrait-image-input"
                                     />
                                 </Col>
-                                <Col xs={12}>
-                                    <label>{t('Portrait width (px or any CSS unit)')}</label>
-                                    <Input
-                                        value={data.portraitWidth == null ? '' : String(data.portraitWidth)}
-                                        onChange={e => {
-                                            const v = e.target.value.trim();
-                                            // Empty → undefined → SCSS default. Bare
-                                            // integer → store as a number so the
-                                            // renderer can append `px`. Anything else
-                                            // (e.g. "20rem", "30%") → string.
-                                            if (v === '') return update('portraitWidth', undefined);
-                                            if (/^\d+$/.test(v)) return update('portraitWidth', Number(v));
-                                            return update('portraitWidth', v);
-                                        }}
-                                        placeholder="320 or 20rem or 30%"
-                                    />
-                                </Col>
-                                <Col xs={12}>
-                                    <label>{t('Portrait height (px or any CSS unit)')}</label>
-                                    <Input
-                                        value={data.portraitHeight == null ? '' : String(data.portraitHeight)}
-                                        onChange={e => {
-                                            const v = e.target.value.trim();
-                                            if (v === '') return update('portraitHeight', undefined);
-                                            if (/^\d+$/.test(v)) return update('portraitHeight', Number(v));
-                                            return update('portraitHeight', v);
-                                        }}
-                                        placeholder="auto or 400 or 25rem"
-                                    />
-                                </Col>
-                                {/* Portrait image opacity — only meaningful when an
-                                    image is set. Slider reads 0–100 where 0 is
-                                    fully visible (historical behaviour) and 100
-                                    hides the image.
-                                    The wrapper's `onPointerDown` swallow stops
-                                    @dnd-kit's PointerSensor on the parent section
-                                    card from interpreting the slider drag as a
-                                    section reorder — without it, dragging the
-                                    thumb also drags the whole module up/down the
-                                    page. Same fix is applied to the bg slider
-                                    below. */}
                                 <Col xs={24} onPointerDown={e => e.stopPropagation()}>
                                     <Typography.Text type="secondary" style={{fontSize: 12}}>
                                         {t('Portrait image transparency')}: {data.portraitOpacity ?? 0}%
@@ -255,7 +191,7 @@ const HeroEditor = ({content, setContent, t}: IInputContent) => {
                                         max={100}
                                         step={5}
                                         value={data.portraitOpacity ?? 0}
-                                        disabled={!data.portraitImage}
+                                        disabled={!data.portraitImage?.src}
                                         onChange={v => update('portraitOpacity', typeof v === 'number' ? v : 0)}
                                         tooltip={{formatter: (v) => `${v}%`}}
                                     />
@@ -332,11 +268,11 @@ const HeroEditor = ({content, setContent, t}: IInputContent) => {
                         children: (
                             <Row gutter={[12, 8]}>
                                 <Col xs={16}>
-                                    <label>{t('Background image URL')}</label>
-                                    <ImageUrlInput
+                                    <label>{t('Background image')}</label>
+                                    <ImageRefInput
                                         t={t}
                                         value={data.bgImage}
-                                        onChange={v => update('bgImage', v)}
+                                        onChange={(image) => update('bgImage', image)}
                                         placeholder="api/hero.jpg or https://…"
                                     />
                                 </Col>
@@ -345,15 +281,6 @@ const HeroEditor = ({content, setContent, t}: IInputContent) => {
                                     <br/>
                                     <ColorPicker value={data.accent || '#1677ff'} onChange={v => update('accent', toHex(v))} showText/>
                                 </Col>
-                                {/* Background image opacity — fades the bg layer
-                                    behind the text overlay so authors can tone a
-                                    busy photograph without dropping legibility
-                                    (text + scrim stay at full opacity). Scale
-                                    mirrors the section-level transparency slider:
-                                    0 = historical, 100 = invisible.
-                                    `onPointerDown` swallow keeps @dnd-kit from
-                                    treating the slider drag as a section
-                                    reorder (see Portrait slider note). */}
                                 <Col xs={24} onPointerDown={e => e.stopPropagation()}>
                                     <Typography.Text type="secondary" style={{fontSize: 12}}>
                                         {t('Background image transparency')}: {data.bgOpacity ?? 0}%
@@ -363,7 +290,7 @@ const HeroEditor = ({content, setContent, t}: IInputContent) => {
                                         max={100}
                                         step={5}
                                         value={data.bgOpacity ?? 0}
-                                        disabled={!data.bgImage}
+                                        disabled={!data.bgImage.src}
                                         onChange={v => update('bgOpacity', typeof v === 'number' ? v : 0)}
                                         tooltip={{formatter: (v) => `${v}%`}}
                                     />

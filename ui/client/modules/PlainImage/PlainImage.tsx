@@ -5,7 +5,8 @@ import {Image} from "antd";
 import {IItem} from "@interfaces/IItem";
 import {TFunction} from "i18next";
 import {extractTranslationsFromHTML} from "@utils/translationsutils";
-import type {IPlainImage} from "./PlainImage.types";
+import {IImageRef, toImageRef} from "@interfaces/IImageRef";
+import type {IPlainImage, IPlainImageLegacy} from "./PlainImage.types";
 export type {IPlainImage} from "./PlainImage.types";
 export {EImageStyle} from "./PlainImage.types";
 
@@ -13,61 +14,69 @@ interface IImgProperties {
     preview: boolean,
     src: string,
     style: React.CSSProperties,
-    width?: string,
-    height?: string,
+    width?: string | number,
+    height?: string | number,
 }
 
+const defaults = (): IPlainImage => ({
+    image: {src: ''},
+    description: '',
+    useAsBackground: false,
+    imageFixed: false,
+    useGradiant: false,
+    offsetX: 0,
+    preview: false,
+});
+
+// Reads either the new {image: IImageRef} shape or the pre-C18 flat shape
+// (`src`, `imgWidth`, `imgHeight`, `alt`) and always returns the new shape.
+const normalize = (raw: IPlainImage | IPlainImageLegacy | undefined): IPlainImage => {
+    const r = raw ?? {};
+    const legacy = r as IPlainImageLegacy;
+    const image = toImageRef(legacy.image, {
+        src: legacy.src ?? '',
+        alt: legacy.alt,
+        width: legacy.imgWidth,
+        height: legacy.imgHeight,
+    });
+    return {
+        ...defaults(),
+        ...(r as Partial<IPlainImage>),
+        image,
+    };
+};
+
 export class PlainImageContent extends ContentManager {
-    public _parsedContent: IPlainImage = {
-        alt: "",
-        height: 0,
-        useAsBackground: false,
-        imageFixed: false,
-        useGradiant: false,
-        offsetX: 0,
-        imgWidth: '',
-        imgHeight: '',
-        preview: false,
-        src: "",
-        description: ''
-    }
+    public _parsedContent: IPlainImage = defaults();
 
     get data(): IPlainImage {
         this.parse();
-        return this._parsedContent
+        this._parsedContent = normalize(this._parsedContent as unknown as IPlainImage | IPlainImageLegacy);
+        return this._parsedContent;
     }
 
     set data(value: IPlainImage) {
         this._parsedContent = value;
     }
 
+    setImage(value: IImageRef) { this._parsedContent.image = value; }
     setSrc(value: string) {
-        this._parsedContent.src = value;
+        const cur = this._parsedContent.image ?? {src: ''};
+        this._parsedContent.image = {...cur, src: value};
     }
-
-    setDescription(value: string) {
-        this._parsedContent.description = value;
-    }
-
-    setUseAsBackground(value: boolean) {
-        this._parsedContent.useAsBackground = value;
-    }
-    setUseGradiant(value: boolean) {
-        this._parsedContent.useGradiant = value;
-    }
-    setOffsetX(value: number) {
-        this._parsedContent.offsetX = value;
-    }
+    setDescription(value: string) { this._parsedContent.description = value; }
+    setUseAsBackground(value: boolean) { this._parsedContent.useAsBackground = value; }
+    setUseGradiant(value: boolean) { this._parsedContent.useGradiant = value; }
+    setOffsetX(value: number) { this._parsedContent.offsetX = value; }
     setImgWidth(value: string) {
-        this._parsedContent.imgWidth = value;
+        const cur = this._parsedContent.image ?? {src: ''};
+        this._parsedContent.image = {...cur, width: value || undefined};
     }
     setImgHeight(value: string) {
-        this._parsedContent.imgHeight = value;
+        const cur = this._parsedContent.image ?? {src: ''};
+        this._parsedContent.image = {...cur, height: value || undefined};
     }
-    setImageFixed(value: boolean) {
-        this._parsedContent.imageFixed = value;
-    }
-
+    setImageFixed(value: boolean) { this._parsedContent.imageFixed = value; }
 }
 
 const PlainImage = ({item, t: _t, tApp, admin}: {
@@ -77,61 +86,60 @@ const PlainImage = ({item, t: _t, tApp, admin}: {
     admin?: boolean,
 }) => {
     const plainImage = new PlainImageContent(EItemType.Image, item.content);
-    const preview = plainImage.data.preview ? plainImage.data.preview : typeof item.action !== "string"
+    const data = plainImage.data;
+    const img = data.image;
+    const preview = data.preview ? data.preview : typeof item.action !== "string"
     const contentRef: RefObject<HTMLDivElement | null> = React.createRef();
     const [minHeight, setMinHeight] = useState(500)
     useEffect(() => {
-        if (contentRef.current && !plainImage.data.useAsBackground) {
-            contentRef.current.innerHTML = extractTranslationsFromHTML(plainImage.data.description, tApp)
+        if (contentRef.current && !data.useAsBackground) {
+            contentRef.current.innerHTML = extractTranslationsFromHTML(data.description, tApp)
         }
-    }, [contentRef,plainImage.data.description, plainImage.data.useAsBackground, tApp]);
-    let backgroundProperty = `url(/${plainImage.data.src})`
-    if(plainImage.data.useGradiant){
-        backgroundProperty = `linear-gradient(to top, rgb(255 255 255 / 0%) 95%, rgb(255 255 255)), url(/${plainImage.data.src})`
+    }, [contentRef, data.description, data.useAsBackground, tApp]);
+    let backgroundProperty = `url(/${img.src})`
+    if (data.useGradiant) {
+        backgroundProperty = `linear-gradient(to top, rgb(255 255 255 / 0%) 95%, rgb(255 255 255)), url(/${img.src})`
     }
 
     useEffect(() => {
         const bodyHeight = document.body.getBoundingClientRect().height;
         const windowHeight = window.screen.height;
-        if(bodyHeight > windowHeight) {
+        if (bodyHeight > windowHeight) {
             setMinHeight(bodyHeight)
-        }else{
+        } else {
             setMinHeight(windowHeight)
         }
     }, []);
     const imgProperties: IImgProperties = {
         preview: preview,
-        src: '/' + plainImage.data.src,
+        src: '/' + img.src,
         style: {
-            marginTop: `${plainImage.data.offsetX}px`
+            marginTop: `${data.offsetX}px`
         }
     }
-    if(plainImage.data.imgWidth && plainImage.data.imgWidth.length > 0){
-        imgProperties.width = plainImage.data.imgWidth
-    }
-    if(plainImage.data.imgHeight && plainImage.data.imgHeight.length > 0){
-        imgProperties.height = plainImage.data.imgHeight
-    }
+    if (img.width) imgProperties.width = img.width;
+    if (img.height) imgProperties.height = img.height;
+    const bgSizeWidth = typeof img.width === 'string' && img.width.length > 0 ? img.width : 'cover';
     return (
         <>
             {
-                plainImage.data.useAsBackground
+                data.useAsBackground
                     ?
-                    <div className={`background-image ${plainImage.data.imageFixed ? 'fixed' : ''}`} style={{
+                    <div className={`background-image ${data.imageFixed ? 'fixed' : ''}`} style={{
                         backgroundImage: backgroundProperty,
-                        backgroundSize: plainImage.data.imgWidth || 'cover',
+                        backgroundSize: bgSizeWidth,
                         backgroundPosition: 'center',
-                        position: plainImage.data.imageFixed ? 'fixed' : 'absolute',
+                        position: data.imageFixed ? 'fixed' : 'absolute',
                         top: 0,
                         left: 0,
                         width: '100%',
-                        height: plainImage.data.imageFixed ? '100vh' : minHeight,
+                        height: data.imageFixed ? '100vh' : minHeight,
                         zIndex: -1,
                         pointerEvents: 'none',
                     }}>
-                        {admin && plainImage.data.src && (
+                        {admin && img.src && (
                             <div
-                                title={`/${plainImage.data.src}`}
+                                title={`/${img.src}`}
                                 style={{
                                     position: 'absolute',
                                     top: 8,
@@ -150,14 +158,14 @@ const PlainImage = ({item, t: _t, tApp, admin}: {
                                 }}
                             >
                                 <img
-                                    src={`/${plainImage.data.src}`}
-                                    alt=""
+                                    src={`/${img.src}`}
+                                    alt={img.alt ?? ''}
                                     style={{width: 28, height: 28, objectFit: 'cover', borderRadius: 4, flex: '0 0 auto'}}
                                 />
                                 <span style={{display: 'flex', flexDirection: 'column', gap: 2, overflow: 'hidden'}}>
                                     <span style={{opacity: 0.75, textTransform: 'uppercase', letterSpacing: 0.3}}>Background image</span>
                                     <span style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
-                                        {plainImage.data.src}
+                                        {img.src}
                                     </span>
                                 </span>
                             </div>
@@ -165,7 +173,7 @@ const PlainImage = ({item, t: _t, tApp, admin}: {
                     </div>
                     :
                     <div className={`plain-image ${item.style}`}>
-                        <Image {...imgProperties}/>
+                        <Image alt={img.alt} {...imgProperties}/>
                         <div className={'content'}>
                             <div ref={contentRef}></div>
                         </div>

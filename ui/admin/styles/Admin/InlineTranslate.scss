@@ -5,6 +5,9 @@
 // `[data-i18n-key]` spans are invisible — they add zero visual cost for
 // visitors.
 
+// SAFE: cross-cutting per spec — the inline-translate hook is intentionally
+// rooted on `body[data-admin-inline-edit]` so it activates wherever the host
+// shell sets the attribute, not under any one component class.
 body[data-admin-inline-edit="true"] {
     [data-i18n-key] {
         position: relative;

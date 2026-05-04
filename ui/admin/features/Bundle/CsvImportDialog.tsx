@@ -1,9 +1,9 @@
-import React, {useMemo, useState} from 'react';
-import {Alert, Button, Input, Modal, Select, Space, Typography, message} from 'antd';
+import React from 'react';
+import {Alert, Button, Input, Modal, Select, Space, Typography} from 'antd';
 import {UploadOutlined} from '@client/lib/icons';
-import {parseCsv, translationsFromCsv} from '@utils/csvTranslations';
 import TranslationManager from '@admin/shell/TranslationManager';
-import {triggerRevalidate} from '@client/lib/triggerRevalidate';
+import {useViewModel} from '@client/lib/state/observable';
+import {CsvImportDialogViewModel} from './CsvImportDialogViewModel';
 
 interface Props {
     open: boolean;
@@ -22,61 +22,21 @@ interface Props {
  * locale symbol (e.g. `key,source,en,lv`). The `source` column is ignored.
  */
 const CsvImportDialog: React.FC<Props> = ({open, close, translationManager, languages}) => {
-    const [raw, setRaw] = useState('');
-    const [targetLocale, setTargetLocale] = useState<string | undefined>(languages[0]?.symbol);
-    const [saving, setSaving] = useState(false);
+    const vm = useViewModel(() => new CsvImportDialogViewModel(translationManager, languages, close));
 
-    const parsed = useMemo(() => {
-        if (!raw.trim()) return null;
-        try { return parseCsv(raw); }
-        catch (err) { return {error: String((err as Error)?.message ?? err)} as any; }
-    }, [raw]);
-
-    const preview = useMemo(() => {
-        if (!parsed || (parsed as any).error || !targetLocale) return null;
-        try { return translationsFromCsv(parsed, targetLocale); }
-        catch (err) { return {error: String((err as Error)?.message ?? err)} as any; }
-    }, [parsed, targetLocale]);
-
-    const previewCount = preview && !(preview as any).error ? Object.keys(preview).length : 0;
-    const previewSamples = preview && !(preview as any).error
+    const parsed  = vm.parsed as {error?: string} | null;
+    const preview = vm.preview as Record<string, string> & {error?: string} | null;
+    const previewCount   = preview && !preview.error ? Object.keys(preview).length : 0;
+    const previewSamples = preview && !preview.error
         ? Object.entries(preview as Record<string, string>).slice(0, 5)
         : [];
-
-    const handleFile = async (file: File) => {
-        const text = await file.text();
-        setRaw(text);
-    };
-
-    const handleImport = async () => {
-        if (!targetLocale || !preview || (preview as any).error) return;
-        setSaving(true);
-        try {
-            const lang = languages.find(l => l.symbol === targetLocale);
-            if (!lang) return;
-            await translationManager.saveNewTranslation(lang, preview as Record<string, string>);
-            // ISR cache busting — without this the prerendered public pages
-            // (e.g. funisimo.pro/lv) keep serving the previous translations
-            // from `getStaticProps` snapshot until their `revalidate` window
-            // expires. Same fix as Bundle import: scope 'all' touches every
-            // locale's prerendered routes so the next request rebuilds with
-            // the just-imported translations baked in. Fire-and-forget so a
-            // slow webhook doesn't block the modal close.
-            void triggerRevalidate({scope: 'all'});
-            message.success(`Imported ${previewCount} translations into ${lang.label} — rebuilding public pages`);
-            setRaw('');
-            close(true);
-        } catch (err) {
-            message.error(String((err as Error)?.message ?? err));
-        } finally { setSaving(false); }
-    };
 
     return (
         <Modal
             open={open}
-            onCancel={() => close(false)}
-            onOk={handleImport}
-            okButtonProps={{disabled: !previewCount || saving, loading: saving}}
+            onCancel={vm.cancel}
+            onOk={() => void vm.handleImport()}
+            okButtonProps={{disabled: !previewCount || vm.saving, loading: vm.saving}}
             okText={previewCount ? `Import ${previewCount} keys` : 'Import'}
             title="Bulk import translations (CSV)"
             width={720}
@@ -93,13 +53,13 @@ const CsvImportDialog: React.FC<Props> = ({open, close, translationManager, lang
                     <Typography.Text strong>Target locale:</Typography.Text>
                     <Select
                         style={{width: 200}}
-                        value={targetLocale}
-                        onChange={setTargetLocale}
+                        value={vm.targetLocale}
+                        onChange={vm.setTargetLocale}
                         options={languages.map(l => ({value: l.symbol, label: `${l.label} (${l.symbol})`}))}
                     />
                     <label>
                         <input type="file" accept=".csv,text/csv" style={{display: 'none'}}
-                               onChange={e => { const f = e.target.files?.[0]; if (f) void handleFile(f); e.target.value = ''; }}/>
+                               onChange={e => { const f = e.target.files?.[0]; if (f) void vm.handleFile(f); e.target.value = ''; }}/>
                         <Button icon={<UploadOutlined/>} onClick={e => (e.currentTarget.previousElementSibling as HTMLInputElement).click()}>
                             Upload CSV
                         </Button>
@@ -108,13 +68,13 @@ const CsvImportDialog: React.FC<Props> = ({open, close, translationManager, lang
                 <Typography.Text type="secondary">Or paste CSV below:</Typography.Text>
                 <Input.TextArea
                     rows={8}
-                    value={raw}
-                    onChange={e => setRaw(e.target.value)}
+                    value={vm.raw}
+                    onChange={e => vm.setRaw(e.target.value)}
                     placeholder={'key,source,en,lv\nHome,Home,Home,Sākums\n…'}
                     style={{fontFamily: 'ui-monospace, monospace', fontSize: 12}}
                 />
-                {(parsed as any)?.error && <Alert type="error" showIcon message={(parsed as any).error}/>}
-                {(preview as any)?.error && <Alert type="error" showIcon message={(preview as any).error}/>}
+                {parsed?.error && <Alert type="error" showIcon message={parsed.error}/>}
+                {preview?.error && <Alert type="error" showIcon message={preview.error}/>}
                 {previewCount > 0 && (
                     <Alert
                         type="success"

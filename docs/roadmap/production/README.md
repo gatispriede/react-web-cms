@@ -9,10 +9,10 @@ These are intentionally paused until the feature/UX surface stabilises — picki
 | # | Item | Status | Size |
 |---|------|--------|------|
 | 1 | [first-boot-admin-password.md](first-boot-admin-password.md) | **Shipped** (see git log) | M |
-| 2 | [automatic-deployment.md](automatic-deployment.md) | Planned | L |
-| 3 | [digitalocean-domain-wiring.md](digitalocean-domain-wiring.md) | Planned | S–M |
-| 4 | [seamless-deployment.md](seamless-deployment.md) | Planned | S |
-| 5 | [mongodb-auth.md](mongodb-auth.md) | Planned | XS |
+| 2 | [automatic-deployment.md](automatic-deployment.md) | **Shipped** — see `docs/runbooks/automatic-deployment.md` (gated on `vars.DEPLOY_ENABLED`) | L |
+| 3 | [digitalocean-domain-wiring.md](digitalocean-domain-wiring.md) | **Shipped** — see `docs/runbooks/digitalocean-domain.md` (env-driven domain) | S–M |
+| 4 | [seamless-deployment.md](seamless-deployment.md) | Planned (depends on P2) | S |
+| 5 | [mongodb-auth.md](mongodb-auth.md) | **Shipped** — see `docs/runbooks/mongo-auth-setup.md` (dev path preserved when env unset) | XS |
 
 Suggested ordering when picked up: 1 → 2 → 4 → 3 → 5. Items 2 and 4 are closely related (CI pipeline); tackle them together.
 

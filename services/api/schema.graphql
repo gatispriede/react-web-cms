@@ -53,6 +53,13 @@ input InNavigation {
     id: String!
     type: String!
     page: String!
+    parent: String
+    """
+    Slug — F1 sub-pages follow-up. JSON scalar: a bare string is the
+    legacy single-locale form; an object `{en: "about", lv: "par-mums"}`
+    carries one slug per active locale.
+    """
+    slug: JSON
     seo: InSeo
     sections: [String]!
 }
@@ -73,6 +80,41 @@ input InUser {
     canPublishProduction: Boolean
     mustChangePassword: Boolean
     preferredAdminLocale: String
+    kind: String
+    googleSub: String
+    phone: String
+}
+
+input InAddress {
+    id: String
+    name: String!
+    line1: String!
+    line2: String
+    city: String!
+    postalCode: String!
+    country: String!
+    isDefault: Boolean
+}
+
+type IAddress {
+    id: String!
+    name: String!
+    line1: String!
+    line2: String
+    city: String!
+    postalCode: String!
+    country: String!
+    isDefault: Boolean
+}
+
+type ICustomer {
+    id: String!
+    name: String
+    email: String!
+    phone: String
+    emailVerified: String
+    shippingAddresses: [IAddress!]!
+    createdAt: String
 }
 type INewLanguage {
     label: String!
@@ -90,6 +132,12 @@ type IUser {
     password: String!
     role: String
     avatar: String
+    # `kind` distinguishes admin/customer/editor/viewer docs. Authoritative
+    # for NextAuth's customer-credentials authorize() — without it, every
+    # customer login is rejected (gqty proxy returns undefined → kind check
+    # fails). Was already on `InUser` (input); the output side parity here
+    # closes the loop.
+    kind: String
     canPublishProduction: Boolean
     mustChangePassword: Boolean
     preferredAdminLocale: String
@@ -159,6 +207,13 @@ type INavigation {
     id: String
     type: String!
     page: String!
+    parent: String
+    """
+    Slug — F1 sub-pages follow-up. JSON scalar; bare string for the
+    legacy single-locale form, or `{<locale>: <slug>, …}` for the
+    per-locale shape.
+    """
+    slug: JSON
     seo: ISeo
     sections: [String]!
     editedBy: String
@@ -171,64 +226,23 @@ type ILoadData {
     empty: Boolean
 }
 
-type QueryMongo {
-    setupAdmin: IUser
-    getMongoDBUri: String
-    loadData: [ILoadData!]!
-    getNavigationCollection: [INavigation!]!
-    getSections(ids: [String]): [ISection!]!
-    getImages(tags: String!): [IImage!]!
-    getLogo: ILogo
-    getUser(email: String): IUser
-    getUsers: [IUser!]!
-    getLanguages: [INewLanguage]
-    getPublishedSnapshot: String
-    getPublishedMeta: String
-    getThemes: String!
-    getActiveTheme: String
-    getPublishedHistory(limit: Int): String!
-    getPosts(includeDrafts: Boolean, limit: Int): String!
-    getPost(slug: String!, includeDrafts: Boolean): String
-    getFooter: String!
-    getSiteFlags: String!
-    getSiteSeo: String!
-    getTranslationMeta: String!
-    getAuditLog(filter: JSON): String!
-    getAuditCollections: String!
-    getAuditActors: String!
-}
-
 scalar JSON
 
+# Phase C.3: per-feature query/mutation fields are now declared on each
+# feature's `feature.manifest.ts → schemaSDL` and concatenated at boot
+# via `composedSchemaSDL()`. The base `QueryMongo` / `MutationMongo`
+# shells live here with a single `_empty` sentinel field — GraphQL SDL
+# requires at least one field on a type, and every real field arrives
+# via `extend type QueryMongo` / `extend type MutationMongo` from the
+# manifests.
+type QueryMongo {
+    """Sentinel — see Phase C.3 note above. All real fields arrive via manifest `extend type QueryMongo` fragments."""
+    _empty: String
+}
+
 type MutationMongo {
-    createNavigation(navigation: InNavigation!): String!
-    addUpdateNavigationItem(pageName: String!, sections: [String]): String!
-    updateNavigation(page: String!, sections: [String]): String!
-    replaceUpdateNavigation(oldPageName: String!,navigation: InNavigation): String!
-    addUpdateSectionItem(section: InSection!, pageName: String, expectedVersion: Int): String!
-    removeSectionItem(id:String!): String!
-    deleteNavigationItem(pageName:String!): String!
-    saveImage(image: InImage!): String!
-    deleteImage(id: String!): String!
-    saveLogo(content: String!, expectedVersion: Int): String!
-    addUpdateLanguage(language: InLanguage, translations: JSON, expectedVersion: Int): String!
-    deleteLanguage(language: InLanguage): String!
-    addUser(user: InUser!): String!
-    updateUser(user: InUser!): String!
-    removeUser(id: String!): String!
-    publishSnapshot(note: String): String!
-    rollbackToSnapshot(id: String!): String!
-    saveTheme(theme: JSON!, expectedVersion: Int): String!
-    deleteTheme(id: String!): String!
-    setActiveTheme(id: String!): String!
-    resetPreset(id: String!): String!
-    savePost(post: JSON!, expectedVersion: Int): String!
-    deletePost(id: String!): String!
-    setPostPublished(id: String!, publish: Boolean!): String!
-    saveFooter(config: JSON!, expectedVersion: Int): String!
-    saveSiteFlags(flags: JSON!, expectedVersion: Int): String!
-    saveSiteSeo(seo: JSON!, expectedVersion: Int): String!
-    saveTranslationMeta(meta: JSON!, expectedVersion: Int): String!
+    """Sentinel — see Phase C.3 note on `QueryMongo._empty`."""
+    _empty: String
 }
 
 

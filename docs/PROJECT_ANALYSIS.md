@@ -361,6 +361,14 @@ Known gaps worth addressing (see ROADMAP for current status):
 - ~~Hardcoded secrets~~ — admin password + Mongo Atlas credentials moved behind env vars (`.env.example` covers every supported variable).
 - ~~Stale README~~ — replaced with a real intro (see [README.md](README.md)).
 
+## Known framework constraints
+
+These are baked into the framework (Next.js Pages Router) and not worth re-litigating without a corresponding business reason. Captured here so future readers don't re-derive the constraint.
+
+- **Customer pages cannot use slugs `admin` or `api`.** Pages Router resolves filesystem routes (`pages/admin.tsx`, `pages/api/*`) before the catch-all `pages/[lang]/[...slug].tsx` runs. If a customer creates a page with slug `admin` or `api`, the request is intercepted by the platform's static route, never reaching the public catch-all. Reserved-slug enforcement on input is the simplest mitigation; documented in the page-create flow.
+- **`pages/api/*` is a Next.js special case** — the directory name is load-bearing. Files there are server-only API routes; files anywhere else (including `pages/v1/api/*`) are treated as React pages and bundled for the browser, which silently pulls Mongo / Redis / Node-only modules into the client chunk and breaks the build (or, worse, ships server code to browsers). The 2026-05-03 F3 attempt to move the directory failed for this reason — see [roadmap/v1-url-namespace.md](roadmap/v1-url-namespace.md) postmortem.
+- **The unlock if root-URL freedom ever becomes a hard requirement** is either (a) Next.js App Router migration (`app/*/route.ts` handlers + `app/[...slug]/page.tsx` catch-all — App Router doesn't have the same file-system-as-URL precedence), or (b) a custom skeleton/architecture not built on Next.js at all. Per the user's 2026-05-03 stance: "idea is good, but need a custom skeleton/architecture, probably for future when we go away from nextjs." Not worth building speculatively. The F3 spec + postmortem at [roadmap/v1-url-namespace.md](roadmap/v1-url-namespace.md) preserves the design thinking so it's ready when that migration is on the table.
+
 ## Suggested next steps
 
 See [ROADMAP.md](ROADMAP.md) for the remaining feature plan — admin i18n decouple (held), translation context/inline editing, admin UX phase 2 (sidebar, drawer, DnD upgrade, undo, templates, high-contrast, icon consolidation), edit-audit UI surfacing on settings tabs, remaining frontend + API-route tests.

@@ -18,11 +18,26 @@ import {standaloneResolvers} from "./api/graphqlResolvers";
  * door by accident.
  */
 // @ts-ignore
-const port = process.env.NODE_SERVER_PORT ? 3000 : 80;
+// `STANDALONE_PORT` overrides everything — used by the e2e build helper
+// (`tools/e2e-build.js`) so it can pick a free port and run alongside any
+// existing dev server on :80 / docker on :3000.
+const port = process.env.STANDALONE_PORT
+    ? Number(process.env.STANDALONE_PORT)
+    : (process.env.NODE_SERVER_PORT ? 3000 : 80);
 const bindHost = process.env.NODE_SERVER_PORT ? '0.0.0.0' : '127.0.0.1';
 const allowRemote = process.env.STANDALONE_ALLOW_REMOTE === '1';
 
-const typeDefs = readFileSync('./services/api/schema.graphql', {encoding: 'utf-8'});
+// Compose the schema from the legacy `schema.graphql` + every active
+// feature manifest's `schemaSDL` fragment — same pattern as the Apollo
+// route in `ui/client/pages/api/graphql.ts`. After Phase C of the
+// platform refactor stripped feature-owned fields out of the legacy
+// file, the standalone server *must* read the composed schema or it
+// won't answer queries the build asks for (`getNavigationCollection`,
+// `getPosts`, …) and the build fails with cryptic prerender errors.
+import {composedSchemaSDL} from './infra/featureRegistry';
+const typeDefs = readFileSync('./services/api/schema.graphql', {encoding: 'utf-8'})
+    + '\n'
+    + composedSchemaSDL();
 const app: express.Application = express();
 
 app.use((req: any, res: any, next: () => void) => {

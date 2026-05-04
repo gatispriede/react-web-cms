@@ -2,6 +2,7 @@ import {resolve} from "@services/api/generated";
 import {INewLanguage} from "@interfaces/INewLanguage";
 import {refreshBus} from "@client/lib/refreshBus";
 import {isConflictError, parseMutationResponse} from "@client/lib/conflict";
+import {log} from "@services/infra/logger";
 
 export class LanguageApi {
     async getLanguages(): Promise<Record<string, INewLanguage>> {
@@ -24,7 +25,7 @@ export class LanguageApi {
             });
             return byKey;
         } catch (err) {
-            console.error('Error while fetching languages', err);
+            log.error({scope: 'languages.list', err}, 'languages fetch failed');
             return {};
         }
     }

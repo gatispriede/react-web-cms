@@ -56,6 +56,51 @@ Adding a new mutation: register it in **both** maps — its required role and (i
 
 Read-only `get*` methods are not in either map — they short-circuit through the Proxy with no role check. Anything that touches state (`save*` / `delete*` / `addUpdate*` / `setActive*`) must be listed.
 
+## Per-resource grants — the third gate (Q10, 2026-05-03)
+
+Stacked on top of role-rank: every authenticated user carries `grants: Grant[]` where each grant is one of three discriminated shapes:
+
+```typescript
+type FeatureGrant = {kind: 'feature'; feature: string};
+type PageGrant    = {kind: 'page';    page: string};
+type LocaleGrant  = {kind: 'locale';  locale: string};
+type Grant = FeatureGrant | PageGrant | LocaleGrant;
+```
+
+Mutations declare gating in their feature manifest:
+
+```typescript
+resourceGated: {
+  dimensions: ['feature', 'page'],
+  extractor: (args) => ({feature: 'Posts', page: args.pageSlug}),
+}
+```
+
+`guardMethods` evaluates **intersection** semantics — for each declared dimension, the user must hold a grant whose value matches what the extractor returns. Missing dimension grant → hard deny. Empty `grants[]` on a non-admin → deny. **Admin role rank bypasses all dimension checks.**
+
+Posts is the reference example (`services/features/Posts/PostsServiceLoader.ts`). Other features opt in by adding `resourceGated` to their manifest entries; without it the legacy role-rank check is the only gate.
+
+### Per-feature `resourceGated` table (2026-05-03)
+
+| Feature | Mutations | Dimensions |
+|---|---|---|
+| Posts | `savePost`, `deletePost`, `setPostPublished` | `feature`, `page` |
+| Products | `saveProduct`, `deleteProduct`, `setProductPublished` | `feature` |
+| Inventory | `inventorySyncAll`, `inventorySyncDelta`, `inventorySaveAdapterConfig` | `feature` |
+| Orders | `adminTransitionOrder`, `adminRefundOrder` | `feature` |
+| Footer | `saveFooter` | `feature` |
+| Themes | `saveTheme`, `deleteTheme`, `setActiveTheme`, `resetPreset` | `feature` |
+| Languages | `addUpdateLanguage`, `deleteLanguage` | `feature`, `locale` |
+| Languages | `saveTranslationMeta` | `feature` |
+| Bundle | `import`, `export` (declared; HTTP routes today, not GraphQL) | `feature` |
+
+Notes:
+- Customer-facing checkout-flow mutations on Orders (`createDraftOrder`, `attachOrderAddress`, `attachOrderShipping`, `authorizeOrderPayment`, `finalizeOrder`, `cancelOrder`) deliberately are NOT `resourceGated` — they're customer/anonymous endpoints that don't pass through the admin grants model.
+- Languages uses `locale` from `args.language.symbol`, so a translator with `{kind:'locale', locale:'lv'}` can save the Latvian language row but not English.
+- Bundle's import/export today runs through HTTP (`/api/import`, `/api/export`); the manifest declaration is inert until those routes (or a future GraphQL `bundleImport`/`bundleExport` mutation) flow through the guarded proxy. Documenting now keeps the dimension contract explicit.
+
+Admin grants UI lives in `/admin/system/users` — three multi-selects per user (Features / Pages / Locales) flatten into the `grants[]` array on save.
+
 ## Optimistic concurrency — the second gate
 
 Even with the right role, a mutation can be rejected if the doc moved past you while you were editing. [`src/Server/conflict.ts`](../../src/Server/conflict.ts) provides the primitive — `requireVersion(existing, existingVersion, expectedVersion)` throws `ConflictError` if `expectedVersion` was supplied and disagrees with the on-disk `version`.

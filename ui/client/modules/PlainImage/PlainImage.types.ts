@@ -1,15 +1,29 @@
+import {IImageRef} from '@interfaces/IImageRef';
+
 export interface IPlainImage {
-    src: string;
+    image: IImageRef;
     description: string;
-    alt: string;
-    height: number;
     useAsBackground: boolean;
     imageFixed: boolean;
     useGradiant: boolean;
     offsetX: number;
-    imgWidth: string;
-    imgHeight: string;
     preview: boolean;
+}
+
+/** Pre-C18 stored shape — kept only for the read-side normaliser. */
+export interface IPlainImageLegacy {
+    src?: string;
+    alt?: string;
+    height?: number;
+    imgWidth?: string;
+    imgHeight?: string;
+    description?: string;
+    useAsBackground?: boolean;
+    imageFixed?: boolean;
+    useGradiant?: boolean;
+    offsetX?: number;
+    preview?: boolean;
+    image?: IImageRef;
 }
 
 export enum EImageStyle {

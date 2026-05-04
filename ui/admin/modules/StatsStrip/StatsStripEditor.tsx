@@ -21,7 +21,7 @@ const StatsStripEditor: React.FC<IInputContent> = ({content, setContent, t}) => 
                 <Space key={i}>
                     <Input value={c.value} onChange={e => patch(i, {value: e.target.value})} placeholder="17" style={{width: 80}}/>
                     <Input value={c.unit ?? ''} onChange={e => patch(i, {unit: e.target.value})} placeholder="types" style={{width: 110}}/>
-                    <Input value={c.label ?? ''} onChange={e => patch(i, {label: e.target.value})} placeholder="reusable item types" style={{width: 240}}/>
+                    <Input {...(i === 0 ? {'data-testid': 'module-editor-primary-text-input'} : {})} value={c.label ?? ''} onChange={e => patch(i, {label: e.target.value})} placeholder="reusable item types" style={{width: 240}}/>
                     <Switch checkedChildren="HL" unCheckedChildren="—" checked={!!c.highlight} onChange={v => patch(i, {highlight: v})}/>
                     <Button danger size="small" icon={<DeleteOutlined/>} onClick={() => rm(i)}/>
                 </Space>

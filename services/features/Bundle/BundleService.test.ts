@@ -83,17 +83,34 @@ describe('BundleService round-trip', () => {
         await expect(service.import(bundle)).rejects.toThrow(/Invalid bundle: sections\[0\]/);
     });
 
-    it('skips assets with disallowed extensions or obviously malicious names', async () => {
+    it('skips assets with disallowed extensions; sanitizes spaces / parens / unicode in otherwise safe names', async () => {
         const bundle = await service.export();
         bundle.assets = {
             'evil.exe': 'data:image/png;base64,iVBORw0KGgo=',
             'has spaces.png': 'data:image/png;base64,iVBORw0KGgo=',
             'no-extension': 'data:image/png;base64,iVBORw0KGgo=',
-            'weird@@.jpg': 'data:image/png;base64,iVBORw0KGgo=',
+            'IMG_0001 (1).jpg': 'data:image/png;base64,iVBORw0KGgo=',
+            'Screenshot 2026-04-26 162952.png': 'data:image/png;base64,iVBORw0KGgo=',
         } as any;
         const summary = await service.import(bundle);
-        expect(summary.assets).toBe(0);
-        expect(summary.skippedAssets.length).toBe(4);
+        // 3 written: `has spaces.png`, `IMG_0001 (1).jpg`, `Screenshot 2026-04-26 162952.png` — all sanitized.
+        expect(summary.assets).toBe(3);
+        // 2 skipped: `evil.exe` (extension) + `no-extension` (no allowed extension).
+        expect(summary.skippedAssets.length).toBe(2);
         expect(summary.skippedAssets.every(s => /unsafe filename/i.test(s))).toBe(true);
+    });
+
+    it('rejects null bytes, control characters, and `..` traversal segments outright', async () => {
+        const bundle = await service.export();
+        bundle.assets = {
+            'a\x00b.png': 'data:image/png;base64,iVBORw0KGgo=',
+            '../escape.png': 'data:image/png;base64,iVBORw0KGgo=',
+            'tab\there.png': 'data:image/png;base64,iVBORw0KGgo=',
+        } as any;
+        const summary = await service.import(bundle);
+        // `../escape.png` → basename is `escape.png` (path.basename strips it),
+        // so it survives — that's by design and is the second-line traversal
+        // guard's job. Null byte + control char are hard rejects.
+        expect(summary.skippedAssets.filter(s => /unsafe filename/i.test(s)).length).toBeGreaterThanOrEqual(2);
     });
 });

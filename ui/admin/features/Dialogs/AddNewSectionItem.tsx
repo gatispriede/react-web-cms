@@ -14,6 +14,13 @@ import {TFunction} from "i18next";
 import {getItemTypeDefinition, itemTypeList, styleEnumFor} from "@admin/lib/itemTypes/registry";
 import TypeDiagram from "@admin/lib/itemTypes/TypeDiagram";
 import ModulePickerDialog from "@admin/features/Dialogs/ModulePickerDialog";
+import {getCachedMode} from "@admin/lib/adminMode";
+
+/** Simplified-mode hides the Action tab + the section transparency
+ *  control (both are advanced-author surfaces). The cached mode is
+ *  read at render time — toggling the mode re-renders the drawer
+ *  through the React tree above. */
+const isSimplifiedMode = (): boolean => getCachedMode() === 'simplified';
 
 interface IAddNewSectionItemProps {
     addSectionItem: (sectionId: string, config: IConfigSectionAddRemove) => void,
@@ -204,6 +211,7 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
             <h4>{this.props.t("Content configuration")}</h4>
             <label>{this.props.t("Please select content type")}: </label>
             <Button
+                data-testid="section-module-type-picker-btn"
                 onClick={() => this.setState({pickerTarget: 'content'})}
                 style={{display: 'inline-flex', alignItems: 'center', gap: 8, height: 'auto', padding: '6px 12px'}}
             >
@@ -273,6 +281,7 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
         const transparencyPct = this._transparencyDraft ?? committedPct;
         const transparencyEnabled = committedTransparent || transparencyPct > 0;
 
+        const simplified = isSimplifiedMode();
         return <div>
             <h4>{this.props.t("Style configuration")}</h4>
             <label>{this.props.t("Please select style type")}: </label>
@@ -280,26 +289,30 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                     onSelect={(e) => {
                         this.setState({style: e})
                     }}/>
-            <hr/>
-            <label>{this.props.t("Animation")}: </label>
-            <Select
-                variant={'filled'}
-                value={this.state.animation}
-                options={this.state.animationOptions}
-                onSelect={(e: EAnimation) => this.setState({animation: e})}
-            />
-            {
-                this.state.action &&
-                <div>
-                    <hr/>
-                    <label>{this.props.t("Please select style for action component")}: </label>
-                    <Select variant={'filled'} value={this.state.actionStyle} options={this.state.actionStyleOptions}
-                            onSelect={(e) => {
-                                this.setState({actionStyle: e})
-                            }}/>
-                </div>
-            }
-            {this.props.updateSection && (
+            {/* Animation + per-action style + section transparency are
+                advanced-only — simplified-mode authors only choose the
+                module's visual style variant. */}
+            {!simplified && <>
+                <hr/>
+                <label>{this.props.t("Animation")}: </label>
+                <Select
+                    variant={'filled'}
+                    value={this.state.animation}
+                    options={this.state.animationOptions}
+                    onSelect={(e: EAnimation) => this.setState({animation: e})}
+                />
+                {this.state.action && (
+                    <div>
+                        <hr/>
+                        <label>{this.props.t("Please select style for action component")}: </label>
+                        <Select variant={'filled'} value={this.state.actionStyle} options={this.state.actionStyleOptions}
+                                onSelect={(e) => {
+                                    this.setState({actionStyle: e})
+                                }}/>
+                    </div>
+                )}
+            </>}
+            {this.props.updateSection && !isSimplifiedMode() && (
                 <div style={{marginTop: 16, padding: 12, borderRadius: 6, background: 'rgba(0,0,0,0.03)'}}>
                     <h4 style={{marginTop: 0}}>{this.props.t('Section transparency')}</h4>
                     <Space align="center" wrap style={{marginBottom: 12}}>
@@ -381,10 +394,16 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
     }
 
     render() {
-        const tabContent = this.state.tabContent
-        tabContent[0].children = this.generateContentSection()
-        tabContent[1].children = this.generateActionSection()
-        tabContent[2].children = this.generateStyleSection()
+        // Filter the Action tab out of the array under simplified mode —
+        // simplified-mode authors don't get the on-click overlay surface.
+        // Style stays so they can still pick variants.
+        const allTabs = this.state.tabContent;
+        allTabs[0].children = this.generateContentSection()
+        allTabs[1].children = this.generateActionSection()
+        allTabs[2].children = this.generateStyleSection()
+        const tabContent = isSimplifiedMode()
+            ? allTabs.filter(tab => tab.key !== 'action')
+            : allTabs;
         const item = {
             index: this.index,
             style: this.state.style,
@@ -399,7 +418,14 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
             <>
                 {
                     <div className={'add-new-section-container'}>
-                        <Button type="primary" onClick={() => {
+                        {/* DECISION: same Button serves both "add" and "edit" flows;
+                            tag with the type-specific edit testid only when loading
+                            an existing item, otherwise the generic add-module testid. */}
+                        <Button
+                            data-testid={this.props.loadItem
+                                ? `section-module-edit-${String(this.state.selected).toLowerCase().replace(/_/g, '-')}-btn`
+                                : 'section-add-module-btn'}
+                            type="primary" onClick={() => {
                             this.setState({dialogOpen: true})
 
                             const activeOption = this.activeOption()
@@ -431,6 +457,7 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                                 {this.props.t('Cancel')}
                             </Button>
                             <Button
+                                data-testid="module-editor-save-btn"
                                 type="primary"
                                 onClick={async () => {
                                     await this.addSectionItem();
@@ -517,6 +544,23 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                             }
                         } else {
                             this.setActiveOptionState(type, undefined, type !== this.state.selected);
+                            // After picking a module type from the picker, focus
+                            // the primary text input so the operator can type
+                            // immediately. Only do this on add (`!loadItem`) —
+                            // edit flows already show populated content.
+                            // Two `requestAnimationFrame`s: the first lets React
+                            // commit the state change and re-render the editor
+                            // (which is now mounted with the new type); the
+                            // second waits for the DOM ref to be live so
+                            // `focus()` has something to grab.
+                            if (!this.props.loadItem) {
+                                requestAnimationFrame(() => requestAnimationFrame(() => {
+                                    const input = document.querySelector<HTMLElement>(
+                                        '[data-testid="module-editor-primary-text-input"]',
+                                    );
+                                    input?.focus();
+                                }));
+                            }
                         }
                     }}
                 />

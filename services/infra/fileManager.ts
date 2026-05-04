@@ -1,4 +1,5 @@
 import fs from "fs";
+import {log} from "@services/infra/logger";
 
 const LOCALE_ROOT_PATH = `${process.cwd()}/ui/client/public/locales`;
 
@@ -14,7 +15,7 @@ class FileManager {
             const parsed = JSON.parse(raw);
             return parsed && typeof parsed === 'object' ? parsed : {};
         } catch (err) {
-            console.error(`[fileManager] failed to read ${fileName}:`, err);
+            log.error({scope: 'fileManager.readTranslation', err, fileName}, 'translation read failed');
             return {};
         }
     }

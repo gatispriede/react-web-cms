@@ -2,11 +2,23 @@ import {resolve} from "@services/api/generated";
 import {ITranslationMetaMap} from "@services/features/Languages/TranslationMetaService";
 import {refreshBus} from "@client/lib/refreshBus";
 import {isConflictError, parseMutationResponse} from "@client/lib/conflict";
+import {log} from "@services/infra/logger";
 
 export class TranslationMetaApi {
     async get(): Promise<{value: ITranslationMetaMap; version: number}> {
+        // Direct-route bug: `gqty.resolve(({query}) => query.mongo.getTranslationMeta)`
+        // returns an empty payload on cold load (gqty client not always
+        // hydrated). Raw POST always returns the correct String! payload.
+        // `gqty.resolve` is reserved for SPA paths that pre-warmed the client.
         try {
-            const raw = await resolve(({query}) => (query as any).mongo.getTranslationMeta);
+            const r = await fetch('/api/graphql', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({query: `{ mongo { getTranslationMeta } }`}),
+            });
+            const json = await r.json();
+            const raw = json?.data?.mongo?.getTranslationMeta;
             if (!raw) return {value: {}, version: 0};
             const parsed = JSON.parse(raw);
             // Back-compat: earlier shape returned the map directly.
@@ -15,7 +27,7 @@ export class TranslationMetaApi {
             }
             return {value: parsed ?? {}, version: 0};
         } catch (err) {
-            console.error('TranslationMetaApi.get:', err);
+            log.error({scope: 'translationMeta.get', err}, 'translation meta get failed');
             return {value: {}, version: 0};
         }
     }

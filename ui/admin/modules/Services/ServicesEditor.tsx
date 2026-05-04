@@ -6,6 +6,7 @@ import {IInputContent} from "@interfaces/IInputContent";
 import {EItemType} from "@enums/EItemType";
 import {IServiceRow, IServices, ServicesContent} from "@client/modules/Services";
 import {SortableHandleItem, SortableList, arrayMove} from "@client/lib/SortableList";
+import IconGlyphPicker from "@admin/lib/IconGlyphPicker";
 
 /**
  * Editor for the Services module. Mirrors the schema 1:1. Title supports
@@ -75,6 +76,7 @@ const ServicesEditor: React.FC<IInputContent> = ({content, setContent, t}) => {
                                     <Button danger size="small" icon={<DeleteOutlined/>} onClick={() => removeRow(i)}/>
                                 </Space>
                                 <LabeledInput
+                                    {...(i === 0 ? {'data-testid': 'module-editor-primary-text-input'} : {})}
                                     value={r.title}
                                     onChange={e => patchRow(i, {title: e.target.value})}
                                     placeholder="Solutions *architecture*"
@@ -102,12 +104,13 @@ const ServicesEditor: React.FC<IInputContent> = ({content, setContent, t}) => {
                                     />
                                 </Space>
                                 <Space style={{width: '100%'}}>
-                                    <LabeledInput
+                                    <IconGlyphPicker
                                         value={r.iconGlyph ?? ''}
-                                        onChange={e => patchRow(i, {iconGlyph: e.target.value})}
+                                        onChange={(v) => patchRow(i, {iconGlyph: v})}
                                         placeholder="▲ or 🧱 or free-text"
                                         label={t('Icon glyph')}
-                                        wrapperStyle={{width: 240}}
+                                        wrapperStyle={{width: 280}}
+                                        t={t}
                                     />
                                     <LabeledInput
                                         value={(r.tags ?? []).join(', ')}

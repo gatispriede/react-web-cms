@@ -1,0 +1,102 @@
+/**
+ * Admin shell dark-mode overrides — applied via the document attribute
+ * `data-admin-theme="dark"` set from `DarkModeSwitcher`.
+ *
+ * SCOPE NOTE (2026-05-03 user feedback): only the admin **chrome**
+ * (top-top nav, sider, drawer header, modal header, table chrome) flips
+ * to dark. The actual content area (`.ant-layout-content`,
+ * `.content-wrapper`, public-page preview render) MUST stay in the
+ * client-side theme so the operator sees what visitors see — flipping
+ * the body or the layout content background to dark made the build
+ * page look nothing like the public page.
+ *
+ * AntD's `darkAlgorithm` (wired in AdminApp.tsx) handles AntD components
+ * in admin chrome automatically; this file targets only the custom SCSS
+ * rules that AntD doesn't own.
+ */
+
+:root {
+    --admin-bg: #ffffff;
+    --admin-fg: #0d0d0d;
+    --admin-muted: #5a5a5a;
+    --admin-border: #e6e6e6;
+    --admin-elevated: #fafafa;
+    --admin-overlay: rgba(0, 0, 0, 0.45);
+}
+
+[data-admin-theme="dark"] {
+    --admin-bg: #1a1a1a;
+    --admin-fg: #f5f5f5;
+    --admin-muted: #a0a0a0;
+    --admin-border: #333333;
+    --admin-elevated: #232323;
+    --admin-overlay: rgba(0, 0, 0, 0.65);
+
+    color-scheme: dark;
+
+    /* Top-top admin nav (UserStatusBar.app-login-wrapper) — visible on
+       every admin route. */
+    .app-login-wrapper {
+        background: var(--admin-elevated) !important;
+        color: var(--admin-fg);
+        border-bottom: 1px solid var(--admin-border);
+    }
+    .app-login-wrapper p,
+    .app-login-wrapper .container p {
+        color: var(--admin-fg);
+    }
+    .app-login-wrapper .ant-btn-link {
+        color: var(--admin-fg);
+    }
+    .app-login-wrapper .ant-btn-link:hover {
+        color: var(--admin-fg);
+        background: var(--admin-bg);
+    }
+
+    /* Admin secondary header (per-pane toolbar with publish, last-pub,
+       breadcrumbs). */
+    .admin-app-header {
+        background: var(--admin-elevated) !important;
+        color: var(--admin-fg);
+        border-bottom-color: var(--admin-border);
+    }
+
+    /* Sider chrome (page list + section list). */
+    .ant-layout-sider {
+        background: var(--admin-elevated) !important;
+        border-right: 1px solid var(--admin-border);
+    }
+    .admin-sider-item {
+        color: var(--admin-fg);
+    }
+    .admin-sider-item:hover {
+        background: var(--admin-bg);
+    }
+
+    /* Drawer + modal chrome — header / footer only. The drawer body
+       stays default so the editor surface (which mirrors public-side
+       components) doesn't take on dark colours. */
+    .ant-drawer-header,
+    .ant-drawer-footer,
+    .ant-modal-header,
+    .ant-modal-footer {
+        background: var(--admin-elevated);
+        color: var(--admin-fg);
+    }
+    .ant-drawer-mask,
+    .ant-modal-mask {
+        background: var(--admin-overlay);
+    }
+
+    /* Tables (Posts list, Products list, etc.) — admin chrome, no
+       public surface uses ant-table. */
+    .ant-table-thead > tr > th {
+        background: var(--admin-elevated);
+        border-color: var(--admin-border);
+        color: var(--admin-fg);
+    }
+    .ant-table-tbody > tr > td {
+        border-color: var(--admin-border);
+        color: var(--admin-fg);
+    }
+}

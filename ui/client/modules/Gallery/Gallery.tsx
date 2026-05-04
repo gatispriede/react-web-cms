@@ -5,22 +5,55 @@ import {Image} from "antd";
 import {IItem} from "@interfaces/IItem";
 import {ETextPosition} from "@enums/ETextPosition";
 import {TFunction} from "i18next";
-import type {IGallery, IGalleryItem} from "./Gallery.types";
+import type {IGallery, IGalleryItem, IGalleryItemLegacy} from "./Gallery.types";
+import SizedImage from "@client/lib/SizedImage";
+import {toImageRef} from "@interfaces/IImageRef";
+import {toLinkRef} from "@interfaces/ILinkRef";
 export type {IGallery, IGalleryItem} from "./Gallery.types";
 export {EGalleryStyle} from "./Gallery.types";
 
-export class GalleryContent extends ContentManager {
-    public _parsedContent: IGallery = {
-        items: [],
-        disablePreview: false
+const defaultItem = (): IGalleryItem => ({
+    image: {src: ''},
+    preview: true,
+    text: '',
+    textPosition: ETextPosition.Bottom,
+});
+
+const normalizeItem = (raw: IGalleryItem | IGalleryItemLegacy | undefined): IGalleryItem => {
+    const r = (raw ?? {}) as IGalleryItemLegacy;
+    const image = toImageRef(r.image, {
+        src: r.src,
+        alt: r.alt,
+        width: r.imgWidth,
+        height: r.imgHeight,
+    });
+    const item: IGalleryItem = {
+        image,
+        preview: r.preview ?? true,
+        text: r.text ?? '',
+        textPosition: r.textPosition ?? ETextPosition.Bottom,
+    };
+    if (r.link) {
+        item.link = toLinkRef(r.link);
+    } else if (r.href) {
+        item.link = toLinkRef(undefined, {url: r.href});
     }
+    return item;
+};
+
+const normalize = (raw: IGallery | undefined): IGallery => ({
+    items: Array.isArray(raw?.items) ? raw!.items.map(normalizeItem) : [],
+    disablePreview: !!raw?.disablePreview,
+    aspectRatio: raw?.aspectRatio,
+});
+
+export class GalleryContent extends ContentManager {
+    public _parsedContent: IGallery = {items: [], disablePreview: false};
 
     get data(): IGallery {
-        if (!this._parsedContent.items) {
-            this._parsedContent.items = []
-        }
         this.parse();
-        return this._parsedContent
+        this._parsedContent = normalize(this._parsedContent);
+        return this._parsedContent;
     }
 
     set data(value: IGallery) {
@@ -28,23 +61,8 @@ export class GalleryContent extends ContentManager {
     }
 
     addItem(value?: IGalleryItem) {
-        if (!this._parsedContent.items) {
-            this._parsedContent.items = []
-        }
-        if (value) {
-            this._parsedContent.items.push(value)
-        } else {
-            this._parsedContent.items.push({
-                alt: '',
-                height: 0,
-                preview: true,
-                src: '',
-                text: '',
-                imgWidth: '',
-                imgHeight: '',
-                textPosition: ETextPosition.Bottom
-            })
-        }
+        if (!this._parsedContent.items) this._parsedContent.items = [];
+        this._parsedContent.items.push(value ?? defaultItem());
     }
 
     removeItem(index: number) {
@@ -63,7 +81,6 @@ export class GalleryContent extends ContentManager {
         this._parsedContent.aspectRatio = value;
     }
 
-    /** Swap two items in place — used by admin "move up / move down" buttons. */
     moveItem(from: number, to: number) {
         const items = this._parsedContent.items ?? [];
         if (from < 0 || to < 0 || from >= items.length || to >= items.length || from === to) return;
@@ -72,7 +89,7 @@ export class GalleryContent extends ContentManager {
     }
 }
 
-const Gallery = ({item, t: _t, tApp}: {
+const Gallery = ({item, t: _t, tApp: _tApp}: {
     item: IItem,
     t: TFunction<"translation", undefined>,
     tApp: TFunction<string, undefined>
@@ -80,35 +97,36 @@ const Gallery = ({item, t: _t, tApp}: {
     const gallery = new GalleryContent(EItemType.Image, item.content);
     gallery.setDisablePreview(item.action !== "onClick");
     const data = gallery.data
-    // Marquee/logo-wall/hazard-strip styles duplicate the item list so the
-    // CSS scroll animation can loop seamlessly — the duplicate is
-    // aria-hidden so screen readers don't announce every item twice.
     const isMarquee = item.style === 'marquee' || item.style === 'logo-wall' || item.style === 'hazard-strip';
-    // Per-gallery aspect-ratio lock (C6). `free` — or missing — keeps the
-    // historical default-style 3:2 ratio baked into the .default SCSS; any
-    // explicit value overrides via `[data-aspect-ratio]` rules in Gallery.scss.
     const aspectRatio = data.aspectRatio && data.aspectRatio !== 'free' ? data.aspectRatio : undefined;
-    // Only originals go into PreviewGroup — marquee clones render as plain
-    // <img> tags outside the group so the preview counter stays at N/N (not
-    // 2N/2N) and the nav doesn't double-step through duplicates.
     const renderTile = (galleryItem: IGalleryItem, index: number, isClone: boolean) => {
-        const hasImage = Boolean(galleryItem.src);
+        const img = galleryItem.image;
+        const hasImage = Boolean(img.src);
         const imgStyle: React.CSSProperties = {};
-        if (galleryItem.imgWidth) imgStyle.width = galleryItem.imgWidth;
-        if (galleryItem.imgHeight) imgStyle.height = galleryItem.imgHeight;
+        if (img.width) imgStyle.width = typeof img.width === 'number' ? `${img.width}px` : img.width;
+        if (img.height) imgStyle.height = typeof img.height === 'number' ? `${img.height}px` : img.height;
         const inner = (
             <>
                 {hasImage && (
-                    <div className={'image'}>
+                    <div
+                        className={'image'}
+                        data-sized={(img.width || img.height) ? true : undefined}
+                    >
                         {isClone ? (
-                            <img src={'/' + galleryItem.src} alt={galleryItem.alt} style={imgStyle}/>
+                            <SizedImage
+                                src={'/' + img.src}
+                                alt={img.alt}
+                                width={img.width || undefined}
+                                height={img.height || undefined}
+                                style={imgStyle}
+                            />
                         ) : (
                             <Image
                                 preview={data.disablePreview ? false : galleryItem.preview}
-                                src={'/' + galleryItem.src}
-                                alt={galleryItem.alt}
-                                width={galleryItem.imgWidth || undefined}
-                                height={galleryItem.imgHeight || undefined}
+                                src={'/' + img.src}
+                                alt={img.alt}
+                                width={img.width || undefined}
+                                height={img.height || undefined}
                             />
                         )}
                     </div>
@@ -121,18 +139,15 @@ const Gallery = ({item, t: _t, tApp}: {
             </>
         );
         const containerClass = `container text-${galleryItem.textPosition}${hasImage ? '' : ' gallery-tile--text'}`;
-        // A per-tile `href` wraps the whole tile in an anchor — the image
-        // preview click is suppressed so the nav wins. Clones never link;
-        // they exist purely to visually seam the marquee loop.
-        if (galleryItem.href && !isClone) {
+        const linkUrl = galleryItem.link?.url;
+        if (linkUrl && !isClone) {
             return (
                 <a
                     key={`o-${index}`}
                     className={`${containerClass} gallery-tile--link`}
-                    href={galleryItem.href}
+                    href={linkUrl}
+                    aria-label={galleryItem.link?.label || undefined}
                     onClick={(e) => {
-                        // Don't intercept clicks on the <Image> preview trigger —
-                        // honour the anchor navigation instead.
                         e.stopPropagation();
                     }}
                 >

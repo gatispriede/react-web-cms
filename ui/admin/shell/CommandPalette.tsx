@@ -42,12 +42,36 @@ export const CommandPalette: React.FC<Props> = ({open, onClose, extra}) => {
     const lang = useLang();
 
     const commands = useMemo<Command[]>(() => {
+        // Six-area structure (admin segregation §11a). Each area + every
+        // sub-page is its own command so an operator can jump directly.
         const list: Command[] = [
-            {id: 'app', label: t('App building'), hint: `/admin`, action: () => navigate(`/admin`)},
-            {id: 'settings', label: t('Site settings'), hint: `/admin/settings`, action: () => navigate(`/admin/settings`)},
-            {id: 'languages', label: t('Languages'), hint: `/admin/languages`, action: () => navigate(`/admin/languages`)},
-            {id: 'preview', label: t('Preview site'), hint: `/${lang}`, action: () => openNew(`/${lang}`)},
-            {id: 'blog', label: t('Open blog'), hint: `/${lang}/blog`, action: () => openNew(`/${lang}/blog`)},
+            // Page building
+            {id: 'build', label: t('Page building'), keywords: 'build pages app sections', hint: `/admin/build`, action: () => navigate(`/admin/build`)},
+            {id: 'build/modules-preview', label: t('Style matrix'), keywords: 'modules preview styles', hint: `/admin/build/modules-preview`, action: () => navigate(`/admin/build/modules-preview`)},
+            // Client configuration
+            {id: 'client-config/themes', label: t('Themes'), keywords: 'themes colors', hint: `/admin/client-config/themes`, action: () => navigate(`/admin/client-config/themes`)},
+            {id: 'client-config/logo', label: t('Logo'), keywords: 'logo brand', hint: `/admin/client-config/logo`, action: () => navigate(`/admin/client-config/logo`)},
+            {id: 'client-config/site-layout', label: t('Layout'), keywords: 'layout tabs scroll', hint: `/admin/client-config/site-layout`, action: () => navigate(`/admin/client-config/site-layout`)},
+            // Content management
+            {id: 'content/translations', label: t('Translations'), keywords: 'translations languages i18n', hint: `/admin/content/translations`, action: () => navigate(`/admin/content/translations`)},
+            {id: 'content/posts', label: t('Blog posts'), keywords: 'blog posts articles', hint: `/admin/content/posts`, action: () => navigate(`/admin/content/posts`)},
+            {id: 'content/footer', label: t('Footer'), keywords: 'footer copyright', hint: `/admin/content/footer`, action: () => navigate(`/admin/content/footer`)},
+            {id: 'content/products', label: t('Products'), keywords: 'products store catalog', hint: `/admin/content/products`, action: () => navigate(`/admin/content/products`)},
+            {id: 'content/inventory', label: t('Inventory'), keywords: 'inventory warehouse stock', hint: `/admin/content/inventory`, action: () => navigate(`/admin/content/inventory`)},
+            {id: 'content/orders', label: t('Orders'), keywords: 'orders checkout customers', hint: `/admin/content/orders`, action: () => navigate(`/admin/content/orders`)},
+            // SEO
+            {id: 'seo', label: t('SEO'), keywords: 'seo meta sitemap', hint: `/admin/seo`, action: () => navigate(`/admin/seo`)},
+            // Release / publishing / auditing
+            {id: 'release/publishing', label: t('Publishing'), keywords: 'publish snapshot rollback', hint: `/admin/release/publishing`, action: () => navigate(`/admin/release/publishing`)},
+            {id: 'release/bundle', label: t('Bundle export / import'), keywords: 'bundle export import backup', hint: `/admin/release/bundle`, action: () => navigate(`/admin/release/bundle`)},
+            {id: 'release/audit', label: t('Audit log'), keywords: 'audit log history', hint: `/admin/release/audit`, action: () => navigate(`/admin/release/audit`)},
+            // Admin side management
+            {id: 'system/users', label: t('Users'), keywords: 'users admins accounts', hint: `/admin/system/users`, action: () => navigate(`/admin/system/users`)},
+            {id: 'system/mcp', label: t('MCP tokens'), keywords: 'mcp tokens ai claude cursor', hint: `/admin/system/mcp`, action: () => navigate(`/admin/system/mcp`)},
+            {id: 'system/inquiries', label: t('Inquiries'), keywords: 'inquiries contact submissions', hint: `/admin/system/inquiries`, action: () => navigate(`/admin/system/inquiries`)},
+            // Cross-area utilities
+            {id: 'preview', label: t('Preview site'), keywords: 'preview public site', hint: `/${lang}`, action: () => openNew(`/${lang}`)},
+            {id: 'open-blog', label: t('Open blog'), keywords: 'blog public', hint: `/${lang}/blog`, action: () => openNew(`/${lang}/blog`)},
         ];
         return [...list, ...(extra ?? [])];
     }, [lang, t, extra]);

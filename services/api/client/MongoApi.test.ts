@@ -79,7 +79,7 @@ describe('MongoApi facade', () => {
         expect(navigationApiMock.createNavigation).toHaveBeenCalledWith(nav);
         expect(navigationApiMock.replaceUpdateNavigation).toHaveBeenCalledWith('OldName', nav);
         expect(navigationApiMock.updateNavigation).toHaveBeenCalledWith('Home', ['s1', 's2']);
-        expect(navigationApiMock.deleteNavigation).toHaveBeenCalledWith('Home');
+        expect(navigationApiMock.deleteNavigation).toHaveBeenCalledWith('Home', undefined);
     });
 
     it('section family → sectionApi (preserves all positional args)', async () => {

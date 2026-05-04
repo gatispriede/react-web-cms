@@ -120,6 +120,19 @@ export function recordSuccess(key: string): void {
     buckets.delete(key);
 }
 
+/**
+ * Operator escape hatch — drop every lockout bucket. Used by the
+ * `/api/auth/reset-lockout` endpoint + the MCP `auth.resetLockouts` tool
+ * when an admin needs to unlock a colleague without restarting the
+ * server. Returns the count cleared so the caller can confirm the op
+ * ran.
+ */
+export function resetAllLockouts(): {cleared: number} {
+    const cleared = buckets.size;
+    buckets.clear();
+    return {cleared};
+}
+
 /** Free stale buckets so the Map doesn't grow unbounded. */
 export function sweepLockouts(now = Date.now()): void {
     for (const [key, bucket] of buckets) {

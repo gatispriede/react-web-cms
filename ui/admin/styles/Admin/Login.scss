@@ -1,3 +1,9 @@
+// Admin login screen. The owner class is `.login-wrapper`, which doesn't
+// match the file stem — keeping the file name to avoid touching the import
+// graph. Audit script accepts the explicit owner declaration.
+//
+// AUDIT-OWNERS: .login-wrapper
+
 .login-wrapper{
   margin: auto;
   width: 100%;
@@ -17,40 +23,7 @@
     text-align: center;
   }
 }
-.app-login-wrapper {
-  position: sticky;
-  top: 0;
-  z-index: 999;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 2px;
-  padding: 4px 12px;
-  background: #fff;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 
-  // "User: Name" label
-  .container {
-    margin-right: 8px;
-    p {
-      line-height: 16px;
-      font-size: 12px;
-      padding: 0;
-      margin: 0;
-      white-space: nowrap;
-      color: #555;
-    }
-  }
-
-  // Push the language selector + sign-out to the far right
-  > button:last-child,
-  > .ant-dropdown-trigger:last-of-type {
-    margin-left: auto;
-  }
-
-  button {
-    height: 28px;
-    font-size: 13px;
-  }
-}
+// `.app-login-wrapper` (top admin status bar) used to live here as a second
+// top-level root. Split into `AppLoginWrapper.scss` per the F4 SCSS scoping
+// sweep (docs/roadmap/scss-audit-2026-05-03.md, Pattern 2).

@@ -1,0 +1,63 @@
+name: e2e
+
+# Pre-merge gate only — runs on PRs into master and on the master branch
+# itself. `develop` is the long-lived integration branch and gets noisy
+# pushes; we don't want a CI run on every WIP commit. Open a PR to master
+# when the branch is ready for the e2e gate.
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install deps
+        # Match `ci.yml`'s install incantation. `npm ci` is strict and
+        # trips on the antd v5↔v6 peer-dep chain (`@ant-design/compatible`
+        # pins to antd v5; we're on v6). `--legacy-peer-deps` is how we
+        # install locally and how `test-and-typecheck` installs in CI.
+        # `--ignore-scripts` skips the bcrypt native-compile that doesn't
+        # work on the GHA image without extra packages — Playwright doesn't
+        # need bcrypt at install time, and the per-worker servers spawn
+        # bcrypt-light paths via E2E_RUN.
+        run: npm install --legacy-peer-deps --ignore-scripts --no-audit --no-fund
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright (shard ${{ matrix.shard }}/4)
+        # `e2e:isolated`, NOT `e2e`. The `e2e` script forces
+        # `PLAYWRIGHT_E2E_REUSE_DEV=1` which is the local iterate-on-one-spec
+        # workflow — it tells `tests/e2e/fixtures/server.ts` to reuse a dev
+        # server already running on `localhost:80`. There's no such server
+        # in CI, so every test fails at its first HTTP call within seconds.
+        # The `:isolated` variant lets each Playwright worker spawn its own
+        # `next dev` against an in-memory Mongo, which is the CI shape.
+        run: npm run e2e:isolated -- --shard=${{ matrix.shard }}/4
+        env:
+          CI: '1'
+
+      - name: Upload report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-shard-${{ matrix.shard }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

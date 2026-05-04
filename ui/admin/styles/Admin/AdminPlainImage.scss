@@ -1,3 +1,10 @@
+// Admin-side PlainImage editor chrome. The owner class is `.admin-image`
+// (the editor wrapper rendered by `<AdminPlainImage>`); the file stem keeps
+// the AdminPlainImage name so its import path mirrors the React component
+// it pairs with. Audit script accepts the explicit owner declaration.
+//
+// AUDIT-OWNERS: .admin-image
+
 .admin-image{
   display: flex;
   flex-direction: column;

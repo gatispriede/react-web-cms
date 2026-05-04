@@ -104,7 +104,9 @@ module.exports = {
             // "ik",
             // "io",
             // "is",
-             "it",
+            // "it",  // disabled 2026-05-04 — no `public/locales/it/` exists,
+                     // no Italian content, no funisimo/skyclimber demand. Re-enable
+                     // when an `it` translation file is shipped + a customer needs it.
             // "iu",
             // "ja",
             // "jv",

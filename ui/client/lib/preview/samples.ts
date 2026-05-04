@@ -32,6 +32,32 @@ export const sampleContent: Record<string, PreviewSample[]> = {
     ],
     [EItemType.Image]: [
         {label: 'placeholder', content: JSON.stringify({src: 'preview:cosmos1080p', useAsBackground: false})},
+        {
+            // Exercises the inline-content shape: width/height + caption and
+            // a vertical offset to surface the renderer's positioning rules.
+            label: 'inline · sized + caption',
+            content: JSON.stringify({
+                src: 'preview:nanocyte1080p',
+                useAsBackground: false,
+                imgWidth: '480px',
+                imgHeight: '320px',
+                offsetX: 24,
+                description: '<p>Inline image with explicit width/height and a short editorial caption beneath it.</p>',
+            }),
+        },
+        {
+            // Background-image shape — the gradient overlay + fixed-position
+            // toggles only render when this style is on, so they can't be
+            // exercised from the inline sample above.
+            label: 'background · gradient + fixed',
+            content: JSON.stringify({
+                src: 'preview:deepblue1080p',
+                useAsBackground: true,
+                imageFixed: true,
+                useGradiant: true,
+                description: '',
+            }),
+        },
     ],
     [EItemType.Gallery]: [
         {
@@ -89,6 +115,24 @@ export const sampleContent: Record<string, PreviewSample[]> = {
                     {src: 'preview:nanocyte1080p', alt: 'Slide 1', text: 'Microstructure — field study, winter 2024', textPosition: 'bottom'},
                     {src: 'preview:deepblue1080p', alt: 'Slide 2', text: 'Depth profile at 400m', textPosition: 'bottom'},
                     {src: 'preview:coalescence1080p', alt: 'Slide 3', text: 'Coalescence, Plate III', textPosition: 'bottom'},
+                ],
+            }),
+        },
+        {
+            // Exercises every playback option. autoplay only kicks in for the
+            // editorial side-card / cinematic styles that respect the option;
+            // the rest of the matrix renders the same as a static slide.
+            label: 'autoplay + dots + arrows + infinity',
+            content: JSON.stringify({
+                autoplay: true,
+                autoplaySpeed: 4000,
+                infinity: true,
+                dots: true,
+                arrows: true,
+                items: [
+                    {src: 'preview:cosmos1080p', alt: 'Auto 1', text: 'Auto-advance every 4s', textPosition: 'bottom'},
+                    {src: 'preview:nanocyte1080p', alt: 'Auto 2', text: 'Loops infinitely', textPosition: 'bottom'},
+                    {src: 'preview:maya21080p', alt: 'Auto 3', text: 'Dots + arrows on', textPosition: 'bottom'},
                 ],
             }),
         },

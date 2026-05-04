@@ -1,17 +1,15 @@
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import React, {useEffect} from 'react';
 import {Button, Card, Col, ColorPicker, ConfigProvider, Form, Input, InputNumber, Modal, Popconfirm, Row, Space, Tag, message} from 'antd';
 import {CheckCircleFilled, CopyOutlined, DeleteOutlined, EditOutlined, PlusOutlined} from '@client/lib/icons';
 import {useTranslation} from 'react-i18next';
-import ThemeApi from '@services/api/client/ThemeApi';
-import {ITheme, IThemeTokens, InTheme} from '@interfaces/ITheme';
+import {ITheme, IThemeTokens} from '@interfaces/ITheme';
 import AuditBadge from '@admin/shell/AuditBadge';
 import {useRefreshView} from '@client/lib/refreshBus';
 import ThemePreviewFrame from './ThemePreviewFrame';
 import FontPicker, {FontPickerSlot} from './FontPicker';
 import ConflictDialog from '@client/lib/ConflictDialog';
-import {ConflictError, isConflictError} from '@client/lib/conflict';
-
-const themeApi = new ThemeApi();
+import {useViewModel} from '@client/lib/state/observable';
+import {ThemesViewModel} from './ThemesViewModel';
 
 /** Preset names with a source-controlled JSON in `ui/client/themes/<slug>.json`.
  *  Only these presets expose the "Reset to preset" affordance — the colour-only
@@ -30,19 +28,6 @@ const COLOR_TOKENS: {key: keyof IThemeTokens; label: string}[] = [
     {key: 'colorInfo', label: 'Info'},
 ];
 
-const BLANK_TOKENS: IThemeTokens = {
-    colorPrimary: '#3b3939',
-    colorBgBase: '#ffffff',
-    colorTextBase: '#1f1f1f',
-    colorSuccess: '#52c41a',
-    colorWarning: '#faad14',
-    colorError: '#ff4d4f',
-    colorInfo: '#1677ff',
-    borderRadius: 6,
-    fontSize: 16,
-    contentPadding: 24,
-};
-
 const toHex = (v: any): string => (typeof v === 'string' ? v : v?.toHexString?.() ?? '');
 
 const ThemeCard: React.FC<{
@@ -53,9 +38,11 @@ const ThemeCard: React.FC<{
     onDuplicate: () => void;
     onDelete: () => void;
     onReset: () => void;
+    deletePending?: boolean;
     t: (k: string) => string;
-}> = ({theme, active, onActivate, onEdit, onDuplicate, onDelete, onReset, t}) => (
+}> = ({theme, active, onActivate, onEdit, onDuplicate, onDelete, onReset, deletePending, t}) => (
     <Card
+        data-testid={`themes-list-row-${theme.id}`}
         size="small"
         title={
             <Space>
@@ -66,9 +53,18 @@ const ThemeCard: React.FC<{
         }
         extra={
             <Space size={4}>
-                {!active && (
-                    <Button size="small" type="primary" onClick={onActivate}>{t('Activate')}</Button>
-                )}
+                {/* DECISION: render the set-active button on every row (disabled
+                    when already active) so tests can locate it per row and use
+                    `.isEnabled()` to find an inactive theme to switch to. */}
+                <Button
+                    data-testid="themes-set-active-btn"
+                    size="small"
+                    type="primary"
+                    disabled={active}
+                    onClick={onActivate}
+                >
+                    {t('Activate')}
+                </Button>
             </Space>
         }
     >
@@ -106,52 +102,50 @@ const ThemeCard: React.FC<{
                     title={t('Delete theme?')}
                     okText={t('Delete')}
                     cancelText={t('Cancel')}
-                    okButtonProps={{danger: true}}
+                    okButtonProps={{danger: true, loading: !!deletePending}}
                     onConfirm={onDelete}
                 >
-                    <Button size="small" danger icon={<DeleteOutlined/>}/>
+                    <Button size="small" danger icon={<DeleteOutlined/>} loading={!!deletePending}/>
                 </Popconfirm>
             )}
         </Space>
     </Card>
 );
 
-const ThemeEditor: React.FC<{
-    initial: InTheme;
-    onCancel: () => void;
-    onSave: (theme: InTheme) => Promise<void>;
-    t: (k: string) => string;
-    saving: boolean;
-}> = ({initial, onCancel, onSave, t, saving}) => {
-    const [draft, setDraft] = useState<InTheme>(initial);
-    const [pickerSlot, setPickerSlot] = useState<FontPickerSlot | null>(null);
+const FONT_SLOTS: {slot: FontPickerSlot; tokenKey: 'fontDisplay' | 'fontSans' | 'fontMono'; label: string}[] = [
+    {slot: 'display', tokenKey: 'fontDisplay', label: 'Display'},
+    {slot: 'sans', tokenKey: 'fontSans', label: 'Body'},
+    {slot: 'mono', tokenKey: 'fontMono', label: 'Mono'},
+];
 
-    const setToken = (key: keyof IThemeTokens, value: string | number) =>
-        setDraft(d => ({...d, tokens: {...d.tokens, [key]: value}}));
+/**
+ * Modal editor — render-only over `ThemesViewModel`. The draft +
+ * picker-slot state used to live as `useState` here; both moved to
+ * the vm so the entire pane has a single source of truth (VM3 final
+ * pane, 2026-05-02). All token mutations route through `vm.setToken`
+ * → re-assigns `vm.editing` → notifies subscribers → re-render.
+ */
+const ThemeEditor: React.FC<{vm: ThemesViewModel; t: (k: string) => string}> = ({vm, t}) => {
+    const draft = vm.editing;
+    if (!draft) return null;
 
-    const previewConfig = useMemo(() => ({token: draft.tokens as any}), [draft.tokens]);
-
-    const FONT_SLOTS: {slot: FontPickerSlot; tokenKey: 'fontDisplay' | 'fontSans' | 'fontMono'; label: string}[] = [
-        {slot: 'display', tokenKey: 'fontDisplay', label: t('Display')},
-        {slot: 'sans', tokenKey: 'fontSans', label: t('Body')},
-        {slot: 'mono', tokenKey: 'fontMono', label: t('Mono')},
-    ];
+    const previewConfig = {token: draft.tokens as any};
 
     return (
         <Modal
-            title={initial.id ? t('Edit theme') : t('New theme')}
+            title={draft.id ? t('Edit theme') : t('New theme')}
             open
             width={720}
-            onCancel={onCancel}
-            onOk={() => onSave(draft)}
-            confirmLoading={saving}
+            onCancel={vm.closeEditor}
+            onOk={() => vm.save()}
+            confirmLoading={vm.saving}
             okText={t('Save')}
         >
             <Form layout="vertical">
                 <Form.Item label={t('Name')}>
                     <Input
                         value={draft.name}
-                        onChange={e => setDraft(d => ({...d, name: e.target.value}))}
+                        onChange={e => vm.setName(e.target.value)}
                     />
                 </Form.Item>
                 <Row gutter={[12, 8]}>
@@ -160,7 +154,7 @@ const ThemeEditor: React.FC<{
                             <Form.Item label={t(label)} style={{marginBottom: 8}}>
                                 <ColorPicker
                                     value={draft.tokens[key] as string}
-                                    onChange={v => setToken(key, toHex(v))}
+                                    onChange={v => vm.setToken(key, toHex(v))}
                                     showText
                                 />
                             </Form.Item>
@@ -172,7 +166,7 @@ const ThemeEditor: React.FC<{
                                 min={0}
                                 max={24}
                                 value={draft.tokens.borderRadius}
-                                onChange={v => setToken('borderRadius', Number(v) || 0)}
+                                onChange={v => vm.setToken('borderRadius', Number(v) || 0)}
                             />
                         </Form.Item>
                     </Col>
@@ -182,7 +176,7 @@ const ThemeEditor: React.FC<{
                                 min={10}
                                 max={24}
                                 value={draft.tokens.fontSize}
-                                onChange={v => setToken('fontSize', Number(v) || 16)}
+                                onChange={v => vm.setToken('fontSize', Number(v) || 16)}
                             />
                         </Form.Item>
                     </Col>
@@ -192,7 +186,7 @@ const ThemeEditor: React.FC<{
                                 min={0}
                                 max={96}
                                 value={draft.tokens.contentPadding}
-                                onChange={v => setToken('contentPadding', Number(v) || 24)}
+                                onChange={v => vm.setToken('contentPadding', Number(v) || 24)}
                             />
                         </Form.Item>
                     </Col>
@@ -204,7 +198,7 @@ const ThemeEditor: React.FC<{
                             const stack = draft.tokens[tokenKey] as string | undefined;
                             return (
                                 <div key={slot} style={{display: 'flex', alignItems: 'center', gap: 10}}>
-                                    <span style={{minWidth: 70, fontSize: 12, color: '#555'}}>{label}</span>
+                                    <span style={{minWidth: 70, fontSize: 12, color: '#555'}}>{t(label)}</span>
                                     <span style={{
                                         flex: 1,
                                         fontFamily: stack || 'inherit',
@@ -216,7 +210,7 @@ const ThemeEditor: React.FC<{
                                     }}>
                                         {stack ? 'The quick brown fox' : t('System default')}
                                     </span>
-                                    <Button size="small" onClick={() => setPickerSlot(slot)}>{t('Pick…')}</Button>
+                                    <Button size="small" onClick={() => vm.openPicker(slot)}>{t('Pick…')}</Button>
                                 </div>
                             );
                         })}
@@ -237,187 +231,62 @@ const ThemeEditor: React.FC<{
                 </div>
             </Form>
             <FontPicker
-                open={pickerSlot !== null}
-                slot={pickerSlot ?? 'display'}
-                currentStack={pickerSlot
-                    ? draft.tokens[pickerSlot === 'sans' ? 'fontSans' : pickerSlot === 'mono' ? 'fontMono' : 'fontDisplay'] as string | undefined
-                    : undefined}
-                onCancel={() => setPickerSlot(null)}
-                onPick={(stack) => {
-                    if (!pickerSlot) return;
-                    const tokenKey = pickerSlot === 'sans' ? 'fontSans' : pickerSlot === 'mono' ? 'fontMono' : 'fontDisplay';
-                    setToken(tokenKey, stack);
-                    setPickerSlot(null);
-                }}
+                open={vm.pickerSlot !== null}
+                slot={vm.pickerSlot ?? 'display'}
+                currentStack={vm.pickerCurrentStack}
+                onCancel={vm.closePicker}
+                onPick={vm.pickFont}
             />
         </Modal>
     );
 };
 
-const AdminSettingsTheme = () => {
+const AdminSettingsTheme: React.FC = () => {
     const {t} = useTranslation();
-    const [themes, setThemes] = useState<ITheme[]>([]);
-    const [activeId, setActiveId] = useState<string | null>(null);
-    const [activeAudit, setActiveAudit] = useState<{editedBy?: string; editedAt?: string}>({});
-    const [loading, setLoading] = useState(false);
-    const [editing, setEditing] = useState<InTheme | null>(null);
-    /** Server-side `version` at the time the editor opened — sent as
-     *  `expectedVersion` so the next save catches a peer's concurrent
-     *  edit. `undefined` for a brand-new theme that hasn't been saved
-     *  yet (no version to check against). */
-    const [editingVersion, setEditingVersion] = useState<number | undefined>(undefined);
-    const [saving, setSaving] = useState(false);
-    const [conflict, setConflict] = useState<{error: ConflictError<any>; retry: () => Promise<void>} | null>(null);
+    const vm = useViewModel(() => new ThemesViewModel(undefined, t));
 
-    const refresh = useCallback(async () => {
-        setLoading(true);
-        try {
-            const [list, active] = await Promise.all([
-                themeApi.listThemes(),
-                themeApi.getActive(),
-            ]);
-            setThemes(list);
-            setActiveId(active?.id ?? null);
-            setActiveAudit({editedBy: active?.editedBy, editedAt: active?.editedAt});
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => { void refresh(); }, [refresh]);
-    useRefreshView(refresh, 'settings');
-
-    const activate = async (id: string) => {
-        const result = await themeApi.setActive(id);
-        if (result.error) { message.error(result.error); return; }
-        message.success(t('Theme activated — reload to see changes site-wide.'));
-        setActiveId(id);
-    };
-
-    const remove = async (id: string) => {
-        const result = await themeApi.deleteTheme(id);
-        if (result.error) { message.error(result.error); return; }
-        message.success(t('Theme deleted'));
-        await refresh();
-    };
-
-    const resetPreset = async (id: string) => {
-        const result = await themeApi.resetPreset(id);
-        if (result.error) { message.error(result.error); return; }
-        message.success(t('Preset reset to on-disk defaults'));
-        await refresh();
-    };
-
-    const duplicate = (theme: ITheme) => {
-        // Duplicate writes a brand-new theme — no expectedVersion baseline yet.
-        setEditing({
-            name: `${theme.name} ${t('(copy)')}`,
-            tokens: {...theme.tokens},
-            custom: true,
-        });
-        setEditingVersion(undefined);
-    };
-
-    const edit = (theme: ITheme) => {
-        setEditing({id: theme.id, name: theme.name, tokens: {...theme.tokens}, custom: true});
-        setEditingVersion(typeof theme.version === 'number' ? theme.version : 0);
-    };
-
-    const createBlank = () => {
-        setEditing({name: t('New theme'), tokens: {...BLANK_TOKENS}, custom: true});
-        setEditingVersion(undefined);
-    };
-
-    const performSave = useCallback(async (draft: InTheme, expectedVersion: number | undefined) => {
-        const result = await themeApi.saveTheme(draft, expectedVersion);
-        if (result.error) { message.error(result.error); return false; }
-        message.success(t('Theme saved'));
-        setEditing(null);
-        setEditingVersion(undefined);
-        await refresh();
-        return true;
-    }, [refresh, t]);
-
-    const save = async (draft: InTheme) => {
-        if (!draft.name.trim()) { message.error(t('Name is required')); return; }
-        setSaving(true);
-        try {
-            await performSave(draft, editingVersion);
-        } catch (err) {
-            if (isConflictError(err)) {
-                // Stash the conflict so the dialog can offer take-theirs vs
-                // keep-mine. Keep-mine retries with the bumped version baseline.
-                setConflict({
-                    error: err,
-                    retry: async () => {
-                        setSaving(true);
-                        try {
-                            await performSave(draft, err.currentVersion);
-                            setConflict(null);
-                        } finally {
-                            setSaving(false);
-                        }
-                    },
-                });
-            } else {
-                message.error(String((err as Error)?.message ?? err));
-            }
-        } finally {
-            setSaving(false);
-        }
-    };
+    useEffect(() => { void vm.refresh(); }, [vm]);
+    useRefreshView(vm.refresh, 'settings');
 
     return (
         <div style={{padding: 16}}>
             <Space style={{marginBottom: 16}} align="center">
-                <Button type="primary" icon={<PlusOutlined/>} onClick={createBlank}>{t('New theme')}</Button>
-                <Button onClick={refresh} loading={loading}>{t('Refresh')}</Button>
-                <AuditBadge editedBy={activeAudit.editedBy} editedAt={activeAudit.editedAt}/>
+                <Button type="primary" icon={<PlusOutlined/>} onClick={vm.createBlank}>{t('New theme')}</Button>
+                <Button onClick={vm.refresh} loading={vm.loading}>{t('Refresh')}</Button>
+                <AuditBadge editedBy={vm.activeAudit.editedBy} editedAt={vm.activeAudit.editedAt}/>
             </Space>
             <Row gutter={[12, 12]}>
-                {themes.map(theme => (
+                {vm.themes.map(theme => (
                     <Col xs={24} md={12} lg={8} key={theme.id}>
                         <ThemeCard
                             theme={theme}
-                            active={theme.id === activeId}
-                            onActivate={() => activate(theme.id)}
-                            onEdit={() => edit(theme)}
-                            onDuplicate={() => duplicate(theme)}
-                            onDelete={() => remove(theme.id)}
-                            onReset={() => resetPreset(theme.id)}
+                            active={theme.id === vm.activeId}
+                            onActivate={() => vm.activate(theme.id)}
+                            onEdit={() => vm.edit(theme)}
+                            onDuplicate={() => vm.duplicate(theme)}
+                            onDelete={() => vm.remove(theme.id)}
+                            deletePending={vm.removePending}
+                            onReset={() => vm.resetPreset(theme.id)}
                             t={t}
                         />
                     </Col>
                 ))}
             </Row>
-            {editing && (
-                <ThemeEditor
-                    initial={editing}
-                    onCancel={() => { setEditing(null); setEditingVersion(undefined); }}
-                    onSave={save}
-                    t={t}
-                    saving={saving}
-                />
-            )}
-            {conflict && (() => {
-                const peer = conflict.error.currentDoc as {editedBy?: string; editedAt?: string; name?: string} | null;
+            {vm.editing && <ThemeEditor vm={vm} t={t}/>}
+            {vm.conflict && (() => {
+                const peer = vm.conflict.error.currentDoc as {editedBy?: string; editedAt?: string; name?: string} | null;
                 return (
                     <ConflictDialog
                         open
                         docKind={t('Theme')}
-                        peerVersion={conflict.error.currentVersion}
+                        peerVersion={vm.conflict.error.currentVersion}
                         peerEditedBy={peer?.editedBy}
                         peerEditedAt={peer?.editedAt}
-                        onCancel={() => setConflict(null)}
-                        onTakeTheirs={async () => {
-                            setConflict(null);
-                            setEditing(null);
-                            setEditingVersion(undefined);
-                            await refresh();
-                        }}
+                        onCancel={vm.dismissConflict}
+                        onTakeTheirs={() => { void vm.takeTheirs(); }}
                         onKeepMine={async () => {
-                            try { await conflict.retry(); }
-                            catch (err) { message.error(String((err as Error)?.message ?? err)); setConflict(null); }
+                            try { await vm.conflict?.retry(); }
+                            catch (err) { message.error(String((err as Error)?.message ?? err)); vm.dismissConflict(); }
                         }}
                     />
                 );

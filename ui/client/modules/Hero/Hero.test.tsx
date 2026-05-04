@@ -13,7 +13,10 @@ import type {IHero} from './Hero.types';
 // so there's no double-translation surprise in assertions.
 const t = ((k: string) => k) as any;
 
-const fixture: IHero = {
+// Pre-C18 stored shape — `bgImage` as a string, CTAs with `href`. The
+// HeroContent normaliser reshapes these to {bgImage: IImageRef, cta: ILinkRef}
+// at read time, so this fixture also exercises the legacy read path.
+const fixture = {
     headline: 'Build *great* things',
     headlineSoft: 'with intention',
     subtitle: 'A tagline sub',
@@ -26,7 +29,7 @@ const fixture: IHero = {
     coords: [{label: 'LAT', value: '57.15'}],
     ctaPrimary: {label: 'Start', href: '/start', primary: true},
     ctaSecondary: {label: 'Docs', href: '/docs'},
-};
+} as unknown as IHero;
 
 describe('Hero render', () => {
     it('renders headline, subtitle, tagline + structural landmarks from a realistic fixture', () => {
@@ -74,7 +77,7 @@ describe('Hero render', () => {
     });
 
     it('empty content: renders container but no optional sub-elements', () => {
-        const empty: IHero = {headline: '', subtitle: '', tagline: '', bgImage: '', accent: ''};
+        const empty = {headline: '', subtitle: '', tagline: '', bgImage: '', accent: ''} as unknown as IHero;
         const {container} = render(
             <Hero
                 item={{type: EItemType.Hero, content: JSON.stringify(empty)}}

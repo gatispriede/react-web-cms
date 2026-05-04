@@ -4,7 +4,7 @@ import LoginBtn from "@admin/features/Auth/login-btn";
 import {Session} from "next-auth";
 import {GetServerSideProps} from "next";
 import {getServerSession} from "next-auth/next";
-import {authOptions} from "./api/auth/[...nextauth]";
+import {authOptions} from "./api/auth/authOptions";
 import {serverSideTranslations} from "next-i18next/pages/serverSideTranslations";
 
 const Admin = ({session}: { session: Session }) => {

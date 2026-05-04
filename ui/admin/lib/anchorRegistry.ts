@@ -18,6 +18,43 @@
 import {slugifyAnchor} from "@utils/stringFunctions";
 import type {ISection} from "@interfaces/ISection";
 import type {IPage} from "@interfaces/IPage";
+import {EItemType} from "@enums/EItemType";
+
+/** Map a section's track count to a friendly width label so the link
+ *  picker shows "Main · 100% · Hero" instead of "Main · <guid>". */
+const sectionWidthLabel = (trackCount: number | undefined): string => {
+    switch (trackCount) {
+        case 1: return '100%';
+        case 2: return '50/50';
+        case 3: return '33/33/33';
+        case 4: return '25×4';
+        default: return trackCount ? `${trackCount}-track` : '';
+    }
+};
+
+/** Best-effort module summary for a section: prefer the dominant item type,
+ *  fall back to a count when items are mixed. Returns '' when the section
+ *  has no items. */
+const sectionModuleSummary = (s: ISection): string => {
+    const items = (s.content ?? []) as Array<{type?: string}>;
+    if (!items.length) return '';
+    const types = items.map(it => it?.type).filter(Boolean) as string[];
+    if (!types.length) return '';
+    const unique = Array.from(new Set(types));
+    if (unique.length === 1) return prettifyType(unique[0]);
+    return `${unique.length} modules`;
+};
+
+/** Convert `PROJECT_GRID` → `Project grid` so the picker reads naturally. */
+const prettifyType = (t: string): string => {
+    // Find a matching EItemType key for canonical casing; fall back to
+    // splitting the underscore form.
+    const match = (Object.keys(EItemType) as Array<keyof typeof EItemType>)
+        .find(k => EItemType[k] === t);
+    const base = match ? String(match) : t;
+    // Insert spaces before capitals and lowercase the rest: "ProjectGrid" → "Project grid".
+    return base.replace(/([A-Z])/g, ' $1').trim().replace(/^./, c => c.toUpperCase()).replace(/(?<=.)\s[A-Z]/g, m => m.toLowerCase());
+};
 
 export interface IAnchorOption {
     /** Stable id for AntD Select `value`. */
@@ -42,13 +79,49 @@ export function subscribeAnchors(fn: () => void): () => void {
     return () => listeners.delete(fn);
 }
 
+/** Page shape this module needs — accepts both flat (legacy) entries
+ *  and sub-page-aware ones with `id` / `parent` / `slug`. F1 sub-pages:
+ *  the registry walks the parent chain so picker labels read
+ *  `Services → Cleaning` and hrefs read `/services/cleaning`. */
+type RegistryPage = Pick<IPage, 'page'> & {
+    id?: string;
+    parent?: string;
+    slug?: string;
+};
+
+/** Walk the parent chain root → self, returning the matched page entries.
+ *  Cycle-safe (server prevents cycles, but never trust input). */
+function chainFor(page: RegistryPage, all: RegistryPage[]): RegistryPage[] {
+    const byKey = new Map<string, RegistryPage>();
+    for (const p of all) byKey.set(p.id ?? p.page, p);
+    const out: RegistryPage[] = [];
+    const seen = new Set<string>();
+    let cur: RegistryPage | undefined = page;
+    while (cur) {
+        const key = cur.id ?? cur.page;
+        if (seen.has(key)) break;
+        seen.add(key);
+        out.unshift(cur);
+        if (!cur.parent) break;
+        cur = byKey.get(cur.parent);
+    }
+    return out;
+}
+
+const slugFor = (p: RegistryPage): string =>
+    p.slug?.trim() || slugifyAnchor(p.page) || p.page;
+
 /**
  * Replace the registry with a fresh build from the admin shell's loaded
  * pages. `sectionsByPage` is the same shape `AdminApp.initialize` already
  * passes around — `{[pageName]: ISection[]}` — to avoid re-fetching.
+ *
+ * F1 sub-pages: when a page has a `parent`, the picker entry uses the
+ * full slug-chain href (`/services/cleaning`) and an indented label
+ * (`Services → Cleaning`). Top-level pages render as before.
  */
 export function setAnchors(
-    pages: Pick<IPage, 'page'>[],
+    pages: RegistryPage[],
     sectionsByPage: Record<string, ISection[]>
 ): void {
     const out: IAnchorOption[] = [];
@@ -62,13 +135,21 @@ export function setAnchors(
     };
 
     for (const p of pages) {
-        const slug = slugifyAnchor(p.page) || p.page;
-        push({href: `/${slug}`, label: p.page, group: 'Pages'});
+        const chain = chainFor(p, pages);
+        const slugs = chain.map(slugFor);
+        const href = `/${slugs.join('/')}`;
+        const label = chain.length > 1
+            ? chain.map(c => c.page).join(' → ')
+            : p.page;
+        push({href, label, group: 'Pages'});
 
         const sections = sectionsByPage[p.page] ?? [];
-        for (const s of sections) {
+        sections.forEach((s, idx) => {
             if (s.id) {
-                push({href: `#${s.id}`, label: `${p.page} · ${s.id}`, group: 'Sections'});
+                const width = sectionWidthLabel(s.type);
+                const summary = sectionModuleSummary(s);
+                const parts = [p.page, width, summary || `section ${idx + 1}`].filter(Boolean);
+                push({href: `#${s.id}`, label: parts.join(' → '), group: 'Sections'});
             }
             // Walk content items to surface module-title anchors.
             const items = (s.content ?? []) as Array<{type?: string; content?: string}>;
@@ -90,8 +171,24 @@ export function setAnchors(
                     if (!anchor) continue;
                     push({href: `#${anchor}`, label: `${p.page} · ${t}`, group: 'Module titles'});
                 }
+
+                // C13b — Timeline entries don't have a single `title` field; the
+                // anchorable identity is `${company}-${role}` (or `${company}-${start}`
+                // as a tiebreaker when role is empty). Same composition is used by
+                // the renderer in `Timeline.tsx`.
+                const tlEntries = Array.isArray(parsed?.entries) ? parsed.entries : [];
+                for (const e of tlEntries) {
+                    const company = typeof e?.company === 'string' ? e.company : '';
+                    const role = typeof e?.role === 'string' ? e.role : '';
+                    const start = typeof e?.start === 'string' ? e.start : '';
+                    if (!company) continue;
+                    const anchor = slugifyAnchor(`${company}-${role || start}`);
+                    if (!anchor) continue;
+                    const label = role ? `${p.page} · ${company} — ${role}` : `${p.page} · ${company}`;
+                    push({href: `#${anchor}`, label, group: 'Timeline entries'});
+                }
             }
-        }
+        });
     }
     cache = out;
     notify();

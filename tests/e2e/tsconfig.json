@@ -1,0 +1,25 @@
+{
+  // Dedicated tsconfig for the Playwright suite. Extends the frontend config
+  // for path aliases (so seedFactories.ts can import @services/*), but pulls
+  // in `@playwright/test` types instead of the next.js plugin and narrows
+  // the include set to this directory.
+  "extends": "../../ui/client/tsconfig.json",
+  "compilerOptions": {
+    "types": ["node", "@playwright/test"],
+    "noEmit": true,
+    "jsx": "preserve",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "paths": {
+      "@client/*": ["../../ui/client/*"],
+      "@admin/*": ["../../ui/admin/*"],
+      "@shared/*": ["../../shared/*"],
+      "@services/*": ["../../services/*"],
+      "@interfaces/*": ["../../shared/types/*"],
+      "@enums/*": ["../../shared/enums/*"],
+      "@utils/*": ["../../shared/utils/*"]
+    }
+  },
+  "include": ["./**/*.ts", "../../playwright.config.ts"],
+  "exclude": ["node_modules"]
+}

@@ -1,3 +1,22 @@
+# --- P3: production domain + automatic HTTPS ---
+# `{$DOMAIN}` is sourced from `.env` (see compose.yaml — defaults to `:80`
+# when unset, so dev / un-DNSed boxes still serve plain HTTP). When set
+# to a real hostname (e.g. `example.com`), Caddy:
+#   * obtains + renews a Let's Encrypt cert automatically
+#   * redirects HTTP → HTTPS
+#   * serves HTTP/3 (UDP/443 is published in compose.yaml)
+# Cert state lives in the `caddy_data` named volume so reissues survive
+# `docker compose down`. See `docs/runbooks/digitalocean-domain.md` for
+# DNS + firewall setup.
+#
+# `{$SITE_DOMAIN_WWW:www.localhost}` — separate vhost that 301s to the
+# canonical apex. We default to a harmless `www.localhost` so dev boots
+# don't try to obtain a cert for an apex+www pair the operator hasn't
+# declared yet. In prod, set `SITE_DOMAIN_WWW=www.example.com` in `.env`.
+{$SITE_DOMAIN_WWW:www.localhost} {
+    redir https://{$DOMAIN}{uri} 301
+}
+
 {$DOMAIN} {
     encode zstd gzip
 
@@ -45,7 +64,16 @@
     # hiccup because the retry wins before they notice. The separate
     # `fail_duration 0s` keeps Caddy optimistic — we don't want it to
     # mark the sole backend as permanently bad after a single miss.
-    reverse_proxy app:80 {
+    # --- P4: blue/green upstream switch ---
+    # `{$ACTIVE_UPSTREAM}` is sourced from `.env` and toggled by
+    # `tools/blue-green-deploy.sh` between `app-blue:80` and
+    # `app-green:80`. Default `app:80` (single-instance dev / pre-P4
+    # production) preserves the legacy P2 path — when both `app-blue`
+    # and `app-green` services are running and `ACTIVE_UPSTREAM` is
+    # set, deploys flip the marker + `caddy reload` (graceful, drains
+    # in-flight requests on the old upstream over `${DRAIN_SECONDS:-30}` s).
+    # See `docs/runbooks/seamless-deployment.md`.
+    reverse_proxy {$ACTIVE_UPSTREAM:app:80} {
         lb_try_duration 30s
         lb_try_interval 500ms
         fail_duration 0s
@@ -68,6 +96,24 @@
 
     @static path /_next/static/*
     header @static Cache-Control "public, max-age=31536000, immutable"
+
+    # --- C9: production SWR cache for public pages + anon GraphQL ---
+    # Guarded by `PROD_CACHE`. The Node app stamps `X-Cms-Cache-Tag:
+    # <bootId>;<feature>=<ver>,…` on every cacheable response; Caddy's
+    # built-in HTTP cache module keys entries on URL + that header,
+    # so a process restart (new bootId) or an admin write (bumped
+    # feature version) evicts naturally without an explicit purge.
+    #
+    # Caddy's cache module isn't bundled in the standard build — the
+    # production deploy uses `caddy-l4 + caddy-cache-handler` (xcaddy)
+    # to add it; if you're on stock Caddy the SWR layer is a no-op
+    # and responses just go through with the headers attached.
+    # Origin sets `Cache-Control: public, max-age=…, stale-while-revalidate=…`
+    # so even unsupported intermediate caches do the right thing for
+    # straight `max-age` reads.
+    #
+    # See `docs/runbooks/caddy-cache.md` for the runbook (force-bypass,
+    # debugging cache misses, header inspection).
 
     # --- Maintenance page for deploy windows > retry duration ---
     # If `app` is still unreachable after the 30 s retry budget, Caddy

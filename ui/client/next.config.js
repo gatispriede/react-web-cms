@@ -1,8 +1,46 @@
 const {i18n} = require('../../next-i18next.config.js')
 const {loadCustomBuildParams} = require('./next-utils.config')
 const {tsconfigPath} = loadCustomBuildParams()
+// E2E full-suite builds (`pnpm e2e:full:build`) write into a sibling
+// `.next-e2e/` so they don't clobber the local dev server's `.next/`.
+// `next start` later in `e2e:full` reads from the same dir via the
+// same env flag. Set by the script, never by humans directly.
+const distDir = process.env.E2E_BUILD_DIR ? process.env.E2E_BUILD_DIR : '.next';
+
+// Resolve the build SHA at config time so every entry tagged by the
+// logger (server) and reportError (browser via window.__BUILD_ID__)
+// names the exact deploy. Falls through to `dev` when git's missing.
+let resolvedBuildId = process.env.BUILD_ID;
+if (!resolvedBuildId) {
+    try {
+        const cp = require('child_process');
+        resolvedBuildId = cp.execSync('git rev-parse --short HEAD', {stdio: ['ignore', 'pipe', 'ignore']}).toString().trim();
+    } catch {
+        resolvedBuildId = 'dev';
+    }
+    process.env.BUILD_ID = resolvedBuildId;
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    distDir,
+    // Server-only packages that should NEVER be bundled into the browser
+    // chunk. The redis client + @node-rs/xxhash native digest helper are
+    // imported transitively from `services/infra/redisConnection.ts` →
+    // `services/api/graphqlResolvers.ts` → `pages/api/graphql.ts`.
+    // Without this list, Turbopack tries to resolve their browser entry
+    // (which chains to WASM/WASI variants that don't exist in this
+    // dependency tree) and fails the build.
+    serverExternalPackages: [
+        'redis',
+        '@redis/client',
+        '@redis/bloom',
+        '@redis/graph',
+        '@redis/json',
+        '@redis/search',
+        '@redis/time-series',
+        '@node-rs/xxhash',
+    ],
     transpilePackages: [
         //
         "@glidejs",
@@ -43,10 +81,22 @@ const nextConfig = {
         "rc-upload",
         "rc-util",
     ],
-    env: {
+    // E2E builds run each Playwright worker on a different free port —
+    // baking `NEXTAUTH_URL` here would freeze it to :80 and NextAuth's
+    // prod-mode CSRF/cookie origin check would reject every worker login.
+    // Skip the inline when E2E_BUILD_DIR is set; runtime `process.env`
+    // (set by the worker's `server.ts`) drives the value instead.
+    env: process.env.E2E_BUILD_DIR ? {
+        API_URL: 'http://localhost',
+        // Browser-readable build SHA — `reportError.ts` injects it on
+        // every payload so an admin debugging a stale-tab error knows
+        // which deploy the failing code came from.
+        NEXT_PUBLIC_BUILD_ID: resolvedBuildId,
+    } : {
         NEXTAUTH_URL: 'http://localhost:80',
         API_URL: 'http://localhost',
         NEXT_PUBLIC_BASE_URL: 'http://localhost:80',
+        NEXT_PUBLIC_BUILD_ID: resolvedBuildId,
     },
     i18n: i18n,
     reactStrictMode: true,
@@ -55,6 +105,19 @@ const nextConfig = {
         tsconfigPath,
     },
     sassOptions: {},
+    // Make webpack watch the shared services/ directory (sits outside ui/client/).
+    // Without this, changes to services/agent/*.ts are not detected in dev mode.
+    webpack: (config, { isServer }) => {
+        if (isServer) {
+            config.watchOptions = {
+                ...config.watchOptions,
+                // On Windows, polling is needed for cross-drive or parent-dir watchers.
+                poll: 1000,
+                ignored: /node_modules/,
+            };
+        }
+        return config;
+    },
     // Locale-prefixed admin URLs from old bookmarks redirect to the prefix-
     // less admin. `locale: false` stops Next.js expanding the source with the
     // active locale. We intentionally skip the defaultLocale (`en`) — Next.js
@@ -63,6 +126,7 @@ const nextConfig = {
     // 307-redirect to itself (internal canonicalization loop). Admin language
     // is driven by `preferredAdminLocale`, not the URL.
     redirects: async () => [
+        // Locale-prefixed admin URLs from old bookmarks → prefix-stripped admin.
         {source: '/lv/admin', destination: '/admin', permanent: false, locale: false},
         {source: '/lv/admin/:path*', destination: '/admin/:path*', permanent: false, locale: false},
         {source: '/it/admin', destination: '/admin', permanent: false, locale: false},
@@ -71,6 +135,10 @@ const nextConfig = {
         {source: '/lt/admin/:path*', destination: '/admin/:path*', permanent: false, locale: false},
         {source: '/ru/admin', destination: '/admin', permanent: false, locale: false},
         {source: '/ru/admin/:path*', destination: '/admin/:path*', permanent: false, locale: false},
+        // Phase 2 of admin segregation — legacy URLs jump to the new area structure.
+        {source: '/admin/settings', destination: '/admin/build', permanent: false},
+        {source: '/admin/languages', destination: '/admin/content/translations', permanent: false},
+        {source: '/admin/modules-preview', destination: '/admin/build/modules-preview', permanent: false},
     ],
     rewrites: async () => [
         {

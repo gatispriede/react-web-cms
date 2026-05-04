@@ -10,6 +10,7 @@ import {IPost} from "@interfaces/IPost";
 import RevealOnScroll from "@client/lib/RevealOnScroll";
 import {usePrefetchedPosts} from "@client/lib/PostsContext";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
+import {slugifyAnchor} from "@utils/stringFunctions";
 import type {IBlogFeed} from "./BlogFeed.types";
 export type {IBlogFeed} from "./BlogFeed.types";
 export {EBlogFeedStyle} from "./BlogFeed.types";
@@ -53,7 +54,7 @@ const BlogFeed = ({item, tApp}: {
 
     return (
         <div>
-            {c.heading && <h3 style={{marginTop: 0}}>{tr(c.heading)}</h3>}
+            {c.heading && <h3 id={slugifyAnchor(c.heading) || undefined} style={{marginTop: 0}}>{tr(c.heading)}</h3>}
             <div className="blog-feed">
                 {posts.map((p, i) => (
                     <RevealOnScroll key={p.id} delay={i * 60}>

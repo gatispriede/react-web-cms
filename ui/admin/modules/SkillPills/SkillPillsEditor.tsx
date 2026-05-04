@@ -11,6 +11,7 @@ const SkillPillsEditor = ({content, setContent, t}: IInputContent) => {
         <div className={'skill-pills-editor'}>
             <label>{t('Category label')}</label>
             <Input
+                data-testid="module-editor-primary-text-input"
                 value={data.category}
                 onChange={e => { pills.setField('category', e.target.value); setContent(pills.stringData); }}
                 placeholder="e.g. Tech stack"

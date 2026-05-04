@@ -5,6 +5,7 @@ import guid from '@utils/guid';
 import {ITheme, IThemeTokens, InTheme} from '@interfaces/ITheme';
 import {auditStamp} from '@services/features/Audit/audit';
 import {nextVersion, requireVersion} from '@services/infra/conflict';
+import {log} from '@services/infra/logger';
 
 /**
  * Editorial presets live as source-controlled JSON in `ui/client/themes/`
@@ -166,7 +167,7 @@ export class ThemeService {
             }
         } catch (err) {
             ThemeService.seeded = false;
-            console.error('[theme] Failed to seed presets:', err);
+            log.error({scope: 'theme.seedPresets', err}, 'failed to seed theme presets');
         }
     }
 

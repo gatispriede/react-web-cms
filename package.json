@@ -4,7 +4,10 @@
   "private": true,
   "type": "esnext",
   "scripts": {
-    "predev": "npm run dev:db",
+    "predev": "npm run features:codegen && node tools/dev-predev.js",
+    "prebuild": "npm run features:codegen && node tools/check-schema-stale.js",
+    "features:codegen": "npx tsx --tsconfig services/tsconfig.custom.json tools/codegen-feature-registry.ts",
+    "features:codegen:check": "npx tsx --tsconfig services/tsconfig.custom.json tools/codegen-feature-registry.ts --check",
     "dev": "next dev --turbo -p 80 ui/client",
     "dev:db": "docker compose -f infra/compose.dev.yaml up -d",
     "dev:db:stop": "docker compose -f infra/compose.dev.yaml down",
@@ -15,16 +18,36 @@
     "build-docker": "cross-env NODE_ENV=production NODE_SERVER_PORT=true BUILD_PORT=3000 next build ui/client",
     "postbuild": "next-sitemap --config next-sitemap.config.cjs",
     "lint": "eslint \"./**/*.{ts,tsx}\" --fix",
+    "lint:scss": "stylelint \"ui/**/*.scss\" --allow-empty-input",
+    "audit:scss": "node tools/scripts/scss-scope-audit.mjs",
+    "lint:mcp-schema": "node tools/scripts/mcp-schema-drift.mjs",
     "clean": "rm -rf ui/client/.next",
     "dev-server": "nodemon --config ./nodemon.json",
     "standalone-graphql": "cross-env npx tsx --tsconfig services/tsconfig.custom.json services/index.ts",
     "standalone-graphql-docker": "cross-env NODE_SERVER_PORT=true npx tsx --tsconfig services/tsconfig.custom.json services/index.ts",
+    "mcp:stdio": "cross-env npx tsx --tsconfig services/tsconfig.custom.json services/mcp/stdio.ts",
+    "mcp:http": "cross-env npx tsx --tsconfig services/tsconfig.custom.json services/mcp/http.ts",
+    "mcp:dev-token": "node tools/mcp-dev-token.js",
+    "mcp:call": "node tools/scripts/mcp-call.mjs",
     "ssl": "npx tsx --tsconfig services/tsconfig.custom.json services/sslServer.ts",
-    "generate-schema": "npx @gqty/cli http://localhost:80/api/graphql --target=services/api/generated/index.ts",
+    "generate-schema": "node tools/generate-schema.js",
     "setupSecrets": "npx auth@latest secret next",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "e2e": "cross-env PLAYWRIGHT_E2E_REUSE_DEV=1 playwright test",
+    "e2e:headed": "cross-env PLAYWRIGHT_E2E_REUSE_DEV=1 playwright test --headed",
+    "e2e:isolated": "playwright test",
+    "e2e:isolated:headed": "playwright test --headed",
+    "e2e:smoke": "cross-env PLAYWRIGHT_E2E_REUSE_DEV=1 E2E_SMOKE_ENABLED=1 playwright test --workers=1 --reporter=list tests/e2e/smoke/",
+    "e2e:full:build": "node tools/e2e-build.js",
+    "e2e:full": "npm run e2e:full:build && cross-env PLAYWRIGHT_E2E_PROD=1 playwright test tests/e2e/modules/ tests/e2e/features/",
+    "e2e:full:headed": "npm run e2e:full:build && cross-env PLAYWRIGHT_E2E_PROD=1 playwright test tests/e2e/modules/ tests/e2e/features/ --headed",
+    "e2e:full:nobuild": "cross-env PLAYWRIGHT_E2E_PROD=1 playwright test tests/e2e/modules/ tests/e2e/features/",
+    "e2e:full:nobuild:headed": "cross-env PLAYWRIGHT_E2E_PROD=1 playwright test tests/e2e/modules/ tests/e2e/features/ --headed",
+    "e2e:bundle:refresh": "node tools/e2e-bundle-refresh.js",
+    "e2e:update-screenshots": "cross-env PLAYWRIGHT_E2E_REUSE_DEV=1 playwright test --update-snapshots",
+    "e2e:install": "playwright install --with-deps chromium"
   },
   "gqty": {
     "introspections": {
@@ -38,6 +61,7 @@
     "@ant-design/icons-svg": "^4.4.2",
     "@ant-design/nextjs-registry": "^1.0.2",
     "@ant-design/v5-patch-for-react-19": "^1.0.3",
+    "@anthropic-ai/sdk": "^0.92.0",
     "@apollo/server": "^5.5.0",
     "@as-integrations/next": "^4.1.0",
     "@ckeditor/ckeditor5-react": "^11.1.2",
@@ -45,6 +69,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@graphql-tools/schema": "^10.0.16",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@types/bcrypt": "^6.0.0",
     "@types/formidable": "^3.4.5",
     "@types/glidejs__glide": "^3.6.6",
@@ -98,44 +123,6 @@
     "uppload": "^3.2.1",
     "zod": "^4.3.6"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ],
-    "rules": {
-      "no-restricted-imports": [
-        "error",
-        {
-          "paths": [
-            {
-              "name": "styled-icons",
-              "message": "styled-icons was dropped — pick a lucide-react equivalent. See roadmap/icon-consolidation.md."
-            },
-            {
-              "name": "@ant-design/icons",
-              "message": "Direct imports from @ant-design/icons are forbidden — import the same name from ui/client/lib/icons (lucide adapter). See docs/roadmap/icon-consolidation.md."
-            }
-          ],
-          "patterns": [
-            {
-              "group": [
-                "styled-icons/*",
-                "@styled-icons/*"
-              ],
-              "message": "styled-icons was dropped — pick a lucide-react equivalent. See roadmap/icon-consolidation.md."
-            },
-            {
-              "group": [
-                "@ant-design/icons/*"
-              ],
-              "message": "Direct imports from @ant-design/icons are forbidden — import the same name from ui/client/lib/icons (lucide adapter). See docs/roadmap/icon-consolidation.md."
-            }
-          ]
-        }
-      ]
-    }
-  },
   "browser": {
     "crypto": false,
     "stream": false
@@ -153,19 +140,33 @@
     ]
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.0",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/react-dom": "^19.0.3",
+    "@typescript-eslint/eslint-plugin": "^8.59.1",
+    "@typescript-eslint/parser": "^8.59.1",
     "@vitejs/plugin-react": "^6.0.1",
     "@vitest/coverage-v8": "^4.1.4",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.4",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "immutable": "^5.0.3",
     "jsdom": "^29.0.2",
     "mongodb-memory-server": "^11.0.1",
     "nodemon": "^3.1.9",
+    "postcss-scss": "^4.0.9",
+    "stylelint": "^17.10.0",
+    "stylelint-config-standard-scss": "^17.0.0",
+    "stylelint-scss": "^7.0.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.2",
     "typescript": "^6.0.3",
     "vitest": "^4.1.4"
+  },
+  "optionalDependencies": {
+    "@node-rs/xxhash": "^1.7.6"
   }
 }

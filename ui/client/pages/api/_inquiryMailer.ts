@@ -125,35 +125,34 @@ export interface InquirySendResult {
     messageId?: string;
 }
 
-export async function sendInquiryEmail(p: InquiryEmailPayload): Promise<InquirySendResult> {
-    const tr = _transport();
-    if (!tr) {
-        return {
-            ok: false,
-            error:
-                'SMTP is not configured. Set SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASS / MAIL_FROM ' +
-                '(or their _FILE equivalents for Docker secrets) in the environment.',
-        };
+/**
+ * Thin shim that routes through `services/features/Email/EmailService.ts`.
+ * `EmailService.sendEmail` reads provider config from `siteFlags.mail`
+ * (admin-configurable, encrypted at rest) and falls back to SMTP env
+ * vars when the DB block is absent — so legacy deployments keep working
+ * unchanged.
+ *
+ * Caller passes the `mail` block through; we don't read `siteFlags`
+ * here because this module is loaded outside the GraphQL/service
+ * context. `pages/api/inquiry.ts` already pulls `flags` for the
+ * recipient + enable check; it now also passes `flags.mail`.
+ */
+import {sendEmail as serviceSendEmail} from '@services/features/Email/EmailService';
+import type {ISiteMailConfig} from '@services/features/Seo/SiteFlagsService';
+
+export async function sendInquiryEmail(
+    p: InquiryEmailPayload,
+    mail?: ISiteMailConfig,
+): Promise<InquirySendResult> {
+    const result = await serviceSendEmail(mail, {
+        to: p.to,
+        subject: p.subject,
+        text: p.text,
+        html: p.html,
+        replyTo: p.replyTo,
+    });
+    if (!result.ok) {
+        return {ok: false, error: result.error};
     }
-    const from = readSecret('MAIL_FROM');
-    if (!from) {
-        return {ok: false, error: 'MAIL_FROM is not set (env or _FILE).'};
-    }
-    try {
-        const info = await tr.sendMail({
-            from,
-            to: p.to,
-            subject: p.subject,
-            text: p.text,
-            html: p.html,
-            replyTo: p.replyTo,
-        });
-        return {ok: true, messageId: info.messageId};
-    } catch (err) {
-        // Don't leak SMTP server messages to the client; log server-side
-        // and return a generic flag. The API endpoint formats user-facing
-        // copy, this just reports machine-friendly success/fail.
-        console.error('[inquiry mailer] send failed:', err);
-        return {ok: false, error: String((err as Error)?.message ?? err)};
-    }
+    return {ok: true, messageId: result.messageId};
 }

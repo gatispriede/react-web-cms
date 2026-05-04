@@ -3,14 +3,26 @@ import {DEFAULT_SITE_SEO, ISiteSeoDefaults} from "@interfaces/ISiteSeo";
 import {refreshBus} from "@client/lib/refreshBus";
 import {triggerRevalidate} from "@client/lib/triggerRevalidate";
 import {isConflictError, parseMutationResponse} from "@client/lib/conflict";
+import {log} from "@services/infra/logger";
 
 export class SiteSeoApi {
     async get(): Promise<ISiteSeoDefaults> {
+        // Direct-route bug: `gqty.resolve(({query}) => query.mongo.getSiteSeo)`
+        // returns an empty payload on cold load (gqty client not always
+        // hydrated). Raw POST always returns the correct String! payload.
+        // `gqty.resolve` is reserved for SPA paths that pre-warmed the client.
         try {
-            const raw = await resolve(({query}) => (query as any).mongo.getSiteSeo);
+            const r = await fetch('/api/graphql', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({query: `{ mongo { getSiteSeo } }`}),
+            });
+            const json = await r.json();
+            const raw = json?.data?.mongo?.getSiteSeo;
             return raw ? JSON.parse(raw) : {...DEFAULT_SITE_SEO};
         } catch (err) {
-            console.error('SiteSeoApi.get:', err);
+            log.error({scope: 'siteSeo.get', err}, 'site seo get failed');
             return {...DEFAULT_SITE_SEO};
         }
     }

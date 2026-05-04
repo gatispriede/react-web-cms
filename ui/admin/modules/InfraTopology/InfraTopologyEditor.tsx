@@ -28,7 +28,7 @@ const InfraTopologyEditor: React.FC<IInputContent> = ({content, setContent, t}) 
                 <label>{t('Eyebrow')}</label>
                 <Input value={data.eyebrow ?? ''} onChange={e => update({eyebrow: e.target.value})}/>
                 <label>{t('Title')}</label>
-                <Input value={data.title ?? ''} onChange={e => update({title: e.target.value})}/>
+                <Input data-testid="module-editor-primary-text-input" value={data.title ?? ''} onChange={e => update({title: e.target.value})}/>
                 <label>{t('Subtitle')}</label>
                 <Input value={data.subtitle ?? ''} onChange={e => update({subtitle: e.target.value})}/>
                 <label>{t('Droplets label')}</label>

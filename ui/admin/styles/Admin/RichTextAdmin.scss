@@ -1,0 +1,28 @@
+// Admin-only chrome for the CKEditor wrapper used in `<RichTextEditor>`
+// (`ui/admin/modules/RichText/RichTextEditor.tsx`). Lived previously in
+// `ui/client/modules/RichText/RichText.scss` as a second top-level root,
+// which leaked admin-only CSS into every public render. Split out per the
+// F4 SCSS scoping sweep (docs/roadmap/scss-audit-2026-05-03.md, Pattern 2).
+//
+// AUDIT-OWNERS: .rich-text-container-admin
+.rich-text-container-admin{
+  max-height: 500px;
+  // `overflow: auto` was clipping CKEditor's toolbar dropdown panels
+  // (alignment, font colour, list-style) the moment the editable was
+  // empty — the panel rendered below the editor's inline flow and got
+  // hidden behind the scrollable bounds, leaving "Align left" et al.
+  // visible but unselectable. `visible` lets dropdowns escape; the
+  // editable itself gets its own bounded scroll via `min-height` +
+  // `max-height` below so a tall body still scrolls.
+  overflow: visible;
+
+  // Empty editor used to collapse to a single text-line height,
+  // which left zero space for the dropdown anchor and forced the
+  // panel to overlap the toolbar. A 200px floor gives the panel room
+  // to drop, and the cap keeps a long article inside its own scroller.
+  .ck-editor__editable {
+    min-height: 200px;
+    max-height: 460px;
+    overflow-y: auto;
+  }
+}

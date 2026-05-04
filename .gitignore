@@ -4,6 +4,7 @@
 # ── Build outputs / generated runtime artefacts ──────────────────────────────
 # Path-agnostic so the reshape (src/frontend/ → ui/client/) doesn't leave stale rules.
 **/.next/
+**/.next-e2e/
 **/dist/
 **/build/
 **/LogFiles/
@@ -30,13 +31,28 @@
 /mongo_data
 
 # Generated first-boot admin credentials (see services/features/Auth/initialPassword.ts)
+# Also catches scratch dumps moved out of repo root: .agent-backup.json, gql_*.json, response.json, etc.
 /var/
+
+# Playwright test artefacts
+/test-results/
+
+# Stray scratch files at repo root (defence in depth — /var/ is the canonical home)
+/.agent-backup.json
+/gql_*.json
+/response.json
+/map-not-territory-post.html
 
 # ── Env / secrets ────────────────────────────────────────────────────────────
 .env
 .env.*
 !.env.example
 IP.ts
+
+# Local MCP dev-token config — emitted by `npm run mcp:dev-token`,
+# contains a real bearer secret. Real tokens for shared use are
+# created via /admin/system/mcp.
+tools/mcp.dev.json
 
 # Local-only secrets / ops notes — infra IPs, cert fingerprints, passwords
 /secrets.md

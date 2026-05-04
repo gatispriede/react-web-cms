@@ -46,5 +46,15 @@ COPY ./ui ./ui
 COPY ./services ./services
 COPY ./shared ./shared
 
+# Stamp the running container with its source commit SHA so the blue/green
+# deploy script (`tools/blue-green-deploy.sh`) can verify the inactive
+# instance is actually running the target commit before flipping Caddy.
+# Build-arg `GIT_SHA` is passed by CI / the deploy script
+# (`docker build --build-arg GIT_SHA="$(git rev-parse HEAD)"`); falls back
+# to `unknown` for local image builds where the build arg isn't set,
+# which the script tolerates as a no-op SHA check.
+ARG GIT_SHA=unknown
+RUN echo "$GIT_SHA" > /app/.git-sha
+
 RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn --frozen-lockfile
 # Build runs at container start (not here) so MongoDB/GraphQL are available for getStaticProps

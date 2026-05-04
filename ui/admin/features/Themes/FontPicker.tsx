@@ -1,20 +1,14 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useEffect} from 'react';
 import {Button, Input, Modal, Radio, Space, Tag, Typography} from 'antd';
 import {SearchOutlined} from '@client/lib/icons';
 import {GOOGLE_FONTS, IGoogleFont, buildFontStack, buildGoogleFontsUrl, extractFontFamily} from '@client/features/Themes/googleFonts';
-
-type Slot = 'display' | 'sans' | 'mono';
+import {useViewModel} from '@client/lib/state/observable';
+import {FontPickerViewModel, type Slot} from './FontPickerViewModel';
 
 const SLOT_LABEL: Record<Slot, string> = {
     display: 'Display (headings)',
     sans: 'Body (sans)',
     mono: 'Monospace (labels, ticks)',
-};
-
-const SLOT_PREFERRED_CATEGORIES: Record<Slot, IGoogleFont['category'][]> = {
-    display: ['display', 'serif', 'sans-serif'],
-    sans: ['sans-serif', 'serif'],
-    mono: ['monospace'],
 };
 
 const CATEGORY_LABEL: Record<IGoogleFont['category'], string> = {
@@ -44,30 +38,20 @@ const FontPicker: React.FC<{
     onPick: (stack: string) => void;
 }> = ({open, slot, currentStack, onCancel, onPick}) => {
     const initialFamily = extractFontFamily(currentStack ?? '');
-    const initialCategory = SLOT_PREFERRED_CATEGORIES[slot][0];
-    const [search, setSearch] = useState('');
-    const [category, setCategory] = useState<IGoogleFont['category'] | 'all'>(initialCategory);
-    const [picked, setPicked] = useState<string | null>(initialFamily);
+    const vm = useViewModel(() => new FontPickerViewModel(slot, currentStack));
 
     useEffect(() => {
         if (!open) return;
-        setSearch('');
-        setCategory(SLOT_PREFERRED_CATEGORIES[slot][0]);
-        setPicked(extractFontFamily(currentStack ?? ''));
-    }, [open, slot, currentStack]);
+        vm.reset(slot, currentStack);
+    }, [open, slot, currentStack, vm]);
 
-    const list = useMemo(() => {
-        const lower = search.trim().toLowerCase();
-        return GOOGLE_FONTS
-            .filter(f => category === 'all' || f.category === category)
-            .filter(f => !lower || f.family.toLowerCase().includes(lower));
-    }, [search, category]);
+    const list = vm.list;
 
     // Lazy-inject a single link tag with every family currently visible plus
     // the picked one. Browsers dedupe identical hrefs so re-renders are cheap.
     useEffect(() => {
         if (!open) return;
-        const families = [picked, ...list.slice(0, 30).map(f => f.family)];
+        const families = [vm.picked, ...list.slice(0, 30).map(f => f.family)];
         const url = buildGoogleFontsUrl(families);
         if (!url) return;
         const id = 'font-picker-preview-link';
@@ -79,9 +63,9 @@ const FontPicker: React.FC<{
             document.head.appendChild(link);
         }
         if (link.href !== url) link.href = url;
-    }, [open, list, picked]);
+    }, [open, list, vm.picked]);
 
-    const previewFamily = picked ?? initialFamily;
+    const previewFamily = vm.picked ?? initialFamily;
 
     return (
         <Modal
@@ -90,20 +74,20 @@ const FontPicker: React.FC<{
             width={760}
             onCancel={onCancel}
             okText="Use this font"
-            okButtonProps={{disabled: !picked}}
-            onOk={() => { if (picked) onPick(buildFontStack(picked)); }}
+            okButtonProps={{disabled: !vm.picked}}
+            onOk={() => { if (vm.picked) onPick(buildFontStack(vm.picked)); }}
         >
             <Space orientation="vertical" style={{width: '100%'}} size={12}>
                 <Input
                     allowClear
                     placeholder="Search families"
                     prefix={<SearchOutlined/>}
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
+                    value={vm.search}
+                    onChange={e => vm.setSearch(e.target.value)}
                 />
                 <Radio.Group
-                    value={category}
-                    onChange={e => setCategory(e.target.value)}
+                    value={vm.category}
+                    onChange={e => vm.setCategory(e.target.value)}
                     optionType="button"
                     size="small"
                 >
@@ -122,12 +106,12 @@ const FontPicker: React.FC<{
                         {list.length === 0 ? (
                             <div style={{padding: 16, color: '#999'}}>No matches.</div>
                         ) : list.map(font => {
-                            const active = picked?.toLowerCase() === font.family.toLowerCase();
+                            const active = vm.picked?.toLowerCase() === font.family.toLowerCase();
                             return (
                                 <button
                                     key={font.family}
                                     type="button"
-                                    onClick={() => setPicked(font.family)}
+                                    onClick={() => vm.setPicked(font.family)}
                                     style={{
                                         width: '100%',
                                         textAlign: 'left',

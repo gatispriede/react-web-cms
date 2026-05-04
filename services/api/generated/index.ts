@@ -20,11 +20,21 @@ const isDocker = node_port !== 80 && node_port !== '80';
 // Browser requests use a relative URL so they go through the public host.
 // SSR requests use the Docker-internal address directly.
 const isBrowser = typeof window !== 'undefined';
+
+// Per-worker E2E runs need an explicit SSR target — each worker listens
+// on a random free port, so neither the :80 fallback nor the Docker
+// `server:<port>` host resolves. The worker fixture sets
+// `INTERNAL_GRAPHQL_URL=http://localhost:<workerPort>/api/graphql`
+// to bypass both branches. No-op for browser code (handled above) and
+// dev/docker (variable unset).
+const internalOverride = !isBrowser ? process.env.INTERNAL_GRAPHQL_URL : undefined;
 const fetchUrl = isBrowser
     ? '/api/graphql'
-    : isDocker
-        ? `http://server:${node_port}/`
-        : `http://localhost:${node_port}/api/graphql`;
+    : (internalOverride
+        ? internalOverride
+        : isDocker
+            ? `http://server:${node_port}/`
+            : `http://localhost:${node_port}/api/graphql`);
 
 const queryFetcher: QueryFetcher = async function (
   { query, variables, operationName },

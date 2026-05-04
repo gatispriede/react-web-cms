@@ -1,6 +1,7 @@
 import {Collection, Db} from 'mongodb';
 import {auditStamp} from '@services/features/Audit/audit';
 import {nextVersion, requireVersion} from '@services/infra/conflict';
+import {encrypt as secretBoxEncrypt} from '@services/infra/secretBox';
 
 export type SiteLayoutMode = 'tabs' | 'scroll';
 
@@ -43,9 +44,37 @@ export interface ISiteFlags {
      *  multiple deployments and you want to lock submissions to one
      *  canonical domain. Example: `https://funisimo.pro,https://www.funisimo.pro`. */
     inquiryAllowedOrigins?: string;
+    /** Master toggle for guest checkout. When false, anonymous callers
+     *  can't drive the checkout-flow mutations — they have to sign in
+     *  first. Default true. See docs/features/checkout.md §1. */
+    allowGuestCheckout?: boolean;
+    /** Site-wide default admin UI mode (per `docs/features/platform/admin-ui-modes.md`).
+     *  Per-user `IUser.adminUiMode` overrides this when set. Default 'advanced'. */
+    defaultAdminUiMode?: 'simplified' | 'advanced';
+    /** Email-provider configuration. When the whole block is absent
+     *  the mailer falls back to the legacy `SMTP_*` env-var path so
+     *  pre-migration deployments keep working. Secrets are
+     *  AES-GCM-wrapped via `secretBox` when SECRETBOX_KEY is set. */
+    mail?: ISiteMailConfig;
     version?: number;
     editedBy?: string;
     editedAt?: string;
+}
+
+export type SiteMailProvider = 'smtp' | 'resend' | 'disabled';
+
+export interface ISiteMailConfig {
+    provider: SiteMailProvider;
+    /** RFC-5322 from header, e.g. `Funisimo <noreply@funisimo.pro>` */
+    from?: string;
+    /** Inquiry recipient. Wins over the top-level
+     *  `inquiryRecipientEmail` when set. */
+    inquiryRecipient?: string;
+    smtpHost?: string;
+    smtpPort?: number;
+    smtpUser?: string;
+    smtpPassEncrypted?: string;
+    resendApiKeyEncrypted?: string;
 }
 
 export const DEFAULT_SITE_FLAGS: ISiteFlags = {
@@ -58,6 +87,8 @@ export const DEFAULT_SITE_FLAGS: ISiteFlags = {
     inquiryEnabled: true,
     inquiryMaxPerClient: 3,
     inquiryAllowedOrigins: '',
+    allowGuestCheckout: true,
+    defaultAdminUiMode: 'advanced',
 };
 
 /** Light validation — keeps obviously-broken values from being saved.
@@ -73,6 +104,41 @@ const sanitizeMaxPerClient = (n: unknown): number => {
     if (!Number.isFinite(x) || x < 0) return 0;
     return Math.min(Math.floor(x), 100);
 };
+
+/** Sanitise `mail` block: bound provider to the enum, drop unknown
+ *  fields, normalise port to a number. Encryption envelope strings are
+ *  passed through opaquely — the EmailService decrypts on use. */
+function sanitizeMailConfig(raw: unknown): ISiteMailConfig | undefined {
+    if (!raw || typeof raw !== 'object') return undefined;
+    const r = raw as Partial<ISiteMailConfig> & {smtpPass?: string; resendApiKey?: string};
+    const provider: SiteMailProvider = r.provider === 'smtp' || r.provider === 'resend' || r.provider === 'disabled'
+        ? r.provider
+        : 'disabled';
+    const port = typeof r.smtpPort === 'number'
+        ? r.smtpPort
+        : (typeof r.smtpPort === 'string' ? Number(r.smtpPort) : undefined);
+    // Encrypt plaintext on the way in. The admin form (and the
+    // `email.config.update` MCP tool) sends `smtpPass` / `resendApiKey`
+    // plaintext exactly once — we encrypt and persist as `*Encrypted`.
+    // When neither plaintext nor pre-encrypted is supplied, leave the
+    // field undefined so `save()` can preserve the prior encrypted blob.
+    const smtpPassEncrypted = typeof r.smtpPass === 'string' && r.smtpPass.length > 0
+        ? secretBoxEncrypt(r.smtpPass)
+        : (typeof r.smtpPassEncrypted === 'string' && r.smtpPassEncrypted.length > 0 ? r.smtpPassEncrypted : undefined);
+    const resendApiKeyEncrypted = typeof r.resendApiKey === 'string' && r.resendApiKey.length > 0
+        ? secretBoxEncrypt(r.resendApiKey)
+        : (typeof r.resendApiKeyEncrypted === 'string' && r.resendApiKeyEncrypted.length > 0 ? r.resendApiKeyEncrypted : undefined);
+    return {
+        provider,
+        from: typeof r.from === 'string' ? r.from.trim() : undefined,
+        inquiryRecipient: isPlausibleEmail(r.inquiryRecipient) ? r.inquiryRecipient : undefined,
+        smtpHost: typeof r.smtpHost === 'string' ? r.smtpHost.trim() : undefined,
+        smtpPort: Number.isFinite(port) && port! > 0 ? Math.floor(port!) : undefined,
+        smtpUser: typeof r.smtpUser === 'string' ? r.smtpUser.trim() : undefined,
+        smtpPassEncrypted,
+        resendApiKeyEncrypted,
+    };
+}
 
 const KEY = 'siteFlags';
 
@@ -112,6 +178,13 @@ export class SiteFlagsService {
             inquiryAllowedOrigins: typeof value?.inquiryAllowedOrigins === 'string'
                 ? value.inquiryAllowedOrigins
                 : DEFAULT_SITE_FLAGS.inquiryAllowedOrigins,
+            allowGuestCheckout: typeof value?.allowGuestCheckout === 'boolean'
+                ? value.allowGuestCheckout
+                : DEFAULT_SITE_FLAGS.allowGuestCheckout,
+            defaultAdminUiMode: (value?.defaultAdminUiMode === 'simplified' || value?.defaultAdminUiMode === 'advanced')
+                ? value.defaultAdminUiMode
+                : DEFAULT_SITE_FLAGS.defaultAdminUiMode,
+            mail: sanitizeMailConfig(value?.mail),
             version: (doc as any)?.version ?? 0,
             editedBy: (doc as any)?.editedBy,
             editedAt: (doc as any)?.editedAt,
@@ -155,6 +228,13 @@ export class SiteFlagsService {
             inquiryAllowedOrigins: typeof flags.inquiryAllowedOrigins === 'string'
                 ? flags.inquiryAllowedOrigins.trim()
                 : current.inquiryAllowedOrigins,
+            allowGuestCheckout: typeof flags.allowGuestCheckout === 'boolean'
+                ? flags.allowGuestCheckout
+                : current.allowGuestCheckout,
+            defaultAdminUiMode: (flags.defaultAdminUiMode === 'simplified' || flags.defaultAdminUiMode === 'advanced')
+                ? flags.defaultAdminUiMode
+                : current.defaultAdminUiMode,
+            mail: flags.mail !== undefined ? sanitizeMailConfig(flags.mail) : current.mail,
         };
         const version = nextVersion(existingVersion);
         await this.settings.updateOne(

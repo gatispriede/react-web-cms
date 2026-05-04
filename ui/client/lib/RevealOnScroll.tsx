@@ -5,9 +5,12 @@ interface Props {
     delay?: number;
     className?: string;
     as?: keyof React.JSX.IntrinsicElements;
+    /** Optional DOM id forwarded to the rendered tag — used by the
+     *  link-target picker so module headlines become deep-link anchors. */
+    id?: string;
 }
 
-const RevealOnScroll: React.FC<Props> = ({children, delay = 0, className = '', as = 'div'}) => {
+const RevealOnScroll: React.FC<Props> = ({children, delay = 0, className = '', as = 'div', id}) => {
     const ref = useRef<HTMLElement | null>(null);
     const [shown, setShown] = useState(false);
 
@@ -33,7 +36,7 @@ const RevealOnScroll: React.FC<Props> = ({children, delay = 0, className = '', a
     const Tag = as as any;
     const style = {transitionDelay: `${delay}ms`};
     return (
-        <Tag ref={ref} className={`reveal-on-scroll ${shown ? 'is-visible' : ''} ${className}`} style={style}>
+        <Tag ref={ref} id={id} className={`reveal-on-scroll ${shown ? 'is-visible' : ''} ${className}`} style={style}>
             {children}
         </Tag>
     );

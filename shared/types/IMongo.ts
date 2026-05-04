@@ -45,5 +45,8 @@ export interface MutationMongo {
         addUpdateSectionItem({section, pageName}: { section: InSection, pageName?: string }): string
         removeSectionItem({id}: { id: string }): string
         deleteNavigationItem({pageName}: { pageName: string }): string
+        /** F1 sub-pages — server enforces cycle / depth / not-found rules.
+         *  `parentId === null` promotes the page to a root. */
+        setParent({pageId, parentId}: { pageId: string, parentId: string | null }): string
     }
 }

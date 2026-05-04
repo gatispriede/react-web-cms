@@ -6,26 +6,74 @@ import {TFunction} from "i18next";
 import {translateOrKeep} from "@utils/translateOrKeep";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import RevealOnScroll from "@client/lib/RevealOnScroll";
-import type {IHero, IHeroCta} from "./Hero.types";
+import {slugifyAnchor} from "@utils/stringFunctions";
+import {toImageRef, IImageRef} from "@interfaces/IImageRef";
+import {toLinkRef} from "@interfaces/ILinkRef";
+import type {IHero, IHeroCta, IHeroCtaLegacy, IHeroLegacy} from "./Hero.types";
 export type {IHero, IHeroCta, IHeroMeta, IHeroCoord} from "./Hero.types";
 export {EHeroStyle} from "./Hero.types";
 
+const normalizeCta = (raw: IHeroCta | IHeroCtaLegacy | undefined): IHeroCta | undefined => {
+    if (!raw) return undefined;
+    const r = raw as IHeroCtaLegacy;
+    const link = toLinkRef(raw, {url: r.url, href: r.href, label: r.label});
+    const cta: IHeroCta = {url: link.url};
+    if (link.label) cta.label = link.label;
+    if (r.primary) cta.primary = true;
+    return cta;
+};
+
+const normalize = (raw: IHero | IHeroLegacy | undefined): IHero => {
+    const r = (raw ?? {}) as IHeroLegacy;
+    const result: IHero = {
+        headline: r.headline ?? '',
+        subtitle: r.subtitle ?? '',
+        tagline: r.tagline ?? '',
+        accent: r.accent ?? '',
+        bgImage: toImageRef(r.bgImage),
+    };
+    if (r.eyebrow) result.eyebrow = r.eyebrow;
+    if (r.headlineSoft) result.headlineSoft = r.headlineSoft;
+    if (r.titles) result.titles = r.titles;
+    if (r.taglineAttribution) result.taglineAttribution = r.taglineAttribution;
+    if (r.bgOpacity !== undefined) result.bgOpacity = r.bgOpacity;
+    if (r.portraitLabel) result.portraitLabel = r.portraitLabel;
+    if (r.portraitImage !== undefined) {
+        // Legacy stored width/height as siblings (`portraitWidth` / `portraitHeight`).
+        // Fold them into the IImageRef so the editor + renderer have one source.
+        const portrait = toImageRef(r.portraitImage);
+        if (portrait.width === undefined && r.portraitWidth !== undefined && r.portraitWidth !== '') {
+            portrait.width = r.portraitWidth;
+        }
+        if (portrait.height === undefined && r.portraitHeight !== undefined && r.portraitHeight !== '') {
+            portrait.height = r.portraitHeight;
+        }
+        if (portrait.src) result.portraitImage = portrait;
+        else if (portrait.width || portrait.height) result.portraitImage = portrait;
+    }
+    if (r.portraitOpacity !== undefined) result.portraitOpacity = r.portraitOpacity;
+    if (r.meta) result.meta = r.meta;
+    if (r.coords) result.coords = r.coords;
+    const p = normalizeCta(r.ctaPrimary);
+    if (p) result.ctaPrimary = p;
+    const s = normalizeCta(r.ctaSecondary);
+    if (s) result.ctaSecondary = s;
+    const tCta = normalizeCta(r.ctaTertiary);
+    if (tCta) result.ctaTertiary = tCta;
+    return result;
+};
+
 export class HeroContent extends ContentManager {
-    public _parsedContent: IHero = {headline: '', subtitle: '', tagline: '', bgImage: '', accent: ''};
-    get data(): IHero { this.parse(); return this._parsedContent; }
+    public _parsedContent: IHero = {headline: '', subtitle: '', tagline: '', bgImage: {src: ''}, accent: ''};
+    get data(): IHero {
+        this.parse();
+        this._parsedContent = normalize(this._parsedContent as unknown as IHero | IHeroLegacy);
+        return this._parsedContent;
+    }
     set data(v: IHero) { this._parsedContent = v; }
     setField<K extends keyof IHero>(k: K, v: IHero[K]) { this._parsedContent[k] = v; }
 }
 
-/**
- * Render a translated string with inline emphasis runs. Authors wrap words:
- *   - `*word*`  → `.em-accent`  (italic + accent colour — used by Studio/Paper)
- *   - `!word!`  → `.em-lit`     (accent background + accent-ink — Industrial highlight block)
- *   - `~word~`  → `.em-outline` (transparent fill + accent stroke — Industrial outline)
- *
- * Themes style whatever classes they care about; unthemed browsers fall
- * back to the default `<em>` / `<span>` rendering which stays readable.
- */
 function renderAccentRuns(text: string, tr: (s: string) => string): React.ReactNode {
     const translated = tr(text);
     const tokens = translated.split(/(\*[^*]+\*|![^!]+!|~[^~]+~)/g);
@@ -65,8 +113,13 @@ const LiveTime: React.FC = () => {
 const renderCta = (cta: IHeroCta | undefined, tr: (v: string) => React.ReactNode) => {
     if (!cta?.label) return null;
     const cls = `hero__cta${cta.primary ? ' hero__cta--primary' : ''}`;
-    if (cta.href) return <a className={cls} href={cta.href}>{tr(cta.label)}</a>;
+    if (cta.url) return <a className={cls} href={cta.url}>{tr(cta.label)}</a>;
     return <button className={cls}>{tr(cta.label)}</button>;
+};
+
+const dimToCss = (v: IImageRef['width']): string | undefined => {
+    if (v === undefined || v === '' || v === null) return undefined;
+    return typeof v === 'number' ? `${v}px` : v;
 };
 
 const Hero = ({item, tApp}: {
@@ -77,28 +130,19 @@ const Hero = ({item, tApp}: {
     const c = new HeroContent(EItemType.Hero, item.content).data;
     const trStr = (v: string) => translateOrKeep(tApp, v);
     const tr = (v: string) => <InlineTranslatable tApp={tApp as any} source={v}/>;
-    // Fullbleed hero: scrim is rendered by a CSS ::before pseudo (see Hero.scss
-    // `.hero.is-fullbleed::before`) rather than as a gradient layer baked into
-    // `background-image`, so each theme can tune the scrim opacity via
-    // `--hero-scrim-opacity` and we get a readable top-edge (client report
-    // 2026-04-24 #2 — text over bright images was washing out at the top where
-    // the previous bottom-only gradient hadn't landed yet).
-    // Background image is rendered as its own absolutely-positioned layer
-    // (`.hero__bg`) rather than a `background-image` on the hero root, so
-    // authors can fade it independently of the text overlay. Opacity of 0
-    // (default) keeps historical rendering; 100 hides the image entirely
-    // without dropping the scrim + text-shadow legibility layer above it.
     const style: React.CSSProperties = {
         borderLeft: c.accent ? `4px solid ${c.accent}` : undefined,
     };
-    const fullbleed = !!c.bgImage;
+    const bgSrc = c.bgImage?.src ?? '';
+    const fullbleed = !!bgSrc;
     const bgOpacityPct = typeof c.bgOpacity === 'number'
         ? Math.max(0, Math.min(100, c.bgOpacity))
         : 0;
     const portraitOpacityPct = typeof c.portraitOpacity === 'number'
         ? Math.max(0, Math.min(100, c.portraitOpacity))
         : 0;
-    const hasSideBlock = Boolean(c.portraitLabel || c.portraitImage);
+    const portraitSrc = c.portraitImage?.src ?? '';
+    const hasSideBlock = Boolean(c.portraitLabel || portraitSrc);
     const hasCta = Boolean(c.ctaPrimary?.label || c.ctaSecondary?.label || c.ctaTertiary?.label);
 
     return (
@@ -108,12 +152,7 @@ const Hero = ({item, tApp}: {
                     className="hero__bg"
                     aria-hidden
                     style={{
-                        // Stored as `api/<file>` (no leading slash) — without
-                        // the prefix the browser resolves it against the
-                        // current path, so on `/en/home` the request becomes
-                        // `/en/api/<file>` and 404s. Match Gallery/PlainImage
-                        // which already root-anchor the URL.
-                        backgroundImage: `url(${c.bgImage?.startsWith('/') || /^https?:/.test(c.bgImage || '') ? c.bgImage : '/' + c.bgImage})`,
+                        backgroundImage: `url(${bgSrc.startsWith('/') || /^https?:/.test(bgSrc) ? bgSrc : '/' + bgSrc})`,
                         opacity: bgOpacityPct > 0 ? 1 - bgOpacityPct / 100 : undefined,
                     }}
                 />
@@ -125,7 +164,11 @@ const Hero = ({item, tApp}: {
                     </RevealOnScroll>
                 )}
                 {c.headline && (
-                    <RevealOnScroll as="h1" className="hero__headline">
+                    <RevealOnScroll
+                        as="h1"
+                        className="hero__headline"
+                        id={slugifyAnchor(c.headline) || undefined}
+                    >
                         <span style={{color: c.accent || undefined}}>{renderAccentRuns(c.headline, trStr)}</span>
                         {c.headlineSoft && (
                             <>
@@ -137,10 +180,10 @@ const Hero = ({item, tApp}: {
                 )}
                 {c.titles && c.titles.length > 0 && (
                     <p className="hero__titles">
-                        {c.titles.map((t, i) => (
+                        {c.titles.map((tt, i) => (
                             <React.Fragment key={i}>
                                 {i > 0 && <span className="hero__title-sep">/</span>}
-                                <span>{renderAccentRuns(t, trStr)}</span>
+                                <span>{renderAccentRuns(tt, trStr)}</span>
                             </React.Fragment>
                         ))}
                     </p>
@@ -171,24 +214,14 @@ const Hero = ({item, tApp}: {
                 <div
                     className="hero__portrait"
                     style={{
-                        // Bare numbers become pixels; strings with a unit
-                        // ("20rem", "30%") flow through verbatim. Empty
-                        // values stay undefined so the SCSS default sizing
-                        // wins (`width: 100%`, ratio-driven height).
-                        width: typeof c.portraitWidth === 'number'
-                            ? `${c.portraitWidth}px`
-                            : (c.portraitWidth || undefined),
-                        height: typeof c.portraitHeight === 'number'
-                            ? `${c.portraitHeight}px`
-                            : (c.portraitHeight || undefined),
+                        width: dimToCss(c.portraitImage?.width),
+                        height: dimToCss(c.portraitImage?.height),
                     }}
                 >
-                    {c.portraitImage ? (
+                    {portraitSrc ? (
                         <img
-                            // Root-anchor relative `api/<file>` paths — same
-                            // reason as `bgImage` above.
-                            src={c.portraitImage.startsWith('/') || /^https?:/.test(c.portraitImage) ? c.portraitImage : '/' + c.portraitImage}
-                            alt=""
+                            src={portraitSrc.startsWith('/') || /^https?:/.test(portraitSrc) ? portraitSrc : '/' + portraitSrc}
+                            alt={c.portraitImage?.alt ?? ''}
                             style={portraitOpacityPct > 0 ? {opacity: 1 - portraitOpacityPct / 100} : undefined}
                         />
                     ) : (

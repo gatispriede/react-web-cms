@@ -211,7 +211,7 @@ class SectionContent extends React.Component<IPropsSectionContent> {
         return (
             <div className={`section${section.transparent || opacityPct > 0 ? ' is-transparent' : ''}`} style={gridStyle}>
                 {
-                    section.content.map((item: IItem, id: number) => {
+                    (section.content ?? []).map((item: IItem, id: number) => {
                         const span = slots[id] ?? 1;
                         const style: React.CSSProperties = {
                             height: '100%',
@@ -234,6 +234,7 @@ class SectionContent extends React.Component<IPropsSectionContent> {
                             : style;
                         return (
                             <div key={id}
+                                 data-testid={`section-module-row-${String(item.type).toLowerCase().replace(/_/g, '-')}`}
                                  className={`section-item-container ${item.type} span-${span} ${styleClass}`}
                                  style={animStyle}
                                  {...(animAttr ? {'data-anim': animAttr} : {})}>

@@ -1,3 +1,8 @@
+// Owner class is `.arch-tiers` (the rendered root); file stem stays
+// `ArchitectureTiers` to mirror the React module name.
+//
+// AUDIT-OWNERS: .arch-tiers
+
 .arch-tiers {
   --at-rule: var(--rule, rgba(0, 0, 0, 0.16));
   --at-rule-strong: var(--rule-strong, rgba(0, 0, 0, 0.32));

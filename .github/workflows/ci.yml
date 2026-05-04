@@ -5,6 +5,10 @@ on:
     branches: [master]
   push:
     branches: [master]
+  # Nightly trigger drives the visual-regression job below — too slow +
+  # too noisy (until baselines stabilise) to run on every PR.
+  schedule:
+    - cron: '0 4 * * *'   # 04:00 UTC nightly
   # Adds a "Run workflow" button in the Actions tab for manual re-runs.
   workflow_dispatch:
 
@@ -41,6 +45,49 @@ jobs:
 
       - name: Tests
         run: npm test -- --reporter=dot
+
+  # Visual regression — opt-in via schedule + workflow_dispatch + master
+  # pushes. Skipped on PR runs to keep the per-PR feedback loop fast and
+  # avoid baseline-noise blocking unrelated changes. See
+  # docs/runbooks/visual-regressions.md for how to update baselines.
+  visual:
+    name: Visual regression (shard ${{ matrix.shard }}/4)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/master')
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm install --legacy-peer-deps --ignore-scripts --no-audit --no-fund
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run visual project
+        # `--shard=N/4` lets Playwright distribute its test list across four
+        # parallel runners. The shard label in the matrix above is shown
+        # on the Actions tab so a failure tells you which slice to rerun.
+        run: npx playwright test --project=visual --shard=${{ matrix.shard }}/4
+
+      - name: Upload diff report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-visual-report-shard-${{ matrix.shard }}
+          path: playwright-report/
+          retention-days: 14
 
   # Deploy fans out to every droplet in the matrix in parallel. Each tenant
   # has its own DEPLOY_HOST_n + DEPLOY_ENV_FILE_n secret pair plus a per-

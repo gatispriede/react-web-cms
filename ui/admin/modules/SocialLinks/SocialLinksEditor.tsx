@@ -44,7 +44,7 @@ const SocialLinksEditor = ({content, setContent, t}: IInputContent) => {
                                 />
                             </Col>
                             <Col xs={10}><Input value={link.url} onChange={e => patch(i, {url: e.target.value})} placeholder={t('URL or email')}/></Col>
-                            <Col xs={6}><Input value={link.label || ''} onChange={e => patch(i, {label: e.target.value})} placeholder={t('Label (optional)')}/></Col>
+                            <Col xs={6}><Input {...(i === 0 ? {'data-testid': 'module-editor-primary-text-input'} : {})} value={link.label || ''} onChange={e => patch(i, {label: e.target.value})} placeholder={t('Label (optional)')}/></Col>
                             <Col xs={2}><Button size="small" danger icon={<DeleteOutlined/>} onClick={() => remove(i)}/></Col>
                         </Row>
                     </SortableHandleItem>

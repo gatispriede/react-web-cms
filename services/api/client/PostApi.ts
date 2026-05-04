@@ -3,6 +3,7 @@ import {IPost, InPost} from "@interfaces/IPost";
 import {refreshBus} from "@client/lib/refreshBus";
 import {triggerRevalidate} from "@client/lib/triggerRevalidate";
 import {isConflictError, parseMutationResponse} from "@client/lib/conflict";
+import {log} from "@services/infra/logger";
 
 export class PostApi {
     async list({includeDrafts = false, limit = 50}: {includeDrafts?: boolean; limit?: number} = {}): Promise<IPost[]> {
@@ -10,7 +11,7 @@ export class PostApi {
             const raw = await resolve(({query}) => (query as any).mongo.getPosts({includeDrafts, limit}));
             return raw ? JSON.parse(raw) : [];
         } catch (err) {
-            console.error('PostApi.list:', err);
+            log.error({scope: 'post.list', err}, 'post list failed');
             return [];
         }
     }
@@ -20,7 +21,7 @@ export class PostApi {
             const raw = await resolve(({query}) => (query as any).mongo.getPost({slug, includeDrafts}));
             return raw ? JSON.parse(raw) : null;
         } catch (err) {
-            console.error('PostApi.getBySlug:', err);
+            log.error({scope: 'post.getBySlug', err}, 'post getBySlug failed');
             return null;
         }
     }
@@ -52,9 +53,11 @@ export class PostApi {
         }
     }
 
-    async remove(id: string): Promise<{id?: string; deleted?: number; error?: string}> {
+    async remove(id: string, opts: {idempotencyKey?: string} = {}): Promise<{id?: string; deleted?: number; error?: string}> {
         try {
-            const raw = await resolve(({mutation}) => (mutation as any).mongo.deletePost({id}));
+            const args: any = {id};
+            if (opts.idempotencyKey) args.idempotencyKey = opts.idempotencyKey;
+            const raw = await resolve(({mutation}) => (mutation as any).mongo.deletePost(args));
             const parsed = JSON.parse(raw || '{}');
             refreshBus.emit('settings');
             // Delete removes a `/blog/<slug>` path — regenerating /blog

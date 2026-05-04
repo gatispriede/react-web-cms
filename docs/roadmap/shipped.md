@@ -1,0 +1,116 @@
+# Shipped roadmap items
+
+Archive of completed roadmap entries. Latest first. Active backlog lives in [README.md](README.md).
+
+## 2026-05-04 — F7 slug source-of-truth + F8 MCP coverage + email-config + UX polish
+
+| # | Notes |
+|---|---|
+| **F7** | Slug single source of truth — canonical `normalizeSlugForMatch` in `shared/utils/slug.ts`, re-exported by `services/features/Navigation/NavigationService.ts` and `ui/client/lib/slugChain.ts`. `pageId` threaded `[...slug].tsx` → `app.tsx`; `findIdForActiveTab` rewritten to exact `tab.id === pageId` lookup (no string matching). Three `menuPages` projections in `app.tsx` rekeyed off `p.id` — fixes the bug where a sub-page rendered as a flat sibling instead of under its root. Two commits: `0d9de06` (canonical helper + initial sweep), `f510beb` (third desktop-MainMenu projection missed by sweep). 17 new tests; 790 total green. See [slug-source-of-truth.md](slug-source-of-truth.md). |
+| **F8** | MCP coverage to real-world-ready — 38 → 87 tools, drift CI 0/0. `compose(...)` wrappers for idempotency, audit, rate-limit, error envelope, validation. `defineTool({...meta}, handler)` registration pattern. Four commits: `1ac5d0d` (W1), `073a59e` (W1 phase 2 — sweep all 45 tools onto compose), `152e2c0` (W2 — P0+P1, registry 66/70), `e300c9a` (W3 — P2 + runbook + E2E spec, registry 87/70). Roadmap snapshot at `bf957e9`. See [mcp-real-world-ready.md](mcp-real-world-ready.md). Streaming transport + plugin SDK + E2E un-skip deferred to post-merge. |
+| **email-config** | SMTP / Resend / Disabled providers behind a `mailConfig` site-flag, AES-GCM encryption via `SECRETBOX_KEY`. Admin pane at System → Email with provider switcher, test-send button, per-provider validation, specific missing-fields error surfacing. Four commits: `1c9cd8a` (foundation — SecretBox + EmailService + SiteFlags shape), `ea09fcd` (admin UI + MCP tools + Resend), `1fb8ebb` (specific missing-fields error), `5cf5cd8` (sanitizeMailConfig encrypts plaintext on save — admin form sent `resendApiKey` plaintext, server was dropping it). |
+| **admin click-parent edits (option B)** | Admin sider parent-row title click now navigates/edits like any leaf; a chevron Button in the label toggles expand/collapse via a controlled `openKeys[]` state. Tree is flattened manually (no AntD `items[].children` so SubMenu can't intercept clicks). Default-expand all parents on first load; subsequent reloads preserve operator's choice. `bad78a9`. |
+| **themed error pages** | `404.tsx` (replaces "Not found" div), new `500.tsx`, new `_error.tsx` catch-all — all share `<ErrorScreen/>` (`ui/client/features/ErrorScreen/`). Pulls `--background` / `--ink` / `--accent` / `--font-display` / `--theme-borderRadius` from active theme; leads with `<Logo/>` so the brand mark mirrors the favicon role. `8711f37`. |
+| **admin nav reorg** | System area-nav reordered (users → email → inquiries → flags → rest below); SEO becomes its own area (Analytics moves there); Errors → System; Bundle first in Release. Two commits: `1c4dece` + `10d0f03`. |
+| **mcp-call helper** | `tools/scripts/mcp-call.mjs` — drives any MCP tool against the local dev DB through actual `McpServer.dispatch`. Used to apply skyclimber bundle patches via real `module.add` instead of editing JSON. `c78171e`. |
+
+## 2026-05-03 — F1 sub-pages + F2 data integrity blitz
+
+| # | Notes |
+|---|---|
+| **F1** | Sub-pages — full surface. Data model (`parent?`, `slug?` on IPage/INavigation; `slug` widened to `string \| Record<LocaleCode, string>` via JSON scalar with non-breaking SDL), `setParent` mutation with server cycle + 3-level depth cap + client cycle guard, slug backfill, `findPageBySlugChain` resolver (locale-aware, default-locale fallback, slugified-page last-resort), parent-scoped slug uniqueness, `[...slug].tsx` catch-all with full slug-chain prop, locale-aware sitemap with `<xhtml:link rel="alternate" hreflang>`, AntD `<Menu mode="horizontal">` + `SubMenu` with 4-theme SCSS, anchor registry walks parent chain (`Services → Cleaning`), admin sider nested rendering, Parent Select, Breadcrumb, delete-with-children prompt, mobile drawer nested rendering with chevron-rotate SCSS polish, SSR theme-name on `<body>`, decorative outer `<Tabs>` retired, gqty regen, `parent` round-trips through `InNavigation`, admin per-locale slug editor with bare-string→Record promote. ~118 new tests. |
+| **F2 idempotency** | Engine — Redis primary + Mongo fallback, in-flight collapse, 5-min TTL via `IDEMPOTENCY_TTL_SECONDS`. Boot-wired in `setupClient`. `idempotencyKey: String` arg on 7 destructive mutations (deletePost, deleteNavigationItem, removeSectionItem, deleteLanguage, deleteTheme, removeUser, revokePermission). `useGuardedAction` React hook + `GuardedAction` VM class with `onPendingChange`, wired into Posts/Themes/Users/MCP/AdminApp delete flows. 11 + 6 unit tests. |
+| **F2 cascade** | Engine + `cascadeRules` on `FeatureManifest` with `kind` discriminator (`collection-move` default + `doc-mutate` for singleton fields). Soft-delete to `*.trash` collections with 24h Mongo TTL. `cascadeRestore(trashGroup)` mutation (no-op for doc-mutate rules). Admin Trash pane at `/admin/release/trash`. Wired into `removeSectionItem`/`deleteNavigationItem`/`deletePost`. **Cascade rules:** Permissions (page-scoped grants follow page deletions), Seo (doc-mutate `$unset SiteSeo.pages.<slug>`), Posts (page-pinned posts via `pageId?`), Navigation→Navigation recursive (sub-page tree, depth-bounded with visited-set). Transaction with single-node best-effort fallback. 12+ cascade tests. |
+| **F2 Posts pinning** | `pageId?: string` on `IPost`, cascade rule (Navigation→Posts via `matchByParentId: id => ({pageId: id})`), admin "Pin to page" Select with allowClear + search, page-list fetched on `PostsViewModel.refresh()`. Public URL stays `/blog/${slug}` regardless of pin. 8 new tests. |
+| **gqty cold-load sweep** | Same anti-pattern as ThemeApi.listThemes applied to 5 APIs / 6 methods: `SiteFlagsApi.get`, `FooterApi.get`, `SiteSeoApi.get`, `TranslationMetaApi.get`, `AuditApi.listCollections`/`listActors`. Each carries the same 4-line comment so `git grep "Direct-route bug"` enumerates every site that migrated. |
+| **E2E coverage for new features** | 5 spec files (`tests/e2e/features/{sub-pages,trash,idempotency,aui-simplified}.spec.ts`, `tests/e2e/modules/timeline-anchors.spec.ts`) — 16 tests + 9 `test.skip`s pending data-testids. Aggregated TODO testid list captured for future sweep. |
+| **E-commerce testid sweep + seed fixtures** | `data-testid` wired across Products/Orders admin panes + storefront product card + product detail + cart/checkout flow + order confirmation. New `tests/e2e/fixtures/seedFactories.ts` with `seedProduct` / `seedOrder` / `createCleanupRegistry` (direct-Mongo writes, per-test cleanup registry). 1 product-create flow un-skipped; the rest still need in-test seed wiring. Two UI-design gaps flagged: Inventory pane lacks per-product editor (sync-status only); Orders detail uses Drawer not URL nav. |
+| **Mobile drawer SCSS polish** | `+74` lines in `MobileNav.scss`: `.mobile-nav-row` flex container, `.mobile-nav-toggle` chevron with 38px hit target, `.mobile-nav-row.is-expanded .mobile-nav-toggle > span` 180deg rotate transition (mirrors existing caret pattern), `.mobile-nav-children` subtle bg, `.mobile-nav-item.is-child` 42px indent. All theme tokens reused; theme-agnostic via existing CSS vars (Paper/Studio/Industrial/HighContrast). |
+| **EL-feat-rest** | `resourceGated` for Navigation (7 muts: `{feature, page}` for slug-bearing, `{feature}` for cross-page), Seo (`saveSiteFlags`/`saveSiteSeo`), Permissions (`grantPermission`/`revokePermission`), Users (`addUser`/`updateUser`/`removeUser`; `setMyAdminUiMode` deliberately ungated). 7 gated tests. **30 admin mutations gated** total across the codebase. |
+| **API integration tests** | `setup.integration.test.ts` (idempotent admin seed), `export-import.integration.test.ts` (round-trip + 405 + 400 malformed), `rescan-images.integration.test.ts` (orphan discovery + idempotent). 9 tests via mongodb-memory-server with mocked auth/origin/rate-limit. |
+| **C13b** | Timeline per-entry stable anchors — `#${slugifyAnchor(company-role)}` on `<h3 className="timeline__who">`. `anchorRegistry.ts` walks `entries[]` so the picker surfaces them under "Timeline entries". Manifesto stays section-only (single body paragraph, no row model). |
+| **AUI simplified panes** | `ThemeSimplifiedView.tsx` — preset gallery only, no token editor. `PostsSimplifiedView.tsx` — title + body + cover, every save publishes (no draft state, no tags/author/excerpt/slug/blog-visible toggle). Both wired through `*AdminUILoader.modes.simplified`. Bulk-migrations queue emptied. |
+| **Bundle import sanitizer** | `services/features/Bundle/BundleService.ts` — accepts spaces, parens, unicode (collapsed to `_`); rejects only on null byte, control char, `..`, disallowed extension. Camera/screenshot filenames like `IMG_0001 (1).jpg` and `Screenshot 2026-04-26 162952.png` round-trip cleanly now. |
+| **Top-bar split** | Admin top bar — nav actions (Build / Client config / Content / SEO / Release / System / Preview / Command) on the left; account + chrome (Language / Mode / Theme / Sign out) on the right via `.app-login-wrapper__spacer`. |
+| **Themes gqty bug** | `ThemeApi.listThemes` switched from `gqty.resolve` to raw `fetch('/api/graphql')` POST — fixes empty-payload on cold direct route to `/admin/client-config/themes`. Same anti-pattern flagged for SiteFlags/Footer/SiteSeo/TranslationMeta/Audit APIs (E2E backlog item 3). |
+| **E-commerce E2E specs** | 5 mount-level specs under `tests/e2e/ecommerce/` (products / cart / checkout / inventory / orders). Deeper flows guarded by `test.skip` pending data-testids + `seedProduct`/`seedOrder` fixtures (see TODO at top of each spec). |
+| **F3 cancelled** | F3 `/v1/**` namespace migration cancelled 2026-05-03 — see [v1-url-namespace.md](v1-url-namespace.md) postmortem. Pages Router special-cases `pages/api/*`; moving it broke server/browser bundle isolation. Without API freedom, moving `/admin/*` alone wasn't worth the cost. Constraint recorded in [PROJECT_ANALYSIS.md](../PROJECT_ANALYSIS.md): customer pages cannot use slugs `admin` or `api`. |
+| **Cleanup closeouts** | Phase 3 admin-segregation deletion → demoted to runbook (gated on observation window). C13b shipped. C17 closed deferred-on-demand. AUI-mode reframed as per-pane opt-in. tests-remaining.md retired. |
+| **Products test fix** | `ProductsServiceLoader.test.ts` deep-equal on `authz` was comparing arrow-function identity; replaced with sub-field assertions + key-set check. 644/644 → 651/652 (in-flight cascade recursion test expected to clear). |
+
+## Production / ops
+
+| # | Date | Notes |
+|---|------|-------|
+| P1 | 2026-04 | First-boot admin password — see [production/first-boot-admin-password.md](production/first-boot-admin-password.md) |
+| P2 | 2026-05-03 | Automatic deployment — `.github/workflows/deploy.yml`, gated on `vars.DEPLOY_ENABLED`; runbook [docs/runbooks/automatic-deployment.md](../runbooks/automatic-deployment.md) |
+| P3 | 2026-05-03 | DigitalOcean domain + TLS — Caddyfile env-driven (`DOMAIN`, `SITE_DOMAIN_WWW`), auto-HTTPS; runbook [docs/runbooks/digitalocean-domain.md](../runbooks/digitalocean-domain.md) |
+| P4 | 2026-05-03 | Seamless (blue/green) deployment — `app-blue` / `app-green` (Compose `seamless` profile), Caddy `{$ACTIVE_UPSTREAM}` switch, orchestrator `tools/blue-green-deploy.sh`; gated by `vars.SEAMLESS_DEPLOY`; runbook [docs/runbooks/seamless-deployment.md](../runbooks/seamless-deployment.md) |
+| P5 | 2026-05-03 | MongoDB auth — `tools/mongo-bootstrap.sh` + `mongoConfig.buildMongoUri`; runbook [docs/runbooks/mongo-auth-setup.md](../runbooks/mongo-auth-setup.md) (dev path preserved) |
+
+## Content editor
+
+| # | Date | Notes |
+|---|------|-------|
+| N15 | 2026-04-24 | Folder reshape — `ui/{client,admin}/` + `services/` + `shared/` + `tools/` + `infra/`. See [migration-mapping.md](migration-mapping.md) |
+| C1 | 2026-04-24 | Themes as files — four editorial presets in `ui/client/themes/*.json`, seeded on boot when missing; admin "Reset to preset" overwrites DB row from disk |
+| C2 | 2026-04-24 | Image optimization on upload (partial) — shared `imageOptimize.ts` pipeline (resize 1920 cap + recompress + strip EXIF + size guard) on both single + batch uploads |
+| C3 | 2026-04-24 | Bulk image upload with ratio — `/api/upload-batch` (sharp cover-crop + EXIF strip + collision-safe), `BulkImageUploadModal`, GalleryEditor "Bulk upload" button |
+| C4 | 2026-04-24 | Drag-drop images modules — extended `useImageDrop` with OS file upload + URL re-host + per-file AntD toasts; shared `<ImageDropTarget>` wrapper + SCSS |
+| C5 | 2026-04-24 | Picker improvements — sort dropdown (recent/name/size), two-column grid + sticky resizable preview panel, always-visible name+size caption, per-tile info drawer, keyboard navigation |
+| C6 | 2026-04-24 | Gallery improvements (partial) — aspect-ratio lock, Masonry style, per-tile `href`, up/down reorder; custom lightbox + drag-reorder deferred |
+| C7 | 2026-04-24 | Logo style options — site-wide Logo `style` field + `.logo--{default,bordered,framed,circle}` SCSS + admin Style select |
+| C8 | 2026-04-24 | Module transparency style — `transparent` flag on `ISection` + `.is-transparent` renderer rule + admin Switch with contrast hint |
+| C9 | 2026-05-02 | Production caching — `bootId` + per-feature version stamps in Redis (`cacheVersion.ts`), `X-Cms-Cache-Tag` header, Caddy SWR fragment + [runbook](../runbooks/caddy-cache.md), DataLoader fold-in via `ServiceLoader.batchAccessors` (Posts is the demo) |
+| C10 | 2026-04-24 | Admin modules preview page — `/admin/modules-preview` with sample fixture per `EItemType`, theme-switcher dropdown, transparent-bg toggle, module-name filter; sample-coverage test |
+| C11 | 2026-04-24 | Admin menu icons — icons on every main-nav button + settings tab + sidebar row; adapter extended with 11 new lucide mappings |
+| C12 | 2026-05-02 | Image width/height respect — `<SizedImage>` helper + `data-sized` opt-out on parent `.image` wrappers; SCSS carve-outs in Logo / Gallery / Carousel |
+| C13 | 2026-05-02 | Link target autosearch — picker UX + readable section labels + stable-anchor emission for Hero / BlogFeed / ProjectCard; `RevealOnScroll` forwards `id`. Manifesto / Timeline anchor support deferred (no single representative title) |
+| C14 | 2026-05-02 | Inline-edit text after add — picker → primary-text-input autofocus on add (no autofocus on edit) |
+| C15 | already shipped | Admin dark-mode theme — top-bar Switch (`AdminApp.tsx`), AntD `darkAlgorithm` via `ConfigProvider`, localStorage-persisted (`admin.darkMode`). Hoisted to top-top bar 2026-05-03 with chrome-only SCSS scoping |
+| C16 | already shipped | Admin/client side-by-side editor layout — `AddNewSectionItem.tsx` Drawer renders `[editor tabs] | [live preview]` 2-column grid for every module type |
+| C18 | 2026-05-02 | Image-ref + link-ref schema convergence — `IImageRef` + `ILinkRef` shared shapes; `<ImageRefInput>` + `<LinkRefInput>` shared editors; per-module ContentManager normalises legacy → new shape |
+| BUG | 2026-04-24 | Client report — Hero #1 + #2: `clamp()` font floors + `overflow-wrap: anywhere` + theme-tunable `--hero-scrim-opacity` scrim. Services #3 not reproducible, locked with regression tests |
+
+## Build / DX
+
+| # | Date | Notes |
+|---|------|-------|
+| Q1+VM4 | 2026-05-03 | ESLint flat config + VM4 lint rule banning `useState` in `ui/admin/features/**` |
+| Q2 | 2026-05-03 | VM3 — Themes + Translations panes migrated (commit b79d221) |
+| **VM3-rest** | **2026-05-03 (commit d942c50)** | VM3 closeout — final 11 panes migrated off `useState`: Agent, Analytics, Bundle×3, ModulePicker, AddNewLanguageDialog, ImageRail, FeatureFlags, RestartRequiredBanner, SEO, FontPicker. **17/17 — zero `eslint-disable-next-line no-restricted-imports` markers remain** in `ui/admin/` |
+| **L4-bulk** | **2026-05-03 (commit 4b56c27)** | `ClientUILoader.publicRoutes` + `gatePath()` helper auto-applies `withFeatureGate`; 4 features migrated (`products`, `posts`, `cart`, `orders`); per-page inline gates dropped from 4 page files. Plus item-types registry composed from per-feature halves: `CLIENT_ITEM_TYPES` (Display) + `ADMIN_ITEM_TYPE_EDITORS` (Editor + metadata); 24 entries split, public API unchanged |
+| Q4 | 2026-05-03 | Visual regression baselines — Playwright `toHaveScreenshot()` config + 58 spec entries (48 module Display+Editor, 9 critical surfaces, 1 Footer); CI shard config; runbook [docs/runbooks/visual-regressions.md](../runbooks/visual-regressions.md). **Image capture pending** — see open backlog |
+| Q5 | 2026-05-03 | Admin-segregation Phase 3 observability — Next edge middleware logs every legacy-route hit via `/api/log/error` (level: warn, scope: legacy-route) before redirect fires. **Deletion pending** — see open backlog |
+| Q6 | 2026-05-03 | Conditional gqty regen on prebuild — `tools/check-schema-stale.js` mtime-checks `services/api/schema.graphql` vs generated client |
+| **mcpAgentTools-fix** | **2026-05-03 (commit 583cfc2)** | Long-standing `services/agent/mcpAgentTools.ts` typecheck error resolved — `mcpToToolDef` narrows `inputSchema: unknown` at the call site with empty fallback |
+| **AppDockerfile-sha** | **2026-05-03 (commit 583cfc2)** | `ARG GIT_SHA=unknown` writes `/app/.git-sha` inside the image; `tools/blue-green-deploy.sh` passes `--build-arg GIT_SHA="$TARGET_SHA"`. Resolves the no-op SHA-verification flagged in P4 |
+
+## Auth / multi-tenancy
+
+| # | Date | Notes |
+|---|------|-------|
+| Q10 | 2026-05-03 | Edit-levels three-dimension grants (FeatureGrant / PageGrant / LocaleGrant) — intersection semantics, admin-role bypass, Posts wired as the reference. See [docs/architecture/auth-roles.md](../architecture/auth-roles.md) |
+| **EL-feat** | **2026-05-03 (commit 3248e86)** | Per-feature `resourceGated` extended beyond Posts: Products, Inventory, Orders (admin-mutations only), Footer, Themes, Languages (`{feature, locale}` for translator scoping), Bundle (declared, HTTP routes still). **18 admin GraphQL mutations now grant-gated.** 8 `<Loader>.gated.test.ts` files added |
+| **EL-i18n** | **2026-05-03 (commit 3248e86)** | `runI18nGrantMigration(db)` boot-once script wired into `LanguagesServiceLoader.onBoot`. Idempotent: when `siteFlags.inlineTranslationEdit === true`, grants `translator` to every editor-rank user, then sets the flag false. 5 tests covering no-op + on-flip + idempotency |
+| **AUI-mcp** | **2026-05-03 (commit 4b56c27)** | MCP execution gate — `enforceModeForTool(userId, toolId)` + `FeatureRestrictedError` + `ADVANCED_TOOLS` allowlist. **8 MCP tools gated as advanced-only**: `site.{revalidate,regenerateSchema,setFeatureFlag,clearFeatureFlag}`, `auth.resetLockouts`, `inventory.syncDelta`, `theme.{setActive,update}`, `section.delete`. 8 passing tests |
+| **CA-geo** | **2026-05-03 (commit 1bc3fce)** | Client-analytics country lookup — embedded IPv4→country dataset (CC0, IP2Location LITE DB1) at `infra/datasets/ip-to-country.json`; `geoLookup()` does synchronous binary search at ingest; **IP discarded** before Mongo write; admin Analytics gains top-N country table; runbook [docs/runbooks/analytics-geolookup.md](../runbooks/analytics-geolookup.md). 17 tests |
+| **AUI-todo** | **2026-05-03 (commit 4b56c27)** | Things-to-do panel mounts at `/admin` (both modes) — 4 collectors via `Promise.allSettled` for graceful degrade: `draftPosts`, `unpublishedChanges`, `inventoryDeadLetters`, `pendingOrders`. Translations + low-stock noted as next iteration |
+| **grants-UI** | **2026-05-03 (commit 69482ba)** | Grants assignment in Users pane — three free-text `Select mode="tags"` swapped for constrained `mode="multiple"` with options pulled live from `getFeatureFlags` / `getNavigationCollection` / `getLanguages`. Per-source try/catch; `showSearch` + `optionFilterProp="label"`. Coding principle saved to `memory/feedback_predefined_selections.md` |
+
+## Go-to-market (Q7)
+
+| # | Date | Notes |
+|---|------|-------|
+| Q7-wizard | 2026-05-03 | First-run onboarding wizard — site name + admin account + theme pick at `/admin/onboarding`. Server-side fresh-install gate via `/api/onboarding/is-fresh-install` |
+| Q7-landing | 2026-05-03 | Marketing landing page — `/welcome` always-on; `/` flips to landing on fresh installs (`pages.length === 0`). Visual baseline added |
+| Q7-docs | 2026-05-03 | Docs site — `docs/site/*.md` source; `tools/seed-docs-bundle.js` generates a CMS bundle; admin imports it; `/docs` index + `/docs/[slug]` per-page routes |
+
+## Misc
+
+| # | Date | Notes |
+|---|------|-------|
+| favicon | 2026-05-03 | Dynamic `/api/favicon` route serves the active site's Logo SVG when present, falls back to a monogram SVG built from siteName initial(s) |
+| simplified-mode-cuts | 2026-05-03 | Admin UI mode toggle now visibly changes the UI: top-bar areas (SEO/Release/System), content area-nav (Products/Inventory/Orders), Layout pane sub-sections, module picker (8 of 24 types), Action tab, Style sub-options, Publish button, click-to-edit on module body. See [docs/features/platform/admin-ui-modes.md](../features/platform/admin-ui-modes.md) |
+| dark-mode-hoist | 2026-05-03 | Dark/light + simplified/advanced switchers hoisted from `AdminApp` secondary header to `UserStatusBar` top-top bar — visible on every admin route. Chrome-only SCSS scoping so the build-page preview stays in client theme |
+| components-drop | 2026-05-03 | `ui/client/components/` removed; Marketing + Cart moved to `ui/client/features/{Marketing,Cart}/` to match target architecture |

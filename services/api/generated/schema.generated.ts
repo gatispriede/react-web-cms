@@ -34,6 +34,17 @@ export interface Scalars {
   JSON: { input: any; output: any };
 }
 
+export interface InAddress {
+  city: Scalars["String"]["input"];
+  country: Scalars["String"]["input"];
+  id?: InputMaybe<Scalars["String"]["input"]>;
+  isDefault?: InputMaybe<Scalars["Boolean"]["input"]>;
+  line1: Scalars["String"]["input"];
+  line2?: InputMaybe<Scalars["String"]["input"]>;
+  name: Scalars["String"]["input"];
+  postalCode: Scalars["String"]["input"];
+}
+
 export interface InImage {
   created: Scalars["String"]["input"];
   id: Scalars["String"]["input"];
@@ -70,8 +81,12 @@ export interface InLogo {
 export interface InNavigation {
   id: Scalars["String"]["input"];
   page: Scalars["String"]["input"];
+  parent?: InputMaybe<Scalars["String"]["input"]>;
   sections: Array<InputMaybe<Scalars["String"]["input"]>>;
   seo?: InputMaybe<InSeo>;
+  // F1 follow-up — JSON scalar (bare string for legacy single-locale,
+  // or `Record<locale, slug>` for the per-locale shape).
+  slug?: InputMaybe<Scalars["JSON"]["input"]>;
   type: Scalars["String"]["input"];
 }
 
@@ -82,7 +97,9 @@ export interface InSection {
   overlayAnchor?: InputMaybe<Scalars["String"]["input"]>;
   page: Scalars["String"]["input"];
   slots?: InputMaybe<Array<InputMaybe<Scalars["Int"]["input"]>>>;
+  /** Cross-cutting "transparent background" flag — clears the section's default bg chain. */
   transparent?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Section-level opacity, 0..100 (%). 0 / absent = opaque; 100 = invisible. */
   transparentOpacity?: InputMaybe<Scalars["Int"]["input"]>;
   type: Scalars["Int"]["input"];
 }
@@ -105,10 +122,13 @@ export interface InUser {
   avatar?: InputMaybe<Scalars["String"]["input"]>;
   canPublishProduction?: InputMaybe<Scalars["Boolean"]["input"]>;
   email?: InputMaybe<Scalars["String"]["input"]>;
+  googleSub?: InputMaybe<Scalars["String"]["input"]>;
   id?: InputMaybe<Scalars["String"]["input"]>;
+  kind?: InputMaybe<Scalars["String"]["input"]>;
   mustChangePassword?: InputMaybe<Scalars["Boolean"]["input"]>;
   name?: InputMaybe<Scalars["String"]["input"]>;
   password?: InputMaybe<Scalars["String"]["input"]>;
+  phone?: InputMaybe<Scalars["String"]["input"]>;
   preferredAdminLocale?: InputMaybe<Scalars["String"]["input"]>;
   role?: InputMaybe<Scalars["String"]["input"]>;
 }
@@ -121,6 +141,27 @@ export const scalarsEnumsHash: ScalarsEnumsHash = {
   String: true,
 };
 export const generatedSchema = {
+  IAddress: {
+    __typename: { __type: "String!" },
+    city: { __type: "String!" },
+    country: { __type: "String!" },
+    id: { __type: "String!" },
+    isDefault: { __type: "Boolean" },
+    line1: { __type: "String!" },
+    line2: { __type: "String" },
+    name: { __type: "String!" },
+    postalCode: { __type: "String!" },
+  },
+  ICustomer: {
+    __typename: { __type: "String!" },
+    createdAt: { __type: "String" },
+    email: { __type: "String!" },
+    emailVerified: { __type: "String" },
+    id: { __type: "String!" },
+    name: { __type: "String" },
+    phone: { __type: "String" },
+    shippingAddresses: { __type: "[IAddress!]!" },
+  },
   IImage: {
     __typename: { __type: "String!" },
     created: { __type: "String!" },
@@ -164,8 +205,10 @@ export const generatedSchema = {
     editedBy: { __type: "String" },
     id: { __type: "String" },
     page: { __type: "String!" },
+    parent: { __type: "String" },
     sections: { __type: "[String]!" },
     seo: { __type: "ISeo" },
+    slug: { __type: "JSON" },
     type: { __type: "String!" },
   },
   INewLanguage: {
@@ -213,11 +256,22 @@ export const generatedSchema = {
     canPublishProduction: { __type: "Boolean" },
     email: { __type: "String!" },
     id: { __type: "String!" },
+    kind: { __type: "String" },
     mustChangePassword: { __type: "Boolean" },
     name: { __type: "String" },
     password: { __type: "String!" },
     preferredAdminLocale: { __type: "String" },
     role: { __type: "String" },
+  },
+  InAddress: {
+    city: { __type: "String!" },
+    country: { __type: "String!" },
+    id: { __type: "String" },
+    isDefault: { __type: "Boolean" },
+    line1: { __type: "String!" },
+    line2: { __type: "String" },
+    name: { __type: "String!" },
+    postalCode: { __type: "String!" },
   },
   InImage: {
     created: { __type: "String!" },
@@ -249,8 +303,10 @@ export const generatedSchema = {
   InNavigation: {
     id: { __type: "String!" },
     page: { __type: "String!" },
+    parent: { __type: "String" },
     sections: { __type: "[String]!" },
     seo: { __type: "InSeo" },
+    slug: { __type: "JSON" },
     type: { __type: "String!" },
   },
   InSection: {
@@ -281,15 +337,19 @@ export const generatedSchema = {
     avatar: { __type: "String" },
     canPublishProduction: { __type: "Boolean" },
     email: { __type: "String" },
+    googleSub: { __type: "String" },
     id: { __type: "String" },
+    kind: { __type: "String" },
     mustChangePassword: { __type: "Boolean" },
     name: { __type: "String" },
     password: { __type: "String" },
+    phone: { __type: "String" },
     preferredAdminLocale: { __type: "String" },
     role: { __type: "String" },
   },
   MutationMongo: {
     __typename: { __type: "String!" },
+    _empty: { __type: "String" },
     addUpdateLanguage: {
       __type: "String!",
       __args: {
@@ -311,24 +371,76 @@ export const generatedSchema = {
       },
     },
     addUser: { __type: "String!", __args: { user: "InUser!" } },
+    changeMyPassword: {
+      __type: "String!",
+      __args: { newPassword: "String!", oldPassword: "String!" },
+    },
+    clearFeatureFlag: { __type: "String!", __args: { id: "String!" } },
     createNavigation: {
       __type: "String!",
       __args: { navigation: "InNavigation!" },
     },
     deleteImage: { __type: "String!", __args: { id: "String!" } },
-    deleteLanguage: { __type: "String!", __args: { language: "InLanguage" } },
+    deleteLanguage: {
+      __type: "String!",
+      __args: { idempotencyKey: "String", language: "InLanguage" },
+    },
+    deleteMyAddress: { __type: "String!", __args: { id: "String!" } },
     deleteNavigationItem: {
       __type: "String!",
-      __args: { pageName: "String!" },
+      __args: { idempotencyKey: "String", pageName: "String!" },
     },
-    deletePost: { __type: "String!", __args: { id: "String!" } },
-    deleteTheme: { __type: "String!", __args: { id: "String!" } },
+    deletePost: {
+      __type: "String!",
+      __args: { id: "String!", idempotencyKey: "String" },
+    },
+    deleteTheme: {
+      __type: "String!",
+      __args: { id: "String!", idempotencyKey: "String" },
+    },
+    grantPermission: {
+      __type: "String!",
+      __args: { resourceId: "String!", scope: "String!", userId: "String!" },
+    },
+    mcpIssueToken: {
+      __type: "String!",
+      __args: { name: "String!", scopes: "[String!]!", ttlDays: "Int" },
+    },
+    mcpRevokeToken: { __type: "String!", __args: { id: "String!" } },
+    onboardingBootstrap: {
+      __type: "String!",
+      __args: {
+        adminEmail: "String!",
+        adminPassword: "String!",
+        locale: "String!",
+        siteName: "String!",
+        themeKey: "String",
+      },
+    },
     publishSnapshot: { __type: "String!", __args: { note: "String" } },
-    removeSectionItem: { __type: "String!", __args: { id: "String!" } },
-    removeUser: { __type: "String!", __args: { id: "String!" } },
+    removeSectionItem: {
+      __type: "String!",
+      __args: { id: "String!", idempotencyKey: "String" },
+    },
+    removeUser: {
+      __type: "String!",
+      __args: { id: "String!", idempotencyKey: "String" },
+    },
     replaceUpdateNavigation: {
       __type: "String!",
       __args: { navigation: "InNavigation", oldPageName: "String!" },
+    },
+    requestServerRestart: { __type: "String!" },
+    resetPreset: { __type: "String!", __args: { id: "String!" } },
+    restoreFromTrash: { __type: "String!", __args: { trashGroup: "String!" } },
+    revokePermission: {
+      __type: "String!",
+      __args: {
+        idempotencyKey: "String",
+        resourceId: "String!",
+        scope: "String!",
+        userId: "String!",
+      },
     },
     rollbackToSnapshot: { __type: "String!", __args: { id: "String!" } },
     saveFooter: {
@@ -340,6 +452,7 @@ export const generatedSchema = {
       __type: "String!",
       __args: { content: "String!", expectedVersion: "Int" },
     },
+    saveMyAddress: { __type: "String!", __args: { address: "InAddress!" } },
     savePost: {
       __type: "String!",
       __args: { expectedVersion: "Int", post: "JSON!" },
@@ -361,11 +474,22 @@ export const generatedSchema = {
       __args: { expectedVersion: "Int", meta: "JSON!" },
     },
     setActiveTheme: { __type: "String!", __args: { id: "String!" } },
-    resetPreset: { __type: "String!", __args: { id: "String!" } },
+    setFeatureFlag: {
+      __type: "String!",
+      __args: { enabled: "Boolean!", id: "String!" },
+    },
+    setMyAdminUiMode: { __type: "String!", __args: { mode: "String!" } },
+    setParent: {
+      __type: "String!",
+      __args: { pageId: "String!", parentId: "String" },
+    },
     setPostPublished: {
       __type: "String!",
       __args: { id: "String!", publish: "Boolean!" },
     },
+    signUpCustomer: { __type: "String!", __args: { customer: "InUser!" } },
+    trackEvent: { __type: "String!", __args: { events: "[JSON!]!" } },
+    updateMyProfile: { __type: "String!", __args: { customer: "InUser!" } },
     updateNavigation: {
       __type: "String!",
       __args: { page: "String!", sections: "[String]" },
@@ -374,10 +498,24 @@ export const generatedSchema = {
   },
   QueryMongo: {
     __typename: { __type: "String!" },
+    _empty: { __type: "String" },
+    analyticsSummary: { __type: "String!", __args: { range: "String!" } },
+    functionalRoles: { __type: "String!" },
     getActiveTheme: { __type: "String" },
     getAuditActors: { __type: "String!" },
     getAuditCollections: { __type: "String!" },
     getAuditLog: { __type: "String!", __args: { filter: "JSON" } },
+    getErrorLog: {
+      __type: "String!",
+      __args: {
+        level: "String",
+        limit: "Int",
+        scope: "String",
+        sinceISO: "String",
+        source: "String",
+      },
+    },
+    getFeatureFlags: { __type: "String!" },
     getFooter: { __type: "String!" },
     getImages: { __type: "[IImage!]!", __args: { tags: "String!" } },
     getLanguages: { __type: "[INewLanguage]" },
@@ -395,14 +533,21 @@ export const generatedSchema = {
     getPublishedHistory: { __type: "String!", __args: { limit: "Int" } },
     getPublishedMeta: { __type: "String" },
     getPublishedSnapshot: { __type: "String" },
+    getRestartStatus: { __type: "String!" },
     getSections: { __type: "[ISection!]!", __args: { ids: "[String]" } },
     getSiteFlags: { __type: "String!" },
     getSiteSeo: { __type: "String!" },
     getThemes: { __type: "String!" },
     getTranslationMeta: { __type: "String!" },
+    getTrashGroups: { __type: "String!" },
     getUser: { __type: "IUser", __args: { email: "String" } },
     getUsers: { __type: "[IUser!]!" },
+    isFreshInstall: { __type: "Boolean!" },
     loadData: { __type: "[ILoadData!]!" },
+    mcpListTokens: { __type: "String!" },
+    me: { __type: "ICustomer" },
+    myAdminUiMode: { __type: "String!" },
+    permissionsForUser: { __type: "String!", __args: { userId: "String!" } },
     setupAdmin: { __type: "IUser" },
   },
   mutation: {
@@ -418,6 +563,29 @@ export const generatedSchema = {
   },
   subscription: {},
 } as const;
+
+export interface IAddress {
+  __typename?: "IAddress";
+  city?: Scalars["String"]["output"];
+  country?: Scalars["String"]["output"];
+  id?: Scalars["String"]["output"];
+  isDefault?: Maybe<Scalars["Boolean"]["output"]>;
+  line1?: Scalars["String"]["output"];
+  line2?: Maybe<Scalars["String"]["output"]>;
+  name?: Scalars["String"]["output"];
+  postalCode?: Scalars["String"]["output"];
+}
+
+export interface ICustomer {
+  __typename?: "ICustomer";
+  createdAt?: Maybe<Scalars["String"]["output"]>;
+  email?: Scalars["String"]["output"];
+  emailVerified?: Maybe<Scalars["String"]["output"]>;
+  id?: Scalars["String"]["output"];
+  name?: Maybe<Scalars["String"]["output"]>;
+  phone?: Maybe<Scalars["String"]["output"]>;
+  shippingAddresses: Array<IAddress>;
+}
 
 export interface IImage {
   __typename?: "IImage";
@@ -466,8 +634,11 @@ export interface INavigation {
   editedBy?: Maybe<Scalars["String"]["output"]>;
   id?: Maybe<Scalars["String"]["output"]>;
   page?: Scalars["String"]["output"];
+  parent?: Maybe<Scalars["String"]["output"]>;
   sections?: Array<Maybe<Scalars["String"]["output"]>>;
   seo?: Maybe<ISeo>;
+  // F1 follow-up — JSON scalar (bare string OR `Record<locale, slug>`).
+  slug?: Maybe<Scalars["JSON"]["output"]>;
   type?: Scalars["String"]["output"];
 }
 
@@ -492,7 +663,13 @@ export interface ISection {
   overlayAnchor?: Maybe<Scalars["String"]["output"]>;
   page?: Maybe<Scalars["String"]["output"]>;
   slots?: Maybe<Array<Maybe<Scalars["Int"]["output"]>>>;
+  /**
+   * Cross-cutting transparent-background flag — see InSection.transparent.
+   */
   transparent?: Maybe<Scalars["Boolean"]["output"]>;
+  /**
+   * Section opacity 0..100 (%). See InSection.transparentOpacity.
+   */
   transparentOpacity?: Maybe<Scalars["Int"]["output"]>;
   type?: Scalars["Int"]["output"];
   /**
@@ -522,6 +699,7 @@ export interface IUser {
   canPublishProduction?: Maybe<Scalars["Boolean"]["output"]>;
   email?: Scalars["String"]["output"];
   id?: Scalars["String"]["output"];
+  kind?: Maybe<Scalars["String"]["output"]>;
   mustChangePassword?: Maybe<Scalars["Boolean"]["output"]>;
   name?: Maybe<Scalars["String"]["output"]>;
   password?: Scalars["String"]["output"];
@@ -531,6 +709,10 @@ export interface IUser {
 
 export interface MutationMongo {
   __typename?: "MutationMongo";
+  /**
+   * Sentinel — see Phase C.3 note on `QueryMongo._empty`.
+   */
+  _empty?: Maybe<Scalars["String"]["output"]>;
   addUpdateLanguage: (args?: {
     expectedVersion?: Maybe<Scalars["Int"]["input"]>;
     language?: Maybe<InLanguage>;
@@ -546,6 +728,16 @@ export interface MutationMongo {
     section: InSection;
   }) => Scalars["String"]["output"];
   addUser: (args: { user: InUser }) => Scalars["String"]["output"];
+  changeMyPassword: (args: {
+    newPassword: Scalars["String"]["input"];
+    oldPassword: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
+  /**
+   * Drop a feature toggle override; the feature falls back to its default behaviour.
+   */
+  clearFeatureFlag: (args: {
+    id: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
   createNavigation: (args: {
     navigation: InNavigation;
   }) => Scalars["String"]["output"];
@@ -553,29 +745,89 @@ export interface MutationMongo {
     id: Scalars["String"]["input"];
   }) => Scalars["String"]["output"];
   deleteLanguage: (args?: {
+    idempotencyKey?: Maybe<Scalars["String"]["input"]>;
     language?: Maybe<InLanguage>;
   }) => Scalars["String"]["output"];
+  deleteMyAddress: (args: {
+    id: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
   deleteNavigationItem: (args: {
+    idempotencyKey?: Maybe<Scalars["String"]["input"]>;
     pageName: Scalars["String"]["input"];
   }) => Scalars["String"]["output"];
   deletePost: (args: {
     id: Scalars["String"]["input"];
+    idempotencyKey?: Maybe<Scalars["String"]["input"]>;
   }) => Scalars["String"]["output"];
   deleteTheme: (args: {
     id: Scalars["String"]["input"];
+    idempotencyKey?: Maybe<Scalars["String"]["input"]>;
+  }) => Scalars["String"]["output"];
+  /**
+   * Admin — grant a (user, scope, resourceId) permission. Idempotent.
+   */
+  grantPermission: (args: {
+    resourceId: Scalars["String"]["input"];
+    scope: Scalars["String"]["input"];
+    userId: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
+  /**
+   * Admin-only — issue a new MCP token. Secret is returned ONCE in the response.
+   */
+  mcpIssueToken: (args: {
+    name: Scalars["String"]["input"];
+    scopes: Array<Scalars["String"]["input"]>;
+    ttlDays?: Maybe<Scalars["Int"]["input"]>;
+  }) => Scalars["String"]["output"];
+  /**
+   * Admin-only — revoke an MCP token by id.
+   */
+  mcpRevokeToken: (args: {
+    id: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
+  onboardingBootstrap: (args: {
+    adminEmail: Scalars["String"]["input"];
+    adminPassword: Scalars["String"]["input"];
+    locale: Scalars["String"]["input"];
+    siteName: Scalars["String"]["input"];
+    themeKey?: Maybe<Scalars["String"]["input"]>;
   }) => Scalars["String"]["output"];
   publishSnapshot: (args?: {
     note?: Maybe<Scalars["String"]["input"]>;
   }) => Scalars["String"]["output"];
   removeSectionItem: (args: {
     id: Scalars["String"]["input"];
+    idempotencyKey?: Maybe<Scalars["String"]["input"]>;
   }) => Scalars["String"]["output"];
   removeUser: (args: {
     id: Scalars["String"]["input"];
+    idempotencyKey?: Maybe<Scalars["String"]["input"]>;
   }) => Scalars["String"]["output"];
   replaceUpdateNavigation: (args: {
     navigation?: Maybe<InNavigation>;
     oldPageName: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
+  /**
+   * Schedule a graceful server shutdown; supervisor respawns. Returns the current bootId so the caller can poll /api/health for the new process.
+   */
+  requestServerRestart?: Scalars["String"]["output"];
+  resetPreset: (args: {
+    id: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
+  /**
+   * Admin — restore every doc tied to a trashGroup (within the 24h TTL window).
+   */
+  restoreFromTrash: (args: {
+    trashGroup: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
+  /**
+   * Admin — revoke a (user, scope, resourceId) permission.
+   */
+  revokePermission: (args: {
+    idempotencyKey?: Maybe<Scalars["String"]["input"]>;
+    resourceId: Scalars["String"]["input"];
+    scope: Scalars["String"]["input"];
+    userId: Scalars["String"]["input"];
   }) => Scalars["String"]["output"];
   rollbackToSnapshot: (args: {
     id: Scalars["String"]["input"];
@@ -589,6 +841,7 @@ export interface MutationMongo {
     content: Scalars["String"]["input"];
     expectedVersion?: Maybe<Scalars["Int"]["input"]>;
   }) => Scalars["String"]["output"];
+  saveMyAddress: (args: { address: InAddress }) => Scalars["String"]["output"];
   savePost: (args: {
     expectedVersion?: Maybe<Scalars["Int"]["input"]>;
     post: Scalars["JSON"]["input"];
@@ -612,13 +865,35 @@ export interface MutationMongo {
   setActiveTheme: (args: {
     id: Scalars["String"]["input"];
   }) => Scalars["String"]["output"];
-  resetPreset: (args: {
+  /**
+   * Persist a plug-and-play feature toggle override. Returns JSON {id, enabled, updatedAt, updatedBy}.
+   */
+  setFeatureFlag: (args: {
+    enabled: Scalars["Boolean"]["input"];
     id: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
+  /**
+   * Editor or admin self-service — flip own admin UI mode.
+   */
+  setMyAdminUiMode: (args: {
+    mode: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
+  setParent: (args: {
+    pageId: Scalars["String"]["input"];
+    parentId?: Maybe<Scalars["String"]["input"]>;
   }) => Scalars["String"]["output"];
   setPostPublished: (args: {
     id: Scalars["String"]["input"];
     publish: Scalars["Boolean"]["input"];
   }) => Scalars["String"]["output"];
+  signUpCustomer: (args: { customer: InUser }) => Scalars["String"]["output"];
+  /**
+   * Public — accept a batch of client-side analytics events. Server validates + rate-limits per anonId; rejected rows silently dropped.
+   */
+  trackEvent: (args: {
+    events: Array<Scalars["JSON"]["input"]>;
+  }) => Scalars["String"]["output"];
+  updateMyProfile: (args: { customer: InUser }) => Scalars["String"]["output"];
   updateNavigation: (args: {
     page: Scalars["String"]["input"];
     sections?: Maybe<Array<Maybe<Scalars["String"]["input"]>>>;
@@ -628,16 +903,47 @@ export interface MutationMongo {
 
 export interface QueryMongo {
   __typename?: "QueryMongo";
+  /**
+   * Sentinel — see Phase C.3 note above. All real fields arrive via manifest `extend type QueryMongo` fragments.
+   */
+  _empty?: Maybe<Scalars["String"]["output"]>;
+  /**
+   * Admin — canned analytics summary for the dashboard (top pages, top events). `range`: 24h | 7d | 30d.
+   */
+  analyticsSummary: (args: {
+    range: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
+  /**
+   * Read — list of functional roles declared by every active feature, with assignable flag.
+   */
+  functionalRoles?: Scalars["String"]["output"];
   getActiveTheme?: Maybe<Scalars["String"]["output"]>;
   getAuditActors?: Scalars["String"]["output"];
   getAuditCollections?: Scalars["String"]["output"];
   getAuditLog: (args?: {
     filter?: Maybe<Scalars["JSON"]["input"]>;
   }) => Scalars["String"]["output"];
+  /**
+   * Recent rows from the structured ErrorLog collection. Filters mirror MCP's audit.errors.
+   */
+  getErrorLog: (args?: {
+    level?: Maybe<Scalars["String"]["input"]>;
+    limit?: Maybe<Scalars["Int"]["input"]>;
+    scope?: Maybe<Scalars["String"]["input"]>;
+    sinceISO?: Maybe<Scalars["String"]["input"]>;
+    source?: Maybe<Scalars["String"]["input"]>;
+  }) => Scalars["String"]["output"];
+  /**
+   * Plug-and-play feature flags — runtime view of which feature manifests are active.
+   */
+  getFeatureFlags?: Scalars["String"]["output"];
   getFooter?: Scalars["String"]["output"];
   getImages: (args: { tags: Scalars["String"]["input"] }) => Array<IImage>;
   getLanguages?: Maybe<Array<Maybe<INewLanguage>>>;
   getLogo?: Maybe<ILogo>;
+  /**
+   * Resolved MongoDB URI — admin-only, surfaces the active connection string for ops introspection.
+   */
   getMongoDBUri?: Maybe<Scalars["String"]["output"]>;
   getNavigationCollection: Array<INavigation>;
   getPost: (args: {
@@ -653,6 +959,10 @@ export interface QueryMongo {
   }) => Scalars["String"]["output"];
   getPublishedMeta?: Maybe<Scalars["String"]["output"]>;
   getPublishedSnapshot?: Maybe<Scalars["String"]["output"]>;
+  /**
+   * Restart status — current bootId, uptime, supervisor detection, pending restart reasons.
+   */
+  getRestartStatus?: Scalars["String"]["output"];
   getSections: (args?: {
     ids?: Maybe<Array<Maybe<Scalars["String"]["input"]>>>;
   }) => Array<ISection>;
@@ -660,11 +970,34 @@ export interface QueryMongo {
   getSiteSeo?: Scalars["String"]["output"];
   getThemes?: Scalars["String"]["output"];
   getTranslationMeta?: Scalars["String"]["output"];
+  /**
+   * Admin — list every soft-deleted cohort (one per trashGroup) with summary counts.
+   */
+  getTrashGroups?: Scalars["String"]["output"];
   getUser: (args?: {
     email?: Maybe<Scalars["String"]["input"]>;
   }) => Maybe<IUser>;
   getUsers: Array<IUser>;
+  isFreshInstall?: Scalars["Boolean"]["output"];
+  /**
+   * Mongo `listDatabases` projection — sizing + names for the operator dashboard.
+   */
   loadData: Array<ILoadData>;
+  /**
+   * Admin-only — list issued MCP tokens (no secrets returned).
+   */
+  mcpListTokens?: Scalars["String"]["output"];
+  me?: Maybe<ICustomer>;
+  /**
+   * Resolved admin UI mode for the calling session. Per-user setting wins; falls back to siteFlags.defaultAdminUiMode then 'advanced'.
+   */
+  myAdminUiMode?: Scalars["String"]["output"];
+  /**
+   * Admin — list every permission grant for a user.
+   */
+  permissionsForUser: (args: {
+    userId: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
   setupAdmin?: Maybe<IUser>;
 }
 

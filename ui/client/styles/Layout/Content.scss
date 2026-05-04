@@ -1,3 +1,10 @@
+// Layout primitives: the outer `.content-wrapper` (page chrome) and
+// `.section-item-container` width modifiers (per-cell sizing). Splitting
+// these into two files would just shuffle imports — they're already paired
+// in every layout that loads this stylesheet.
+//
+// AUDIT-OWNERS: .content-wrapper, .section-item-container
+
 .content-wrapper{
   &.action-enabled{
     cursor: pointer;
@@ -25,9 +32,10 @@
   &.width-25{
     width: 25%;
   }
-}
-@media (min-width: 769px) and (max-width: 1024px){
-  .section-item-container{
+
+  // F4 sweep: media queries scoped under the owner — compiled selectors are
+  // identical to the previous top-level `@media { .section-item-container { … } }`.
+  @media (min-width: 769px) and (max-width: 1024px){
     &.width-100{
       width: 100%;
     }
@@ -41,9 +49,8 @@
       width: 50%;
     }
   }
-}
-@media (max-width: 768px){
-  .section-item-container{
+
+  @media (max-width: 768px){
     &.width-100{
       width: 100%;
     }

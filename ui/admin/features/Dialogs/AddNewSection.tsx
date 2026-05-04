@@ -103,6 +103,7 @@ class AddNewSection extends React.Component <{
                     ].map(layout => (
                         <div
                             key={layout.n}
+                            data-testid={`section-layout-picker-${layout.n}`}
                             className={`section-${layout.slots[0].replace('%', '')} ${this.state.type === layout.n ? 'active' : ''}`}
                             onClick={() => this.setState({type: layout.n, label: layout.label})}
                         >
@@ -167,7 +168,7 @@ class AddNewSection extends React.Component <{
             : undefined;
         return (
             <>
-                <Button type="primary" onClick={() => this.setState({dialogOpen: true})}>
+                <Button data-testid="section-add-section-btn" type="primary" onClick={() => this.setState({dialogOpen: true})}>
                     {t("Add new section")} <PlusCircleOutlined/>
                 </Button>
                 <Modal
@@ -178,9 +179,9 @@ class AddNewSection extends React.Component <{
                     footer={[
                         <Button key="cancel" onClick={this.close}>{t('Cancel')}</Button>,
                         this.state.mode === 'blank' ? (
-                            <Button key="ok" type="primary" onClick={this.createFromBlank}>{t('Create')}</Button>
+                            <Button data-testid="section-create-btn" key="ok" type="primary" onClick={this.createFromBlank}>{t('Create')}</Button>
                         ) : (
-                            <Button key="tpl" type="primary" disabled={!picked} onClick={() => picked && this.createFromTemplate(picked)}>
+                            <Button data-testid="section-create-from-template-btn" key="tpl" type="primary" disabled={!picked} onClick={() => picked && this.createFromTemplate(picked)}>
                                 {t('Create from template')}
                             </Button>
                         ),

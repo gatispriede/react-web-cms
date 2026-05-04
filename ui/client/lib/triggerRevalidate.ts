@@ -21,6 +21,8 @@ type Scope =
     | {scope: 'page'; pageName: string}
     | {scope: 'post'; slug: string}
     | {scope: 'blog'}
+    | {scope: 'product'; slug: string}
+    | {scope: 'products'}
     | {paths: string[]};
 
 export function triggerRevalidate(scope: Scope): void {

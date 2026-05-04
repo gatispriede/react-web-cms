@@ -1,3 +1,8 @@
+// Owner class is `.gallery-wrapper` (with `&.gallery-wrapper-app` admin
+// modifier); file stem stays `Gallery` to mirror the React module name.
+//
+// AUDIT-OWNERS: .gallery-wrapper
+
 // Defensive base for the horizontal-scroll variants (`marquee`, `logo-wall`,
 // `hazard-strip`). Earlier these only worked when the active theme was
 // Studio (which scoped `overflow: hidden` + the marquee animation under
@@ -49,8 +54,17 @@
   }
 
   &.gallery-wrapper-app {
-    .ant-image {
-      img { width: 100% !important; }
+    // Author-supplied dimensions opt out of the blanket `width: 100%` so a
+    // 200px tile actually renders at 200px instead of stretching to the
+    // cell. The `data-sized` flag lives on `.image` (the parent), since
+    // AntD's `<Image>` wraps the actual `<img>` and passing the attribute
+    // through is unreliable.
+    // See docs/roadmap/image-width-height-respect.md.
+    .image:not([data-sized]) .ant-image img {
+      width: 100% !important;
+    }
+    .image[data-sized] .ant-image img {
+      max-width: 100%;
     }
 
     // --- Default masonry-like grid ---
@@ -153,26 +167,29 @@
   }
 
   hr { display: flex; }
-}
 
-@media (max-width: 960px) {
-  .gallery-wrapper-app.default .gallery-wrapper-images,
-  .gallery-wrapper-app.Default .gallery-wrapper-images {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
+  // F4 sweep: media queries scoped under the owner — compiled selectors are
+  // identical to the previous top-level form (`.gallery-wrapper-app` is the
+  // alias chained on the root via `&.gallery-wrapper-app`).
+  &.gallery-wrapper-app {
+    @media (max-width: 960px) {
+      &.default .gallery-wrapper-images,
+      &.Default .gallery-wrapper-images {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
 
-@media (max-width: 540px) {
-  .gallery-wrapper-app.default .gallery-wrapper-images,
-  .gallery-wrapper-app.Default .gallery-wrapper-images {
-    grid-template-columns: 1fr;
-  }
-}
+    @media (max-width: 540px) {
+      &.default .gallery-wrapper-images,
+      &.Default .gallery-wrapper-images {
+        grid-template-columns: 1fr;
+      }
+    }
 
-@media (max-width: 720px){
-  .gallery-wrapper-app {
-    &.BorderedAlignedByThree .container {
-      flex: 100%;
+    @media (max-width: 720px) {
+      &.BorderedAlignedByThree .container {
+        flex: 100%;
+      }
     }
   }
 }
@@ -227,34 +244,34 @@
     text-decoration: none;
     &:hover { text-decoration: none; }
   }
-}
 
-@media (max-width: 960px) {
-  .gallery-wrapper-app.masonry .gallery-wrapper-images { column-count: 2; }
-}
-@media (max-width: 540px) {
-  .gallery-wrapper-app.masonry .gallery-wrapper-images { column-count: 1; }
-}
+  // Text-only tile — rendered when a gallery item has no `src`. Omits the
+  // image slot entirely; stronger typography fills the space instead. Works
+  // in any gallery style variant that supports `.container`.
+  .gallery-tile--text {
+    .text {
+      padding: 16px;
+      font-size: 1.05em;
+      line-height: 1.55;
+      font-weight: 500;
 
-// Text-only tile — rendered when a gallery item has no `src`. Omits the image
-// slot entirely; stronger typography fills the space instead. Works in any
-// gallery style variant that supports `.container`.
-.gallery-tile--text {
-  .text {
-    padding: 16px;
-    font-size: 1.05em;
-    line-height: 1.55;
-    font-weight: 500;
+      p {
+        margin: 0;
+      }
+    }
 
-    p {
-      margin: 0;
+    // Remove any aspect-ratio or min-height that image-bearing tiles apply
+    // so the tile sizes to its text content instead.
+    &.container {
+      aspect-ratio: unset;
+      min-height: unset;
     }
   }
 
-  // Remove any aspect-ratio or min-height that image-bearing tiles apply
-  // so the tile sizes to its text content instead.
-  &.container {
-    aspect-ratio: unset;
-    min-height: unset;
+  @media (max-width: 960px) {
+    &.masonry .gallery-wrapper-images { column-count: 2; }
+  }
+  @media (max-width: 540px) {
+    &.masonry .gallery-wrapper-images { column-count: 1; }
   }
 }

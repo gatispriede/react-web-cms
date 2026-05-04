@@ -1,5 +1,20 @@
 # Production caching + static-asset strategy
 
+## Status
+
+**Shipped (2026-05-02)** — Caddy SWR (config + runbook), `bootId` +
+per-feature version stamps in Redis (`services/infra/cacheVersion.ts`),
+`X-Cms-Cache-Tag` header on every public response, DataLoader
+fold-in via `ServiceLoader.batchAccessors` (Posts is the demo). Stock
+Caddy without the cache plugin is a graceful degradation — responses
+still carry the right `Cache-Control` so browser/CDN caches honour
+the policy.
+
+## Decisions (2026-05-02)
+
+- **Caddy SWR scope**: public pages + public-scope (anon) GraphQL reads. Public pages get `~60s` TTL with background refresh; anon GraphQL gets `~30s` TTL. Admin / authenticated GraphQL stay `no-store`. Cache key includes a server `bootId` (see `server-restart.md`) so a restart invalidates the cache, plus a per-feature version stamp bumped on admin write so admin saves never serve stale public reads.
+- **DataLoader as Loader-internal**: each `ServiceLoader` owns its own batched accessors via `batchAccessors: Record<string, factory>`. The registry composes them into a per-request tree (`ctx.batch.<feature>.<accessor>`). No new dependency — `services/infra/BatchLoader.ts` is ~50 lines of micro-task aggregation with key dedup.
+
 ## Goal
 
 Formalise the caching story across Caddy, Next.js and the admin save path so

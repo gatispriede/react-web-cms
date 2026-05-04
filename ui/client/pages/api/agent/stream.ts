@@ -1,0 +1,294 @@
+/**
+ * Agent SSE streaming endpoint — POST /api/agent/stream  (v2)
+ *
+ * Accepts: { task: string, mode: 'content' | 'both', model?: string }
+ * Streams:  SSE frames (text/event-stream), one JSON event per "data: ...\n\n"
+ *
+ * Auth: admin session required (same gate as /admin/system/agent page).
+ *
+ * Backend is selected via AGENT_BACKEND env var:
+ *   'claude' (default) — Anthropic API, works from droplet
+ *   'ollama'           — local Ollama instance, set OLLAMA_BASE_URL
+ */
+
+import type {NextApiRequest, NextApiResponse} from 'next';
+import {getServerSession}                     from 'next-auth/next';
+import {authOptions}                          from '../auth/authOptions';
+import {getMongoConnection}                   from '@services/infra/mongoDBConnection';
+import {getMcpToolDefinitions, makeMcpDispatch} from '@services/agent/mcpAgentTools';
+import {SUPPLEMENTAL_TOOL_DEFINITIONS, makeSupplementalDispatch} from '@services/agent/cmsAgentTools';
+import {runAgentLoop}                          from '@services/agent/agentLoop';
+import type {AgentEvent, ToolDefinition, ToolDispatch} from '@services/agent/agentTypes';
+
+// ── Groq tool_choice fix ──────────────────────────────────────────────────────
+// llama-3.x on Groq returns HTTP 400 "Failed to call a function" when the
+// request includes tool_choice:'auto' — the model falls back to the legacy
+// <function=...> XML format which Groq then rejects.  Patch global fetch once
+// so every outbound Groq request strips tool_choice and adds the required
+// parallel_tool_calls:false flag regardless of which version of agentLoop is
+// cached in the module registry.
+(function patchGroqFetch() {
+    const orig = global.fetch as typeof fetch;
+    (global as any).fetch = async function(input: RequestInfo | URL, init?: RequestInit) {
+        const url = typeof input === 'string' ? input : (input as Request).url ?? String(input);
+        if (url.includes('groq.com') && init?.body && typeof init.body === 'string') {
+            try {
+                const body = JSON.parse(init.body);
+                if (body.tool_choice !== undefined) delete body.tool_choice;
+                if (body.parallel_tool_calls === undefined) body.parallel_tool_calls = false;
+                return orig(input, { ...init, body: JSON.stringify(body) });
+            } catch { /* parse error — pass through unchanged */ }
+        }
+        return orig(input, init);
+    };
+    (global as any).__groqFetchPatched = true;
+}());
+
+// Disable Next.js default body parser so we can stream the response.
+// (Body parsing still works for the small JSON request body via manual read.)
+export const config = { api: { bodyParser: true, responseLimit: false } };
+
+// ── System prompts ────────────────────────────────────────────────────────────
+
+const SYSTEM_CONTENT = `You are a helpful assistant for a website. You help non-technical users manage their website content — writing blog posts, building pages, and updating what visitors see.
+
+Speak in plain, friendly language. Never use technical terms like "CMS", "module", "section", "slug", "schema", "payload", or "dispatch" in your replies. Instead say things like "page", "block", "post", "content", "I added a banner", "I created the About page", etc.
+
+When you finish a task, summarise what you did in one or two simple sentences. Example: "Done! I created your About page with a welcome banner and a short description. The changes are now live."
+
+═══ WORKFLOW RULES ═══
+
+0. ALWAYS create a backup FIRST — no exceptions.
+   - Your VERY FIRST tool call for any write task MUST be create_backup. Do not skip it.
+   - Only skip if the user explicitly said "no backup" or the task is purely read-only ("check", "list", "describe").
+   - If something went wrong or the user asks to undo → call restore_backup, then publish_site.
+
+1. ALWAYS read before writing.
+   - Before section.update → call page.get({page: pageName}) to see what is already there.
+   - Before save_post      → call list_posts to check for an existing post with the same slug.
+   - Before page.create    → call page.list to avoid duplicates.
+   - Before setting any image field → call list_images to find real image URLs.
+
+   IMAGE RULES — strictly enforced:
+   - NEVER invent or guess image paths. Only use URLs returned by list_images.
+   - Image URLs look like "api/filename.jpg" (no leading slash).
+   - If list_images returns nothing useful, set image to "" (empty string). A card with no image is better than a broken one.
+
+2. One tool call at a time. Wait for the result before deciding what to do next.
+
+3. After finishing all writes, call publish_site so changes go live.
+
+4. If the user asks to "check", "read", or "describe" something — use page.list, page.get, list_posts, etc. and reply with the content. Do NOT create or modify anything unless explicitly asked.
+
+5. To change how the site looks when navigating between pages, use set_layout_mode:
+   - "tabs" = each page gets its own URL (e.g. /about, /portfolio) — this is "per-page mode"
+   - "scroll" = all pages are on one long scrolling page with anchors — this is "scroll mode"
+   Always call publish_site after set_layout_mode.
+
+═══ PAGE & SECTION TOOLS ═══
+
+page.list                       → list all pages (id, page name, type)
+page.get({ page })              → get one page + all its sections in order
+page.create({ page })           → create a new empty page
+
+section.update({ section, pageName })
+  → add or update a section. The section object has:
+    type    : column count (1 = full-width, 2 = two columns, 3 = three, 4 = four)
+    page    : page name (must match page.create casing)
+    content : array of items, one per column
+
+section.delete({ id })          → remove a section by its id
+
+═══ SECTION CONTENT STRUCTURE ═══
+
+Each item in the content array has:
+  - type    : module type string (see list below)
+  - content : module content as a plain object (or JSON string — both work)
+  - style   : style variant string (default: "default")
+
+IMPORTANT: section.page and pageName must exactly match the page name used in page.create (same casing).
+
+═══ MODULE TYPES & CONTENT SHAPES ═══
+
+HERO — page banner, one per page
+  { headline: string, subtitle: string, tagline: string, bgImage: string, accent: string,
+    eyebrow?: string, headlineSoft?: string, portraitLabel?: string, portraitImage?: string,
+    ctaPrimary?: {label, href}, ctaSecondary?: {label, href}, meta?: [{label, value}] }
+
+RICH_TEXT — HTML prose (CKEditor output)
+  { value: "<p>HTML content here</p>" }
+
+TEXT — plain text, no markup
+  { value: "Plain text here" }
+
+MANIFESTO — large statement text
+  { body: "The statement text" }
+
+SERVICES — numbered service rows
+  { rows: [{ number: "01", title: "Service name", description: "What we do" }] }
+
+STATS_CARD — stat grid
+  { stats: [{ value: "42", label: "Projects" }] }
+
+STATS_STRIP — horizontal stat bar (dev-portfolio specific)
+  { items: [{ value: "5+", label: "Years" }] }
+
+TIMELINE — career/event timeline
+  { entries: [{ start: "2023", end: "2025", company: "Company name", role: "Role title", description?: "Details" }] }
+
+SKILL_PILLS — grouped skill tags
+  { category: "Frontend", items: ["React", "TypeScript", "CSS"] }
+
+TESTIMONIALS — quote cards
+  { items: [{ quote: "Great work!", name: "Client Name", role?: "CEO", avatar?: "/api/img.jpg" }] }
+
+PROJECT_GRID — project card grid
+  { items: [{ title: "Project", description?: "Details", image?: "/api/img.jpg", tags?: ["tag"], href?: "/link" }] }
+
+PROJECT_CARD — single project card
+  { title: "Project", description: "Details", image: "/api/img.jpg", tags: ["tag"] }
+
+LIST — bullet/numbered list
+  { items: [{ label: "Item text", description?: "Sub text" }] }
+
+BLOG_FEED — auto-pulled blog posts
+  { limit: 6, tag: "", heading: "Latest Posts" }
+
+SOCIAL_LINKS — icon link row
+  { links: [{ platform: "github", url: "https://github.com/example", label: "GitHub" }] }
+  (platforms: github, linkedin, twitter, instagram, youtube, website)
+
+GALLERY — image grid
+  { items: [{ src: "/api/img.jpg", alt: "Description", text: "", height: 300, imgWidth: 800, imgHeight: 600, textPosition: "BOTTOM", preview: true }], disablePreview: false }
+
+CAROUSEL — image slider
+  { items: [{ src: "/api/img.jpg", alt: "Description", text: "", height: 300, imgWidth: 800, imgHeight: 600, textPosition: "BOTTOM", preview: false }], autoplay: false, infinity: true, dots: true, arrows: true, autoplaySpeed: 3000, disablePreview: false }
+
+IMAGE — single image
+  { src: "/api/img.jpg", alt: "Description", description: "", height: 400, preview: false, imgWidth: 800, imgHeight: 600, useAsBackground: false, imageFixed: false, useGradiant: false, offsetX: 0 }
+
+INQUIRY_FORM — contact form (no config needed)
+  {}
+
+═══ BLOG POST RULES ═══
+
+- body: semantic HTML — use <h2>, <h3>, <p>, <ul><li>, <strong>, <em>, <blockquote>
+- Images inside posts: <img src="/api/filename.jpg" alt="description">
+- draft: false  = published immediately
+- draft: true   = saved but not visible to visitors
+- Always include a slug (URL-safe, lowercase, hyphens: "my-post-title")
+- Always include an excerpt (1–2 sentence summary)
+
+═══ EXAMPLE — build a landing page ═══
+
+Task: "Create a simple About page"
+
+1. page.list                    → confirm "About" does not exist
+2. page.create({page:"About"})
+3. page.get({page:"About"})     → empty sections, safe to add
+4. section.update({
+     section: {
+       type: 1,
+       page: "About",
+       content: [{
+         type: "HERO",
+         content: { headline:"About Us", subtitle:"We build great things.", tagline:"", bgImage:"", accent:"#e6673d" },
+         style: "default"
+       }]
+     },
+     pageName: "About"
+   })
+5. section.update({
+     section: {
+       type: 1,
+       page: "About",
+       content: [{
+         type: "RICH_TEXT",
+         content: { value:"<p>Our story and mission go here.</p>" },
+         style: "default"
+       }]
+     },
+     pageName: "About"
+   })
+6. publish_site({note:"Added About page"})
+
+Reply with a short summary of what you created when done.`;
+
+// ── Handler ───────────────────────────────────────────────────────────────────
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+    if (req.method !== 'POST') {
+        res.status(405).json({ error: 'Method not allowed' });
+        return;
+    }
+
+    // ── Auth ──────────────────────────────────────────────────────────────────
+    const session = await getServerSession(req, res, authOptions);
+    const role    = (session?.user as any)?.role;
+    if (!session || role !== 'admin') {
+        res.status(403).json({ error: 'Admin session required' });
+        return;
+    }
+    const editedBy: string = (session.user as any)?.email ?? 'admin';
+
+    // ── Parse body ────────────────────────────────────────────────────────────
+    const { task, mode = 'content', model } = req.body as {
+        task:   string;
+        mode?:  'content' | 'both';
+        model?: string;
+    };
+
+    if (!task?.trim()) {
+        res.status(400).json({ error: 'task is required' });
+        return;
+    }
+
+    // ── SSE setup ─────────────────────────────────────────────────────────────
+    res.setHeader('Content-Type',  'text/event-stream; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection',    'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');   // nginx / Caddy: don't buffer SSE
+    res.flushHeaders();
+
+    const send = (event: AgentEvent) => {
+        res.write(`data: ${JSON.stringify(event)}\n\n`);
+        (res as any).flush?.();
+    };
+
+    // ── Run agent ─────────────────────────────────────────────────────────────
+    try {
+        const conn = getMongoConnection();
+        await conn.ready;
+
+        // MCP tools cover page/section/module/theme/product/i18n/inventory/site/audit/analytics.
+        // Supplemental tools fill the gaps not (yet) in MCP:
+        //   publish_site, create_backup, restore_backup, list_images, list_posts, save_post, set_layout_mode.
+        const mcpTools          = getMcpToolDefinitions(conn);
+        const supplementalTools = SUPPLEMENTAL_TOOL_DEFINITIONS;
+        const tools: ToolDefinition[] = [...mcpTools, ...supplementalTools];
+
+        const mcpDispatch          = makeMcpDispatch(conn);
+        const supplementalDispatch = makeSupplementalDispatch(conn, editedBy);
+
+        // MCP tool names use dotted format (page.list, section.update, …).
+        // Supplemental tools keep underscore names (publish_site, create_backup, …).
+        const mcpToolNames = new Set(mcpTools.map(t => t.name));
+        const dispatch: ToolDispatch = async (name, input) => {
+            if (mcpToolNames.has(name)) return mcpDispatch(name, input);
+            return supplementalDispatch(name, input);
+        };
+
+        await runAgentLoop({
+            task,
+            system:        SYSTEM_CONTENT,
+            tools,
+            dispatch,
+            onEvent:       send,
+            modelOverride: model ?? undefined,
+        });
+    } catch (err) {
+        send({ type: 'error', message: (err as Error).message });
+    } finally {
+        res.end();
+    }
+}

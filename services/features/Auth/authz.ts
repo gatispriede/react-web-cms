@@ -1,12 +1,30 @@
 import {getServerSession} from 'next-auth/next';
 import type {NextAuthOptions} from 'next-auth';
 import {UserRole} from '@interfaces/IUser';
+import {composedAuthz} from '@services/infra/featureRegistry';
+import {
+    type Grant,
+    type GrantDimension,
+    type DimensionGrantSpec,
+    userHasGrant,
+} from '@interfaces/IPermission';
 
 export const ROLE_RANK: Record<UserRole, number> = {viewer: 0, editor: 1, admin: 2};
 
+export type SessionKind = 'admin' | 'customer' | 'anonymous';
+
 export interface GraphqlSession {
+    /**
+     * Discriminator across the two auth populations. Defaults to 'admin'
+     * for legacy callers that built their `GraphqlSession` literal without
+     * setting it, so existing standalone server code keeps working.
+     */
+    kind?: SessionKind;
     role: UserRole;
     email?: string;
+    /** Populated when `kind === 'customer'` — convenience handle so
+     *  resolvers don't have to re-derive it from `email`. */
+    customerId?: string;
     canPublishProduction?: boolean;
 }
 
@@ -17,13 +35,26 @@ export async function sessionFromReq(req: any, res: any, authOptions: NextAuthOp
     try {
         const session = await getServerSession(req, res, authOptions);
         const user = session?.user as any;
+        if (!user) {
+            return {kind: 'anonymous', role: 'viewer'};
+        }
+        const kind: SessionKind = (user.kind ?? 'admin') as SessionKind;
+        if (kind === 'customer') {
+            return {
+                kind: 'customer',
+                role: 'viewer',
+                email: user.email,
+                customerId: user.id,
+            };
+        }
         return {
-            role: (user?.role ?? 'viewer') as UserRole,
-            email: user?.email,
-            canPublishProduction: Boolean(user?.canPublishProduction),
+            kind: 'admin',
+            role: (user.role ?? 'viewer') as UserRole,
+            email: user.email,
+            canPublishProduction: Boolean(user.canPublishProduction),
         };
     } catch {
-        return {role: 'viewer'};
+        return {kind: 'anonymous', role: 'viewer'};
     }
 }
 
@@ -49,51 +80,191 @@ export type Capability = (session: GraphqlSession) => boolean | string;
  * keep their original signatures — the Proxy injects the session; standalone
  * server callers (which don't have sessions) just don't pass `_session` and
  * the services fall back to `undefined`.
+ *
+ * Phase C.3: every entry now lives on a feature manifest's
+ * `authz.sessionInjected`. The merge block at the bottom of this file
+ * populates the Set at module load. Kept as `Set<string>` (not Readonly)
+ * so the merge can `.add(...)`.
  */
-export const SESSION_INJECTED_METHODS: ReadonlySet<string> = new Set([
-    // Publish/rollback — stamps `publishedBy` on the snapshot doc.
-    'publishSnapshot',
-    'rollbackToSnapshot',
-    // Content edits — stamps `editedBy` + `editedAt` on the touched doc.
-    'addUpdateSectionItem',
-    'updateNavigation',
-    'replaceUpdateNavigation',
-    'addUpdateNavigationItem',
-    'deleteNavigationItem',
-    'removeSectionItem',
-    // Theme / Post / Site-settings editors.
-    'saveTheme',
-    'deleteTheme',
-    'setActiveTheme',
-    'resetPreset',
-    'savePost',
-    'deletePost',
-    'setPostPublished',
-    'saveFooter',
-    'saveSiteFlags',
-    'saveSiteSeo',
-    'saveTranslationMeta',
-    'saveLogo',
-    'addUpdateLanguage',
-    'deleteLanguage',
+export const SESSION_INJECTED_METHODS: ReadonlySet<string> = new Set<string>();
+
+/**
+ * Customer-only mutations / queries — the Proxy stamps `_session.email`
+ * (and `_session.customerId`) so the service can scope every Mongo query
+ * by the authenticated customer rather than a client-supplied id. This is
+ * the IDOR guard.
+ *
+ * Phase C.3: customer entries are mirrored on the Users + Orders manifests
+ * (`authz.customerSessionInjected`). The single non-manifest entry —
+ * `placeOrder` — has no feature owner (no service implements it; appears
+ * to be a legacy alias kept for safety) and stays here as a platform-level
+ * residual.
+ */
+export const CUSTOMER_SESSION_INJECTED_METHODS: ReadonlySet<string> = new Set<string>([
+    // Platform residual — no manifest owner; legacy alias.
+    'placeOrder',
 ]);
+
+export const CUSTOMER_MUTATION_REQUIREMENTS: Record<string, true> = {
+    // Platform residual — no manifest owner; legacy alias. See above.
+    placeOrder: true,
+};
+
+export const CUSTOMER_QUERY_REQUIREMENTS: Record<string, true> = {};
+
+/**
+ * `signUpCustomer` is the **only** customer mutation reachable without a
+ * session (anonymous → customer). It's still routed through `guardMethods`
+ * (so the Proxy can no-op the session injection) but doesn't appear in the
+ * customer requirements table — the resolver layer applies the rate-limit.
+ *
+ * Phase C.3: Users manifest contributes `signUpCustomer`; Orders manifest
+ * contributes the six guest-checkout mutations. The merge block at the
+ * bottom of this file populates the Set at module load.
+ */
+const ANON_OPEN_MUTATIONS: ReadonlySet<string> = new Set<string>();
+
+/**
+ * Per-method resource-scoped extractor — pulls `{scope, resourceId}` out
+ * of the call args. Returning `null` skips the check (e.g. for
+ * create-flow methods where there's no existing resource).
+ * Per `docs/features/platform/edit-levels.md`.
+ */
+export type ResourceGateExtractor = (
+    args: any,
+) =>
+    | {scope: 'page' | 'module' | 'element'; resourceId: string}
+    | {dimensions: readonly GrantDimension[]; values: DimensionGrantSpec}
+    | null;
+
+/**
+ * Resource-forbidden error — thrown when a per-resource (legacy scope) or
+ * per-dimension (Q10) grant check fails. Distinct subclass so resolvers can
+ * surface it as a 403 rather than a generic AuthzError if needed.
+ */
+export class ResourceForbiddenError extends AuthzError {
+    constructor(message: string) {
+        super(message);
+        this.name = 'ResourceForbiddenError';
+    }
+}
+
+/**
+ * Q10 — request-scoped grant resolver. Looks up the caller's `grants`
+ * array (cached per-request). Returns `[]` when no Permissions/Users
+ * service is wired (gating then no-ops, falling back to role-rank).
+ */
+export type GrantResolver = (session: GraphqlSession) => Promise<readonly Grant[]>;
+
+/** Async predicate the proxy calls after the role/capability check passes. */
+export type PermissionCheck = (opts: {
+    userId: string;
+    userRole: UserRole;
+    scope: 'page' | 'module' | 'element';
+    resourceId: string;
+}) => Promise<boolean>;
 
 export function guardMethods<T extends object>(
     target: T,
     session: GraphqlSession,
-    required: Record<string, UserRole>,
+    required: Record<string, UserRole | true>,
     capabilities: Record<string, Capability> = {},
+    resourceGated: Record<string, ResourceGateExtractor> = {},
+    permissionCheck?: PermissionCheck,
+    grantResolver?: GrantResolver,
 ): T {
+    const kind: SessionKind = session.kind ?? 'admin';
+
     return new Proxy(target, {
         get(obj, prop: string | symbol, receiver) {
             const value = Reflect.get(obj, prop, receiver);
             if (typeof value !== 'function') return value;
             const key = String(prop);
-            const minimum = required[key];
-            if (minimum && ROLE_RANK[session.role] < ROLE_RANK[minimum]) {
-                return () => {
-                    throw new AuthzError(`Forbidden: ${minimum} role required for ${key} (current: ${session.role})`);
-                };
+
+            // ---------------------------------------------------------
+            // Branch 1: customer session. Customer endpoints are gated
+            // by the parallel CUSTOMER_*_REQUIREMENTS tables; the admin
+            // `required` table is never satisfied by a customer cookie.
+            // ---------------------------------------------------------
+            if (kind === 'customer') {
+                const isCustomerMutation = CUSTOMER_MUTATION_REQUIREMENTS[key] === true;
+                const isCustomerQuery = CUSTOMER_QUERY_REQUIREMENTS[key] === true;
+                if (isCustomerMutation || isCustomerQuery) {
+                    if (CUSTOMER_SESSION_INJECTED_METHODS.has(key)) {
+                        const bound = value.bind(obj);
+                        return (args: any = {}) => bound({...args, _session: session});
+                    }
+                    return value.bind(obj);
+                }
+                // Not a customer endpoint — but anon-open mutations
+                // (signUpCustomer) are also reachable from a customer
+                // session, even though there's no reason to. Allow it.
+                if (ANON_OPEN_MUTATIONS.has(key)) {
+                    return value.bind(obj);
+                }
+                // Anything else listed in the admin `required` table is
+                // off-limits — explicitly reject so the customer can't
+                // call admin mutations even if they hand-craft a query.
+                if (required[key] !== undefined) {
+                    return () => {
+                        throw new AuthzError(`Forbidden: customer endpoint (cannot call admin ${key})`);
+                    };
+                }
+                // Fall-through methods (e.g. unrestricted reads like
+                // `getSections` / `getLogo`) stay open.
+                return value.bind(obj);
+            }
+
+            // ---------------------------------------------------------
+            // Branch 2: anonymous session. Only the anon-open mutations
+            // are reachable; customer-only endpoints are not (they need
+            // a customer cookie); admin endpoints obviously are not.
+            // ---------------------------------------------------------
+            if (kind === 'anonymous') {
+                if (ANON_OPEN_MUTATIONS.has(key)) {
+                    // Inject `_session` for the order checkout-flow
+                    // methods so the service can apply guest-vs-customer
+                    // IDOR checks based on the session kind.
+                    if (CUSTOMER_SESSION_INJECTED_METHODS.has(key)) {
+                        const bound = value.bind(obj);
+                        return (args: any = {}) => bound({...args, _session: session});
+                    }
+                    return value.bind(obj);
+                }
+                if (CUSTOMER_MUTATION_REQUIREMENTS[key] === true || CUSTOMER_QUERY_REQUIREMENTS[key] === true) {
+                    return () => {
+                        throw new AuthzError(`Forbidden: customer endpoint requires sign-in (${key})`);
+                    };
+                }
+                // Fall through to the admin role check — anonymous has
+                // role 'viewer', so admin-gated methods reject below.
+            }
+
+            // ---------------------------------------------------------
+            // Branch 3: admin session (or anonymous fall-through). Use
+            // the admin `required` + `capabilities` tables exactly as
+            // before. Admin sessions calling customer-only endpoints
+            // are explicitly rejected — admins are not customers.
+            // ---------------------------------------------------------
+            if (kind === 'admin') {
+                if (CUSTOMER_MUTATION_REQUIREMENTS[key] === true || CUSTOMER_QUERY_REQUIREMENTS[key] === true) {
+                    return () => {
+                        throw new AuthzError(`Forbidden: customer-only endpoint (admin cannot call ${key})`);
+                    };
+                }
+            }
+
+            const requirement = required[key];
+            // The customer entries in `required` (when callers merge
+            // tables) are `true` rather than a UserRole — only admin
+            // role checks apply here.
+            if (typeof requirement === 'string') {
+                const minimum = requirement;
+                if (ROLE_RANK[session.role] < ROLE_RANK[minimum]) {
+                    return () => {
+                        throw new AuthzError(`Forbidden: ${minimum} role required for ${key} (current: ${session.role})`);
+                    };
+                }
             }
             const capability = capabilities[key];
             if (capability) {
@@ -104,6 +275,60 @@ export function guardMethods<T extends object>(
                     };
                 }
             }
+
+            // Resource-scoped gate (per `docs/features/platform/edit-levels.md`).
+            // Decision 1: admins bypass — predicate short-circuits at the
+            // PermissionService layer, so we still call through (and let
+            // the service take credit for the bypass) but only when an
+            // extractor is registered AND a check function is wired.
+            const resourceExtractor = resourceGated[key];
+            if (resourceExtractor) {
+                const bound = value.bind(obj);
+                return async (args: any = {}) => {
+                    const extracted = resourceExtractor(args);
+                    if (extracted) {
+                        // Branch A: legacy `{scope, resourceId}` — gated via PermissionService.
+                        if ('scope' in extracted && permissionCheck) {
+                            const ok = await permissionCheck({
+                                userId: session.email ?? '',
+                                userRole: session.role,
+                                scope: extracted.scope,
+                                resourceId: extracted.resourceId,
+                            });
+                            if (!ok) {
+                                throw new ResourceForbiddenError(
+                                    `Forbidden: no ${extracted.scope} grant on ${extracted.resourceId}`,
+                                );
+                            }
+                        }
+                        // Branch B (Q10): three-dimension grants. Admin bypass; otherwise
+                        // every declared dimension must be satisfied (intersection).
+                        if ('dimensions' in extracted) {
+                            if (session.role !== 'admin') {
+                                const grants = grantResolver ? await grantResolver(session) : [];
+                                for (const dim of extracted.dimensions) {
+                                    const value = extracted.values[dim];
+                                    if (!value) {
+                                        throw new ResourceForbiddenError(
+                                            `Forbidden: ${key} requires ${dim} dimension but extractor returned no value`,
+                                        );
+                                    }
+                                    if (!userHasGrant(grants, dim, value)) {
+                                        throw new ResourceForbiddenError(
+                                            `Forbidden: missing ${dim}=${value} grant for ${key}`,
+                                        );
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (SESSION_INJECTED_METHODS.has(key)) {
+                        return bound({...args, _session: session});
+                    }
+                    return bound(args);
+                };
+            }
+
             if (SESSION_INJECTED_METHODS.has(key)) {
                 const bound = value.bind(obj);
                 return (args: any = {}) => bound({...args, _session: session});
@@ -113,50 +338,78 @@ export function guardMethods<T extends object>(
     });
 }
 
-export const MUTATION_CAPABILITIES: Record<string, Capability> = {
-    publishSnapshot: (s) => s.canPublishProduction ? true : 'canPublishProduction required to publish',
-    rollbackToSnapshot: (s) => s.canPublishProduction ? true : 'canPublishProduction required to rollback',
-};
+/**
+ * Phase C.3: capability predicates are built dynamically from each
+ * manifest's `authz.capabilities` mapping (Publishing contributes
+ * `publishSnapshot` / `rollbackToSnapshot` → `canPublishProduction`).
+ * The merge block at the bottom of this file populates this object.
+ */
+export const MUTATION_CAPABILITIES: Record<string, Capability> = {};
 
-export const MUTATION_REQUIREMENTS: Record<string, UserRole> = {
-    createNavigation: 'editor',
-    addUpdateNavigationItem: 'editor',
-    updateNavigation: 'editor',
-    replaceUpdateNavigation: 'editor',
-    addUpdateSectionItem: 'editor',
-    removeSectionItem: 'editor',
-    deleteNavigationItem: 'editor',
-    saveImage: 'editor',
-    deleteImage: 'editor',
-    saveLogo: 'editor',
-    addUpdateLanguage: 'editor',
-    deleteLanguage: 'editor',
-    addUser: 'admin',
-    updateUser: 'admin',
-    removeUser: 'admin',
-    publishSnapshot: 'editor',
-    rollbackToSnapshot: 'editor',
-    saveTheme: 'editor',
-    deleteTheme: 'editor',
-    setActiveTheme: 'editor',
-    resetPreset: 'editor',
-    savePost: 'editor',
-    deletePost: 'editor',
-    setPostPublished: 'editor',
-    saveFooter: 'editor',
-    saveSiteFlags: 'admin',
-    saveSiteSeo: 'editor',
-    saveTranslationMeta: 'editor',
-};
+/**
+ * Phase C.3: every entry lives on a feature manifest's
+ * `authz.mutationRequirements`. The merge block at the bottom of this
+ * file populates this object at module load — keeping the same shape
+ * means call sites (`MUTATION_REQUIREMENTS[key]`) keep working.
+ */
+export const MUTATION_REQUIREMENTS: Record<string, UserRole> = {};
 
-export const QUERY_REQUIREMENTS: Record<string, UserRole> = {
-    getUsers: 'admin',
-    setupAdmin: 'admin',
-    getMongoDBUri: 'admin',
-    loadData: 'admin',
-    // Audit log is admin-only — diffs can include user text and actor
-    // metadata we don't want exposing to editors.
-    getAuditLog: 'admin',
-    getAuditCollections: 'admin',
-    getAuditActors: 'admin',
-};
+/**
+ * Phase C.3: every entry lives on a feature manifest's
+ * `authz.queryRequirements`. The merge block at the bottom of this
+ * file populates this object at module load.
+ */
+export const QUERY_REQUIREMENTS: Record<string, UserRole> = {};
+
+/**
+ * Edit-levels (2026-05-02) — per-method resource extractors composed from
+ * every active feature manifest's `authz.resourceGated`. Empty by default;
+ * features opt in by adding entries to their manifest. The
+ * `graphqlResolvers.ts` mutation route reads here and feeds the proxy.
+ */
+export const RESOURCE_GATED_METHODS: Record<string, ResourceGateExtractor> = {};
+
+// ──────────────────────────────────────────────────────────────────────
+// Phase C.1 — fold per-manifest authz contributions into the legacy
+// constants above. `composedAuthz()` walks every active feature
+// manifest's `authz` block and merges them; we apply the result HERE
+// so existing call sites (`MUTATION_REQUIREMENTS[key]`,
+// `SESSION_INJECTED_METHODS.has(key)`, …) keep working unchanged. Phase
+// C.2 then moves individual entries OUT of the literals above INTO
+// each feature's manifest. Once a feature's authz lives entirely in
+// its manifest, dropping the feature from the registry — via a
+// `FEATURE_<X>=false` env or by deleting the folder — also drops its
+// authz contributions in the same step.
+//
+// Lazy require so the registry's transitive imports (every manifest →
+// every service) don't cycle through this file during module load.
+// ──────────────────────────────────────────────────────────────────────
+try {
+    const merged = composedAuthz();
+    Object.assign(MUTATION_REQUIREMENTS, merged.mutationRequirements);
+    Object.assign(QUERY_REQUIREMENTS, merged.queryRequirements);
+    for (const [k, v] of Object.entries(merged.capabilities)) {
+        // Capability contributions land as `'canPublishProduction'` /
+        // `'canEditUsers'` strings on the manifest; the legacy table
+        // expects predicate functions. Bridge by lookup at call time.
+        const flag = v;
+        MUTATION_CAPABILITIES[k] = (s: GraphqlSession) =>
+            (s as unknown as Record<string, unknown>)[flag] ? true : `${flag} required`;
+    }
+    for (const m of merged.sessionInjected) (SESSION_INJECTED_METHODS as Set<string>).add(m);
+    for (const m of merged.customerSessionInjected) (CUSTOMER_SESSION_INJECTED_METHODS as Set<string>).add(m);
+    for (const m of merged.customerMutations) {
+        (CUSTOMER_MUTATION_REQUIREMENTS as Record<string, true>)[m] = true;
+    }
+    for (const m of merged.customerQueries) {
+        (CUSTOMER_QUERY_REQUIREMENTS as Record<string, true>)[m] = true;
+    }
+    for (const m of merged.anonOpenMutations) (ANON_OPEN_MUTATIONS as Set<string>).add(m);
+    Object.assign(RESOURCE_GATED_METHODS, merged.resourceGated);
+} catch (err) {
+    // Logger may not be initialised yet at module-eval time; fall
+    // through silently — manifest-side authz simply won't apply,
+    // but the legacy tables above still gate correctly.
+     
+    console.warn('[authz] failed to merge composedAuthz contributions:', err);
+}

@@ -1,5 +1,6 @@
 import {resolve} from "@services/api/generated";
 import type {PublishedSnapshot, SnapshotMeta} from "@services/features/Publishing/PublishService";
+import {log} from "@services/infra/logger";
 
 export class PublishApi {
     async publish(note?: string): Promise<SnapshotMeta & {error?: string}> {
@@ -27,7 +28,7 @@ export class PublishApi {
             const raw = await resolve(({query}) => (query as any).mongo.getPublishedHistory({limit}));
             return raw ? JSON.parse(raw) : [];
         } catch (err) {
-            console.error('getHistory:', err);
+            log.error({scope: 'publish.getHistory', err}, 'getHistory failed');
             return [];
         }
     }
@@ -38,7 +39,7 @@ export class PublishApi {
             if (!raw) return null;
             return JSON.parse(raw) as PublishedSnapshot;
         } catch (err) {
-            console.error('Error reading snapshot:', err);
+            log.error({scope: 'publish.getSnapshot', err}, 'snapshot read failed');
             return null;
         }
     }

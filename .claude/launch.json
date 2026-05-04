@@ -6,7 +6,8 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 80,
-      "autoPort": false
+      "autoPort": false,
+      "env": {"NEXT_DISABLE_HMR": "1"}
     },
     {
       "name": "next-start",
@@ -31,6 +32,13 @@
       "runtimeExecutable": "docker",
       "runtimeArgs": ["compose", "up", "-d", "mongodb"],
       "port": 27017
+    },
+    {
+      "name": "peaches-mobile",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["expo", "start", "--web", "--port", "8081"],
+      "port": 8081,
+      "cwd": "../../Experiments/peaches/apps/mobile"
     }
   ]
 }

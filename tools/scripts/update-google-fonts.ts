@@ -20,7 +20,7 @@
  * the full set, but the flag is there for future filter changes).
  */
 
-/* eslint-disable no-console */
+ 
 
 import fs from 'node:fs';
 import path from 'node:path';

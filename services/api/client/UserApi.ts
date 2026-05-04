@@ -1,5 +1,6 @@
 import {resolve} from "@services/api/generated";
 import {AdminLocale, IUser, InUser} from "@interfaces/IUser";
+import {log} from "@services/infra/logger";
 
 function normalizeAdminLocale(value: unknown): AdminLocale | undefined {
     return value === 'en' || value === 'lv' ? value : undefined;
@@ -17,6 +18,7 @@ export class UserApi {
                 password: user.password ?? '',
                 role: (user.role ?? 'viewer') as IUser['role'],
                 avatar: user.avatar ?? undefined,
+                kind: ((user as any).kind ?? 'admin') as IUser['kind'],
                 canPublishProduction: Boolean((user as any).canPublishProduction),
                 mustChangePassword: Boolean((user as any).mustChangePassword),
                 preferredAdminLocale: normalizeAdminLocale((user as any).preferredAdminLocale),
@@ -41,7 +43,7 @@ export class UserApi {
                 }));
             });
         } catch (err) {
-            console.error('Error listing users:', err);
+            log.error({scope: 'users.list', err}, 'listUsers failed');
             return [];
         }
     }
@@ -64,9 +66,11 @@ export class UserApi {
         }
     }
 
-    async removeUser(id: string): Promise<{id?: string; error?: string}> {
+    async removeUser(id: string, opts: {idempotencyKey?: string} = {}): Promise<{id?: string; error?: string}> {
         try {
-            const raw = await resolve(({mutation}) => mutation.mongo.removeUser({id}));
+            const args: any = {id};
+            if (opts.idempotencyKey) args.idempotencyKey = opts.idempotencyKey;
+            const raw = await resolve(({mutation}) => mutation.mongo.removeUser(args as any));
             return JSON.parse(raw || '{}').removeUser ?? JSON.parse(raw || '{}');
         } catch (err) {
             return {error: String(err)};

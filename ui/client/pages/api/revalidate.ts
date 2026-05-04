@@ -30,6 +30,8 @@ type RevalidateBody =
     | {scope: 'page'; pageName: string}
     | {scope: 'post'; slug: string}
     | {scope: 'blog'}
+    | {scope: 'product'; slug: string}
+    | {scope: 'products'}
     | {paths: string[]};
 
 /**
@@ -151,6 +153,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 case 'blog':
                     paths = ['/blog'];
                     break;
+                case 'product':
+                    if (!body.slug) return res.status(400).json({error: 'slug required'});
+                    paths = ['/products', `/products/${body.slug}`];
+                    break;
+                case 'products':
+                    paths = ['/products'];
+                    break;
                 default:
                     return res.status(400).json({error: 'unknown scope'});
             }
@@ -162,12 +171,55 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(500).json({error: 'resolve failed'});
     }
 
+    // Next i18n static routes are PER LOCALE — `res.revalidate('/')` only
+    // refreshes the default-locale prerender, leaving every `/<lng>/...`
+    // variant stuck on the old snapshot. Expand every path across the
+    // configured locale set so a footer save (or any global-scope flush)
+    // updates EN + LV + LT + IT + RU + DE in one go.
+    let expanded: string[] = paths;
+    try {
+        const i18nCfg = require('../../../../next-i18next.config.js');
+        const locales: string[] = i18nCfg?.i18n?.locales ?? [];
+        const defaultLocale: string = i18nCfg?.i18n?.defaultLocale ?? 'en';
+        // Filter to locales that actually have a populated `app.json` —
+        // a locale listed in next-i18next.config.js but without a file
+        // breaks `serverSideTranslations` and turns every revalidate
+        // call into a stack trace. Defensive: drift between config and
+        // disk shouldn't take the dev server down.
+        const fs = require('fs');
+        const path = require('path');
+        const localesRoot = path.resolve(process.cwd(), 'ui/client/public/locales');
+        const populated = locales.filter(l => {
+            try {
+                const f = path.join(localesRoot, l, 'app.json');
+                const stat = fs.statSync(f);
+                return stat.isFile() && stat.size > 2; // at least `{}`
+            } catch { return false; }
+        });
+        if (populated.length) {
+            const out = new Set<string>();
+            for (const p of paths) {
+                out.add(p);
+                for (const l of populated) {
+                    if (l === defaultLocale) continue;
+                    out.add(p === '/' ? `/${l}` : `/${l}${p}`);
+                }
+            }
+            expanded = [...out];
+        }
+    } catch (err) {
+        // i18n config unavailable in some test setups — fall through to
+        // the un-expanded path list. The default-locale variant still
+        // refreshes; non-default locales just stay cached longer.
+        console.warn('[revalidate] i18n locale expand skipped:', err);
+    }
+
     // Deduplicate and cap to a sensible ceiling — ISR regeneration is
     // serial within Next, so `scope: 'all'` on a site with 400 blog
     // posts would hammer the origin. If operators need a bigger window
     // they can bump REVALIDATE_MAX.
     const max = Number(process.env.REVALIDATE_MAX ?? 200);
-    const unique = [...new Set(paths)].slice(0, max);
+    const unique = [...new Set(expanded)].slice(0, max);
 
     const results = await Promise.all(unique.map(async (p) => {
         try {
