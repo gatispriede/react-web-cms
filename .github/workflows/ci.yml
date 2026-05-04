@@ -262,12 +262,39 @@ jobs:
             # If DEPLOY_ENV_FILE is set, (re)write .env from it. If it's empty
             # (e.g. the original droplet already has .env on disk), leave the
             # existing file alone — but fail loudly if there's nothing at all.
+            #
+            # PRESERVE runtime-managed values across the rewrite. The CI
+            # secret holds STATIC config (DOMAIN, NEXTAUTH_SECRET, …) and
+            # has no knowledge of which blue/green slot is currently
+            # active. `tools/blue-green-deploy.sh` writes
+            # `ACTIVE_UPSTREAM=app-{blue,green}:80` to .env on every flip;
+            # without this preservation, the next deploy clobbers it
+            # back to the secret's value (or absent → default app:80) and
+            # Caddy loses track of the active slot. Sky's first seamless
+            # deploy on 2026-05-04 went down for this exact reason —
+            # ACTIVE_UPSTREAM=app-green:80 disappeared on rewrite, Caddy
+            # came up pointing at legacy app:80, ERR_SSL_PROTOCOL_ERROR.
+            PRESERVED_ACTIVE_UPSTREAM=""
+            if [ -f .env ]; then
+              PRESERVED_ACTIVE_UPSTREAM=$(grep -E '^ACTIVE_UPSTREAM=' .env 2>/dev/null | tail -n1 || true)
+            fi
             if [ -n "${DEPLOY_ENV_FILE:-}" ]; then
               umask 077
               printf '%s\n' "$DEPLOY_ENV_FILE" > .env
             elif [ ! -f .env ]; then
               echo "No DEPLOY_ENV_FILE secret and no existing .env on disk; aborting" >&2
               exit 1
+            fi
+            if [ -n "$PRESERVED_ACTIVE_UPSTREAM" ]; then
+              # Drop any ACTIVE_UPSTREAM line from the freshly-written
+              # secret (defensive — secret shouldn't have one, but if
+              # the operator added one by mistake, the runtime value
+              # wins) then append the preserved one.
+              if grep -q '^ACTIVE_UPSTREAM=' .env 2>/dev/null; then
+                sed -i '/^ACTIVE_UPSTREAM=/d' .env
+              fi
+              printf '%s\n' "$PRESERVED_ACTIVE_UPSTREAM" >> .env
+              echo "==> Preserved $PRESERVED_ACTIVE_UPSTREAM across .env rewrite"
             fi
 
             # Pre-refactor deploys ran compose from /opt/cms/ so the
