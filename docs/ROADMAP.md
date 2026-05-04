@@ -33,7 +33,11 @@ Import bundle into local build → open public client → walk every page side-b
 
 ### Forward work
 
-- **Visual baseline capture** — running locally via `--workers=1`. Snapshots will land in `tests/e2e/visual/__snapshots__/` for review + commit.
+- [F6 — site-mode toggle: scroll vs multipage](roadmap/site-mode-toggle.md) — `siteFlags.siteMode` switch so sites can render as single-page-scroll (legacy/portfolio sites) or multipage-routed (F1, multi-section operations). Skyclimber.pro is scroll-era authored; bundle import + multipage forced incorrect rendering. **M** (1-2 days). 3 open questions in spec.
+- [F7 — slug single source of truth](roadmap/slug-source-of-truth.md) — one canonical `normalizeSlug` helper consumed by every site (server + SSR + client active-tab matcher + admin picker + footer + sitemap). Plus pass `pageId` from `[...slug].tsx` → `app.tsx` so the client never re-derives which page is active. Skyclimber's empty-page bug ("Jaunumi un aktualitātes ") was caused by three separate slug normalisers doing slightly different things. **S** (2-4 hr). User feedback: "either way we always should see on client side what we see on admin side, it's unacceptable to not match."
+- [F8 — MCP coverage to real-world-ready](roadmap/mcp-real-world-ready.md) — every admin operation has an MCP tool of equal capability + equal guards. P0 page lifecycle (`page.update/delete/setParent/reorder`); P1 users + permissions + languages + site-wide content + trash; P2 themes/images/orders/diagnostics/discovery (~32 new tools on top of the 38 today). Cross-cutting hardening: idempotency wrap + audit wrap + rate limit + error envelope + schema drift CI. Aligns with the project's MCP-as-value-proposition stance. **XL** (2-3 weeks). User feedback: "from now on MCP is the tool to manage content/settings on the CMS system, purpose is to advance it to the point where it's real world ready."
+- **Bundle-import → markRestartRequired() hook** — when imported bundle's language symbol set differs from current `next-i18next.config.js` locales, set the existing restart banner. Avoids the locale-stale errors seen on skyclimber import. **S** (1-2 hr).
+- **Visual baseline capture** — `--workers=1` run failed with 1ms instant errors per spec; needs spec-load diagnosis (separate from `--workers` setup).
 - **2 lingering `test.skip`s** — Trash restore-flow (Popconfirm OK button needs a stable testid) + idempotency reusable-button (no non-destructive guarded button candidate exists). Low priority.
 
 ---

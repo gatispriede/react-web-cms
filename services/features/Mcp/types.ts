@@ -54,12 +54,32 @@ export interface McpToolResult {
     content: Array<{type: 'text'; text: string}>;
 }
 
+export interface McpToolRateLimit {
+    /** Sliding-window cap; defaults are 100/min for read tools, 30/min for writes. */
+    maxPerMinute: number;
+}
+
 export interface McpTool {
     name: string;
     description: string;
     scopes: McpScope[];
     inputSchema: JSONSchemaObject;
     handler: (args: any, ctx: McpToolContext) => Promise<McpToolResult>;
+    /**
+     * F8 hardening — when true, calls accepting `idempotencyKey` route
+     * through `getIdempotencyService().checkOrRun`. Mandatory for any
+     * destructive tool; enforced at registration time in
+     * `buildToolRegistry`.
+     */
+    idempotent?: boolean;
+    /**
+     * Audit scope label written onto the audit row (`mcp:<scope>`). When
+     * omitted the wrapper derives one from the tool name's first segment
+     * (`page.delete` → `page`).
+     */
+    auditScope?: string;
+    /** Per-token sliding-window rate limit applied by `withRateLimit`. */
+    rateLimit?: McpToolRateLimit;
 }
 
 export class McpError extends Error {

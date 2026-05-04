@@ -181,11 +181,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const i18nCfg = require('../../../../next-i18next.config.js');
         const locales: string[] = i18nCfg?.i18n?.locales ?? [];
         const defaultLocale: string = i18nCfg?.i18n?.defaultLocale ?? 'en';
-        if (locales.length) {
+        // Filter to locales that actually have a populated `app.json` —
+        // a locale listed in next-i18next.config.js but without a file
+        // breaks `serverSideTranslations` and turns every revalidate
+        // call into a stack trace. Defensive: drift between config and
+        // disk shouldn't take the dev server down.
+        const fs = require('fs');
+        const path = require('path');
+        const localesRoot = path.resolve(process.cwd(), 'ui/client/public/locales');
+        const populated = locales.filter(l => {
+            try {
+                const f = path.join(localesRoot, l, 'app.json');
+                const stat = fs.statSync(f);
+                return stat.isFile() && stat.size > 2; // at least `{}`
+            } catch { return false; }
+        });
+        if (populated.length) {
             const out = new Set<string>();
             for (const p of paths) {
                 out.add(p);
-                for (const l of locales) {
+                for (const l of populated) {
                     if (l === defaultLocale) continue;
                     out.add(p === '/' ? `/${l}` : `/${l}${p}`);
                 }

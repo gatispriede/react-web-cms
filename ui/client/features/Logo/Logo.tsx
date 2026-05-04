@@ -76,8 +76,15 @@ class Logo extends Component<ILogoProps> {
         // as the default). `.logo-mark` is styled module-level in
         // `scss/Common/Logo.scss` so every theme picks up the same structural
         // rules and only layers in its own accents.
+        // Admin-set height drives the `--logo-height` CSS variable so the
+        // base cap in Logo.scss (`.logo img { max-height: var(--logo-height) }`)
+        // expands to match — without this, every logo silently caps at the
+        // 40px default regardless of what the admin configures.
+        const logoHeightStyle = (this.state.logo.height && this.state.logo.height > 0)
+            ? ({'--logo-height': `${this.state.logo.height}px`} as React.CSSProperties)
+            : undefined;
         return (
-            <Link href={this.admin ? '#' : '/'} className={`logo logo--${this.state.logo.style ?? ELogoStyle.Default}`} onClick={() => {
+            <Link href={this.admin ? '#' : '/'} className={`logo logo--${this.state.logo.style ?? ELogoStyle.Default}`} style={logoHeightStyle} onClick={() => {
                 if (this.admin && !this.state.open) {
                     this.setState({open: true})
                 }
@@ -86,7 +93,11 @@ class Logo extends Component<ILogoProps> {
                     ? <SizedImage
                         alt={this.state.logo.src}
                         src={`/${this.state.logo.src}`}
-                        width={this.state.logo.width}
+                        // Logo aspect-ratio is sacred — admin's width field used
+                        // to be passed too, but `SizedImage` caps via `maxWidth`
+                        // which squishes wide logos at small heights. Pass
+                        // height only; the browser computes width from the
+                        // natural image ratio.
                         height={this.state.logo.height}
                     />
                     : <span className="logo-mark" aria-hidden>◆</span>}

@@ -449,13 +449,30 @@ class App extends React.Component<IHomeProps> {
     }
 
     findIdForActiveTab() {
-        const firstTab = this.state.tabProps[0] ? this.state.tabProps[0].page.replace(/ /g, '-').toLowerCase() : ''
-        const propsPage = this.props.page !== '/' ? this.props.page : firstTab
-        return this.state.tabProps.findIndex((tab) => {
-            const tabUrl = encodeURIComponent(tab.page.replace(/ /g, '-')).toLowerCase()
-            const propsUrl = encodeURIComponent(propsPage).toLowerCase()
-            return tabUrl === propsUrl
-        })
+        // Source-of-truth match: the same normaliser server-side
+        // `findPageBySlugChain` uses (decodeURIComponent → strip diacritics
+        // → space-to-dash → trim trailing dash). Without this, asymmetric
+        // transforms — tab side did `replace(/ /g,'-')` THEN encode while
+        // props side just encoded — caused "Jaunumi un aktualitātes "
+        // (trailing space) to render empty body even though the page WAS
+        // resolved correctly server-side. TODO(F1 follow-up): pass the
+        // resolved page id from `[...slug].tsx` → `app.tsx` instead of
+        // re-deriving from the display name. One source of truth = the
+        // server's resolved row.
+        const norm = (s: string): string => {
+            try { s = decodeURIComponent(s); } catch { /* not encoded */ }
+            return s
+                .normalize('NFKD')
+                .replace(/[̀-ͯ]/g, '')
+                .toLowerCase()
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '');
+        };
+        const firstTab = this.state.tabProps[0]?.page ?? '';
+        const propsPage = this.props.page !== '/' ? this.props.page : firstTab;
+        const target = norm(propsPage);
+        return this.state.tabProps.findIndex(tab => norm(tab.page) === target);
     }
 
     render() {

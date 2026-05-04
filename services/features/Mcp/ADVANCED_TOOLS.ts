@@ -33,6 +33,12 @@ export const ADVANCED_ONLY_TOOLS: ReadonlySet<string> = new Set<string>([
     'theme.update',
     // page-tree structural mutations
     'section.delete',
+    'module.add',
+    'module.update',
+    'module.remove',
+    // inquiry-management writes — destructive or sends mail
+    'inquiry.delete',
+    'email.send',
     // whole-site replace — never expose in simplified mode
     'bundle.import',
     'bundle.export',
