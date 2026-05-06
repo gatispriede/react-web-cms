@@ -218,6 +218,18 @@ jobs:
           script: |
             set -euo pipefail
 
+            # SSH keepalive heartbeat. The appleboy/ssh-action session
+            # drops when no bytes flow through the channel for too long;
+            # long stretches inside `docker build` (single layer cache
+            # restore, single `next build` SSG pass) can sit idle from
+            # the SSH socket's perspective even though docker is busy.
+            # A background loop printing every 20s guarantees the
+            # connection never goes idle. EXIT trap cleans up so the
+            # heartbeat doesn't outlive the main script.
+            ( while sleep 20; do echo "    [heartbeat $(date +%H:%M:%S)]"; done ) &
+            HEARTBEAT_PID=$!
+            trap 'kill $HEARTBEAT_PID 2>/dev/null || true' EXIT
+
             REPO_URL="https://github.com/${{ github.repository }}.git"
             APP_DIR="/opt/cms"
             BRANCH="master"
