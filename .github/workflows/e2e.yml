@@ -1,14 +1,10 @@
 name: e2e
 
-# Pre-merge gate only — runs on PRs into master and on the master branch
-# itself. `develop` is the long-lived integration branch and gets noisy
-# pushes; we don't want a CI run on every WIP commit. Open a PR to master
-# when the branch is ready for the e2e gate.
+# Manual-only for now — auto triggers (push/PR) are disabled until the
+# Playwright suite stabilises. Re-enable by adding back:
+#   pull_request: { branches: [master] }
+#   push:         { branches: [master] }
 on:
-  pull_request:
-    branches: [master]
-  push:
-    branches: [master]
   workflow_dispatch:
 
 jobs:

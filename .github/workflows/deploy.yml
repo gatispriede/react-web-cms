@@ -40,7 +40,13 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-      - run: npm ci
+      # Match `ci.yml`'s install incantation. `npm ci` is strict and trips
+      # on the antd v5↔v6 peer-dep chain (`@ant-design/compatible` pins to
+      # antd v5; we're on v6). `--legacy-peer-deps` is the standard install
+      # path locally + in `ci.yml`. `--ignore-scripts` skips bcrypt's
+      # native compile (fails on the GHA image; tests mock bcrypt-heavy
+      # paths anyway).
+      - run: npm install --legacy-peer-deps --ignore-scripts --no-audit --no-fund
       - name: Typecheck + build
         run: npm run build
       - name: Unit tests
