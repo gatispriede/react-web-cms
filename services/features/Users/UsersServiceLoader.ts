@@ -112,8 +112,12 @@ extend type MutationMongo {
         try {
             const admin = await users.setupAdmin();
             if (admin) {
-                 
-                console.log(`[setup] Admin user ready: ${admin.email}`);
+                // Was a bare `console.log` before — that wrote raw text to
+                // stdout, which corrupted the MCP stdio JSON-RPC stream.
+                // Going through the structured logger respects MCP_STDIO=1
+                // (stdio.ts sets that before this loader runs) and routes
+                // the line to stderr.
+                log.info({scope: 'auth.bootstrap', email: admin.email}, 'admin user ready');
             }
         } catch (err) {
             adminSeeded = false;

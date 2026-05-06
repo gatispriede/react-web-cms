@@ -6,8 +6,46 @@
  * or `--token` flag) gates every call. The transport speaks MCP JSON-RPC
  * over stdin/stdout via the official SDK.
  *
+ * stdout discipline: ONLY JSON-RPC frames go to stdout. Any non-JSON line
+ * (a stray `console.log`, an ANSI-coloured INFO log, npm's own banner)
+ * is treated as malformed by the client and surfaces as `Unexpected token`
+ * errors in `~/AppData/Roaming/Claude/logs/mcp-server-*.log`. Two
+ * defenses live here:
+ *   1. Set `MCP_STDIO=1` BEFORE any other import — the structured logger
+ *      reads it at module load and routes every line to stderr.
+ *   2. Hijack `console.*` in this same pre-import block so transitive
+ *      modules that bypass the logger (vendored deps, drive-by debug
+ *      logs, `[setup]` prints) also land on stderr.
+ *
  * To register with Claude Code / Cursor, see `tools/mcp.example.json`.
  */
+
+// CRITICAL: this block runs BEFORE every other import so it influences
+// the logger's module-level `STDIO_ONLY_STDERR` constant and any
+// console.log call made during early service-loader bootstrap.
+process.env.MCP_STDIO = '1';
+// Mute pretty-printed colour codes too — they'd still be valid stderr,
+// but they make the Claude log file harder to read on the operator side.
+process.env.LOG_FORMAT = process.env.LOG_FORMAT ?? 'json';
+// Reroute the four console levels to stderr. Code that does
+// `console.log('[setup] ...')` or vendored libs that print on import
+// would otherwise corrupt the JSON-RPC stream.
+{
+    const sink = (...args: unknown[]) => {
+        try {
+            const line = args.map(a => typeof a === 'string' ? a : JSON.stringify(a)).join(' ');
+            process.stderr.write(line + '\n');
+        } catch { /* never let logging throw — silent drop is fine here */ }
+    };
+    console.log = sink;
+    console.info = sink;
+    console.warn = sink;
+    console.debug = sink;
+    // `console.error` already writes to stderr, but normalise so its
+    // formatting matches the others.
+    console.error = sink;
+}
+
 import {Server} from '@modelcontextprotocol/sdk/server/index.js';
 import {StdioServerTransport} from '@modelcontextprotocol/sdk/server/stdio.js';
 import {

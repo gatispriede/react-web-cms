@@ -57,6 +57,36 @@
         header Cache-Control "public, max-age=300, stale-while-revalidate=604800"
     }
 
+    # --- MCP HTTP transport ---
+    # Remote AI access — Claude Desktop / Cursor speak Streamable HTTP
+    # at `https://${DOMAIN}/mcp`. Auth = bearer token issued at
+    # `/admin/system/mcp`; this block adds an optional IP allowlist
+    # (`MCP_ALLOWED_CIDR` in `.env`) as defense in depth — set it to
+    # your office/VPN CIDR if you don't want random internet hosts to
+    # even hit the auth check.
+    #
+    # SSE-friendly: `flush_interval -1` disables Caddy's buffering on
+    # this route so server→client streaming events reach the client
+    # as soon as the MCP server emits them. The default would batch
+    # them in 4KB chunks and break long-running tool progress.
+    @mcp path /mcp /mcp/*
+    @mcp-blocked {
+        path /mcp /mcp/*
+        not remote_ip {$MCP_ALLOWED_CIDR:0.0.0.0/0}
+    }
+    handle @mcp-blocked {
+        respond "forbidden" 403
+    }
+    handle @mcp {
+        reverse_proxy mcp:8788 {
+            flush_interval -1
+            transport http {
+                read_timeout 300s
+                write_timeout 300s
+            }
+        }
+    }
+
     # --- Everything else → Next.js app ---
     # `lb_try_duration` makes Caddy hold incoming requests for up to 30 s
     # while retrying the upstream — that bridges the brief gap when the

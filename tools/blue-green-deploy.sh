@@ -146,3 +146,25 @@ docker compose -f "$COMPOSE_FILE" up -d --no-deps caddy
 log "draining old upstream for ${DRAIN_SECONDS}s"
 sleep "$DRAIN_SECONDS"
 log "deploy complete: traffic now on $SERVICE ($TARGET_SHA)"
+
+# --- 7. MCP HTTP transport — rebuild + restart (single instance) ---
+# Per docs/runbooks/mcp-http-deploy.md. Not blue/green'd: MCP serves
+# operator/agent traffic, not customers, so a brief restart is fine.
+# Skipped when MCP_HTTP_ENABLED isn't set in `.env` — the service
+# exits cleanly in that case and compose never holds onto it.
+#
+# Done AFTER the public flip so a misconfigured MCP build can never
+# block customer-facing traffic. Failure here is logged but doesn't
+# abort: the public deploy already succeeded, the mcp container keeps
+# running the previous build, and the next deploy retries.
+if grep -qE '^MCP_HTTP_ENABLED=true' "$ENV_FILE" 2>/dev/null; then
+    log "rebuilding mcp service (single-instance, brief restart)"
+    if GIT_SHA="$TARGET_SHA" docker compose -f "$COMPOSE_FILE" build --build-arg GIT_SHA="$TARGET_SHA" mcp; then
+        docker compose -f "$COMPOSE_FILE" up -d --no-deps mcp
+        log "mcp restarted"
+    else
+        log "WARN: mcp build failed — public site is healthy on $SERVICE; investigate mcp separately"
+    fi
+else
+    log "MCP_HTTP_ENABLED!=true — skipping mcp rebuild"
+fi

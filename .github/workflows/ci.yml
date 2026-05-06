@@ -10,7 +10,21 @@ on:
   schedule:
     - cron: '0 4 * * *'   # 04:00 UTC nightly
   # Adds a "Run workflow" button in the Actions tab for manual re-runs.
+  # The optional `target` input scopes the deploy job to ONE droplet —
+  # useful for staging a risky change on funisimo first before rolling
+  # it to skyclimber. Empty (the default) deploys to every droplet in
+  # the matrix as on a normal push.
   workflow_dispatch:
+    inputs:
+      target:
+        description: 'Single droplet to deploy (empty = all). Match the matrix `name`.'
+        required: false
+        default: ''
+        type: choice
+        options:
+          - ''
+          - funisimo.pro
+          - skyclimber.pro
 
 jobs:
   test-and-typecheck:
@@ -114,8 +128,14 @@ jobs:
     name: Deploy to ${{ matrix.target.name }}
     runs-on: ubuntu-latest
     needs: test-and-typecheck
-    # Only deploy on direct pushes to master, not on PRs
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    # Run on:
+    #   - push to master (full fan-out, every droplet)
+    #   - workflow_dispatch (manual). When the `target` input is set,
+    #     the per-matrix-entry guard below skips non-matching droplets,
+    #     so only the chosen one deploys.
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/master') ||
+      github.event_name == 'workflow_dispatch'
     # Holds the appleboy/ssh-action command_timeout (30m) plus the
     # workflow setup/teardown around it.
     timeout-minutes: 40
@@ -153,7 +173,19 @@ jobs:
       SEAMLESS: ${{ matrix.target.seamless }}
 
     steps:
+      # workflow_dispatch + a non-empty `target` input → run only the
+      # matching matrix entry. Empty input = deploy everything (matches
+      # the push-to-master behaviour). The matrix can't be pre-filtered
+      # via expression (matrix is statically evaluated), so the guard
+      # lives on the step itself; non-matching jobs spin up briefly
+      # then no-op.
+      - name: Skip non-targeted droplet
+        if: ${{ inputs.target != '' && inputs.target != matrix.target.name }}
+        run: |
+          echo "skipping ${{ matrix.target.name }} — workflow_dispatch target='${{ inputs.target }}'"
+          exit 0
       - name: Deploy via SSH
+        if: ${{ inputs.target == '' || inputs.target == matrix.target.name }}
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets[matrix.target.host_secret] }}
