@@ -578,5 +578,26 @@ jobs:
               exit 1
             fi
 
+            # MCP HTTP transport — rebuild + restart on every deploy.
+            # Per docs/runbooks/mcp-http-deploy.md. Skipped when
+            # MCP_HTTP_ENABLED isn't set in `.env`; the service exits
+            # cleanly in that case. Done AFTER the public site is
+            # confirmed healthy so a misconfigured MCP build never blocks
+            # customer-facing traffic. Failure here is logged but
+            # doesn't fail the whole deploy — the public site is already
+            # serving the new build, and the mcp container keeps running
+            # the previous build until the next deploy retries.
+            if grep -qE '^MCP_HTTP_ENABLED=true' /opt/cms/.env 2>/dev/null; then
+              echo '==> Rebuilding mcp service'
+              if docker compose -p cms -f infra/compose.yaml --env-file .env build mcp; then
+                docker compose -p cms -f infra/compose.yaml --env-file .env up -d --no-deps mcp
+                echo '    mcp restarted'
+              else
+                echo '!! mcp build failed — public site is healthy; investigate mcp separately' >&2
+              fi
+            else
+              echo '==> Skipping mcp rebuild (MCP_HTTP_ENABLED!=true in .env)'
+            fi
+
             docker compose -p cms -f infra/compose.yaml --env-file .env ps
             echo "==> Deploy complete"
