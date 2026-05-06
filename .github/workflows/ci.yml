@@ -129,10 +129,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: test-and-typecheck
     # Run on:
-    #   - push to master (full fan-out, every droplet)
-    #   - workflow_dispatch (manual). When the `target` input is set,
-    #     the per-matrix-entry guard below skips non-matching droplets,
-    #     so only the chosen one deploys.
+    #   - push to master (only droplets with `auto: true` in the matrix)
+    #   - workflow_dispatch (manual). The `target` input scopes to one
+    #     droplet; empty input deploys to every droplet regardless of
+    #     `auto`. Use this to roll a release to a paused droplet.
     if: |
       (github.event_name == 'push' && github.ref == 'refs/heads/master') ||
       github.event_name == 'workflow_dispatch'
@@ -148,10 +148,16 @@ jobs:
             env_secret: DEPLOY_ENV_FILE_1
             smoke_url: https://funisimo.pro/
             seamless: false
+            # `auto: true` → deploys on every push to master.
+            auto: true
           - name: skyclimber.pro
             host_secret: DEPLOY_HOST_2
             env_secret: DEPLOY_ENV_FILE_2
             smoke_url: https://skyclimber.pro/
+            # `auto: false` → push triggers SKIP this droplet. Promote a
+            # release here via "Run workflow" → target=skyclimber.pro
+            # once it's been validated on funisimo.
+            auto: false
             # Per-target seamless (blue/green) opt-in. Skyclimber runs
             # the P4 path (`tools/blue-green-deploy.sh`) so the `app`
             # container flip is atomic via Caddy's ACTIVE_UPSTREAM swap.
@@ -173,19 +179,29 @@ jobs:
       SEAMLESS: ${{ matrix.target.seamless }}
 
     steps:
-      # workflow_dispatch + a non-empty `target` input → run only the
-      # matching matrix entry. Empty input = deploy everything (matches
-      # the push-to-master behaviour). The matrix can't be pre-filtered
-      # via expression (matrix is statically evaluated), so the guard
-      # lives on the step itself; non-matching jobs spin up briefly
-      # then no-op.
-      - name: Skip non-targeted droplet
-        if: ${{ inputs.target != '' && inputs.target != matrix.target.name }}
+      # Skip rules. Matrix can't be pre-filtered via expression (it's
+      # statically evaluated), so the guard lives on the deploy step
+      # itself; skipped jobs spin up briefly then no-op.
+      #
+      # On push to master: only droplets with `auto: true` deploy.
+      # On workflow_dispatch:
+      #   - empty `target` input: deploy every matrix entry (manual full
+      #     fan-out — the override path for promoting to a paused droplet).
+      #   - non-empty `target`: deploy only the matching entry.
+      - name: Skip droplet
+        if: |
+          (github.event_name == 'push' && matrix.target.auto != true) ||
+          (github.event_name == 'workflow_dispatch' && inputs.target != '' && inputs.target != matrix.target.name)
         run: |
-          echo "skipping ${{ matrix.target.name }} — workflow_dispatch target='${{ inputs.target }}'"
+          echo "skipping ${{ matrix.target.name }}"
+          echo "  event=${{ github.event_name }}"
+          echo "  matrix.auto=${{ matrix.target.auto }}"
+          echo "  inputs.target='${{ inputs.target }}'"
           exit 0
       - name: Deploy via SSH
-        if: ${{ inputs.target == '' || inputs.target == matrix.target.name }}
+        if: |
+          (github.event_name == 'push' && matrix.target.auto == true) ||
+          (github.event_name == 'workflow_dispatch' && (inputs.target == '' || inputs.target == matrix.target.name))
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets[matrix.target.host_secret] }}
