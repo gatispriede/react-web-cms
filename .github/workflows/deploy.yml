@@ -129,6 +129,6 @@ jobs:
               git reset --hard HEAD@{1}
               docker compose -f infra/compose.yaml build app server mcp
               docker compose -f infra/compose.yaml up -d --no-deps app server mcp caddy
-ROLLBACK
+          ROLLBACK
             exit 1
           fi
