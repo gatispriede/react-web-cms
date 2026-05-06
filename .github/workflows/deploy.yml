@@ -104,8 +104,8 @@ jobs:
             # Build new images + restart only what changed. `--no-deps`
             # so we don't bounce Mongo on every deploy (P5 auth state
             # lives in its data volume but the connection is cheap).
-            docker compose -f infra/compose.yaml build app server
-            docker compose -f infra/compose.yaml up -d --no-deps app server
+            docker compose -f infra/compose.yaml build app server mcp
+            docker compose -f infra/compose.yaml up -d --no-deps app server mcp caddy
           REMOTE
 
           echo "[deploy] waiting for health on $SITE_URL/api/health"
@@ -127,8 +127,8 @@ jobs:
               # least 90 days, so this is safe even after the master ref
               # has moved on the droplet.
               git reset --hard HEAD@{1}
-              docker compose -f infra/compose.yaml build app server
-              docker compose -f infra/compose.yaml up -d --no-deps app server
+              docker compose -f infra/compose.yaml build app server mcp
+              docker compose -f infra/compose.yaml up -d --no-deps app server mcp caddy
 ROLLBACK
             exit 1
           fi

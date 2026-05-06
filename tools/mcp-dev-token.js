@@ -75,11 +75,21 @@ async function main() {
         });
     `;
 
-    const result = spawnSync(
-        process.execPath,
-        [tsxBin, '--tsconfig', 'services/tsconfig.custom.json', '-e', innerScript],
-        {cwd: REPO_ROOT, encoding: 'utf8', env: {...process.env, MONGODB_URI}},
-    );
+    // tsx silently swallows stdout when combining `--tsconfig` with `-e`,
+    // so write the inner script to a temp file and run that instead.
+    // Must live inside the repo so node can resolve the workspace's node_modules.
+    const tmpScript = path.join(REPO_ROOT, 'tools', `.mcp-dev-token-inner-${process.pid}.mts`);
+    fs.writeFileSync(tmpScript, innerScript);
+    let result;
+    try {
+        result = spawnSync(
+            process.execPath,
+            [tsxBin, '--tsconfig', 'services/tsconfig.custom.json', tmpScript],
+            {cwd: REPO_ROOT, encoding: 'utf8', env: {...process.env, MONGODB_URI}},
+        );
+    } finally {
+        try { fs.unlinkSync(tmpScript); } catch {}
+    }
 
     if (result.status !== 0) {
         process.stderr.write(result.stderr || 'token issue failed\n');

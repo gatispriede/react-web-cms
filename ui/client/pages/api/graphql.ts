@@ -147,10 +147,15 @@ const handler = startServerAndCreateNextHandler<NextApiRequest, GqlContext>(apol
                 }
             },
             // Analytics: expose the request IP for country derivation
-            // ONLY. `AnalyticsService.ingest` resolves it to a 2-letter
-            // country and discards the IP — see geoLookup.ts +
-            // docs/runbooks/analytics-geolookup.md.
+            // + internal-IP allowlist match, and the UA header for
+            // device parsing. Both are consumed once by
+            // `AnalyticsService.ingest` and discarded — never persisted,
+            // never logged. See geoLookup.ts + the runbook.
             getClientIp: () => ip,
+            getUserAgent: () => {
+                const h = req.headers['user-agent'];
+                return typeof h === 'string' ? h : undefined;
+            },
             getOrderTokenCookie: () => orderTokenCookie,
             setOrderTokenCookie: (token: string) => {
                 try {

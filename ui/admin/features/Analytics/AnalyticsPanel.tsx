@@ -1,23 +1,39 @@
-import React, {useEffect} from 'react';
-import {Alert, Button, Card, Col, Empty, Radio, Row, Space, Statistic, Table, Typography} from 'antd';
+import React, {useEffect, useMemo} from 'react';
+import {Alert, Button, Card, Col, Empty, Radio, Row, Segmented, Space, Statistic, Table, Tag, Typography} from 'antd';
 import {useTranslation} from 'react-i18next';
+import {ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid} from 'recharts';
 import {useViewModel} from '@client/lib/state/observable';
-import {AnalyticsPanelViewModel, type AnalyticsRange, type CountryRow, type EventRow, type PageRow} from './AnalyticsPanelViewModel';
+import {
+    AnalyticsPanelViewModel,
+    type AnalyticsRange,
+    type AudienceFilter,
+    type DailyRow,
+    type PageRow,
+    type EventRow,
+    type CountryRow,
+    type ReferrerRow,
+    type DeviceRow,
+    type BrowserRow,
+    type OsRow,
+} from './AnalyticsPanelViewModel';
+import type {AnalyticsAudience} from '@interfaces/IAnalytics';
 
 /**
- * Admin analytics dashboard — `/admin/release/analytics`.
- * Per `docs/features/platform/client-analytics.md` (decision 4 — canned only).
+ * Admin analytics dashboard — `/admin/seo/analytics`. v2 (2026-05-06).
+ * Per `docs/features/platform/client-analytics.md`.
  *
- * Reads `mongo.analyticsSummary(range)`. Renders:
- *   - Range selector (24h / 7d / 30d).
- *   - Top pages table.
- *   - Top events table.
- *   - Refresh + last-loaded stamp.
+ * Layout (top → bottom):
+ *   - Range selector (24h / 7d / 30d) + audience filter chips.
+ *   - KPI tiles: pageviews, unique visitors, sessions, events.
+ *   - Daily time-series line chart (pageviews + unique visitors).
+ *   - Audience-mix tags (always over the un-filtered range).
+ *   - Top pages / events tables.
+ *   - Top countries / referrers tables.
+ *   - Device / browser / OS breakdown tables.
  *
- * Out of scope (deferred to v2):
- *   - Per-page time series charts.
- *   - Funnel visualisation (funnel data needs Mongo aggregation work).
- *   - Drill-down by user / anonId.
+ * The dashboard's default audience is `public` — admin/internal/bot
+ * traffic is filtered out so the customer numbers stay clean. The chips
+ * surface the share % so it's obvious when the noise is large.
  */
 
 const RANGE_OPTIONS = [
@@ -26,15 +42,47 @@ const RANGE_OPTIONS = [
     {value: '30d', label: '30d'},
 ] as const;
 
+const AUDIENCE_ORDER: readonly AudienceFilter[] = ['public', 'admin', 'internal', 'bot', 'all'];
+
+function formatPercent(part: number, total: number): string {
+    if (total <= 0) return '0%';
+    return `${Math.round((part / total) * 100)}%`;
+}
+
 const AnalyticsPanel: React.FC = () => {
     const {t} = useTranslation();
     const vm = useViewModel(() => new AnalyticsPanelViewModel());
 
-    useEffect(() => { void vm.refresh(); }, [vm, vm.range]);
+    useEffect(() => { void vm.refresh(); }, [vm, vm.range, vm.audience]);
 
     const summary = vm.summary;
-    const totalPageviews = (summary?.topPages ?? []).reduce((acc, r) => acc + r.count, 0);
-    const totalEvents = (summary?.topEvents ?? []).reduce((acc, r) => acc + r.count, 0);
+    const totalAudience = useMemo(
+        () => (summary?.audienceMix ?? []).reduce((acc, r) => acc + r.count, 0),
+        [summary?.audienceMix],
+    );
+    const audienceCounts = useMemo(() => {
+        const out: Record<AnalyticsAudience, number> = {public: 0, admin: 0, internal: 0, bot: 0};
+        for (const row of summary?.audienceMix ?? []) out[row.audience] = row.count;
+        return out;
+    }, [summary?.audienceMix]);
+
+    const audienceOptions = AUDIENCE_ORDER.map(a => {
+        if (a === 'all') return {value: a, label: t('All')};
+        const aud = a as AnalyticsAudience;
+        return {
+            value: a,
+            label: (
+                <Space size={4}>
+                    <span style={{textTransform: 'capitalize'}}>{aud}</span>
+                    {totalAudience > 0 && (
+                        <Tag style={{marginInlineEnd: 0}}>
+                            {formatPercent(audienceCounts[aud] ?? 0, totalAudience)}
+                        </Tag>
+                    )}
+                </Space>
+            ),
+        };
+    });
 
     return (
         <div style={{padding: 16}}>
@@ -58,8 +106,18 @@ const AnalyticsPanel: React.FC = () => {
                     type="info"
                     showIcon
                     style={{marginBottom: 12}}
-                    message={t('First-party analytics — no third-party scripts. Anonymous + logged-in interactions, 90-day retention. Honours Sec-GPC / DNT.')}
+                    message={t('First-party analytics — no third-party scripts. 90-day retention. Honours Sec-GPC / DNT. Audience filter excludes admin / internal / bot traffic by default.')}
                 />
+
+                <div style={{marginBottom: 12}}>
+                    <Segmented
+                        value={vm.audience}
+                        onChange={(v) => vm.setAudience(v as AudienceFilter)}
+                        options={audienceOptions as any}
+                        size="middle"
+                    />
+                </div>
+
                 {summary?.error ? (
                     <Empty description={summary.error}/>
                 ) : !summary ? (
@@ -67,26 +125,56 @@ const AnalyticsPanel: React.FC = () => {
                 ) : (
                     <>
                         <Row gutter={16} style={{marginBottom: 16}}>
-                            <Col span={8}>
-                                <Statistic title={t('Pageviews (top 10 paths)')} value={totalPageviews}/>
+                            <Col span={6}>
+                                <Statistic title={t('Pageviews')} value={summary.totals.pageviews}/>
                             </Col>
-                            <Col span={8}>
-                                <Statistic title={t('Events (top 10 names)')} value={totalEvents}/>
+                            <Col span={6}>
+                                <Statistic title={t('Unique visitors')} value={summary.totals.uniqueAnon}/>
+                                <Typography.Text type="secondary" style={{fontSize: 11}}>
+                                    {t('logged-in: {{n}}', {n: summary.totals.uniqueUsers})}
+                                </Typography.Text>
                             </Col>
-                            <Col span={8}>
-                                <Statistic title={t('Since')} value={summary.since.split('T')[0]}/>
+                            <Col span={6}>
+                                <Statistic title={t('Sessions')} value={summary.totals.sessions}/>
+                            </Col>
+                            <Col span={6}>
+                                <Statistic title={t('Events')} value={summary.totals.events}/>
                             </Col>
                         </Row>
+
+                        <Card
+                            size="small"
+                            title={t('Daily traffic')}
+                            style={{marginBottom: 16}}
+                            styles={{body: {paddingTop: 0}}}
+                        >
+                            {summary.daily.length === 0 ? (
+                                <Empty description={t('No data in range')} style={{padding: 24}}/>
+                            ) : (
+                                <div style={{height: 240}}>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <LineChart data={summary.daily} margin={{top: 16, right: 16, left: 0, bottom: 0}}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)"/>
+                                            <XAxis dataKey="day" tick={{fontSize: 11}}/>
+                                            <YAxis allowDecimals={false} tick={{fontSize: 11}} width={40}/>
+                                            <Tooltip/>
+                                            <Line type="monotone" dataKey="pageviews" name={t('Pageviews')} stroke="#1677ff" strokeWidth={2} dot={false}/>
+                                            <Line type="monotone" dataKey="uniqueAnon" name={t('Unique')} stroke="#13c2c2" strokeWidth={2} dot={false}/>
+                                            <Line type="monotone" dataKey="events" name={t('Events')} stroke="#faad14" strokeWidth={2} dot={false}/>
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            )}
+                        </Card>
+
                         <Row gutter={16}>
                             <Col span={12}>
                                 <Typography.Title level={5}>{t('Top pages')}</Typography.Title>
                                 <Table<PageRow>
-                                    rowKey="path"
-                                    size="small"
-                                    pagination={false}
+                                    rowKey="path" size="small" pagination={false}
                                     dataSource={summary.topPages}
                                     columns={[
-                                        {title: t('Path'), dataIndex: 'path', key: 'path'},
+                                        {title: t('Path'), dataIndex: 'path', key: 'path', ellipsis: true},
                                         {title: t('Views'), dataIndex: 'count', key: 'count', width: 80, align: 'right'},
                                     ]}
                                     locale={{emptyText: t('No pageviews')}}
@@ -95,9 +183,7 @@ const AnalyticsPanel: React.FC = () => {
                             <Col span={12}>
                                 <Typography.Title level={5}>{t('Top events')}</Typography.Title>
                                 <Table<EventRow>
-                                    rowKey="name"
-                                    size="small"
-                                    pagination={false}
+                                    rowKey="name" size="small" pagination={false}
                                     dataSource={summary.topEvents}
                                     columns={[
                                         {title: t('Name'), dataIndex: 'name', key: 'name'},
@@ -107,14 +193,13 @@ const AnalyticsPanel: React.FC = () => {
                                 />
                             </Col>
                         </Row>
+
                         <Row gutter={16} style={{marginTop: 16}}>
                             <Col span={12}>
                                 <Typography.Title level={5}>{t('Top countries')}</Typography.Title>
                                 <Table<CountryRow>
-                                    rowKey="country"
-                                    size="small"
-                                    pagination={false}
-                                    dataSource={summary.topCountries ?? []}
+                                    rowKey="country" size="small" pagination={false}
+                                    dataSource={summary.topCountries}
                                     columns={[
                                         {title: t('Country'), dataIndex: 'country', key: 'country'},
                                         {title: t('Hits'), dataIndex: 'count', key: 'count', width: 80, align: 'right'},
@@ -125,7 +210,59 @@ const AnalyticsPanel: React.FC = () => {
                                     {t('Derived from request IP at ingest; the IP itself is never stored.')}
                                 </Typography.Text>
                             </Col>
+                            <Col span={12}>
+                                <Typography.Title level={5}>{t('Top referrers')}</Typography.Title>
+                                <Table<ReferrerRow>
+                                    rowKey="referrer" size="small" pagination={false}
+                                    dataSource={summary.topReferrers}
+                                    columns={[
+                                        {title: t('Referrer'), dataIndex: 'referrer', key: 'referrer', ellipsis: true},
+                                        {title: t('Hits'), dataIndex: 'count', key: 'count', width: 80, align: 'right'},
+                                    ]}
+                                    locale={{emptyText: t('No referrer data')}}
+                                />
+                            </Col>
                         </Row>
+
+                        <Row gutter={16} style={{marginTop: 16}}>
+                            <Col span={8}>
+                                <Typography.Title level={5}>{t('Devices')}</Typography.Title>
+                                <Table<DeviceRow>
+                                    rowKey="device" size="small" pagination={false}
+                                    dataSource={summary.devices}
+                                    columns={[
+                                        {title: t('Device'), dataIndex: 'device', key: 'device'},
+                                        {title: t('Hits'), dataIndex: 'count', key: 'count', width: 80, align: 'right'},
+                                    ]}
+                                    locale={{emptyText: t('No device data')}}
+                                />
+                            </Col>
+                            <Col span={8}>
+                                <Typography.Title level={5}>{t('Browsers')}</Typography.Title>
+                                <Table<BrowserRow>
+                                    rowKey="browser" size="small" pagination={false}
+                                    dataSource={summary.browsers}
+                                    columns={[
+                                        {title: t('Browser'), dataIndex: 'browser', key: 'browser'},
+                                        {title: t('Hits'), dataIndex: 'count', key: 'count', width: 80, align: 'right'},
+                                    ]}
+                                    locale={{emptyText: t('No browser data')}}
+                                />
+                            </Col>
+                            <Col span={8}>
+                                <Typography.Title level={5}>{t('Operating systems')}</Typography.Title>
+                                <Table<OsRow>
+                                    rowKey="os" size="small" pagination={false}
+                                    dataSource={summary.osFamilies}
+                                    columns={[
+                                        {title: t('OS'), dataIndex: 'os', key: 'os'},
+                                        {title: t('Hits'), dataIndex: 'count', key: 'count', width: 80, align: 'right'},
+                                    ]}
+                                    locale={{emptyText: t('No OS data')}}
+                                />
+                            </Col>
+                        </Row>
+
                         {vm.loadedAt && (
                             <Typography.Text type="secondary" style={{display: 'block', marginTop: 12, fontSize: 12}}>
                                 {t('Loaded at {{time}}', {time: vm.loadedAt.toLocaleTimeString()})}
@@ -137,5 +274,8 @@ const AnalyticsPanel: React.FC = () => {
         </div>
     );
 };
+
+// Suppress TS6133 (unused type imports kept for future drill-downs).
+export type _Unused = DailyRow;
 
 export default AnalyticsPanel;

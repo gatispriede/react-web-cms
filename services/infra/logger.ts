@@ -29,7 +29,27 @@ const ENV_LEVEL: LogLevel = (() => {
     if (raw === 'debug' || raw === 'info' || raw === 'warn' || raw === 'error') return raw;
     return process.env.NODE_ENV === 'production' ? 'info' : 'debug';
 })();
-const PRETTY = process.env.NODE_ENV !== 'production' && process.env.LOG_FORMAT !== 'json';
+// Read at emit-time (same reasoning as stdioOnlyStderr below): the
+// MCP stdio entrypoint mutates `LOG_FORMAT` before its tools spin up,
+// but ESM-hoisted imports of this module evaluate first.
+function isPretty(): boolean {
+    return process.env.NODE_ENV !== 'production' && process.env.LOG_FORMAT !== 'json';
+}
+
+/**
+ * MCP stdio mode reserves stdout for the JSON-RPC frame stream — any
+ * other byte on stdout breaks the parser on the client side. When
+ * `MCP_STDIO=1` is set, EVERY log line goes to stderr regardless of
+ * level so info/debug noise can't poison the channel.
+ *
+ * Read at emit-time, not module-load-time: ESM hoists imports above any
+ * statement, so the stdio entrypoint can't reliably set the env var
+ * before this module evaluates. Per-emit env reads are essentially
+ * free (a process env lookup is a hash hit).
+ */
+function stdioOnlyStderr(): boolean {
+    return process.env.MCP_STDIO === '1';
+}
 
 export interface LogContext {
     [key: string]: unknown;
@@ -86,9 +106,9 @@ function emit(level: LogLevel, msg: string, ctx: LogContext): void {
         return;
     }
 
-    if (PRETTY) {
+    if (isPretty()) {
         const line = formatPretty(level, msg, payload);
-        if (level === 'error' || level === 'warn') process.stderr.write(line + '\n');
+        if (stdioOnlyStderr() || level === 'error' || level === 'warn') process.stderr.write(line + '\n');
         else process.stdout.write(line + '\n');
         return;
     }
@@ -99,7 +119,7 @@ function emit(level: LogLevel, msg: string, ctx: LogContext): void {
         msg,
         ...payload,
     });
-    if (level === 'error' || level === 'warn') process.stderr.write(json + '\n');
+    if (stdioOnlyStderr() || level === 'error' || level === 'warn') process.stderr.write(json + '\n');
     else process.stdout.write(json + '\n');
 }
 

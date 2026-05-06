@@ -224,12 +224,62 @@ services:
       timeout: 5s
       retries: 5
       start_period: 90s
+  # --- MCP HTTP transport — remote AI access to the CMS ---
+  # Same image as `app` (we reuse the bundled tsx + service tree); just a
+  # different command. Bound only to the back-end network, never exposes
+  # a public port — Caddy proxies `https://${DOMAIN}/mcp` to it on
+  # `mcp:8788`. Auth is bearer-token (issued at /admin/system/mcp); Caddy
+  # adds an IP allowlist via `MCP_ALLOWED_IPS` for defense in depth.
+  #
+  # Default `replicas: 1` is fine — MCP traffic is operator/agent-driven,
+  # not customer-facing, so seamless deploy isn't required. A restart =
+  # disconnected sessions; the client reconnects.
+  mcp:
+    image: node-app
+    container_name: mcp
+    depends_on:
+      mongodb: { condition: service_started }
+    build:
+      context: ..
+      dockerfile: infra/AppDockerfile
+    command: npm run mcp:http
+    env_file:
+      - ../.env
+    environment:
+      - NODE_ENV=production
+      - MCP_HTTP_ENABLED=true
+      - MCP_HTTP_BIND=0.0.0.0
+      - MCP_HTTP_PORT=8788
+      # IP allowlist applied INSIDE the process — strictest gate. Caddy
+      # also enforces (see Caddyfile @mcp-allow). Empty value = trust
+      # whatever Caddy let through.
+      - MCP_HTTP_ALLOWED_IPS=${MCP_HTTP_ALLOWED_IPS:-}
+    volumes:
+      # MCP tools that touch the filesystem (bundle.export/import,
+      # image.upload, log.tail) operate on the same uploads tree the
+      # app writes to, so files end up where Next can serve them.
+      - ../uploads/images:/app/ui/client/public/images
+      - ../uploads/bundles:/app/ui/client/public/bundles
+      - ../uploads/design-v2:/app/ui/client/public/design-v2
+    networks:
+      - db
+      - back-end
+    expose:
+      - 8788
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:8788/healthz | grep -q '\"ok\":true' || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
   caddy:
     image: caddy:2-alpine
     container_name: caddy
     restart: unless-stopped
     depends_on:
       app: { condition: service_started }
+      mcp: { condition: service_started }
     environment:
       # Site address for the Caddyfile. Set DOMAIN in .env per droplet
       # (e.g. DOMAIN=skyclimber.pro). Falls back to :80 so the proxy still
@@ -246,6 +296,11 @@ services:
       # `app:80` keeps the legacy single-instance path working when
       # the seamless profile is off.
       - ACTIVE_UPSTREAM=${ACTIVE_UPSTREAM:-app:80}
+      # Caddy-side IP allowlist for the /mcp route. Comma-separated CIDR
+      # or literal IPs (e.g. `198.51.100.0/24,203.0.113.7`). Empty =
+      # bearer token is the only gate — set this to your office / VPN
+      # CIDRs in `.env` for defense in depth.
+      - MCP_ALLOWED_CIDR=${MCP_ALLOWED_CIDR:-}
     ports:
       - "80:80"
       - "443:443"

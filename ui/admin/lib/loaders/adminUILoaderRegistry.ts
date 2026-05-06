@@ -21,6 +21,7 @@ import type {AdminPaneDescriptor, AdminUILoader} from './AdminUILoader';
 import {PostsAdminUILoader} from '@admin/features/Posts/PostsAdminUILoader';
 import {FooterAdminUILoader} from '@admin/features/Footer/FooterAdminUILoader';
 import {AnalyticsAdminUILoader} from '@admin/features/Analytics/AnalyticsAdminUILoader';
+import {AnalyticsFiltersAdminUILoader} from '@admin/features/Analytics/AnalyticsFiltersAdminUILoader';
 import {ErrorLogAdminUILoader} from '@admin/features/Observability/ErrorLogAdminUILoader';
 import {McpAdminUILoader} from '@admin/features/Mcp/McpAdminUILoader';
 import {AuditAdminUILoader} from '@admin/features/Audit/AuditAdminUILoader';
@@ -46,6 +47,7 @@ const REGISTERED: AdminUILoader[] = [
     new PostsAdminUILoader(),
     new FooterAdminUILoader(),
     new AnalyticsAdminUILoader(),
+    new AnalyticsFiltersAdminUILoader(),
     new ErrorLogAdminUILoader(),
     new McpAdminUILoader(),
     new AuditAdminUILoader(),

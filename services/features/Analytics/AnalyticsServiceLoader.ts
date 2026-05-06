@@ -28,26 +28,41 @@ export class AnalyticsServiceLoader extends ServiceLoader {
         {collection: 'Analytics', spec: {ts: 1}, options: {expireAfterSeconds: () => AnalyticsService.retentionSeconds()}},
         // Idempotent dedupe on client-supplied event id.
         {collection: 'Analytics', spec: {id: 1}, options: {unique: true}},
-        // Dashboard query patterns.
+        // Dashboard query patterns. The audience-leading composite index
+        // covers the dashboard's default (`audience: 'public'`) range
+        // queries; `ts: -1` is the secondary key for time-window scans.
+        {collection: 'Analytics', spec: {audience: 1, ts: -1}},
+        {collection: 'Analytics', spec: {audience: 1, type: 1, ts: -1}},
+        {collection: 'Analytics', spec: {audience: 1, path: 1, ts: -1}},
         {collection: 'Analytics', spec: {anonId: 1, ts: -1}},
         {collection: 'Analytics', spec: {userId: 1, ts: -1}, options: {sparse: true}},
-        {collection: 'Analytics', spec: {type: 1, name: 1, ts: -1}},
-        {collection: 'Analytics', spec: {path: 1, ts: -1}},
+        // Filter doc lives in its own collection — no TTL, single-doc.
     ];
 
     readonly schemaSDL = `extend type MutationMongo {
     """Public — accept a batch of client-side analytics events. Server validates + rate-limits per anonId; rejected rows silently dropped."""
     trackEvent(events: [JSON!]!): String!
+    """Admin — replace the internal-IP allowlist + labels. \`input\` is a JSON object {internalIps: string[], labels?: {ip: label}}."""
+    analyticsFiltersUpdate(input: JSON!): String!
 }
 extend type QueryMongo {
-    """Admin — canned analytics summary for the dashboard (top pages, top events). \`range\`: 24h | 7d | 30d."""
-    analyticsSummary(range: String!): String!
+    """Admin — analytics summary for the dashboard. \`range\`: 24h | 7d | 30d. \`audience\`: public (default) | admin | internal | bot | all."""
+    analyticsSummary(range: String, audience: String): String!
+    """Admin — current internal-IP allowlist + labels."""
+    analyticsFiltersGet: String!
 }`;
 
     readonly authz: FeatureAuthzContribution = {
         queryRequirements: {
             analyticsSummary: 'admin',
+            analyticsFiltersGet: 'admin',
         },
+        mutationRequirements: {
+            analyticsFiltersUpdate: 'admin',
+        },
+        // `analyticsFiltersUpdate` is session-injected so the service
+        // can stamp `updatedBy` on the filter doc.
+        sessionInjected: ['analyticsFiltersUpdate'],
         // `trackEvent` is intentionally NOT in mutationRequirements — it's
         // public ingest. Keep it out of `customerMutations` too: anonymous
         // callers must be allowed.

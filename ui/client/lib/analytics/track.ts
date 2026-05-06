@@ -76,29 +76,16 @@ function privacyOptOut(): boolean {
     return gpc || dnt;
 }
 
-function detectDevice(): 'mobile' | 'tablet' | 'desktop' {
-    if (typeof navigator === 'undefined') return 'desktop';
-    const ua = (navigator.userAgent || '').toLowerCase();
-    if (/ipad|tablet/i.test(ua)) return 'tablet';
-    if (/mobile|iphone|android.*mobile/i.test(ua)) return 'mobile';
-    return 'desktop';
-}
-
-function detectBrowser(): string | undefined {
-    if (typeof navigator === 'undefined') return undefined;
-    const ua = navigator.userAgent || '';
-    if (/edg\//i.test(ua)) return 'edge';
-    if (/chrome\//i.test(ua)) return 'chrome';
-    if (/safari\//i.test(ua) && !/chrome/i.test(ua)) return 'safari';
-    if (/firefox\//i.test(ua)) return 'firefox';
-    return undefined;
-}
-
 function buildEvent(
     type: IAnalyticsEvent['type'],
     name: string,
     props?: Record<string, string | number | boolean>,
 ): IAnalyticsEvent {
+    // UA parsing moved to the server (ua-parser-js, ingest-time) in v2.
+    // The client no longer sends `ua` — clients are untrusted on this
+    // axis (a hostile or buggy client could spoof `mobile` to skew the
+    // device-mix dashboard) and the server already has the raw UA
+    // header for free.
     return {
         id: uuid(),
         ts: Date.now(),
@@ -109,7 +96,6 @@ function buildEvent(
         type,
         name,
         props,
-        ua: {device: detectDevice(), browser: detectBrowser()},
         viewport: typeof window !== 'undefined' ? {w: window.innerWidth, h: window.innerHeight} : undefined,
         locale: typeof navigator !== 'undefined' ? navigator.language : undefined,
     };

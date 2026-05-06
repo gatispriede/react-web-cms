@@ -207,13 +207,16 @@ services/features/CmsAi/mcp/
 └── resources/          # cms://pages, cms://module-types, cms://themes/active
 ```
 
-Transport: **stdio only** in v1. Spawned as a child process by the MCP client. No HTTP, no network surface.
+Transports:
 
-```
-"mcp:stdio": "tsx services/features/CmsAi/mcp/index.ts"
-```
+- **stdio** (`npm run mcp:stdio`) — spawned as a child by Claude Desktop / Claude Code / Cursor / Continue. Auth = `--token` flag or `MCP_TOKEN` env. Stdout reserved for JSON-RPC frames; logs and `console.*` are rerouted to stderr by the entrypoint.
+- **Streamable HTTP** (`npm run mcp:http`) — long-running server for remote use (multi-developer, mobile Claude Desktop, agent platforms). Auth = `Authorization: Bearer mcpsk_…` per request. Sessions are short-lived (`Mcp-Session-Id` header). Default bind `127.0.0.1:8788`; in production it sits on the back-end Docker network behind Caddy at `https://${DOMAIN}/mcp`. See `docs/runbooks/mcp-http-deploy.md` for the deploy procedure.
 
-Auth: same `CMS_SECRET` env var — the MCP server reads it at boot, checks it on each tool call.
+Auth (both transports): tokens issued at `/admin/system/mcp` (or `npm run mcp:dev-token` for local). Same `McpTokens` collection, same scope set, same revocation path. The HTTP transport additionally adds:
+
+- per-token rate limit (`MCP_HTTP_RATE_LIMIT_PER_MIN`, default 600)
+- in-process IP allowlist (`MCP_HTTP_ALLOWED_IPS`)
+- Caddy-side IP allowlist (`MCP_ALLOWED_CIDR`) as defense in depth
 
 ### Why MCP on top of CLI
 

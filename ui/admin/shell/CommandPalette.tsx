@@ -68,6 +68,7 @@ export const CommandPalette: React.FC<Props> = ({open, onClose, extra}) => {
             // Admin side management
             {id: 'system/users', label: t('Users'), keywords: 'users admins accounts', hint: `/admin/system/users`, action: () => navigate(`/admin/system/users`)},
             {id: 'system/mcp', label: t('MCP tokens'), keywords: 'mcp tokens ai claude cursor', hint: `/admin/system/mcp`, action: () => navigate(`/admin/system/mcp`)},
+            {id: 'system/analytics-filters', label: t('Analytics filters'), keywords: 'analytics filters internal ip allowlist exclude', hint: `/admin/system/analytics-filters`, action: () => navigate(`/admin/system/analytics-filters`)},
             {id: 'system/inquiries', label: t('Inquiries'), keywords: 'inquiries contact submissions', hint: `/admin/system/inquiries`, action: () => navigate(`/admin/system/inquiries`)},
             // Cross-area utilities
             {id: 'preview', label: t('Preview site'), keywords: 'preview public site', hint: `/${lang}`, action: () => openNew(`/${lang}`)},
