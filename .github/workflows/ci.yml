@@ -519,7 +519,25 @@ jobs:
               # port 80 until the new `app` is healthy, then Docker
               # swaps them. BuildKit picks up layer cache from the prior
               # build automatically on the same host.
+              #
+              # Trap the exit code explicitly. Docker compose v2 sometimes
+              # returns non-zero after a successful `up` when a sibling
+              # service's healthcheck is briefly stale — under
+              # `set -euo pipefail` that aborts the deploy mid-stride
+              # without a clear error. Capturing the code lets us decide
+              # rather than getting silently 'set -e'd.
+              set +e
               docker compose -p cms -f infra/compose.yaml --env-file .env up --no-deps --build -d app
+              UP_RC=$?
+              set -e
+              echo "==> docker compose up app returned: $UP_RC"
+              if [ "$UP_RC" != "0" ]; then
+                # Show what's actually unhappy so we can diagnose without
+                # another round-trip through CI.
+                docker compose -p cms -f infra/compose.yaml --env-file .env ps >&2 || true
+                docker compose -p cms -f infra/compose.yaml --env-file .env logs --tail=80 app >&2 || true
+                exit "$UP_RC"
+              fi
             fi
 
             # Skip the `front` health loop when seamless ran — the
