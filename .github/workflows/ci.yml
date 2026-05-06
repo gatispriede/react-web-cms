@@ -208,7 +208,15 @@ jobs:
           username: root
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           envs: DEPLOY_ENV_FILE,SMOKE_URL,SEAMLESS
-          script_stop: true
+          # `script_stop: true` joins script lines with `&&`-style chaining,
+          # which makes the action abort whenever ANY single line returns
+          # non-zero — including bash `if` test commands that bash itself
+          # correctly handles without aborting. Caused funisimo deploys
+          # to die at `if [ "$DEPLOY_MODE" = "seamless" ]; then` once
+          # DEPLOY_MODE was set to "legacy". Our inline `set -euo pipefail`
+          # below is the right gate; it follows POSIX `set -e` semantics
+          # and exempts test contexts.
+          script_stop: false
           # Default appleboy/ssh-action command_timeout is 10m, which fires
           # before the inner app-healthy loop on cold deploys (image pull +
           # `next build` regularly take 6-8m alone). Bumped to 30m so the
