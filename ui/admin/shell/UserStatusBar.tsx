@@ -97,6 +97,7 @@ export type AdminView =
     | 'system'
     | 'system/users'
     | 'system/mcp'
+    | 'system/analytics-filters'
     | 'system/inquiries'
     | 'system/features'
     | 'system/agent'
@@ -153,6 +154,7 @@ const buildAreaItems = (
         {path: '/admin/system/features', label: tAdmin('Feature flags'), icon: <SettingOutlined/>, testidSuffix: 'features', adminOnly: true},
         // Power-user / observability — the rest below.
         {path: '/admin/system/mcp', label: tAdmin('MCP'), icon: <AuditOutlined/>, testidSuffix: 'mcp'},
+        {path: '/admin/system/analytics-filters', label: tAdmin('Analytics filters'), icon: <SettingOutlined/>, testidSuffix: 'analytics-filters', adminOnly: true},
         {path: '/admin/system/agent', label: tAdmin('AI Agent'), icon: <ThunderboltOutlined/>, testidSuffix: 'agent', adminOnly: true},
         {path: '/admin/system/errors', label: tAdmin('Errors'), icon: <AuditOutlined/>, testidSuffix: 'errors', adminOnly: true},
         {path: '/admin/system/info', label: tAdmin('Diagnostics'), icon: <InfoCircleOutlined/>, testidSuffix: 'info', adminOnly: true},

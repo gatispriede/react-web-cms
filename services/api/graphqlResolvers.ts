@@ -46,6 +46,13 @@ export interface ResolverHooks {
      * `services/features/Analytics/geoLookup.ts` + the runbook.
      */
     getClientIp?: () => string | undefined;
+    /**
+     * Raw HTTP `User-Agent` header for analytics device parsing.
+     * Read once; `AnalyticsService.ingest` parses it via `ua-parser-js`
+     * and stores the structured result on each event. The raw header
+     * is never persisted.
+     */
+    getUserAgent?: () => string | undefined;
 }
 
 // Cart owner derivation moved to services/features/Cart/feature.manifest.ts
@@ -163,10 +170,12 @@ export const nextResolvers = {
             return parent.signUpCustomer(args);
         },
         trackEvent: (parent: any, args: {events: unknown[]}, ctx: {hooks?: ResolverHooks}) => {
-            // Read the IP off the hook once and pass it down. The
-            // service consumes it for country lookup and discards it.
+            // IP for country + internal-IP allowlist; UA for device parse.
+            // Both are consumed by `AnalyticsService.ingest` and discarded
+            // — neither is ever persisted, neither is ever logged.
             const ip = ctx.hooks?.getClientIp?.();
-            return parent.trackEvent({events: args.events, ip});
+            const userAgent = ctx.hooks?.getUserAgent?.();
+            return parent.trackEvent({events: args.events, ip, userAgent});
         },
         // Cart mutations (cartAddItem / cartUpdateQty / cartRemoveItem /
         // cartClear) are owned by the Cart feature manifest and merged in

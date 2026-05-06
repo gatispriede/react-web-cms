@@ -5,7 +5,31 @@
  * Strict allowlist on `props` — string/number/boolean only. Server-side
  * ingest validates before write so a buggy / hostile client can't bloat
  * the collection or smuggle PII through abused custom events.
+ *
+ * v2 (2026-05-06): added `audience` segmentation + richer `ua.*` fields
+ * parsed server-side from the UA header. The dashboard defaults to
+ * `audience === 'public'` so admin/internal/bot traffic never skews
+ * customer numbers; full data is retained for retroactive re-segmentation.
  */
+export type AnalyticsAudience = 'public' | 'admin' | 'internal' | 'bot';
+
+export interface IAnalyticsUA {
+    /** Coarse device class — primary breakdown axis. */
+    device: 'mobile' | 'tablet' | 'desktop' | 'bot';
+    /** Browser family (e.g. `Chrome`, `Safari`, `Firefox`, `Edge`). */
+    browser?: string;
+    /** Browser major version (e.g. `124`). Cardinality bounded — major only. */
+    browserVersion?: string;
+    /** OS family (e.g. `Windows`, `macOS`, `iOS`, `Android`, `Linux`). */
+    os?: string;
+    /** OS version (e.g. `14.5`, `11`). Truncated to 16 chars. */
+    osVersion?: string;
+    /** Hardware vendor (`Apple`, `Samsung`). 64-char cap. */
+    vendor?: string;
+    /** Hardware model (`iPhone15,2`, `SM-S921B`). 64-char cap. */
+    model?: string;
+}
+
 export interface IAnalyticsEvent {
     /** UUID generated client-side. Lets the server dedupe a retry storm. */
     id: string;
@@ -27,9 +51,27 @@ export interface IAnalyticsEvent {
     name: string;
     /** Small key/value bag — string|number|boolean only, max 16 keys. */
     props?: Record<string, string | number | boolean>;
-    ua?: {device: 'mobile' | 'tablet' | 'desktop'; browser?: string};
+    /** Server-derived from the UA header (ua-parser-js). Client-supplied UA is ignored. */
+    ua?: IAnalyticsUA;
     viewport?: {w: number; h: number};
     locale?: string;
+    /**
+     * Server-stamped traffic segment. Tagged at ingest from three signals,
+     * in priority order:
+     *   1. `bot`       — UA matches the `isbot` heuristic.
+     *   2. `internal`  — request IP is on the Mongo-backed allowlist
+     *                    (admin-editable at `/admin/system/analytics-filters`).
+     *   3. `admin`     — authenticated session is an admin user (any
+     *                    role above `customer`), OR the request path is
+     *                    under `/admin/*`.
+     *   4. `public`    — everything else (default).
+     *
+     * Filtering happens at QUERY time, not at ingest. Old rows without
+     * an explicit `audience` are treated as `public`. The backfill in
+     * `tools/scripts/analytics-backfill-audience.mjs` retro-tags via a
+     * `userId → users.role` join for the rolling 90-day retention window.
+     */
+    audience?: AnalyticsAudience;
     /**
      * Server-derived 2-letter country code (ISO 3166-1 alpha-2).
      *
@@ -63,4 +105,26 @@ export const ANALYTICS_LIMITS = {
     RATE_LIMIT_EVENTS: 60,
     /** Rate-limit window milliseconds. */
     RATE_LIMIT_WINDOW_MS: 60_000,
+    /** Max chars per UA-derived field (browser/os/vendor/model). */
+    UA_FIELD_LEN: 64,
 } as const;
+
+/**
+ * Mongo-backed IP allowlist that tags inbound traffic as `audience: 'internal'`.
+ * Admin-editable at `/admin/system/analytics-filters`. Stored in the
+ * `AnalyticsFilters` collection — single document per environment, no
+ * sharding, < 1KB. CIDR not supported in v2 — exact match on IPv4/IPv6
+ * literal; that's enough for office/VPN/static-home setups.
+ */
+export interface IAnalyticsFilters {
+    /** Document id — always the literal string `'default'`. */
+    _id?: string;
+    /** Exact-match IP literals. Matched case-insensitively against the request IP. */
+    internalIps: string[];
+    /** Free-text label per IP for the admin UI ("office router", "alex home"). */
+    labels?: Record<string, string>;
+    /** Last-edited stamp for the audit log row. */
+    updatedAt?: number;
+    /** Email of the admin who last edited. */
+    updatedBy?: string;
+}
