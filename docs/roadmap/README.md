@@ -68,6 +68,7 @@ Estimates assume one focused engineer already familiar with the codebase. Double
 | F8-stream | streaming transport for bundle/image tools | M | Long-running tools (bundle export, image rescan) currently buffer; streaming progress events queued for post-merge |
 | F8-sdk | plugin SDK for third-party MCP tools | L | Surface `defineTool` + `compose` as a public API so plugins can register without touching core |
 | F8-e2e | un-skip MCP E2E suite | S | Spec exists; `test.skip` blocks pending fixture wiring |
+| F8-bulk-introspection | [mcp-bulk-and-introspection.md](mcp-bulk-and-introspection.md) | M-L (~3 days) | Two parallel gaps. **Bulk-write**: extend ~12 mutation tools (`section.update`, `module.add/update/remove`, `page.update`, `post.upsert`, `product.create/update`, `permission.grant/revoke`, `user.setRole/update`, `translation.delete`, `trash.restore/purge`) with optional `items[]` / `ids[]` arrays. Reference impl: `image.delete { ids[] }` shipped 2026-05-07. **Introspection**: extend ~10 `*.list` tools with aggregating flags (`i18n.listLanguages { includeMissing }` for translation gap analysis, `theme.list { includeUsage }`, `page.list { includeSeoStatus }`, `user.list { includeActivity }`, etc.). Reference impl: `image.list { includeUsage }` same day. Plus `i18n.diff` + `i18n.scanCodebase` translation-specific helpers — agent-driven translation work needs server-side missing-key matrix instead of dumping every locale into context. Same shared scanner pattern as `ImageUsageService` so admin UI's "show unused / missing" filters reuse the backend |
 
 ### Visual + observability
 
@@ -99,7 +100,7 @@ Estimates assume one focused engineer already familiar with the codebase. Double
 3a. **Mobile-friendly admin** — operator can edit/publish from a phone. Shell drawer first (immediate readable win), editors next (the unblocker), polish + PWA last. Pair with the public-site mobile column work — the SCSS approach for collapsing multi-column rows is the same on both surfaces
 4. **Q4-cap** — capture visual baselines so subsequent refactors have a safety net
 5. **Bundle-import restart hook** — XS wiring, removes a real operator paper-cut after each import
-6. **F8 deferred (streaming + plugin SDK + E2E un-skip)** — interleave; streaming is highest-value for the long-running tools
+6. **F8 deferred (bulk + introspection → streaming → plugin SDK → E2E un-skip)** — bulk-write + introspection sweep is the unblocker for translation/agent workflows; ship before streaming so the streaming work has the right surface to streamline. SDK last (needs API stability)
 7. **AUI-mode per-pane simplified variants** — Themes + Posts proved the dispatch; pick the next high-traffic pane
 8. **E-commerce real-flow specs** — unblocks the e-commerce wiring queue
 9. **Q5-del** — only after observation window; pure cleanup
