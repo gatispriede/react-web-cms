@@ -66,7 +66,6 @@ Estimates assume one focused engineer already familiar with the codebase. Double
 | # | Item | Size | Notes |
 |---|------|------|-------|
 | F8-stream | streaming transport for bundle/image tools | M | Long-running tools (bundle export, image rescan) currently buffer; streaming progress events queued for post-merge |
-| F8-sdk | plugin SDK for third-party MCP tools | L | Surface `defineTool` + `compose` as a public API so plugins can register without touching core |
 | F8-e2e | un-skip MCP E2E suite | S | Spec exists; `test.skip` blocks pending fixture wiring |
 | F8-bulk-introspection | [mcp-bulk-and-introspection.md](mcp-bulk-and-introspection.md) | M-L (~3 days) | Two parallel gaps. **Bulk-write**: extend ~12 mutation tools (`section.update`, `module.add/update/remove`, `page.update`, `post.upsert`, `product.create/update`, `permission.grant/revoke`, `user.setRole/update`, `translation.delete`, `trash.restore/purge`) with optional `items[]` / `ids[]` arrays. Reference impl: `image.delete { ids[] }` shipped 2026-05-07. **Introspection**: extend ~10 `*.list` tools with aggregating flags (`i18n.listLanguages { includeMissing }` for translation gap analysis, `theme.list { includeUsage }`, `page.list { includeSeoStatus }`, `user.list { includeActivity }`, etc.). Reference impl: `image.list { includeUsage }` same day. Plus `i18n.diff` + `i18n.scanCodebase` translation-specific helpers — agent-driven translation work needs server-side missing-key matrix instead of dumping every locale into context. Same shared scanner pattern as `ImageUsageService` so admin UI's "show unused / missing" filters reuse the backend |
 
@@ -99,44 +98,40 @@ Strict size-first ordering: largest items lead so deep work isn't fragmented; qu
 
 1. **Mobile-friendly admin** — `mobile-friendly-admin.md`. Three independently-mergeable phases (shell drawer → editors → polish + PWA). ~5 days realistic. Reuses SCSS mixin from Wave 2 mobile column work, so mergeable in either order.
    - **Dependency exception:** Q4-cap visual baselines (Wave 3) ideally lands first — every shell + editor change otherwise risks silent regression. Acceptable to start admin Phase 1 in parallel since shell scope is small.
-2. **Terraform / Kamal full migration** — `terraform-kamal-migration.md`. 7 days across 6 phases. **Phase B (GHCR push-based deploy) carved out into Wave 2** because half-day standalone value is too high to wait — the rest of the migration can follow.
-3. **F8-sdk plugin SDK** — surface `defineTool` + `compose` as a public API. Hold until F8-bulk-introspection lands so the API surface is stable.
+2. **Terraform / Kamal full migration** — `terraform-kamal-migration.md`. 7 days across 6 phases. GHCR push-based deploy is Phase B internally; rest of the migration follows.
 
 ### Wave 2 — M (0.5-2 days each)
 
 4. **F8-bulk-introspection** — `mcp-bulk-and-introspection.md`. ~3 days. Unblocks translation work + bulk authoring via MCP. Reusable scanner pattern feeds admin "show unused / missing" filters.
 5. **F6 site-mode-toggle** — `site-mode-toggle.md`. ~1-2 days, four phases. Phase 1 (shell + mobile-menu unification) also resolves the standing styling drift.
 6. **F8-stream** — streaming transport for `bundle.export` / `image.rescan`. Pair with mcp-rollout #12 (bundle sanitiser fix) — the same flow gets stress-tested.
-7. **GHCR push-based deploy** (Terraform Phase B carve-out) — `next build` moves to CI; droplets pull instead of build. Cold-deploy drops 6-8min → ~30s. Obsoletes the auto-rollback item below.
-8. **Section drag-reorder root cause** — investigate why `getChangedPos` + `DraggableWrapper` chain stopped firing. Up/down arrows already ship as workaround.
-9. **link-target-autosearch** — `link-target-autosearch.md`. Picker + anchor registry. **Depends on F6** (picker emits `/page#anchor` vs `/#anchor` based on mode).
-10. **AUI mode per-pane** — Themes + Posts proved the dispatch; pick next high-traffic pane. Slot one pane at a time.
-11. **E-commerce real-flow specs** — happy-path per feature: products / cart / checkout / inventory / orders.
+7. **Section drag-reorder root cause** — investigate why `getChangedPos` + `DraggableWrapper` chain stopped firing. Up/down arrows already ship as workaround.
+8. **link-target-autosearch** — `link-target-autosearch.md`. Picker + anchor registry. **Depends on F6** (picker emits `/page#anchor` vs `/#anchor` based on mode).
+9. **AUI mode per-pane** — Themes + Posts proved the dispatch; pick next high-traffic pane. Slot one pane at a time.
+10. **E-commerce real-flow specs** — happy-path per feature: products / cart / checkout / inventory / orders.
 
 ### Wave 3 — S (1-3 hours each)
 
-12. **Q4-cap visual baselines** — capture mobile + desktop. **Should land before Wave 1 Mobile-friendly admin Phase 2**.
-13. **Mobile column behavior flag** — per-module `stack` / `keep-ratio` / `reorder-N`. SCSS approach reused by Mobile-friendly admin Phase 2.
-14. **C13b Manifesto link-target** — depends on link-target-autosearch landing first.
-15. **Bundle-import restart hook** — `markRestartRequired()` wiring.
-16. **Declarative .env split** — `.env.static` (CI-managed) + `.env.runtime` (deploy-script-managed). Removes a class of "where did this var go?" bugs.
-17. **Deploy auto-rollback** — likely obsoleted by GHCR. Verify after GHCR ships; close as won't-do if obsolete.
-18. **F8-e2e** — un-skip MCP E2E suite + re-enable e2e.yml triggers (mcp-rollout #10 same workstream).
-19. **mcp-rollout aftermath quick fixes:**
+11. **Q4-cap visual baselines** — capture mobile + desktop. **Should land before Wave 1 Mobile-friendly admin Phase 2**.
+12. **Mobile column behavior flag** — per-module `stack` / `keep-ratio` / `reorder-N`. SCSS approach reused by Mobile-friendly admin Phase 2.
+13. **C13b Manifesto link-target** — depends on link-target-autosearch landing first.
+14. **Bundle-import restart hook** — `markRestartRequired()` wiring.
+15. **Declarative .env split** — `.env.static` (CI-managed) + `.env.runtime` (deploy-script-managed). Removes a class of "where did this var go?" bugs.
+16. **Deploy auto-rollback** — likely obsoleted by GHCR (Terraform Phase B). Verify after GHCR ships; close as won't-do if obsolete.
+17. **F8-e2e** — un-skip MCP E2E suite + re-enable e2e.yml triggers (mcp-rollout #10 same workstream).
+18. **mcp-rollout aftermath quick fixes:**
     - `#1` section.update description / upsert (1 line)
     - `#5` admin:bundle scope in dev-token (1 line)
     - `#9` `page.touch` MCP tool (audit-triplet stamp)
     - `#11` INFRA_TOPOLOGY normalize step
     - `#12` bundle sanitiser fix
-20. **Q5-del** — admin-segregation Phase 3 cleanup after ≥1 release with zero `legacy-route` errors.
-21. **Themes direct-route gqty** — `Theme.tsx` empty fetch investigation.
+19. **Q5-del** — admin-segregation Phase 3 cleanup after ≥1 release with zero `legacy-route` errors.
+20. **Themes direct-route gqty** — `Theme.tsx` empty fetch investigation.
 
 ### Wave 4 — XS
 
-22. **gqty schema regen** — surfaces `isFreshInstall` / `onboardingBootstrap` to typed clients.
+21. **gqty schema regen** — surfaces `isFreshInstall` / `onboardingBootstrap` to typed clients.
 
-### Backlog (no commitment)
+### Potential — concrete-trigger backlog
 
-- C17 sample audit — opens when a client surfaces a specific gap.
-- Mobile-friendly admin native wrapper (Capacitor / RN) — explicitly out of scope for v1.
-- mcp-rollout `#8` Mongo healthcheck — explicitly deferred per cattle-not-pets stance.
+Items deferred until a real driver appears (third-party plugin author, customer ask, recurring bug, external dependency). Not budgeted in any wave. See [`potential.md`](potential.md) for the parking lot. Currently parked: **F8-sdk** plugin SDK · **C17** sample audit · Mobile-friendly admin **native wrapper** · mcp-rollout `#8` Mongo healthcheck · per-page site-mode toggle.
