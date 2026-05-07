@@ -24,15 +24,24 @@ const escapeXml = (s: string): string => s
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&apos;');
 
+export interface SitemapPost {
+    slug: string;
+    draft?: boolean;
+    publishedAt?: string | null;
+    editedAt?: string | null;
+}
+
 export interface BuildSitemapInput {
     pages: NavRow[];
     locales: string[];
     defaultLocale: string;
     origin: string;
+    posts?: SitemapPost[];
+    blogEnabled?: boolean;
 }
 
 /** Pure builder — exported for unit tests. */
-export function buildSitemapXml({pages, locales, defaultLocale, origin}: BuildSitemapInput): string {
+export function buildSitemapXml({pages, locales, defaultLocale, origin, posts = [], blogEnabled = true}: BuildSitemapInput): string {
     const urls: string[] = [];
     for (const p of pages) {
         // Pre-compute one chain per locale — per-locale slugs (F1
@@ -62,6 +71,26 @@ export function buildSitemapXml({pages, locales, defaultLocale, origin}: BuildSi
             ].join('\n'));
         }
     }
+    // Blog: emit /blog index + one entry per published post. Posts aren't
+    // localised via the slug-chain (they live under a single /blog/<slug>
+    // route), so no hreflang alternates here. Skip drafts and missing slugs.
+    if (blogEnabled && posts.length > 0) {
+        urls.push([
+            `  <url>`,
+            `    <loc>${escapeXml(`${origin}/blog`)}</loc>`,
+            `  </url>`,
+        ].join('\n'));
+        for (const post of posts) {
+            if (!post.slug || post.draft) continue;
+            const lastmod = post.editedAt || post.publishedAt;
+            urls.push([
+                `  <url>`,
+                `    <loc>${escapeXml(`${origin}/blog/${post.slug}`)}</loc>`,
+                ...(lastmod ? [`    <lastmod>${escapeXml(lastmod)}</lastmod>`] : []),
+                `  </url>`,
+            ].join('\n'));
+        }
+    }
     return [
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
@@ -73,16 +102,30 @@ export function buildSitemapXml({pages, locales, defaultLocale, origin}: BuildSi
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse): Promise<void> {
     try {
-        const data = await gqlFetch<{mongo: {getNavigationCollection: NavRow[]}}>(
-            `{ mongo { getNavigationCollection { id page parent slug } } }`,
+        const data = await gqlFetch<{mongo: {
+            getNavigationCollection: NavRow[];
+            getPosts: string;
+            getSiteFlags: string;
+        }}>(
+            `{ mongo { getNavigationCollection { id page parent slug } getPosts(limit: 500) getSiteFlags } }`,
         );
         const pages = data?.mongo?.getNavigationCollection ?? [];
+        let posts: SitemapPost[] = [];
+        let blogEnabled = true;
+        try {
+            posts = data?.mongo?.getPosts ? JSON.parse(data.mongo.getPosts) : [];
+        } catch { /* tolerate parse errors — sitemap shouldn't 500 because of blog */ }
+        try {
+            if (data?.mongo?.getSiteFlags) {
+                blogEnabled = JSON.parse(data.mongo.getSiteFlags).blogEnabled !== false;
+            }
+        } catch { /* default true */ }
         const locales: string[] = i18nConfig?.i18n?.locales ?? ['en'];
         const defaultLocale: string = i18nConfig?.i18n?.defaultLocale ?? 'en';
         const proto = (req.headers['x-forwarded-proto'] as string | undefined) || 'http';
         const host = (req.headers['x-forwarded-host'] as string | undefined) || req.headers.host || 'localhost';
         const origin = `${proto}://${host}`;
-        const xml = buildSitemapXml({pages, locales, defaultLocale, origin});
+        const xml = buildSitemapXml({pages, locales, defaultLocale, origin, posts, blogEnabled});
         res.setHeader('Content-Type', 'application/xml; charset=utf-8');
         res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=600');
         res.status(200).send(xml);

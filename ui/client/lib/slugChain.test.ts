@@ -136,4 +136,36 @@ describe('buildSitemapXml', () => {
         });
         expect(xml).not.toContain('<loc>https://example.com/x</loc>');
     });
+
+    it('emits /blog index + one URL per published post (skips drafts)', () => {
+        const xml = buildSitemapXml({
+            pages: [],
+            locales: ['en'],
+            defaultLocale: 'en',
+            origin: 'https://example.com',
+            posts: [
+                {slug: 'first-post', publishedAt: '2026-05-01T00:00:00Z'},
+                {slug: 'draft-post', draft: true},
+                {slug: 'mcp-walkthrough', publishedAt: '2026-05-06T00:00:00Z', editedAt: '2026-05-07T00:00:00Z'},
+            ],
+        });
+        expect(xml).toContain('<loc>https://example.com/blog</loc>');
+        expect(xml).toContain('<loc>https://example.com/blog/first-post</loc>');
+        expect(xml).toContain('<loc>https://example.com/blog/mcp-walkthrough</loc>');
+        // editedAt wins over publishedAt for lastmod.
+        expect(xml).toContain('<lastmod>2026-05-07T00:00:00Z</lastmod>');
+        expect(xml).not.toContain('draft-post');
+    });
+
+    it('omits blog entries when blogEnabled is false', () => {
+        const xml = buildSitemapXml({
+            pages: [],
+            locales: ['en'],
+            defaultLocale: 'en',
+            origin: 'https://example.com',
+            posts: [{slug: 'first-post'}],
+            blogEnabled: false,
+        });
+        expect(xml).not.toContain('/blog');
+    });
 });

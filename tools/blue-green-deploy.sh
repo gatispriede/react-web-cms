@@ -36,6 +36,16 @@ ENV_FILE="${ENV_FILE:-.env}"
 DEPLOY_HEALTH_TIMEOUT="${DEPLOY_HEALTH_TIMEOUT:-60}"
 DRAIN_SECONDS="${DRAIN_SECONDS:-30}"
 TARGET_SHA="${TARGET_SHA:?TARGET_SHA must be set (the commit the new instance should run)}"
+# Pin the compose project to `cms` so this script targets the same
+# container set as the legacy + bootstrap paths in `ci.yml` (both
+# use `-p cms`). Without it, compose v2 infers the project from the
+# `-f infra/compose.yaml` parent dir → `infra` — which means
+# `docker compose up app-green` tries to create a fresh `app-green`
+# under project `infra` and immediately conflicts with the existing
+# one already running under project `cms` (container_name is global).
+# Caught on skyclimber's first-ever blue-green flip on 2026-05-04.
+COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-cms}"
+export COMPOSE_PROJECT_NAME
 
 cd "$REPO_DIR"
 
@@ -95,9 +105,9 @@ fi
 # Pass GIT_SHA as a build-arg so AppDockerfile stamps /app/.git-sha,
 # which the SHA verification at step 3 (below) reads back via docker exec.
 log "building $SERVICE (GIT_SHA=$TARGET_SHA)"
-GIT_SHA="$TARGET_SHA" docker compose --profile seamless -f "$COMPOSE_FILE" build --build-arg GIT_SHA="$TARGET_SHA" "$SERVICE"
+GIT_SHA="$TARGET_SHA" docker compose --profile seamless -f "$COMPOSE_FILE" --env-file "$ENV_FILE" build --build-arg GIT_SHA="$TARGET_SHA" "$SERVICE"
 log "starting $SERVICE"
-docker compose --profile seamless -f "$COMPOSE_FILE" up -d --no-deps "$SERVICE"
+docker compose --profile seamless -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --no-deps "$SERVICE"
 
 # --- 3. Health-check the inactive instance directly ---
 # Hit the container's /api/health via `docker exec` so we bypass Caddy
@@ -140,7 +150,7 @@ write_upstream "$NEW_UPSTREAM"
 # var pickup also requires re-render of the env, so the up path is the
 # canonical choice).
 log "flipping Caddy to $NEW_UPSTREAM"
-docker compose -f "$COMPOSE_FILE" up -d --no-deps caddy
+docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --no-deps --force-recreate caddy
 
 # --- 6. Drain the old instance ---
 log "draining old upstream for ${DRAIN_SECONDS}s"

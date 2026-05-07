@@ -129,16 +129,16 @@ jobs:
     runs-on: ubuntu-latest
     needs: test-and-typecheck
     # Run on:
-    #   - push to master (full fan-out, every droplet)
-    #   - workflow_dispatch (manual). When the `target` input is set,
-    #     the per-matrix-entry guard below skips non-matching droplets,
-    #     so only the chosen one deploys.
+    #   - push to master (only droplets with `auto: true` in the matrix)
+    #   - workflow_dispatch (manual). The `target` input scopes to one
+    #     droplet; empty input deploys to every droplet regardless of
+    #     `auto`. Use this to roll a release to a paused droplet.
     if: |
       (github.event_name == 'push' && github.ref == 'refs/heads/master') ||
       github.event_name == 'workflow_dispatch'
-    # Holds the appleboy/ssh-action command_timeout (30m) plus the
+    # Holds the appleboy/ssh-action command_timeout (35m) plus the
     # workflow setup/teardown around it.
-    timeout-minutes: 40
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
@@ -148,10 +148,19 @@ jobs:
             env_secret: DEPLOY_ENV_FILE_1
             smoke_url: https://funisimo.pro/
             seamless: false
+            # `auto: true` → deploys on every push to master.
+            auto: true
           - name: skyclimber.pro
             host_secret: DEPLOY_HOST_2
             env_secret: DEPLOY_ENV_FILE_2
             smoke_url: https://skyclimber.pro/
+            # `auto: true` → deploys on every push to master, in parallel
+            # with funisimo. Both droplets run the same image build off
+            # the same commit; per-droplet config differences live in
+            # DEPLOY_ENV_FILE_n. Use "Run workflow" with `target=` set to
+            # one droplet only when you specifically want to stage a
+            # change against one tenant first.
+            auto: true
             # Per-target seamless (blue/green) opt-in. Skyclimber runs
             # the P4 path (`tools/blue-green-deploy.sh`) so the `app`
             # container flip is atomic via Caddy's ACTIVE_UPSTREAM swap.
@@ -173,34 +182,64 @@ jobs:
       SEAMLESS: ${{ matrix.target.seamless }}
 
     steps:
-      # workflow_dispatch + a non-empty `target` input → run only the
-      # matching matrix entry. Empty input = deploy everything (matches
-      # the push-to-master behaviour). The matrix can't be pre-filtered
-      # via expression (matrix is statically evaluated), so the guard
-      # lives on the step itself; non-matching jobs spin up briefly
-      # then no-op.
-      - name: Skip non-targeted droplet
-        if: ${{ inputs.target != '' && inputs.target != matrix.target.name }}
+      # Skip rules. Matrix can't be pre-filtered via expression (it's
+      # statically evaluated), so the guard lives on the deploy step
+      # itself; skipped jobs spin up briefly then no-op.
+      #
+      # On push to master: only droplets with `auto: true` deploy.
+      # On workflow_dispatch:
+      #   - empty `target` input: deploy every matrix entry (manual full
+      #     fan-out — the override path for promoting to a paused droplet).
+      #   - non-empty `target`: deploy only the matching entry.
+      - name: Skip droplet
+        if: |
+          (github.event_name == 'push' && matrix.target.auto != true) ||
+          (github.event_name == 'workflow_dispatch' && inputs.target != '' && inputs.target != matrix.target.name)
         run: |
-          echo "skipping ${{ matrix.target.name }} — workflow_dispatch target='${{ inputs.target }}'"
+          echo "skipping ${{ matrix.target.name }}"
+          echo "  event=${{ github.event_name }}"
+          echo "  matrix.auto=${{ matrix.target.auto }}"
+          echo "  inputs.target='${{ inputs.target }}'"
           exit 0
       - name: Deploy via SSH
-        if: ${{ inputs.target == '' || inputs.target == matrix.target.name }}
+        if: |
+          (github.event_name == 'push' && matrix.target.auto == true) ||
+          (github.event_name == 'workflow_dispatch' && (inputs.target == '' || inputs.target == matrix.target.name))
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets[matrix.target.host_secret] }}
           username: root
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           envs: DEPLOY_ENV_FILE,SMOKE_URL,SEAMLESS
-          script_stop: true
+          # `script_stop: true` joins script lines with `&&`-style chaining,
+          # which makes the action abort whenever ANY single line returns
+          # non-zero — including bash `if` test commands that bash itself
+          # correctly handles without aborting. Caused funisimo deploys
+          # to die at `if [ "$DEPLOY_MODE" = "seamless" ]; then` once
+          # DEPLOY_MODE was set to "legacy". Our inline `set -euo pipefail`
+          # below is the right gate; it follows POSIX `set -e` semantics
+          # and exempts test contexts.
+          script_stop: false
           # Default appleboy/ssh-action command_timeout is 10m, which fires
           # before the inner app-healthy loop on cold deploys (image pull +
           # `next build` regularly take 6-8m alone). Bumped to 30m so the
           # SSH session outlasts the inner timeouts; the GHA job timeout
           # (timeout-minutes: 30 above) is the real upper bound.
-          command_timeout: 30m
+          command_timeout: 35m
           script: |
             set -euo pipefail
+
+            # SSH keepalive heartbeat. The appleboy/ssh-action session
+            # drops when no bytes flow through the channel for too long;
+            # long stretches inside `docker build` (single layer cache
+            # restore, single `next build` SSG pass) can sit idle from
+            # the SSH socket's perspective even though docker is busy.
+            # A background loop printing every 20s guarantees the
+            # connection never goes idle. EXIT trap cleans up so the
+            # heartbeat doesn't outlive the main script.
+            ( while sleep 20; do echo "    [heartbeat $(date +%H:%M:%S)]"; done ) &
+            HEARTBEAT_PID=$!
+            trap 'kill $HEARTBEAT_PID 2>/dev/null || true' EXIT
 
             REPO_URL="https://github.com/${{ github.repository }}.git"
             APP_DIR="/opt/cms"
@@ -294,12 +333,39 @@ jobs:
             # If DEPLOY_ENV_FILE is set, (re)write .env from it. If it's empty
             # (e.g. the original droplet already has .env on disk), leave the
             # existing file alone — but fail loudly if there's nothing at all.
+            #
+            # PRESERVE runtime-managed values across the rewrite. The CI
+            # secret holds STATIC config (DOMAIN, NEXTAUTH_SECRET, …) and
+            # has no knowledge of which blue/green slot is currently
+            # active. `tools/blue-green-deploy.sh` writes
+            # `ACTIVE_UPSTREAM=app-{blue,green}:80` to .env on every flip;
+            # without this preservation, the next deploy clobbers it
+            # back to the secret's value (or absent → default app:80) and
+            # Caddy loses track of the active slot. Sky's first seamless
+            # deploy on 2026-05-04 went down for this exact reason —
+            # ACTIVE_UPSTREAM=app-green:80 disappeared on rewrite, Caddy
+            # came up pointing at legacy app:80, ERR_SSL_PROTOCOL_ERROR.
+            PRESERVED_ACTIVE_UPSTREAM=""
+            if [ -f .env ]; then
+              PRESERVED_ACTIVE_UPSTREAM=$(grep -E '^ACTIVE_UPSTREAM=' .env 2>/dev/null | tail -n1 || true)
+            fi
             if [ -n "${DEPLOY_ENV_FILE:-}" ]; then
               umask 077
               printf '%s\n' "$DEPLOY_ENV_FILE" > .env
             elif [ ! -f .env ]; then
               echo "No DEPLOY_ENV_FILE secret and no existing .env on disk; aborting" >&2
               exit 1
+            fi
+            if [ -n "$PRESERVED_ACTIVE_UPSTREAM" ]; then
+              # Drop any ACTIVE_UPSTREAM line from the freshly-written
+              # secret (defensive — secret shouldn't have one, but if
+              # the operator added one by mistake, the runtime value
+              # wins) then append the preserved one.
+              if grep -q '^ACTIVE_UPSTREAM=' .env 2>/dev/null; then
+                sed -i '/^ACTIVE_UPSTREAM=/d' .env
+              fi
+              printf '%s\n' "$PRESERVED_ACTIVE_UPSTREAM" >> .env
+              echo "==> Preserved $PRESERVED_ACTIVE_UPSTREAM across .env rewrite"
             fi
 
             # Pre-refactor deploys ran compose from /opt/cms/ so the
@@ -364,15 +430,15 @@ jobs:
               sleep 5
             done
 
-            # Decide deploy mode without `||`-chained tests — appleboy/
-            # ssh-action's `script_stop: true` mode aborts on any `[`
-            # returning nonzero, even inside `if`/`||` constructs that
-            # standard bash treats as conditional. Use a single case
-            # statement so the test runs once and returns 0.
+            # Decide deploy mode without || or case constructs.
+            # appleboy/ssh-action sends the script as one string to
+            # bash -c. Some bash versions on the droplets choke on
+            # case statements with ;; inside that string (line 327 /
+            # 350 syntax error near unexpected token ; on 2026-05-04).
+            # Plain sequential ifs are the safe path.
             DEPLOY_MODE=legacy
-            case "${SEAMLESS:-}" in
-              true|1) DEPLOY_MODE=seamless ;;
-            esac
+            if [ "${SEAMLESS:-}" = "true" ]; then DEPLOY_MODE=seamless; fi
+            if [ "${SEAMLESS:-}" = "1" ]; then DEPLOY_MODE=seamless; fi
             echo "==> Deploy mode: $DEPLOY_MODE"
 
             if [ "$DEPLOY_MODE" = "seamless" ]; then
@@ -418,14 +484,14 @@ jobs:
                 # the legacy front-container poll.
                 for slot in app-blue app-green; do
                   echo "==> Waiting for $slot to report healthy"
-                  for i in $(seq 1 120); do
+                  for i in $(seq 1 216); do
                     status=$(docker inspect --format '{{.State.Health.Status}}' "$slot" 2>/dev/null || echo starting)
                     if [ "$status" = "healthy" ]; then
                       echo "    $slot healthy after ${i} checks"
                       break
                     fi
                     if [ "$i" = "120" ]; then
-                      echo "!! $slot failed to become healthy within 10 minutes" >&2
+                      echo "!! $slot failed to become healthy within 18 minutes" >&2
                       docker logs --tail=200 "$slot" >&2 || true
                       exit 1
                     fi
@@ -452,8 +518,13 @@ jobs:
                 # and front can be `docker rm -f`'d in a follow-up
                 # housekeeping task once the seamless path is stable.
               fi
+              # 1080s (18 min) ceiling matches the legacy front-container health
+              # loop. Cold `next build` inside the freshly-recreated
+              # slot takes 5-8 min on the droplet's CPU budget; the
+              # previous 60s default aborted flips that would have
+              # eventually succeeded.
               TARGET_SHA="$CUR_SHA" \
-                DEPLOY_HEALTH_TIMEOUT="${DEPLOY_HEALTH_TIMEOUT:-60}" \
+                DEPLOY_HEALTH_TIMEOUT="${DEPLOY_HEALTH_TIMEOUT:-1080}" \
                 DRAIN_SECONDS="${DRAIN_SECONDS:-30}" \
                 bash tools/blue-green-deploy.sh
               # blue-green script exits 0 on a successful flip; its own
@@ -471,7 +542,25 @@ jobs:
               # port 80 until the new `app` is healthy, then Docker
               # swaps them. BuildKit picks up layer cache from the prior
               # build automatically on the same host.
+              #
+              # Trap the exit code explicitly. Docker compose v2 sometimes
+              # returns non-zero after a successful `up` when a sibling
+              # service's healthcheck is briefly stale — under
+              # `set -euo pipefail` that aborts the deploy mid-stride
+              # without a clear error. Capturing the code lets us decide
+              # rather than getting silently 'set -e'd.
+              set +e
               docker compose -p cms -f infra/compose.yaml --env-file .env up --no-deps --build -d app
+              UP_RC=$?
+              set -e
+              echo "==> docker compose up app returned: $UP_RC"
+              if [ "$UP_RC" != "0" ]; then
+                # Show what's actually unhappy so we can diagnose without
+                # another round-trip through CI.
+                docker compose -p cms -f infra/compose.yaml --env-file .env ps >&2 || true
+                docker compose -p cms -f infra/compose.yaml --env-file .env logs --tail=80 app >&2 || true
+                exit "$UP_RC"
+              fi
             fi
 
             # Skip the `front` health loop when seamless ran — the
@@ -485,21 +574,21 @@ jobs:
             else
             echo "==> Waiting for app to report healthy"
             # Poll the compose healthcheck (defined in compose.yaml) for
-            # up to 10 minutes before giving up. Cold builds (no
+            # up to 18 minutes before giving up. Cold builds (no
             # BuildKit cache, fresh `next build` SSG pass) routinely run
             # 6-8 min on the droplet's small CPU budget; the previous
             # 3-min cap was tripping legitimate deploys. The
-            # appleboy/ssh-action `command_timeout: 30m` set above
+            # appleboy/ssh-action `command_timeout: 35m` set above
             # gives this loop room to run plus the server-rebuild loop
             # plus image pulls.
-            for i in $(seq 1 120); do
+            for i in $(seq 1 216); do
               status=$(docker inspect --format '{{.State.Health.Status}}' front 2>/dev/null || echo "starting")
               if [ "$status" = "healthy" ]; then
                 echo "    app healthy after ${i} checks"
                 break
               fi
               if [ "$i" = "120" ]; then
-                echo "!! app failed to become healthy within 10 minutes" >&2
+                echo "!! app failed to become healthy within 18 minutes" >&2
                 docker compose -p cms -f infra/compose.yaml --env-file .env logs --tail=200 app >&2 || true
                 exit 1
               fi
@@ -507,25 +596,48 @@ jobs:
             done
             fi
 
-            echo "==> Smoke check: public domain returns 200"
-            # Hit the public origin via Caddy, not localhost:80 — catches
-            # TLS / reverse-proxy regressions as well as app health.
+            echo "==> Smoke check: HTTPS via Caddy returns 200"
+            # Hit Caddy via 127.0.0.1 + --resolve so SNI stays correct
+            # (= the public domain) but the TCP connection goes to the
+            # local docker-proxy instead of round-tripping through the
+            # droplet's own public IP. DigitalOcean's NAT doesn't always
+            # hairpin properly — `curl https://skyclimber.pro/` from the
+            # droplet itself returns a TLS internal-error alert even
+            # while external clients get clean 200s. The --resolve
+            # path tests the same Caddy → app upstream chain that real
+            # public traffic uses, just without the cloud round-trip.
             SMOKE_URL="${SMOKE_URL:-https://funisimo.pro/}"
-            # -L follows redirects (Caddy may 301 http→https or /→/en),
-            # we count "final landing returned 200" as healthy. On
-            # failure dump headers + first 500 chars of body + the
-            # localhost:80 result so the log tells us whether the
-            # problem is the app, Caddy, TLS or DNS.
-            smoke_code=$(curl -sSL -o /dev/null -w "%{http_code}" --max-time 20 "$SMOKE_URL" || echo "000")
+            SMOKE_HOST=$(echo "$SMOKE_URL" | sed -E 's|^https?://([^/]+).*|\1|')
+            smoke_code=$(curl -sSL --resolve "${SMOKE_HOST}:443:127.0.0.1" -o /dev/null -w "%{http_code}" --max-time 20 "$SMOKE_URL" || echo "000")
             if [ "$smoke_code" != "200" ]; then
               echo "!! Smoke check failed: $SMOKE_URL returned $smoke_code" >&2
-              # Compact diagnostics: status line of the public URL,
-              # localhost bypass code, and the last 20 app log lines.
-              # Trim further if log noise becomes a problem.
-              curl -sSIL --max-time 20 "$SMOKE_URL" 2>&1 | head -1 >&2 || true
+              # Diagnostics: localhost (no SNI), the same --resolve probe
+              # again with -I for headers, and the last 20 app log lines.
               curl -sS -o /dev/null -w "localhost http_code: %{http_code}\n" --max-time 10 http://localhost/ >&2 || true
+              curl -sSIL --resolve "${SMOKE_HOST}:443:127.0.0.1" --max-time 10 "$SMOKE_URL" 2>&1 | head -1 >&2 || true
               docker compose -p cms -f infra/compose.yaml --env-file .env logs --tail=20 app >&2 || true
               exit 1
+            fi
+
+            # MCP HTTP transport — rebuild + restart on every deploy.
+            # Per docs/runbooks/mcp-http-deploy.md. Skipped when
+            # MCP_HTTP_ENABLED isn't set in `.env`; the service exits
+            # cleanly in that case. Done AFTER the public site is
+            # confirmed healthy so a misconfigured MCP build never blocks
+            # customer-facing traffic. Failure here is logged but
+            # doesn't fail the whole deploy — the public site is already
+            # serving the new build, and the mcp container keeps running
+            # the previous build until the next deploy retries.
+            if grep -qE '^MCP_HTTP_ENABLED=true' /opt/cms/.env 2>/dev/null; then
+              echo '==> Rebuilding mcp service'
+              if docker compose -p cms -f infra/compose.yaml --env-file .env build mcp; then
+                docker compose -p cms -f infra/compose.yaml --env-file .env up -d --no-deps mcp
+                echo '    mcp restarted'
+              else
+                echo '!! mcp build failed — public site is healthy; investigate mcp separately' >&2
+              fi
+            else
+              echo '==> Skipping mcp rebuild (MCP_HTTP_ENABLED!=true in .env)'
             fi
 
             docker compose -p cms -f infra/compose.yaml --env-file .env ps

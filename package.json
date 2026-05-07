@@ -25,7 +25,7 @@
     "dev-server": "nodemon --config ./nodemon.json",
     "standalone-graphql": "cross-env npx tsx --tsconfig services/tsconfig.custom.json services/index.ts",
     "standalone-graphql-docker": "cross-env NODE_SERVER_PORT=true npx tsx --tsconfig services/tsconfig.custom.json services/index.ts",
-    "mcp:stdio": "cross-env npx tsx --tsconfig services/tsconfig.custom.json services/mcp/stdio.ts --token mcpsk_68902e403b16413e192c225f7517887376439c6063531f61cbf3f94283701d43",
+    "mcp:stdio": "cross-env npx tsx --tsconfig services/tsconfig.custom.json services/mcp/stdio.ts",
     "mcp:http": "cross-env npx tsx --tsconfig services/tsconfig.custom.json services/mcp/http.ts",
     "mcp:dev-token": "node tools/mcp-dev-token.js",
     "mcp:call": "node tools/scripts/mcp-call.mjs",

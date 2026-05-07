@@ -1,7 +1,17 @@
 /** @type {import('next-sitemap').IConfig} */ const {error} = require("next/dist/build/output/log");
 const dev = process.env.NODE_ENV !== 'production';
 
-const domain = 'http://localhost'
+// Hardcoded localhost is the dev / build-on-droplet default. In production
+// builds this gets overridden by SITE_URL (preferred) or NEXT_PUBLIC_SITE_URL
+// — both refer to the public-facing canonical (e.g. https://funisimo.pro).
+// Without this Google sees `http://localhost/...` URLs in the sitemap and
+// either ignores them or flags the site as broken.
+//
+// The fetch URL stays as localhost because next-sitemap runs on the build
+// host and talks to the build-time GraphQL server on the same box; it's
+// only `siteUrl` and the `<loc>` entries that need the public origin.
+const domain = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost'
+const fetchOrigin = 'http://localhost'
 
 module.exports = {
     siteUrl: domain,
@@ -16,7 +26,7 @@ module.exports = {
         // in scroll mode redirect client-side to `/#<slug>` — see
         // `src/frontend/pages/[...slug].tsx`.
         const query = `{ mongo { getNavigationCollection { page } getSiteFlags getPosts(limit: 200) } }`;
-        const resp = await fetch(`${domain}/api/graphql`, {
+        const resp = await fetch(`${fetchOrigin}/api/graphql`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({query}),
