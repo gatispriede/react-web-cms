@@ -105,6 +105,28 @@ Issues surfaced during the MCP HTTP transport rollout to funisimo.pro and skycli
 | Fix proposal | Either (A) always stamp the audit triplet on `page.update` regardless of whether content actually changed, or (B) add an explicit `page.touch` MCP tool that bumps `editedAt`/`editedBy`/`version` without touching content. |
 | Notes | (A) is more invasive; (B) is one new tool definition + an MCP scope check (admin or write:content). Recommend (B). |
 
+## 11. INFRA_TOPOLOGY field-name mismatch — SVGs silently absent
+
+| Field | Value |
+|---|---|
+| Severity | medium (existing data) |
+| Where | `cv-sec-cms-infra`, `cv-sec-lss-infra` (and any new `INFRA_TOPOLOGY` authored from the parent's shape as a template) |
+| Symptom | The topology SVG never renders. The droplet cards show, the eyebrow + title show, but the diagram doesn't. |
+| Cause | Authors used `svg` and `caption` in the JSON content; the `IInfraTopology` type and renderer expect `topologySvg` and `topologyCaption`. Section saves the wrong-shaped JSON without a schema warning. |
+| Fix applied | `cv-sec-cms-infra` and `cv-sec-lss-infra` rewritten with the correct field names on local. Prod replication pending. |
+| Follow-up | Add a `validateSectionInput` pass for INFRA_TOPOLOGY content that warns when the legacy field names are present. Better: support both via the content manager's `normalize` step (read `svg` → `topologySvg`) so older bundles don't break on import. |
+
+## 12. Bundle import filename-sanitization breaks asset references
+
+| Field | Value |
+|---|---|
+| Severity | medium (real content breakage on import) |
+| Where | `services/features/Bundle/BundleService.ts:209-219` (`sanitizeAssetName`) |
+| Symptom | After importing the funisimo bundle locally, the home-page hero portrait (and any other image whose original filename contained parens / spaces) showed a broken-image icon stacked on top of the portrait tile's background-color — looks like "two backgrounds". |
+| Cause | `sanitizeAssetName` replaces every char outside `[a-zA-Z0-9._-]` with `_`. So `20260426_162153(0).jpg` lands on disk as `20260426_162153_0_.jpg`. The DB entries are NOT rewritten, so the page still requests the original name and 404s. The sanitizer is too aggressive — parens, spaces, plus signs, etc. are valid filename chars on every supported filesystem. |
+| Fix proposal | Either (A) tighten the sanitizer to only reject security-critical chars (null bytes, control chars, `..` segments, path separators) and leave parens/spaces/plus alone; (B) when the sanitizer renames a file, walk the same JSON structures `collectLocalAssets` walks and rewrite every reference; or (C) keep the sanitizer aggressive but emit `skippedAssets` entries for filenames that needed rename (so the operator sees them). |
+| Workaround | One-off `cp <sanitized> <original>` for each affected image after import — see `tools/import-bundle-local.mts` notes. |
+
 ## 10. e2e workflow disabled to manual-only
 
 | Field | Value |
