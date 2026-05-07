@@ -61,7 +61,7 @@ Already shipping (this PR):
 
 ## Files to touch
 
-- `services/anchors/AnchorRegistry.ts` — new; build + cache the anchor list
+- `services/features/Anchors/AnchorRegistry.ts` — new feature slice; build + cache the anchor list. Co-located with its tests (`AnchorRegistry.test.ts`) and `feature.manifest.ts`. Lives under `services/features/<Name>/` per `target-architecture.md` — every server-side feature is a deletable folder unit; no `services/anchors/` parallel hierarchy.
 - `ui/admin/lib/LinkTargetPicker.tsx` — new shared component
 - `ui/admin/modules/Hero/HeroEditor.tsx`, `ProjectCard/...Editor.tsx`, `Gallery/...Editor.tsx`, etc. — swap text inputs for `<LinkTargetPicker>`
 - `ui/client/lib/DynamicTabsContent.tsx` — already carries `id={section.id}`

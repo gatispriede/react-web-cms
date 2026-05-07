@@ -119,7 +119,25 @@ Beyond the generic `includeMissing`, three translation tools are worth pulling o
 
 **Shared infrastructure:**
 - `services/features/Mcp/tools/_shared.ts` — extract a `runBatch(items, fn) → {results, failed, count}` helper so each tool doesn't roll its own loop. ~half a day to design + tests.
-- `services/features/Mcp/tools/_introspection.ts` (new) — shared aggregation helpers (key-diff, usage-scanner adapter, etc.).
+
+**Scanner placement — per-feature, not centralised** (decided 2026-05-07).
+
+Each introspection scanner lives **inside the feature it scans**, mirroring `ImageUsageService` in `services/features/Assets/`. The MCP tool imports the scanner; the admin UI's "show unused / missing" filters import the same scanner. No `services/features/Mcp/tools/_introspection.ts` central pile.
+
+| Scanner | Lives in | Used by |
+|---------|----------|--------|
+| `ImageUsageService` (existing) | `services/features/Assets/` | `image.list { includeUsage }`, admin "Show unused" filter |
+| `TranslationDiffService` (new) | `services/features/Languages/` | `i18n.listLanguages { includeMissing }`, `i18n.diff`, admin "Show missing" filter |
+| `ThemeUsageService` (new) | `services/features/Themes/` | `theme.list { includeUsage }`, admin "Hide unused" |
+| `PageSeoStatusService` (new) | `services/features/Seo/` | `page.list { includeSeoStatus }`, admin SEO sweep |
+| `ModuleUsageService` (new) | `services/features/Modules/` | `module.listTypes { includeUsage }`, deprecation tooling |
+| `UserActivityService` (new) | `services/features/Users/` | `user.list { includeActivity }`, stale-account audit |
+| `PermissionResolver` (new) | `services/features/Permissions/` | `permission.list { includeResources }`, admin overview |
+| `PostStatsService` (new) | `services/features/Posts/` | `post.list { includeStats }`, editorial dashboard |
+
+Each scanner is its own file with co-located tests (`<Name>Service.test.ts`). MCP tools become thin adapters that import the right scanner and project its output into the response shape. Admin UI features can call the scanner directly via the existing service-loader DI without depending on MCP.
+
+This keeps `services/features/Mcp/` focused on *transport + dispatch* — not on holding business logic about every other feature.
 
 **Admin UI follow-ups (optional, separate PR):**
 - Image manager "Show unused" filter (consumes `image.list { includeUsage, unusedOnly }`)

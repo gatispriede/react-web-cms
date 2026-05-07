@@ -114,7 +114,7 @@ Issues surfaced during the MCP HTTP transport rollout to funisimo.pro and skycli
 | Symptom | The topology SVG never renders. The droplet cards show, the eyebrow + title show, but the diagram doesn't. |
 | Cause | Authors used `svg` and `caption` in the JSON content; the `IInfraTopology` type and renderer expect `topologySvg` and `topologyCaption`. Section saves the wrong-shaped JSON without a schema warning. |
 | Fix applied | `cv-sec-cms-infra` and `cv-sec-lss-infra` rewritten with the correct field names on local. Prod replication pending. |
-| Follow-up | Add a `validateSectionInput` pass for INFRA_TOPOLOGY content that warns when the legacy field names are present. Better: support both via the content manager's `normalize` step (read `svg` → `topologySvg`) so older bundles don't break on import. |
+| Follow-up | New file `services/features/Navigation/normalizeSectionInput.ts` (decided 2026-05-07). Called from `addUpdateSectionItem` before persistence. Per-content-type rules — INFRA_TOPOLOGY: read `svg` → `topologySvg`, `caption` → `topologyCaption`. Older bundles import without breakage; new content writes the canonical shape. Keeps `NavigationService.ts` under the 400-line ceiling by extracting normalization into its own file. Co-located test (`normalizeSectionInput.test.ts`) covers the rename rule + a no-op pass-through case. |
 
 ## 13. Blog post + index SEO was incomplete (Google rich-result eligibility)
 
