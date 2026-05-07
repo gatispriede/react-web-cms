@@ -145,13 +145,15 @@ Docs follow-up: add a "Mobile column behavior" entry to `docs/architecture/secti
 
 ## Effort
 
-**S · 1 day.**
+**S · ~1h AI.**
 
-- Types + service pass-through: 1 h
-- SCSS mixin + breakpoint rules: 2 h
-- Renderer branch + chevron toggle component: 2 h
-- Admin Select: 1 h
-- Tests + visual snapshots (after Q4-cap): 2 h
+- Types + service pass-through: ~10 min
+- SCSS mixin + breakpoint rules: ~15 min
+- Renderer branch + chevron toggle component: ~15 min
+- Admin Select: ~10 min
+- Tests + visual snapshots (after Q4-cap): ~15 min
+
+(Pre-AI human estimate was 1 day.)
 
 ## Dependency notes
 

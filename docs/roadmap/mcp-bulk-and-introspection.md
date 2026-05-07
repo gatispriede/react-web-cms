@@ -156,9 +156,13 @@ This keeps `services/features/Mcp/` focused on *transport + dispatch* — not on
 
 ## Effort
 
-**M-L · ~3 days, shipped as one chunk.** Bulk-write + introspection share the same scanner/runBatch infrastructure and the same schema-drift CI updates — splitting them means writing the shared infra twice or merging an incomplete surface where some tools have bulk and others don't, some lists have `includeUsage` and others don't. Land together.
+**M · ~2-3h AI, shipped as one chunk.** Bulk-write + introspection share the same scanner/runBatch infrastructure and the same schema-drift CI updates — splitting them means writing the shared infra twice or merging an incomplete surface where some tools have bulk and others don't, some lists have `includeUsage` and others don't. Land together.
 
-Internal time-share: bulk-write extensions (~12 tools mechanical) ~1d, introspection extensions (~10 read-tool flags + scanner services) ~1.5d, tests + schema-drift CI updates + documentation pass ~0.5d.
+Calibration: image.delete `ids[]` + image.list `includeUsage` + ImageUsageService scanner shipped in ~45 min during this session (`391e45f`). The remaining 11 bulk extensions + 7 scanner services follow the same pattern — mechanical, ~10 min each.
+
+Internal time-share: bulk-write extensions (~12 tools) ~1h, introspection extensions (~10 read-tool flags + scanner services) ~1.5h, tests + schema-drift CI updates + documentation pass ~30 min.
+
+(Pre-AI human estimate was ~3 days.)
 
 ## Dependency notes
 

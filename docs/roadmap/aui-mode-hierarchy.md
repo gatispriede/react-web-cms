@@ -123,11 +123,14 @@ Per-pane budget: M (~1 day each, less if simplified surface is already known fro
 
 ## Effort
 
-- **Refactor existing Themes + Posts** to inheritance shape: 1 day total.
-- **Per new pane onboarded to simplified mode**: M (~1 day).
-- **One-time tooling**: ESLint rule + lazy-load convention helper: ~half a day.
+**Foundational chunk (this roadmap item) — M · ~1-2h AI:**
+- Refactor existing Themes + Posts onto inheritance shape: ~45 min
+- ESLint rule + lazy-load convention helper: ~30 min
+- Tests + docs: ~30 min
 
-Ongoing — slot one pane per quiet sprint as in the original roadmap.
+**Per future pane onboarded** (each one is its own roadmap item, picked up by demand): M · ~1-2h AI per pane.
+
+(Pre-AI human estimate: 1 day for foundational refactor + 1 day per pane.)
 
 ## Priority order for new panes (suggested)
 

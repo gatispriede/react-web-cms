@@ -123,7 +123,9 @@ Everything below ships as one cohesive deliverable. Internal ordering is executi
 
 ## Effort
 
-**L · ~7 working days.** Spreadable over 2 calendar weeks alongside other work because individual steps are interruptible (terraform import + kamal config drafting are quiet desk work; cutover is the only "must focus" window).
+**L · ~6-8h AI for code/config + cutover validation wall-clock.** The AI portion writes terraform modules, kamal configs, the GHCR push step, and the cutover scripts. Wall-clock time dominates: terraform import discovery, kamal-setup against a fresh test droplet, the 1-week parallel-run validation window on funisimo before cutover, and DNS propagation. Realistic calendar window is 1-2 weeks of elapsed time; focused AI work is one solid afternoon.
+
+(Pre-AI human estimate was ~7 working days spread over 2 calendar weeks.)
 
 ## Testids — for e2e
 

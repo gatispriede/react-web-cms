@@ -72,7 +72,9 @@ Three subsystems, all in scope of the single deliverable.
 
 ## Effort
 
-**L · ~5 days realistic.** Internal time-share roughly: shell ~1.5 days, editors ~2.5 days, polish ~1 day. All ships together.
+**L · ~6-8h AI work + on-device QA wall-clock.** Internal time-share for the AI portion: shell ~2h, editors ~3h, polish + PWA ~1h, tests + runbook ~1h. Wall-clock blocker is real-phone QA passes (iOS Safari + Android Chrome) which AI can't compress; budget ~1-2h of human QA time per cycle.
+
+(Pre-AI human estimate was ~5 days realistic.)
 
 ## Testids — for e2e
 
