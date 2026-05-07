@@ -132,6 +132,6 @@ Strict size-first ordering: largest items lead so deep work isn't fragmented; qu
 
 21. **gqty schema regen** — surfaces `isFreshInstall` / `onboardingBootstrap` to typed clients.
 
-### Potential — concrete-trigger backlog
+### Backlog — concrete-trigger parking lot
 
-Items deferred until a real driver appears (third-party plugin author, customer ask, recurring bug, external dependency). Not budgeted in any wave. See [`potential.md`](potential.md) for the parking lot. Currently parked: **F8-sdk** plugin SDK · **C17** sample audit · Mobile-friendly admin **native wrapper** · mcp-rollout `#8` Mongo healthcheck · per-page site-mode toggle.
+Items deferred until a real driver appears (third-party plugin author, customer ask, recurring bug, external dependency). Not budgeted in any wave. See [`backlog.md`](backlog.md) for the full list. Currently parked: **F8-sdk** plugin SDK · **C17** sample audit · Mobile-friendly admin **native wrapper** · mcp-rollout `#8` Mongo healthcheck · per-page site-mode toggle.

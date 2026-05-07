@@ -1,4 +1,4 @@
-# Potential roadmap items
+# Backlog
 
 Parking lot for ideas deferred until a **concrete trigger** emerges. These are not committed work and not budgeted in any wave. Move an item from here to the active queue (`README.md`) only when there's a real driver — a customer ask, a recurring bug, an external dependency, etc.
 
@@ -57,7 +57,7 @@ F6 site-mode-toggle (active Wave 2) is intentionally global. Per-page would requ
 
 ---
 
-## How to revive an item
+## How to promote an item to active
 
 1. Cut its entry out of this file.
 2. Paste into the appropriate active table in [`README.md`](README.md) (Content editor / MCP / Visual + observability / etc.) with a note about which trigger fired.
