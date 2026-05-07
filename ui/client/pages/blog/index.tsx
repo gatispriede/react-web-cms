@@ -27,10 +27,45 @@ const BlogIndex = ({posts, themeTokens, footer, pages}: Props) => {
     useEffect(() => { if (themeTokens) applyThemeCssVars(themeTokens); }, [themeTokens]);
     const themeConfig = themeTokens ? buildThemeConfig(themeTokens) : staticTheme;
 
+    const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || '').replace(/\/+$/, '');
+    const blogUrl = `${siteUrl}/blog`;
+    const description = t('Writing on engineering, AI workflows, CMS architecture, and the practice of building software end to end.');
+    // Blog index gets a Blog/CollectionPage schema rather than Article — it's
+    // a listing, not a single piece. Still emits enough for Google Discover
+    // and rich-card previews on share.
+    const jsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'Blog',
+        name: t('Writing'),
+        description,
+        url: blogUrl || undefined,
+        blogPost: posts.slice(0, 20).map(p => ({
+            '@type': 'BlogPosting',
+            headline: p.title,
+            url: siteUrl ? `${siteUrl}/blog/${p.slug}` : `/blog/${p.slug}`,
+            datePublished: p.publishedAt || undefined,
+            author: p.author ? {'@type': 'Person', name: p.author} : undefined,
+        })),
+    };
+
     return (
         <ConfigProvider theme={themeConfig}>
             <Head>
                 <title>{t('Blog')}</title>
+                <meta name="description" content={description}/>
+                <meta name="robots" content="index, follow, max-image-preview:large"/>
+                {siteUrl && <link rel="canonical" href={blogUrl}/>}
+                <meta property="og:type" content="website"/>
+                <meta property="og:title" content={t('Writing')}/>
+                <meta property="og:description" content={description}/>
+                {siteUrl && <meta property="og:url" content={blogUrl}/>}
+                <meta name="twitter:card" content="summary"/>
+                <meta name="twitter:title" content={t('Writing')}/>
+                <meta name="twitter:description" content={description}/>
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{__html: JSON.stringify(jsonLd, (_k, v) => v === undefined ? undefined : v)}}
+                />
             </Head>
             <div style={{maxWidth: 1100, margin: '0 auto', padding: 24}}>
                 <Logo t={t} admin={false}/>

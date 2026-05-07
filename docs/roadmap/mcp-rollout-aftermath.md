@@ -116,6 +116,26 @@ Issues surfaced during the MCP HTTP transport rollout to funisimo.pro and skycli
 | Fix applied | `cv-sec-cms-infra` and `cv-sec-lss-infra` rewritten with the correct field names on local. Prod replication pending. |
 | Follow-up | Add a `validateSectionInput` pass for INFRA_TOPOLOGY content that warns when the legacy field names are present. Better: support both via the content manager's `normalize` step (read `svg` → `topologySvg`) so older bundles don't break on import. |
 
+## 13. Blog post + index SEO was incomplete (Google rich-result eligibility)
+
+| Field | Value |
+|---|---|
+| Severity | medium (organic traffic) |
+| Where | `ui/client/pages/blog/[slug].tsx` and `ui/client/pages/blog/index.tsx` |
+| Symptom | Blog posts had basic OG / Twitter tags but no canonical link, no `og:url`, no `article:published_time`, no `article:author`, no `article:tag`, no `robots` meta, no JSON-LD Article schema. Google's rich-card eligibility for blog posts requires structured data; without it, posts appear as plain text-link results. |
+| Fix applied | Both renderers now emit canonical, og:url, article:published_time, article:modified_time, article:author, article:tag (per tag), robots, and JSON-LD `Article` (post) / `Blog` (index) schema. Falls back from `NEXT_PUBLIC_SITE_URL` to `NEXTAUTH_URL` for the canonical URL so existing droplets work without an env-var rollout. |
+| Follow-up | Add `NEXT_PUBLIC_SITE_URL` to `secrets.md`'s `DEPLOY_ENV_FILE_*` blocks (optional — `NEXTAUTH_URL` fallback already covers this). Could also enrich `Article` JSON-LD with `wordCount`, `image` dimensions, `articleSection`. |
+
+## 14. `next-sitemap.config.cjs` had hardcoded `http://localhost`
+
+| Field | Value |
+|---|---|
+| Severity | medium (sitemap was useless for prod SEO) |
+| Where | `next-sitemap.config.cjs:4` |
+| Symptom | Production builds emitted `sitemap.xml` with every URL prefixed `http://localhost/...` — Google rejects the sitemap or treats the URLs as broken. Same for `robots.txt`. Posts and pages weren't getting indexed because the canonical sitemap was wrong. |
+| Fix applied | `siteUrl` now reads from `SITE_URL` → `NEXT_PUBLIC_SITE_URL` → `http://localhost` (in that order). The internal GraphQL fetch URL stays as `http://localhost` because next-sitemap runs on the build host. |
+| Follow-up | Verify on the next prod deploy that `sitemap.xml` has the correct `funisimo.pro` URLs. Submit the sitemap to Google Search Console manually once. |
+
 ## 12. Bundle import filename-sanitization breaks asset references
 
 | Field | Value |

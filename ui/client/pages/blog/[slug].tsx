@@ -47,27 +47,72 @@ const BlogPost = ({post, themeTokens, footer, pages, hasPosts}: Props) => {
         );
     }
 
+    // ---- SEO helpers ------------------------------------------------------
+    // Canonical URL + og:url need an absolute URL — Google penalises the
+    // page if canonical resolves to a relative path. Falls back to
+    // location.origin when NEXT_PUBLIC_SITE_URL isn't set (dev / first
+    // deploy on a fresh droplet).
+    // Prefer NEXT_PUBLIC_SITE_URL (intentional, public-facing) but fall
+    // back to NEXTAUTH_URL because every prod droplet already has that
+    // set — saves having to add a new env var on existing deploys.
+    const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || '').replace(/\/+$/, '');
+    const postUrl = `${siteUrl}/blog/${post.slug}`;
+    const absUrl = (path: string) =>
+        /^([a-z]+:|\/\/)/i.test(path)
+            ? path
+            : `${siteUrl}${path.startsWith('/') ? '' : '/'}${path}`;
+    const coverAbs = post.coverImage ? absUrl(post.coverImage) : undefined;
+    const tagsCsv = (post.tags ?? []).join(', ');
+    // JSON-LD Article schema — drives Google rich-result eligibility.
+    // Required fields: @type, headline, image, datePublished, author.
+    // We add description, publisher, mainEntityOfPage as a courtesy; they
+    // don't unlock anything specific but score well on Lighthouse.
+    const jsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: post.title,
+        description: post.excerpt || undefined,
+        image: coverAbs ? [coverAbs] : undefined,
+        datePublished: post.publishedAt || undefined,
+        dateModified: post.editedAt || post.publishedAt || undefined,
+        author: post.author ? {'@type': 'Person', name: post.author} : undefined,
+        publisher: siteUrl ? {'@type': 'Organization', name: siteUrl.replace(/^https?:\/\//, '')} : undefined,
+        keywords: tagsCsv || undefined,
+        mainEntityOfPage: {'@type': 'WebPage', '@id': postUrl},
+    };
+
     return (
         <ConfigProvider theme={themeConfig}>
             <Head>
                 <title>{post.title}</title>
                 {post.excerpt && <meta name="description" content={post.excerpt}/>}
+                <meta name="robots" content="index, follow, max-image-preview:large"/>
+                {tagsCsv && <meta name="keywords" content={tagsCsv}/>}
+                {/* Canonical anchors the post against duplicate-content penalties. */}
+                {siteUrl && <link rel="canonical" href={postUrl}/>}
                 <meta property="og:type" content="article"/>
                 <meta property="og:title" content={post.title}/>
                 {post.excerpt && <meta property="og:description" content={post.excerpt}/>}
-                {post.coverImage && <meta property="og:image" content={
-                    /^([a-z]+:|\/\/)/i.test(post.coverImage)
-                        ? post.coverImage
-                        : `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}${post.coverImage.startsWith('/') ? '' : '/'}${post.coverImage}`
-                }/>}
+                {siteUrl && <meta property="og:url" content={postUrl}/>}
+                {coverAbs && <meta property="og:image" content={coverAbs}/>}
+                {/* article:* are part of the Open Graph article namespace —
+                    LinkedIn, Facebook and various scrapers use them; Google
+                    reads them as additional structured-data signals. */}
+                {post.publishedAt && <meta property="article:published_time" content={post.publishedAt}/>}
+                {post.editedAt && <meta property="article:modified_time" content={post.editedAt}/>}
+                {post.author && <meta property="article:author" content={post.author}/>}
+                {(post.tags ?? []).map(tag => (
+                    <meta key={tag} property="article:tag" content={tag}/>
+                ))}
                 <meta name="twitter:card" content="summary_large_image"/>
                 <meta name="twitter:title" content={post.title}/>
                 {post.excerpt && <meta name="twitter:description" content={post.excerpt}/>}
-                {post.coverImage && <meta name="twitter:image" content={
-                    /^([a-z]+:|\/\/)/i.test(post.coverImage)
-                        ? post.coverImage
-                        : `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}${post.coverImage.startsWith('/') ? '' : '/'}${post.coverImage}`
-                }/>}
+                {coverAbs && <meta name="twitter:image" content={coverAbs}/>}
+                {/* JSON-LD Article schema — required for Google rich results. */}
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{__html: JSON.stringify(jsonLd, (_k, v) => v === undefined ? undefined : v)}}
+                />
             </Head>
             <div style={{maxWidth: 720, margin: '0 auto', padding: '24px 20px 80px'}}>
                 <Logo t={t} admin={false}/>
