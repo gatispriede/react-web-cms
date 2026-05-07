@@ -12,6 +12,17 @@ The headline [ROADMAP.md](../ROADMAP.md) stays as the short bullet list; these f
 
 Shipped items live in [`shipped.md`](shipped.md) — kept for archaeology, not active triage.
 
+## Universal requirements — every roadmap item
+
+These apply to every active item regardless of size or wave. Treat them as acceptance criteria, not nice-to-haves.
+
+1. **Docs reflect the work.** When an item ships, update — at minimum — the relevant spec doc (mark it shipped or amend), `docs/roadmap/shipped.md`, and any architecture / runbook docs that diverge from the new shape. Inline code comments cover the *why*; markdown docs cover the *where to look first*.
+2. **MCP coverage parity for editable surfaces.** Every feature whose content / state / config can be authored through the admin UI must also be manageable via MCP — same operations, same guards. MCP is the canonical write path for AI authoring; admin UI is the human surface on top. New editable field → MCP tool (or extension to an existing tool's schema) lands in the same PR. Read-side parity follows the introspection pattern (`includeUsage` / `includeMissing` / etc. — see [`mcp-bulk-and-introspection.md`](mcp-bulk-and-introspection.md)). Items that touch only infra, tests, or read-only investigations are exempt.
+
+Both are CI-checkable:
+- The schema-drift CI (`tools/scripts/mcp-schema-drift.mjs`) already fails when a GraphQL arg lands without an MCP tool update.
+- Add a follow-up CI step: any merged feature commit must touch at least one `docs/` markdown OR pass an explicit "no docs needed" gate in the PR description.
+
 ## Effort legend
 
 | Size | Budget | Reality |

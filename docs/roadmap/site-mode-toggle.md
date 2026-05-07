@@ -66,6 +66,18 @@ In `scroll` mode, sub-pages are nonsensical (everything's on one URL). The admin
 - `ui/admin/features/Seo/SEO.tsx` — add the Select.
 - `services/features/Seo/feature.manifest.test.ts` — extend if it asserts the SiteFlags shape.
 
+## MCP coverage
+
+`siteFlags.siteMode` is read by `site.featureFlags` (already returns the full `ISiteFlags` shape) and written by `site.setFeatureFlag('siteMode', 'scroll' | 'multipage' | 'auto')` (already accepts arbitrary keys via the generic flag tool). No new MCP tool needed.
+
+Required updates:
+- `services/features/Mcp/tools/site.ts` — extend `site.setFeatureFlag` description to mention `siteMode` as a known flag with its enum values.
+- `services/features/Seo/SiteFlagsService.ts` validates the enum membership server-side so MCP-driven writes can't poison the flag.
+
+Docs follow-up:
+- `docs/architecture/site-flags.md` (or equivalent) — document `siteMode` alongside existing flags.
+- `docs/runbooks/site-mode-switch.md` (new) — operator runbook covering the cache-bust + sitemap-regen + external-link-breakage warning when flipping mode under live traffic.
+
 ## Acceptance
 
 - New site (no `siteMode` set) defaults to `auto` → `multipage` (F1 behavior, no surprise regression).

@@ -141,6 +141,23 @@ Highest editing volume first:
 6. **Users** — simplified: invite + role; advanced: lockout, force password reset, audit
 7. **SEO** — simplified: per-page description + image; advanced: site-wide flags + JSON-LD overrides
 
+## MCP coverage
+
+Each per-feature site flag (e.g. `themesAdvancedBulkDelete`, `themesAdvancedVersionHistory`) lives in `siteFlags`. Already covered by `site.featureFlags` (read) and `site.setFeatureFlag` / `site.clearFeatureFlag` (write). No new MCP tools needed.
+
+When adding a new advanced sub-feature behind a flag:
+1. Add the flag's default to `services/features/Seo/SiteFlagsService.ts`
+2. Add the flag name to `site.setFeatureFlag`'s description so agents discover it
+3. (Optional) add a typed accessor to `shared/types/ISiteFlags.ts` so admin-side code reads the flag with autocomplete
+
+The dispatch metadata itself (`{simplified, advanced}` per feature loader) is code-only — agents shouldn't be flipping which component renders for a user. That stays a human-driven UX setting per `defaultAdminUiMode` (already exists).
+
+## Docs follow-up
+
+- `docs/architecture/aui-mode.md` (new) — document the simplified-base / advanced-extends pattern, the lazy-load convention, and the feature-flag escape hatch.
+- Per-pane: when onboarding a new pane to simplified mode, update `docs/architecture/admin-feature-shape.md` (or equivalent) with the file checklist.
+- Update `docs/roadmap/shipped.md` per pane onboarded.
+
 ## Open questions (resolved 2026-05-07)
 
 1. ~~Same folder or parallel hierarchy?~~ → **Same folder.** `ui/admin/features/<X>/` for both variants.

@@ -69,6 +69,25 @@ Already shipping (this PR):
 - `ui/client/pages/app.tsx` — tabs-mode hash listener (mount + `hashchange`)
 - `scripts/buildCvBundle.cjs` — emit the anchor registry alongside the bundle for SSG consumers
 
+## MCP coverage
+
+The picker is the human authoring surface; the agent authoring surface needs the same registry exposed as MCP tools so an AI building a hero CTA picks a real link target instead of guessing.
+
+Two new tools in `services/features/Mcp/tools/anchors.ts`:
+
+| Tool | Scope | Description |
+|------|-------|-------------|
+| `anchor.list` | `read:content` | Returns the full anchor registry — every page, section, and module-with-a-title across the site. Optional `siteMode` filter ('scroll' \| 'multipage') controls href shape. Used before `section.update` to validate any link-bearing content. |
+| `anchor.search { query }` | `read:content` | Free-text search across page names, section titles, and module titles. Returns ranked matches with their canonical hrefs. Mirrors the picker's autosearch UX for agents. |
+
+No write tool — the registry is derived from existing collections (Navigation, Sections), not its own collection. Authoring a new anchor = creating a page / section / module with a title; that already goes through the existing write tools.
+
+The `LinkTargetPicker` component and the new MCP tools both consume the same `AnchorRegistry` — single source of truth.
+
+Docs follow-up:
+- `docs/architecture/anchors.md` (new) — registry shape, slugify rules, scroll-vs-multipage href shape.
+- Update `docs/roadmap/mcp-real-world-ready.md` tool count (89 → 91).
+
 ## Acceptance
 
 - [ ] In any link input, typing "career" surfaces the Career section across both pages

@@ -95,6 +95,28 @@ JS only on `'collapse'` (toggle state); other variants are pure CSS.
 - `services/features/Navigation/feature.manifest.test.ts` — extend if it asserts ISection shape.
 - Tests: e2e visual baseline at 375px width (iPhone SE) with each behavior set.
 
+### MCP coverage
+
+`section.update` already accepts the section payload generically. Extend its `inputSchema` to whitelist `layout.mobileBehavior` so MCP-driven authoring can set it:
+
+```ts
+// services/features/Mcp/tools/sections.ts — section.update inputSchema.properties.section
+layout: {
+    type: 'object',
+    properties: {
+        mobileBehavior: {
+            type: 'string',
+            enum: ['stack', 'collapse', 'keep-ratio'],
+            description: 'Mobile column layout. "stack" (default) flattens columns to 100% width. "collapse" renders subsequent columns under a chevron-rotate accordion. "keep-ratio" preserves widths via horizontal scroll.',
+        },
+    },
+}
+```
+
+No new tool — section.update is the write path. Update the tool description to mention layout authoring so agents discover it.
+
+Docs follow-up: add a "Mobile column behavior" entry to `docs/architecture/section-shape.md` (or wherever `ISection` is documented) so the next dev reading the type knows when to set the field.
+
 ## Acceptance
 
 1. Existing sites render identically — `mobileBehavior` undefined → `'stack'` → existing flat collapse.

@@ -74,6 +74,18 @@ Three axes of work, decreasing in scope:
 
 Phase it: ship Shell first (immediate operator-readable win), then Editors (the unblocker), then Cross-cutting (the polish that makes it feel native). Each phase is independently mergeable.
 
+## MCP coverage
+
+This is admin UI structural work — no new editable content fields. **MCP-exempt.** Existing MCP tools continue to work unchanged; the admin UI just gets phone-friendly.
+
+Edge case: the PWA manifest at `ui/client/pages/admin/manifest.json` is content-shaped (name, icons, theme-color) — but treating it as code-managed (committed JSON) keeps it out of MCP scope. If it ever needs runtime customisation per-tenant, revisit.
+
+## Docs follow-up
+
+- `docs/architecture/admin-shell.md` — document the breakpoint, drawer behavior, and the shared `@mixin section-row-collapsible` reuse so the next dev knows where the responsive primitives live.
+- `docs/runbooks/mobile-admin-qa.md` (new) — operator-facing checklist for testing admin on a phone (devices to cover, gestures to verify, PWA install verification).
+- Update `docs/roadmap/shipped.md` per phase merged.
+
 ## Out of scope for v1
 
 - Native iOS / Android wrapper. Web works fine; a Capacitor / React Native shell is a separate project if the value emerges.
