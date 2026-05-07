@@ -154,10 +154,13 @@ jobs:
             host_secret: DEPLOY_HOST_2
             env_secret: DEPLOY_ENV_FILE_2
             smoke_url: https://skyclimber.pro/
-            # `auto: false` → push triggers SKIP this droplet. Promote a
-            # release here via "Run workflow" → target=skyclimber.pro
-            # once it's been validated on funisimo.
-            auto: false
+            # `auto: true` → deploys on every push to master, in parallel
+            # with funisimo. Both droplets run the same image build off
+            # the same commit; per-droplet config differences live in
+            # DEPLOY_ENV_FILE_n. Use "Run workflow" with `target=` set to
+            # one droplet only when you specifically want to stage a
+            # change against one tenant first.
+            auto: true
             # Per-target seamless (blue/green) opt-in. Skyclimber runs
             # the P4 path (`tools/blue-green-deploy.sh`) so the `app`
             # container flip is atomic via Caddy's ACTIVE_UPSTREAM swap.

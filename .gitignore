@@ -53,6 +53,7 @@ IP.ts
 # contains a real bearer secret. Real tokens for shared use are
 # created via /admin/system/mcp.
 tools/mcp.dev.json
+.mcp-token
 
 # Local-only secrets / ops notes — infra IPs, cert fingerprints, passwords
 /secrets.md

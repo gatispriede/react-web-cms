@@ -46,6 +46,8 @@ process.env.LOG_FORMAT = process.env.LOG_FORMAT ?? 'json';
     console.error = sink;
 }
 
+import * as fs from 'fs';
+import * as path from 'path';
 import {Server} from '@modelcontextprotocol/sdk/server/index.js';
 import {StdioServerTransport} from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
@@ -61,6 +63,19 @@ function readToken(): string | null {
     if (envToken) return envToken;
     const flagIdx = process.argv.findIndex(a => a === '--token');
     if (flagIdx >= 0 && process.argv[flagIdx + 1]) return process.argv[flagIdx + 1];
+    // Last-resort fallback: a gitignored `.mcp-token` file at repo root.
+    // This is what local dev / Claude Desktop uses — keeps the secret out
+    // of `package.json` and out of any spawned env, while still letting
+    // `npm run mcp:stdio` "just work" without flags.
+    try {
+        const tokenPath = path.resolve(process.cwd(), '.mcp-token');
+        if (fs.existsSync(tokenPath)) {
+            const raw = fs.readFileSync(tokenPath, 'utf8').trim();
+            if (raw) return raw;
+        }
+    } catch (err) {
+        process.stderr.write(`[mcp:stdio] .mcp-token read failed: ${(err as Error).message}\n`);
+    }
     return null;
 }
 
