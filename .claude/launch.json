@@ -39,6 +39,24 @@
       "runtimeArgs": ["expo", "start", "--web", "--port", "8081"],
       "port": 8081,
       "cwd": "../../Experiments/peaches/apps/mobile"
+    },
+    {
+      "name": "mcp-http",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "mcp:http"],
+      "port": 8788,
+      "env": {
+        "MCP_HTTP_ENABLED": "true",
+        "MCP_HTTP_BIND": "127.0.0.1",
+        "MCP_HTTP_PORT": "8788"
+      }
+    },
+    {
+      "name": "mcp-stdio",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "mcp:stdio"],
+      "port": 0,
+      "autoPort": false
     }
   ]
 }
