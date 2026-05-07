@@ -17,6 +17,7 @@ import {enforceModeForTool} from '../modeEnforcement';
 import {getMongoConnection} from '@services/infra/mongoDBConnection';
 import {PUBLIC_IMAGE_PATH} from '@utils/imgPath';
 import {defineTool} from './_shared';
+import {loadUsageSources, scanImageUsage, UsageConnection} from '@services/features/Assets/ImageUsageService';
 
 const IMAGES_DIR = path.join(process.cwd(), 'ui/client/public/images');
 const NAME_RE = /[^a-zA-Z0-9._-]+/g;
@@ -33,18 +34,36 @@ function sanitiseFilename(name: string): string {
 export const imageList: McpTool = defineTool({
     // SAFE: not a GraphQL mutation
     name: 'image.list',
-    description: 'Lists uploaded images. Returns name, URL (use as-is in content fields), tags, and dimensions. Always call this before setting any image field — never guess paths.',
+    description: 'Lists uploaded images. Returns name, URL (use as-is in content fields), tags, and dimensions. Always call this before setting any image field — never guess paths. Set `includeUsage:true` to also get `usageCount` + `usedIn` for each image (powers the "show unused" filter).',
     scopes: ['read:content'],
     inputSchema: {
         type: 'object',
         properties: {
             tags: {type: 'string', description: 'Filter by tag keyword. Omit or pass "" to list all.'},
+            includeUsage: {type: 'boolean', description: 'When true, scans pages, sections, posts, logo, footer, site SEO and themes; each returned image gets `usageCount` (number of references) and `usedIn` (compact location list).'},
+            unusedOnly: {type: 'boolean', description: 'When true (and `includeUsage` is also true), filters the response to images with `usageCount === 0`. No-op without `includeUsage`.'},
         },
     },
 }, async (args) => {
     try {
-        const images = await getMongoConnection().getImages({tags: args.tags ?? ''});
-        return images;
+        const conn: UsageConnection = getMongoConnection() as unknown as UsageConnection;
+        const images = await conn.getImages({tags: args.tags ?? ''});
+        if (!args.includeUsage) return images;
+        const sources = await loadUsageSources(conn);
+        // Override the inventory with the (possibly tag-filtered) `images`
+        // result so usageCount/usedIn line up with what we're returning.
+        const usage = scanImageUsage({...sources, images});
+        const annotated = images.map(img => {
+            const entry = usage.get(img.name);
+            return {
+                ...img,
+                usageCount: entry?.count ?? 0,
+                usedIn: entry?.refs ?? [],
+            };
+        });
+        return args.unusedOnly
+            ? annotated.filter(r => r.usageCount === 0)
+            : annotated;
     } catch (err) {
         return {ok: false, error: String((err as Error).message || err)};
     }
@@ -94,34 +113,77 @@ export const imageUpload: McpTool = defineTool({
     return {ok: true, filename, location: `${PUBLIC_IMAGE_PATH}${filename}`, size: buf.length};
 });
 
+async function deleteOneImage(
+    id: string,
+    inventory: Array<{id: string; name?: string}>,
+    conn: {assetService: {deleteImage: (id: string) => Promise<unknown>}},
+): Promise<{id: string; ok: boolean; name: string | null; fileDeleted: boolean; error?: string}> {
+    try {
+        const row = inventory.find(r => r.id === id);
+        const res = await conn.assetService.deleteImage(id);
+        let fileDeleted = false;
+        if (row?.name) {
+            const target = path.join(IMAGES_DIR, sanitiseFilename(String(row.name)));
+            try {
+                if (fs.existsSync(target)) { fs.unlinkSync(target); fileDeleted = true; }
+            } catch { /* swallow — Mongo row deletion is the contract */ }
+        }
+        return {id, ok: true, name: row?.name ?? null, fileDeleted, deleted: typeof res === 'string' ? res : 1} as never;
+    } catch (err) {
+        return {id, ok: false, name: null, fileDeleted: false, error: String((err as Error).message || err)};
+    }
+}
+
 export const imageDelete: McpTool = defineTool({
     name: 'image.delete',
-    description: 'Delete an image (by id) — removes file from public/images and the Mongo Images row.',
+    description: 'Delete one or many images by id — removes the file from public/images and the Mongo Images row. Accepts either `id` (single) or `ids` (array, up to 500). Bulk form returns per-id results so partial failures don\'t abort the batch.',
     scopes: ['write:content'],
     idempotent: true,
+    // Schema enforces shape; the handler enforces "exactly one of id/ids
+    // non-empty" since the local JSONSchemaObject type doesn't surface
+    // `oneOf`. Both fields are optional at the schema layer.
     inputSchema: {
         type: 'object',
-        required: ['id'],
         properties: {
-            id: {type: 'string', minLength: 1},
+            id: {type: 'string', minLength: 1, description: 'Single image id. Mutually exclusive with `ids`.'},
+            ids: {type: 'array', items: {type: 'string', minLength: 1}, description: 'Bulk image ids (up to 500). Mutually exclusive with `id`.'},
             idempotencyKey: {type: 'string'},
         },
     },
 }, async (args, ctx) => {
     await enforceModeForTool(ctx.actor, 'image.delete');
     const conn: any = getMongoConnection();
-    // Look up the row so we know the on-disk filename.
-    const all = await conn.getImages({tags: ''});
-    const row = (all ?? []).find((r: any) => r.id === args.id);
-    const res = await conn.assetService.deleteImage(args.id);
-    let fileDeleted = false;
-    if (row?.name) {
-        const target = path.join(IMAGES_DIR, sanitiseFilename(String(row.name)));
-        try {
-            if (fs.existsSync(target)) { fs.unlinkSync(target); fileDeleted = true; }
-        } catch { /* swallow — row deleted is the contract */ }
+    const ids: string[] = Array.isArray(args.ids)
+        ? args.ids.filter((s: unknown): s is string => typeof s === 'string' && s.length > 0)
+        : (typeof args.id === 'string' ? [args.id] : []);
+    if (!ids.length) {
+        throw new Error('image.delete requires `id` or non-empty `ids[]`');
     }
-    return {ok: true, deleted: typeof res === 'string' ? res : 1, fileDeleted, name: row?.name ?? null};
+    // One inventory fetch reused across the batch — avoids hammering
+    // Mongo with `getImages` per id when deleting hundreds at once.
+    const inventory = (await conn.getImages({tags: ''})) ?? [];
+    const results = [] as Awaited<ReturnType<typeof deleteOneImage>>[];
+    for (const id of ids) {
+        results.push(await deleteOneImage(id, inventory, conn));
+    }
+    // Backward-compat: when called with single `id`, return the original
+    // flat shape so existing callers don't break.
+    if (typeof args.id === 'string' && !Array.isArray(args.ids)) {
+        const r = results[0]!;
+        return r.ok
+            ? {ok: true, deleted: 1, fileDeleted: r.fileDeleted, name: r.name}
+            : {ok: false, error: r.error};
+    }
+    const deleted = results.filter(r => r.ok).map(r => r.id);
+    const failed = results.filter(r => !r.ok).map(r => ({id: r.id, error: r.error}));
+    return {
+        ok: failed.length === 0,
+        deletedCount: deleted.length,
+        failedCount: failed.length,
+        deleted,
+        failed,
+        results,
+    };
 });
 
 export const imageRescan: McpTool = defineTool({
