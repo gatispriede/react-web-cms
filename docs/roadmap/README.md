@@ -91,16 +91,52 @@ Estimates assume one focused engineer already familiar with the codebase. Double
 - [migration-mapping.md](migration-mapping.md) — full old→new path table from the N15 reshape. Useful when chasing a stale import in docs / legacy notes.
 - [shipped.md](shipped.md) — archive of completed items with commit refs.
 
-## Suggested ordering
+## Suggested ordering — big to small (2026-05-07)
 
-0. **PROD HOTFIX 0390491** — push develop → merge to master → redeploy. Blocking until prod is healthy again.
-1. **F6 site-mode toggle** — biggest open feature; scroll vs multipage flag with footer/header/routing branches. Phase 1 (shell unification, including mobile menu) also resolves the standing scroll-vs-menu styling drift the operator flagged on 2026-05-04
-2. **Section drag-reorder root cause** — the up/down arrows mitigate but the underlying drag flow needs an explanation; pair with reordering UX cleanup
-3. **Mobile column behavior** — per-module stack/keep-ratio/reorder flag
-3a. **Mobile-friendly admin** — operator can edit/publish from a phone. Shell drawer first (immediate readable win), editors next (the unblocker), polish + PWA last. Pair with the public-site mobile column work — the SCSS approach for collapsing multi-column rows is the same on both surfaces
-4. **Q4-cap** — capture visual baselines so subsequent refactors have a safety net
-5. **Bundle-import restart hook** — XS wiring, removes a real operator paper-cut after each import
-6. **F8 deferred (bulk + introspection → streaming → plugin SDK → E2E un-skip)** — bulk-write + introspection sweep is the unblocker for translation/agent workflows; ship before streaming so the streaming work has the right surface to streamline. SDK last (needs API stability)
-7. **AUI-mode per-pane simplified variants** — Themes + Posts proved the dispatch; pick the next high-traffic pane
-8. **E-commerce real-flow specs** — unblocks the e-commerce wiring queue
-9. **Q5-del** — only after observation window; pure cleanup
+Strict size-first ordering: largest items lead so deep work isn't fragmented; quick wins fill the tail. Dependencies override pure size-order in two places — flagged inline.
+
+### Wave 1 — L (1-3 days each)
+
+1. **Mobile-friendly admin** — `mobile-friendly-admin.md`. Three independently-mergeable phases (shell drawer → editors → polish + PWA). ~5 days realistic. Reuses SCSS mixin from Wave 2 mobile column work, so mergeable in either order.
+   - **Dependency exception:** Q4-cap visual baselines (Wave 3) ideally lands first — every shell + editor change otherwise risks silent regression. Acceptable to start admin Phase 1 in parallel since shell scope is small.
+2. **Terraform / Kamal full migration** — `terraform-kamal-migration.md`. 7 days across 6 phases. **Phase B (GHCR push-based deploy) carved out into Wave 2** because half-day standalone value is too high to wait — the rest of the migration can follow.
+3. **F8-sdk plugin SDK** — surface `defineTool` + `compose` as a public API. Hold until F8-bulk-introspection lands so the API surface is stable.
+
+### Wave 2 — M (0.5-2 days each)
+
+4. **F8-bulk-introspection** — `mcp-bulk-and-introspection.md`. ~3 days. Unblocks translation work + bulk authoring via MCP. Reusable scanner pattern feeds admin "show unused / missing" filters.
+5. **F6 site-mode-toggle** — `site-mode-toggle.md`. ~1-2 days, four phases. Phase 1 (shell + mobile-menu unification) also resolves the standing styling drift.
+6. **F8-stream** — streaming transport for `bundle.export` / `image.rescan`. Pair with mcp-rollout #12 (bundle sanitiser fix) — the same flow gets stress-tested.
+7. **GHCR push-based deploy** (Terraform Phase B carve-out) — `next build` moves to CI; droplets pull instead of build. Cold-deploy drops 6-8min → ~30s. Obsoletes the auto-rollback item below.
+8. **Section drag-reorder root cause** — investigate why `getChangedPos` + `DraggableWrapper` chain stopped firing. Up/down arrows already ship as workaround.
+9. **link-target-autosearch** — `link-target-autosearch.md`. Picker + anchor registry. **Depends on F6** (picker emits `/page#anchor` vs `/#anchor` based on mode).
+10. **AUI mode per-pane** — Themes + Posts proved the dispatch; pick next high-traffic pane. Slot one pane at a time.
+11. **E-commerce real-flow specs** — happy-path per feature: products / cart / checkout / inventory / orders.
+
+### Wave 3 — S (1-3 hours each)
+
+12. **Q4-cap visual baselines** — capture mobile + desktop. **Should land before Wave 1 Mobile-friendly admin Phase 2**.
+13. **Mobile column behavior flag** — per-module `stack` / `keep-ratio` / `reorder-N`. SCSS approach reused by Mobile-friendly admin Phase 2.
+14. **C13b Manifesto link-target** — depends on link-target-autosearch landing first.
+15. **Bundle-import restart hook** — `markRestartRequired()` wiring.
+16. **Declarative .env split** — `.env.static` (CI-managed) + `.env.runtime` (deploy-script-managed). Removes a class of "where did this var go?" bugs.
+17. **Deploy auto-rollback** — likely obsoleted by GHCR. Verify after GHCR ships; close as won't-do if obsolete.
+18. **F8-e2e** — un-skip MCP E2E suite + re-enable e2e.yml triggers (mcp-rollout #10 same workstream).
+19. **mcp-rollout aftermath quick fixes:**
+    - `#1` section.update description / upsert (1 line)
+    - `#5` admin:bundle scope in dev-token (1 line)
+    - `#9` `page.touch` MCP tool (audit-triplet stamp)
+    - `#11` INFRA_TOPOLOGY normalize step
+    - `#12` bundle sanitiser fix
+20. **Q5-del** — admin-segregation Phase 3 cleanup after ≥1 release with zero `legacy-route` errors.
+21. **Themes direct-route gqty** — `Theme.tsx` empty fetch investigation.
+
+### Wave 4 — XS
+
+22. **gqty schema regen** — surfaces `isFreshInstall` / `onboardingBootstrap` to typed clients.
+
+### Backlog (no commitment)
+
+- C17 sample audit — opens when a client surfaces a specific gap.
+- Mobile-friendly admin native wrapper (Capacitor / RN) — explicitly out of scope for v1.
+- mcp-rollout `#8` Mongo healthcheck — explicitly deferred per cattle-not-pets stance.
