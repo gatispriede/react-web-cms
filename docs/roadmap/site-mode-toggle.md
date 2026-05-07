@@ -66,6 +66,17 @@ In `scroll` mode, sub-pages are nonsensical (everything's on one URL). The admin
 - `ui/admin/features/Seo/SEO.tsx` — add the Select.
 - `services/features/Seo/feature.manifest.test.ts` — extend if it asserts the SiteFlags shape.
 
+## Testids — for e2e
+
+- `seo-pane-site-mode-select` — the admin Select on the SEO/client-config pane
+- `seo-pane-site-mode-option-{scroll|multipage|auto}` — each option
+- `seo-pane-site-mode-warning` — the SEO-impact warning banner shown on switch
+- `main-menu-link-{pageSlug}` — every nav item; assert `[href]` shape per mode (`/${slug}` vs `#${anchor}`)
+- `site-footer-link-{entryId}` — every footer entry; same per-mode href assertion
+
+E2e coverage:
+- `tests/e2e/features/site-mode-toggle.spec.ts` — admin flips mode → public site reload shows nav + footer rebuilt with correct href shape; smooth-scroll fires in scroll mode; deep page paths 404 in scroll mode; F1 sub-pages flatten visibly.
+
 ## MCP coverage
 
 `siteFlags.siteMode` is read by `site.featureFlags` (already returns the full `ISiteFlags` shape) and written by `site.setFeatureFlag('siteMode', 'scroll' | 'multipage' | 'auto')` (already accepts arbitrary keys via the generic flag tool). No new MCP tool needed.

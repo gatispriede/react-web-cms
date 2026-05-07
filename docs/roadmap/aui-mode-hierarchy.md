@@ -141,6 +141,27 @@ Highest editing volume first:
 6. **Users** — simplified: invite + role; advanced: lockout, force password reset, audit
 7. **SEO** — simplified: per-page description + image; advanced: site-wide flags + JSON-LD overrides
 
+## Testids — for e2e
+
+Every pane that ships both variants needs **mode-prefixed testids** so e2e specs target the right component unambiguously. Pattern from the universal rule:
+
+- `<feature>-simplified-{role}` for simplified-mode interactive surfaces
+- `<feature>-advanced-{role}` for advanced-mode-only controls
+- `<feature>-{role}` (no prefix) for surfaces shared between variants — testids that live on the simplified base component and inherit when the advanced variant composes it
+
+Examples (Themes):
+- `themes-simplified-card-{themeId}` — the simplified card layout
+- `themes-simplified-set-active-button-{themeId}` — set-active action (shared, same in both modes)
+- `themes-advanced-bulk-delete-button` — advanced-only
+- `themes-advanced-version-history-toggle-{themeId}` — advanced-only
+- `themes-mode-flag-bulk-delete` — the site-flag toggle (when the flag UI is visible)
+
+Per pane, e2e coverage tests both variants:
+- `tests/e2e/admin/<feature>-simplified.spec.ts` — happy-path with simplified mode active
+- `tests/e2e/admin/<feature>-advanced.spec.ts` — advanced controls + flag-gated sub-features
+
+The shell switches mode via `defaultAdminUiMode` (already exists). e2e test setup can flip the mode per spec via the existing API.
+
 ## MCP coverage
 
 Each per-feature site flag (e.g. `themesAdvancedBulkDelete`, `themesAdvancedVersionHistory`) lives in `siteFlags`. Already covered by `site.featureFlags` (read) and `site.setFeatureFlag` / `site.clearFeatureFlag` (write). No new MCP tools needed.

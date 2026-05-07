@@ -69,6 +69,26 @@ Already shipping (this PR):
 - `ui/client/pages/app.tsx` — tabs-mode hash listener (mount + `hashchange`)
 - `scripts/buildCvBundle.cjs` — emit the anchor registry alongside the bundle for SSG consumers
 
+## Testids — for e2e
+
+The picker is a reusable AntD Select wrapper used in 8+ editors; testids are critical so e2e specs can target it from any host editor.
+
+Picker surface (`<LinkTargetPicker>`):
+- `link-target-picker-{hostId}` — picker root; `hostId` is the editor field id (e.g. `hero-cta-primary`, `project-card-{projectId}-href`)
+- `link-target-picker-{hostId}-input` — the search input
+- `link-target-picker-{hostId}-option-{anchorId}` — each surfaced option in the dropdown
+- `link-target-picker-{hostId}-group-{Page|Section|Module|Custom}` — option group headers
+- `link-target-picker-{hostId}-custom-toggle` — "Custom URL…" entry that flips to free-text mode
+- `link-target-picker-{hostId}-custom-input` — the free-text URL input when active
+
+Public-side anchor targets:
+- `section-anchor-{sectionId}` — already implicit via `id={section.id}` on the section wrapper; mirror as `data-testid` for e2e too
+- `module-title-anchor-{slug}` — module titles that emit anchor ids
+
+E2e coverage:
+- `tests/e2e/admin/link-target-picker.spec.ts` — type "career" → assert grouped results → select an option → saved href matches expected canonical shape (per layoutMode); switching layoutMode keeps the link working.
+- `tests/e2e/features/anchor-deeplink.spec.ts` — visit `/cms#career-record` → smooth-scroll to title with correct `scrollMarginTop`; tabs-mode `/#career-record` → opens correct tab + scrolls.
+
 ## MCP coverage
 
 The picker is the human authoring surface; the agent authoring surface needs the same registry exposed as MCP tools so an AI building a hero CTA picks a real link target instead of guessing.

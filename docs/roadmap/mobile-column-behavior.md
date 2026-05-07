@@ -95,6 +95,23 @@ JS only on `'collapse'` (toggle state); other variants are pure CSS.
 - `services/features/Navigation/feature.manifest.test.ts` — extend if it asserts ISection shape.
 - Tests: e2e visual baseline at 375px width (iPhone SE) with each behavior set.
 
+### Testids — for e2e
+
+Per the universal `data-testid` rule. Reused by the Mobile-friendly admin Phase 2 spec since the same SCSS mixin powers both surfaces.
+
+- `section-row-{sectionId}` — every multi-column section row (parent)
+- `section-row-toggle-{sectionId}` — chevron-rotate toggle button (only rendered when `mobileBehavior === 'collapse'`); assert `[data-state="open"|"closed"]`
+- `section-row-column-{sectionId}-{n}` — each column slot
+- `section-row-{sectionId}-behavior-{stack|collapse|keep-ratio}` — variant indicator (or use `[data-mobile-behavior]` attribute)
+
+Admin authoring side:
+- `section-layout-editor-{sectionId}-mobile-behavior-select` — the AntD Select that exposes the enum
+- `section-layout-editor-{sectionId}-mobile-behavior-option-{stack|collapse|keep-ratio}` — each option
+
+E2e coverage:
+- `tests/e2e/visual/section-mobile-collapse.spec.ts` — visual baseline at 375px width per behavior variant (Q4-cap dependency).
+- `tests/e2e/admin/section-mobile-behavior.spec.ts` — admin sets a section to `'collapse'` → public-side mobile preview shows accordion → toggle expands the second column → reload preserves the persisted toggle state via sessionStorage.
+
 ### MCP coverage
 
 `section.update` already accepts the section payload generically. Extend its `inputSchema` to whitelist `layout.mobileBehavior` so MCP-driven authoring can set it:

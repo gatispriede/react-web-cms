@@ -74,6 +74,40 @@ Three axes of work, decreasing in scope:
 
 Phase it: ship Shell first (immediate operator-readable win), then Editors (the unblocker), then Cross-cutting (the polish that makes it feel native). Each phase is independently mergeable.
 
+## Testids — for e2e
+
+Per the universal `data-testid` rule. Each phase lands its testids in the same PR as the code:
+
+**Phase 1 — Shell**
+- `admin-shell-drawer-toggle` — open/close button on the top bar (mobile only)
+- `admin-shell-drawer` — the drawer container itself; assert `[data-state="open"|"closed"]`
+- `admin-shell-drawer-overlay` — tap-to-dismiss overlay
+- `admin-topbar-overflow-toggle` — overflow menu button when controls collapse
+- `admin-topbar-active-tab-label` — the breadcrumb/title in the shrunk top bar
+
+**Phase 2 — Editors**
+- `admin-editor-row-{sectionId}` — every multi-column editor row (parent of collapsed columns)
+- `admin-editor-row-toggle-{sectionId}` — the chevron-rotate accordion button
+- `admin-editor-row-column-{sectionId}-{n}` — each column inside the row
+- `admin-image-tray-toggle` — sticky-bottom tray open button
+- `admin-image-tray-sheet` — the bottom-sheet image picker
+- `admin-image-tray-tile-{imageId}` — each image in the picker grid
+- `admin-modal-{modalName}` — every AntD Modal (now bottom-sheet on mobile) carries its modal-name id
+- `admin-form-field-{fieldName}` — every form input wrapper (44px touch target assertion)
+- `admin-inline-edit-target-{itemId}` — Alt+click / long-press editable surfaces
+
+**Phase 3 — Polish**
+- `admin-pwa-install-prompt` — install prompt button (when surfaced)
+- `admin-presence-stack` — vertical presence-avatar cluster
+- `admin-inquiry-list-pull-refresh` — pull-to-refresh container
+
+E2e coverage targets:
+- `tests/e2e/admin/mobile-shell.spec.ts` — drawer open/close, overlay dismiss, safe-area
+- `tests/e2e/admin/mobile-editor.spec.ts` — drawer-style row toggle, image tray flow, long-press inline edit
+- `tests/e2e/admin/mobile-pwa.spec.ts` — manifest served, install prompt visible, standalone mode after install (limited Playwright support; assert what's testable)
+
+Run with `--device "iPhone 13"` so the breakpoints + touch-event gestures fire.
+
 ## MCP coverage
 
 This is admin UI structural work — no new editable content fields. **MCP-exempt.** Existing MCP tools continue to work unchanged; the admin UI just gets phone-friendly.

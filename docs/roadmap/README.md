@@ -18,10 +18,17 @@ These apply to every active item regardless of size or wave. Treat them as accep
 
 1. **Docs reflect the work.** When an item ships, update — at minimum — the relevant spec doc (mark it shipped or amend), `docs/roadmap/shipped.md`, and any architecture / runbook docs that diverge from the new shape. Inline code comments cover the *why*; markdown docs cover the *where to look first*.
 2. **MCP coverage parity for editable surfaces.** Every feature whose content / state / config can be authored through the admin UI must also be manageable via MCP — same operations, same guards. MCP is the canonical write path for AI authoring; admin UI is the human surface on top. New editable field → MCP tool (or extension to an existing tool's schema) lands in the same PR. Read-side parity follows the introspection pattern (`includeUsage` / `includeMissing` / etc. — see [`mcp-bulk-and-introspection.md`](mcp-bulk-and-introspection.md)). Items that touch only infra, tests, or read-only investigations are exempt.
+3. **`data-testid` on every interactive surface.** Any new or modified UI component lands with `data-testid` attributes on every element an e2e test could plausibly target — buttons, inputs, options, list items with identity, modals, drawer toggles, status indicators. Naming convention:
+   - **Static elements:** `feature-component-role` (kebab-case) — e.g. `admin-shell-drawer-toggle`, `link-target-picker-search-input`, `themes-pane-bulk-delete-button`.
+   - **Items with identity:** `feature-component-{id}` — e.g. `section-row-toggle-{sectionId}`, `link-target-picker-option-{anchorId}`, `gallery-tile-{imageId}`.
+   - **State variants:** suffix with `-{state}` when needed — e.g. `section-row-toggle-{id}-expanded`. Prefer toggling a class + asserting via `[data-testid="..."][data-state="expanded"]` over compound testids.
+   - **Mode dispatchers (AUI):** prefix with the mode — e.g. `themes-simplified-card-{themeId}` vs `themes-advanced-card-{themeId}` — so e2e specs can target either variant unambiguously.
 
-Both are CI-checkable:
+   E-commerce sweep (shipped 2026-05-03) is the reference precedent: `data-testid` wired across Products / Orders / Storefront / Cart / Checkout. Same conventions apply to every new component going forward.
+
+All three are CI-checkable:
 - The schema-drift CI (`tools/scripts/mcp-schema-drift.mjs`) already fails when a GraphQL arg lands without an MCP tool update.
-- Add a follow-up CI step: any merged feature commit must touch at least one `docs/` markdown OR pass an explicit "no docs needed" gate in the PR description.
+- Add follow-up CI steps: (a) any merged feature commit must touch at least one `docs/` markdown OR pass an explicit "no docs needed" gate in the PR description; (b) `tools/scripts/testid-coverage.mjs` (new) walks new/modified `.tsx` files and warns when an interactive element (`button`, `input`, `Select`, `Modal`, etc.) lacks `data-testid`.
 
 ## Effort legend
 
