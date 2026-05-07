@@ -119,8 +119,6 @@ Docs follow-up:
 
 ## Effort
 
-**M (0.5–1 day)** for the picker + module-title ids + hash listener.
-**+S (1–3 h)** for the registry build/cache hook on save.
-**+S** per editor surface to swap the input (≈8 surfaces).
+**M · ~2 focused days, shipped as one chunk.** Picker component, registry build/cache hook, MCP tools, every editor surface swap (~8 editors), hashchange listener, module-title `id` emission, and tests all land together. A picker without the registry behind it is a dropdown of nothing; a registry without picker integration in editors is dead infrastructure; missing one editor swap means an inconsistent authoring experience. Land together.
 
-Total: **~2 focused days** including a test pass.
+Internal time-share: registry + cache hook ~3h, picker component + types ~3h, editor surface swaps (8 × ~30min) ~4h, MCP tools (`anchor.list`, `anchor.search`) ~2h, module-title id + hashchange listener ~2h, tests + runbook ~2h.

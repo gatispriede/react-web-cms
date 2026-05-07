@@ -1,9 +1,11 @@
 # Terraform + Kamal migration
 
 Status: Planned
-Last updated: 2026-05-06
+Last updated: 2026-05-07
 
-Replace the current bash deploy stack (`tools/blue-green-deploy.sh` + the 600-line inline ssh script in `.github/workflows/ci.yml`) with **Terraform** for infrastructure and **[Kamal 2](https://kamal-deploy.org/)** for app deploy.
+Replace the current bash deploy stack (`tools/blue-green-deploy.sh` + the 250-line inline ssh script in `.github/workflows/ci.yml`) with **Terraform** for infrastructure and **[Kamal 2](https://kamal-deploy.org/)** for app deploy. Plus push the built `node-app:<sha>` image to GHCR so droplets stop running `next build` in-container.
+
+**Shipped as one chunk.** The migration is one logical unit: terraform-imported infra + GHCR-built images + Kamal-driven deploy work together. Splitting into separate roadmap items would mean a half-migrated state where `kamal deploy` reads a not-yet-imported infra, or a Terraform droplet that still runs the old bash deploy. The whole thing lands together; rolling back is one revert.
 
 ---
 
@@ -11,7 +13,7 @@ Replace the current bash deploy stack (`tools/blue-green-deploy.sh` + the 600-li
 
 The current setup hit two blocking bugs in a single week (YAML heredoc indent, SSH idle-disconnect mid-build) and a third config bug from copy-pasting the wrong content into a deploy secret. Root cause: deploy logic, droplet bootstrap, env rewriting, image build, container swap, and health probing are all wedged into one stringly-typed shell script that can only be tested by running a real deploy. There is no declarative source of truth for what infra exists.
 
-Kamal solves the deploy-script problem; Terraform solves the infra-state problem.
+Kamal solves the deploy-script problem; Terraform solves the infra-state problem; GHCR solves the in-droplet build problem.
 
 ---
 
@@ -56,18 +58,89 @@ If those constraints change later (multi-tenant, real customer data, audit requi
 
 ---
 
-## Phased rollout
+## Scope of the chunk
 
-| Phase | Scope | Validation gate | Effort |
-|---|---|---|---|
-| **A** | `terraform import` existing droplets, reserved IPs, firewalls, DNS records into a `terraform/` directory. State remote (DO Spaces backend or Terraform Cloud free tier). | `terraform plan` shows zero diff against live infra. | 1 day |
-| **B** | Set up GHCR (free for our private repo). Modify CI to **build + push** images from `infra/AppDockerfile` instead of building on droplet. Tag with commit SHA. | `docker run ghcr.io/gatispriede/cms:<sha>` boots locally. | 1 day |
-| **C** | Add `config/deploy.yml` per droplet. Run `kamal setup` against a freshly-provisioned test droplet (Terraform module reused). | Hello-world deploy succeeds; kamal-proxy issues TLS. | 2 days |
-| **D** | Migrate funisimo: parallel-run Kamal alongside current bash for a week. Trigger both on each push, compare outcomes. | Two consecutive Kamal-only deploys, including a deliberate rollback. | 2 days |
-| **E** | Cut over funisimo: delete `tools/blue-green-deploy.sh`, replace the inline ssh script in `ci.yml` with `kamal deploy`. | Push to master → green deploy via Kamal only. | 1 day |
-| **F** | Repeat E for skyclimber. Different `deploy.yml`, same migration steps. | Same. | 0.5 day |
+Everything below ships as one cohesive deliverable. Internal ordering is execution-order, not separately-shippable phases — every step is required for the next to function, and the migration is only useful when the whole chain runs end-to-end.
 
-**Total ~7 working days.** Can be spread over 2 calendar weeks alongside other work.
+**Infra-as-code (Terraform)**
+- `terraform/` directory at repo root
+- State backend: Terraform Cloud free tier (5 users, 500 resources) or DO Spaces
+- `terraform import` existing droplets, reserved IPs, firewalls, DNS records
+- Reusable droplet module so adding a third tenant is one module call
+- `terraform plan` shows zero diff against live infra at handoff
+
+**Image registry (GHCR)**
+- CI builds `infra/AppDockerfile` once and pushes `ghcr.io/gatispriede/cms:<sha>` per commit
+- Cleanup policy: keep last 10 SHA-tagged images per branch
+- Droplets pull instead of build — cold-deploy drops 6-8min → ~30s
+- GHCR free for public repos; ~$0-3/mo for private at our scale
+
+**App deploy (Kamal)**
+- `config/deploy.funisimo.yml` + `config/deploy.skyclimber.yml`
+- `kamal setup` provisions kamal-proxy on each droplet (binds 8080; Caddy stays on 80/443 → reverse-proxies to kamal-proxy)
+- `kamal deploy` replaces `tools/blue-green-deploy.sh`
+- Kamal's blue-green slot logic supersedes ours; `ACTIVE_UPSTREAM` env var goes away
+- CI workflow shrinks from ~250 lines to a 5-line `kamal deploy --destination=<env>` call
+
+**Cutover and validation**
+- Test droplet provisioned via Terraform module, used as the kamal-setup target before touching prod
+- Funisimo migrated first; skyclimber follows once funisimo is stable for a week
+- Single revert path: roll back the migration commit + redeploy via the legacy bash on the previous master tag (kept in `tools/legacy/blue-green-deploy.sh` for one release cycle, then deleted)
+
+---
+
+## Files to touch
+
+**New**
+- `terraform/` — providers, droplets, DNS, firewall, reserved IPs, state backend config
+- `config/deploy.funisimo.yml`, `config/deploy.skyclimber.yml` — Kamal configs
+- `infra/AppDockerfile` adjustments for GHCR push (multi-stage, tag-aware)
+- `tools/legacy/blue-green-deploy.sh` — moved from `tools/`, kept one cycle for revert path
+
+**Modified**
+- `.github/workflows/ci.yml` — replace inline ssh script with `kamal deploy`; add GHCR push step
+- `infra/Caddyfile` — upstream changes from `app:80` to `kamal-proxy:8080`
+- `secrets.md` — replace `DEPLOY_ENV_FILE_*` documentation with Kamal secrets path
+
+**Deleted**
+- `tools/blue-green-deploy.sh` (after revert window closes)
+- `DEPLOY_ENV_FILE_1` / `DEPLOY_ENV_FILE_2` GitHub secrets (after Kamal cutover stable)
+
+---
+
+## Acceptance
+
+1. `terraform plan` against live infra returns "no changes" — every existing droplet, IP, firewall, and DNS record is reflected in code.
+2. CI build pushes a tagged image to GHCR; `docker run ghcr.io/gatispriede/cms:<sha>` boots cleanly locally.
+3. `kamal deploy --destination=funisimo` ships a new commit end-to-end in under 90 seconds (vs current ~6-8 minutes).
+4. `kamal deploy --destination=skyclimber` does the same.
+5. Caddy still serves `/uploads/*`, `/design-v2/*`, and TLS unchanged — no public regression.
+6. A deliberate `kamal rollback` returns to the previous deployed slot under a minute.
+7. The 250-line inline ssh script in `ci.yml` is gone; the deploy job is ≤30 lines.
+8. **Cattle test:** terraform-destroy + terraform-apply produces a fresh, deployable droplet without manual SSH steps. Bundle import restores content; site serves traffic within 10 minutes of starting from zero.
+
+---
+
+## Effort
+
+**L · ~7 working days.** Spreadable over 2 calendar weeks alongside other work because individual steps are interruptible (terraform import + kamal config drafting are quiet desk work; cutover is the only "must focus" window).
+
+## Testids — for e2e
+
+This is infra; no UI surface. **Testid-exempt.** End-to-end validation is the deploy CI job + the smoke check + the deliberate rollback test, not Playwright.
+
+## MCP coverage
+
+Infra; no editable content. **MCP-exempt.** Operational tools (`diagnostics.health`, `log.tail`) keep working since they target the running container regardless of how it got there.
+
+## Docs follow-up
+
+- `docs/runbooks/terraform.md` (new) — provider setup, state backend, common ops (`plan`, `apply`, `destroy`, `import`).
+- `docs/runbooks/kamal-deploy.md` (new) — daily operator workflow, rollback procedure, secrets rotation.
+- `docs/runbooks/ghcr.md` (new) — image lifecycle, retention, `docker pull` from a workstation for local repro.
+- Replace `docs/runbooks/automatic-deployment.md` (legacy bash) and `docs/runbooks/seamless-deployment.md` (legacy blue-green) with pointers to the new Kamal runbook; keep the originals one cycle for archaeology.
+- Update `docs/roadmap/shipped.md` on merge.
+- Update `docs/architecture/deployment.md` (or equivalent) to reflect the new pipeline shape.
 
 ---
 
@@ -75,12 +148,12 @@ If those constraints change later (multi-tenant, real customer data, audit requi
 
 | Risk | Mitigation |
 |---|---|
-| Kamal-proxy can't coexist with Caddy on 80/443. | Caddy continues to own 80/443; kamal-proxy binds 8080 (or whatever Caddy upstreams to). Only the upstream port changes from `app:80` to `kamal-proxy:8080`. |
+| Kamal-proxy can't coexist with Caddy on 80/443. | Caddy continues to own 80/443; kamal-proxy binds 8080. Only the upstream port changes from `app:80` to `kamal-proxy:8080`. |
 | Image push to GHCR adds CI runtime. | Compensated by removing 6–10min of on-droplet `next build`. Net deploy gets faster, not slower. |
 | Kamal's "1 repo = 1 app" forces split if the CMS later co-locates services. | Add a second `config/deploy.<name>.yml`. Kamal supports multiple destinations. |
 | Lose Caddy's caching layer. | Caddy stays in front; cache layer untouched. |
-| Drift between `terraform import`-ed state and actual infra after months of manual DO console clicks. | The point of Phase A is to catch and codify all drift. Run `terraform plan` weekly thereafter. |
-| Existing GitHub secrets pattern (`DEPLOY_ENV_FILE_*`) is comfortable; switching loses muscle memory. | Migrate to Kamal secrets gradually; can keep the GHA-secret-→-env-file path as a Kamal env source for one deploy cycle. |
+| Drift between `terraform import`-ed state and actual infra after months of manual DO console clicks. | The point of the import step is to catch and codify all drift. Run `terraform plan` weekly thereafter. |
+| Cutover causes downtime. | Migration runs against funisimo first while skyclimber stays on the old path. If funisimo Kamal cutover regresses, the skyclimber bash path is the working fallback. |
 
 ---
 
@@ -94,11 +167,11 @@ If Kamal proves wrong (multi-app per droplet, designer wanting a UI, multi-regio
 
 ---
 
-## Open questions for kickoff
+## Open questions (resolved)
 
-- **Registry:** GHCR (free, fits our existing GitHub-centric workflow) or DO Container Registry ($5/mo, faster pull on droplet because same datacenter). Default: GHCR.
-- **Secrets:** Keep using GHA repo secrets via Kamal's `env: tags:` pattern, or move to 1Password/SSM. Default: GHA secrets for v1 — minimal change.
-- **Caddy stays as front:** Confirmed default. Caddy → kamal-proxy → app. We don't lose static-asset serving or the caching layer.
+- **Registry:** GHCR (free, fits our existing GitHub-centric workflow). DO Container Registry rejected ($5/mo, marginal pull-speed gain doesn't justify the cost at our scale).
+- **Secrets:** Keep using GHA repo secrets via Kamal's `env: tags:` pattern. 1Password / SSM if a real driver appears.
+- **Caddy stays as front:** Confirmed. Caddy → kamal-proxy → app.
 
 ---
 

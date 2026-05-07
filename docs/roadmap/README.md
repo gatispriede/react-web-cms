@@ -18,7 +18,8 @@ These apply to every active item regardless of size or wave. Treat them as accep
 
 1. **Docs reflect the work.** When an item ships, update — at minimum — the relevant spec doc (mark it shipped or amend), `docs/roadmap/shipped.md`, and any architecture / runbook docs that diverge from the new shape. Inline code comments cover the *why*; markdown docs cover the *where to look first*.
 2. **MCP coverage parity for editable surfaces.** Every feature whose content / state / config can be authored through the admin UI must also be manageable via MCP — same operations, same guards. MCP is the canonical write path for AI authoring; admin UI is the human surface on top. New editable field → MCP tool (or extension to an existing tool's schema) lands in the same PR. Read-side parity follows the introspection pattern (`includeUsage` / `includeMissing` / etc. — see [`mcp-bulk-and-introspection.md`](mcp-bulk-and-introspection.md)). Items that touch only infra, tests, or read-only investigations are exempt.
-3. **`data-testid` on every interactive surface.** Any new or modified UI component lands with `data-testid` attributes on every element an e2e test could plausibly target — buttons, inputs, options, list items with identity, modals, drawer toggles, status indicators. Naming convention:
+3. **Ship as chunks, not phases.** Each roadmap item is one complete deliverable. No "Phase 1 / Phase 2 / Phase 3" inside an item — that just means three follow-up items, each requiring more context-restoration. If a feature is genuinely too large for one chunk, split it into separately-named roadmap items in `README.md`, each with its own complete acceptance criteria. A chunk lands or doesn't; there's no useful intermediate state to merge. Effort estimates can break down internally (shell ~1.5d, editors ~2.5d, polish ~1d) but those are time-share notes, not separate ship targets.
+4. **`data-testid` on every interactive surface.** Any new or modified UI component lands with `data-testid` attributes on every element an e2e test could plausibly target — buttons, inputs, options, list items with identity, modals, drawer toggles, status indicators. Naming convention:
    - **Static elements:** `feature-component-role` (kebab-case) — e.g. `admin-shell-drawer-toggle`, `link-target-picker-search-input`, `themes-pane-bulk-delete-button`.
    - **Items with identity:** `feature-component-{id}` — e.g. `section-row-toggle-{sectionId}`, `link-target-picker-option-{anchorId}`, `gallery-tile-{imageId}`.
    - **State variants:** suffix with `-{state}` when needed — e.g. `section-row-toggle-{id}-expanded`. Prefer toggling a class + asserting via `[data-testid="..."][data-state="expanded"]` over compound testids.
@@ -26,7 +27,7 @@ These apply to every active item regardless of size or wave. Treat them as accep
 
    E-commerce sweep (shipped 2026-05-03) is the reference precedent: `data-testid` wired across Products / Orders / Storefront / Cart / Checkout. Same conventions apply to every new component going forward.
 
-All three are CI-checkable:
+All four are CI-checkable:
 - The schema-drift CI (`tools/scripts/mcp-schema-drift.mjs`) already fails when a GraphQL arg lands without an MCP tool update.
 - Add follow-up CI steps: (a) any merged feature commit must touch at least one `docs/` markdown OR pass an explicit "no docs needed" gate in the PR description; (b) `tools/scripts/testid-coverage.mjs` (new) walks new/modified `.tsx` files and warns when an interactive element (`button`, `input`, `Select`, `Modal`, etc.) lacks `data-testid`.
 
@@ -64,14 +65,12 @@ Estimates assume one focused engineer already familiar with the codebase. Double
 | C13b | link-target stable-anchor — Manifesto only | S | Timeline portion shipped 2026-05-03. Manifesto still needs a per-row anchor model (single body paragraph today, no row identity) |
 | C17 | [field-level sample audit](./samples-audit.md) | S | Broad per-EItemType coverage already exists; open when a client surfaces a specific gap |
 | F6 | [site-mode-toggle.md](site-mode-toggle.md) | M | Per-site flag: scroll (single-page sections) vs multipage (current default). Footer nav, header nav, and SSR routing branch on it. Phased plan: (1) unify scroll/multipage shell incl. mobile menu — fixes the visible styling drift; (2) `SiteFooter` mode prop with hash-anchor rewrite; (3) proper `siteMode` enum flag (`scroll \| multipage \| auto`) + admin Select; (4) `getStaticProps` mode branch in catch-all + `index.tsx` |
-| Mobile column behavior | [mobile-column-behavior.md](mobile-column-behavior.md) | S (~1 day) | **Section-level** `ISection.layout.mobileBehavior: 'stack'\|'collapse'\|'keep-ratio'`. `'collapse'` uses drawer-style accordion with chevron-rotate, mirroring the existing public-side `MobileNav` pattern (consistent gesture across the mobile UX). Shared `@mixin section-row-collapsible` in `ui/client/styles/Common/_responsive.scss` — reused by Mobile-friendly admin Phase 2 so both surfaces collapse the same way. Section-level rather than module-level keeps DRY (5+ multi-column modules would otherwise carry the same field); per-module override added later if a real case appears. Visual reference: impeccable design plugin's collapsible-content patterns. |
+| Mobile column behavior | [mobile-column-behavior.md](mobile-column-behavior.md) | S (~1 day) | **Section-level** `ISection.layout.mobileBehavior: 'stack'\|'collapse'\|'keep-ratio'`. `'collapse'` uses drawer-style accordion with chevron-rotate, mirroring the existing public-side `MobileNav` pattern (consistent gesture across the mobile UX). Shared `@mixin section-row-collapsible` in `ui/client/styles/Common/_responsive.scss` — reused by the Mobile-friendly admin chunk so both surfaces collapse the same way. Section-level rather than module-level keeps DRY (5+ multi-column modules would otherwise carry the same field); per-module override added later if a real case appears. Visual reference: impeccable design plugin's collapsible-content patterns. |
 | Bundle-import restart | bundle-import → `markRestartRequired()` hook | S | Currently a successful import doesn't surface the "restart to pick up new modules" hint. Wire through the existing flag |
 | Section drag-reorder bug | original report; up/down arrows are the workaround | M | Drag-reorder for both sections and per-module rows stopped working at some point. The new explicit up/down + label cluster (commits `a12c7b6` + `cc306a7`) is the immediate user-facing fix. Root cause investigation deferred — find why the existing `getChangedPos` + `DraggableWrapper` chain stopped firing |
 | Deploy auto-rollback on health-check fail | keep previous container alive until new one is healthy | S | The default (non-seamless) deploy path runs `docker compose up --no-deps --build -d app` which recreates the `front` container atomically — but if `next build` fails inside the new image (as it just did with the `--webpack` hotfix), the old container is gone and the site is down until the next deploy. Two paths: (a) tag the previous `app:current` image before rebuild, restore it if the new container's health check fails; or (b) promote `SEAMLESS_DEPLOY=1` to default since `tools/blue-green-deploy.sh` already keeps both slots alive. Filed 2026-05-04 after the `--webpack` prod outage |
-| Mobile-friendly admin | [mobile-friendly-admin.md](mobile-friendly-admin.md) | L | Admin SPA today is desktop-first — sider clips on phones, multi-column editors stack badly, drag-reorder needs a mouse, image rail expects a wide canvas. Three phases: (1) shell — sider becomes drawer below 768 px, top bar shrinks, safe-area handling; (2) editors — every multi-column row collapses, InlineEdit gets long-press fallback, image rail folds into a sticky-bottom tray, modals → bottom sheets, form fields hit 44 px; (3) polish — admin PWA manifest, presence stacking, pull-to-refresh on inquiries. Acceptance: full content-edit round-trip on mobile Safari without horizontal scroll. Goal is operator-grade editing on a phone, not a responsive paint job |
-| **Image registry (GHCR) + push-based deploy** | build once in CI, droplet pulls instead of building | M (~half day) | Biggest single deploy-fragility win. Today every deploy runs `next build` inside the freshly-recreated container (per `start-docker`: `next build && next start`) → 6-8 min cold start, during which Caddy serves the maintenance page if upstreams flip wrong. Push the built `node-app:<sha>` image to GHCR from CI; droplet does `docker pull + up -d` only. Cold start drops to ~30 sec. **Cost:** GHCR free for public repos; private = $0/mo for first 500MB then $0.25/GB·mo storage + $0/inbound (droplet pulls are inbound to droplet → free; DO doesn't charge inbound traffic). Realistic: $0-3/mo for 5-10 SHA-tagged images at ~1.2 GB each. Alternatives: Docker Hub free for 1 private repo, or DO Container Registry $5/mo starter. Filed 2026-05-04 after a day of seamless-flip incidents traceable mostly to in-droplet builds. |
-| Declarative `.env` (split static vs runtime) | stop CI from clobbering ACTIVE_UPSTREAM | S | Twin of the image-registry item. Today `ci.yml` rewrites `/opt/cms/.env` from `DEPLOY_ENV_FILE_n` secret on every deploy, wiping the runtime-managed `ACTIVE_UPSTREAM=app-{blue,green}:80` that `blue-green-deploy.sh` writes. Already mitigated in `a713bd4` via in-place preservation, but the cleaner shape is split: `.env.static` (from secret, never modified at runtime) + `.env.runtime` (Caddy reads both, blue-green-deploy.sh only ever touches the second). Removes a class of "where did this env var go?" bugs. **Cost:** $0. |
-| Terraform droplet + DNS + firewall | replace imperative SSH bootstrap with declarative IaC | L (1-2 days) | Lower urgency than image-registry. Replaces the `apt install + systemctl + Caddy + nginx-evict + sshd-harden` bootstrap currently in `ci.yml` with `terraform apply`. Multi-droplet provisioning becomes adding a matrix entry. Diff before apply prevents surprise rewrites. **Cost:** Terraform itself free. State backend: Terraform Cloud free tier (5 users, 500 resources) or DO Spaces $5/mo for state. ~$0-5/mo. **Counter-argument:** TF doesn't fix `next build`-in-container time, doesn't fix bash parse errors (it removes the bash entirely though), and adds a learning curve. The image-registry change buys more uptime per dev hour. |
+| Mobile-friendly admin | [mobile-friendly-admin.md](mobile-friendly-admin.md) | L | Operator-grade editing on a phone. Shell drawer + editor row collapse + image tray + PWA + presence + pull-to-refresh shipped together as one chunk. Reuses the shared `@mixin section-row-collapsible` from the public-side mobile column work. Acceptance: full content-edit round-trip on mobile Safari without horizontal scroll. |
+| Terraform + Kamal migration | [terraform-kamal-migration.md](terraform-kamal-migration.md) | L (~7 days) | Single chunk that replaces the bash deploy stack end-to-end: Terraform-imported infra + GHCR-built images + Kamal app deploy + cutover of both droplets. Subsumes the previously-separate Image-registry / Declarative-env / Terraform-droplet items — they shipped half-migrated states; doing them as one chunk avoids that. Eliminates 6-8min cold deploys and the entire 250-line inline ssh script. |
 
 ### Bulk migrations
 
@@ -112,43 +111,41 @@ Estimates assume one focused engineer already familiar with the codebase. Double
 
 Strict size-first ordering: largest items lead so deep work isn't fragmented; quick wins fill the tail. Dependencies override pure size-order in two places — flagged inline.
 
-### Wave 1 — L (1-3 days each)
+### Wave 1 — L (1-3 days each, shipped as chunks)
 
-1. **Mobile-friendly admin** — `mobile-friendly-admin.md`. Three independently-mergeable phases (shell drawer → editors → polish + PWA). ~5 days realistic. Reuses SCSS mixin from Wave 2 mobile column work, so mergeable in either order.
-   - **Dependency exception:** Q4-cap visual baselines (Wave 3) ideally lands first — every shell + editor change otherwise risks silent regression. Acceptable to start admin Phase 1 in parallel since shell scope is small.
-2. **Terraform / Kamal full migration** — `terraform-kamal-migration.md`. 7 days across 6 phases. GHCR push-based deploy is Phase B internally; rest of the migration follows.
+1. **Mobile-friendly admin** — [`mobile-friendly-admin.md`](mobile-friendly-admin.md). ~5 days. Shell drawer + editor row collapse + image tray + PWA + presence + pull-to-refresh ship together as one chunk. Reuses SCSS mixin from Wave 2 mobile column work — schedule mobile column either before or in parallel since the mixin is what feeds both surfaces.
+   - **Dependency exception:** Q4-cap visual baselines (Wave 3) ideally lands first — the chunk is structural enough that silent regressions become possible without baselines.
+2. **Terraform / Kamal migration** — [`terraform-kamal-migration.md`](terraform-kamal-migration.md). ~7 days. Terraform-imported infra + GHCR-built images + Kamal app deploy migrate together. Splitting would mean half-migrated states (kamal targeting un-imported infra, etc.). Internal execution order is detailed in the spec; the deliverable is the whole migration including cutover of both droplets.
 
-### Wave 2 — M (0.5-2 days each)
+### Wave 2 — M (0.5-2 days each, shipped as chunks)
 
-4. **F8-bulk-introspection** — `mcp-bulk-and-introspection.md`. ~3 days. Unblocks translation work + bulk authoring via MCP. Reusable scanner pattern feeds admin "show unused / missing" filters.
-5. **F6 site-mode-toggle** — `site-mode-toggle.md`. ~1-2 days, four phases. Phase 1 (shell + mobile-menu unification) also resolves the standing styling drift.
-6. **F8-stream** — streaming transport for `bundle.export` / `image.rescan`. Pair with mcp-rollout #12 (bundle sanitiser fix) — the same flow gets stress-tested.
-7. **Section drag-reorder root cause** — investigate why `getChangedPos` + `DraggableWrapper` chain stopped firing. Up/down arrows already ship as workaround.
-8. **link-target-autosearch** — `link-target-autosearch.md`. Picker + anchor registry. **Depends on F6** (picker emits `/page#anchor` vs `/#anchor` based on mode).
-9. **AUI mode per-pane** — Themes + Posts proved the dispatch; pick next high-traffic pane. Slot one pane at a time.
-10. **E-commerce real-flow specs** — happy-path per feature: products / cart / checkout / inventory / orders.
+3. **F8-bulk-introspection** — [`mcp-bulk-and-introspection.md`](mcp-bulk-and-introspection.md). ~3 days. Bulk-write extensions + introspection flags + per-feature scanners + translation helpers all ship together. Unblocks translation work + bulk authoring via MCP.
+4. **F6 site-mode-toggle** — [`site-mode-toggle.md`](site-mode-toggle.md). ~1-2 days. Flag + admin Select + nav/footer mode-aware rendering + getStaticProps branch + runbook + tests as one chunk. Also resolves the standing scroll-vs-menu styling drift.
+5. **F8-stream** — streaming transport for `bundle.export` / `image.rescan`. Pair with mcp-rollout #12 (bundle sanitiser fix) — the same flow gets stress-tested.
+6. **Section drag-reorder root cause** — investigate why `getChangedPos` + `DraggableWrapper` chain stopped firing. Up/down arrows already ship as workaround.
+7. **link-target-autosearch** — [`link-target-autosearch.md`](link-target-autosearch.md). ~2 days. Picker + anchor registry + MCP tools + every editor swap (~8 surfaces) as one chunk. **Depends on F6** (picker emits `/page#anchor` vs `/#anchor` based on mode).
+8. **AUI mode infrastructure refactor** — [`aui-mode-hierarchy.md`](aui-mode-hierarchy.md). ~1 day. Refactor existing Themes + Posts onto inheritance shape + ESLint rule + lazy-load convention. Foundational chunk; subsequent per-pane onboardings (Navigation, Modules, Inquiries, …) are each their own roadmap items, picked up by demand.
+9. **E-commerce real-flow specs** — happy-path per feature: products / cart / checkout / inventory / orders.
 
 ### Wave 3 — S (1-3 hours each)
 
-11. **Q4-cap visual baselines** — capture mobile + desktop. **Should land before Wave 1 Mobile-friendly admin Phase 2**.
-12. **Mobile column behavior flag** — per-module `stack` / `keep-ratio` / `reorder-N`. SCSS approach reused by Mobile-friendly admin Phase 2.
-13. **C13b Manifesto link-target** — depends on link-target-autosearch landing first.
-14. **Bundle-import restart hook** — `markRestartRequired()` wiring.
-15. **Declarative .env split** — `.env.static` (CI-managed) + `.env.runtime` (deploy-script-managed). Removes a class of "where did this var go?" bugs.
-16. **Deploy auto-rollback** — likely obsoleted by GHCR (Terraform Phase B). Verify after GHCR ships; close as won't-do if obsolete.
-17. **F8-e2e** — un-skip MCP E2E suite + re-enable e2e.yml triggers (mcp-rollout #10 same workstream).
-18. **mcp-rollout aftermath quick fixes:**
+10. **Q4-cap visual baselines** — capture mobile + desktop. **Should land before Wave 1 Mobile-friendly admin** to protect the chunk against silent regressions.
+11. **Mobile column behavior** — [`mobile-column-behavior.md`](mobile-column-behavior.md). ~1 day. Section-level `mobileBehavior` enum + drawer accordion mixin + admin Select + e2e visual baselines as one chunk. The shared `@mixin section-row-collapsible` is what Mobile-friendly admin reuses, so this lands first or in parallel.
+12. **C13b Manifesto link-target** — depends on link-target-autosearch landing first.
+13. **Bundle-import restart hook** — `markRestartRequired()` wiring.
+14. **F8-e2e** — un-skip MCP E2E suite + re-enable e2e.yml triggers (mcp-rollout #10 same workstream).
+15. **mcp-rollout aftermath quick fixes** — single chunk batching the trivial fixes:
     - `#1` section.update description / upsert (1 line)
     - `#5` admin:bundle scope in dev-token (1 line)
     - `#9` `page.touch` MCP tool (audit-triplet stamp)
     - `#11` INFRA_TOPOLOGY normalize step
     - `#12` bundle sanitiser fix
-19. **Q5-del** — admin-segregation Phase 3 cleanup after ≥1 release with zero `legacy-route` errors.
-20. **Themes direct-route gqty** — `Theme.tsx` empty fetch investigation.
+16. **Q5-del** — admin-segregation Phase 3 cleanup after ≥1 release with zero `legacy-route` errors.
+17. **Themes direct-route gqty** — `Theme.tsx` empty fetch investigation.
 
 ### Wave 4 — XS
 
-21. **gqty schema regen** — surfaces `isFreshInstall` / `onboardingBootstrap` to typed clients.
+18. **gqty schema regen** — surfaces `isFreshInstall` / `onboardingBootstrap` to typed clients.
 
 ### Backlog — concrete-trigger parking lot
 

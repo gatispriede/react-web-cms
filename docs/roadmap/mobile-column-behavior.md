@@ -51,7 +51,7 @@ Reuse the existing `MobileNav` SCSS approach:
 - A `.section-row__toggle` chevron button with the same 38px hit target + 180deg rotate transition as `.mobile-nav-toggle`.
 - Optional first-render expanded state per section (`layout.defaultOpenOnMobile?: boolean`); persisted choice via `sessionStorage` per section id (so toggling state survives navigation within the session).
 
-Reference: existing public-side `MobileNav.scss` lines that ship the chevron rotate (search for `.mobile-nav-toggle > span`). Same animation curve, same hit target. Visual reference comes from the impeccable design plugin's collapsible-content patterns — pull a reference frame from the plugin when starting Phase 1.
+Reference: existing public-side `MobileNav.scss` lines that ship the chevron rotate (search for `.mobile-nav-toggle > span`). Same animation curve, same hit target. Visual reference comes from the impeccable design plugin's collapsible-content patterns — pull a reference frame from the plugin before starting.
 
 ### SCSS shape — shared mixin
 
@@ -69,7 +69,7 @@ Reference: existing public-side `MobileNav.scss` lines that ship the chevron rot
 }
 ```
 
-The mixin is **reused by Mobile-friendly admin Phase 2** for the admin editor rows — both surfaces collapse the same way. One source of truth for the breakpoint + the chevron behaviour.
+The mixin is **reused by the Mobile-friendly admin chunk** for the admin editor rows — both surfaces collapse the same way. One source of truth for the breakpoint + the chevron behaviour.
 
 ### Renderer integration
 
@@ -97,7 +97,7 @@ JS only on `'collapse'` (toggle state); other variants are pure CSS.
 
 ### Testids — for e2e
 
-Per the universal `data-testid` rule. Reused by the Mobile-friendly admin Phase 2 spec since the same SCSS mixin powers both surfaces.
+Per the universal `data-testid` rule. Reused by the the Mobile-friendly admin chunk spec since the same SCSS mixin powers both surfaces.
 
 - `section-row-{sectionId}` — every multi-column section row (parent)
 - `section-row-toggle-{sectionId}` — chevron-rotate toggle button (only rendered when `mobileBehavior === 'collapse'`); assert `[data-state="open"|"closed"]`
@@ -141,7 +141,7 @@ Docs follow-up: add a "Mobile column behavior" entry to `docs/architecture/secti
 3. `'keep-ratio'` preserves column widths with horizontal scroll on a wide table/diagram.
 4. Toggle state persists across in-session navigation (sessionStorage key includes section id).
 5. Visual baselines captured for each variant under `tests/e2e/visual/` (Q4-cap dependency — wait until baselines exist).
-6. The shared `@mixin section-row-collapsible` is consumed by Mobile-friendly admin Phase 2 for editor rows.
+6. The shared `@mixin section-row-collapsible` is consumed by the Mobile-friendly admin chunk for editor rows.
 
 ## Effort
 
@@ -156,7 +156,7 @@ Docs follow-up: add a "Mobile column behavior" entry to `docs/architecture/secti
 ## Dependency notes
 
 - **Q4-cap (Wave 3 #11) ideally before this** — visual baselines protect the rollout.
-- **Mobile-friendly admin Phase 2 reuses the SCSS mixin** — schedule this either before or in parallel with admin Phase 2; the mixin lands on the public side first.
+- **the Mobile-friendly admin chunk reuses the SCSS mixin** — schedule this either before or in parallel with admin Phase 2; the mixin lands on the public side first.
 - F6 site-mode-toggle is independent.
 
 ## Open questions (already decided 2026-05-07)

@@ -156,13 +156,9 @@ This keeps `services/features/Mcp/` focused on *transport + dispatch* — not on
 
 ## Effort
 
-**M-L · ~3 days realistic.**
+**M-L · ~3 days, shipped as one chunk.** Bulk-write + introspection share the same scanner/runBatch infrastructure and the same schema-drift CI updates — splitting them means writing the shared infra twice or merging an incomplete surface where some tools have bulk and others don't, some lists have `includeUsage` and others don't. Land together.
 
-- Day 1: Bulk-write extensions (~12 tools mechanical, share `runBatch`).
-- Day 2: Introspection extensions (~10 read-tool flags, share scanner helpers).
-- Day 3: Tests + schema-drift CI updates + documentation pass.
-
-Could split: bulk-write alone is ~1 day if introspection is deferred. Introspection alone is ~1.5 days.
+Internal time-share: bulk-write extensions (~12 tools mechanical) ~1d, introspection extensions (~10 read-tool flags + scanner services) ~1.5d, tests + schema-drift CI updates + documentation pass ~0.5d.
 
 ## Dependency notes
 

@@ -108,12 +108,9 @@ Docs follow-up:
 
 ## Effort
 
-**M · 1-2 days.**
+**M · 1-2 days, shipped as one chunk.** Everything below lands together — flag + admin Select + nav/footer mode-aware rendering + getStaticProps branch + runbook + tests. There's no useful intermediate state (a flag without rendering branches doesn't change behavior; a footer that emits `#anchor` URLs without scroll-mode routing breaks navigation).
 
-- Flag + admin select: 0.5 day
-- `app.tsx` + catch-all branch: 0.5 day
-- MainMenu + SiteFooter mode prop + smooth-scroll wiring: 0.25 day
-- Tests + runbook + acceptance: 0.5 day
+Internal time-share: flag + admin select ~0.5d, app.tsx + catch-all branch ~0.5d, MainMenu + SiteFooter mode prop + smooth-scroll wiring ~0.25d, tests + runbook + acceptance ~0.5d.
 
 ## Dependency notes
 
