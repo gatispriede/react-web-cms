@@ -102,25 +102,19 @@
 
   // ----------------------------------------------------------------
   // Area layout — rail above pane on phones (was: rail-left, pane-right
-  // side-by-side which broke at narrow widths). The rail becomes a
-  // horizontally-scrollable strip; the pane gets the full viewport width.
+  // side-by-side which broke at narrow widths). The rail itself flips to
+  // AntD's native `mode="horizontal"` from inside `AreaNav.tsx` (see
+  // `useIsMobile`), so no CSS coercion is needed — only the wrapper-level
+  // column stack + horizontal scroll fallback for areas that overflow.
   [data-admin-theme] .admin-area-layout {
     display: flex !important;
     flex-direction: column !important;
     gap: 8px !important;
     align-items: stretch !important;
   }
-  [data-admin-theme] .admin-area-layout > .ant-menu {
-    overflow-x: auto !important;
+  [data-admin-theme] .admin-area-layout > .ant-menu-horizontal {
+    overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    white-space: nowrap !important;
-    min-width: auto !important;
-    border-inline-end: 0 !important;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  }
-  [data-admin-theme] .admin-area-layout > .ant-menu .ant-menu-item {
-    display: inline-flex !important;
-    margin: 0 4px !important;
   }
   [data-admin-theme] .admin-area-pane {
     width: 100%;

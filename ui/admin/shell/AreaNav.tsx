@@ -1,5 +1,6 @@
 import React, {ReactNode} from 'react';
 import {Menu} from 'antd';
+import {useIsMobile} from '@admin/lib/useIsMobile';
 
 /**
  * Phase 2 of admin segregation (docs/features/platform/admin-segregation.md).
@@ -46,12 +47,21 @@ const AreaNav = ({
         .filter(it => currentPath === it.path || currentPath.startsWith(it.path + '/'))
         .sort((a, b) => b.path.length - a.path.length)[0];
 
+    // Mobile flips the rail to AntD's native `mode="horizontal"` instead
+    // of trying to coax a vertical Menu into a horizontal scroll strip
+    // via CSS (the operator screenshot 2026-05-08 caught the failure mode:
+    // selected item rendered as an empty blue tile because vertical-mode
+    // markup carries a different label-wrapper structure than horizontal).
+    // AntD owns the horizontal layout; we just hand it the right mode.
+    const isMobile = useIsMobile();
+    const mode = isMobile ? 'horizontal' : 'vertical';
+
     return (
         <Menu
-            mode="vertical"
+            mode={mode}
             data-testid={`nav-${area}-rail`}
             selectedKeys={active ? [active.path] : []}
-            style={{minWidth: 200, borderInlineEnd: '1px solid rgba(0,0,0,0.06)'}}
+            style={isMobile ? undefined : {minWidth: 200, borderInlineEnd: '1px solid rgba(0,0,0,0.06)'}}
             items={visible.map(it => ({
                 key: it.path,
                 icon: it.icon,
