@@ -1,21 +1,11 @@
 name: e2e
 
-# Wave 3 F8-e2e: re-enabled PR + master push triggers. The smoke job
-# below runs `tests/e2e/smoke/cv-bundle-chain.spec.ts` only — the
-# heavier MCP full-lifecycle spec lives at tests/e2e/mcp/ and is
-# guarded with a `process.platform === 'win32'` skip so local dev
-# stays green. A separate manual run via workflow_dispatch can target
-# the broader suite when needed.
-#
-# Was manual-only since mcp-rollout #10 — flakes during the MCP
-# rollout consumed more attention than they caught. The suite has
-# been stabilised since (see tests/e2e/mcp/full-site-lifecycle.spec.ts
-# header).
+# Manual-only (2026-05-08): operator turned off auto-triggers during the
+# Terraform/Kamal cutover work — e2e was double-running against every
+# master push + PR while the cutover infra was being shaken out. Re-enable
+# `pull_request` + `push` triggers when re-introducing the auto-gate is
+# wanted; the spec body itself stays runnable via `workflow_dispatch`.
 on:
-  pull_request:
-    branches: [master]
-  push:
-    branches: [master]
   workflow_dispatch:
 
 jobs:
