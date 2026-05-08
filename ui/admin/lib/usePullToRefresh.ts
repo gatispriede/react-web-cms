@@ -30,6 +30,14 @@ export function usePullToRefresh(onRefresh: () => void | Promise<void>): {
     const startYRef = useRef<number | null>(null);
     const elRef = useRef<HTMLElement | null>(null);
     const onRefreshRef = useRef(onRefresh);
+    // Mirror reactive state into refs so the touch listeners can read
+    // the latest distance at touchend time without re-binding on every
+    // setState. Earlier version put `distance` in the effect deps, which
+    // tore down + rebound listeners on every move event — synthetic
+    // gestures from Playwright would race the rebinding and miss the
+    // threshold. Refs keep the binding identity stable for the lifetime
+    // of the element.
+    const distanceRef = useRef(0);
 
     // Keep the latest callback without breaking the listeners' identity.
     useEffect(() => { onRefreshRef.current = onRefresh; }, [onRefresh]);
@@ -47,12 +55,14 @@ export function usePullToRefresh(onRefresh: () => void | Promise<void>): {
             if (startYRef.current == null) return;
             const dy = e.touches[0].clientY - startYRef.current;
             if (dy <= 0) {
+                distanceRef.current = 0;
                 setDistance(0);
                 setPulling(false);
                 return;
             }
             // Apply rubber-band resistance so 80 px of pull feels weighty.
             const resisted = dy * RESISTANCE;
+            distanceRef.current = resisted;
             setDistance(resisted);
             setPulling(true);
             // Don't preventDefault — let the user keep scrolling normally
@@ -62,8 +72,9 @@ export function usePullToRefresh(onRefresh: () => void | Promise<void>): {
         };
 
         const onEnd = (): void => {
-            const final = distance;
+            const final = distanceRef.current;
             startYRef.current = null;
+            distanceRef.current = 0;
             setDistance(0);
             setPulling(false);
             if (final >= PULL_THRESHOLD_PX) {
@@ -81,7 +92,10 @@ export function usePullToRefresh(onRefresh: () => void | Promise<void>): {
             el.removeEventListener('touchend', onEnd);
             el.removeEventListener('touchcancel', onEnd);
         };
-    }, [distance]);
+        // Empty deps — listeners bind once per element. State that the
+        // listeners need to read at fire-time lives in refs above.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const ref = (el: HTMLElement | null): void => { elRef.current = el; };
 

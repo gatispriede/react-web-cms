@@ -222,7 +222,7 @@ const UserStatusBarInner = ({session, view, tApp}: {
                     Android Chrome show "Add to Home Screen" → standalone mode.
                     Public site keeps `public/manifest.json` for the storefront
                     PWA install. */}
-                <link rel="manifest" href="/admin/manifest.json"/>
+                <link rel="manifest" href="/api/admin/manifest.json"/>
                 <meta name="apple-mobile-web-app-capable" content="yes"/>
                 <meta name="apple-mobile-web-app-title" content="CMS Admin"/>
                 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>

@@ -1,16 +1,21 @@
 import type {NextApiRequest, NextApiResponse} from 'next';
 
 /**
- * `/admin/manifest.json` — PWA manifest for the admin SPA. Served as a
- * dynamic JSON route so future per-tenant theming (name, theme_color)
- * can read site flags without a build/deploy. For now it returns a
- * static document that lets iOS Safari + Android Chrome offer
- * "Add to Home Screen" → standalone install.
+ * `/api/admin/manifest.json` — PWA manifest for the admin SPA. Served
+ * as a dynamic JSON route so future per-tenant theming (name,
+ * theme_color) can read site flags without a build/deploy. For now it
+ * returns a static document that lets iOS Safari + Android Chrome
+ * offer "Add to Home Screen" → standalone install.
  *
- * The file lives under `pages/admin/` so the public-site manifest at
- * `public/manifest.json` (storefront) and the admin manifest don't
- * collide. The admin pages reference this manifest only when the
- * route prefix is `/admin/`; the public site keeps its own.
+ * Lives under `pages/api/admin/` (not `pages/admin/`) because Next's
+ * pages router only invokes the `(req, res) => …` handler shape for
+ * files under `pages/api/`. A handler in `pages/admin/` would be
+ * interpreted as a React page module and 500 on render — surfaced by
+ * the e2e spec for this exact reason.
+ *
+ * The admin pages reference this manifest via `<link rel="manifest"
+ * href="/api/admin/manifest.json">` only on admin routes. The public
+ * storefront keeps its own `public/manifest.json`.
  *
  * Long-cache the manifest at the edge — content rarely changes; clients
  * pick up updates via the standard manifest re-fetch on app open.
