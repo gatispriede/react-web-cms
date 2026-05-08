@@ -26,3 +26,77 @@
     }
   }
 }
+
+// =================================================================
+// Mobile-friendly admin (Wave 1 — see roadmap/mobile-friendly-admin.md)
+// =================================================================
+// Below 768 px (admin mobile breakpoint, see `useIsMobile`):
+//
+//   1. Every AntD `Modal` (20+ usages across admin) renders as a
+//      bottom-sheet — anchored to the viewport bottom, full-width,
+//      max-height 90vh with internal scroll. Avoids the desktop
+//      "centered tiny dialog" pattern that fails iOS HIG on phones.
+//   2. Form fields hit 44 × 44 px touch targets per iOS HIG. AntD's
+//      `size="middle"` defaults to 36 px which is below the
+//      threshold; bumped to 44 px globally on narrow viewports.
+//   3. Sticky-bottom action strips reserve `env(safe-area-inset-bottom)`
+//      so iOS Safari's bottom bar doesn't overlap.
+//
+// ConfigProvider doesn't expose Modal placement as a token; pure CSS
+// via `.ant-modal-wrap` repositioning is the pragmatic path. AdminApp
+// stamps `[data-admin-theme]` on `<html>` only while the admin shell
+// is mounted, so these rules don't bleed into the public site even
+// though the global stylesheet ships them everywhere.
+
+@media (max-width: 767px) {
+  // Bottom-sheet placement for every AntD Modal on mobile.
+  // Scoped under [data-admin-theme] so the public site (which doesn't
+  // stamp that attribute) keeps its standard centered Modals.
+  [data-admin-theme] .ant-modal-root .ant-modal-wrap {
+    display: flex;
+    align-items: flex-end !important;
+    justify-content: stretch !important;
+  }
+  [data-admin-theme] .ant-modal-root .ant-modal {
+    top: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100vw !important;
+    width: 100vw !important;
+    vertical-align: bottom;
+  }
+  [data-admin-theme] .ant-modal-root .ant-modal .ant-modal-content {
+    border-radius: 16px 16px 0 0 !important;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+  [data-admin-theme] .ant-modal-root .ant-modal .ant-modal-body {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  // 44 px touch targets — iOS HIG. AntD's `middle` (36 px) and
+  // `small` (24 px) sizes both fail. Bump to 44 px on phones.
+  [data-admin-theme] {
+    .ant-input,
+    .ant-input-number-input,
+    .ant-select-selector,
+    .ant-picker {
+      min-height: 44px !important;
+    }
+    .ant-btn:not(.ant-btn-icon-only):not(.ant-btn-link):not(.ant-btn-sm) {
+      min-height: 44px !important;
+    }
+    .ant-form-item-control-input-content > .ant-btn {
+      min-height: 44px !important;
+    }
+  }
+
+  // Drawer body padding shrinks on phones so menu items fill the
+  // narrower viewport without horizontal scroll.
+  [data-admin-theme] .ant-drawer-content-wrapper .ant-drawer-body {
+    padding: 0 !important;
+  }
+}

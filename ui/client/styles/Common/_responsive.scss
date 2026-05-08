@@ -1,0 +1,118 @@
+/* ==========================================================================
+   _responsive.scss — shared responsive primitives.
+
+   Single source of truth for breakpoints + layout patterns reused across
+   the public site (`ui/client`) and the admin SPA (`ui/admin`). Both
+   surfaces collapse multi-column rows the same way so the mobile gesture
+   stays consistent: first column visible, subsequent columns hidden
+   under a chevron-rotate accordion that mirrors `MobileNav.scss`'s
+   trigger pattern.
+
+   Public-site mobile column behavior (`mobile-column-behavior.md`)
+   ships the section-level enum that flips a section into collapse
+   mode. Admin (`mobile-friendly-admin.md`) imports this same mixin
+   for editor rows. Same breakpoint, same gesture, one source of truth.
+
+   The mixin is parameterised on breakpoint because the public side
+   already has 980 px / 720 px breakpoints in flight; admin opted into
+   768 px (iOS HIG default) per Wave 1 D2. Each surface invokes with
+   its own `$bp` argument; the inner CSS structure is identical.
+   ========================================================================== */
+
+@mixin section-row-collapsible($bp: 768px) {
+  @media (max-width: #{$bp - 1px}) {
+    /* Container becomes a vertical stack — every column is full-width.
+       The renderer adds `.is-expanded` to the row; without it, only the
+       first column shows. JS-driven on the host side; this mixin is the
+       pure CSS half. */
+    display: flex !important;
+    flex-direction: column;
+
+    /* First column always visible. Subsequent columns hide unless
+       the row carries `.is-expanded`. Targets `*-column` children so
+       the rule survives across hosts (admin editor uses
+       `.admin-editor-row__column`, public uses `.section-row__column`). */
+    > [class*="-column"]:not(:first-child) {
+      display: none;
+    }
+  }
+  &.is-expanded > [class*="-column"]:not(:first-child) {
+    @media (max-width: #{$bp - 1px}) {
+      display: block;
+    }
+  }
+}
+
+/* Chevron-rotate toggle — matches `.mobile-nav-toggle` in `MobileNav.scss`
+   for visual consistency. Hosts emit `<button class="...-toggle">` with
+   an inner `<span>` for the glyph; the rotation targets the inner span
+   so the JSX glyph swap (▾ → ▴) and CSS rotation co-operate. */
+@mixin section-row-toggle($bp: 768px) {
+  display: none; /* hidden on desktop — explicit up/down + label cluster wins */
+  @media (max-width: #{$bp - 1px}) {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    min-height: 38px;
+    padding: 0 12px;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    color: var(--ink-3, var(--theme-colorInkTertiary, rgba(0, 0, 0, 0.45)));
+    font: inherit;
+    font-size: 12px;
+    line-height: 1;
+    transition: color 120ms ease, background 120ms ease;
+
+    > span {
+      display: inline-block;
+      transition: transform 180ms ease;
+    }
+
+    &:hover,
+    &:focus-visible {
+      color: var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary, inherit)));
+      outline: none;
+    }
+  }
+}
+
+/* Helper applied alongside `section-row-collapsible` on the row root —
+   when the row is expanded, rotate the toggle's inner span. Keeps the
+   rotation declaration in one place so hosts only need to flip the
+   `.is-expanded` class. */
+@mixin section-row-toggle-active() {
+  &.is-expanded [class*="-toggle"] > span {
+    transform: rotate(180deg);
+  }
+}
+
+/* iOS HIG-compliant minimum touch target. Wrap any AntD form field in
+   a parent that applies this and form fields hit ≥44 × 44 px below the
+   breakpoint without overriding AntD globally. */
+@mixin touch-target-44($bp: 768px) {
+  @media (max-width: #{$bp - 1px}) {
+    .ant-input,
+    .ant-input-number-input,
+    .ant-select-selector,
+    .ant-picker,
+    .ant-btn:not(.ant-btn-icon-only):not(.ant-btn-link) {
+      min-height: 44px !important;
+    }
+    .ant-checkbox,
+    .ant-radio,
+    .ant-switch {
+      min-width: 44px;
+      min-height: 44px;
+    }
+  }
+}
+
+/* iOS bottom safe-area helper. Reserve `env(safe-area-inset-bottom)` on
+   any sticky/fixed element so iOS Safari's bottom bar doesn't overlap
+   the tap target. No-op on non-iOS / non-mobile. */
+@mixin safe-area-bottom() {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--safe-area-extra, 0px));
+}

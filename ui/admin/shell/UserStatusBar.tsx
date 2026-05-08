@@ -1,4 +1,5 @@
 import AdminApp from "./AdminApp";
+import Head from "next/head";
 import React, {useEffect, useState, ReactNode} from "react";
 import {Session} from "next-auth";
 import AdminSettings from "./AdminSettings";
@@ -216,6 +217,20 @@ const UserStatusBarInner = ({session, view, tApp}: {
 
     return (
         <>
+            <Head>
+                {/* PWA install — admin pages get their own manifest. iOS Safari +
+                    Android Chrome show "Add to Home Screen" → standalone mode.
+                    Public site keeps `public/manifest.json` for the storefront
+                    PWA install. */}
+                <link rel="manifest" href="/admin/manifest.json"/>
+                <meta name="apple-mobile-web-app-capable" content="yes"/>
+                <meta name="apple-mobile-web-app-title" content="CMS Admin"/>
+                <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+                <meta name="theme-color" content="#c65a2a"/>
+                {/* iOS bottom safe-area + viewport-fit=cover so the notch +
+                    bottom bar don't overlap the admin chrome on phones. */}
+                <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+            </Head>
             <AdminTopBar
                 view={view}
                 session={session}

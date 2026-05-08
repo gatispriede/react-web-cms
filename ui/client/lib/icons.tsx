@@ -61,6 +61,7 @@ import {
     Loader2,
     LogOut,
     Mail,
+    Menu as MenuIcon,
     Merge,
     MoveHorizontal,
     Palette,
@@ -174,6 +175,7 @@ export const LinkOutlined: React.FC<IconBaseProps> = (p) => <IconBase component=
 export const LoadingOutlined: React.FC<IconBaseProps> = ({spin = true, ...p}) => <IconBase component={Loader2} spin={spin} {...p}/>;
 export const LogoutOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={LogOut} {...p}/>;
 export const MailOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Mail} {...p}/>;
+export const MenuOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={MenuIcon} {...p}/>;
 export const MergeCellsOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Merge} {...p}/>;
 export const PhoneOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Phone} {...p}/>;
 export const PictureOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={ImageIcon} {...p}/>;
