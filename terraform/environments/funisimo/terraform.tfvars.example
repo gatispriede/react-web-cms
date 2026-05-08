@@ -1,8 +1,10 @@
-# Copy this file to `terraform.tfvars` (gitignored) and fill in the
+# Copy this file to `terraform.tfvars` (gitignored) and fill the
 # non-secret values. Secrets (`do_token`) live in the TF Cloud
 # workspace variable store — never commit them.
 
-# Fingerprint of the SSH key already added to the DO account that
-# should authorise root access on the droplet. Get it with:
-#   doctl compute ssh-key list
-ssh_key_fingerprint = "REPLACE_ME"
+# Fingerprint of the SSH key authorised on the droplet. Verified
+# 2026-05-08 via `GET /v2/account/keys` — there is exactly one
+# registered key on this account.
+#   id   = 45450888
+#   name = "my pc"
+ssh_key_fingerprint = "74:a8:a4:e6:b9:bf:20:1e:f9:f9:a1:e4:e9:1c:38:b4"

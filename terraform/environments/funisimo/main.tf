@@ -38,16 +38,27 @@ variable "ssh_key_fingerprint" {
 module "funisimo" {
   source = "../../modules/site"
 
-  name                = "funisimo"
-  domain              = "funisimo.pro"
+  # `name` matches the existing droplet's `name` field on DO so that
+  # `terraform plan` after import returns "no changes". Live droplet
+  # name is `my-homepage` (set 2026-04-17, predates the funisimo
+  # branding); rename via `digitalocean_droplet.app.name = "funisimo"`
+  # is a separate post-import housekeeping step.
+  name                = "my-homepage"
   region              = "fra1"
   size                = "s-1vcpu-2gb"
   image               = "ubuntu-24-04-x64"
   ssh_key_fingerprint = var.ssh_key_fingerprint
+  tags                = ["cms"]
 }
 
-output "funisimo_ip" {
-  value = module.funisimo.ipv4_address
+output "funisimo_reserved_ip" {
+  value       = module.funisimo.ipv4_address
+  description = "Reserved IPv4 — DNS apex points here (`139.59.205.140`)."
+}
+
+output "funisimo_droplet_public_ipv4" {
+  value       = module.funisimo.droplet_public_ipv4
+  description = "Droplet's eth0 public IP — diagnostic only; clients reach the site via the reserved IP."
 }
 
 output "funisimo_droplet_id" {

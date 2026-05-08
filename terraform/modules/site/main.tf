@@ -1,7 +1,18 @@
-# Reusable per-tenant module — one droplet + reserved IP + firewall +
-# DNS records. Both funisimo and skyclimber instantiate this module with
-# tenant-specific values (domain, hostnames, sizes). Adding a third
-# tenant is one `module "thirdsite"` block in the environment file.
+# Reusable per-tenant module — droplet + reserved IP only.
+#
+# Scope decisions (post-API audit, 2026-05-08):
+#   - DNS is OUT OF SCOPE — funisimo.pro is registered + DNS-managed at
+#     an external registrar (DO only manages `legalstablesure.com`).
+#     Adding a `digitalocean_domain` here would create a parallel zone
+#     that nothing's authoritative for.
+#   - Firewall is OUT OF SCOPE — the existing "Standard" DO Cloud
+#     Firewall (id 43a483e8-…) is shared between both droplets. Importing
+#     it into a per-tenant module would either drop the other droplet
+#     from the rule set or force per-tenant drift. Leave as DO-managed.
+#
+# What stays:
+#   - Droplet (the actual VM)
+#   - Reserved IP + assignment (so cattle-not-pets rebuild keeps the IP)
 
 terraform {
   required_providers {
@@ -13,12 +24,7 @@ terraform {
 }
 
 variable "name" {
-  description = "Tenant slug — used as droplet name + DNS comments + tag. e.g. `funisimo`."
-  type        = string
-}
-
-variable "domain" {
-  description = "Apex domain — e.g. `funisimo.pro`. Must already be registered + delegated to DO nameservers."
+  description = "Tenant slug — used as droplet name + tag. e.g. `funisimo`."
   type        = string
 }
 
@@ -42,23 +48,29 @@ variable "ssh_key_fingerprint" {
   type        = string
 }
 
+variable "tags" {
+  description = "DO tags applied to the droplet. Defaults to [\"cms\"] which matches the existing funisimo droplet."
+  type        = list(string)
+  default     = ["cms"]
+}
+
 # ---------------------------------------------------------------- droplet
 
 resource "digitalocean_droplet" "app" {
-  name      = var.name
-  region    = var.region
-  size      = var.size
-  image     = var.image
-  ssh_keys  = [var.ssh_key_fingerprint]
-  tags      = ["cms", var.name]
-  ipv6      = false
+  name       = var.name
+  region     = var.region
+  size       = var.size
+  image      = var.image
+  ssh_keys   = [var.ssh_key_fingerprint]
+  tags       = var.tags
+  ipv6       = true
   monitoring = true
 
-  # cloud-init bootstrap — Docker + docker-compose-plugin so a freshly-
-  # provisioned droplet can run `kamal setup` immediately. Reuses the
-  # exact apt steps the legacy bash deploy used to run inline; moving
-  # them into cloud-init means each droplet boot starts from a known
-  # state instead of accreting drift.
+  # cloud-init bootstrap — Docker + ufw + fail2ban so a freshly-
+  # provisioned droplet can run `kamal setup` immediately. Mirrors the
+  # apt steps the legacy bash deploy used to run inline; moving them
+  # into cloud-init means each droplet boot starts from a known state
+  # instead of accreting drift across deploys.
   user_data = <<-EOT
     #cloud-config
     package_update: true
@@ -80,10 +92,6 @@ resource "digitalocean_droplet" "app" {
       - systemctl start docker
       - mkdir -p /opt/cms/uploads /srv/uploads
       - chown -R 1000:1000 /opt/cms/uploads
-      # ufw — allow ssh (22), http (80), https (443) only. The legacy
-      # bash deploy script hardened sshd with MaxStartups + fail2ban; we
-      # keep the same posture here so a fresh droplet matches the
-      # hardened production state out of the box.
       - ufw default deny incoming
       - ufw default allow outgoing
       - ufw allow 22/tcp
@@ -106,77 +114,6 @@ resource "digitalocean_reserved_ip_assignment" "app" {
   droplet_id = digitalocean_droplet.app.id
 }
 
-# ---------------------------------------------------------------- firewall
-
-resource "digitalocean_firewall" "app" {
-  name = "${var.name}-cms"
-
-  droplet_ids = [digitalocean_droplet.app.id]
-
-  inbound_rule {
-    protocol         = "tcp"
-    port_range       = "22"
-    source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-
-  inbound_rule {
-    protocol         = "tcp"
-    port_range       = "80"
-    source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-
-  inbound_rule {
-    protocol         = "tcp"
-    port_range       = "443"
-    source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-
-  inbound_rule {
-    protocol         = "udp"
-    port_range       = "443"
-    source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-
-  outbound_rule {
-    protocol              = "tcp"
-    port_range            = "1-65535"
-    destination_addresses = ["0.0.0.0/0", "::/0"]
-  }
-
-  outbound_rule {
-    protocol              = "udp"
-    port_range            = "1-65535"
-    destination_addresses = ["0.0.0.0/0", "::/0"]
-  }
-
-  outbound_rule {
-    protocol              = "icmp"
-    destination_addresses = ["0.0.0.0/0", "::/0"]
-  }
-}
-
-# ---------------------------------------------------------------- DNS
-
-resource "digitalocean_domain" "app" {
-  name = var.domain
-}
-
-resource "digitalocean_record" "apex" {
-  domain = digitalocean_domain.app.name
-  type   = "A"
-  name   = "@"
-  value  = digitalocean_reserved_ip.app.ip_address
-  ttl    = 300
-}
-
-resource "digitalocean_record" "www" {
-  domain = digitalocean_domain.app.name
-  type   = "A"
-  name   = "www"
-  value  = digitalocean_reserved_ip.app.ip_address
-  ttl    = 300
-}
-
 # ---------------------------------------------------------------- outputs
 
 output "droplet_id" {
@@ -187,6 +124,6 @@ output "ipv4_address" {
   value = digitalocean_reserved_ip.app.ip_address
 }
 
-output "domain" {
-  value = digitalocean_domain.app.name
+output "droplet_public_ipv4" {
+  value = digitalocean_droplet.app.ipv4_address
 }

@@ -2,7 +2,11 @@
 
 Source of truth for the droplets, reserved IPs, firewalls, and DNS records that host the CMS production sites.
 
-**Status:** funisimo.pro — scaffolded, not imported yet. skyclimber.pro — pending funisimo cutover stable.
+**Status:** funisimo.pro — import IDs filled (2026-05-08), pending `terraform plan` validation. skyclimber.pro — pending funisimo cutover stable.
+
+**Out-of-scope (deliberate):**
+- **DNS** — funisimo.pro is registered + DNS-managed at an external registrar. DO Domains only carries `legalstablesure.com`. Adding terraform-managed DNS would create a parallel zone with no authority.
+- **Cloud Firewall** — the existing "Standard" firewall (id `43a483e8-…`) is shared between the funisimo droplet and one other DO droplet. Importing it into a per-tenant module would either drop the other droplet from its rules or force per-tenant drift. Stays DO-managed; on-droplet `ufw` (set up by cloud-init in the module for new droplets) provides defence in depth.
 
 ## Layout
 
