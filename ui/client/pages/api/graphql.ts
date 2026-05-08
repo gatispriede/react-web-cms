@@ -88,7 +88,25 @@ interface GqlContext {
 // land on the same composite type the legacy file declares. Disabled
 // features (env-flagged off via plug-and-play) contribute nothing —
 // their fields disappear from the schema as a natural side effect.
-const typeDefs = readFileSync('services/api/schema.graphql', {encoding: 'utf-8'})
+//
+// Path resolution covers two runtimes:
+//  - Legacy `next start ui/client` from /app: cwd = /app, schema at
+//    /app/services/api/schema.graphql.
+//  - Next.js standalone (`output: 'standalone'`) `node ui/client/server.js`:
+//    cwd = /app/ui/client. Dockerfile copies the schema to
+//    /app/ui/client/services/api/schema.graphql so the same relative
+//    path resolves cleanly.
+const SCHEMA_CANDIDATES = [
+    'services/api/schema.graphql',          // both legacy + standalone (after Docker copy)
+    '../services/api/schema.graphql',       // standalone fallback if cwd unexpectedly different
+];
+const SCHEMA_PATH = SCHEMA_CANDIDATES.find(p => {
+    try {
+        readFileSync(p, {encoding: 'utf-8'});
+        return true;
+    } catch { return false; }
+}) ?? SCHEMA_CANDIDATES[0];
+const typeDefs = readFileSync(SCHEMA_PATH, {encoding: 'utf-8'})
     + '\n'
     + composedSchemaSDL();
 

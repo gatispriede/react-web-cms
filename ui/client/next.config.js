@@ -24,6 +24,21 @@ if (!resolvedBuildId) {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     distDir,
+    // Standalone output (Wave 1 Terraform/Kamal followup, 2026-05-08).
+    // Generates `.next/standalone/` with a minimal Node app + tree-shaken
+    // `node_modules` containing only what the running server imports.
+    // Replaces wholesale-COPY of `node_modules/` (1.1 GB) in the runtime
+    // Dockerfile stage with `.next/standalone/` (~150 MB target).
+    //
+    // Required runtime layout (see `infra/AppDockerfile`):
+    //   /app/server.js                     ← from .next/standalone/server.js
+    //   /app/node_modules                  ← from .next/standalone/node_modules
+    //   /app/<workspace>/.next/static      ← copy separately
+    //   /app/<workspace>/public            ← copy separately
+    //
+    // CMD changes from `npm run start` (next start -p 80 ui/client) to
+    // `node server.js` — server.js is what next emits to host the app.
+    output: 'standalone',
     // Server-only packages that should NEVER be bundled into the browser
     // chunk. The redis client + @node-rs/xxhash native digest helper are
     // imported transitively from `services/infra/redisConnection.ts` →

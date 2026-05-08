@@ -13,8 +13,30 @@ import {log} from '@services/infra/logger';
  * in-memory array; the four JSON-backed entries are the canonical designs
  * and are diffable on disk. The remaining hardcoded presets below are the
  * colour-only basics kept for continuity — they don't need a SCSS pair.
+ *
+ * Resolution covers two runtimes:
+ *  - Legacy `next start ui/client` from `/app`: cwd = /app, themes at
+ *    /app/ui/client/themes/.
+ *  - Next.js standalone output (`output: 'standalone'`) running
+ *    `node ui/client/server.js` from /app: cwd = /app/ui/client (Next
+ *    sets it to the standalone server's package dir). Themes are
+ *    copied alongside in the Docker image at /app/ui/client/themes/.
+ *
+ * First-existing-path lookup keeps both paths working without touching
+ * the surface where the require happens.
  */
-const THEMES_DIR = path.join(process.cwd(), 'ui/client/themes');
+const THEMES_DIR = (() => {
+    const candidates = [
+        path.join(process.cwd(), 'ui/client/themes'),  // legacy next start
+        path.join(process.cwd(), 'themes'),              // standalone (cwd = ui/client/)
+    ];
+    for (const dir of candidates) {
+        if (fs.existsSync(dir)) return dir;
+    }
+    // Fall back to first candidate; readFile will throw with a clear
+    // path so the operator can debug.
+    return candidates[0];
+})();
 const JSON_PRESET_SLUGS = ['industrial', 'studio', 'paper', 'high-contrast'] as const;
 type JsonPresetSlug = typeof JSON_PRESET_SLUGS[number];
 
