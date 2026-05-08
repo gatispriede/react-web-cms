@@ -172,12 +172,32 @@ async function buildServerForToken(
             })),
     }));
 
-    server.setRequestHandler(CallToolRequestSchema, async (req) => {
+    server.setRequestHandler(CallToolRequestSchema, async (req, extra) => {
+        // MCP `notifications/progress` — wired only when the client
+        // included `_meta.progressToken` on its `tools/call`. The SDK
+        // hands us `extra.sendNotification` scoped to this request; we
+        // tag every outgoing notification with the same token. Errors
+        // are swallowed so a failed notification never aborts the tool.
+        const progressToken = (req.params as any)?._meta?.progressToken
+            ?? (extra as any)?._meta?.progressToken;
+        const notify = progressToken !== undefined && extra?.sendNotification
+            ? async (p: {progress: number; total?: number; message?: string}) => {
+                try {
+                    await extra.sendNotification({
+                        method: 'notifications/progress',
+                        params: {progressToken, ...p},
+                    });
+                } catch (err) {
+                    log.warn({scope: 'mcp.http.progress', err, tool: req.params.name}, 'progress notification failed');
+                }
+            }
+            : undefined;
         const outcome = await mcp.dispatch({
             tool: req.params.name,
             args: req.params.arguments ?? {},
             token,
             tokenSecret,
+            notify,
         });
         if (!outcome.ok) {
             return {

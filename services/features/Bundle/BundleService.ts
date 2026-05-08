@@ -106,7 +106,23 @@ export class BundleService {
         return this.db.collection(name);
     }
 
-    async export(): Promise<SiteBundle> {
+    /**
+     * Optional progress callback. Best-effort — failures inside the
+     * callback are swallowed so a misbehaving notifier never aborts the
+     * export. Wired by the MCP `bundle.export` tool when the client
+     * passes `_meta.progressToken`.
+     */
+    async export(onProgress?: (p: {progress: number; total: number; message: string}) => Promise<void>): Promise<SiteBundle> {
+        // Total = 7 phases: collections → site object → asset scan → asset
+        // base64 read → manifest. Each `notify` call is wrapped in
+        // try/catch so progress reporting can never abort the work.
+        const TOTAL_PHASES = 6;
+        const tick = async (progress: number, message: string): Promise<void> => {
+            if (!onProgress) return;
+            try { await onProgress({progress, total: TOTAL_PHASES, message}); } catch { /* swallow */ }
+        };
+
+        await tick(0, 'Reading collections');
         const [navigation, sections, languages, images, logos, themes, activeSetting, posts, flagsSetting, footerSetting, siteSeoSetting] = await Promise.all([
             this.col('Navigation').find({}).toArray(),
             this.col('Sections').find({}).toArray(),
@@ -120,6 +136,7 @@ export class BundleService {
             this.col('SiteSettings').findOne({key: 'footer'}),
             this.col('SiteSettings').findOne({key: 'siteSeo'}),
         ]);
+        await tick(1, 'Collections loaded');
 
         const site = stripMongoIds({
             navigation,
@@ -135,8 +152,11 @@ export class BundleService {
             siteSeo: (siteSeoSetting as any)?.value ?? undefined,
         });
 
+        await tick(2, 'Stripping mongo ids');
+
         const localAssets = new Set<string>();
         collectLocalAssets(site, localAssets);
+        await tick(3, `Scanning ${localAssets.size} referenced assets`);
 
         const assets: Record<string, string> = {};
         for (const name of Array.from(localAssets)) {
@@ -151,8 +171,9 @@ export class BundleService {
                 log.warn({scope: 'bundle.export', err, asset: name}, 'missing asset on disk, skipping');
             }
         }
+        await tick(4, `Encoded ${Object.keys(assets).length} assets`);
 
-        return {
+        const result: SiteBundle = {
             manifest: {
                 version: BUNDLE_VERSION,
                 exportedAt: new Date().toISOString(),
@@ -161,6 +182,8 @@ export class BundleService {
             site,
             assets,
         };
+        await tick(6, 'Bundle ready');
+        return result;
     }
 
     /**

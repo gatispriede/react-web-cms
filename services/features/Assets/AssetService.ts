@@ -103,30 +103,47 @@ export class AssetService  implements IAssetService {
      * bundle import's `deleteMany({})` but lost their Mongo metadata.
      * Returns {added, skipped, total} so the UI can report what happened.
      */
-    async rescanDiskImages(editedBy?: string): Promise<{added: number; skipped: number; total: number}> {
+    async rescanDiskImages(
+        editedBy?: string,
+        onProgress?: (p: {progress: number; total: number; message: string}) => Promise<void>,
+    ): Promise<{added: number; skipped: number; total: number}> {
         try {
             if (!fs.existsSync(IMAGES_DIR)) return {added: 0, skipped: 0, total: 0};
             const files = fs.readdirSync(IMAGES_DIR).filter(f => IMAGE_EXT.test(f));
             let added = 0;
             let skipped = 0;
-            for (const fileName of files) {
+            // Best-effort progress: tick after every file so the client
+            // gets ~10 Hz updates on a typical few-hundred-file folder.
+            // Notification failures are swallowed inside the callback so
+            // a misbehaving notifier never aborts the rescan.
+            const tick = async (i: number, message: string): Promise<void> => {
+                if (!onProgress) return;
+                try { await onProgress({progress: i, total: files.length, message}); } catch { /* swallow */ }
+            };
+            await tick(0, `Scanning ${files.length} files`);
+            for (let i = 0; i < files.length; i++) {
+                const fileName = files[i];
                 const location = `${PUBLIC_IMAGE_PATH}${fileName}`;
                 const existing = await this.imagesDB.findOne({$or: [{location}, {name: fileName}]});
-                if (existing) { skipped++; continue; }
-                const stat = fs.statSync(path.join(IMAGES_DIR, fileName));
-                const ext = path.extname(fileName).slice(1).toLowerCase();
-                const image: InImage = {
-                    id: guid(),
-                    name: fileName,
-                    location,
-                    created: stat.mtime.toDateString(),
-                    type: `image/${ext === 'jpg' ? 'jpeg' : ext}`,
-                    size: stat.size,
-                    tags: ['All'],
-                    ...auditStamp(editedBy),
-                } as InImage;
-                await this.imagesDB.insertOne(image);
-                added++;
+                if (existing) {
+                    skipped++;
+                } else {
+                    const stat = fs.statSync(path.join(IMAGES_DIR, fileName));
+                    const ext = path.extname(fileName).slice(1).toLowerCase();
+                    const image: InImage = {
+                        id: guid(),
+                        name: fileName,
+                        location,
+                        created: stat.mtime.toDateString(),
+                        type: `image/${ext === 'jpg' ? 'jpeg' : ext}`,
+                        size: stat.size,
+                        tags: ['All'],
+                        ...auditStamp(editedBy),
+                    } as InImage;
+                    await this.imagesDB.insertOne(image);
+                    added++;
+                }
+                await tick(i + 1, `Scanned ${fileName}`);
             }
             return {added, skipped, total: files.length};
         } catch (err) {

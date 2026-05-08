@@ -19,7 +19,7 @@ import {defineTool} from './_shared';
 export const bundleExport: McpTool = defineTool({
     // SAFE: not a GraphQL mutation
     name: 'bundle.export',
-    description: 'Exports the full site (pages, sections, themes, images, posts, i18n) to a JSON file at `path`. The file can be imported into any CMS instance with bundle.import.',
+    description: 'Exports the full site (pages, sections, themes, images, posts, i18n) to a JSON file at `path`. The file can be imported into any CMS instance with bundle.import. Emits MCP `notifications/progress` over the export phases when the client passes a `progressToken` in `_meta`.',
     scopes: ['admin:bundle'],
     rateLimit: {maxPerMinute: 5},
     inputSchema: {
@@ -32,9 +32,13 @@ export const bundleExport: McpTool = defineTool({
             },
         },
     },
-}, async (args) => {
+}, async (args, ctx) => {
     try {
-        const bundle = await getMongoConnection().bundleService.export();
+        const bundle = await getMongoConnection().bundleService.export(
+            ctx.notify
+                ? async (p) => { await ctx.notify!(p); }
+                : undefined,
+        );
         const dest = path.resolve(args.path as string);
         await fs.writeFile(dest, JSON.stringify(bundle), 'utf8');
         const stat = await fs.stat(dest);

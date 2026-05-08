@@ -39,6 +39,17 @@ const fakeConn = {
             if (idx >= 0) inventory.splice(idx, 1);
             return JSON.stringify({deletedCount: 1});
         }),
+        // Stand-in for rescanDiskImages — drives a fake 3-file walk and
+        // calls the optional `onProgress` callback once per file so the
+        // progress-notification tests can assert monotonic ticks.
+        rescanDiskImages: vi.fn(async (_actor: string, onProgress?: (p: {progress: number; total: number; message: string}) => Promise<void>) => {
+            const files = ['a.jpg', 'b.png', 'c.svg'];
+            if (onProgress) await onProgress({progress: 0, total: files.length, message: `Scanning ${files.length} files`});
+            for (let i = 0; i < files.length; i++) {
+                if (onProgress) await onProgress({progress: i + 1, total: files.length, message: `Scanned ${files[i]}`});
+            }
+            return {added: files.length, skipped: 0, total: files.length};
+        }),
     },
 };
 
@@ -60,7 +71,7 @@ vi.mock('fs', async () => {
     };
 });
 
-import {imageList, imageDelete} from '../tools/images';
+import {imageList, imageDelete, imageRescan} from '../tools/images';
 import {scanImageUsage} from '@services/features/Assets/ImageUsageService';
 
 const ACTOR = 'mcp:test';
@@ -217,5 +228,30 @@ describe('image.delete — single + bulk', () => {
         const r = decode(await imageDelete.handler({}, makeCtx()));
         expect(r.ok).toBe(false);
         expect(r.error.message).toMatch(/requires `id` or/);
+    });
+});
+
+describe('image.rescan — progress notifications (F8 wave-2)', () => {
+    it('forwards ctx.notify to assetService.rescanDiskImages with monotonic ticks', async () => {
+        const calls: Array<{progress: number; total?: number; message?: string}> = [];
+        const ctx = {
+            ...makeCtx(),
+            notify: async (p: {progress: number; total?: number; message?: string}) => { calls.push(p); },
+        };
+        const r = decode(await imageRescan.handler({}, ctx));
+        expect(r.ok).toBe(true);
+        expect(r.data.added).toBe(3);
+        // Initial tick + one per file → 4 calls; progress strictly non-decreasing.
+        expect(calls.length).toBe(4);
+        for (let i = 1; i < calls.length; i++) {
+            expect(calls[i].progress).toBeGreaterThanOrEqual(calls[i - 1].progress);
+        }
+        expect(calls[calls.length - 1].progress).toBe(calls[calls.length - 1].total);
+    });
+
+    it('runs cleanly with no notify callback (token-less client)', async () => {
+        const r = decode(await imageRescan.handler({}, makeCtx()));
+        expect(r.ok).toBe(true);
+        expect(r.data.added).toBe(3);
     });
 });

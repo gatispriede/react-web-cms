@@ -48,6 +48,19 @@ export interface McpToolContext {
      * through; in-process tools never touch it.
      */
     tokenSecret?: string;
+    /**
+     * Send a `notifications/progress` MCP notification for the current
+     * request. No-op when the client didn't pass a `progressToken` in
+     * `_meta` (the transport leaves `notify` undefined). Tools that run
+     * long enough to benefit (`bundle.export`, `image.rescan`) call this
+     * periodically; the client renders progress to the user.
+     *
+     * `progress` is a count or fraction; if `total` is given the client
+     * renders a percent. `message` is a free-text status line — keep it
+     * short, no PII / secrets. Errors are swallowed: a notification
+     * failure must never abort the underlying tool work.
+     */
+    notify?: (params: {progress: number; total?: number; message?: string}) => Promise<void>;
 }
 
 export interface McpToolResult {

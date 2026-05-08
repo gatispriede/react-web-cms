@@ -122,7 +122,24 @@ async function main() {
         })),
     }));
 
-    server.setRequestHandler(CallToolRequestSchema, async (req) => {
+    server.setRequestHandler(CallToolRequestSchema, async (req, extra) => {
+        // MCP `notifications/progress` — wired only when the client
+        // included `_meta.progressToken` on its `tools/call`. Errors
+        // are swallowed so a failed notification never aborts the tool.
+        const progressToken = (req.params as any)?._meta?.progressToken
+            ?? (extra as any)?._meta?.progressToken;
+        const notify = progressToken !== undefined && extra?.sendNotification
+            ? async (p: {progress: number; total?: number; message?: string}) => {
+                try {
+                    await extra.sendNotification({
+                        method: 'notifications/progress',
+                        params: {progressToken, ...p},
+                    });
+                } catch (err) {
+                    process.stderr.write(`[mcp:stdio] progress notify failed: ${(err as Error).message}\n`);
+                }
+            }
+            : undefined;
         const outcome = await mcp.dispatch({
             tool: req.params.name,
             args: req.params.arguments ?? {},
@@ -131,6 +148,7 @@ async function main() {
             // bearer secret. The dispatcher threads it onto the tool
             // context; tools that don't read it never see it.
             tokenSecret: rawToken,
+            notify,
         });
         if (!outcome.ok) {
             return {

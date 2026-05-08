@@ -189,7 +189,7 @@ export const imageDelete: McpTool = defineTool({
 export const imageRescan: McpTool = defineTool({
     // SAFE: not a GraphQL mutation — direct asset service call
     name: 'image.rescan',
-    description: 'Walk public/images and create Mongo rows for any file missing one. Returns {added, skipped, total}.',
+    description: 'Walk public/images and create Mongo rows for any file missing one. Returns {added, skipped, total}. Emits MCP `notifications/progress` per file when the client passes a `progressToken` in `_meta`.',
     scopes: ['write:content'],
     idempotent: true,
     rateLimit: {maxPerMinute: 5},
@@ -202,7 +202,12 @@ export const imageRescan: McpTool = defineTool({
 }, async (_args, ctx) => {
     await enforceModeForTool(ctx.actor, 'image.rescan');
     const conn: any = getMongoConnection();
-    return await conn.assetService.rescanDiskImages(ctx.actor);
+    return await conn.assetService.rescanDiskImages(
+        ctx.actor,
+        ctx.notify
+            ? async (p: {progress: number; total: number; message: string}) => { await ctx.notify!(p); }
+            : undefined,
+    );
 });
 
 export const IMAGE_TOOLS: McpTool[] = [imageList, imageUpload, imageDelete, imageRescan];

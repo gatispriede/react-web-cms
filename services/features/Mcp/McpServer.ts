@@ -29,6 +29,14 @@ export interface McpDispatchInput {
      * call back into the CMS over HTTP. Never logged.
      */
     tokenSecret?: string;
+    /**
+     * Optional progress callback wired by the transport layer. Set when
+     * the MCP client included `_meta.progressToken` in `tools/call`.
+     * Threaded onto `ctx.notify`; tools that don't read it never see it.
+     * Best-effort — failures are swallowed inside the transport-built
+     * callback, never thrown back at the dispatcher.
+     */
+    notify?: (params: {progress: number; total?: number; message?: string}) => Promise<void>;
 }
 
 export interface McpServerDeps {
@@ -126,6 +134,7 @@ export class McpServer {
                 actor,
                 audit: this.deps.audit,
                 tokenSecret: input.tokenSecret,
+                notify: input.notify,
             });
             return this.finish(actor, input.tool, parsed, started, {ok: true, result});
         } catch (err) {
