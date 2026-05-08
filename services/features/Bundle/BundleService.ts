@@ -3,6 +3,7 @@ import path from 'node:path';
 import type {Collection, Db} from 'mongodb';
 import {validateSectionInput} from '@utils/contentSchemas';
 import {PRESETS} from '@services/features/Themes/ThemeService';
+import {markRestartRequired} from '@services/infra/restartRequired';
 import guid from '@utils/guid';
 import FileManager from '@services/infra/fileManager';
 import {log} from '@services/infra/logger';
@@ -349,6 +350,18 @@ export class BundleService {
         if (bundle.site.siteFlags !== undefined) await putSetting('siteFlags', bundle.site.siteFlags);
         if (bundle.site.footer !== undefined) await putSetting('footer', bundle.site.footer);
         if (bundle.site.siteSeo !== undefined) await putSetting('siteSeo', bundle.site.siteSeo);
+
+        // Wave 3 — surface the "restart to pick up new modules" hint.
+        // A bundle import can ship new modules / item types whose
+        // ServiceLoader registration only runs at server boot; without
+        // a restart their resolvers + UI loaders won't be wired even
+        // though the bundle data lives in Mongo. The admin restart
+        // banner reads `getRestartReasons()` and surfaces this to
+        // the operator.
+        markRestartRequired({
+            source: 'bundle-import',
+            detail: `Bundle imported (${assetsWritten} asset${assetsWritten === 1 ? '' : 's'} written, ${Object.keys(restored).length} collections restored). Restart to pick up any newly-registered modules.`,
+        });
 
         return {restored, assets: assetsWritten, skippedAssets};
     }
