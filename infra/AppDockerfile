@@ -108,41 +108,31 @@ RUN npm prune --omit=dev --legacy-peer-deps \
 
 # ---------------------------------------------------------------- runtime
 #
-# Standalone runtime — Next.js's `output: 'standalone'` traces the
-# server's import graph at build time and emits a self-contained
-# `.next/standalone/` folder with:
-#   - `server.js` — the Node entry point (replaces `next start`)
-#   - minimal `node_modules/` — only packages actually reachable from
-#     server-side code (drops the 1 GB+ of devDeps + UI-only deps + the
-#     Next CLI itself)
-#   - mirrored source tree (so dynamic require()s with relative paths
-#     still resolve)
+# Slim runtime — only what `next start` reads at request time.
+# Build #5 dropped a 2.97 GB image because the runtime stage did a
+# blanket `COPY /app /app` that pulled in tests, tools, infra/, source
+# maps, the entire builder yarn cache, etc.
 #
-# What the runtime image needs:
-#   - `.next/standalone/` (entire)           → /app
-#   - `.next/static/`                        → /app/ui/client/.next/static
-#   - `public/`                              → /app/ui/client/public
-#   - `.git-sha`                             → /app/.git-sha (health endpoint)
+# Selective COPY (~600-800 MB target):
+#   - package.json + package-lock.json  →  needed for `npm prune`
+#   - node_modules/                     →  pruned to production-only below
+#   - ui/client/.next/                  →  Next prebuild output
+#   - ui/client/public/                 →  static assets
+#   - ui/client/next.config.js          →  required by `next start`
+#   - ui/client/pages/ + ui/client/lib/ →  API routes + lib imported at runtime
+#   - services/ + shared/               →  SSR + API handlers walk these
+#   - next-i18next.config.js            →  i18n bootstrap
+#   - next-sitemap.config.cjs           →  sitemap generation at runtime
+#   - .git-sha                          →  health endpoint surfaces this
 #
-# CMD changes from `npm run start` → `node ui/client/server.js`. The
-# legacy compose stack still pins its own `command: npm run start-docker`
-# in compose.yaml, so the image's default CMD doesn't affect it.
-FROM node:20-bookworm-slim AS runtime
+# Excluded: tests/, tools/, infra/, docs/, eslint config, vitest config,
+# .next/cache, node_modules/.cache. These accounted for the bulk of
+# the 2.97 GB image.
+FROM node:20-alpine AS runtime
 
 ENV NODE_ENV=production
-# `next start` (and standalone server.js) honour `PORT`; default 80
-# matches the legacy compose's expectation.
-ENV PORT=80
-ENV HOSTNAME=0.0.0.0
 
-# Match builder's libc (glibc) — alpine runtime fails on native
-# bindings compiled in the builder against bookworm's glibc:
-#   "No native build was found for platform=linux runtime=node libc=musl"
-# Affects bcrypt, @node-rs/xxhash, etc. Easier to align libc than to
-# rebuild native packages for alpine.
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        curl ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache curl
 
 WORKDIR /app
 
@@ -151,29 +141,22 @@ WORKDIR /app
 # here so the node user can write without elevating.
 RUN mkdir -p /app/var && chmod 700 /app/var
 
-# Standalone output — the Next build's tree-shaken minimal app.
-COPY --from=builder /app/ui/client/.next/standalone /app
-# .next/static lives next to the standalone server, NOT inside its
-# tree — Next docs explicitly call this out.
-COPY --from=builder /app/ui/client/.next/static /app/ui/client/.next/static
-# Static assets (favicon, locales, robots, sitemap.xml proxies, etc.).
-COPY --from=builder /app/ui/client/public /app/ui/client/public
-# Theme JSON presets — `ThemeService.ts` does dynamic `readFileSync` for
-# each preset slug, which standalone's import-tracer can't follow.
-# Standalone changes cwd to the server.js dir (/app/ui/client/), so
-# put themes alongside.
-COPY --from=builder /app/ui/client/themes /app/ui/client/themes
-# GraphQL schema — `pages/api/graphql.ts` reads it via cwd-relative
-# `services/api/schema.graphql`. Standalone tracer doesn't follow the
-# `readFileSync` of a non-JS asset, so copy it to the path the runtime
-# expects (cwd-relative, with cwd = /app/ui/client/ in standalone).
-COPY --from=builder /app/services/api/schema.graphql /app/ui/client/services/api/schema.graphql
-# Health endpoint reads /app/.git-sha to surface the running commit.
+# Manifest + lockfile first so `npm prune` works.
+COPY --from=builder /app/package.json /app/package.json
+COPY --from=builder /app/package-lock.json /app/package-lock.json
+COPY --from=builder /app/next-i18next.config.js /app/next-i18next.config.js
+COPY --from=builder /app/next-sitemap.config.cjs /app/next-sitemap.config.cjs
 COPY --from=builder /app/.git-sha /app/.git-sha
+
+# Source dirs that the running app imports.
+COPY --from=builder /app/services /app/services
+COPY --from=builder /app/shared /app/shared
+COPY --from=builder /app/ui/client /app/ui/client
+COPY --from=builder /app/node_modules /app/node_modules
 
 EXPOSE 80
 
-# server.js path inside the standalone output mirrors the source layout:
-# build was `next build ui/client`, so server.js lands at
-# `<standalone>/ui/client/server.js`.
-CMD ["node", "ui/client/server.js"]
+# Default CMD = `next start` against the prebuilt `.next/`. Legacy
+# compose overrides via `command:` in compose.yaml when it wants the
+# build-at-startup path.
+CMD ["npm", "run", "start"]
