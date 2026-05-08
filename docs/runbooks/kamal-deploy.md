@@ -88,16 +88,26 @@ container. The cutover sequence below is what flips public traffic:
    `docker push`) pushes images on every master push.
 2. **Kamal deploy** — `kamal deploy --destination=funisimo` boots a
    new container on `cms_back-end`. Legacy `front` keeps serving.
-3. **Caddy upstream flip** — on the droplet:
+3. **Attach the front-end network** — `kamal deploy` puts the new
+   container on `cms_back-end` only (one-network limit in `options`).
+   Caddy lives on `cms_front-end`; without this step Caddy returns 502
+   because it can't resolve `cms-web` (verified the hard way during the
+   2026-05-08 cutover).
    ```bash
    ssh root@funisimo.pro
-   # Look up the new container name (kamal v2 names them
-   # `cms-web-<version>` where version = git SHA-7 prefix).
-   NEW=$(docker ps --filter name=cms-web --format '{{.Names}}' | head -1)
-   sed -i "s|^ACTIVE_UPSTREAM=.*|ACTIVE_UPSTREAM=${NEW}:80|" /opt/cms/.env
-   docker compose -f /opt/cms/infra/compose.yaml up -d --no-deps caddy
+   docker network connect cms_front-end cms-web
    ```
-4. **Smoke** — `curl -sf https://funisimo.pro/api/health` from your
+4. **Caddy upstream flip + recreation** — `caddy reload` won't pick up
+   `.env` changes because env vars are baked at container creation.
+   Use `--force-recreate`:
+   ```bash
+   sed -i "s|^ACTIVE_UPSTREAM=.*|ACTIVE_UPSTREAM=cms-web:80|" /opt/cms/.env
+   cd /opt/cms && docker compose -p cms -f infra/compose.yaml --env-file .env \
+     up -d --no-deps --force-recreate caddy
+   ```
+   Note `-p cms` — the project name auto-derived from cwd is wrong;
+   pin it explicitly.
+5. **Smoke** — `curl -sf https://funisimo.pro/api/health` from your
    workstation. If 200, the cutover succeeded.
 5. **One release cycle stable** — leave funisimo on Kamal for ≥ 7 days,
    monitor Errors panel + smoke checks. Skyclimber stays on the legacy

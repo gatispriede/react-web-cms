@@ -22,12 +22,24 @@ servers:
   web:
     hosts:
       - funisimo.pro
-    # `cms_back-end` is the existing docker network the legacy compose
-    # stack uses (mongodb, server, caddy, mcp all attach to it). The
-    # Kamal container needs to land on the same network so MONGODB_URI=
-    # mongodb://mongodb:27017 resolves and Caddy can reverse-proxy by
-    # container name. Verified network exists: `docker network ls` on
-    # funisimo.pro lists `cms_back-end` as the cms compose network.
+    # The compose stack splits into two networks:
+    #   - `cms_back-end` carries mongodb, standalone-graphql server,
+    #     mcp. cms-web needs this so MONGODB_URI=mongodb://mongodb:27017
+    #     and ad-hoc graphql calls resolve.
+    #   - `cms_front-end` carries caddy. cms-web needs this so caddy
+    #     can reverse-proxy by `cms-web:80` after the ACTIVE_UPSTREAM
+    #     flip. Without both, Caddy returns 502 (verified the hard way
+    #     during 2026-05-08 cutover — Caddy is on front-end only and
+    #     can't see back-end-only containers).
+    # Kamal v2 takes a single network in `options.network`; for the
+    # second, post-deploy step runs `docker network connect`.
+    # Kamal `options.network` only takes a single network; after `kamal
+    # deploy` boots the container, the runbook flow runs:
+    #
+    #   docker network connect cms_front-end cms-web
+    #
+    # to attach the second network. See docs/runbooks/kamal-deploy.md
+    # cutover sequence for the full procedure.
     options:
       network: cms_back-end
 
