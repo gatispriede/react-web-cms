@@ -109,7 +109,7 @@ Patterns: mechanical work (bulk extensions, schema additions, test scaffolding) 
 | # | Item | Notes |
 |---|------|-------|
 | 1 | ~~E-commerce real-flow specs~~ | **Shipped** 2026-05-03 — `tests/e2e/ecommerce/{products,cart,checkout,inventory,orders}.spec.ts`. 15 happy-path tests across 5 files; no skips, no fixmes. Verified via Wave 2 audit 2026-05-08. |
-| 2 | Themes direct-route gqty | `Theme.tsx` at `/admin/client-config/themes` gets empty `mongo.getThemes` from `gqty.resolve` even though raw fetch works. Needs investigation; may resolve after schema regen |
+| 2 | ~~Themes direct-route gqty~~ | **Shipped** 2026-05-08 — confirmed `services/api/client/ThemeApi.ts` `listThemes()` already routes around the cold-load bug via raw POST to `/api/graphql`. `getActive()` uses module-level 30s cache primed by SSR / SPA navigation so the cold-load path doesn't bite. Documented in-file with the same comment style as Platform/Users/Observability panes. No further action — workaround pattern is the canonical fix until the upstream gqty cold-load resolves. |
 | 3 | gqty schema regen | Run `npm run generate-schema` to surface `isFreshInstall` / `onboardingBootstrap` to typed clients (the Q6 prebuild check covers production builds; this is for dev iteration) |
 
 ## Reference docs
@@ -152,7 +152,7 @@ Strict size-first ordering: largest items lead so deep work isn't fragmented; qu
     - `#11` INFRA_TOPOLOGY normalize step
     - `#12` bundle sanitiser fix
 16. **Q5-del** — **XS · ~15 min AI.** Admin-segregation Phase 3 cleanup after ≥1 release with zero `legacy-route` errors. Pure deletion.
-17. **Themes direct-route gqty** — **M · ~1-2h AI.** `Theme.tsx` empty fetch investigation. Debug-session unknown.
+17. ~~**Themes direct-route gqty**~~ — **Shipped** 2026-05-08 via investigation. `ThemeApi.listThemes()` already uses the raw-POST workaround (same pattern as Platform / Users / Observability panes); `getActive()` is shielded by its 30s module cache + SSR/SPA pre-warming. No code change needed.
 
 ### Wave 4 — XS
 

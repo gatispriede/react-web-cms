@@ -84,8 +84,11 @@ export interface InNavigation {
   parent?: InputMaybe<Scalars["String"]["input"]>;
   sections: Array<InputMaybe<Scalars["String"]["input"]>>;
   seo?: InputMaybe<InSeo>;
-  // F1 follow-up — JSON scalar (bare string for legacy single-locale,
-  // or `Record<locale, slug>` for the per-locale shape).
+  /**
+   * Slug — F1 sub-pages follow-up. JSON scalar: a bare string is the
+   * legacy single-locale form; an object `{en: "about", lv: "par-mums"}`
+   * carries one slug per active locale.
+   */
   slug?: InputMaybe<Scalars["JSON"]["input"]>;
   type: Scalars["String"]["input"];
 }
@@ -371,6 +374,7 @@ export const generatedSchema = {
       },
     },
     addUser: { __type: "String!", __args: { user: "InUser!" } },
+    analyticsFiltersUpdate: { __type: "String!", __args: { input: "JSON!" } },
     changeMyPassword: {
       __type: "String!",
       __args: { newPassword: "String!", oldPassword: "String!" },
@@ -499,12 +503,17 @@ export const generatedSchema = {
   QueryMongo: {
     __typename: { __type: "String!" },
     _empty: { __type: "String" },
-    analyticsSummary: { __type: "String!", __args: { range: "String!" } },
+    analyticsFiltersGet: { __type: "String!" },
+    analyticsSummary: {
+      __type: "String!",
+      __args: { audience: "String", range: "String" },
+    },
     functionalRoles: { __type: "String!" },
     getActiveTheme: { __type: "String" },
     getAuditActors: { __type: "String!" },
     getAuditCollections: { __type: "String!" },
     getAuditLog: { __type: "String!", __args: { filter: "JSON" } },
+    getDiagnostics: { __type: "String!" },
     getErrorLog: {
       __type: "String!",
       __args: {
@@ -637,7 +646,11 @@ export interface INavigation {
   parent?: Maybe<Scalars["String"]["output"]>;
   sections?: Array<Maybe<Scalars["String"]["output"]>>;
   seo?: Maybe<ISeo>;
-  // F1 follow-up — JSON scalar (bare string OR `Record<locale, slug>`).
+  /**
+   * Slug — F1 sub-pages follow-up. JSON scalar; bare string for the
+   * legacy single-locale form, or `{<locale>: <slug>, …}` for the
+   * per-locale shape.
+   */
   slug?: Maybe<Scalars["JSON"]["output"]>;
   type?: Scalars["String"]["output"];
 }
@@ -728,6 +741,12 @@ export interface MutationMongo {
     section: InSection;
   }) => Scalars["String"]["output"];
   addUser: (args: { user: InUser }) => Scalars["String"]["output"];
+  /**
+   * Admin — replace the internal-IP allowlist + labels. `input` is a JSON object {internalIps: string[], labels?: {ip: label}}.
+   */
+  analyticsFiltersUpdate: (args: {
+    input: Scalars["JSON"]["input"];
+  }) => Scalars["String"]["output"];
   changeMyPassword: (args: {
     newPassword: Scalars["String"]["input"];
     oldPassword: Scalars["String"]["input"];
@@ -908,10 +927,15 @@ export interface QueryMongo {
    */
   _empty?: Maybe<Scalars["String"]["output"]>;
   /**
-   * Admin — canned analytics summary for the dashboard (top pages, top events). `range`: 24h | 7d | 30d.
+   * Admin — current internal-IP allowlist + labels.
    */
-  analyticsSummary: (args: {
-    range: Scalars["String"]["input"];
+  analyticsFiltersGet?: Scalars["String"]["output"];
+  /**
+   * Admin — analytics summary for the dashboard. `range`: 24h | 7d | 30d. `audience`: public (default) | admin | internal | bot | all.
+   */
+  analyticsSummary: (args?: {
+    audience?: Maybe<Scalars["String"]["input"]>;
+    range?: Maybe<Scalars["String"]["input"]>;
   }) => Scalars["String"]["output"];
   /**
    * Read — list of functional roles declared by every active feature, with assignable flag.
@@ -923,6 +947,10 @@ export interface QueryMongo {
   getAuditLog: (args?: {
     filter?: Maybe<Scalars["JSON"]["input"]>;
   }) => Scalars["String"]["output"];
+  /**
+   * Operator-facing runtime snapshot — build identity, feature manifest summary, storage health, trash + idempotency counts, authorization scope counts. Admin-only.
+   */
+  getDiagnostics?: Scalars["String"]["output"];
   /**
    * Recent rows from the structured ErrorLog collection. Filters mirror MCP's audit.errors.
    */
