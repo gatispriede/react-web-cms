@@ -242,6 +242,42 @@ export const pageUpdate: McpTool = defineTool({
     return batch;
 });
 
+export const pageTouch: McpTool = defineTool({
+    // mcp-rollout-aftermath #9 — stamp editedAt/editedBy without
+    // changing content. For pre-audit-triplet pages where page.update
+    // detects no-op and skips, page.touch forces a stamp + version
+    // bump so the audit trail catches up.
+    name: 'page.touch',
+    description: 'Bump editedAt / editedBy / version on a page without changing content. Use when a legacy page lacks an audit triplet and a no-op page.update doesn\'t register a save. Returns the new version. Idempotent only inside the standard idempotency window — outside that, repeated calls bump the version each time.',
+    scopes: ['write:content'],
+    idempotent: true,
+    inputSchema: {
+        type: 'object',
+        required: ['page'],
+        properties: {
+            page: {type: 'string', minLength: 1, description: 'Page name (used as the unique key for the navigation row).'},
+            idempotencyKey: {type: 'string'},
+        },
+    },
+}, async (args, ctx) => {
+    await enforceModeForTool(ctx.actor, 'page.touch');
+    const pageName = String(args.page);
+    // Re-pull the existing nav row, write it back unchanged through
+    // replaceUpdateNavigation. The service's auditStamp + version
+    // bump fire even when the rest of the doc is identical.
+    const all = await ctx.services.navigationService.getNavigationCollection();
+    const existing = (all ?? []).find((n: {page?: string}) => n?.page === pageName);
+    if (!existing) {
+        throw new Error(`page.touch: page "${pageName}" not found`);
+    }
+    const res = await ctx.services.navigationService.replaceUpdateNavigation(
+        pageName,
+        existing as any,
+        ctx.actor,
+    );
+    return JSON.parse(res);
+});
+
 export const pageDelete: McpTool = defineTool({
     // SAFE: routes through cascadeDelete — not a 1:1 GraphQL mutation
     name: 'page.delete',
@@ -320,6 +356,6 @@ export const pageReorder: McpTool = defineTool({
 });
 
 export const PAGE_TOOLS: McpTool[] = [
-    pageList, pageGet, pageCreate, pageUpdate, pageDelete, pageSetParent, pageReorder,
+    pageList, pageGet, pageCreate, pageUpdate, pageTouch, pageDelete, pageSetParent, pageReorder,
     sectionUpdate, sectionDelete,
 ];

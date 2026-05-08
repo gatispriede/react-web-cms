@@ -42,6 +42,11 @@ const SCOPES = [
     'read:site', 'write:site',
     'read:audit',
     'admin:auth',
+    // mcp-rollout-aftermath #5 — bundle.export + bundle.import need
+    // admin:bundle. Local dev tokens are deliberately maximally
+    // privileged (Mongo is throwaway); production tokens stay
+    // least-privilege via the admin UI.
+    'admin:bundle',
 ];
 const NAME = process.env.MCP_DEV_TOKEN_NAME || `dev-${require('node:os').hostname()}`;
 

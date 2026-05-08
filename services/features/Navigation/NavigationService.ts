@@ -5,6 +5,7 @@ import {ISection} from "@interfaces/ISection";
 import {InSection} from "@interfaces/IMongo";
 import {INavigationService} from "@services/infra/mongoConfig";
 import {validateSectionInput} from "@utils/contentSchemas";
+import {normalizeSectionInput} from "./normalizeSectionInput";
 import {assertNotReservedPageSlug} from "@utils/reservedSlugs";
 import {auditStamp} from "@services/features/Audit/audit";
 import {nextVersion, requireVersion} from "@services/infra/conflict";
@@ -167,6 +168,13 @@ export class NavigationService implements INavigationService{
     }
 
     async addUpdateSectionItem(item: { section: InSection, pageName?: string, editedBy?: string, expectedVersion?: number | null }): Promise<string> {
+        // Normalize per-content-type input drift before validation —
+        // older bundles + MCP-driven authoring sometimes ship legacy
+        // field names (INFRA_TOPOLOGY's svg/caption → topologySvg/
+        // topologyCaption). Run before validate so the validator sees
+        // the canonical shape; legacy keys are preserved on the way
+        // through. mcp-rollout-aftermath #11.
+        item = {...item, section: normalizeSectionInput(item.section)};
         const check = validateSectionInput(item.section);
         if (!check.valid) {
             return JSON.stringify({error: `Invalid section: ${check.error}`});
@@ -192,7 +200,26 @@ export class NavigationService implements INavigationService{
             }
             const existing = await this.sectionsDB.findOne({id: item.section.id});
             if (!existing) {
-                return JSON.stringify({error: `Section ${item.section.id} not found`});
+                // mcp-rollout-aftermath #1 — actually upsert when an
+                // unknown id is provided AND a pageName is given. Lets
+                // MCP callers write semantic ids ("cv-sec-mcp-hero")
+                // instead of UUIDs. Without pageName we'd insert an
+                // orphan section the navigation tree never references.
+                if (!item.pageName) {
+                    return JSON.stringify({error: `Section ${item.section.id} not found (and no pageName given to attach a fresh insert to)`});
+                }
+                const newSection = {...item.section, version: 1, ...audit};
+                await this.sectionsDB.insertOne(newSection);
+                const nav = await this.navigationDB.findOne({type: 'navigation', page: item.pageName});
+                if (nav) {
+                    const sections: string[] = Array.isArray((nav as any).sections) ? (nav as any).sections : [];
+                    if (!sections.includes(item.section.id!)) sections.push(item.section.id!);
+                    await this.navigationDB.updateOne(
+                        {type: 'navigation', page: item.pageName},
+                        {$set: {sections, ...audit}}
+                    );
+                }
+                return JSON.stringify({createSection: {id: item.section.id, version: 1, upserted: true}});
             }
             const existingVersion = (existing as any)?.version as number | undefined;
             requireVersion(existing, existingVersion, item.expectedVersion, `Section ${item.section.id}`);

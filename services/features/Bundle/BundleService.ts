@@ -225,21 +225,33 @@ export class BundleService {
         const MAX_ASSET_BYTES = 25 * 1024 * 1024; // 25 MB per image
         const DATA_URI = /^data:image\/(jpeg|png|gif|webp|svg\+xml);base64,(.*)$/;
 
+        // mcp-rollout-aftermath #12 — the previous sanitiser was too
+        // aggressive: it replaced parens / spaces / plus signs with `_`,
+        // so `20260426_162153(0).jpg` landed on disk as
+        // `20260426_162153_0_.jpg` while the DB still referenced the
+        // original name. Net effect: hero portraits 404'd silently
+        // post-import, operator saw a "double background" broken-image
+        // icon. Tightened: only reject security-critical chars (null
+        // bytes, control chars, traversal segments, path separators).
+        // Common-case filenames (parens, spaces, plus, accented Latin)
+        // round-trip unchanged.
         const sanitizeAssetName = (raw: string): string | null => {
             const base = path.basename(raw);
-            // Hard reject: null byte / control char / traversal / separator.
+            if (!base) return null;
+            // Hard reject: null byte / control char.
             if (/[\x00-\x1f\x7f]/.test(base)) return null;
+            // Hard reject: traversal segments / path separators.
             if (base === '..' || base.split(/[\\/]/).some(s => s === '..')) return null;
-            // Sanitize: collapse whitespace, replace any char outside the safe
-            // set (`[a-zA-Z0-9._-]`) with `_`, then collapse repeats.
-            const cleaned = base
-                .replace(/\s+/g, '_')
-                .replace(/[^\w.\-]/g, '_')
-                .replace(/_+/g, '_');
-            if (!cleaned || cleaned === '.' || cleaned === '..') return null;
-            if (!ALLOWED_EXT.test(cleaned)) return null;
-            // Empty stem (e.g. `.png`) — reject.
-            if (cleaned.startsWith('.') && cleaned.indexOf('.', 1) === -1) return null;
+            if (/[\\/]/.test(base)) return null;
+            // Hard reject: empty stem (e.g. `.png`) or just dots.
+            if (base === '.' || base === '..') return null;
+            if (base.startsWith('.') && base.indexOf('.', 1) === -1) return null;
+            if (!ALLOWED_EXT.test(base)) return null;
+            // Collapse whitespace (preserves operator-readable shape but
+            // avoids URL-encoding pitfalls) — but DON'T strip the
+            // pleasantries operators rely on (parens, plus, etc.).
+            const cleaned = base.replace(/\s+/g, ' ').trim();
+            if (!cleaned) return null;
             return cleaned;
         };
 
