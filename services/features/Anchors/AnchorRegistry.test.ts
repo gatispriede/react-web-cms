@@ -55,6 +55,32 @@ describe('buildAnchorRegistry — tabs mode (default)', () => {
         expect(title?.group).toBe('Module titles');
     });
 
+    it('extracts manifesto chips via `manifesto-chip-${slug}` (C13b)', () => {
+        const r = buildAnchorRegistry({
+            pages: PAGES,
+            sectionsByPage: {
+                Home: [{
+                    id: 'sec1',
+                    content: [{
+                        type: 'MANIFESTO',
+                        content: JSON.stringify({
+                            body: 'Built with *{{chip:REACT:React}}* and *{{chip:NODE:Node}}*.',
+                            chips: [
+                                {key: 'REACT', thumb: 'R'},
+                                {key: 'NODE', thumb: 'N'},
+                            ],
+                        }),
+                    }],
+                }],
+            },
+        });
+        const reactChip = r.find(e => e.href === '#manifesto-chip-react');
+        expect(reactChip?.label).toBe('Home · REACT (R)');
+        expect(reactChip?.group).toBe('Module titles');
+        const nodeChip = r.find(e => e.href === '#manifesto-chip-node');
+        expect(nodeChip).toBeDefined();
+    });
+
     it('extracts timeline entries via `${company}-${role}` slug', () => {
         const r = buildAnchorRegistry({
             pages: PAGES,

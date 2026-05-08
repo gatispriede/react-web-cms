@@ -187,6 +187,24 @@ export function setAnchors(
                     const label = role ? `${p.page} · ${company} — ${role}` : `${p.page} · ${company}`;
                     push({href: `#${anchor}`, label, group: 'Timeline entries'});
                 }
+
+                // C13b — Manifesto chips become per-chip anchors. Each chip's
+                // `key` is the addressable identity; the renderer emits an
+                // `id="manifesto-chip-${slugifyAnchor(key)}"` on each chip
+                // span so deep-links resolve via native hash-scroll.
+                if (it.type === 'MANIFESTO' || (parsed && Array.isArray(parsed.chips))) {
+                    const chips = Array.isArray(parsed?.chips) ? parsed.chips : [];
+                    for (const c of chips) {
+                        const key = typeof c?.key === 'string' ? c.key : '';
+                        const thumb = typeof c?.thumb === 'string' ? c.thumb : '';
+                        const slug = slugifyAnchor(key);
+                        if (!slug) continue;
+                        const label = thumb
+                            ? `${p.page} · ${key} (${thumb})`
+                            : `${p.page} · ${key}`;
+                        push({href: `#manifesto-chip-${slug}`, label, group: 'Manifesto chips'});
+                    }
+                }
             }
         });
     }

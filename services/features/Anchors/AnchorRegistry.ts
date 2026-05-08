@@ -168,6 +168,24 @@ export function buildAnchorRegistry(args: {
                     const label = role ? `${p.page} · ${company} — ${role}` : `${p.page} · ${company}`;
                     push({href: `#${anchor}`, label, group: 'Timeline entries'});
                 }
+
+                // C13b — Manifesto chips. The renderer emits
+                // `id="manifesto-chip-${slugifyAnchor(key)}"` on each chip
+                // span; mirror that here so the picker / agent can target
+                // an individual chip without guessing the slug rule.
+                if (it.type === 'MANIFESTO' || Array.isArray(obj?.chips)) {
+                    const chips = Array.isArray(obj?.chips) ? (obj.chips as Array<{key?: unknown; thumb?: unknown}>) : [];
+                    for (const c of chips) {
+                        const key = typeof c?.key === 'string' ? c.key : '';
+                        const thumb = typeof c?.thumb === 'string' ? c.thumb : '';
+                        const slug = slugifyAnchor(key);
+                        if (!slug) continue;
+                        const label = thumb
+                            ? `${p.page} · ${key} (${thumb})`
+                            : `${p.page} · ${key}`;
+                        push({href: `#manifesto-chip-${slug}`, label, group: 'Module titles'});
+                    }
+                }
             }
         });
     }

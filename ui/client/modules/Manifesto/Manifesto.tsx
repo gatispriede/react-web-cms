@@ -6,6 +6,7 @@ import {TFunction} from "i18next";
 import {translateOrKeep} from "@utils/translateOrKeep";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import RevealOnScroll from "@client/lib/RevealOnScroll";
+import {slugifyAnchor} from "@utils/stringFunctions";
 import type {IManifesto, IManifestoChip} from "./Manifesto.types";
 export type {IManifesto, IManifestoChip} from "./Manifesto.types";
 export {EManifestoStyle} from "./Manifesto.types";
@@ -41,8 +42,21 @@ function renderBody(body: string, chips: IManifestoChip[], tr: (s: string) => st
             const [key, ...labelParts] = inner.split(':');
             const label = labelParts.join(':');
             const chip = chipByKey.get(key);
+            // C13b — chip = the addressable unit inside a manifesto body.
+            // The DOM id mirrors the slug rule the AnchorRegistry uses
+            // (`manifesto-chip-${slugifyAnchor(key)}`) so deep-links of
+            // the form `/about#manifesto-chip-react` resolve via native
+            // hash-scroll without extra JavaScript.
+            const anchorId = `manifesto-chip-${slugifyAnchor(key)}`;
             return (
-                <span key={i} className={`manifesto__chip`} data-chip-key={key}>
+                <span
+                    key={i}
+                    id={anchorId}
+                    className={`manifesto__chip`}
+                    data-chip-key={key}
+                    data-testid={`manifesto-chip-${slugifyAnchor(key)}`}
+                    style={{scrollMarginTop: 80}}
+                >
                     <span className="manifesto__chip-thumb" style={chip?.color ? {background: chip.color} : undefined}>
                         {chip?.thumb ?? key}
                     </span>
