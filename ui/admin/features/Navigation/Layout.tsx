@@ -31,8 +31,8 @@ const AdminSettingsLayout: React.FC = () => {
             </div>
             <Radio.Group value={vm.mode} onChange={e => vm.setMode(e.target.value)} disabled={vm.loading} style={{width: '100%'}}>
                 <Space orientation="vertical" style={{width: '100%'}}>
-                    <Card hoverable style={{border: vm.mode === 'tabs' ? '2px solid var(--theme-colorPrimary, #1677ff)' : undefined}}>
-                        <Radio value="tabs">
+                    <Card data-testid="site-layout-mode-tabs-card" hoverable style={{border: vm.mode === 'tabs' ? '2px solid var(--theme-colorPrimary, #1677ff)' : undefined}}>
+                        <Radio data-testid="site-layout-mode-tabs-radio" value="tabs">
                             <Typography.Text strong>{t('Tabs')}</Typography.Text>
                             <div style={{marginTop: 4}}>
                                 <Typography.Text type="secondary">
@@ -41,12 +41,22 @@ const AdminSettingsLayout: React.FC = () => {
                             </div>
                         </Radio>
                     </Card>
-                    <Card hoverable style={{border: vm.mode === 'scroll' ? '2px solid var(--theme-colorPrimary, #1677ff)' : undefined}}>
-                        <Radio value="scroll">
+                    <Card data-testid="site-layout-mode-scroll-card" hoverable style={{border: vm.mode === 'scroll' ? '2px solid var(--theme-colorPrimary, #1677ff)' : undefined}}>
+                        <Radio data-testid="site-layout-mode-scroll-radio" value="scroll">
                             <Typography.Text strong>{t('Single-page scroll')}</Typography.Text>
                             <div style={{marginTop: 4}}>
                                 <Typography.Text type="secondary">
                                     {t('All pages stacked on one URL. Clicking a nav item smooth-scrolls to the matching section; hash URLs stay shareable.')}
+                                </Typography.Text>
+                            </div>
+                        </Radio>
+                    </Card>
+                    <Card data-testid="site-layout-mode-auto-card" hoverable style={{border: vm.mode === 'auto' ? '2px solid var(--theme-colorPrimary, #1677ff)' : undefined}}>
+                        <Radio data-testid="site-layout-mode-auto-radio" value="auto">
+                            <Typography.Text strong>{t('Auto')}</Typography.Text>
+                            <div style={{marginTop: 4}}>
+                                <Typography.Text type="secondary">
+                                    {t('Defer to the safe default (currently: Tabs). Pick this when the site has no strong preference and the operator wants the platform to choose.')}
                                 </Typography.Text>
                             </div>
                         </Radio>

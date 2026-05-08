@@ -275,7 +275,7 @@ export const siteGetPublishHistory: McpTool = defineTool({
 
 export const siteSetLayoutMode: McpTool = defineTool({
     name: 'site.setLayoutMode',
-    description: 'Switch between "tabs" (each page at its own URL) and "scroll" (all pages stacked on one scrolling page). Call site.publish after.',
+    description: 'Switch between "tabs" (each page at its own URL — F1 sub-pages render here), "scroll" (all pages stacked on one scrolling page; nav uses #anchor links; SiteFooter rewrites page URLs to anchors), and "auto" (resolves to "tabs" — pick this when no preference). Call site.publish after.',
     scopes: ['write:site'],
     idempotent: true,
     gqlMutation: 'saveSiteFlags',
@@ -283,14 +283,14 @@ export const siteSetLayoutMode: McpTool = defineTool({
         type: 'object',
         required: ['mode'],
         properties: {
-            mode: {type: 'string', enum: ['tabs', 'scroll']},
+            mode: {type: 'string', enum: ['tabs', 'scroll', 'auto']},
             idempotencyKey: {type: 'string'},
         },
     },
 }, async (args, ctx) => {
     try {
         const raw = await getMongoConnection().saveSiteFlags({
-            flags: {layoutMode: args.mode as 'tabs' | 'scroll'},
+            flags: {layoutMode: args.mode as 'tabs' | 'scroll' | 'auto'},
             _session: {email: ctx.actor},
         });
         return JSON.parse(raw);

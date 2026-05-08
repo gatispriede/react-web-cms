@@ -9,7 +9,7 @@ export interface LayoutConflict {
 }
 
 interface SaveablePatch {
-    layoutMode?: 'tabs' | 'scroll';
+    layoutMode?: 'tabs' | 'scroll' | 'auto';
     inlineTranslationEdit?: boolean;
     autoHighContrast?: boolean;
     selfHostFonts?: boolean;
@@ -21,7 +21,7 @@ interface SaveablePatch {
 
 /** VM3 — Site Layout admin pane state. */
 export class LayoutViewModel {
-    mode: 'tabs' | 'scroll' = 'tabs';
+    mode: 'tabs' | 'scroll' | 'auto' = 'tabs';
     inlineEdit = false;
     autoHC = false;
     selfHostFonts = false;
@@ -49,7 +49,8 @@ export class LayoutViewModel {
         this.loading = true;
         try {
             const flags = await this.api.get();
-            this.mode = (flags as any).layoutMode === 'scroll' ? 'scroll' : 'tabs';
+            const lm = (flags as any).layoutMode;
+            this.mode = (lm === 'scroll' || lm === 'tabs' || lm === 'auto') ? lm : 'tabs';
             this.inlineEdit = Boolean((flags as any).inlineTranslationEdit);
             this.autoHC = Boolean((flags as any).autoHighContrast);
             this.selfHostFonts = Boolean((flags as any).selfHostFonts);
@@ -104,9 +105,9 @@ export class LayoutViewModel {
         }
     }
 
-    setMode(next: 'tabs' | 'scroll'): void {
+    setMode(next: 'tabs' | 'scroll' | 'auto'): void {
         const prev = this.mode;
-        void this.toggleField('layoutMode', next, prev, (v) => { this.mode = v as 'tabs' | 'scroll'; });
+        void this.toggleField('layoutMode', next, prev, (v) => { this.mode = v as 'tabs' | 'scroll' | 'auto'; });
     }
 
     setInlineEdit(next: boolean): void {

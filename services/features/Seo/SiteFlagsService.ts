@@ -3,12 +3,30 @@ import {auditStamp} from '@services/features/Audit/audit';
 import {nextVersion, requireVersion} from '@services/infra/conflict';
 import {encrypt as secretBoxEncrypt} from '@services/infra/secretBox';
 
-export type SiteLayoutMode = 'tabs' | 'scroll';
+export type SiteLayoutMode = 'tabs' | 'scroll' | 'auto';
+
+/**
+ * Resolve `'auto'` to a concrete render mode. Per the F6 spec
+ * (`docs/roadmap/site-mode-toggle.md`): default `auto` → `'tabs'`
+ * because every existing production site runs in multi-page tabs
+ * mode (F1 sub-pages is the live shape). Operators on legacy
+ * scroll-era bundles opt explicitly into `'scroll'`. The auto
+ * branch exists so site-flag docs can express "no preference, use
+ * the safe default" without inventing a magic falsy value.
+ */
+export function resolveLayoutMode(mode: SiteLayoutMode | undefined | null): 'tabs' | 'scroll' {
+    if (mode === 'scroll') return 'scroll';
+    if (mode === 'tabs') return 'tabs';
+    // `'auto'`, undefined, null, or any unknown value: default to 'tabs'.
+    return 'tabs';
+}
 
 export interface ISiteFlags {
     blogEnabled: boolean;
     /** How the public site renders navigation: classic tab-per-page or a single
-     *  stacked document with smooth-scroll anchors. */
+     *  stacked document with smooth-scroll anchors. `'auto'` resolves to
+     *  `'tabs'` (the safe default for F1 sub-pages); operators set explicit
+     *  `'scroll'` for legacy single-narrative bundles. */
     layoutMode: SiteLayoutMode;
     /** When true, editors / admins get Alt-click inline translation editing on
      *  public-site strings. Off by default — Alt-click bindings can interfere
@@ -154,7 +172,7 @@ export class SiteFlagsService {
         const value = (doc as any)?.value as Partial<ISiteFlags> | undefined;
         return {
             blogEnabled: value?.blogEnabled ?? DEFAULT_SITE_FLAGS.blogEnabled,
-            layoutMode: (value?.layoutMode === 'scroll' || value?.layoutMode === 'tabs')
+            layoutMode: (value?.layoutMode === 'scroll' || value?.layoutMode === 'tabs' || value?.layoutMode === 'auto')
                 ? value.layoutMode
                 : DEFAULT_SITE_FLAGS.layoutMode,
             inlineTranslationEdit: typeof value?.inlineTranslationEdit === 'boolean'
@@ -198,7 +216,7 @@ export class SiteFlagsService {
         requireVersion(current, existingVersion, expectedVersion, 'Site flags');
         const next: ISiteFlags = {
             blogEnabled: typeof flags.blogEnabled === 'boolean' ? flags.blogEnabled : current.blogEnabled,
-            layoutMode: (flags.layoutMode === 'scroll' || flags.layoutMode === 'tabs')
+            layoutMode: (flags.layoutMode === 'scroll' || flags.layoutMode === 'tabs' || flags.layoutMode === 'auto')
                 ? flags.layoutMode
                 : current.layoutMode,
             inlineTranslationEdit: typeof flags.inlineTranslationEdit === 'boolean'

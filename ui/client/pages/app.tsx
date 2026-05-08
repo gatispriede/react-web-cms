@@ -748,6 +748,7 @@ class App extends React.Component<IHomeProps> {
                             hasPosts={this.state.hasPosts}
                             blogEnabled={this.state.blogEnabled}
                             t={this.props.t as any}
+                            layoutMode={this.state.layoutMode}
                         />
                     </Spin>
                 </ConfigProvider>
