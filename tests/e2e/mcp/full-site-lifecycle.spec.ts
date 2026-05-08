@@ -5,15 +5,24 @@
  * (the 10-step parity tour) without any UI clicks past the token
  * issuance. If this is green, MCP is "real-world-ready" for v1.
  *
- * SKIPPED in CI today — the Windows worker fanout for E2E is broken
- * (see docs/roadmap/mcp-real-world-ready.md). The spec compiles
- * (typecheck passes) and is ready to un-skip the moment the worker
- * issue is resolved.
+ * Wave 3 F8-e2e: un-skipped. The previous suite-level `test.skip(true)`
+ * was blocking CI even when the underlying issue ("Windows worker
+ * fanout broken") only affects local Windows dev. Linux CI runners
+ * (where prod deploys live) handle the worker fanout cleanly. We
+ * keep the spec honest by replacing the unconditional skip with a
+ * conditional one:
+ *   - skipped on `process.platform === 'win32'` (local dev) until the
+ *     adminStorageState auth fixture's 30s sign-in timeout on Windows
+ *     is resolved (see mobile-shell.spec.ts agent report).
+ *   - runs everywhere else.
  */
 import {test, expect} from '../fixtures/auth';
 
 test.describe('MCP — full site lifecycle', () => {
-    test.skip(true, 'Windows worker fanout broken; un-skip once resolved.');
+    test.skip(
+        process.platform === 'win32',
+        'adminStorageState auth fixture times out on Windows local dev; CI (Linux) runs the spec. See tests/e2e/admin/mobile-shell.spec.ts for the same issue.',
+    );
 
     test('drives a site from zero to published via the MCP tool surface', async ({adminPage, serverUrl}) => {
         // 1. Issue an MCP token (admin step). Resolved by the test

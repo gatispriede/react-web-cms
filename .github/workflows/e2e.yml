@@ -1,10 +1,21 @@
 name: e2e
 
-# Manual-only for now — auto triggers (push/PR) are disabled until the
-# Playwright suite stabilises. Re-enable by adding back:
-#   pull_request: { branches: [master] }
-#   push:         { branches: [master] }
+# Wave 3 F8-e2e: re-enabled PR + master push triggers. The smoke job
+# below runs `tests/e2e/smoke/cv-bundle-chain.spec.ts` only — the
+# heavier MCP full-lifecycle spec lives at tests/e2e/mcp/ and is
+# guarded with a `process.platform === 'win32'` skip so local dev
+# stays green. A separate manual run via workflow_dispatch can target
+# the broader suite when needed.
+#
+# Was manual-only since mcp-rollout #10 — flakes during the MCP
+# rollout consumed more attention than they caught. The suite has
+# been stabilised since (see tests/e2e/mcp/full-site-lifecycle.spec.ts
+# header).
 on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
   workflow_dispatch:
 
 jobs:
