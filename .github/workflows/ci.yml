@@ -128,7 +128,7 @@ jobs:
   # deployment goes through Kamal's container lifecycle: pull the new
   # image, boot the new container alongside the old, healthcheck, drop
   # old. Container env comes from `/opt/cms/.env` on the droplet (see
-  # `config/deploy.funisimo.yml` `options.env-file`).
+  # `config/deploy.yml` `options.env-file`).
   #
   # Post-deploy hook (`.kamal/hooks/post-deploy`) attaches the
   # `cms_front-end` network (kamal v2 limit: `options.network` takes
@@ -174,7 +174,12 @@ jobs:
           # (the `ghcr-push:` job tagged it as `:latest` + `:<sha>`).
           # `--version` makes the deploy reproducible — kamal pulls that
           # exact tag rather than whatever `:latest` happens to point to.
-          kamal deploy --destination=funisimo --version=${{ github.sha }}
+          # No --destination flag: we only have one Kamal target
+          # (`config/deploy.yml`). Skyclimber stays on the legacy bash
+          # path until it gets its own DO API key + Kamal cutover, at
+          # which point we'll split deploy.yml → deploy.funisimo.yml +
+          # deploy.skyclimber.yml with a shared base.
+          kamal deploy --version=${{ github.sha }}
 
   # ----------------------------------------------------------------
   # Legacy ssh+rsync deploy. Funisimo is `auto: false` since 2026-05-08
@@ -216,7 +221,7 @@ jobs:
             seamless: false
             # `auto: false` since 2026-05-08 — funisimo is now served by
             # the Kamal-managed `cms-web` container (see
-            # `config/deploy.funisimo.yml` + `docs/runbooks/kamal-deploy.md`).
+            # `config/deploy.yml` + `docs/runbooks/kamal-deploy.md`).
             # The legacy ssh+rsync deploy still resolves here for
             # `workflow_dispatch --target=funisimo.pro` runs (emergency
             # fallback if Kamal needs backing out), but no longer fires

@@ -1,6 +1,6 @@
 # Kamal deploy config — funisimo.pro.
 #
-# Read by `kamal deploy --destination=funisimo` from CI (and locally
+# Read by `kamal deploy` from CI (and locally
 # during cutover). Replaces the inline ssh script in `.github/workflows/
 # ci.yml` for funisimo only — skyclimber stays on the legacy bash deploy
 # until funisimo runs stable on Kamal for ≥ 1 release cycle.

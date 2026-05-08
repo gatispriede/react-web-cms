@@ -110,8 +110,8 @@ terraform apply -target=module.funisimo.digitalocean_droplet.app
 ssh root@$(terraform output -raw funisimo_ip) -- 'cloud-init status --wait'
 
 # Then ship the latest image via Kamal:
-kamal setup --destination=funisimo
-kamal deploy --destination=funisimo
+kamal setup
+kamal deploy
 
 # Restore content:
 scp /path/to/latest-bundle.zip root@$(terraform output -raw funisimo_ip):/srv/uploads/bundles/

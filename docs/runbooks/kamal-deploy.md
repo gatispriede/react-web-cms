@@ -11,12 +11,12 @@ The legacy deploy was: GHA → ssh into droplet → rsync sources → `docker co
 Kamal replaces that with:
 
 1. **CI builds** the image (`infra/AppDockerfile`) in `ghcr-push:` job → pushes `ghcr.io/gatispriede/cms:<sha>` to GHCR.
-2. **CI runs `kamal deploy --destination=funisimo`** → Kamal SSH-connects to the droplet, pulls the image, runs a new container on the `cms_back-end` docker network alongside the legacy `front`, health-checks the new container.
+2. **CI runs `kamal deploy`** → Kamal SSH-connects to the droplet, pulls the image, runs a new container on the `cms_back-end` docker network alongside the legacy `front`, health-checks the new container.
 3. **Operator flips Caddy upstream** by editing `/opt/cms/.env` → `ACTIVE_UPSTREAM=cms-web-<version>:80` and reloading Caddy. Drains gracefully in-flight requests on the legacy container.
 
 **Operator decision 2026-05-08, option A**: kamal-proxy is **not used**. Caddy stays the public front (TLS termination, `/uploads/*`, `/design-v2/*`, MCP routing, SWR cache). Kamal handles image deploy + container swap only. Avoids the port-collision / extra-layer overhead of running kamal-proxy alongside Caddy on the same droplet.
 
-The `proxy: false` line in `config/deploy.funisimo.yml` is what disables kamal-proxy; container is registered on `cms_back-end` via `servers.web.options.network`.
+The `proxy: false` line in `config/deploy.yml` is what disables kamal-proxy; container is registered on `cms_back-end` via `servers.web.options.network`.
 
 ## Setup (operator, one-time per droplet)
 
@@ -37,26 +37,26 @@ export INITIAL_ADMIN_EMAIL='you@example.com'
 export INITIAL_ADMIN_PASSWORD='...'
 
 # 4. Bootstrap kamal-proxy on the droplet
-kamal setup --destination=funisimo
+kamal setup
 
 # 5. First deploy
-kamal deploy --destination=funisimo
+kamal deploy
 ```
 
-Acceptance: `https://funisimo.pro/` serves the new commit within ~30 s (vs ~6-8 min on the legacy path). `kamal app logs --destination=funisimo --follow` tails the running container.
+Acceptance: `https://funisimo.pro/` serves the new commit within ~30 s (vs ~6-8 min on the legacy path). `kamal app logs --follow` tails the running container.
 
 ## Daily ops
 
 | Goal | Command |
 |------|---------|
-| Deploy current HEAD | `kamal deploy --destination=funisimo` |
-| Deploy a specific commit | `kamal deploy --destination=funisimo --version=<sha>` |
-| Roll back one deploy | `kamal rollback --destination=funisimo` |
-| Tail logs | `kamal app logs --destination=funisimo --follow` (alias: `kamal logs`) |
-| Open node REPL in container | `kamal console --destination=funisimo` |
-| Open shell in container | `kamal shell --destination=funisimo` |
-| Restart the container | `kamal app boot --destination=funisimo` |
-| Stop serving (drain) | `kamal app stop --destination=funisimo` |
+| Deploy current HEAD | `kamal deploy` |
+| Deploy a specific commit | `kamal deploy --version=<sha>` |
+| Roll back one deploy | `kamal rollback` |
+| Tail logs | `kamal app logs --follow` (alias: `kamal logs`) |
+| Open node REPL in container | `kamal console` |
+| Open shell in container | `kamal shell` |
+| Restart the container | `kamal app boot` |
+| Stop serving (drain) | `kamal app stop` |
 
 `--destination=` repeats are tedious. Set a per-shell default:
 
@@ -69,7 +69,7 @@ export KAMAL_DESTINATION=funisimo
 `kamal rollback` flips kamal-proxy back to the previous slot — instant, no rebuild needed. The previous container is still on the droplet (Kamal keeps the last 5 by default), so the rollback is just an upstream switch.
 
 ```bash
-kamal rollback --destination=funisimo
+kamal rollback
 # Verify
 curl -sf https://funisimo.pro/api/healthz | head -1
 ```
@@ -86,7 +86,7 @@ container. The cutover sequence below is what flips public traffic:
 
 1. **GHCR push lands first** — `ghcr-push:` CI job (or local
    `docker push`) pushes images on every master push.
-2. **Kamal deploy** — `kamal deploy --destination=funisimo` boots a
+2. **Kamal deploy** — `kamal deploy` boots a
    new container on `cms_back-end`. Legacy `front` keeps serving.
 3. **Attach the front-end network** — `kamal deploy` puts the new
    container on `cms_back-end` only (one-network limit in `options`).
@@ -112,7 +112,7 @@ container. The cutover sequence below is what flips public traffic:
 5. **One release cycle stable** — leave funisimo on Kamal for ≥ 7 days,
    monitor Errors panel + smoke checks. Skyclimber stays on the legacy
    path.
-6. **Skyclimber cutover** — copy `config/deploy.funisimo.yml` to
+6. **Skyclimber cutover** — copy `config/deploy.yml` to
    `config/deploy.skyclimber.yml`, swap hosts + secrets, repeat 1-5.
 7. **Retire legacy** — delete `tools/legacy/blue-green-deploy.sh`, the
    `deploy:` matrix in `ci.yml`, the `app-blue` / `app-green` compose
@@ -127,7 +127,7 @@ container. The cutover sequence below is what flips public traffic:
 
 Kamal reads runtime secrets from the host env at deploy time — set them in CI (`secrets.SECRET_NAME` → `env: SECRET_NAME: ${{ secrets.SECRET_NAME }}`) and they get forwarded to the droplet via Kamal's secret-piping. Never commit them, never bake them into the image.
 
-The `config/deploy.funisimo.yml` `env.secret:` list is what Kamal expects from the host at deploy time:
+The `config/deploy.yml` `env.secret:` list is what Kamal expects from the host at deploy time:
 
 - `MONGODB_URI`
 - `MCP_ALLOWED_CIDR`
@@ -144,7 +144,7 @@ Adding a new secret: append to `env.secret:` in the deploy YAML, set the GHA sec
 The `/api/healthz` endpoint returns 503 until the app finishes loading the schema + connecting to mongo. Cold-start budget is ~30 s after the multi-stage prebuilt image lands; the deploy YAML allows 60 × 2s = 2 min before failing. If healthchecks consistently exceed that:
 
 ```bash
-kamal app logs --destination=funisimo --lines=200
+kamal app logs --lines=200
 ```
 
 Common causes: missing `MONGODB_URI` secret, mongo unreachable, `next start` couldn't find `.next/` (multi-stage build issue — check `infra/AppDockerfile`).
@@ -155,10 +155,10 @@ Means GHCR auth is broken. Check `GHCR_PAT` is set + has `read:packages` scope.
 
 ### Caddy returns 502
 
-Caddy is reverse-proxying to `kamal-proxy:8080` but kamal-proxy isn't running. Check `kamal app details --destination=funisimo` for the proxy state.
+Caddy is reverse-proxying to `kamal-proxy:8080` but kamal-proxy isn't running. Check `kamal app details` for the proxy state.
 
 ## Related
 
 - [`docs/runbooks/terraform.md`](terraform.md) — provision the droplet that Kamal deploys to.
 - [`docs/runbooks/ghcr.md`](ghcr.md) — the image registry Kamal pulls from.
-- [`config/deploy.funisimo.yml`](../../config/deploy.funisimo.yml) — Kamal config file with inline notes on every block.
+- [`config/deploy.yml`](../../config/deploy.yml) — Kamal config file with inline notes on every block.

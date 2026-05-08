@@ -83,3 +83,4 @@ yarn-error.log*
 # ── Legacy design reference assets (root /public/, not ui/client/public/) ────
 /public/**
 tmp/
+/temp.md

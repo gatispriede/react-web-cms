@@ -76,7 +76,7 @@ Everything below ships as one cohesive deliverable. Internal ordering is executi
 - GHCR free for public repos; ~$0-3/mo for private at our scale
 
 **App deploy (Kamal)**
-- `config/deploy.funisimo.yml` + `config/deploy.skyclimber.yml`
+- `config/deploy.yml` + `config/deploy.skyclimber.yml`
 - `kamal setup` provisions kamal-proxy on each droplet (binds 8080; Caddy stays on 80/443 → reverse-proxies to kamal-proxy)
 - `kamal deploy` replaces `tools/blue-green-deploy.sh`
 - Kamal's blue-green slot logic supersedes ours; `ACTIVE_UPSTREAM` env var goes away
@@ -93,7 +93,7 @@ Everything below ships as one cohesive deliverable. Internal ordering is executi
 
 **New**
 - `terraform/` — providers, droplets, DNS, firewall, reserved IPs, state backend config
-- `config/deploy.funisimo.yml`, `config/deploy.skyclimber.yml` — Kamal configs
+- `config/deploy.yml`, `config/deploy.skyclimber.yml` — Kamal configs
 - `infra/AppDockerfile` adjustments for GHCR push (multi-stage, tag-aware)
 - `tools/legacy/blue-green-deploy.sh` — moved from `tools/`, kept one cycle for revert path
 
@@ -112,7 +112,7 @@ Everything below ships as one cohesive deliverable. Internal ordering is executi
 
 1. `terraform plan` against live infra returns "no changes" — every existing droplet, IP, firewall, and DNS record is reflected in code.
 2. CI build pushes a tagged image to GHCR; `docker run ghcr.io/gatispriede/cms:<sha>` boots cleanly locally.
-3. `kamal deploy --destination=funisimo` ships a new commit end-to-end in under 90 seconds (vs current ~6-8 minutes).
+3. `kamal deploy` ships a new commit end-to-end in under 90 seconds (vs current ~6-8 minutes).
 4. `kamal deploy --destination=skyclimber` does the same.
 5. Caddy still serves `/uploads/*`, `/design-v2/*`, and TLS unchanged — no public regression.
 6. A deliberate `kamal rollback` returns to the previous deployed slot under a minute.
