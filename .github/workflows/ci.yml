@@ -160,6 +160,16 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
 
+      - name: Ensure `kamal` docker network exists on funisimo
+        run: |
+          # Kamal v2.11 hardcodes `--network kamal` in
+          # `lib/kamal/commands/app.rb:21` — no deploy.yml override.
+          # The network is auto-created by `kamal setup`, but we don't
+          # run setup (it tries to boot kamal-proxy which we don't want).
+          # Create the network manually here; idempotent.
+          ssh -o StrictHostKeyChecking=accept-new root@funisimo.pro \
+            "docker network inspect kamal >/dev/null 2>&1 || docker network create kamal"
+
       - name: Configure SSH for funisimo.pro
         run: |
           # Skip strict host-key checking for funisimo deploy targets.
@@ -199,14 +209,15 @@ jobs:
           # `:latest` happens to point to.
           kamal app boot --version=${{ github.sha }}
 
-      - name: Attach front-end network + public smoke
+      - name: Attach back-end + front-end networks + public smoke
         run: |
-          # `kamal app boot` puts cms-web on cms_back-end (deploy.yml
-          # `options.network`). Caddy lives on cms_front-end — attach
-          # the second network so `cms-web:80` resolves from Caddy.
-          # `app boot` doesn't trigger `post-deploy` hook so this runs
-          # inline.
-          ssh root@funisimo.pro "docker network connect cms_front-end cms-web 2>/dev/null || true"
+          # `kamal app boot` puts cms-web on the `kamal` network (hardcoded).
+          # Real connectivity comes from the existing compose networks:
+          #   - cms_back-end → mongo, standalone-graphql, mcp
+          #   - cms_front-end → caddy
+          # Attach both so MONGODB_URI=mongodb://mongodb:27017 resolves
+          # AND Caddy can reverse-proxy by `cms-web:80`.
+          ssh root@funisimo.pro "docker network connect cms_back-end cms-web 2>/dev/null || true; docker network connect cms_front-end cms-web 2>/dev/null || true"
 
           # Wait for the new container to settle, smoke the public path.
           for i in 1 2 3 4 5 6 7 8; do
