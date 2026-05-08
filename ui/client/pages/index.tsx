@@ -1,5 +1,5 @@
 import React from 'react';
-import type {GetStaticProps} from 'next';
+import type {GetServerSideProps} from 'next';
 import {useTranslation} from 'next-i18next/pages';
 import {serverSideTranslations} from 'next-i18next/pages/serverSideTranslations';
 import {usePathname} from 'next/navigation';
@@ -28,11 +28,21 @@ const Index: React.FC<Props> = ({initialData, showLanding}) => {
     );
 };
 
-export const getStaticProps: GetStaticProps<Props> = async ({locale}) => {
+// `/` was previously rendered via `getStaticProps + revalidate: 3600`
+// but the production Docker build runs `tools/docker-prebuild.js` against
+// an empty in-memory Mongo (the CMS data lives only on the running
+// droplet at deploy time), which baked `showLanding=true` into the image.
+// First hour after every deploy served the marketing landing instead of
+// the configured site content; ISR eventually flipped it but the
+// regression window was unacceptable. Switch to `getServerSideProps` so
+// the `showLanding` decision happens against runtime Mongo on every
+// request — no caching, but the page is cheap (one initialData fetch)
+// and Caddy's SWR cache layer (production prod_cache feature) covers
+// repeat-visitor performance.
+export const getServerSideProps: GetServerSideProps<Props> = async ({locale}) => {
     const initialData = await fetchInitialPageData();
-    // Fresh install: no published pages (and therefore nothing meaningful to
-    // show on `/`). Defer to the marketing landing until the user authors
-    // their first page. After publish, ISR revalidation flips this back.
+    // Fresh install (no Navigation entries): show the marketing landing.
+    // After the first page is published, this flips automatically.
     const showLanding = (initialData.pages?.length ?? 0) === 0;
     return {
         props: {
@@ -40,7 +50,6 @@ export const getStaticProps: GetStaticProps<Props> = async ({locale}) => {
             showLanding,
             ...(await serverSideTranslations(locale ?? 'en', ['app', 'common'])),
         },
-        revalidate: 3600,
     };
 };
 

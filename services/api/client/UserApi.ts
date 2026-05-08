@@ -48,9 +48,20 @@ export class UserApi {
         }
     }
 
+    /** Strip non-schema fields (grants) before sending — `InUser` in
+     *  `services/api/schema.graphql` doesn't accept `grants`; that's set
+     *  via separate Permissions API calls. The TypeScript `InUser` shape
+     *  carries the field for read-side convenience but a write-side
+     *  payload must drop it or the GraphQL endpoint rejects with 400
+     *  "Variable $... got invalid value". */
+    private toMutationPayload(user: InUser): Record<string, unknown> {
+        const {grants: _grants, ...rest} = user as InUser & {grants?: unknown};
+        return rest;
+    }
+
     async addUser(user: InUser): Promise<{id?: string; error?: string}> {
         try {
-            const raw = await resolve(({mutation}) => mutation.mongo.addUser({user: user as any}));
+            const raw = await resolve(({mutation}) => mutation.mongo.addUser({user: this.toMutationPayload(user) as any}));
             return JSON.parse(raw || '{}').createUser ?? JSON.parse(raw || '{}');
         } catch (err) {
             return {error: String(err)};
@@ -59,7 +70,7 @@ export class UserApi {
 
     async updateUser(user: InUser): Promise<{id?: string; error?: string}> {
         try {
-            const raw = await resolve(({mutation}) => mutation.mongo.updateUser({user: user as any}));
+            const raw = await resolve(({mutation}) => mutation.mongo.updateUser({user: this.toMutationPayload(user) as any}));
             return JSON.parse(raw || '{}').updateUser ?? JSON.parse(raw || '{}');
         } catch (err) {
             return {error: String(err)};
