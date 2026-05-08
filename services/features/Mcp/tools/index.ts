@@ -21,6 +21,7 @@ import {ORDER_TOOLS} from './orders';
 import {DIAGNOSTICS_TOOLS} from './diagnostics';
 import {DISCOVERY_TOOLS} from './discovery';
 import {EMAIL_TOOLS} from './email';
+import {ANCHOR_TOOLS} from './anchors';
 
 /**
  * Out of scope (defer):
@@ -51,6 +52,7 @@ export const ALL_MCP_TOOLS: McpTool[] = [
     ...DIAGNOSTICS_TOOLS,
     ...DISCOVERY_TOOLS,
     ...EMAIL_TOOLS,
+    ...ANCHOR_TOOLS,
 ];
 
 /**
