@@ -1,12 +1,20 @@
+import React from 'react';
 import {AdminUILoader, AdminPaneDescriptor} from '@admin/lib/loaders/AdminUILoader';
-import Theme from './Theme';
-import ThemeSimplifiedView from './ThemeSimplifiedView';
 
 /**
  * Themes pane. Both modes share `ThemesViewModel` (admin-ui-modes
  * decision 4). Simplified is a preset gallery — pick one, click
- * Activate. Advanced is the token editor with color / font pickers.
+ * Activate. Advanced composes the simplified base (per
+ * `aui-mode-hierarchy.md` 2026-05-07) and adds the token editor with
+ * color / font pickers.
+ *
+ * Both variants are `React.lazy`-imported so simplified-mode users
+ * never download the advanced bundle (and vice versa). The shell
+ * dispatcher wraps the active pane in `<Suspense>`.
  */
+const ThemeAdvanced = React.lazy(() => import('./Theme'));
+const ThemeSimplified = React.lazy(() => import('./ThemeSimplifiedView'));
+
 export class ThemeAdminUILoader extends AdminUILoader {
     readonly id = 'themes';
     readonly displayName = 'Themes';
@@ -16,8 +24,8 @@ export class ThemeAdminUILoader extends AdminUILoader {
         title: 'Theme',
         route: '/admin/client-config/themes',
         modes: {
-            advanced: Theme,
-            simplified: ThemeSimplifiedView,
+            advanced: ThemeAdvanced,
+            simplified: ThemeSimplified,
         },
     };
 }

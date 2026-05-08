@@ -1,4 +1,4 @@
-import type {ComponentType} from 'react';
+import type {ComponentType, LazyExoticComponent} from 'react';
 import type {EItemType} from '@enums/EItemType';
 import type {TFunction} from 'i18next';
 import {UILoader} from '@client/lib/loaders/UILoader';
@@ -18,10 +18,20 @@ export interface AdminPaneDescriptor {
     readonly icon?: ComponentType<{className?: string}>;
     /** Admin route, e.g. `/admin/content/products`. */
     readonly route: string;
-    /** Per-mode view components. */
+    /**
+     * Per-mode view components. Either a plain `ComponentType` or a
+     * `React.lazy()`-wrapped component — the shell wraps the dispatch
+     * site in `<Suspense>` so lazy variants stream in on first render
+     * (admin-ui-modes 2026-05-07: simplified-base / advanced-extends
+     * lazy-load convention).
+     */
     readonly modes: {
-        readonly simplified?: ComponentType<Record<string, unknown>>;
-        readonly advanced: ComponentType<Record<string, unknown>>;
+        readonly simplified?:
+            | ComponentType<Record<string, unknown>>
+            | LazyExoticComponent<ComponentType<Record<string, unknown>>>;
+        readonly advanced:
+            | ComponentType<Record<string, unknown>>
+            | LazyExoticComponent<ComponentType<Record<string, unknown>>>;
     };
     /**
      * Default to `false` for any write/mutation tool surfaced via MCP.

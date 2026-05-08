@@ -1,6 +1,7 @@
 import AdminApp from "./AdminApp";
 import Head from "next/head";
-import React, {useEffect, useState, ReactNode} from "react";
+import React, {useEffect, useState, ReactNode, Suspense} from "react";
+import {Spin} from "antd";
 import {Session} from "next-auth";
 import AdminSettings from "./AdminSettings";
 import AdminSettingsLanguages from "@admin/features/Languages/Languages";
@@ -176,7 +177,14 @@ const UserStatusBarInner = ({session, view, tApp}: {
             const Pane = (adminMode === 'simplified' && fromRegistry.modes.simplified)
                 ? fromRegistry.modes.simplified
                 : fromRegistry.modes.advanced;
-            return <Pane/>;
+            // Pane may be a `React.lazy()` import — wrap in Suspense so
+            // the chunk streams in on first render. Fallback is a small
+            // Spin; the swap is short-lived.
+            return (
+                <Suspense fallback={<div style={{padding: 24, textAlign: 'center'}}><Spin/></div>}>
+                    <Pane/>
+                </Suspense>
+            );
         }
         switch (view) {
             // Legacy / utility views
