@@ -66,6 +66,17 @@ resource "digitalocean_droplet" "app" {
   ipv6       = true
   monitoring = true
 
+  lifecycle {
+    # The existing funisimo droplet was provisioned manually before
+    # terraform existed — it doesn't have `ssh_keys`, `user_data`, or
+    # the same `image` slug recorded against it. Without `ignore_changes`,
+    # terraform plan wants to REPLACE the live droplet to align (which
+    # would destroy production). For freshly terraform-applied droplets
+    # these fields are still honoured at creation time; ignore_changes
+    # only kicks in after the resource exists.
+    ignore_changes = [ssh_keys, user_data, image]
+  }
+
   # cloud-init bootstrap — Docker + ufw + fail2ban so a freshly-
   # provisioned droplet can run `kamal setup` immediately. Mirrors the
   # apt steps the legacy bash deploy used to run inline; moving them
@@ -105,12 +116,16 @@ resource "digitalocean_droplet" "app" {
 
 # ---------------------------------------------------------------- reserved IP
 
+# DO provider supports two patterns: (a) `digitalocean_reserved_ip` with
+# `droplet_id` set inline, or (b) a separate `digitalocean_reserved_ip_
+# assignment` resource. (a) is cleaner — single resource owns the IP +
+# its current assignment, and importing is one ID. (b) caused a plan
+# diff against the existing funisimo IP because the live IP carries
+# `droplet_id=565525068` but our (b)-style declaration omitted it,
+# making terraform want to null it out then re-assign via the separate
+# resource (destructive). Use (a) instead.
 resource "digitalocean_reserved_ip" "app" {
-  region = var.region
-}
-
-resource "digitalocean_reserved_ip_assignment" "app" {
-  ip_address = digitalocean_reserved_ip.app.ip_address
+  region     = var.region
   droplet_id = digitalocean_droplet.app.id
 }
 

@@ -23,8 +23,3 @@ import {
   to = module.funisimo.digitalocean_reserved_ip.app
   id = "139.59.205.140"
 }
-
-import {
-  to = module.funisimo.digitalocean_reserved_ip_assignment.app
-  id = "139.59.205.140,565525068"
-}
