@@ -1,6 +1,7 @@
 import {McpTool} from '../types';
 import {enforceModeForTool} from '../modeEnforcement';
 import {defineTool, runBatch} from './_shared';
+import {scanPageSeo} from '@services/features/Seo/PageSeoStatusService';
 
 const sessionFor = (actor: string) => ({kind: 'admin' as const, role: 'admin' as const, email: actor});
 
@@ -11,10 +12,32 @@ function safeParse(s: string): unknown {
 export const pageList: McpTool = defineTool({
     // SAFE: not a GraphQL mutation
     name: 'page.list',
-    description: 'Returns the navigation tree (every page) plus high-level metadata.',
+    description: 'Returns the navigation tree (every page) plus high-level metadata. Set `includeSeoStatus:true` to also annotate each page with `hasDescription`, `hasOgImage`, `hasKeywords`, `hasAuthor`, and `missingFields[]`.',
     scopes: ['read:content'],
-    inputSchema: {type: 'object', properties: {}},
-}, async (_args, ctx) => ctx.services.navigationService.getNavigationCollection());
+    inputSchema: {
+        type: 'object',
+        properties: {
+            includeSeoStatus: {type: 'boolean', description: 'When true, each page is annotated with per-field SEO completeness flags + a hyphenated `missingFields[]` list (description, og-image, keywords, author).'},
+        },
+    },
+}, async (args, ctx) => {
+    const navs = await ctx.services.navigationService.getNavigationCollection();
+    if (!args.includeSeoStatus) return navs;
+    const list = (navs ?? []) as Array<{page: string; seo?: any}>;
+    const status = scanPageSeo(list.map(n => ({page: n.page, seo: n.seo ?? null})));
+    const byPage = new Map(status.map(s => [s.page, s]));
+    return list.map(n => {
+        const s = byPage.get(n.page);
+        return {
+            ...n,
+            hasDescription: s?.hasDescription ?? false,
+            hasOgImage: s?.hasOgImage ?? false,
+            hasKeywords: s?.hasKeywords ?? false,
+            hasAuthor: s?.hasAuthor ?? false,
+            missingFields: s?.missingFields ?? [],
+        };
+    });
+});
 
 export const pageGet: McpTool = defineTool({
     // SAFE: not a GraphQL mutation

@@ -16,6 +16,7 @@
 import {McpTool} from '../types';
 import {enforceModeForTool} from '../modeEnforcement';
 import {defineTool, runBatch} from './_shared';
+import {scanUserActivity} from '@services/features/Users/UserActivityService';
 
 function safeParse(s: unknown): unknown {
     if (typeof s !== 'string') return s;
@@ -28,10 +29,12 @@ function redact(u: any): any {
     return rest;
 }
 
+const THIRTY_DAYS_MS_USERS = 30 * 24 * 60 * 60 * 1000;
+
 export const userList: McpTool = defineTool({
     // SAFE: not a GraphQL mutation — direct service read
     name: 'user.list',
-    description: 'List admin-side users (no customers). Password hashes are redacted. Optional `role` filter.',
+    description: 'List admin-side users (no customers). Password hashes are redacted. Optional `role` filter. Set `includeActivity:true` to also annotate each user with `lastLoginAt`, `editsLast30d`, and `pagesEdited[]` (joined against the audit log).',
     scopes: ['admin:auth'],
     inputSchema: {
         type: 'object',
@@ -39,6 +42,7 @@ export const userList: McpTool = defineTool({
             limit: {type: 'integer', minimum: 1, maximum: 500},
             offset: {type: 'integer', minimum: 0},
             role: {type: 'string', enum: ['admin', 'editor', 'viewer']},
+            includeActivity: {type: 'boolean', description: 'When true, joins each user against the last-30-day audit tail and adds `lastLoginAt`, `editsLast30d`, `pagesEdited[]`.'},
         },
     },
 }, async (args, ctx) => {
@@ -48,7 +52,38 @@ export const userList: McpTool = defineTool({
         : all;
     const offset = typeof args.offset === 'number' ? args.offset : 0;
     const limit = typeof args.limit === 'number' ? args.limit : filtered.length;
-    return filtered.slice(offset, offset + limit).map(redact);
+    const page = filtered.slice(offset, offset + limit).map(redact);
+    if (!args.includeActivity) return page;
+    // Pull the recent audit tail and project per-user activity.
+    let auditRows: Array<any> = [];
+    try {
+        const auditSvc = (ctx.services as any).auditService;
+        if (auditSvc?.list) {
+            const since = new Date(Date.now() - THIRTY_DAYS_MS_USERS);
+            const res = await auditSvc.list({since, limit: 500});
+            auditRows = (res?.rows ?? []).map((r: any) => ({
+                actor: r.actor,
+                collection: r.collection,
+                tag: r.tag,
+                createdAt: r.at instanceof Date ? r.at.toISOString() : (typeof r.at === 'string' ? r.at : r.createdAt),
+                diff: r.diff,
+            }));
+        }
+    } catch { /* swallow — activity is best-effort */ }
+    const activity = scanUserActivity({
+        users: page.map((u: any) => ({email: u.email, lastLoginAt: u.lastLoginAt ?? null})),
+        auditRows,
+    });
+    const byEmail = new Map(activity.map(a => [a.email, a]));
+    return page.map((u: any) => {
+        const a = byEmail.get(u.email);
+        return {
+            ...u,
+            lastLoginAt: a?.lastLoginAt ?? u.lastLoginAt ?? null,
+            editsLast30d: a?.editsLast30d ?? 0,
+            pagesEdited: a?.pagesEdited ?? [],
+        };
+    });
 });
 
 export const userGet: McpTool = defineTool({

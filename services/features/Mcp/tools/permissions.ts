@@ -10,32 +10,59 @@
 import {McpTool} from '../types';
 import {enforceModeForTool} from '../modeEnforcement';
 import {defineTool, runBatch} from './_shared';
+import {resolvePermissions} from '@services/features/Permissions/PermissionResolver';
 
 export const permissionList: McpTool = defineTool({
     // SAFE: not a GraphQL mutation — direct service read
     name: 'permission.list',
-    description: 'List resource-scoped permission grants. Optional filter by `userId` and/or `scope`.',
+    description: 'List resource-scoped permission grants. Optional filter by `userId` and/or `scope`. Set `includeResources:true` to also annotate each grant with a human-readable `resourceLabel` (page name, "module on <page>", or null).',
     scopes: ['admin:auth'],
     inputSchema: {
         type: 'object',
         properties: {
             userId: {type: 'string'},
             scope: {type: 'string'},
+            includeResources: {type: 'boolean', description: 'When true, joins grants against pages + sections and adds `resourceLabel` to every row.'},
         },
     },
 }, async (args, ctx) => {
+    let rows: any[];
     if (typeof args.userId === 'string' && args.userId.length > 0) {
-        const rows = await ctx.services.permissionService.listForUser(args.userId);
-        return typeof args.scope === 'string'
-            ? rows.filter((r: any) => r.scope === args.scope)
-            : rows;
+        rows = await ctx.services.permissionService.listForUser(args.userId);
+        if (typeof args.scope === 'string') rows = rows.filter((r: any) => r.scope === args.scope);
+    } else {
+        const all = await ctx.services.permissionService['col']
+            ?.find({}, {projection: {_id: 0}}).toArray() ?? [];
+        rows = typeof args.scope === 'string'
+            ? all.filter((r: any) => r.scope === args.scope)
+            : all;
     }
-    // Whole-collection read — admin-only diagnostic surface.
-    const all = await ctx.services.permissionService['col']
-        ?.find({}, {projection: {_id: 0}}).toArray() ?? [];
-    return typeof args.scope === 'string'
-        ? all.filter((r: any) => r.scope === args.scope)
-        : all;
+    if (!args.includeResources) return rows;
+    const pages = (await ctx.services.navigationService?.getNavigationCollection?.()) ?? [];
+    const moduleIds = rows
+        .filter((r: any) => r.scope === 'module' && typeof r.resourceId === 'string')
+        .map((r: any) => r.resourceId);
+    const sectionDocs = moduleIds.length
+        ? (await ctx.services.navigationService?.getSections?.(moduleIds)) ?? []
+        : [];
+    const resolved = resolvePermissions({
+        grants: rows.map((r: any) => ({
+            id: String(r.id ?? ''),
+            userId: String(r.userId ?? ''),
+            scope: String(r.scope ?? ''),
+            resourceId: r.resourceId ?? null,
+        })),
+        pages: (pages as Array<{id: string; page: string}>).map(p => ({id: p.id, page: p.page})),
+        sections: (sectionDocs as Array<{id?: string; page?: string}>)
+            .filter(d => typeof d.id === 'string')
+            .map(d => ({id: d.id as string, page: d.page})),
+    });
+    const byKey = new Map(resolved.map(r => [`${r.userId}:${r.scope}:${r.resourceId ?? ''}`, r]));
+    return rows.map((r: any) => {
+        const key = `${r.userId}:${r.scope}:${r.resourceId ?? ''}`;
+        const found = byKey.get(key);
+        return {...r, resourceLabel: found?.resourceLabel ?? null};
+    });
 });
 
 export const permissionGrant: McpTool = defineTool({

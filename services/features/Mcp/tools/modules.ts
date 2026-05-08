@@ -16,6 +16,7 @@ import {EStyle} from '@enums/EStyle';
 import {McpTool} from '../types';
 import {enforceModeForTool} from '../modeEnforcement';
 import {defineTool, runBatch} from './_shared';
+import {scanModuleUsage} from '@services/features/Modules/ModuleUsageService';
 
 const sessionFor = (actor: string) => ({kind: 'admin' as const, role: 'admin' as const, email: actor});
 
@@ -68,13 +69,47 @@ const moduleSchema = {
 export const moduleListTypes: McpTool = defineTool({
     // SAFE: not a GraphQL mutation
     name: 'module.listTypes',
-    description: 'Enumerates the registered module item types (EItemType) and the shared style enum (EStyle).',
+    description: 'Enumerates the registered module item types (EItemType) and the shared style enum (EStyle). Set `includeUsage:true` to also report per-type `usageCount` and the distinct `pages[]` each type appears on.',
     scopes: ['read:content'],
-    inputSchema: {type: 'object', properties: {}},
-}, async () => ({
-    itemTypes: Object.entries(EItemType).map(([k, v]) => ({key: k, value: v})),
-    styles: Object.entries(EStyle).map(([k, v]) => ({key: k, value: v})),
-}));
+    inputSchema: {
+        type: 'object',
+        properties: {
+            includeUsage: {type: 'boolean', description: 'When true, walks pages × sections and adds `usageCount` + `pages[]` to each itemType row.'},
+        },
+    },
+}, async (args, ctx) => {
+    const itemTypes = Object.entries(EItemType).map(([k, v]) => ({key: k, value: v as string}));
+    const styles = Object.entries(EStyle).map(([k, v]) => ({key: k, value: v}));
+    if (!args.includeUsage) return {itemTypes, styles};
+    const pages = (await ctx.services.navigationService.getNavigationCollection?.()) ?? [];
+    const idToPage = new Map<string, string>();
+    const allIds: string[] = [];
+    for (const p of pages as Array<{page: string; sections?: string[]}>) {
+        for (const id of p.sections ?? []) {
+            idToPage.set(id, p.page);
+            allIds.push(id);
+        }
+    }
+    const docs = allIds.length
+        ? (await ctx.services.navigationService.getSections?.(allIds)) ?? []
+        : [];
+    const sections = (docs as Array<{id?: string; page?: string; content?: Array<{type?: string}>}>).map(d => ({
+        page: d.page ?? (d.id ? idToPage.get(d.id) : undefined),
+        content: d.content,
+    }));
+    const usage = scanModuleUsage({
+        types: itemTypes.map(t => t.value),
+        sections,
+    });
+    const byType = new Map(usage.map(u => [u.type, u]));
+    return {
+        itemTypes: itemTypes.map(t => {
+            const u = byType.get(t.value);
+            return {...t, usageCount: u?.usageCount ?? 0, pages: u?.pages ?? []};
+        }),
+        styles,
+    };
+});
 
 async function moduleAddOnce(ctx: any, args: {sectionId: string; module: ModuleSpec; at?: number}): Promise<any> {
     const sec = await loadSection(ctx, args.sectionId);

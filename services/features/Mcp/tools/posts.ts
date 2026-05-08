@@ -1,19 +1,21 @@
 import {McpTool} from '../types';
 import {getMongoConnection} from '@services/infra/mongoDBConnection';
 import {defineTool, runBatch} from './_shared';
+import {scanPostStats} from '@services/features/Posts/PostStatsService';
 
 const sessionFor = (actor: string) => ({kind: 'admin' as const, role: 'admin' as const, email: actor});
 
 export const postList: McpTool = defineTool({
     // SAFE: not a GraphQL mutation
     name: 'post.list',
-    description: 'Lists blog posts. includeDrafts=true (default) returns drafts too. Useful before post.upsert to check for slug conflicts.',
+    description: 'Lists blog posts. includeDrafts=true (default) returns drafts too. Useful before post.upsert to check for slug conflicts. Set `includeStats:true` to also annotate each post with `wordCount`, `imageCount`, and `tagCount`.',
     scopes: ['read:content'],
     inputSchema: {
         type: 'object',
         properties: {
             includeDrafts: {type: 'boolean', default: true},
             limit: {type: 'integer', minimum: 1, maximum: 500, default: 100},
+            includeStats: {type: 'boolean', description: 'When true, runs the body through the post-stats scanner and adds `wordCount`, `imageCount`, `tagCount` to each row.'},
         },
     },
 }, async (args) => {
@@ -22,7 +24,21 @@ export const postList: McpTool = defineTool({
             includeDrafts: args.includeDrafts ?? true,
             limit: args.limit ?? 100,
         });
-        return JSON.parse(raw);
+        const posts = JSON.parse(raw);
+        if (!args.includeStats || !Array.isArray(posts)) return posts;
+        const stats = scanPostStats(posts.map((p: any) => ({
+            slug: p.slug, body: p.body, coverImage: p.coverImage, tags: p.tags,
+        })));
+        const bySlug = new Map(stats.map(s => [s.slug, s]));
+        return posts.map((p: any) => {
+            const s = bySlug.get(p.slug);
+            return {
+                ...p,
+                wordCount: s?.wordCount ?? 0,
+                imageCount: s?.imageCount ?? 0,
+                tagCount: s?.tagCount ?? 0,
+            };
+        });
     } catch (err) {
         return {ok: false, error: String((err as Error).message || err)};
     }

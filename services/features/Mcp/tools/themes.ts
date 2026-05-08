@@ -1,6 +1,7 @@
 import {McpTool} from '../types';
 import {enforceModeForTool} from '../modeEnforcement';
 import {defineTool} from './_shared';
+import {scanThemeUsage} from '@services/features/Themes/ThemeUsageService';
 
 const sessionFor = (actor: string) => ({kind: 'admin' as const, role: 'admin' as const, email: actor});
 const safeParse = (s: string): unknown => { try { return JSON.parse(s); } catch { return {raw: s}; } };
@@ -8,10 +9,30 @@ const safeParse = (s: string): unknown => { try { return JSON.parse(s); } catch 
 export const themeList: McpTool = defineTool({
     // SAFE: not a GraphQL mutation
     name: 'theme.list',
-    description: 'Returns every theme (presets + customs) and their tokens.',
+    description: 'Returns every theme (presets + customs) and their tokens. Set `includeUsage:true` to also annotate each row with `isActive` and `inPublishHistory`.',
     scopes: ['read:themes'],
-    inputSchema: {type: 'object', properties: {}},
-}, async (_args, ctx) => ctx.services.themeService.getThemes());
+    inputSchema: {
+        type: 'object',
+        properties: {
+            includeUsage: {type: 'boolean', description: 'When true, each theme is annotated with `isActive` (matches `themeService.getActive().id`) and `inPublishHistory` (currently always false; reserved for a future snapshot.themeId schema bump).'},
+        },
+    },
+}, async (args, ctx) => {
+    const themes = await ctx.services.themeService.getThemes();
+    if (!args.includeUsage) return themes;
+    const list = (themes ?? []) as Array<{id: string; name: string}>;
+    const active = await ctx.services.themeService.getActive?.();
+    const usage = scanThemeUsage({
+        themes: list.map(t => ({id: t.id, name: t.name})),
+        activeId: active?.id ?? null,
+        publishHistoryThemeIds: [],
+    });
+    const byId = new Map(usage.map(u => [u.id, u]));
+    return list.map(t => {
+        const u = byId.get(t.id);
+        return {...t, isActive: u?.isActive ?? false, inPublishHistory: u?.inPublishHistory ?? false};
+    });
+});
 
 export const themeUpdate: McpTool = defineTool({
     name: 'theme.update',
