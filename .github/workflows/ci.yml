@@ -5,11 +5,12 @@ on:
     branches: [master]
   push:
     branches: [master]
-  # Nightly trigger drives the visual-regression job below — too slow +
-  # too noisy (until baselines stabilise) to run on every PR.
-  schedule:
-    - cron: '0 4 * * *'   # 04:00 UTC nightly
-  # Adds a "Run workflow" button in the Actions tab for manual re-runs.
+  # Nightly schedule trigger removed 2026-05-08 — only `visual:` was
+  # opting into it, and operator dropped visual from the pipeline (run
+  # manually when needed). Re-add the cron block here if a regular
+  # cadence ever returns.
+  #
+  # "Run workflow" button in the Actions tab for manual re-runs.
   # The optional `target` input scopes the deploy job to ONE droplet —
   # useful for staging a risky change on funisimo first before rolling
   # it to skyclimber. Empty (the default) deploys to every droplet in
@@ -69,18 +70,16 @@ jobs:
       - name: Tests
         run: npm test -- --reporter=dot
 
-  # Visual regression — opt-in via schedule + workflow_dispatch only.
-  # Skipped on PR runs (per-PR feedback loop) and on master pushes
-  # (Q4-cap roadmap item — no baselines committed yet, so every run
-  # fails loudly until baselines land). Re-add `(github.event_name ==
-  # 'push' && github.ref == 'refs/heads/master')` once the initial
-  # baselines are captured + committed via the Q4-cap workflow.
-  # See docs/runbooks/visual-regressions.md.
+  # Visual regression — manual only via `workflow_dispatch`. Pipeline
+  # auto-trigger removed 2026-05-08 (operator: "we run visuals locally").
+  # Job kept in the workflow so the Actions tab "Run workflow" button can
+  # still kick it off when needed. Q4-cap baseline-capture workflow is
+  # still the way to refresh `tests/e2e/visual/__snapshots__/`.
   visual:
     name: Visual regression (shard ${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
       matrix:
