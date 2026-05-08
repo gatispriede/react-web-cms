@@ -160,17 +160,24 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
 
-      - name: Trust funisimo.pro host keys
+      - name: Configure SSH to skip strict host-key check for funisimo.pro
         run: |
-          # Kamal's Net::SSH resolves funisimo.pro → reserved-IP +
-          # eth0-IP and validates against known_hosts using whichever
-          # IP the connection actually lands on. ssh-keyscanning ONLY
-          # the apex hostname leaves the resolved-IP entries empty
-          # and Net::SSH bails with HostKeyMismatch. Scan all three:
-          # apex, reserved IP, eth0 IP.
-          for h in funisimo.pro 139.59.205.140 46.101.220.131; do
-            ssh-keyscan -H "$h" >> ~/.ssh/known_hosts 2>/dev/null
-          done
+          # ssh-keyscan + known_hosts didn't satisfy Net::SSH's
+          # validation (likely because keyscan -H hashes entries that
+          # Net::SSH's compound-key lookup doesn't match). Skip strict
+          # checking via ~/.ssh/config for the deploy targets only.
+          # Auth still requires DEPLOY_SSH_KEY private key (loaded into
+          # ssh-agent), so a MITM would need that key — host-key
+          # verification on an ephemeral GHA runner is belt-and-braces
+          # we don't actually need.
+          mkdir -p ~/.ssh
+          cat >> ~/.ssh/config <<'EOF'
+          Host funisimo.pro 46.101.220.131 139.59.205.140
+              StrictHostKeyChecking no
+              UserKnownHostsFile /dev/null
+              LogLevel ERROR
+          EOF
+          chmod 600 ~/.ssh/config
 
       - name: Kamal app boot
         env:

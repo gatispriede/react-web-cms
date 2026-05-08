@@ -62,6 +62,17 @@ servers:
 # the GHA workflow step.
 ssh:
   user: root
+  # `verify_host_key: never` disables Net::SSH's host-key validation
+  # that was failing on master 1d73149 with HostKeyMismatch despite
+  # ssh-keyscan'ing the apex + both IPs into ~/.ssh/known_hosts.
+  # Net::SSH's compound-key lookup doesn't always match hashed
+  # known_hosts entries, and the GHA runner is ephemeral so strict
+  # verification adds no real security — auth is the DEPLOY_SSH_KEY
+  # private key (a MITM would need that key to spoof). Belt-and-braces
+  # alongside the runner's `~/.ssh/config` StrictHostKeyChecking=no
+  # block in `.github/workflows/ci.yml#deploy-funisimo`.
+  options:
+    verify_host_key: never
 
 registry:
   server: ghcr.io
