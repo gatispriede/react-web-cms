@@ -11,9 +11,12 @@ The legacy deploy was: GHA → ssh into droplet → rsync sources → `docker co
 Kamal replaces that with:
 
 1. **CI builds** the image (`infra/AppDockerfile`) in `ghcr-push:` job → pushes `ghcr.io/gatispriede/cms:<sha>` to GHCR.
-2. **CI runs `kamal deploy --destination=funisimo`** → Kamal SSH-connects to the droplet, pulls the image, runs the new container alongside the old, health-checks, flips kamal-proxy upstream, drains the old container.
+2. **CI runs `kamal deploy --destination=funisimo`** → Kamal SSH-connects to the droplet, pulls the image, runs a new container on the `cms_back-end` docker network alongside the legacy `front`, health-checks the new container.
+3. **Operator flips Caddy upstream** by editing `/opt/cms/.env` → `ACTIVE_UPSTREAM=cms-web-<version>:80` and reloading Caddy. Drains gracefully in-flight requests on the legacy container.
 
-Caddy stays in front (TLS, `/uploads/*`, MCP path proxying); kamal-proxy sits behind Caddy on port 8080 and handles the blue-green slot logic Kamal owns.
+**Operator decision 2026-05-08, option A**: kamal-proxy is **not used**. Caddy stays the public front (TLS termination, `/uploads/*`, `/design-v2/*`, MCP routing, SWR cache). Kamal handles image deploy + container swap only. Avoids the port-collision / extra-layer overhead of running kamal-proxy alongside Caddy on the same droplet.
+
+The `proxy: false` line in `config/deploy.funisimo.yml` is what disables kamal-proxy; container is registered on `cms_back-end` via `servers.web.options.network`.
 
 ## Setup (operator, one-time per droplet)
 
@@ -75,14 +78,40 @@ If the rollback target is older than 5 deploys back, `kamal deploy --version=<ol
 
 ## Cutover from legacy bash deploy
 
-The migration spec runs Kamal alongside the legacy ssh deploy during the cutover window:
+Test deploy 2026-05-08 (option A path) validated the foundations:
+terraform plan converges clean, image builds end-to-end, GHCR push +
+droplet pull work, container boots in ~500 ms on the droplet,
+`/api/health` + `/admin` + GraphQL all respond against the test
+container. The cutover sequence below is what flips public traffic:
 
-1. **GHCR push lands first** — the `ghcr-push:` CI job pushes images on every master push, but no droplet pulls them yet.
-2. **Kamal setup against a fresh test droplet** — provision via `terraform/environments/<test>` (or just a temp droplet), `kamal setup`, `kamal deploy`. Verify deploy timing + healthcheck behaviour.
-3. **Kamal cutover on funisimo** — flip `ACTIVE_UPSTREAM` in funisimo's `.env` from `app:80` to `kamal-proxy:8080`. Run `kamal deploy --destination=funisimo`. Verify the public smoke URL.
-4. **One release cycle stable** — leave funisimo on Kamal for ≥ 7 days, monitor Errors panel + smoke checks. Skyclimber stays on the legacy path.
-5. **Skyclimber cutover** — repeat steps 3-4 for skyclimber.
-6. **Retire legacy** — delete `tools/legacy/blue-green-deploy.sh`, the `deploy:` matrix in `ci.yml`, the `app-blue` / `app-green` compose services, and the `DEPLOY_ENV_FILE_*` secrets.
+1. **GHCR push lands first** — `ghcr-push:` CI job (or local
+   `docker push`) pushes images on every master push.
+2. **Kamal deploy** — `kamal deploy --destination=funisimo` boots a
+   new container on `cms_back-end`. Legacy `front` keeps serving.
+3. **Caddy upstream flip** — on the droplet:
+   ```bash
+   ssh root@funisimo.pro
+   # Look up the new container name (kamal v2 names them
+   # `cms-web-<version>` where version = git SHA-7 prefix).
+   NEW=$(docker ps --filter name=cms-web --format '{{.Names}}' | head -1)
+   sed -i "s|^ACTIVE_UPSTREAM=.*|ACTIVE_UPSTREAM=${NEW}:80|" /opt/cms/.env
+   docker compose -f /opt/cms/infra/compose.yaml up -d --no-deps caddy
+   ```
+4. **Smoke** — `curl -sf https://funisimo.pro/api/health` from your
+   workstation. If 200, the cutover succeeded.
+5. **One release cycle stable** — leave funisimo on Kamal for ≥ 7 days,
+   monitor Errors panel + smoke checks. Skyclimber stays on the legacy
+   path.
+6. **Skyclimber cutover** — copy `config/deploy.funisimo.yml` to
+   `config/deploy.skyclimber.yml`, swap hosts + secrets, repeat 1-5.
+7. **Retire legacy** — delete `tools/legacy/blue-green-deploy.sh`, the
+   `deploy:` matrix in `ci.yml`, the `app-blue` / `app-green` compose
+   services, the `front` compose service, and the `DEPLOY_ENV_FILE_*`
+   secrets.
+
+**Rollback**: re-run step 3 with `ACTIVE_UPSTREAM=front:80`. The legacy
+`front` container stays running throughout — flipping back is one `sed`
++ Caddy reload, no rebuild needed.
 
 ## Secrets
 
