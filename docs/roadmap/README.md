@@ -108,7 +108,7 @@ Patterns: mechanical work (bulk extensions, schema additions, test scaffolding) 
 
 | # | Item | Notes |
 |---|------|-------|
-| 1 | E-commerce real-flow specs | happy-path per feature: products / cart / checkout / inventory / orders. Edge cases deferred |
+| 1 | ~~E-commerce real-flow specs~~ | **Shipped** 2026-05-03 — `tests/e2e/ecommerce/{products,cart,checkout,inventory,orders}.spec.ts`. 15 happy-path tests across 5 files; no skips, no fixmes. Verified via Wave 2 audit 2026-05-08. |
 | 2 | Themes direct-route gqty | `Theme.tsx` at `/admin/client-config/themes` gets empty `mongo.getThemes` from `gqty.resolve` even though raw fetch works. Needs investigation; may resolve after schema regen |
 | 3 | gqty schema regen | Run `npm run generate-schema` to surface `isFreshInstall` / `onboardingBootstrap` to typed clients (the Q6 prebuild check covers production builds; this is for dev iteration) |
 
@@ -136,7 +136,7 @@ Strict size-first ordering: largest items lead so deep work isn't fragmented; qu
 6. **Section drag-reorder root cause** — **S-M · ~1-2h AI for diagnosis; fix scope opens after.** Investigate why `getChangedPos` + `DraggableWrapper` chain stopped firing. Up/down arrows already ship as workaround.
 7. **link-target-autosearch** — [`link-target-autosearch.md`](link-target-autosearch.md). **M · ~3h AI.** Picker + anchor registry + MCP tools + every editor swap (~8 surfaces) + module-title id emission + hashchange listener as one chunk. **Depends on F6** (picker emits `/page#anchor` vs `/#anchor` based on mode).
 8. **AUI mode infrastructure refactor** — [`aui-mode-hierarchy.md`](aui-mode-hierarchy.md). **M · ~1-2h AI.** Refactor existing Themes + Posts onto inheritance shape + ESLint rule + lazy-load convention. Foundational chunk; subsequent per-pane onboardings (Navigation, Modules, Inquiries, …) are each their own roadmap items, picked up by demand. Each pane onboarding ≈ M (~1-2h AI).
-9. **E-commerce real-flow specs** — **M · ~2-4h AI** depending on spec count. Happy-path per feature: products / cart / checkout / inventory / orders. Each spec ≈ S.
+9. ~~**E-commerce real-flow specs**~~ — **Shipped** 2026-05-03. `tests/e2e/ecommerce/` carries 15 happy-path tests; `playwright test --list` enumerates them all. No further work needed.
 
 ### Wave 3 — S (15-60 min AI each)
 
