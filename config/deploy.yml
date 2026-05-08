@@ -71,19 +71,25 @@ registry:
     # local `kamal deploy` runs.
     - GHCR_PAT
 
-# Skip kamal-proxy entirely (operator decision 2026-05-08, option A).
+# Skip kamal-proxy entirely (operator decision 2026-05-08, option A):
 # Caddy is the existing public front — it terminates TLS, serves
 # `/uploads/*`, `/design-v2/*`, MCP routing, SWR cache. kamal-proxy
 # would either need a non-default port or fight Caddy for 80/443.
 #
-# Kamal v2 doesn't accept `proxy: false`. To skip proxy registration
-# we pass `--skip-proxy-deploy --skip-proxy-boot` to `kamal deploy`
-# in CI (see `.github/workflows/ci.yml#deploy-funisimo`). The proxy:
-# block here is omitted entirely so kamal doesn't try to validate it.
+# How proxy is disabled: `servers.web.proxy: false` (above). Without
+# it, `kamal app boot` succeeds at `docker run` then fails registering
+# the new container with `docker exec kamal-proxy ...` (no kamal-proxy
+# running) and stops the just-booted container.
 #
-# Cutover behaviour: kamal pulls + boots the new `cms-web` container
-# on cms_back-end. Post-deploy hook attaches cms_front-end. Caddy
-# already points at `cms-web:80` from the 2026-05-08 manual cutover.
+# Cutover behaviour:
+#   1. CI's "Ensure kamal docker network exists" pre-creates the
+#      hardcoded `kamal` network (kamal v2.11 hardcodes
+#      `--network kamal`).
+#   2. `kamal app boot --version=<sha>` pulls + runs `cms-web-<sha>`.
+#   3. CI's "Rotate to new container" stops the prior cms-web*,
+#      attaches the new one to cms_back-end + cms_front-end with
+#      `--alias cms-web`. Caddy's upstream `cms-web:80` resolves to
+#      whichever container currently holds the alias.
 
 # Runtime env comes from /opt/cms/.env on the droplet (see
 # `servers.web.options.env-file` above). No `env: clear:` / `env: secret:`

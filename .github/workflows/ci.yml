@@ -209,17 +209,42 @@ jobs:
           # `:latest` happens to point to.
           kamal app boot --version=${{ github.sha }}
 
-      - name: Attach back-end + front-end networks + public smoke
+      - name: Rotate to new container + public smoke
         run: |
-          # `kamal app boot` puts cms-web on the `kamal` network (hardcoded).
-          # Real connectivity comes from the existing compose networks:
-          #   - cms_back-end → mongo, standalone-graphql, mcp
-          #   - cms_front-end → caddy
-          # Attach both so MONGODB_URI=mongodb://mongodb:27017 resolves
-          # AND Caddy can reverse-proxy by `cms-web:80`.
-          ssh root@funisimo.pro "docker network connect cms_back-end cms-web 2>/dev/null || true; docker network connect cms_front-end cms-web 2>/dev/null || true"
+          # Kamal v2 names the new container cms-web-<sha-full> (versioned).
+          # Caddy's upstream is `cms-web:80` — needs to resolve to the
+          # NEW container. Strategy: docker network alias `cms-web` on
+          # both compose networks. Stop the prior cms-web* (versioned
+          # or unversioned from manual cutover) so the alias releases.
+          # Caddy's `lb_try_duration 30s` covers the brief gap.
+          ssh root@funisimo.pro bash -s <<'REMOTE'
+          set -e
+          NEW=$(docker ps --filter "name=cms-web-" --format "{{.Names}}" | head -1)
+          if [ -z "$NEW" ]; then
+            echo "!! no kamal-booted cms-web-<sha> container found" >&2
+            docker ps --format "{{.Names}}: {{.Status}}" >&2
+            exit 1
+          fi
+          echo "new container: $NEW"
 
-          # Wait for the new container to settle, smoke the public path.
+          # Stop + remove the unversioned `cms-web` (manual cutover from
+          # 2026-05-08) and any prior versioned cms-web-* that aren't $NEW.
+          for c in $(docker ps -a --filter "name=cms-web" --format "{{.Names}}"); do
+            if [ "$c" != "$NEW" ]; then
+              echo "stopping prior: $c"
+              docker stop "$c" 2>/dev/null || true
+              docker rm "$c" 2>/dev/null || true
+            fi
+          done
+
+          # Attach $NEW to compose networks with alias `cms-web` so Caddy's
+          # upstream and the legacy `mongo` / `mcp` / standalone-graphql
+          # references all resolve.
+          docker network connect cms_back-end "$NEW" --alias cms-web 2>/dev/null || true
+          docker network connect cms_front-end "$NEW" --alias cms-web 2>/dev/null || true
+          REMOTE
+
+          # Public smoke from the runner.
           for i in 1 2 3 4 5 6 7 8; do
             CODE=$(curl -sf -o /dev/null -w "%{http_code}" --max-time 10 https://funisimo.pro/api/health || echo "000")
             if [ "$CODE" = "200" ]; then
@@ -229,7 +254,7 @@ jobs:
             sleep 5
           done
           echo "!! public /api/health did not return 200 within 40s" >&2
-          ssh root@funisimo.pro "docker logs cms-web --tail=30" >&2 || true
+          ssh root@funisimo.pro 'docker ps --format "{{.Names}}: {{.Status}}"; docker logs $(docker ps --filter "name=cms-web-" -q | head -1) --tail=30' >&2 || true
           exit 1
 
   # ----------------------------------------------------------------
