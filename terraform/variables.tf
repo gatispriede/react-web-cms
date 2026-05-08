@@ -5,8 +5,9 @@ variable "do_token" {
 }
 
 variable "ssh_key_fingerprint" {
-  description = "Fingerprint of the SSH key already added to your DO account (`doctl compute ssh-key list`). Used to authorise root access on freshly-provisioned droplets."
+  description = "Fingerprint of the SSH key already added to your DO account (`doctl compute ssh-key list`). Used to authorise root access on freshly-provisioned droplets. Treat as secret-adjacent — set via TF Cloud workspace var or gitignored local terraform.tfvars."
   type        = string
+  sensitive   = true
 }
 
 variable "region" {

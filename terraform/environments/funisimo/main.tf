@@ -31,8 +31,9 @@ variable "do_token" {
 }
 
 variable "ssh_key_fingerprint" {
-  description = "Fingerprint of the SSH key authorised on the droplet."
+  description = "Fingerprint of the SSH key authorised on the droplet. Set via TF Cloud workspace var (preferred) or local terraform.tfvars (gitignored). Marked sensitive so terraform plan/apply don't print it to logs."
   type        = string
+  sensitive   = true
 }
 
 module "funisimo" {
