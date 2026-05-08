@@ -160,24 +160,27 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
 
-      - name: Configure SSH to skip strict host-key check for funisimo.pro
+      - name: Configure SSH for funisimo.pro
         run: |
-          # ssh-keyscan + known_hosts didn't satisfy Net::SSH's
-          # validation (likely because keyscan -H hashes entries that
-          # Net::SSH's compound-key lookup doesn't match). Skip strict
-          # checking via ~/.ssh/config for the deploy targets only.
-          # Auth still requires DEPLOY_SSH_KEY private key (loaded into
-          # ssh-agent), so a MITM would need that key — host-key
-          # verification on an ephemeral GHA runner is belt-and-braces
-          # we don't actually need.
+          # Skip strict host-key checking for funisimo deploy targets.
+          # Net::SSH 7.3 (kamal v2.11's runtime) parses ~/.ssh/config
+          # for `StrictHostKeyChecking`. Auth still requires
+          # DEPLOY_SSH_KEY — strict host-key verification on an
+          # ephemeral GHA runner buys nothing extra.
+          # Plain text config (no heredoc indentation traps).
           mkdir -p ~/.ssh
-          cat >> ~/.ssh/config <<'EOF'
-          Host funisimo.pro 46.101.220.131 139.59.205.140
-              StrictHostKeyChecking no
-              UserKnownHostsFile /dev/null
-              LogLevel ERROR
-          EOF
+          {
+            printf 'Host funisimo.pro 46.101.220.131 139.59.205.140\n'
+            printf '    StrictHostKeyChecking no\n'
+            printf '    UserKnownHostsFile /dev/null\n'
+            printf '    LogLevel ERROR\n'
+          } >> ~/.ssh/config
           chmod 600 ~/.ssh/config
+          # Also pre-populate plain (non-hashed) known_hosts as fallback —
+          # if Net::SSH's ~/.ssh/config parsing skips StrictHostKeyChecking,
+          # plain entries match the hostname/IP keys directly.
+          ssh-keyscan funisimo.pro 46.101.220.131 139.59.205.140 >> ~/.ssh/known_hosts 2>/dev/null
+          chmod 600 ~/.ssh/known_hosts
 
       - name: Kamal app boot
         env:
