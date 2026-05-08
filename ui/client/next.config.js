@@ -39,23 +39,6 @@ const nextConfig = {
     // CMD changes from `npm run start` (next start -p 80 ui/client) to
     // `node server.js` — server.js is what next emits to host the app.
     output: 'standalone',
-    // Force-include packages whose conditional `exports` map points
-    // at `.mjs` variants that Next's standalone tracer skips. Surfaced
-    // 2026-05-08 with `@reduxjs/toolkit` — runtime tried to require
-    // `dist/redux-toolkit.modern.mjs` (the ESM-condition target), but
-    // standalone only copied `dist/cjs/` because the tracer follows
-    // the CJS leg of the exports map. Result: 500 on /admin routes.
-    //
-    // If new packages surface the same bug at runtime (`Cannot find
-    // module .../dist/...mjs`), add their dist/** glob here.
-    // Path is relative to the project root (where next.config.js lives:
-    // ui/client/), but node_modules is at the REPO root, so climb two
-    // levels with `../../`.
-    outputFileTracingIncludes: {
-        '*': [
-            '../../node_modules/@reduxjs/toolkit/dist/**',
-        ],
-    },
     // Server-only packages that should NEVER be bundled into the browser
     // chunk. The redis client + @node-rs/xxhash native digest helper are
     // imported transitively from `services/infra/redisConnection.ts` →
