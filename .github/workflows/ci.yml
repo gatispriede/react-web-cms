@@ -174,12 +174,15 @@ jobs:
           # (the `ghcr-push:` job tagged it as `:latest` + `:<sha>`).
           # `--version` makes the deploy reproducible — kamal pulls that
           # exact tag rather than whatever `:latest` happens to point to.
-          # No --destination flag: we only have one Kamal target
-          # (`config/deploy.yml`). Skyclimber stays on the legacy bash
-          # path until it gets its own DO API key + Kamal cutover, at
-          # which point we'll split deploy.yml → deploy.funisimo.yml +
-          # deploy.skyclimber.yml with a shared base.
-          kamal deploy --version=${{ github.sha }}
+          # `--skip-proxy-boot` because kamal-proxy isn't on this
+          # droplet (Caddy is the public front — see `config/deploy.yml`
+          # header). Without the flag kamal would try to register the
+          # container with a kamal-proxy that doesn't exist and fail.
+          #
+          # No --destination flag: we only have one Kamal target. When
+          # skyclimber gets its own DO API key + Kamal cutover, split
+          # `config/deploy.yml` into a base + per-destination files.
+          kamal deploy --version=${{ github.sha }} --skip-proxy-boot
 
   # ----------------------------------------------------------------
   # Legacy ssh+rsync deploy. Funisimo is `auto: false` since 2026-05-08

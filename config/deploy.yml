@@ -75,24 +75,17 @@ registry:
 
 # Skip kamal-proxy entirely (operator decision 2026-05-08, option A).
 # Caddy is the existing public front — it terminates TLS, serves
-# `/uploads/*`, `/design-v2/*`, the MCP proxy at `/mcp`, and the SWR
-# cache layer. kamal-proxy would either need to bind a non-default
-# port (extra moving parts) or fight Caddy for 80/443. Cleanest path:
-# Kamal manages the image deploy + container swap only; Caddy keeps
-# routing public traffic to the Kamal-managed container by name.
+# `/uploads/*`, `/design-v2/*`, MCP routing, SWR cache. kamal-proxy
+# would either need a non-default port or fight Caddy for 80/443.
 #
-# Cutover flow on the droplet:
-#   1. `kamal deploy` boots a new container named `cms-web-<version>`
-#      on the cms_back-end docker network.
-#   2. Operator flips `ACTIVE_UPSTREAM` in `/opt/cms/.env` to the new
-#      container name and runs `docker compose up -d --no-deps caddy`.
-#   3. Caddy's graceful reload drains in-flight requests on the old
-#      upstream while routing new requests to the Kamal container.
+# Kamal v2 doesn't accept `proxy: false`. To skip proxy registration
+# we pass `--skip-proxy-deploy --skip-proxy-boot` to `kamal deploy`
+# in CI (see `.github/workflows/ci.yml#deploy-funisimo`). The proxy:
+# block here is omitted entirely so kamal doesn't try to validate it.
 #
-# Rollback: flip `ACTIVE_UPSTREAM` back to `front:80` (legacy) — the
-# legacy `front` container stays running throughout the cutover window
-# until funisimo runs stable on Kamal for ≥ 1 release cycle.
-proxy: false
+# Cutover behaviour: kamal pulls + boots the new `cms-web` container
+# on cms_back-end. Post-deploy hook attaches cms_front-end. Caddy
+# already points at `cms-web:80` from the 2026-05-08 manual cutover.
 
 # Runtime env comes from /opt/cms/.env on the droplet (see
 # `servers.web.options.env-file` above). No `env: clear:` / `env: secret:`
