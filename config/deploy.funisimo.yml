@@ -60,6 +60,16 @@ env:
     - MCP_ALLOWED_CIDR
     - INITIAL_ADMIN_EMAIL
     - INITIAL_ADMIN_PASSWORD
+    # SMTP — funisimo uses Resend (smtp.resend.com:2587). Today's
+    # legacy compose reads these from `/opt/cms/secrets/*` files;
+    # Kamal pipes them through `secret:` instead so the deploy YAML is
+    # self-contained. EmailService reads them via `readSecret(SMTP_*)`
+    # which falls back to `process.env` when the *_FILE form is absent.
+    - SMTP_HOST
+    - SMTP_PORT
+    - SMTP_USER
+    - SMTP_PASS
+    - MAIL_FROM
 
 # Healthcheck — Kamal polls this before flipping the proxy upstream to
 # the new container, so the old container keeps serving until the new
