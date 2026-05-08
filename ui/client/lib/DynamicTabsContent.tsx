@@ -13,6 +13,7 @@ import MongoApi from "@services/api/client/MongoApi";
 import {IConfigSectionAddRemove} from "@interfaces/IConfigSectionAddRemove";
 import guid from "@utils/guid";
 import DraggableWrapper from "@client/lib/DraggableWrapper";
+import {reorderGroupedSections, flatToGroupedIndex, groupCount} from "@client/lib/reorderGroupedSections";
 import AuditBadge from "@admin/shell/AuditBadge";
 import {TFunction} from "i18next";
 import {InSection} from "@interfaces/IMongo";
@@ -54,13 +55,15 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
 
     getChangedPos = async (currentPos: number, newPos: number) => {
         if (currentPos === newPos) return;
-        // Move semantics — take the dragged item out and re-insert at the
-        // target index, shifting the rest. Previous swap-in-place left two
-        // items swapped instead of one moved.
-        const sections = [...this.state.sections];
-        const [moved] = sections.splice(currentPos, 1);
-        if (!moved) return;
-        sections.splice(newPos, 0, moved);
+        // The indices come from `<DraggableWrapper>` and reference the
+        // GROUPED children produced by `renderGroupedSections` (host
+        // sections with overlays nested inside, so each group counts as
+        // one drag target). The flat `state.sections` array carries
+        // overlays as separate entries — splicing it with grouped
+        // indices used to misorder sections + orphan overlays from
+        // their hosts the moment any overlay was set. See
+        // `reorderGroupedSections.test.ts` for the regression cases.
+        const sections = reorderGroupedSections(this.state.sections, currentPos, newPos);
         this.setState({sections});
         const ids = sections.map(s => s.id).filter((id): id is string => typeof id === 'string');
         if (ids.length === 0) return;
@@ -382,10 +385,25 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
                         t={this.props.t}
                         admin={this.admin}
                         label={this.props.t('Section {{n}}', {n: index + 1}) as string}
-                        moveUp={() => this.getChangedPos(index, index - 1)}
-                        moveDown={() => this.getChangedPos(index, index + 1)}
-                        canMoveUp={index > 0}
-                        canMoveDown={index < this.state.sections.length - 1}
+                        moveUp={() => {
+                            // Translate flat index → grouped index so the move
+                            // operates in the same space as drag-reorder.
+                            // Overlays travel with their host; moveUp on an
+                            // overlay row moves its whole host group up.
+                            const g = flatToGroupedIndex(this.state.sections, index);
+                            if (g > 0) void this.getChangedPos(g, g - 1);
+                        }}
+                        moveDown={() => {
+                            const g = flatToGroupedIndex(this.state.sections, index);
+                            if (g >= 0 && g < groupCount(this.state.sections) - 1) {
+                                void this.getChangedPos(g, g + 1);
+                            }
+                        }}
+                        canMoveUp={flatToGroupedIndex(this.state.sections, index) > 0}
+                        canMoveDown={(() => {
+                            const g = flatToGroupedIndex(this.state.sections, index);
+                            return g >= 0 && g < groupCount(this.state.sections) - 1;
+                        })()}
                         deleteAction={async () => {
                             if (section.id) {
                                 await this.MongoApi.deleteSection(section.id);
