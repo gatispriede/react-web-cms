@@ -153,8 +153,14 @@ jobs:
             env_secret: DEPLOY_ENV_FILE_1
             smoke_url: https://funisimo.pro/
             seamless: false
-            # `auto: true` → deploys on every push to master.
-            auto: true
+            # `auto: false` since 2026-05-08 — funisimo is now served by
+            # the Kamal-managed `cms-web` container (see
+            # `config/deploy.funisimo.yml` + `docs/runbooks/kamal-deploy.md`).
+            # The legacy ssh+rsync deploy still resolves here for
+            # `workflow_dispatch --target=funisimo.pro` runs (emergency
+            # fallback if Kamal needs backing out), but no longer fires
+            # on push-to-master.
+            auto: false
           - name: skyclimber.pro
             host_secret: DEPLOY_HOST_2
             env_secret: DEPLOY_ENV_FILE_2
