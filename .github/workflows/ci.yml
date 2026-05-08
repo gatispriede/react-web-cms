@@ -70,49 +70,9 @@ jobs:
       - name: Tests
         run: npm test -- --reporter=dot
 
-  # Visual regression — manual only via `workflow_dispatch`. Pipeline
-  # auto-trigger removed 2026-05-08 (operator: "we run visuals locally").
-  # Job kept in the workflow so the Actions tab "Run workflow" button can
-  # still kick it off when needed. Q4-cap baseline-capture workflow is
-  # still the way to refresh `tests/e2e/visual/__snapshots__/`.
-  visual:
-    name: Visual regression (shard ${{ matrix.shard }}/4)
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    if: github.event_name == 'workflow_dispatch'
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2, 3, 4]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
-      - name: Install deps
-        run: npm install --legacy-peer-deps --ignore-scripts --no-audit --no-fund
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: Run visual project
-        # `--shard=N/4` lets Playwright distribute its test list across four
-        # parallel runners. The shard label in the matrix above is shown
-        # on the Actions tab so a failure tells you which slice to rerun.
-        run: npx playwright test --project=visual --shard=${{ matrix.shard }}/4
-
-      - name: Upload diff report on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-visual-report-shard-${{ matrix.shard }}
-          path: playwright-report/
-          retention-days: 14
+  # Visual regression + e2e jobs removed 2026-05-08 — operator runs
+  # Playwright tests locally only. To re-introduce, see git history
+  # for `visual:` here and the deleted `.github/workflows/e2e.yml`.
 
   # ----------------------------------------------------------------
   # GHCR push — Wave 1 Terraform/Kamal migration. Builds the multi-stage
