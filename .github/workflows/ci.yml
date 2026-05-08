@@ -207,9 +207,11 @@ jobs:
     if: |
       (github.event_name == 'push' && github.ref == 'refs/heads/master') ||
       github.event_name == 'workflow_dispatch'
-    # Holds the appleboy/ssh-action command_timeout (35m) plus the
-    # workflow setup/teardown around it.
-    timeout-minutes: 45
+    # Holds the appleboy/ssh-action command_timeout (45m) plus the
+    # workflow setup/teardown around it. Bumped from 45 → 60 to cover
+    # the longer DEPLOY_HEALTH_TIMEOUT (30 min) without the GHA job
+    # killing ssh mid-deploy.
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -297,12 +299,13 @@ jobs:
           # below is the right gate; it follows POSIX `set -e` semantics
           # and exempts test contexts.
           script_stop: false
-          # Default appleboy/ssh-action command_timeout is 10m, which fires
-          # before the inner app-healthy loop on cold deploys (image pull +
-          # `next build` regularly take 6-8m alone). Bumped to 30m so the
-          # SSH session outlasts the inner timeouts; the GHA job timeout
-          # (timeout-minutes: 30 above) is the real upper bound.
-          command_timeout: 35m
+          # Default appleboy/ssh-action command_timeout is 10m. Cold
+          # deploys (image pull + `next build` on 1-vCPU droplet) can
+          # cross 25-30 min when antd/rc-* re-transpile is needed, so
+          # the inner DEPLOY_HEALTH_TIMEOUT is 1800s (30 min). Set the
+          # SSH session timeout to 50m so it outlasts the inner loop.
+          # The GHA job's `timeout-minutes: 60` above is the real cap.
+          command_timeout: 50m
           script: |
             set -euo pipefail
 
@@ -600,8 +603,15 @@ jobs:
               # slot takes 5-8 min on the droplet's CPU budget; the
               # previous 60s default aborted flips that would have
               # eventually succeeded.
+              # 1800s (30 min) ceiling — bumped from 1080s after a
+              # 2026-05-08 skyclimber deploy aborted at 18 min while
+              # `next build` was still finishing on the 1-vCPU droplet.
+              # Cold rebuild after deps changes occasionally crosses
+              # 18-25 min when antd/rc-* modules need full re-transpile.
+              # 1800s gives breathing room without hiding genuine deploy
+              # failures.
               TARGET_SHA="$CUR_SHA" \
-                DEPLOY_HEALTH_TIMEOUT="${DEPLOY_HEALTH_TIMEOUT:-1080}" \
+                DEPLOY_HEALTH_TIMEOUT="${DEPLOY_HEALTH_TIMEOUT:-1800}" \
                 DRAIN_SECONDS="${DRAIN_SECONDS:-30}" \
                 bash tools/legacy/blue-green-deploy.sh
               # blue-green script exits 0 on a successful flip; its own
