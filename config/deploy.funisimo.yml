@@ -23,6 +23,18 @@ servers:
     hosts:
       - funisimo.pro
 
+# SSH — funisimo's sshd currently allows root (verified 2026-05-08:
+# `PermitRootLogin yes`, only `root` has authorised keys, no
+# non-system user accounts). Hardening to a non-root operator user is
+# a separate item; for now Kamal connects as root, same as the legacy
+# bash deploy.
+#
+# Key auth uses the same `secrets.DEPLOY_SSH_KEY` the legacy CI deploy
+# uses; Kamal's `ssh-agent` integration picks it up via `ssh-add` in
+# the GHA workflow step.
+ssh:
+  user: root
+
 registry:
   server: ghcr.io
   username: gatispriede
