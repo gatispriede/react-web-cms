@@ -28,6 +28,32 @@
 }
 
 // =================================================================
+// Admin area layout — desktop default
+// =================================================================
+// `.admin-area-layout` wraps `<AreaNav rail/>` + `<div pane/>`. On
+// desktop (≥ 768 px) they sit side-by-side: rail on the left at its
+// natural ~200 px width, pane fills the rest. Without an explicit
+// `display: flex` here the wrapper falls back to block layout — the
+// AreaNav menu (which AntD makes `width: 100%` by default in vertical
+// mode) takes the full row, pushing the pane below it. Operator
+// screenshot 2026-05-08 (post-Kamal-cutover smoke) caught the
+// regression: footer page rendered with the rail full-width across
+// the top, not on the side.
+[data-admin-theme] .admin-area-layout {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 24px;
+}
+[data-admin-theme] .admin-area-layout > .ant-menu {
+  flex: 0 0 auto;
+}
+[data-admin-theme] .admin-area-layout > .admin-area-pane {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+// =================================================================
 // Mobile-friendly admin (Wave 1 — see roadmap/mobile-friendly-admin.md)
 // =================================================================
 // Below 768 px (admin mobile breakpoint, see `useIsMobile`):
