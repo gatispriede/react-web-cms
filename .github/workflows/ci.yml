@@ -159,6 +159,12 @@ jobs:
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+          # Suppress the action's default public-key + comment printout —
+          # the comment embeds the operator's machine name (e.g.
+          # `User@Funisimo-pc`) which is identifying info we don't want
+          # in public CI logs. Auth still works; only the log line is
+          # silenced.
+          log-public-key: false
 
       - name: Ensure `kamal` docker network exists on funisimo
         run: |
