@@ -103,15 +103,18 @@ proxy: false
 # `kamal app boot` to recreate the container. Same pattern the legacy
 # compose stack used.
 
-# Healthcheck — Kamal polls this before flipping the proxy upstream to
-# the new container, so the old container keeps serving until the new
-# one is genuinely ready. The `/api/health` endpoint already exists
-# (used by the legacy bash deploy's pre-flip readiness loop).
-healthcheck:
-  path: /api/health
-  port: 80
-  max_attempts: 60       # 60 × 2s = 2 min cold-deploy budget
-  interval: 2s
+# Healthcheck — Kamal v2 only accepts a `healthcheck:` block when the
+# proxy is on (it's how kamal-proxy decides when to flip slots). With
+# `proxy: false` (Caddy stays in front), the container's readiness is
+# verified two other ways:
+#   1. Kamal waits for `docker run` to exit successfully, then leaves
+#      the container running. If `node ui/client/server.js` crashes on
+#      boot the container exits and kamal aborts the deploy.
+#   2. `.kamal/hooks/post-deploy` runs after kamal considers the deploy
+#      successful, hits `https://funisimo.pro/api/health` over the public
+#      Caddy path, and fails the CI step on non-200.
+# Net effect: same gate as a kamal-native healthcheck, just split between
+# the boot exit code and the public-side smoke. Adequate for our setup.
 
 # Asset persistence. The site reads `/srv/uploads/{images,bundles}`
 # from a host bind mount; same dirs the legacy compose uses. Kamal's
