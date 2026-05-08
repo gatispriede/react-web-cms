@@ -1,0 +1,99 @@
+# Kamal deploy config — funisimo.pro.
+#
+# Read by `kamal deploy --destination=funisimo` from CI (and locally
+# during cutover). Replaces the inline ssh script in `.github/workflows/
+# ci.yml` for funisimo only — skyclimber stays on the legacy bash deploy
+# until funisimo runs stable on Kamal for ≥ 1 release cycle.
+#
+# Operator runbook: `docs/runbooks/kamal-deploy.md`.
+
+service: cms
+
+# GHCR image. CI pushes `ghcr.io/gatispriede/cms:<sha>` per commit; Kamal
+# resolves `<sha>` from the working-tree git SHA at deploy time, so a
+# `kamal deploy` always lines up with whatever HEAD points to.
+image: gatispriede/cms
+
+# `app.servers` lists the production droplet by domain. The reserved IP
+# is what DNS resolves to, so referencing the apex domain works for both
+# Terraform-managed and pre-Terraform droplets — Kamal SSH-connects, no
+# DNS-cache concerns.
+servers:
+  web:
+    hosts:
+      - funisimo.pro
+
+registry:
+  server: ghcr.io
+  username: gatispriede
+  password:
+    # Read from Kamal's host env at deploy time. CI sets this from
+    # `secrets.GITHUB_TOKEN` (which already has packages:read on the
+    # repo); operator can use a personal token with `read:packages` for
+    # local `kamal deploy` runs.
+    - GHCR_PAT
+
+# kamal-proxy binds 80/443 by default and offers blue-green slot
+# management. Caddy is staying as the public-facing TLS terminator
+# (handles `/uploads/*`, `/design-v2/*`, MCP proxy at `/mcp`); the
+# upstream port flips from `app:80` (legacy) to `kamal-proxy:8080`
+# during cutover. See infra/Caddyfile inline notes.
+proxy:
+  ssl: false  # Caddy handles TLS termination; kamal-proxy stays HTTP-only
+  app_port: 80
+  host: funisimo.pro
+
+# `env` is the runtime container env. Secrets come via the Kamal secret
+# store (1Password / SSM / GHA secrets piped in by CI); plain values
+# can stay inline. Below mirrors what `DEPLOY_ENV_FILE_1` carries today.
+env:
+  clear:
+    NODE_ENV: production
+    SITE_DOMAIN_WWW: www.funisimo.pro
+    DOMAIN: funisimo.pro
+    # The legacy compose's blue/green selector — left empty so the
+    # image's CMD (`npm run start`) takes effect; kamal-proxy handles
+    # blue/green slot logic, not the in-container ACTIVE_UPSTREAM.
+    ACTIVE_UPSTREAM: ""
+  secret:
+    - MONGODB_URI
+    - MCP_ALLOWED_CIDR
+    - INITIAL_ADMIN_EMAIL
+    - INITIAL_ADMIN_PASSWORD
+
+# Healthcheck — Kamal polls this before flipping the proxy upstream to
+# the new container, so the old container keeps serving until the new
+# one is genuinely ready. The `/api/healthz` endpoint already exists
+# (used by the legacy bash deploy's pre-flip readiness loop).
+healthcheck:
+  path: /api/healthz
+  port: 80
+  max_attempts: 60       # 60 × 2s = 2 min cold-deploy budget
+  interval: 2s
+
+# Asset persistence. The site reads `/srv/uploads/{images,bundles}`
+# from a host bind mount; same dirs the legacy compose uses. Kamal's
+# `volumes` survives container swaps, so admins keep their uploaded
+# images across deploys without involving DO Spaces.
+volumes:
+  - "/opt/cms/uploads:/srv/uploads"
+
+# Builder — runs `docker build` against the multi-stage AppDockerfile.
+# `local: false` + `arch: amd64` would push the build to a remote builder;
+# we use the GHA runner (amd64) so this stays local-to-CI.
+builder:
+  dockerfile: infra/AppDockerfile
+  arch: amd64
+  args:
+    GIT_SHA: <%= `git rev-parse HEAD`.strip %>
+
+# Aliases — convenience commands for operator workflows. Ship a one-off
+# bundle import without tearing down the running container:
+#   kamal app exec --interactive 'node tools/bundle-import.js /srv/uploads/bundles/latest.zip'
+#
+# `console` opens a node REPL inside the running container — handy for
+# poking at the running process during incidents.
+aliases:
+  console: app exec --interactive 'node'
+  logs: app logs --follow
+  shell: app exec --interactive 'sh'

@@ -1,5 +1,11 @@
 # Automatic deployment
 
+> **Wave 1 Terraform/Kamal note (2026-05-08):** the SSH+rsync+`docker
+> compose up --build` flow this runbook describes is being replaced by
+> [`kamal-deploy.md`](kamal-deploy.md) on funisimo. Skyclimber stays on
+> this path until the migration's per-tenant cutover lands. CI now also
+> pushes images to GHCR — see [`ghcr.md`](ghcr.md).
+
 P2 of the production-ops roadmap. Push to `master` → built, tested,
 SSH-deployed to the droplet, health-gated with rollback.
 

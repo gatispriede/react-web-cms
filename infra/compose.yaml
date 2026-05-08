@@ -298,7 +298,7 @@ services:
       # for a hostname the operator hasn't declared. See P3 in
       # docs/runbooks/digitalocean-domain.md.
       - SITE_DOMAIN_WWW=${SITE_DOMAIN_WWW:-www.localhost}
-      # P4 — blue/green upstream marker. `tools/blue-green-deploy.sh`
+      # P4 — blue/green upstream marker. `tools/legacy/blue-green-deploy.sh`
       # rewrites `.env`'s `ACTIVE_UPSTREAM` line + `docker compose up
       # -d --no-deps caddy` (or `caddy reload`) on every flip. Default
       # `app:80` keeps the legacy single-instance path working when

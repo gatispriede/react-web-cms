@@ -96,13 +96,20 @@
     # mark the sole backend as permanently bad after a single miss.
     # --- P4: blue/green upstream switch ---
     # `{$ACTIVE_UPSTREAM}` is sourced from `.env` and toggled by
-    # `tools/blue-green-deploy.sh` between `app-blue:80` and
+    # `tools/legacy/blue-green-deploy.sh` between `app-blue:80` and
     # `app-green:80`. Default `app:80` (single-instance dev / pre-P4
     # production) preserves the legacy P2 path — when both `app-blue`
     # and `app-green` services are running and `ACTIVE_UPSTREAM` is
     # set, deploys flip the marker + `caddy reload` (graceful, drains
     # in-flight requests on the old upstream over `${DRAIN_SECONDS:-30}` s).
     # See `docs/runbooks/seamless-deployment.md`.
+    #
+    # Wave 1 Terraform/Kamal cutover: when migrating a tenant to Kamal,
+    # set `ACTIVE_UPSTREAM=kamal-proxy:8080` in that droplet's `.env` —
+    # Caddy starts reverse-proxying through kamal-proxy which then
+    # routes to the active blue/green slot Kamal manages. The legacy
+    # `app-blue` / `app-green` containers can be torn down once Kamal
+    # has shipped a successful deploy. See `docs/runbooks/kamal-deploy.md`.
     reverse_proxy {$ACTIVE_UPSTREAM:app:80} {
         lb_try_duration 30s
         lb_try_interval 500ms

@@ -1,34 +1,42 @@
 # syntax=docker/dockerfile:1
-
-# Comments are provided throughout this file to help you get started.
-# If you need more help, visit the Dockerfile reference guide at
-# https://docs.docker.com/go/dockerfile-reference/
-
-# Want to help us make this template better? Share your feedback here: https://forms.gle/ybq9Krt8jtBL3iCk7
-
-FROM node:20-alpine
-
-# Use production node environment by default.
-ENV NODE_ENV production
-
-RUN apk add python3 py3-pip make g++ curl
 #
-#RUN echo 'http://dl-cdn.alpinelinux.org/alpine/v3.6/main' >> /etc/apk/repositories
-#RUN echo 'http://dl-cdn.alpinelinux.org/alpine/v3.6/community' >> /etc/apk/repositories
-#RUN apk update
-#RUN apk add mongodb=3.4.4-r0
+# Multi-stage build (Wave 1 Terraform/Kamal migration).
+#
+# Stage 1 (builder) installs deps and runs `next build` against an
+# ephemeral mongo + standalone-graphql pair (`tools/docker-prebuild.js`)
+# so the resulting image carries a prebuilt `.next/`. Cold-deploy used
+# to run `next build` at container start which took 6-8 min on a 1-vCPU
+# droplet; the GHCR-pushed prebuilt image lets the runtime stage skip
+# straight to `next start` (~30 s).
+#
+# Stage 2 (runtime) is the slim production image. It still copies the
+# full sources (admin upload paths read from `ui/client/public/`,
+# runtime SSR walks `services/`) plus the prebuilt `.next/` and
+# `node_modules`. CMD is `npm run start` — no rebuild, just `next
+# start` against the prebuilt artefacts.
+#
+# Backwards compatibility: the legacy bash deploy on funisimo /
+# skyclimber currently runs `npm run start-docker` (build → start) via
+# `infra/compose.yaml`. That path keeps working because `start-docker`
+# rebuilds at container start using the same mongo / graphql containers
+# in the compose file — slower, but unchanged in shape. Once Kamal
+# cutover ships, the legacy compose service moves to the prebuilt
+# image and the start-docker fallback is retired.
+
+# ---------------------------------------------------------------- builder
+FROM node:20-alpine AS builder
+
+ENV NODE_ENV=production
+
+# Native build deps for bcrypt + the mongo-memory-server binary fetcher
+# the prebuild step uses. `curl` is needed for the memory-server's mongod
+# tarball download; keep it in builder, drop from runtime.
+RUN apk add --no-cache python3 py3-pip make g++ curl
 
 RUN npm i -g sass
 
 WORKDIR /app
-# Yarn cache ensurance
 
-# Location for runtime-generated secrets (e.g. first-boot admin password).
-# Permissions are tightened at write-time in initialPassword.ts; the dir is
-# created here so the node user can write without elevating.
-RUN mkdir -p /app/var && chmod 700 /app/var
-
-# Copy the rest of the source files into the image.
 COPY ./yarn.lock ./yarn.lock
 COPY ./package.json ./package.json
 COPY ./next-i18next.config.js ./next-i18next.config.js
@@ -37,24 +45,61 @@ COPY ./nodemon.json ./nodemon.json
 COPY ./vitest.config.ts ./vitest.config.ts
 COPY ./vitest.setup.ts ./vitest.setup.ts
 COPY ./tools ./tools
-# `infra/certificates/` is gitignored (local mkcert dev TLS for
-# `npm run ssl` via services/sslServer.ts). Production terminates
-# TLS at Caddy (Let's Encrypt), so the certs aren't needed in the
-# image — and the directory is missing on CI/droplet, which used
-# to break the build.
 COPY ./ui ./ui
 COPY ./services ./services
 COPY ./shared ./shared
 
-# Stamp the running container with its source commit SHA so the blue/green
-# deploy script (`tools/blue-green-deploy.sh`) can verify the inactive
-# instance is actually running the target commit before flipping Caddy.
-# Build-arg `GIT_SHA` is passed by CI / the deploy script
-# (`docker build --build-arg GIT_SHA="$(git rev-parse HEAD)"`); falls back
-# to `unknown` for local image builds where the build arg isn't set,
-# which the script tolerates as a no-op SHA check.
+# Yarn install — `--frozen-lockfile` so a drift between yarn.lock and
+# package.json fails the build instead of silently bumping deps.
+# Cache mount keeps the yarn cache across rebuilds (BuildKit feature).
+RUN --mount=type=cache,target=/root/.yarn \
+    YARN_CACHE_FOLDER=/root/.yarn yarn --frozen-lockfile
+
+# Stamp the running container with its source commit SHA so health
+# probes / smoke checks can verify the deploy targets the right commit.
+# `GIT_SHA` is passed by CI (`docker build --build-arg
+# GIT_SHA="$(git rev-parse HEAD)"`); falls back to `unknown` for local
+# image builds.
 ARG GIT_SHA=unknown
 RUN echo "$GIT_SHA" > /app/.git-sha
 
-RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn --frozen-lockfile
-# Build runs at container start (not here) so MongoDB/GraphQL are available for getStaticProps
+# Run the prebuild — boots ephemeral mongo + standalone-graphql, runs
+# `next build --webpack`, tears them down. Output is `.next/` + the
+# Next 16 standalone runtime artefacts that `next start` reads.
+RUN node tools/docker-prebuild.js
+
+# ---------------------------------------------------------------- runtime
+FROM node:20-alpine AS runtime
+
+ENV NODE_ENV=production
+
+# Runtime needs python/g++ stripped, but bcrypt loads a native .node
+# binary at runtime so we keep `make` + a `g++` shim out — the binary
+# was already compiled in the builder stage and lives in node_modules.
+# `curl` stays for the in-container healthcheck the legacy compose +
+# Kamal both use.
+RUN apk add --no-cache curl
+
+WORKDIR /app
+
+# Runtime-generated secrets (first-boot admin password). Permissions
+# are tightened at write-time in initialPassword.ts; the dir is created
+# here so the node user can write without elevating.
+RUN mkdir -p /app/var && chmod 700 /app/var
+
+# Pull the built tree wholesale from the builder. Includes node_modules,
+# .next/, the source tree (admin / SSR still reads it at runtime), and
+# the .git-sha stamp. Single COPY keeps the layer cache simple — every
+# rebuild that needs a new app version invalidates this layer regardless.
+COPY --from=builder /app /app
+
+# Document the port for tooling (compose / Kamal). The actual listen
+# port is set by the start command; legacy compose maps 80, Kamal maps
+# 3000 → kamal-proxy upstream.
+EXPOSE 80
+
+# Default CMD = `next start` against the prebuilt `.next/`. The legacy
+# compose stack overrides this with `npm run start-docker` (which
+# rebuilds at startup) for backwards compatibility while the cutover
+# is in flight; Kamal uses this default and skips the rebuild.
+CMD ["npm", "run", "start"]

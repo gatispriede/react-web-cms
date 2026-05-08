@@ -1,5 +1,11 @@
 # Seamless (blue/green) deployment runbook
 
+> **Wave 1 Terraform/Kamal note (2026-05-08):** funisimo is migrating to
+> Kamal-driven deploys — see [`kamal-deploy.md`](kamal-deploy.md). This
+> runbook stays accurate for skyclimber until its cutover lands. The
+> legacy script moved to `tools/legacy/blue-green-deploy.sh` to signal
+> retirement is in progress.
+
 P4 closes the brief outage window from P2 by running two app containers
 behind Caddy and swapping the upstream marker on each deploy. Old container
 keeps serving until the new one is healthy; Caddy reload is graceful, so
