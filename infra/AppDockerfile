@@ -90,16 +90,48 @@ RUN echo "$GIT_SHA" > /app/.git-sha
 # Next 16 standalone runtime artefacts that `next start` reads.
 RUN node tools/docker-prebuild.js
 
+# Slim down BEFORE the runtime COPY so the deletions actually shrink
+# layer size. Earlier iterations ran `npm prune` + `rm` in the runtime
+# stage, but layer ordering means the deleted files still occupy space
+# in the underlying COPY layer. Doing it here means the runtime COPY
+# brings only the trimmed tree.
+#
+# Drops: devDeps (mongodb-memory-server, vitest, tsx, ts toolchain,
+# the entire `@types/*` corpus, eslint, etc.), `.next/cache` (build-
+# time only), and source maps.
+RUN npm prune --omit=dev --legacy-peer-deps \
+    && rm -rf /app/ui/client/.next/cache \
+    && find /app/ui/client/.next -name "*.map" -delete \
+    && rm -rf /app/tests /app/tools/legacy /app/__mocks__ /app/scripts \
+              /app/.next /app/node_modules/.cache \
+    && du -sh /app/node_modules /app/ui/client/.next /app/services /app/shared 2>&1
+
 # ---------------------------------------------------------------- runtime
+#
+# Slim runtime — only what `next start` reads at request time.
+# Build #5 dropped a 2.97 GB image because the runtime stage did a
+# blanket `COPY /app /app` that pulled in tests, tools, infra/, source
+# maps, the entire builder yarn cache, etc.
+#
+# Selective COPY (~600-800 MB target):
+#   - package.json + package-lock.json  →  needed for `npm prune`
+#   - node_modules/                     →  pruned to production-only below
+#   - ui/client/.next/                  →  Next prebuild output
+#   - ui/client/public/                 →  static assets
+#   - ui/client/next.config.js          →  required by `next start`
+#   - ui/client/pages/ + ui/client/lib/ →  API routes + lib imported at runtime
+#   - services/ + shared/               →  SSR + API handlers walk these
+#   - next-i18next.config.js            →  i18n bootstrap
+#   - next-sitemap.config.cjs           →  sitemap generation at runtime
+#   - .git-sha                          →  health endpoint surfaces this
+#
+# Excluded: tests/, tools/, infra/, docs/, eslint config, vitest config,
+# .next/cache, node_modules/.cache. These accounted for the bulk of
+# the 2.97 GB image.
 FROM node:20-alpine AS runtime
 
 ENV NODE_ENV=production
 
-# Runtime needs python/g++ stripped, but bcrypt loads a native .node
-# binary at runtime so we keep `make` + a `g++` shim out — the binary
-# was already compiled in the builder stage and lives in node_modules.
-# `curl` stays for the in-container healthcheck the legacy compose +
-# Kamal both use.
 RUN apk add --no-cache curl
 
 WORKDIR /app
@@ -109,19 +141,22 @@ WORKDIR /app
 # here so the node user can write without elevating.
 RUN mkdir -p /app/var && chmod 700 /app/var
 
-# Pull the built tree wholesale from the builder. Includes node_modules,
-# .next/, the source tree (admin / SSR still reads it at runtime), and
-# the .git-sha stamp. Single COPY keeps the layer cache simple — every
-# rebuild that needs a new app version invalidates this layer regardless.
-COPY --from=builder /app /app
+# Manifest + lockfile first so `npm prune` works.
+COPY --from=builder /app/package.json /app/package.json
+COPY --from=builder /app/package-lock.json /app/package-lock.json
+COPY --from=builder /app/next-i18next.config.js /app/next-i18next.config.js
+COPY --from=builder /app/next-sitemap.config.cjs /app/next-sitemap.config.cjs
+COPY --from=builder /app/.git-sha /app/.git-sha
 
-# Document the port for tooling (compose / Kamal). The actual listen
-# port is set by the start command; legacy compose maps 80, Kamal maps
-# 3000 → kamal-proxy upstream.
+# Source dirs that the running app imports.
+COPY --from=builder /app/services /app/services
+COPY --from=builder /app/shared /app/shared
+COPY --from=builder /app/ui/client /app/ui/client
+COPY --from=builder /app/node_modules /app/node_modules
+
 EXPOSE 80
 
-# Default CMD = `next start` against the prebuilt `.next/`. The legacy
-# compose stack overrides this with `npm run start-docker` (which
-# rebuilds at startup) for backwards compatibility while the cutover
-# is in flight; Kamal uses this default and skips the rebuild.
+# Default CMD = `next start` against the prebuilt `.next/`. Legacy
+# compose overrides via `command:` in compose.yaml when it wants the
+# build-at-startup path.
 CMD ["npm", "run", "start"]
