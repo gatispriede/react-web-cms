@@ -3,6 +3,7 @@ import {Button, Empty, Input, Popconfirm, Spin, Tooltip} from 'antd';
 import {CheckCircleFilled, CloseOutlined, DeleteOutlined, PictureOutlined, SearchOutlined} from '@client/lib/icons';
 import {IMAGE_DRAG_MIME, serialiseImageForDrag} from '@client/lib/useImageDrop';
 import {useViewModel} from '@client/lib/state/observable';
+import {useIsMobile} from '@admin/lib/useIsMobile';
 import {ImageRailViewModel} from './ImageRailViewModel';
 export {useImageRailState} from './ImageRailViewModel';
 
@@ -40,6 +41,7 @@ interface ImageRailProps {
 
 const ImageRail: React.FC<ImageRailProps> = ({open, onClose}) => {
     const vm = useViewModel(() => new ImageRailViewModel());
+    const isMobile = useIsMobile();
 
     useEffect(() => {
         if (!open) return;
@@ -51,7 +53,14 @@ const ImageRail: React.FC<ImageRailProps> = ({open, onClose}) => {
     // tab deleted them) so the toolbar count never lies.
     useEffect(() => { vm.pruneSelection(); }, [vm.images, vm]);
 
-    if (!open) return null;
+    // Mobile: don't render the rail at all. The drag-from-rail flow doesn't
+    // translate to touch (no "active editor" target context for tap-to-insert),
+    // and the 260 px fixed panel would eat most of a phone viewport. Operators
+    // on mobile use the per-field image pickers (`<ImageUpload>`,
+    // `<ImageRefInput>`, `<BulkImageUploadModal>`) which are tap-friendly.
+    // A proper mobile picker with active-editor context is a follow-up roadmap
+    // item — see Wave 1 mobile-friendly admin spec § "Out of scope for v1".
+    if (!open || isMobile) return null;
 
     const filtered = vm.filtered;
     const selectMode = vm.selectMode;

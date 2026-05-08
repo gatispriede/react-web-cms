@@ -1,9 +1,11 @@
 import React, {useEffect, useMemo} from "react";
-import {Alert, Badge, Button, Card, Empty, Modal, Popconfirm, Space, Table, Tag, Typography} from "antd";
+import {Alert, Badge, Button, Card, Empty, Modal, Popconfirm, Space, Spin, Table, Tag, Typography} from "antd";
 import {DeleteOutlined, MailOutlined, ReloadOutlined} from "@client/lib/icons";
 import {useTranslation} from "react-i18next";
 import {useRefreshView} from "@client/lib/refreshBus";
 import {useViewModel} from "@client/lib/state/observable";
+import {usePullToRefresh, PULL_THRESHOLD_PX} from "@admin/lib/usePullToRefresh";
+import {useIsMobile} from "@admin/lib/useIsMobile";
 import {InquiriesViewModel, InquirySummary} from "./InquiriesViewModel";
 
 /** Render-only Inquiries pane — VM3 (2026-05-02). */
@@ -58,8 +60,37 @@ const AdminSettingsInquiries: React.FC = () => {
             )},
     ], [t, vm]);
 
+    const isMobile = useIsMobile();
+    const {ref: pullRef, pulling, distance} = usePullToRefresh(vm.refresh);
+    const pullProgress = Math.min(distance / PULL_THRESHOLD_PX, 1);
+
     return (
-        <div style={{padding: 16}}>
+        <div
+            ref={isMobile ? pullRef : undefined}
+            data-testid="inquiries-list-pull-refresh"
+            style={{
+                padding: 16,
+                overflowY: 'auto',
+                maxHeight: isMobile ? '100vh' : undefined,
+                transform: pulling ? `translateY(${distance}px)` : undefined,
+                transition: pulling ? 'none' : 'transform 200ms ease',
+            }}
+        >
+            {isMobile && pulling && (
+                <div
+                    aria-hidden="true"
+                    style={{
+                        position: 'sticky',
+                        top: -36,
+                        height: 32,
+                        marginTop: -32,
+                        textAlign: 'center',
+                        opacity: pullProgress,
+                    }}
+                >
+                    <Spin size="small"/>
+                </div>
+            )}
             <Space style={{marginBottom: 12, width: '100%', justifyContent: 'space-between'}}>
                 <Space>
                     <Typography.Title level={4} style={{margin: 0}}>{t('Inquiries')}</Typography.Title>
