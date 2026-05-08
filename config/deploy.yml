@@ -22,6 +22,15 @@ servers:
   web:
     hosts:
       - funisimo.pro
+    # Disable kamal-proxy registration for this role.
+    # `lib/kamal/configuration/role.rb:168` (kamal v2.11):
+    #   "only false means no proxy for non-primary roles"
+    # Without this, `kamal app boot` boots the container fine, then
+    # tries to `docker exec kamal-proxy kamal-proxy deploy cms-web ...`
+    # which fails because kamal-proxy isn't running. The failed proxy
+    # registration causes kamal to stop the otherwise-healthy container.
+    # Caddy is the public front (see deploy.yml header decision).
+    proxy: false
     # Container runtime config.
     #
     # `env-file: /opt/cms/.env` — droplet already carries the full
