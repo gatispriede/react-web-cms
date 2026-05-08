@@ -98,8 +98,15 @@ describe('module.add', () => {
         expect(parse(out)).toEqual({ok: false, error: 'section not found'});
     });
 
-    it('schema marks `sectionId` and `module` as required', () => {
-        expect(moduleAdd.inputSchema.required).toEqual(['sectionId', 'module']);
+    it('schema exposes `sectionId`, `module`, and the bulk `items` variant', () => {
+        // Bulk-write extension moved required-field enforcement into the
+        // handler ("single OR items[]"); the schema still names the
+        // single-item fields so agents can discover the shape.
+        const props = moduleAdd.inputSchema.properties as any;
+        expect(props.sectionId).toBeDefined();
+        expect(props.module).toBeDefined();
+        expect(props.items).toBeDefined();
+        expect(props.items.type).toBe('array');
     });
 });
 

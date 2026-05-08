@@ -206,10 +206,17 @@ describe('F8 W2 — permission tools', () => {
         expect(ADVANCED_ONLY_TOOLS.has('permission.revoke')).toBe(true);
     });
 
-    it('permission.grant schema declares the natural key as required', () => {
-        // Schema validation happens in the dispatcher before the handler
-        // runs; here we just assert the contract.
-        expect(permissionGrant.inputSchema.required).toEqual(['userId', 'scope', 'resourceId']);
+    it('permission.grant schema exposes the natural key plus the bulk variant', () => {
+        // After the bulk-write extension, single-item args are no longer
+        // schema-required (handler enforces "single OR items[]"); the
+        // schema still surfaces them as named properties so agents can
+        // discover the single-item shape.
+        const props = permissionGrant.inputSchema.properties as any;
+        expect(props.userId).toBeDefined();
+        expect(props.scope).toBeDefined();
+        expect(props.resourceId).toBeDefined();
+        expect(props.items).toBeDefined();
+        expect(props.items.type).toBe('array');
     });
 });
 

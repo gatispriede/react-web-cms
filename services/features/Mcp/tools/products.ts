@@ -1,5 +1,5 @@
 import {McpTool} from '../types';
-import {defineTool} from './_shared';
+import {defineTool, runBatch} from './_shared';
 
 const sessionFor = (actor: string) => ({kind: 'admin' as const, role: 'admin' as const, email: actor});
 const safeParse = (s: string): unknown => { try { return JSON.parse(s); } catch { return {raw: s}; } };
@@ -52,47 +52,100 @@ const productInputProps = {
 
 export const productCreate: McpTool = defineTool({
     name: 'product.create',
-    description: 'Creates a new product. Returns id, slug, version.',
+    description: 'Create one or many products. Single form: pass {title, sku, price, currency, ...}. Bulk form: pass {items: InProduct[]}. Bulk returns per-item failures via `data.failed[]` so a partial-batch failure doesn\'t abort the rest. Reference: image.delete { ids[] }.',
     scopes: ['write:products'],
     idempotent: true,
     gqlMutation: 'saveProduct',
     inputSchema: {
         type: 'object',
-        required: ['title', 'sku', 'price', 'currency'],
-        properties: {...productInputProps, idempotencyKey: {type: 'string'}},
-    },
-}, async (args, ctx) => {
-    const res = await ctx.services.saveProduct({
-        product: args,
-        _session: sessionFor(ctx.actor),
-    });
-    return typeof res === 'string' ? safeParse(res) : res;
-});
-
-export const productUpdate: McpTool = defineTool({
-    name: 'product.update',
-    description: 'Updates an existing product by id (optimistic concurrency via expectedVersion).',
-    scopes: ['write:products'],
-    idempotent: true,
-    gqlMutation: 'saveProduct',
-    inputSchema: {
-        type: 'object',
-        required: ['id'],
         properties: {
-            id: {type: 'string', minLength: 1},
             ...productInputProps,
-            expectedVersion: {type: 'integer'},
+            items: {
+                type: 'array',
+                items: {type: 'object', properties: productInputProps},
+                description: 'Bulk variant. Each item is an InProduct. Up to 500 items. Mutually exclusive with single-item args.',
+            },
             idempotencyKey: {type: 'string'},
         },
     },
 }, async (args, ctx) => {
-    const {expectedVersion, ...rest} = args;
-    const res = await ctx.services.saveProduct({
-        product: rest,
-        expectedVersion: expectedVersion ?? null,
-        _session: sessionFor(ctx.actor),
+    const isBulk = Array.isArray(args.items);
+    // For single mode: idempotencyKey/items keys don't go into the product payload.
+    const {items: _i, idempotencyKey: _k, ...singlePayload} = args;
+    const itemsList: Array<{id: string; payload: any}> = isBulk
+        ? args.items.map((it: any, i: number) => ({id: String(it?.sku ?? it?.slug ?? `idx:${i}`), payload: it}))
+        : (typeof args.title === 'string' && typeof args.sku === 'string'
+            ? [{id: String(args.sku), payload: singlePayload}]
+            : []);
+    if (!itemsList.length) {
+        throw new Error('product.create requires (title+sku+price+currency) or non-empty `items[]`');
+    }
+    const batch = await runBatch(itemsList, async (_id, payload) => {
+        const res = await ctx.services.saveProduct({
+            product: payload,
+            _session: sessionFor(ctx.actor),
+        });
+        return {result: typeof res === 'string' ? safeParse(res) : res};
     });
-    return typeof res === 'string' ? safeParse(res) : res;
+    if (!isBulk) {
+        const r = batch.results[0]!;
+        return r.ok ? r.result : {ok: false, error: r.error};
+    }
+    return batch;
+});
+
+export const productUpdate: McpTool = defineTool({
+    name: 'product.update',
+    description: 'Update one or many products by id (optimistic concurrency via expectedVersion). Single form: pass {id, ...patch}. Bulk form: pass {items: IProduct[]}. Bulk returns per-item failures via `data.failed[]` so a partial-batch failure doesn\'t abort the rest. Reference: image.delete { ids[] }.',
+    scopes: ['write:products'],
+    idempotent: true,
+    gqlMutation: 'saveProduct',
+    inputSchema: {
+        type: 'object',
+        properties: {
+            id: {type: 'string', minLength: 1},
+            ...productInputProps,
+            expectedVersion: {type: 'integer'},
+            items: {
+                type: 'array',
+                items: {
+                    type: 'object',
+                    properties: {
+                        id: {type: 'string', minLength: 1},
+                        ...productInputProps,
+                        expectedVersion: {type: 'integer'},
+                    },
+                },
+                description: 'Bulk variant. Each item is an IProduct (must include `id`). Up to 500 items.',
+            },
+            idempotencyKey: {type: 'string'},
+        },
+    },
+}, async (args, ctx) => {
+    const isBulk = Array.isArray(args.items);
+    const {items: _i, idempotencyKey: _k, expectedVersion, ...singleRest} = args;
+    const itemsList: Array<{id: string; payload: any}> = isBulk
+        ? args.items.map((it: any, i: number) => ({id: String(it?.id ?? `idx:${i}`), payload: it}))
+        : (typeof args.id === 'string'
+            ? [{id: args.id, payload: {...singleRest, expectedVersion}}]
+            : []);
+    if (!itemsList.length) {
+        throw new Error('product.update requires `id` or non-empty `items[]`');
+    }
+    const batch = await runBatch(itemsList, async (_id, payload) => {
+        const {expectedVersion: ev, ...productFields} = payload;
+        const res = await ctx.services.saveProduct({
+            product: productFields,
+            expectedVersion: ev ?? null,
+            _session: sessionFor(ctx.actor),
+        });
+        return {result: typeof res === 'string' ? safeParse(res) : res};
+    });
+    if (!isBulk) {
+        const r = batch.results[0]!;
+        return r.ok ? r.result : {ok: false, error: r.error};
+    }
+    return batch;
 });
 
 export const productPublish: McpTool = defineTool({

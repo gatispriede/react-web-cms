@@ -1,6 +1,6 @@
 import {McpTool} from '../types';
 import {getMongoConnection} from '@services/infra/mongoDBConnection';
-import {defineTool} from './_shared';
+import {defineTool, runBatch} from './_shared';
 
 const sessionFor = (actor: string) => ({kind: 'admin' as const, role: 'admin' as const, email: actor});
 
@@ -50,48 +50,72 @@ export const postGet: McpTool = defineTool({
     }
 });
 
+async function postUpsertOnce(ctx: any, payload: any): Promise<any> {
+    const raw = await getMongoConnection().savePost({
+        post: {
+            id:         payload.id,
+            slug:       payload.slug,
+            title:      payload.title,
+            excerpt:    payload.excerpt,
+            body:       payload.body,
+            tags:       payload.tags,
+            coverImage: payload.coverImage,
+            draft:      payload.draft ?? false,
+        },
+        expectedVersion: payload.expectedVersion ?? null,
+        _session: sessionFor(ctx.actor),
+    });
+    return JSON.parse(raw);
+}
+
+const postItemProps = {
+    id:          {type: 'string' as const},
+    slug:        {type: 'string' as const},
+    title:       {type: 'string' as const},
+    excerpt:     {type: 'string' as const},
+    body:        {type: 'string' as const},
+    tags:        {type: 'array' as const, items: {type: 'string' as const}},
+    coverImage:  {type: 'string' as const},
+    draft:       {type: 'boolean' as const},
+    expectedVersion: {type: 'integer' as const},
+};
+
 export const postUpsert: McpTool = defineTool({
     name: 'post.upsert',
-    description: 'Create or update a blog post. Omit `id` to create. `body` is HTML — use semantic tags (<h2>, <p>, <ul>, <strong>). `draft: false` publishes immediately.',
+    description: 'Create or update one or many blog posts. Single form: pass {slug, title, body, ...}. Bulk form: pass {items: IPost[]}. Bulk returns per-item failures via `data.failed[]` so a partial-batch failure doesn\'t abort the rest. Omit `id` to create. `body` is HTML. Reference: image.delete { ids[] }.',
     scopes: ['write:content'],
     idempotent: true,
     gqlMutation: 'savePost',
     inputSchema: {
         type: 'object',
-        required: ['slug', 'title', 'body'],
         properties: {
-            id:          {type: 'string',  description: 'Existing post id for update (omit to create)'},
-            slug:        {type: 'string',  description: 'URL-safe slug e.g. "my-post-title"'},
-            title:       {type: 'string'},
-            excerpt:     {type: 'string',  description: '1–2 sentence summary shown in feeds'},
-            body:        {type: 'string',  description: 'HTML body content'},
-            tags:        {type: 'array', items: {type: 'string'}},
-            coverImage:  {type: 'string',  description: 'Image path e.g. "api/photo.jpg"'},
-            draft:       {type: 'boolean', default: false},
-            expectedVersion: {type: 'integer', description: 'Optimistic-concurrency guard — include if updating'},
+            ...postItemProps,
+            items: {
+                type: 'array',
+                items: {type: 'object', properties: postItemProps},
+                description: 'Bulk variant. Each item is an IPost. Up to 500 items. Mutually exclusive with single-item args.',
+            },
             idempotencyKey: {type: 'string'},
         },
     },
 }, async (args, ctx) => {
-    try {
-        const raw = await getMongoConnection().savePost({
-            post: {
-                id:         args.id,
-                slug:       args.slug,
-                title:      args.title,
-                excerpt:    args.excerpt,
-                body:       args.body,
-                tags:       args.tags,
-                coverImage: args.coverImage,
-                draft:      args.draft ?? false,
-            },
-            expectedVersion: args.expectedVersion ?? null,
-            _session: sessionFor(ctx.actor),
-        });
-        return JSON.parse(raw);
-    } catch (err) {
-        return {ok: false, error: String((err as Error).message || err)};
+    const isBulk = Array.isArray(args.items);
+    const items: Array<{id: string; payload: any}> = isBulk
+        ? args.items.map((it: any, i: number) => ({id: String(it?.id ?? it?.slug ?? `idx:${i}`), payload: it}))
+        : (typeof args.slug === 'string' && typeof args.title === 'string' && typeof args.body === 'string'
+            ? [{id: String(args.id ?? args.slug), payload: args}]
+            : []);
+    if (!items.length) {
+        throw new Error('post.upsert requires (slug+title+body) or non-empty `items[]`');
     }
+    const batch = await runBatch(items, async (_id, payload) => ({
+        result: await postUpsertOnce(ctx, payload),
+    }));
+    if (!isBulk) {
+        const r = batch.results[0]!;
+        return r.ok ? r.result : {ok: false, error: r.error};
+    }
+    return batch;
 });
 
 export const postDelete: McpTool = defineTool({

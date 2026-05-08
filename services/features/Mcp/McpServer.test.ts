@@ -128,8 +128,10 @@ describe('McpServer dispatch', () => {
         const {server} = buildHarness();
         const out = await server.dispatch({
             tool: 'product.create',
-            // missing `title` + `currency`
-            args: {sku: 'X', price: 1},
+            // `price` must be an integer; this exercises the schema
+            // validator's type/format keywords now that required-field
+            // checks moved into the handler (single|bulk contract).
+            args: {title: 'X', sku: 'X', price: 'cheap', currency: 'EUR'},
             token: tokenWith(['write:products']),
         });
         expect(out.ok).toBe(false);

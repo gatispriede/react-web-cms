@@ -339,3 +339,83 @@ export function compose<T = unknown>(
         return {content: [{type: 'text' as const, text: JSON.stringify(env)}]};
     };
 }
+
+// ──────────────────────────────────────────────────────────────────────
+// Bulk helper — runBatch
+// ──────────────────────────────────────────────────────────────────────
+
+/**
+ * Per-item result shape for bulk-write tools. The handler invokes
+ * `runBatch` over the input array; each item's `fn` returns this shape
+ * (`ok: true` + custom payload on success, `ok: false` + `error` on
+ * failure). `runBatch` aggregates without aborting on per-item errors.
+ */
+export interface BulkItemResult {
+    id: string;
+    ok: boolean;
+    error?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    [k: string]: any;
+}
+
+export interface BulkBatchResult<T extends BulkItemResult = BulkItemResult> {
+    /** True when every item succeeded; false if any failed. */
+    ok: boolean;
+    /** Number of items that succeeded. */
+    succeededCount: number;
+    /** Number of items that failed. */
+    failedCount: number;
+    /** Ids of successful items, in input order. */
+    succeeded: string[];
+    /** Failed items with their error strings, in input order. */
+    failed: Array<{id: string; error?: string}>;
+    /** Full per-item results, in input order. */
+    results: T[];
+}
+
+/**
+ * Run a function over each item in a bulk-write batch. Sequential by
+ * default (some Mongo writes deadlock if hammered concurrently); each
+ * item's failure is captured into `failed[]` rather than aborting the
+ * batch. Returns the aggregate shape every bulk-write tool emits.
+ *
+ * Reference impl pattern: `image.delete { ids: [...] }` (shipped
+ * 2026-05-07). Every bulk extension on `section.update`,
+ * `permission.grant`, `user.setRole`, etc. composes via this helper so
+ * the response shape is identical across the surface — agents (and
+ * future drift CI) can rely on the contract.
+ *
+ * The `fn` callback receives both the id (for the result envelope) and
+ * any extra per-item payload the caller threads through (e.g. the
+ * `ISection` for `section.update`). Errors thrown by `fn` are caught
+ * and projected into `{id, ok: false, error}`.
+ */
+export async function runBatch<TPayload, TResult extends BulkItemResult>(
+    items: Array<{id: string; payload?: TPayload}>,
+    fn: (id: string, payload: TPayload | undefined, index: number) => Promise<Omit<TResult, 'id' | 'ok' | 'error'>>,
+): Promise<BulkBatchResult<TResult>> {
+    const results: TResult[] = [];
+    for (let i = 0; i < items.length; i++) {
+        const {id, payload} = items[i];
+        try {
+            const partial = await fn(id, payload, i);
+            results.push({id, ok: true, ...partial} as unknown as TResult);
+        } catch (err) {
+            results.push({
+                id,
+                ok: false,
+                error: String((err as Error).message || err),
+            } as unknown as TResult);
+        }
+    }
+    const succeeded = results.filter(r => r.ok).map(r => r.id);
+    const failed = results.filter(r => !r.ok).map(r => ({id: r.id, error: r.error}));
+    return {
+        ok: failed.length === 0,
+        succeededCount: succeeded.length,
+        failedCount: failed.length,
+        succeeded,
+        failed,
+        results,
+    };
+}

@@ -1,6 +1,6 @@
 import {McpTool} from '../types';
 import {enforceModeForTool} from '../modeEnforcement';
-import {defineTool} from './_shared';
+import {defineTool, runBatch} from './_shared';
 
 const sessionFor = (actor: string) => ({kind: 'admin' as const, role: 'admin' as const, email: actor});
 
@@ -64,28 +64,61 @@ export const pageCreate: McpTool = defineTool({
 
 export const sectionUpdate: McpTool = defineTool({
     name: 'section.update',
-    description: 'Upserts a section (the `content` JSON is run through the same DOMPurify pipeline as the admin UI).',
+    description: 'Upsert one or many sections. Single form: pass {section}. Bulk form: pass {items: ISection[]}. Bulk returns per-item failures via `data.failed[]` so a partial-batch failure doesn\'t abort the rest. The `content` JSON is run through the same DOMPurify pipeline as the admin UI. Reference: image.delete { ids[] }.',
     scopes: ['write:content'],
     idempotent: true,
     gqlMutation: 'addUpdateSectionItem',
     inputSchema: {
         type: 'object',
-        required: ['section'],
         properties: {
-            section: {type: 'object', properties: {}},
+            section: {type: 'object', properties: {}, description: 'Single-item form. Mutually exclusive with `items`.'},
             pageName: {type: 'string'},
             expectedVersion: {type: 'integer'},
+            items: {
+                type: 'array',
+                items: {
+                    type: 'object',
+                    properties: {
+                        section: {type: 'object', properties: {}},
+                        pageName: {type: 'string'},
+                        expectedVersion: {type: 'integer'},
+                    },
+                },
+                description: 'Bulk variant. Each item is {section, pageName?, expectedVersion?}. Up to 500 items. Mutually exclusive with single-item args.',
+            },
             idempotencyKey: {type: 'string'},
         },
     },
 }, async (args, ctx) => {
-    const res = await ctx.services.addUpdateSectionItem({
-        section: args.section,
-        pageName: args.pageName,
-        expectedVersion: args.expectedVersion ?? null,
-        _session: sessionFor(ctx.actor),
+    const isBulk = Array.isArray(args.items);
+    const items: Array<{id: string; payload: any}> = isBulk
+        ? args.items.map((it: any, i: number) => ({
+            id: String(it?.section?.id ?? `idx:${i}`),
+            payload: it,
+        }))
+        : (args.section ? [{
+            id: String(args.section?.id ?? 'idx:0'),
+            payload: {section: args.section, pageName: args.pageName, expectedVersion: args.expectedVersion},
+        }] : []);
+    if (!items.length) {
+        throw new Error('section.update requires `section` or non-empty `items[]`');
+    }
+
+    const batch = await runBatch(items, async (_id, payload) => {
+        const res = await ctx.services.addUpdateSectionItem({
+            section: payload.section,
+            pageName: payload.pageName,
+            expectedVersion: payload.expectedVersion ?? null,
+            _session: sessionFor(ctx.actor),
+        });
+        return {result: typeof res === 'string' ? safeParse(res) : res};
     });
-    return typeof res === 'string' ? safeParse(res) : res;
+
+    if (!isBulk) {
+        const r = batch.results[0]!;
+        return r.ok ? r.result : {ok: false, error: r.error};
+    }
+    return batch;
 });
 
 export const sectionDelete: McpTool = defineTool({
@@ -108,27 +141,7 @@ export const sectionDelete: McpTool = defineTool({
     return typeof res === 'string' ? safeParse(res) : res;
 });
 
-export const pageUpdate: McpTool = defineTool({
-    // SAFE: routes through navigationService.addUpdateNavigationItem +
-    // setParent — no single matching mutation. Drift CI will soft-warn.
-    name: 'page.update',
-    description: 'Updates a page: rename (`page`), set/clear parent, change slug. Cycle + 3-level depth-cap enforced server-side when `parent` is provided.',
-    scopes: ['write:content'],
-    idempotent: true,
-    inputSchema: {
-        type: 'object',
-        required: ['id'],
-        properties: {
-            id: {type: 'string', minLength: 1},
-            page: {type: 'string', minLength: 1},
-            slug: {type: 'string'},
-            parent: {type: 'string'},
-            expectedVersion: {type: 'integer'},
-            idempotencyKey: {type: 'string'},
-        },
-    },
-}, async (args, ctx) => {
-    await enforceModeForTool(ctx.actor, 'page.update');
+async function applyPageUpdate(ctx: any, args: any): Promise<any> {
     const navs = await ctx.services.navigationService.getNavigationCollection();
     const row = (navs ?? []).find((n: any) => n.id === args.id);
     if (!row) return {error: 'page-not-found', id: args.id};
@@ -153,6 +166,57 @@ export const pageUpdate: McpTool = defineTool({
         parentRes = typeof res === 'string' ? safeParse(res) : res;
     }
     return {id: args.id, rename: renameRes, parent: parentRes};
+}
+
+export const pageUpdate: McpTool = defineTool({
+    // SAFE: routes through navigationService.addUpdateNavigationItem +
+    // setParent — no single matching mutation. Drift CI will soft-warn.
+    name: 'page.update',
+    description: 'Update one or many pages. Single form: pass {id, page?, slug?, parent?}. Bulk form: pass {items: INavigation[]}. Bulk returns per-item failures via `data.failed[]` so a partial-batch failure doesn\'t abort the rest. Cycle + 3-level depth-cap enforced server-side when `parent` is provided. Reference: image.delete { ids[] }.',
+    scopes: ['write:content'],
+    idempotent: true,
+    inputSchema: {
+        type: 'object',
+        properties: {
+            id: {type: 'string', minLength: 1},
+            page: {type: 'string', minLength: 1},
+            slug: {type: 'string'},
+            parent: {type: 'string'},
+            expectedVersion: {type: 'integer'},
+            items: {
+                type: 'array',
+                items: {
+                    type: 'object',
+                    properties: {
+                        id: {type: 'string', minLength: 1},
+                        page: {type: 'string'},
+                        slug: {type: 'string'},
+                        parent: {type: 'string'},
+                        expectedVersion: {type: 'integer'},
+                    },
+                },
+                description: 'Bulk variant. Each item shaped like the single-item args. Up to 500 items.',
+            },
+            idempotencyKey: {type: 'string'},
+        },
+    },
+}, async (args, ctx) => {
+    await enforceModeForTool(ctx.actor, 'page.update');
+    const isBulk = Array.isArray(args.items);
+    const items: Array<{id: string; payload: any}> = isBulk
+        ? args.items.map((it: any, i: number) => ({id: String(it?.id ?? `idx:${i}`), payload: it}))
+        : (typeof args.id === 'string' && args.id ? [{id: args.id, payload: args}] : []);
+    if (!items.length) {
+        throw new Error('page.update requires `id` or non-empty `items[]`');
+    }
+    const batch = await runBatch(items, async (_id, payload) => ({
+        result: await applyPageUpdate(ctx, payload),
+    }));
+    if (!isBulk) {
+        const r = batch.results[0]!;
+        return r.ok ? r.result : {ok: false, error: r.error};
+    }
+    return batch;
 });
 
 export const pageDelete: McpTool = defineTool({

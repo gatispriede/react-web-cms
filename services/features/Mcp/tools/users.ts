@@ -15,7 +15,7 @@
  */
 import {McpTool} from '../types';
 import {enforceModeForTool} from '../modeEnforcement';
-import {defineTool} from './_shared';
+import {defineTool, runBatch} from './_shared';
 
 function safeParse(s: unknown): unknown {
     if (typeof s !== 'string') return s;
@@ -78,24 +78,55 @@ export const userGet: McpTool = defineTool({
 
 export const userSetRole: McpTool = defineTool({
     name: 'user.setRole',
-    description: 'Promote/demote a user. Sugar over user.update.',
+    description: 'Promote/demote one or many users. Single form: pass {id, role} (or legacy {email, role}). Bulk form: pass {items: {id?, email?, role}[]}. Bulk returns per-item failures via `data.failed[]` so a partial-batch failure doesn\'t abort the rest. Sugar over user.update. Reference: image.delete { ids[] }.',
     scopes: ['admin:auth'],
     idempotent: true,
     gqlMutation: 'updateUser',
     inputSchema: {
         type: 'object',
-        required: ['id', 'role'],
         properties: {
             id: {type: 'string', minLength: 1},
+            email: {type: 'string'},
             role: {type: 'string', enum: ['admin', 'editor', 'viewer']},
+            items: {
+                type: 'array',
+                items: {
+                    type: 'object',
+                    properties: {
+                        id: {type: 'string', minLength: 1},
+                        email: {type: 'string'},
+                        role: {type: 'string', enum: ['admin', 'editor', 'viewer']},
+                    },
+                },
+                description: 'Bulk variant. Each item is {id|email, role}. Up to 500 items.',
+            },
             idempotencyKey: {type: 'string'},
         },
     },
 }, async (args, ctx) => {
     await enforceModeForTool(ctx.actor, 'user.setRole');
     const conn: any = ctx.services;
-    const res = await conn.updateUser({user: {id: args.id, role: args.role}});
-    return safeParse(res);
+    const isBulk = Array.isArray(args.items);
+    const items: Array<{id: string; payload: any}> = isBulk
+        ? args.items.map((it: any, i: number) => ({id: String(it?.id ?? it?.email ?? `idx:${i}`), payload: it}))
+        : (typeof args.role === 'string' && (args.id || args.email)
+            ? [{id: String(args.id ?? args.email), payload: args}]
+            : []);
+    if (!items.length) {
+        throw new Error('user.setRole requires (id|email)+role or non-empty `items[]`');
+    }
+    const batch = await runBatch(items, async (_id, payload) => {
+        const userPatch: any = {role: payload.role};
+        if (payload.id) userPatch.id = payload.id;
+        if (payload.email) userPatch.email = payload.email;
+        const res = await conn.updateUser({user: userPatch});
+        return {result: safeParse(res)};
+    });
+    if (!isBulk) {
+        const r = batch.results[0]!;
+        return r.ok ? r.result : {ok: false, error: r.error};
+    }
+    return batch;
 });
 
 export const userCreate: McpTool = defineTool({
@@ -162,32 +193,62 @@ export const userCreate: McpTool = defineTool({
     return parsed;
 });
 
+function buildUserPatch(payload: any): any {
+    const patch: any = {id: payload.id};
+    if (payload.name !== undefined) patch.name = payload.name;
+    if (payload.email !== undefined) patch.email = payload.email;
+    if (payload.role !== undefined) patch.role = payload.role;
+    return patch;
+}
+
 export const userUpdate: McpTool = defineTool({
     name: 'user.update',
-    description: 'Patch user fields. Whitelist: name / email / role.',
+    description: 'Patch one or many users. Whitelist: name / email / role. Single form: pass {id, ...patch}. Bulk form: pass {items: IUser[]}. Bulk returns per-item failures via `data.failed[]` so a partial-batch failure doesn\'t abort the rest. Reference: image.delete { ids[] }.',
     scopes: ['admin:auth'],
     idempotent: true,
     gqlMutation: 'updateUser',
     inputSchema: {
         type: 'object',
-        required: ['id'],
         properties: {
             id: {type: 'string', minLength: 1},
             name: {type: 'string'},
             email: {type: 'string'},
             role: {type: 'string', enum: ['admin', 'editor', 'viewer']},
+            items: {
+                type: 'array',
+                items: {
+                    type: 'object',
+                    properties: {
+                        id: {type: 'string', minLength: 1},
+                        name: {type: 'string'},
+                        email: {type: 'string'},
+                        role: {type: 'string', enum: ['admin', 'editor', 'viewer']},
+                    },
+                },
+                description: 'Bulk variant. Each item is an IUser patch (must include `id`). Up to 500 items.',
+            },
             idempotencyKey: {type: 'string'},
         },
     },
 }, async (args, ctx) => {
     await enforceModeForTool(ctx.actor, 'user.update');
     const conn: any = ctx.services;
-    const patch: any = {id: args.id};
-    if (args.name !== undefined) patch.name = args.name;
-    if (args.email !== undefined) patch.email = args.email;
-    if (args.role !== undefined) patch.role = args.role;
-    const res = await conn.updateUser({user: patch});
-    return safeParse(res);
+    const isBulk = Array.isArray(args.items);
+    const items: Array<{id: string; payload: any}> = isBulk
+        ? args.items.map((it: any, i: number) => ({id: String(it?.id ?? `idx:${i}`), payload: it}))
+        : (typeof args.id === 'string' ? [{id: args.id, payload: args}] : []);
+    if (!items.length) {
+        throw new Error('user.update requires `id` or non-empty `items[]`');
+    }
+    const batch = await runBatch(items, async (_id, payload) => {
+        const res = await conn.updateUser({user: buildUserPatch(payload)});
+        return {result: safeParse(res)};
+    });
+    if (!isBulk) {
+        const r = batch.results[0]!;
+        return r.ok ? r.result : {ok: false, error: r.error};
+    }
+    return batch;
 });
 
 export const userDelete: McpTool = defineTool({

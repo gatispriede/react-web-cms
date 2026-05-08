@@ -249,3 +249,61 @@ describe('compose', () => {
         expect(envA.data).toBe(1);
     });
 });
+
+describe('runBatch', () => {
+    it('aggregates successes', async () => {
+        const {runBatch} = await import('./_shared');
+        const result = await runBatch<{name: string}, {id: string; ok: boolean; greeting?: string}>(
+            [
+                {id: 'a', payload: {name: 'one'}},
+                {id: 'b', payload: {name: 'two'}},
+            ],
+            async (id, p) => ({greeting: `hi-${p?.name}-${id}`}),
+        );
+        expect(result.ok).toBe(true);
+        expect(result.succeededCount).toBe(2);
+        expect(result.failedCount).toBe(0);
+        expect(result.succeeded).toEqual(['a', 'b']);
+        expect(result.results[0].greeting).toBe('hi-one-a');
+        expect(result.results[1].greeting).toBe('hi-two-b');
+    });
+
+    it('isolates per-item failures', async () => {
+        const {runBatch} = await import('./_shared');
+        const result = await runBatch<undefined, {id: string; ok: boolean}>(
+            [
+                {id: 'a'},
+                {id: 'b'},
+                {id: 'c'},
+            ],
+            async (id) => {
+                if (id === 'b') throw new Error('boom-b');
+                return {};
+            },
+        );
+        expect(result.ok).toBe(false);
+        expect(result.succeededCount).toBe(2);
+        expect(result.failedCount).toBe(1);
+        expect(result.succeeded).toEqual(['a', 'c']);
+        expect(result.failed).toEqual([{id: 'b', error: 'boom-b'}]);
+        expect(result.results.find(r => r.id === 'b')?.ok).toBe(false);
+    });
+
+    it('preserves input order in `results`', async () => {
+        const {runBatch} = await import('./_shared');
+        const result = await runBatch<undefined, {id: string; ok: boolean}>(
+            [{id: 'z'}, {id: 'a'}, {id: 'm'}],
+            async () => ({}),
+        );
+        expect(result.results.map(r => r.id)).toEqual(['z', 'a', 'm']);
+    });
+
+    it('handles an empty batch', async () => {
+        const {runBatch} = await import('./_shared');
+        const result = await runBatch<undefined, {id: string; ok: boolean}>([], async () => ({}));
+        expect(result.ok).toBe(true);
+        expect(result.succeededCount).toBe(0);
+        expect(result.failedCount).toBe(0);
+        expect(result.results).toEqual([]);
+    });
+});

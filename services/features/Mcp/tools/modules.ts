@@ -15,7 +15,7 @@ import {EItemType} from '@enums/EItemType';
 import {EStyle} from '@enums/EStyle';
 import {McpTool} from '../types';
 import {enforceModeForTool} from '../modeEnforcement';
-import {defineTool} from './_shared';
+import {defineTool, runBatch} from './_shared';
 
 const sessionFor = (actor: string) => ({kind: 'admin' as const, role: 'admin' as const, email: actor});
 
@@ -76,25 +76,7 @@ export const moduleListTypes: McpTool = defineTool({
     styles: Object.entries(EStyle).map(([k, v]) => ({key: k, value: v})),
 }));
 
-export const moduleAdd: McpTool = defineTool({
-    name: 'module.add',
-    description: 'Append a module to a section.content array (or insert at index `at`). Persists through the same pipeline as section.update.',
-    scopes: ['write:content'],
-    idempotent: true,
-    auditScope: 'modules',
-    gqlMutation: 'addUpdateSectionItem',
-    inputSchema: {
-        type: 'object',
-        required: ['sectionId', 'module'],
-        properties: {
-            sectionId: {type: 'string', minLength: 1},
-            module: moduleSchema,
-            at: {type: 'integer', minimum: 0},
-            idempotencyKey: {type: 'string'},
-        },
-    },
-}, async (args, ctx) => {
-    await enforceModeForTool(ctx.actor, 'module.add');
+async function moduleAddOnce(ctx: any, args: {sectionId: string; module: ModuleSpec; at?: number}): Promise<any> {
     const sec = await loadSection(ctx, args.sectionId);
     if (!sec) return {ok: false, error: 'section not found'};
     const content = Array.isArray(sec.content) ? sec.content.slice() : [];
@@ -108,27 +90,9 @@ export const moduleAdd: McpTool = defineTool({
         _session: sessionFor(ctx.actor),
     });
     return typeof res === 'string' ? safeParse(res) : res;
-});
+}
 
-export const moduleUpdate: McpTool = defineTool({
-    name: 'module.update',
-    description: 'Replace section.content[at] with the given module spec.',
-    scopes: ['write:content'],
-    idempotent: true,
-    auditScope: 'modules',
-    gqlMutation: 'addUpdateSectionItem',
-    inputSchema: {
-        type: 'object',
-        required: ['sectionId', 'module', 'at'],
-        properties: {
-            sectionId: {type: 'string', minLength: 1},
-            module: moduleSchema,
-            at: {type: 'integer', minimum: 0},
-            idempotencyKey: {type: 'string'},
-        },
-    },
-}, async (args, ctx) => {
-    await enforceModeForTool(ctx.actor, 'module.update');
+async function moduleUpdateOnce(ctx: any, args: {sectionId: string; module: ModuleSpec; at: number}): Promise<any> {
     const sec = await loadSection(ctx, args.sectionId);
     if (!sec) return {ok: false, error: 'section not found'};
     const content = Array.isArray(sec.content) ? sec.content.slice() : [];
@@ -143,26 +107,9 @@ export const moduleUpdate: McpTool = defineTool({
         _session: sessionFor(ctx.actor),
     });
     return typeof res === 'string' ? safeParse(res) : res;
-});
+}
 
-export const moduleRemove: McpTool = defineTool({
-    name: 'module.remove',
-    description: 'Remove section.content[at] from the section.',
-    scopes: ['write:content'],
-    idempotent: true,
-    auditScope: 'modules',
-    gqlMutation: 'addUpdateSectionItem',
-    inputSchema: {
-        type: 'object',
-        required: ['sectionId', 'at'],
-        properties: {
-            sectionId: {type: 'string', minLength: 1},
-            at: {type: 'integer', minimum: 0},
-            idempotencyKey: {type: 'string'},
-        },
-    },
-}, async (args, ctx) => {
-    await enforceModeForTool(ctx.actor, 'module.remove');
+async function moduleRemoveOnce(ctx: any, args: {sectionId: string; at: number}): Promise<any> {
     const sec = await loadSection(ctx, args.sectionId);
     if (!sec) return {ok: false, error: 'section not found'};
     const content = Array.isArray(sec.content) ? sec.content.slice() : [];
@@ -177,6 +124,151 @@ export const moduleRemove: McpTool = defineTool({
         _session: sessionFor(ctx.actor),
     });
     return typeof res === 'string' ? safeParse(res) : res;
+}
+
+export const moduleAdd: McpTool = defineTool({
+    name: 'module.add',
+    description: 'Append one or many modules to section.content arrays. Single form: pass {sectionId, module, at?}. Bulk form: pass {items: {sectionId, module, at?}[]}. Bulk returns per-item failures via `data.failed[]`. Persists through the same pipeline as section.update. Reference: image.delete { ids[] }.',
+    scopes: ['write:content'],
+    idempotent: true,
+    auditScope: 'modules',
+    gqlMutation: 'addUpdateSectionItem',
+    inputSchema: {
+        type: 'object',
+        properties: {
+            sectionId: {type: 'string', minLength: 1},
+            module: moduleSchema,
+            at: {type: 'integer', minimum: 0},
+            items: {
+                type: 'array',
+                items: {
+                    type: 'object',
+                    properties: {
+                        sectionId: {type: 'string', minLength: 1},
+                        module: moduleSchema,
+                        at: {type: 'integer', minimum: 0},
+                    },
+                },
+                description: 'Bulk variant. Up to 500 items. Mutually exclusive with the single-item args.',
+            },
+            idempotencyKey: {type: 'string'},
+        },
+    },
+}, async (args, ctx) => {
+    await enforceModeForTool(ctx.actor, 'module.add');
+    const isBulk = Array.isArray(args.items);
+    const items: Array<{id: string; payload: any}> = isBulk
+        ? args.items.map((it: any, i: number) => ({id: String(it?.sectionId ?? `idx:${i}`) + ':' + i, payload: it}))
+        : (typeof args.sectionId === 'string' && args.module
+            ? [{id: args.sectionId, payload: {sectionId: args.sectionId, module: args.module, at: args.at}}]
+            : []);
+    if (!items.length) {
+        throw new Error('module.add requires `sectionId`+`module` or non-empty `items[]`');
+    }
+    const batch = await runBatch(items, async (_id, payload) => ({
+        result: await moduleAddOnce(ctx, payload),
+    }));
+    if (!isBulk) {
+        const r = batch.results[0]!;
+        return r.ok ? r.result : {ok: false, error: r.error};
+    }
+    return batch;
+});
+
+export const moduleUpdate: McpTool = defineTool({
+    name: 'module.update',
+    description: 'Replace section.content[at] with the given module spec. Single form: pass {sectionId, module, at}. Bulk form: pass {items: {sectionId, module, at}[]}. Bulk returns per-item failures via `data.failed[]`. Reference: image.delete { ids[] }.',
+    scopes: ['write:content'],
+    idempotent: true,
+    auditScope: 'modules',
+    gqlMutation: 'addUpdateSectionItem',
+    inputSchema: {
+        type: 'object',
+        properties: {
+            sectionId: {type: 'string', minLength: 1},
+            module: moduleSchema,
+            at: {type: 'integer', minimum: 0},
+            items: {
+                type: 'array',
+                items: {
+                    type: 'object',
+                    properties: {
+                        sectionId: {type: 'string', minLength: 1},
+                        module: moduleSchema,
+                        at: {type: 'integer', minimum: 0},
+                    },
+                },
+                description: 'Bulk variant. Up to 500 items. Mutually exclusive with the single-item args.',
+            },
+            idempotencyKey: {type: 'string'},
+        },
+    },
+}, async (args, ctx) => {
+    await enforceModeForTool(ctx.actor, 'module.update');
+    const isBulk = Array.isArray(args.items);
+    const items: Array<{id: string; payload: any}> = isBulk
+        ? args.items.map((it: any, i: number) => ({id: `${it?.sectionId ?? 'idx'}:${it?.at ?? i}`, payload: it}))
+        : (typeof args.sectionId === 'string' && args.module && typeof args.at === 'number'
+            ? [{id: `${args.sectionId}:${args.at}`, payload: {sectionId: args.sectionId, module: args.module, at: args.at}}]
+            : []);
+    if (!items.length) {
+        throw new Error('module.update requires `sectionId`+`module`+`at` or non-empty `items[]`');
+    }
+    const batch = await runBatch(items, async (_id, payload) => ({
+        result: await moduleUpdateOnce(ctx, payload),
+    }));
+    if (!isBulk) {
+        const r = batch.results[0]!;
+        return r.ok ? r.result : {ok: false, error: r.error};
+    }
+    return batch;
+});
+
+export const moduleRemove: McpTool = defineTool({
+    name: 'module.remove',
+    description: 'Remove section.content[at] from the section. Single form: pass {sectionId, at}. Bulk form: pass {items: {sectionId, at}[]}. Bulk returns per-item failures via `data.failed[]`. Reference: image.delete { ids[] }.',
+    scopes: ['write:content'],
+    idempotent: true,
+    auditScope: 'modules',
+    gqlMutation: 'addUpdateSectionItem',
+    inputSchema: {
+        type: 'object',
+        properties: {
+            sectionId: {type: 'string', minLength: 1},
+            at: {type: 'integer', minimum: 0},
+            items: {
+                type: 'array',
+                items: {
+                    type: 'object',
+                    properties: {
+                        sectionId: {type: 'string', minLength: 1},
+                        at: {type: 'integer', minimum: 0},
+                    },
+                },
+                description: 'Bulk variant. Up to 500 items. Mutually exclusive with the single-item args.',
+            },
+            idempotencyKey: {type: 'string'},
+        },
+    },
+}, async (args, ctx) => {
+    await enforceModeForTool(ctx.actor, 'module.remove');
+    const isBulk = Array.isArray(args.items);
+    const items: Array<{id: string; payload: any}> = isBulk
+        ? args.items.map((it: any, i: number) => ({id: `${it?.sectionId ?? 'idx'}:${it?.at ?? i}`, payload: it}))
+        : (typeof args.sectionId === 'string' && typeof args.at === 'number'
+            ? [{id: `${args.sectionId}:${args.at}`, payload: {sectionId: args.sectionId, at: args.at}}]
+            : []);
+    if (!items.length) {
+        throw new Error('module.remove requires `sectionId`+`at` or non-empty `items[]`');
+    }
+    const batch = await runBatch(items, async (_id, payload) => ({
+        result: await moduleRemoveOnce(ctx, payload),
+    }));
+    if (!isBulk) {
+        const r = batch.results[0]!;
+        return r.ok ? r.result : {ok: false, error: r.error};
+    }
+    return batch;
 });
 
 function safeParse(s: string): unknown {

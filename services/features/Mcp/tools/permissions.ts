@@ -9,7 +9,7 @@
  */
 import {McpTool} from '../types';
 import {enforceModeForTool} from '../modeEnforcement';
-import {defineTool} from './_shared';
+import {defineTool, runBatch} from './_shared';
 
 export const permissionList: McpTool = defineTool({
     // SAFE: not a GraphQL mutation — direct service read
@@ -40,53 +40,115 @@ export const permissionList: McpTool = defineTool({
 
 export const permissionGrant: McpTool = defineTool({
     name: 'permission.grant',
-    description: 'Grant a (userId, scope, resourceId) permission. Idempotent — re-granting is a no-op.',
+    description: 'Grant one or many (userId, scope, resourceId) permissions. Single form: pass {userId, scope, resourceId}. Bulk form: pass {items: {userId, scope, resourceId?}[]}. Bulk returns per-item failures via `data.failed[]` so a partial-batch failure doesn\'t abort the rest. Idempotent — re-granting is a no-op. Reference: image.delete { ids[] }.',
     scopes: ['admin:auth'],
     idempotent: true,
     gqlMutation: 'grantPermission',
     inputSchema: {
         type: 'object',
-        required: ['userId', 'scope', 'resourceId'],
         properties: {
             userId: {type: 'string', minLength: 1},
             scope: {type: 'string', minLength: 1},
             resourceId: {type: 'string', minLength: 1},
+            items: {
+                type: 'array',
+                items: {
+                    type: 'object',
+                    properties: {
+                        userId: {type: 'string', minLength: 1},
+                        scope: {type: 'string', minLength: 1},
+                        resourceId: {type: 'string', minLength: 1},
+                    },
+                },
+                description: 'Bulk variant. Up to 500 items. Mutually exclusive with single-item args.',
+            },
             idempotencyKey: {type: 'string'},
         },
     },
 }, async (args, ctx) => {
     await enforceModeForTool(ctx.actor, 'permission.grant');
-    return ctx.services.permissionService.grant({
-        userId: args.userId,
-        scope: args.scope,
-        resourceId: args.resourceId,
-        grantedBy: ctx.actor,
+    const isBulk = Array.isArray(args.items);
+    const items: Array<{id: string; payload: any}> = isBulk
+        ? args.items.map((it: any, i: number) => ({
+            id: `${it?.userId ?? 'idx'}:${it?.scope ?? ''}:${it?.resourceId ?? ''}:${i}`,
+            payload: it,
+        }))
+        : (typeof args.userId === 'string' && typeof args.scope === 'string' && typeof args.resourceId === 'string'
+            ? [{id: `${args.userId}:${args.scope}:${args.resourceId}`, payload: args}]
+            : []);
+    if (!items.length) {
+        throw new Error('permission.grant requires (userId+scope+resourceId) or non-empty `items[]`');
+    }
+    const batch = await runBatch(items, async (_id, payload) => {
+        const result = await ctx.services.permissionService.grant({
+            userId: payload.userId,
+            scope: payload.scope,
+            resourceId: payload.resourceId,
+            grantedBy: ctx.actor,
+        });
+        return {result};
     });
+    if (!isBulk) {
+        const r = batch.results[0]!;
+        return r.ok ? r.result : {ok: false, error: r.error};
+    }
+    return batch;
 });
 
 export const permissionRevoke: McpTool = defineTool({
     name: 'permission.revoke',
-    description: 'Revoke a (userId, scope, resourceId) permission. Idempotent — revoking a missing row is a no-op.',
+    description: 'Revoke one or many (userId, scope, resourceId) permissions. Single form: pass {userId, scope, resourceId}. Bulk form: pass {items: {userId, scope, resourceId?}[]}. Bulk returns per-item failures via `data.failed[]`. Idempotent — revoking a missing row is a no-op. Reference: image.delete { ids[] }.',
     scopes: ['admin:auth'],
     idempotent: true,
     gqlMutation: 'revokePermission',
     inputSchema: {
         type: 'object',
-        required: ['userId', 'scope', 'resourceId'],
         properties: {
             userId: {type: 'string', minLength: 1},
             scope: {type: 'string', minLength: 1},
             resourceId: {type: 'string', minLength: 1},
+            items: {
+                type: 'array',
+                items: {
+                    type: 'object',
+                    properties: {
+                        userId: {type: 'string', minLength: 1},
+                        scope: {type: 'string', minLength: 1},
+                        resourceId: {type: 'string', minLength: 1},
+                    },
+                },
+                description: 'Bulk variant. Up to 500 items. Mutually exclusive with single-item args.',
+            },
             idempotencyKey: {type: 'string'},
         },
     },
 }, async (args, ctx) => {
     await enforceModeForTool(ctx.actor, 'permission.revoke');
-    return ctx.services.permissionService.revoke({
-        userId: args.userId,
-        scope: args.scope,
-        resourceId: args.resourceId,
+    const isBulk = Array.isArray(args.items);
+    const items: Array<{id: string; payload: any}> = isBulk
+        ? args.items.map((it: any, i: number) => ({
+            id: `${it?.userId ?? 'idx'}:${it?.scope ?? ''}:${it?.resourceId ?? ''}:${i}`,
+            payload: it,
+        }))
+        : (typeof args.userId === 'string' && typeof args.scope === 'string' && typeof args.resourceId === 'string'
+            ? [{id: `${args.userId}:${args.scope}:${args.resourceId}`, payload: args}]
+            : []);
+    if (!items.length) {
+        throw new Error('permission.revoke requires (userId+scope+resourceId) or non-empty `items[]`');
+    }
+    const batch = await runBatch(items, async (_id, payload) => {
+        const result = await ctx.services.permissionService.revoke({
+            userId: payload.userId,
+            scope: payload.scope,
+            resourceId: payload.resourceId,
+        });
+        return {result};
     });
+    if (!isBulk) {
+        const r = batch.results[0]!;
+        return r.ok ? r.result : {ok: false, error: r.error};
+    }
+    return batch;
 });
 
 export const PERMISSION_TOOLS: McpTool[] = [permissionList, permissionGrant, permissionRevoke];
