@@ -1,8 +1,9 @@
 import React from "react";
-import {Button, Dropdown, Space} from "antd";
+import {Button, Drawer, Dropdown, Space} from "antd";
 import {
     EyeOutlined,
     LogoutOutlined,
+    MenuOutlined,
     ThunderboltOutlined,
 } from "@client/lib/icons";
 import {Session} from "next-auth";
@@ -11,6 +12,7 @@ import {TFunction} from "i18next";
 import {useTranslation as useReactTranslation} from "react-i18next";
 import {ADMIN_LOCALES, AdminLocale, setAdminLocale} from "@admin/i18n/adminI18n";
 import UserApi from "@services/api/client/UserApi";
+import {useIsMobile} from "@admin/lib/useIsMobile";
 import CommandPalette from "../CommandPalette";
 import AdminModeSwitcher from "../AdminModeSwitcher";
 import DarkModeSwitcher from "../DarkModeSwitcher";
@@ -21,8 +23,14 @@ import type {AdminView} from "../UserStatusBar";
  * Admin top-bar nav: skip-to-content link, user name, area buttons,
  * preview/command/locale chrome, then mode + theme switchers and sign-out.
  *
- * The host shell (`UserStatusBarInner`) owns the area-rail + main pane;
- * everything inside the `<nav>` lives here.
+ * **Mobile shrink (≤768 px)** — the inline nav row wrapped onto 4 lines
+ * on phones (operator screenshot 2026-05-08 surfaced this). Below the
+ * breakpoint:
+ *   - Top row keeps just User name + hamburger + sign-out.
+ *   - Area buttons + Preview + Command + locale + mode + theme switch
+ *     move into a slide-in `<Drawer>` triggered by the hamburger.
+ *   - The drawer dismisses on overlay tap and on any nav item activation
+ *     so the operator returns to the page they just picked.
  */
 const AdminTopBar = ({
     view,
@@ -44,6 +52,54 @@ const AdminTopBar = ({
     const {i18n: adminI} = useReactTranslation();
     const currentAdminLocale = (adminI.language as AdminLocale) || 'en';
     const adminLocaleLabel = currentAdminLocale.toUpperCase();
+    const isMobile = useIsMobile();
+    const [drawerOpen, setDrawerOpen] = React.useState(false);
+    const dismiss = (): void => setDrawerOpen(false);
+
+    const localeDropdown = (
+        <Dropdown
+            menu={{
+                selectedKeys: [currentAdminLocale],
+                items: ADMIN_LOCALES.map(({code, label}: {code: AdminLocale; label: string}) => ({
+                    key: code, label: tAdmin(label),
+                    onClick: () => {
+                        setAdminLocale(code);
+                        const userId = (session?.user as any)?.id;
+                        const userEmail = session?.user?.email;
+                        if (userId && userEmail) {
+                            void new UserApi().updateUser({
+                                id: userId,
+                                email: userEmail,
+                                preferredAdminLocale: code,
+                            });
+                        }
+                    },
+                })),
+            }}
+            placement="bottomRight"
+        >
+            <Button type="link" title={tAdmin("Admin language")} aria-label={tAdmin("Admin language")}>
+                <Space size={4}>
+                    <span style={{fontFamily: 'ui-monospace, monospace', fontWeight: 600}}>{adminLocaleLabel}</span>
+                </Space>
+            </Button>
+        </Dropdown>
+    );
+
+    const previewButton = (
+        <Button type={"link"} icon={<EyeOutlined/>} onClick={(e) => {
+            e.preventDefault();
+            if (typeof window !== 'undefined') {
+                window.open(`/${lang}`, '_blank', 'noopener,noreferrer');
+            }
+            dismiss();
+        }}>{tAdmin("Preview")}</Button>
+    );
+    const commandButton = (
+        <Button type={"link"} icon={<ThunderboltOutlined/>} onClick={() => { setPaletteOpen(true); dismiss(); }} title="Ctrl+K / ⌘K">
+            {tAdmin("Command")}
+        </Button>
+    );
 
     return (
         <>
@@ -53,58 +109,64 @@ const AdminTopBar = ({
                 <div className={'container'}>
                     <p>{`${tAdmin("User")}: ${session?.user?.name} `}</p>
                 </div>
-                <AdminAreaButtons view={view} simplified={simplified} tAdmin={tAdmin}/>
-                <Button type={"link"} icon={<EyeOutlined/>} onClick={(e) => {
-                    e.preventDefault();
-                    if (typeof window !== 'undefined') {
-                        window.open(`/${lang}`, '_blank', 'noopener,noreferrer');
-                    }
-                }}>{tAdmin("Preview")}</Button>
-                {/* DECISION: the public-blog link moved into the Content
-                    area's sub-nav as a "View live blog" affordance under
-                    Posts (per user instruction "move blog under content"
-                    — Phase 2 of admin segregation). The admin top-bar no
-                    longer carries a Blog utility button; the public blog
-                    is reachable via Preview → /lang/blog or the Command
-                    palette's "Open blog" entry. */}
-                <Button type={"link"} icon={<ThunderboltOutlined/>} onClick={() => setPaletteOpen(true)} title="Ctrl+K / ⌘K">
-                    {tAdmin("Command")}
-                </Button>
-                {/* Spacer — pushes everything from the language dropdown onward
-                    to the far right. Nav actions (Build / Content / Preview /
-                    Command…) stay left-aligned; account + chrome controls
-                    (language / mode / theme / sign out) sit on the right. */}
-                <span className="app-login-wrapper__spacer" aria-hidden="true"/>
-                <Dropdown
-                    menu={{
-                        selectedKeys: [currentAdminLocale],
-                        items: ADMIN_LOCALES.map(({code, label}: {code: AdminLocale; label: string}) => ({
-                            key: code, label: tAdmin(label),
-                            onClick: () => {
-                                setAdminLocale(code);
-                                const userId = (session?.user as any)?.id;
-                                const userEmail = session?.user?.email;
-                                if (userId && userEmail) {
-                                    void new UserApi().updateUser({
-                                        id: userId,
-                                        email: userEmail,
-                                        preferredAdminLocale: code,
-                                    });
-                                }
-                            },
-                        })),
-                    }}
-                    placement="bottomRight"
-                >
-                    <Button type="link" title={tAdmin("Admin language")} aria-label={tAdmin("Admin language")}>
-                        <Space size={4}>
-                            <span style={{fontFamily: 'ui-monospace, monospace', fontWeight: 600}}>{adminLocaleLabel}</span>
-                        </Space>
-                    </Button>
-                </Dropdown>
-                <AdminModeSwitcher/>
-                <DarkModeSwitcher/>
-                <Button type={"link"} icon={<LogoutOutlined/>} href={'#'} onClick={() => signOut()}>{tAdmin("Sign out")}</Button>
+                {isMobile ? (
+                    <>
+                        <span className="app-login-wrapper__spacer" aria-hidden="true"/>
+                        <Button
+                            data-testid="admin-topbar-mobile-toggle"
+                            type="text"
+                            icon={<MenuOutlined/>}
+                            onClick={() => setDrawerOpen(true)}
+                            aria-label={tAdmin("Open admin menu")}
+                            aria-expanded={drawerOpen}
+                        />
+                        <Button type={"link"} icon={<LogoutOutlined/>} onClick={() => signOut()} aria-label={tAdmin("Sign out")}/>
+                        <Drawer
+                            data-testid="admin-topbar-mobile-drawer"
+                            data-state={drawerOpen ? 'open' : 'closed'}
+                            placement="right"
+                            open={drawerOpen}
+                            onClose={dismiss}
+                            width="80vw"
+                            title={tAdmin("Admin")}
+                        >
+                            <div onClick={dismiss}>
+                                <AdminAreaButtons view={view} simplified={simplified} tAdmin={tAdmin}/>
+                            </div>
+                            <div style={{borderTop: '1px solid rgba(0,0,0,0.06)', marginTop: 12, paddingTop: 12}}>
+                                {previewButton}
+                                {commandButton}
+                                {localeDropdown}
+                                <div style={{display: 'flex', alignItems: 'center', gap: 8, marginTop: 12}}>
+                                    <AdminModeSwitcher/>
+                                    <DarkModeSwitcher/>
+                                </div>
+                            </div>
+                        </Drawer>
+                    </>
+                ) : (
+                    <>
+                        <AdminAreaButtons view={view} simplified={simplified} tAdmin={tAdmin}/>
+                        {previewButton}
+                        {/* DECISION: the public-blog link moved into the Content
+                            area's sub-nav as a "View live blog" affordance under
+                            Posts (per user instruction "move blog under content"
+                            — Phase 2 of admin segregation). The admin top-bar no
+                            longer carries a Blog utility button; the public blog
+                            is reachable via Preview → /lang/blog or the Command
+                            palette's "Open blog" entry. */}
+                        {commandButton}
+                        {/* Spacer — pushes everything from the language dropdown onward
+                            to the far right. Nav actions (Build / Content / Preview /
+                            Command…) stay left-aligned; account + chrome controls
+                            (language / mode / theme / sign out) sit on the right. */}
+                        <span className="app-login-wrapper__spacer" aria-hidden="true"/>
+                        {localeDropdown}
+                        <AdminModeSwitcher/>
+                        <DarkModeSwitcher/>
+                        <Button type={"link"} icon={<LogoutOutlined/>} href={'#'} onClick={() => signOut()}>{tAdmin("Sign out")}</Button>
+                    </>
+                )}
             </nav>
         </>
     );

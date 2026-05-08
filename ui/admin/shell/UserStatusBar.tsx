@@ -248,16 +248,20 @@ const UserStatusBarInner = ({session, view, tApp}: {
                 paletteOpen={paletteOpen}
                 setPaletteOpen={setPaletteOpen}
             />
-            <main id="admin-main" aria-label={tAdmin("Admin workspace")}>
+            <main id="admin-main" aria-label={tAdmin("Admin workspace")} className="admin-main">
                 {activeArea ? (
-                    <div style={{display: 'flex', alignItems: 'flex-start', gap: 16}}>
+                    /* Desktop: rail + pane side-by-side. Mobile (≤768 px,
+                       see AdminAntdOverrides.scss): rail flips above the
+                       pane and renders horizontally — stacking vertically
+                       was eating most of the viewport on phones. */
+                    <div className="admin-area-layout">
                         <AreaNav
                             area={activeArea}
                             items={areaItems[activeArea]}
                             currentPath={currentPath}
                             isAdmin={isAdmin}
                         />
-                        <div style={{flex: 1, minWidth: 0}}>
+                        <div className="admin-area-pane">
                             {renderPane()}
                         </div>
                     </div>
