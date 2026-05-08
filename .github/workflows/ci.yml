@@ -163,26 +163,44 @@ jobs:
       - name: Trust funisimo.pro host key
         run: ssh-keyscan -H funisimo.pro >> ~/.ssh/known_hosts
 
-      - name: Kamal deploy
+      - name: Kamal app boot
         env:
           # GHCR pull auth — workflow's GITHUB_TOKEN already has
           # packages:read once Actions access on the package is set
           # (operator did this 2026-05-08).
           GHCR_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Pin the deploy to the master SHA we just pushed to GHCR
-          # (the `ghcr-push:` job tagged it as `:latest` + `:<sha>`).
-          # `--version` makes the deploy reproducible — kamal pulls that
-          # exact tag rather than whatever `:latest` happens to point to.
-          # `--skip-proxy-boot` because kamal-proxy isn't on this
-          # droplet (Caddy is the public front — see `config/deploy.yml`
-          # header). Without the flag kamal would try to register the
-          # container with a kamal-proxy that doesn't exist and fail.
-          #
-          # No --destination flag: we only have one Kamal target. When
-          # skyclimber gets its own DO API key + Kamal cutover, split
-          # `config/deploy.yml` into a base + per-destination files.
-          kamal deploy --version=${{ github.sha }} --skip-proxy-boot
+          # `kamal app boot` (not `kamal deploy`) because kamal v2's
+          # `deploy` always tries to set up kamal-proxy and there's no
+          # skip flag. We don't run kamal-proxy (Caddy is the public
+          # front). `app boot` is the proxy-agnostic primitive: pulls
+          # image, stops old, starts new.
+          # `--version` pins to the master SHA already on GHCR via
+          # the `ghcr-push:` job above — reproducible vs whatever
+          # `:latest` happens to point to.
+          kamal app boot --version=${{ github.sha }}
+
+      - name: Attach front-end network + public smoke
+        run: |
+          # `kamal app boot` puts cms-web on cms_back-end (deploy.yml
+          # `options.network`). Caddy lives on cms_front-end — attach
+          # the second network so `cms-web:80` resolves from Caddy.
+          # `app boot` doesn't trigger `post-deploy` hook so this runs
+          # inline.
+          ssh root@funisimo.pro "docker network connect cms_front-end cms-web 2>/dev/null || true"
+
+          # Wait for the new container to settle, smoke the public path.
+          for i in 1 2 3 4 5 6 7 8; do
+            CODE=$(curl -sf -o /dev/null -w "%{http_code}" --max-time 10 https://funisimo.pro/api/health || echo "000")
+            if [ "$CODE" = "200" ]; then
+              echo "public smoke 200 after $((i*5))s"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "!! public /api/health did not return 200 within 40s" >&2
+          ssh root@funisimo.pro "docker logs cms-web --tail=30" >&2 || true
+          exit 1
 
   # ----------------------------------------------------------------
   # Legacy ssh+rsync deploy. Funisimo is `auto: false` since 2026-05-08
