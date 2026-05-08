@@ -1,0 +1,41 @@
+#!/bin/bash
+#
+# Kamal post-deploy hook — runs LOCALLY on the deploy machine (CI runner
+# or operator workstation) after every successful `kamal deploy`. Kamal
+# pipes per-deploy context via env vars: KAMAL_DESTINATION,
+# KAMAL_VERSION, KAMAL_HOSTS, KAMAL_RECORDED_AT.
+#
+# What this hook does:
+#   1. SSH into each deployed host and run `docker network connect
+#      cms_front-end cms-web` (kamal v2 `options.network` only takes one
+#      network — primary is `cms_back-end` for mongo/graphql/mcp; we need
+#      to attach `cms_front-end` so Caddy can reverse-proxy).
+#   2. Public smoke against the destination's apex.
+#
+# Idempotent — `docker network connect` errors out if already attached;
+# we silence that error so re-deploys don't fail loudly.
+
+set -e
+
+if [ "$KAMAL_DESTINATION" != "funisimo" ]; then
+    echo "[post-deploy] skipping non-funisimo destination ($KAMAL_DESTINATION)"
+    exit 0
+fi
+
+for host in $KAMAL_HOSTS; do
+    echo "[post-deploy] $host: attaching cms_front-end network"
+    ssh -o StrictHostKeyChecking=accept-new "root@$host" \
+        "docker network connect cms_front-end cms-web 2>/dev/null || true"
+done
+
+# Public smoke from the runner. Kamal already healthchecks the container
+# on the host before considering the deploy successful, but the public
+# smoke verifies Caddy's path through to cms-web works end-to-end.
+SMOKE_URL="https://${KAMAL_DESTINATION}.pro/api/health"
+echo "[post-deploy] smoking $SMOKE_URL"
+SMOKE_CODE=$(curl -sf -o /dev/null -w "%{http_code}" --max-time 15 "$SMOKE_URL" || echo "000")
+if [ "$SMOKE_CODE" != "200" ]; then
+    echo "!! public smoke failed: $SMOKE_URL → $SMOKE_CODE" >&2
+    exit 1
+fi
+echo "[post-deploy] public 200 ✓"

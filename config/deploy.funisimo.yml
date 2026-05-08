@@ -33,15 +33,23 @@ servers:
     #     can't see back-end-only containers).
     # Kamal v2 takes a single network in `options.network`; for the
     # second, post-deploy step runs `docker network connect`.
-    # Kamal `options.network` only takes a single network; after `kamal
-    # deploy` boots the container, the runbook flow runs:
+    # Container runtime config. Three things to note:
     #
-    #   docker network connect cms_front-end cms-web
+    # 1. `env-file: /opt/cms/.env` — droplet already carries the full
+    #    runtime env (MONGODB_URI, SMTP_*, INITIAL_ADMIN_*, etc.) at
+    #    /opt/cms/.env from the legacy compose stack. Pointing kamal at
+    #    it avoids mirroring the same 9 secrets into GHA repo settings.
+    #    Drops the entire `env: secret:` block below as a result.
     #
-    # to attach the second network. See docs/runbooks/kamal-deploy.md
-    # cutover sequence for the full procedure.
+    # 2. `network: cms_back-end` — primary network so MONGODB_URI=
+    #    mongodb://mongodb:27017 + standalone-graphql + mcp resolve.
+    #
+    # 3. cms_front-end (caddy network) is attached POST-deploy via the
+    #    kamal post-deploy hook (`.kamal/hooks/post-deploy`). Kamal v2
+    #    `options.network` only takes one; the hook fixes that gap.
     options:
       network: cms_back-end
+      env-file: /opt/cms/.env
 
 # SSH — funisimo's sshd currently allows root (verified 2026-05-08:
 # `PermitRootLogin yes`, only `root` has authorised keys, no
@@ -86,33 +94,14 @@ registry:
 # until funisimo runs stable on Kamal for ≥ 1 release cycle.
 proxy: false
 
-# `env` is the runtime container env. Secrets come via the Kamal secret
-# store (1Password / SSM / GHA secrets piped in by CI); plain values
-# can stay inline. Below mirrors what `DEPLOY_ENV_FILE_1` carries today.
-env:
-  clear:
-    NODE_ENV: production
-    SITE_DOMAIN_WWW: www.funisimo.pro
-    DOMAIN: funisimo.pro
-    # The legacy compose's blue/green selector — left empty so the
-    # image's CMD (`npm run start`) takes effect; kamal-proxy handles
-    # blue/green slot logic, not the in-container ACTIVE_UPSTREAM.
-    ACTIVE_UPSTREAM: ""
-  secret:
-    - MONGODB_URI
-    - MCP_ALLOWED_CIDR
-    - INITIAL_ADMIN_EMAIL
-    - INITIAL_ADMIN_PASSWORD
-    # SMTP — funisimo uses Resend (smtp.resend.com:2587). Today's
-    # legacy compose reads these from `/opt/cms/secrets/*` files;
-    # Kamal pipes them through `secret:` instead so the deploy YAML is
-    # self-contained. EmailService reads them via `readSecret(SMTP_*)`
-    # which falls back to `process.env` when the *_FILE form is absent.
-    - SMTP_HOST
-    - SMTP_PORT
-    - SMTP_USER
-    - SMTP_PASS
-    - MAIL_FROM
+# Runtime env comes from /opt/cms/.env on the droplet (see
+# `servers.web.options.env-file` above). No `env: clear:` / `env: secret:`
+# blocks because the `--env-file` covers everything the running container
+# needs (MONGODB_URI, SMTP_*, NODE_ENV, DOMAIN, INITIAL_ADMIN_*, …).
+#
+# To rotate a secret: edit /opt/cms/.env on the droplet directly, then
+# `kamal app boot` to recreate the container. Same pattern the legacy
+# compose stack used.
 
 # Healthcheck — Kamal polls this before flipping the proxy upstream to
 # the new container, so the old container keeps serving until the new
