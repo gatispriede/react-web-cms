@@ -1,28 +1,24 @@
 import React from 'react'
-import {resolve} from "@services/api/generated";
-import {Button, ConfigProvider, Layout, Menu, Modal, Popconfirm, Spin, Tag, message, theme as antdTheme} from 'antd';
-import {CloseOutlined, CloudUploadOutlined, DownOutlined, EditOutlined, FileOutlined, PlusOutlined} from "@client/lib/icons";
+import {ConfigProvider, Layout, Modal, Spin, message, theme as antdTheme} from 'antd';
 import PublishApi from "@services/api/client/PublishApi";
 import AddNewDialogNavigation from "@admin/features/Navigation/AddNewDialogNavigation";
-import DynamicTabsContent from "@client/lib/DynamicTabsContent";
 import {IPage} from "@interfaces/IPage";
 import staticTheme from '@client/features/Themes/themeConfig';
 import {applyThemeCssVars} from '@client/features/Themes/applyThemeCssVars';
 import ThemeApi from '@services/api/client/ThemeApi';
-import {IMongo} from "@interfaces/IMongo";
 import MongoApi from '@services/api/client/MongoApi';
 import {GuardedAction} from '@admin/lib/useGuardedAction';
-import Logo from "@client/features/Logo/Logo";
 import {Session} from "next-auth";
 import {INavigation} from "@interfaces/INavigation";
 import {TFunction} from "i18next";
 import {UserRole} from "@interfaces/IUser";
-import AuditBadge from "./AuditBadge";
-import UndoStatusPill from "./UndoStatusPill";
 import {refreshBus} from "@client/lib/refreshBus";
-import ImageRailDock from "@admin/features/Navigation/ImageRailDock";
 import {setAnchors} from "@admin/lib/anchorRegistry";
 import {getCachedMode} from "@admin/lib/adminMode";
+import AdminBuildHeader from "./AdminBuild/AdminBuildHeader";
+import AdminBuildSider from "./AdminBuild/AdminBuildSider";
+import {buildPageMenuItems} from "./AdminBuild/pageMenuBuilder";
+import {loadNavigationPages} from "./AdminBuild/loadNavigationPages";
 
 interface IHomeState {
     loading: boolean,
@@ -232,96 +228,13 @@ class AdminApp extends React.Component<{
                 seo: undefined
             }
         }
-        const pages = await resolve(
-            ({query}) => {
-                const list: any[] = [];
-                (query as unknown as IMongo).mongo.getNavigationCollection.map((item: INavigation) => {
-                    let itemSeo
-                    if (item.seo) {
-                        itemSeo = {
-                            description: item.seo.description,
-                            keywords: item.seo.keywords,
-                            viewport: item.seo.viewport,
-                            charSet: item.seo.charSet,
-                            url: item.seo.url,
-                            image: item.seo.image,
-                            image_alt: item.seo.image_alt,
-                            author: item.seo.author,
-                            locale: item.seo.locale,
-                        }
-                    }
-
-                    return list.push({
-                        page: item.page,
-                        id: item.id,
-                        type: item.type,
-                        // F1 sub-pages — `parent` and `slug` feed the sider
-                        // tree builder + breadcrumb. Reads return undefined
-                        // for legacy rows, treated as roots.
-                        parent: (item as any).parent,
-                        slug: (item as any).slug,
-                        seo: itemSeo,
-                        sections: item.sections,
-                        editedBy: (item as any).editedBy,
-                        editedAt: (item as any).editedAt,
-                    })
-                })
-                return list
-            }
-        )
-        // F1 sub-pages — gqty doesn't yet expose `parent` / `slug` on
-        // INavigation (regen pending). Pull them via raw GraphQL and
-        // graft onto each page so the sider tree builds correctly.
-        try {
-            const ps = await this.MongoApi.fetchNavigationParentSlugMap();
-            for (const p of pages) {
-                const extra = ps.get((p as any).id);
-                if (extra) {
-                    (p as any).parent = extra.parent;
-                    (p as any).slug = extra.slug;
-                }
-            }
-        } catch (err) { console.warn('parent/slug graft failed', err); }
-
-        const newTabsState: any[] = []
-        const sectionsByPage: Record<string, any[]> = {};
-        if (pages[0]) {
-            for (let id in pages) {
-                if (pages[id]) {
-                    const sectionsData: any[] = await this.MongoApi.loadSections(pages[id].page, pages)
-                    sectionsByPage[pages[id].page] = sectionsData;
-                    newTabsState.push({
-                        key: id,
-                        page: pages[id].page,
-                        // F1 sub-pages — carry id/parent so `renderMenuItems`
-                        // can build the nested submenu structure and
-                        // `deletePage` can offer the cascade prompt.
-                        id: (pages[id] as any).id,
-                        parent: (pages[id] as any).parent,
-                        editedBy: (pages[id] as any).editedBy,
-                        editedAt: (pages[id] as any).editedAt,
-                        // Key by page name so React remounts `DynamicTabsContent` when the
-                        // admin switches pages in the sidebar — the class stores
-                        // `sections` on mount and never re-syncs from props.
-                        children: (
-                            <DynamicTabsContent
-                                key={`page-${pages[id].page}`}
-                                t={this.props.t}
-                                tApp={this.props.tApp}
-                                page={pages[id].page}
-                                admin={this.admin}
-                                sections={sectionsData}
-                                refresh={async () => {
-                                    await this.initialize()
-                                }}
-                            />
-                        )
-                    })
-                }
-            }
-
-        }
-
+        const {pages, tabProps: newTabsState, sectionsByPage} = await loadNavigationPages({
+            mongoApi: this.MongoApi,
+            t: this.props.t,
+            tApp: this.props.tApp,
+            admin: this.admin,
+            onRefresh: async () => { await this.initialize(); },
+        });
 
         newState.tabProps = newTabsState
         newState.pages = pages
@@ -350,123 +263,6 @@ class AdminApp extends React.Component<{
                 : [...s.openKeys, key],
         }));
     };
-
-    renderMenuItems() {
-        // F1 sub-pages + click-parent-edits (option B) — `tabProps` is a
-        // flat list (one entry per page). Build a parent → children tree
-        // off `id` / `parent`, then *flatten back to a single-level list*
-        // with depth-based indent. The flatten is deliberate: if we hand
-        // AntD `<Menu items[].children>`, AntD renders a SubMenu and
-        // intercepts the title click for expand/collapse — meaning a
-        // click on a parent page can no longer set `activeTab` (i.e.
-        // navigate to edit the parent itself). We want title click =
-        // navigate, separate chevron = expand. Doing the flatten here
-        // gives us full control over both interactions. Orphans
-        // (parent points at a missing page) surface as roots.
-        const byId = new Map<string, any>();
-        for (const tp of this.state.tabProps) {
-            if (tp.id) byId.set(tp.id, {...tp, kids: []});
-        }
-        const roots: any[] = [];
-        for (const node of byId.values()) {
-            if (node.parent && byId.has(node.parent)) {
-                byId.get(node.parent)!.kids.push(node);
-            } else {
-                roots.push(node);
-            }
-        }
-        const buildLabel = (tp: any, depth: number, hasKids: boolean, isOpen: boolean) => (
-                <div
-                    className="admin-sider-item"
-                    data-testid={`nav-page-row-${String(tp.page).toLowerCase()}`}
-                    style={{
-                        display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'space-between',
-                        paddingLeft: depth * 20,
-                    }}
-                >
-                    <div style={{flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2}}>
-                        <span style={{
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            textTransform: 'uppercase',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 8,
-                            lineHeight: 1.3,
-                        }}>
-                            {hasKids ? (
-                                <Button
-                                    size="small"
-                                    type="text"
-                                    aria-label={isOpen ? this.props.t('Collapse') : this.props.t('Expand')}
-                                    aria-expanded={isOpen}
-                                    data-testid={`nav-page-toggle-${String(tp.page).toLowerCase()}`}
-                                    onClick={e => { e.stopPropagation(); this.toggleOpenKey(tp.key); }}
-                                    icon={
-                                        <DownOutlined
-                                            style={{
-                                                transition: 'transform 120ms',
-                                                transform: isOpen ? 'rotate(0deg)' : 'rotate(-90deg)',
-                                            }}
-                                        />
-                                    }
-                                    style={{flex: '0 0 auto', width: 20, height: 20, padding: 0, opacity: 0.7}}
-                                />
-                            ) : (
-                                /* Generic per-page icon. A future per-page `iconName`
-                                   (set via the navigation editor) would slot in here. */
-                                <FileOutlined aria-hidden="true" style={{flex: '0 0 auto', opacity: 0.7}}/>
-                            )}
-                            <span style={{overflow: 'hidden', textOverflow: 'ellipsis'}}>{tp.page}</span>
-                        </span>
-                        {!this.state.siderCollapsed && this.admin && tp.editedAt && (
-                            <span style={{lineHeight: 1.1, fontSize: 10, opacity: 0.75, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
-                                <AuditBadge compact editedBy={tp.editedBy} editedAt={tp.editedAt}/>
-                            </span>
-                        )}
-                    </div>
-                    {!this.state.siderCollapsed && this.canEditNav && (
-                        <span
-                            className="admin-sider-actions"
-                            style={{display: 'inline-flex', gap: 2, flex: '0 0 auto'}}
-                            onClick={e => e.stopPropagation()}
-                        >
-                            <Button
-                                size="small"
-                                type="text"
-                                icon={<EditOutlined/>}
-                                onClick={e => { e.stopPropagation(); this.openEdit(Number(tp.key)); }}
-                                aria-label={this.props.t('Edit page')}
-                            />
-                            <Button
-                                data-testid="nav-page-delete-btn"
-                                size="small"
-                                type="text"
-                                danger
-                                icon={<CloseOutlined/>}
-                                onClick={e => { e.stopPropagation(); void this.confirmDelete(tp); }}
-                                aria-label={this.props.t('Delete page')}
-                            />
-                        </span>
-                    )}
-                </div>
-            );
-        const out: any[] = [];
-        const walk = (node: any, depth: number) => {
-            const hasKids = node.kids.length > 0;
-            const isOpen = this.state.openKeys.includes(node.key);
-            out.push({
-                key: node.key,
-                label: buildLabel(node, depth, hasKids, isOpen),
-            });
-            if (hasKids && isOpen) {
-                for (const c of node.kids) walk(c, depth + 1);
-            }
-        };
-        for (const r of roots) walk(r, 0);
-        return out;
-    }
 
     /** F1 sub-pages — delete prompt that asks the operator what to do
      *  with children when the deleted page has any. Default: orphan
@@ -509,96 +305,68 @@ class AdminApp extends React.Component<{
         });
     };
 
+    private setActiveTab = (key: string) => {
+        this.setState({activeTab: key});
+    };
+
+    private closeAddDialog = () => {
+        this.setState({addNewDialogOpen: false});
+    };
+
+    private refreshFromDialog = async () => {
+        await this.initialize();
+    };
+
     render() {
         const activeChildren = this.state.tabProps.find(t => t.key === this.state.activeTab)?.children
             ?? this.state.tabProps[0]?.children;
+        const menuItems = buildPageMenuItems({
+            tabProps: this.state.tabProps,
+            openKeys: this.state.openKeys,
+            siderCollapsed: this.state.siderCollapsed,
+            isAdmin: this.admin,
+            canEditNav: this.canEditNav,
+            t: this.props.t,
+            onToggleOpenKey: this.toggleOpenKey,
+            onOpenEdit: this.openEdit,
+            onConfirmDelete: this.confirmDelete,
+        });
         return (
             <ConfigProvider theme={{
                 ...staticTheme,
                 algorithm: this.state.darkMode ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
             }}>
                 <Spin spinning={this.state.loading}>
-                    <div className="admin-app-header" style={{
-                        display: 'flex', alignItems: 'center', gap: 12, padding: '8px 16px', flexWrap: 'wrap',
-                    }}>
-                        <Logo admin={this.admin} t={this.props.t}/>
-                        <div style={{flex: 1}}/>
-                        {this.canEditNav && <ImageRailDock/>}
-                        {this.canEditNav && <UndoStatusPill t={this.props.t}/>}
-                        {this.canPublish && getCachedMode() !== 'simplified' && (
-                            <>
-                                <Popconfirm
-                                    title={this.props.t('Publish to production?')}
-                                    description={this.props.t('This copies the current draft to the live published snapshot.')}
-                                    okText={this.props.t('Publish')}
-                                    cancelText={this.props.t('Cancel')}
-                                    okButtonProps={{'data-testid': 'publishing-publish-confirm-btn'} as any}
-                                    onConfirm={this.publish}
-                                >
-                                    <Button data-testid="publishing-publish-btn" type="primary" icon={<CloudUploadOutlined/>} loading={this.state.publishing}>
-                                        {this.props.t('Publish')}
-                                    </Button>
-                                </Popconfirm>
-                                {this.state.publishedAt ? (
-                                    <Tag color="green">
-                                        {this.props.t('Last published')}: {new Date(this.state.publishedAt).toLocaleString()}
-                                    </Tag>
-                                ) : (
-                                    <Tag>{this.props.t('No published snapshot yet')}</Tag>
-                                )}
-                            </>
-                        )}
-                        {/* Dark-mode toggle + AdminModeSwitcher live in
-                            the top-top bar (UserStatusBar) so they
-                            persist across every admin route, not just
-                            /admin/build. AdminApp still reads the
-                            localStorage flag on mount so the AntD
-                            ConfigProvider's `darkAlgorithm` flips. */}
-                    </div>
+                    <AdminBuildHeader
+                        admin={this.admin}
+                        t={this.props.t}
+                        canEditNav={this.canEditNav}
+                        canPublish={this.canPublish}
+                        publishing={this.state.publishing}
+                        publishedAt={this.state.publishedAt}
+                        mode={getCachedMode()}
+                        onPublish={this.publish}
+                    />
                     <AddNewDialogNavigation
                         t={this.props.t}
-                        close={() => {
-                            this.setState({addNewDialogOpen: false})
-                        }}
+                        close={this.closeAddDialog}
                         activeNavigation={this.state.activeNavigation}
                         allPages={this.state.pages as any}
                         open={this.state.addNewDialogOpen}
-                        refresh={async () => {
-                            await this.initialize()
-                        }}
+                        refresh={this.refreshFromDialog}
                     />
                     <Layout style={{background: 'transparent'}}>
-                        <Layout.Sider
-                            collapsible
-                            collapsed={this.state.siderCollapsed}
-                            onCollapse={this.toggleSider}
-                            breakpoint="md"
-                            width={240}
-                            theme={this.state.darkMode ? 'dark' : 'light'}
-                            style={{borderRight: '1px solid rgba(0,0,0,0.06)', minHeight: '70vh'}}
-                        >
-                            <Menu
-                                mode="inline"
-                                theme={this.state.darkMode ? 'dark' : 'light'}
-                                selectedKeys={[this.state.activeTab]}
-                                onClick={({key}) => this.setState({activeTab: key})}
-                                items={this.renderMenuItems()}
-                                style={{borderInlineEnd: 'none'}}
-                            />
-                            {this.canEditNav && (
-                                <div style={{padding: 12, textAlign: 'center'}}>
-                                    <Button
-                                        data-testid="nav-add-page-btn"
-                                        type="dashed"
-                                        icon={<PlusOutlined/>}
-                                        onClick={this.openAdd}
-                                        block={!this.state.siderCollapsed}
-                                    >
-                                        {!this.state.siderCollapsed && this.props.t('New page')}
-                                    </Button>
-                                </div>
-                            )}
-                        </Layout.Sider>
+                        <AdminBuildSider
+                            darkMode={this.state.darkMode}
+                            siderCollapsed={this.state.siderCollapsed}
+                            onToggleSider={this.toggleSider}
+                            menuItems={menuItems}
+                            activeTab={this.state.activeTab}
+                            onActiveTabChange={this.setActiveTab}
+                            canEditNav={this.canEditNav}
+                            onAddPage={this.openAdd}
+                            t={this.props.t}
+                        />
                         <Layout.Content
                             key={this.state.activeTab}
                             style={{padding: 16, minHeight: '70vh'}}
