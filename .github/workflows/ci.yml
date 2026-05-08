@@ -160,8 +160,17 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
 
-      - name: Trust funisimo.pro host key
-        run: ssh-keyscan -H funisimo.pro >> ~/.ssh/known_hosts
+      - name: Trust funisimo.pro host keys
+        run: |
+          # Kamal's Net::SSH resolves funisimo.pro → reserved-IP +
+          # eth0-IP and validates against known_hosts using whichever
+          # IP the connection actually lands on. ssh-keyscanning ONLY
+          # the apex hostname leaves the resolved-IP entries empty
+          # and Net::SSH bails with HostKeyMismatch. Scan all three:
+          # apex, reserved IP, eth0 IP.
+          for h in funisimo.pro 139.59.205.140 46.101.220.131; do
+            ssh-keyscan -H "$h" >> ~/.ssh/known_hosts 2>/dev/null
+          done
 
       - name: Kamal app boot
         env:
