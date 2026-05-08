@@ -254,13 +254,17 @@ jobs:
             host_secret: DEPLOY_HOST_2
             env_secret: DEPLOY_ENV_FILE_2
             smoke_url: https://skyclimber.pro/
-            # `auto: true` → deploys on every push to master, in parallel
-            # with funisimo. Both droplets run the same image build off
-            # the same commit; per-droplet config differences live in
-            # DEPLOY_ENV_FILE_n. Use "Run workflow" with `target=` set to
-            # one droplet only when you specifically want to stage a
-            # change against one tenant first.
-            auto: true
+            # `auto: false` since 2026-05-08 (operator: "skip sky for
+            # now"). Skyclimber's legacy build was timing out on cold
+            # next-build at startup; while we sort that path out the
+            # auto-deploy is paused. Manual via `workflow_dispatch
+            # --target=skyclimber.pro` still resolves the legacy path.
+            #
+            # Re-enable when:
+            #   - Skyclimber gets its own DO API key + Kamal cutover
+            #     (preferred — same fast deploy as funisimo)
+            #   - Or the legacy build issue is fixed
+            auto: false
             # Per-target seamless (blue/green) opt-in. Skyclimber runs
             # the P4 path (`tools/blue-green-deploy.sh`) so the `app`
             # container flip is atomic via Caddy's ACTIVE_UPSTREAM swap.
