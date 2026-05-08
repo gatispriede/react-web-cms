@@ -50,6 +50,27 @@ export interface ISection {
      * into the same control + Slider pair.
      */
     transparentOpacity?: number
+    /**
+     * Layout config — currently a single `mobileBehavior` enum that controls
+     * how multi-column rows collapse on phones. See Wave 3 mobile-column-
+     * behavior spec at `docs/roadmap/mobile-column-behavior.md`.
+     *
+     *   - `'stack'` (default): legacy flat collapse — every column → 100%
+     *     width, stacked in DOM order.
+     *   - `'collapse'`: drawer-style accordion — first column visible,
+     *     subsequent columns hide under a chevron-rotate toggle. Mirrors
+     *     the public-side `MobileNav` gesture; uses the shared
+     *     `@mixin section-row-collapsible` in `_responsive.scss`.
+     *   - `'keep-ratio'`: preserve column widths via horizontal scroll —
+     *     for tables / wide diagrams that don't decompose.
+     *
+     * Section-level (not module-level) keeps DRY across the 5+ modules
+     * that render multi-column rows. Per-module override added later if
+     * a real case appears.
+     */
+    layout?: {
+        mobileBehavior?: 'stack' | 'collapse' | 'keep-ratio'
+    }
     /** Optimistic-concurrency counter — bumped server-side on each save.
      *  Frontend stashes this at read-time and sends it back as
      *  `expectedVersion` on save; server rejects with a `ConflictError`

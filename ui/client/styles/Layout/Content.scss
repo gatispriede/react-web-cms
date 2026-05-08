@@ -3,7 +3,9 @@
 // these into two files would just shuffle imports — they're already paired
 // in every layout that loads this stylesheet.
 //
-// AUDIT-OWNERS: .content-wrapper, .section-item-container
+// AUDIT-OWNERS: .content-wrapper, .section-item-container, .section--mobile-*
+
+@use "../Common/responsive" as *;
 
 .content-wrapper{
   &.action-enabled{
@@ -62,6 +64,32 @@
     }
     &.width-25{
       width: 100%;
+    }
+  }
+}
+/* =================================================================
+   Mobile column behavior — Wave 3 mobile-column-behavior.md. See the
+   shared @mixin section-row-collapsible in Common/_responsive.scss.
+   Hosts pick a variant via .section--mobile-{collapse,keep-ratio}.
+   Default 'stack' relies on the existing per-cell width-100 rules
+   above (each .section-item-container collapses to width:100% at
+   ≤768 px). The renderer (SectionContent.tsx) emits the class +
+   the toggle button + .section__column wrappers.
+   ================================================================= */
+
+.section.section--mobile-collapse {
+  @include section-row-collapsible(768px);
+  @include section-row-toggle-active();
+}
+.section.section--mobile-collapse > .section__toggle {
+  @include section-row-toggle(768px);
+}
+.section.section--mobile-keep-ratio {
+  @media (max-width: 767px) {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    > .section__column {
+      min-width: 240px;
     }
   }
 }

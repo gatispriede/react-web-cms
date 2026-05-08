@@ -202,10 +202,35 @@ class SectionContent extends React.Component<IPropsSectionContent> {
         await this.saveSlots(newSlots, newContent);
     }
 
+    /**
+     * Wave 3 mobile-column-behavior: 'collapse' mode renders an
+     * accordion toggle that reveals the rest of the columns. State is
+     * per-section-id and persists in sessionStorage so reload-within-
+     * session preserves operator's choice; cross-session it resets to
+     * collapsed.
+     */
+    private isExpanded(): boolean {
+        const id = this.state.section.id;
+        if (!id) return false;
+        if (typeof window === 'undefined') return false;
+        return window.sessionStorage.getItem(`section-row-expanded:${id}`) === '1';
+    }
+    private toggleExpanded = (): void => {
+        const id = this.state.section.id;
+        if (!id || typeof window === 'undefined') return;
+        const key = `section-row-expanded:${id}`;
+        const next = window.sessionStorage.getItem(key) === '1' ? '0' : '1';
+        window.sessionStorage.setItem(key, next);
+        // Force a render — class component, no state hook for this UX-only flag.
+        this.forceUpdate();
+    };
+
     render() {
         const section = this.state.section;
         const slots = resolveSlots(section);
         const totalUnits = slots.reduce((a, b) => a + b, 0);
+        const mobileBehavior = section.layout?.mobileBehavior ?? 'stack';
+        const expanded = mobileBehavior === 'collapse' ? this.isExpanded() : false;
         // Column count travels through a CSS var so the SCSS mobile rules in
         // `.section` (global.scss) can collapse multi-column layouts to 1fr
         // on narrow viewports — an inline `grid-template-columns` would
@@ -227,8 +252,21 @@ class SectionContent extends React.Component<IPropsSectionContent> {
         if (opacityPct > 0) {
             gridStyle.opacity = 1 - opacityPct / 100;
         }
+        const sectionClasses = [
+            'section',
+            (section.transparent || opacityPct > 0) ? 'is-transparent' : '',
+            mobileBehavior === 'collapse' ? 'section--mobile-collapse' : '',
+            mobileBehavior === 'keep-ratio' ? 'section--mobile-keep-ratio' : '',
+            expanded ? 'is-expanded' : '',
+        ].filter(Boolean).join(' ');
         return (
-            <div className={`section${section.transparent || opacityPct > 0 ? ' is-transparent' : ''}`} style={gridStyle}>
+            <div
+                className={sectionClasses}
+                style={gridStyle}
+                data-testid={section.id ? `section-row-${section.id}` : undefined}
+                data-mobile-behavior={mobileBehavior}
+                data-state={expanded ? 'open' : 'closed'}
+            >
                 {
                     (section.content ?? []).map((item: IItem, id: number) => {
                         const span = slots[id] ?? 1;
@@ -254,7 +292,7 @@ class SectionContent extends React.Component<IPropsSectionContent> {
                         return (
                             <div key={id}
                                  data-testid={`section-module-row-${String(item.type).toLowerCase().replace(/_/g, '-')}`}
-                                 className={`section-item-container ${item.type} span-${span} ${styleClass}`}
+                                 className={`section-item-container section__column ${item.type} span-${span} ${styleClass}`}
                                  style={animStyle}
                                  {...(animAttr ? {'data-anim': animAttr} : {})}>
                                 <EditWrapper
@@ -409,6 +447,18 @@ class SectionContent extends React.Component<IPropsSectionContent> {
                         )
                     })
                 }
+                {mobileBehavior === 'collapse' && slots.length > 1 && (
+                    <button
+                        type="button"
+                        className="section__toggle"
+                        data-testid={section.id ? `section-row-toggle-${section.id}` : undefined}
+                        onClick={this.toggleExpanded}
+                        aria-expanded={expanded}
+                        aria-label={expanded ? this.props.t('Collapse columns') : this.props.t('Expand columns')}
+                    >
+                        <span aria-hidden="true">▾</span>
+                    </button>
+                )}
             </div>
         )
     }

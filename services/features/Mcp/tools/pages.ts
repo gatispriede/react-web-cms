@@ -87,7 +87,7 @@ export const pageCreate: McpTool = defineTool({
 
 export const sectionUpdate: McpTool = defineTool({
     name: 'section.update',
-    description: 'Upsert one or many sections. Single form: pass {section}. Bulk form: pass {items: ISection[]}. Bulk returns per-item failures via `data.failed[]` so a partial-batch failure doesn\'t abort the rest. The `content` JSON is run through the same DOMPurify pipeline as the admin UI. Reference: image.delete { ids[] }.',
+    description: 'Upsert one or many sections. Single form: pass {section}. Bulk form: pass {items: ISection[]}. Bulk returns per-item failures via `data.failed[]` so a partial-batch failure doesn\'t abort the rest. The `content` JSON is run through the same DOMPurify pipeline as the admin UI. The section payload accepts an optional `layout.mobileBehavior: \'stack\'|\'collapse\'|\'keep-ratio\'` (Wave 3 mobile-column-behavior) controlling how multi-column rows render below 768 px — defaults to `stack`. Reference: image.delete { ids[] }.',
     scopes: ['write:content'],
     idempotent: true,
     gqlMutation: 'addUpdateSectionItem',

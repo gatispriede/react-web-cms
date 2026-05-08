@@ -370,6 +370,34 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
                     </div>
                 </div>
             )}
+            {this.props.updateSection && !isSimplifiedMode() && (
+                <div style={{marginTop: 16, padding: 12, borderRadius: 6, background: 'rgba(0,0,0,0.03)'}}>
+                    <h4 style={{marginTop: 0}}>{this.props.t('Mobile column behavior')}</h4>
+                    <Tooltip title={this.props.t('How multi-column rows render below 768 px. Stack: each column to 100% width. Collapse: drawer-style accordion (chevron toggle). Keep ratio: preserve widths via horizontal scroll.')}>
+                        <Select
+                            data-testid={`section-layout-mobile-behavior-select`}
+                            variant="filled"
+                            style={{width: '100%'}}
+                            value={(this.props.section as any)?.layout?.mobileBehavior ?? 'stack'}
+                            options={[
+                                {value: 'stack', label: this.props.t('Stack — each column 100% width (default)')},
+                                {value: 'collapse', label: this.props.t('Collapse — drawer accordion, chevron toggle')},
+                                {value: 'keep-ratio', label: this.props.t('Keep ratio — horizontal scroll')},
+                            ]}
+                            onChange={(v) => {
+                                if (this.props.updateSection) {
+                                    void this.props.updateSection({
+                                        layout: {
+                                            ...((this.props.section as any)?.layout ?? {}),
+                                            mobileBehavior: v as 'stack' | 'collapse' | 'keep-ratio',
+                                        },
+                                    } as any);
+                                }
+                            }}
+                        />
+                    </Tooltip>
+                </div>
+            )}
         </div>
     }
 
