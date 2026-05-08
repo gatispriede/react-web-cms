@@ -24,21 +24,29 @@
 # image and the start-docker fallback is retired.
 
 # ---------------------------------------------------------------- builder
-FROM node:20-alpine AS builder
+#
+# bookworm-slim (glibc) — `mongodb-memory-server` downloads a glibc-
+# linked `mongod` binary at boot for the prebuild step; Alpine's musl
+# rejects it with `UnknownLinuxDistro: alpine`. Bookworm-slim adds
+# ~30 MB to the builder layer (which is tossed after build anyway —
+# only the runtime stage ships) so cost is zero.
+FROM node:20-bookworm-slim AS builder
 
 ENV NODE_ENV=production
 
-# Native build deps for bcrypt + the mongo-memory-server binary fetcher
-# the prebuild step uses. `curl` is needed for the memory-server's mongod
-# tarball download; keep it in builder, drop from runtime.
-RUN apk add --no-cache python3 py3-pip make g++ curl
+# Native build deps for bcrypt + curl for the memory-server's mongod
+# tarball download.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        python3 build-essential curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN npm i -g sass
 
 WORKDIR /app
 
-COPY ./yarn.lock ./yarn.lock
 COPY ./package.json ./package.json
+COPY ./package-lock.json ./package-lock.json
+COPY ./yarn.lock ./yarn.lock
 COPY ./next-i18next.config.js ./next-i18next.config.js
 COPY ./next-sitemap.config.cjs ./next-sitemap.config.cjs
 COPY ./nodemon.json ./nodemon.json
@@ -49,11 +57,25 @@ COPY ./ui ./ui
 COPY ./services ./services
 COPY ./shared ./shared
 
-# Yarn install — `--frozen-lockfile` so a drift between yarn.lock and
-# package.json fails the build instead of silently bumping deps.
-# Cache mount keeps the yarn cache across rebuilds (BuildKit feature).
-RUN --mount=type=cache,target=/root/.yarn \
-    YARN_CACHE_FOLDER=/root/.yarn yarn --frozen-lockfile
+# npm install — matches the validated `.github/workflows/e2e.yml` path
+# (`npm install --legacy-peer-deps --no-audit --no-fund`). The repo
+# carries both `yarn.lock` and `package-lock.json` but npm + the legacy-
+# peer-deps flag is the validated path: yarn 1.x trips on the antd v5↔v6
+# peer-dep chain (`@ant-design/compatible` pins to antd v5; we're on v6)
+# and silently skips dependent packages like `@anthropic-ai/sdk`,
+# producing a build that fails TypeScript module resolution while
+# claiming success on the install step.
+#
+# `NODE_ENV=development` is set ONLY for the install step so devDeps
+# (`mongodb-memory-server`, `tsx`) used by the prebuild script land
+# in node_modules. Image-level `NODE_ENV=production` would skip them
+# and break the prebuild's ephemeral mongo+graphql boot.
+#
+# `--ignore-scripts` is intentionally NOT passed (vs the e2e CI install)
+# because the production runtime needs bcrypt's native binding compiled.
+# `python3 build-essential` were added above for that compile step.
+RUN --mount=type=cache,target=/root/.npm \
+    NODE_ENV=development npm install --legacy-peer-deps --no-audit --no-fund --prefer-offline
 
 # Stamp the running container with its source commit SHA so health
 # probes / smoke checks can verify the deploy targets the right commit.

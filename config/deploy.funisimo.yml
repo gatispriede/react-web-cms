@@ -85,10 +85,10 @@ env:
 
 # Healthcheck — Kamal polls this before flipping the proxy upstream to
 # the new container, so the old container keeps serving until the new
-# one is genuinely ready. The `/api/healthz` endpoint already exists
+# one is genuinely ready. The `/api/health` endpoint already exists
 # (used by the legacy bash deploy's pre-flip readiness loop).
 healthcheck:
-  path: /api/healthz
+  path: /api/health
   port: 80
   max_attempts: 60       # 60 × 2s = 2 min cold-deploy budget
   interval: 2s
