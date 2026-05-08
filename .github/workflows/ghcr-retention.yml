@@ -1,0 +1,43 @@
+name: GHCR retention
+
+# Prune old container image versions on a schedule. GitHub Free's
+# private-package quota is 500 MB; without retention, every master
+# push (current image ~507 MB) accumulates and trips the cap quickly.
+# Without the manual pass on 2026-05-08 we were sitting at 22 versions
+# / multi-GB stored.
+#
+# Keeps the 8 most recent versions (which under our pipeline equals
+# ~3 master deploys + their attestation companions × 3 entries each).
+# Untagged manifest companions get pruned too — `actions/delete-
+# package-versions` handles those alongside the tagged manifests.
+
+on:
+  schedule:
+    # 04:00 UTC every Monday — runs once a week so we never need
+    # another emergency manual prune.
+    - cron: '0 4 * * 1'
+  # Operator can trigger from the Actions tab whenever.
+  workflow_dispatch:
+
+jobs:
+  prune-cms-image:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - name: Delete old container versions
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: cms
+          package-type: container
+          # Keeps the 8 most recent versions — covers 2-3 master
+          # deploys (each push lands a tagged manifest + 2 untagged
+          # attestation companions = 3 entries per build). Tighten
+          # to lower if storage gets pinched again.
+          min-versions-to-keep: 8
+          # Skip versions that have a non-empty `tags` filter — keeps
+          # `latest` + any version still tagged with a SHA. Without
+          # this, untagged-but-still-recent versions get spared but
+          # tagged-but-old versions get pruned. We want the opposite:
+          # always keep tagged versions newer than the threshold.
+          delete-only-untagged-versions: false
