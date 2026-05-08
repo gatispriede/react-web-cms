@@ -2,6 +2,20 @@
 
 Archive of completed roadmap entries. Latest first. Active backlog lives in [README.md](README.md).
 
+## 2026-05-08 — Terraform/Kamal funisimo migration + admin polish + image hygiene
+
+| # | Notes |
+|---|---|
+| **Terraform/Kamal funisimo** | Replaced 250-line inline ssh deploy with `kamal app boot --version=<sha>` + docker network alias rotation. Caddy stays the public front (kamal-proxy disabled via role-level `proxy: false` — operator decision: option A). CI flow: `test-and-typecheck` → `ghcr-push` → `deploy-funisimo`, ~10-15 min master-push to live. `terraform/environments/funisimo/` imports the existing droplet + reserved IP cleanly (`No changes` plan). Skyclimber stays on legacy ssh+rsync until its own DO API token arrives. 5 spec divergences + 9 footguns documented in [terraform-kamal-migration.md](terraform-kamal-migration.md); operator-truth runbook at [docs/runbooks/kamal-deploy.md](../runbooks/kamal-deploy.md); local validation flow at [docs/runbooks/local-prod-test.md](../runbooks/local-prod-test.md). |
+| **GHCR retention** | New weekly job at `.github/workflows/ghcr-retention.yml` keeps last 8 versions of `ghcr.io/gatispriede/cms` (each push = 1 tagged manifest + 2 untagged attestation companions = 3 entries, so 8 ≈ ~2-3 master deploys of headroom). Manual one-shot pruned 22 → 6 versions during the migration day. |
+| **Standalone image refactor — ATTEMPTED + REVERTED** | Tried Next.js `output: 'standalone'` to shrink runtime image 2.03 GB → 507 MB. Two issues forced a revert same day: (a) tracer skipped ESM-conditional `dist/` files (`@reduxjs/toolkit/dist/redux-toolkit.modern.mjs` missing → `/admin` 500), (b) static `getStaticProps` for `/` baked empty-Mongo state from `tools/docker-prebuild.js` so homepage served the marketing landing for ~1h after every deploy. Revert kept the ~2 GB multi-stage image with all routes working. Re-attempt deferred until the local-prod-test workflow gates the change. |
+| **homepage `getServerSideProps`** | Even with the standalone revert, `/`'s `getStaticProps + revalidate: 3600` still baked an empty-Mongo `showLanding=true` at image build time. Switched to `getServerSideProps` so `showLanding` evaluates against runtime Mongo per request. No staleness window after deploy; SWR cache layer covers repeat-visitor performance. Same fix pattern applies if other pages develop the same bug. |
+| **user-create `grants` strip** | `UsersViewModel.save()` sent `grants: [...]` on the addUser/updateUser payloads but `InUser` GraphQL input type doesn't carry that field — admin "Add user" returned GraphQL 400. Added `UserApi.toMutationPayload()` which omits `grants` (persisted via separate Permissions API) before send. |
+| **admin desktop AreaNav** | Operator screenshot 2026-05-08 caught a regression — AreaNav rail rendered full-width across the top instead of left-side. Cause: I added a mobile @media block but never wrote a default desktop layout for `.admin-area-layout`. Explicit `display: flex; flex-direction: row` on the wrapper for the default state; mobile block's `column !important` still wins below 768 px. |
+| **CI hygiene** | E2E + visual regression workflows removed from the auto-trigger pipeline (operator: "we run those locally"). `e2e.yml` deleted; `visual:` job stripped from `ci.yml`. Skyclimber legacy deploy `auto: false` (operator paused). Funisimo legacy deploy `auto: false` (Kamal owns it). |
+| **droplet hygiene** | funisimo: 39 GB used → 11 GB used (`docker system prune -af --volumes` + `journalctl --vacuum-time=7d`, freed ~27.5 GB of accumulated build cache + orphan mongo volumes from months of legacy compose deploys). Skyclimber: 60 GB used → 20 GB used (~43 GB reclaimed). Both at 23-26% disk after cleanup. |
+| **secrets.md updated** | Added Terraform Cloud token, DO PAT location, GHCR namespace, GHCR_PAT, Kamal runtime secret list. SSH user note corrected to `root` (the `gatis` operator user described earlier was aspirational, not deployed). |
+
 ## 2026-05-04 — F7 slug source-of-truth + F8 MCP coverage + email-config + UX polish
 
 | # | Notes |

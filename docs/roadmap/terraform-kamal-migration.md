@@ -1,11 +1,34 @@
 # Terraform + Kamal migration
 
-Status: Planned
-Last updated: 2026-05-07
+Status: **Shipped (funisimo)** — 2026-05-08
+Skyclimber pending: own DO API token + parallel cutover.
+Last updated: 2026-05-08
 
-Replace the current bash deploy stack (`tools/blue-green-deploy.sh` + the 250-line inline ssh script in `.github/workflows/ci.yml`) with **Terraform** for infrastructure and **[Kamal 2](https://kamal-deploy.org/)** for app deploy. Plus push the built `node-app:<sha>` image to GHCR so droplets stop running `next build` in-container.
+Replaced the bash deploy stack (`tools/blue-green-deploy.sh` + the 250-line inline ssh script in `.github/workflows/ci.yml`) with **Terraform** for infrastructure and **[Kamal 2](https://kamal-deploy.org/)** for app deploy. Plus pushes the built image to GHCR so droplets stop running `next build` in-container.
 
-**Shipped as one chunk.** The migration is one logical unit: terraform-imported infra + GHCR-built images + Kamal-driven deploy work together. Splitting into separate roadmap items would mean a half-migrated state where `kamal deploy` reads a not-yet-imported infra, or a Terraform droplet that still runs the old bash deploy. The whole thing lands together; rolling back is one revert.
+## What actually shipped (vs the original plan)
+
+The original spec proposed `kamal deploy` with kamal-proxy + per-tenant secrets in GHA. The shipped reality (after several iterations on 2026-05-08) diverges in five ways. **Operator runbook with current truth: [`docs/runbooks/kamal-deploy.md`](../runbooks/kamal-deploy.md).**
+
+| Spec said | Shipped reality | Why diverged |
+|---|---|---|
+| `kamal deploy` with kamal-proxy on droplet | `kamal app boot` only, no kamal-proxy | Caddy already binds 80/443; running kamal-proxy alongside requires non-default ports (extra moving parts). `proxy: false` at role level disables it. |
+| `kamal-proxy` does blue-green slot mgmt | Caddy + docker network alias rotation does the swap | Without kamal-proxy, swap happens via `docker network connect ... --alias cms-web` post-boot. Caddy's `lb_try_duration 30s` covers the swap gap. |
+| 9 secrets mirrored into GHA repo settings | `options.env-file: /opt/cms/.env` reads from droplet | The legacy compose stack already kept secrets there; mirroring is friction without value for a single-droplet setup. |
+| Per-destination `config/deploy.<tenant>.yml` from day one | Single `config/deploy.yml` (funisimo only) | One Kamal target until skyclimber gets its API token. When that lands, split base + per-tenant. |
+| `output: 'standalone'` for slim images (~600 MB) | Multi-stage non-standalone (~2 GB) | Standalone tracer missed ESM-conditional `dist/` files (`@reduxjs/toolkit`, etc.) and pre-rendered against empty in-memory Mongo at build time. Reverted; revisit with proper testing. |
+
+## Footguns we hit (so the next operator doesn't)
+
+1. **Kamal v2.11 hardcodes `--network kamal`** ([`commands/app.rb:21`](https://github.com/basecamp/kamal/blob/main/lib/kamal/commands/app.rb)). No deploy.yml override. CI must pre-create the network on the droplet.
+2. **Kamal v2.11 always tries to register with `kamal-proxy`** unless the role-level `proxy: false` is set. Without it, `kamal app boot` succeeds at `docker run` then fails with `No such container: kamal-proxy` and stops the just-booted container.
+3. **Kamal v2's `deploy.yml` doesn't accept `ssh.options`** — host-key verification is bypassed via the GHA runner's `~/.ssh/config`, not via deploy.yml.
+4. **Kamal v2's `deploy.yml` doesn't accept `proxy: false` at top level** (kamal expects a hash there). The role-level `servers.<role>.proxy: false` is what works.
+5. **Kamal v2 names containers `<service>-<role>-<full-sha>`** — versioned, hardcoded. Caddy's stable upstream name resolves via a docker network alias post-boot.
+6. **`tools/docker-prebuild.js` boots an empty in-memory Mongo at image build time.** Anything pre-rendered via `getStaticProps` bakes empty-Mongo state. Fix per page: convert to `getServerSideProps`, or add a post-deploy `/api/revalidate` step.
+7. **GHCR's `delete:packages` PAT scope is separate from `write:packages`.** Bulk version cleanup needs the delete scope explicitly.
+8. **A classic PAT pushing to `.github/workflows/*.yml` requires `workflow` scope.** Without it, push is rejected with "refusing to allow a Personal Access Token to create or update workflow".
+9. **Local `npm run dev` ≠ production image.** Set up a local-prod-test stack ([`docs/runbooks/local-prod-test.md`](../runbooks/local-prod-test.md)) and validate before pushing risky changes.
 
 ---
 
