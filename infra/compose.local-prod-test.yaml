@@ -1,0 +1,85 @@
+# Local validation of the GHCR production image against a real Mongo.
+#
+# Why: production-built images may render differently than `npm run dev`
+# because (a) static pages are pre-rendered at build time, (b) the build
+# uses tools/docker-prebuild.js with an empty in-memory mongo, (c) the
+# import tracer behaves differently than dev's webpack — any of these
+# can produce a working dev environment but a broken prod image.
+#
+# How to run:
+#   1. Build the production image locally:
+#        docker build --file infra/AppDockerfile \
+#          --build-arg GIT_SHA=$(git rev-parse HEAD) \
+#          --tag cms:local-prod-test .
+#   2. Spin this stack up:
+#        docker compose -f infra/compose.local-prod-test.yaml up
+#   3. Open http://localhost:18080/ and verify content renders correctly.
+#   4. Tear down:
+#        docker compose -f infra/compose.local-prod-test.yaml down -v
+#
+# If `/` shows the marketing landing instead of your real content, the
+# build is baking empty-mongo state into the static pages — same bug
+# that hit funisimo.pro 2026-05-08 with `output: 'standalone'`. Fix
+# before pushing.
+
+services:
+  mongo:
+    image: mongo:7.0
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  cms:
+    image: cms:local-prod-test
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "18080:80"
+    environment:
+      NODE_ENV: production
+      MONGODB_URI: mongodb://mongo:27017
+      MONGODB_DB: MAIN-DB
+      DOMAIN: localhost
+      SITE_DOMAIN_WWW: www.localhost
+      ACTIVE_UPSTREAM: app:80
+      # NextAuth — placeholder values, just enough for the app to boot.
+      NEXTAUTH_URL: http://localhost:18080
+      NEXTAUTH_SECRET: local-validation-only-not-a-real-secret
+      # Admin seed — first boot creates this user.
+      ADMIN_EMAIL: admin@localhost
+      ADMIN_DEFAULT_PASSWORD: admin
+      BCRYPT_ROUNDS: 4
+      # Build / runtime
+      BUILD_PORT: "3000"
+      # MCP / SMTP — feature flags off for the smoke test
+      MCP_HTTP_ENABLED: "false"
+      MCP_ALLOWED_CIDR: 0.0.0.0/0
+
+  # Seed Mongo from a local mongodump if available. Run BEFORE `cms`
+  # boots so the first SSR request sees real content. Place a backup
+  # at `infra/datasets/mongo-seed/dump.archive` (gitignored — operator
+  # creates it locally with `mongodump --archive=...` from their dev
+  # environment).
+  mongo-seed:
+    image: mongo:7.0
+    depends_on:
+      mongo:
+        condition: service_healthy
+    volumes:
+      - ./datasets/mongo-seed:/seed:ro
+    entrypoint:
+      - sh
+      - -c
+      - |
+        if [ -f /seed/dump.archive ]; then
+          echo "==> seeding Mongo from /seed/dump.archive"
+          mongorestore --uri=mongodb://mongo:27017 --archive=/seed/dump.archive --drop || true
+        else
+          echo "==> no /seed/dump.archive found — running with empty mongo"
+          echo "==> create one with: mongodump --uri='<your-dev-mongo>' --archive=infra/datasets/mongo-seed/dump.archive"
+        fi
+    restart: "no"
