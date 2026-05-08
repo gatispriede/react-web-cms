@@ -33,6 +33,7 @@ const CsvImportDialog: React.FC<Props> = ({open, close, translationManager, lang
 
     return (
         <Modal
+            data-testid="bundle-csv-import-modal"
             open={open}
             onCancel={vm.cancel}
             onOk={() => void vm.handleImport()}
@@ -52,6 +53,7 @@ const CsvImportDialog: React.FC<Props> = ({open, close, translationManager, lang
                 <Space wrap>
                     <Typography.Text strong>Target locale:</Typography.Text>
                     <Select
+                        data-testid="bundle-csv-target-locale-select"
                         style={{width: 200}}
                         value={vm.targetLocale}
                         onChange={vm.setTargetLocale}
@@ -60,13 +62,14 @@ const CsvImportDialog: React.FC<Props> = ({open, close, translationManager, lang
                     <label>
                         <input type="file" accept=".csv,text/csv" style={{display: 'none'}}
                                onChange={e => { const f = e.target.files?.[0]; if (f) void vm.handleFile(f); e.target.value = ''; }}/>
-                        <Button icon={<UploadOutlined/>} onClick={e => (e.currentTarget.previousElementSibling as HTMLInputElement).click()}>
+                        <Button data-testid="bundle-csv-upload-button" icon={<UploadOutlined/>} onClick={e => (e.currentTarget.previousElementSibling as HTMLInputElement).click()}>
                             Upload CSV
                         </Button>
                     </label>
                 </Space>
                 <Typography.Text type="secondary">Or paste CSV below:</Typography.Text>
                 <Input.TextArea
+                    data-testid="bundle-csv-raw-textarea"
                     rows={8}
                     value={vm.raw}
                     onChange={e => vm.setRaw(e.target.value)}

@@ -77,7 +77,7 @@ const ImageRail: React.FC<ImageRailProps> = ({open, onClose}) => {
                 <PictureOutlined/>
                 <strong style={{flex: 1, fontSize: 13}}>Images</strong>
                 <Tooltip title="Close">
-                    <Button type="text" size="small" icon={<CloseOutlined/>} onClick={onClose} aria-label="Close image rail"/>
+                    <Button data-testid="image-rail-close-button" type="text" size="small" icon={<CloseOutlined/>} onClick={onClose} aria-label="Close image rail"/>
                 </Tooltip>
             </header>
             {selectMode && (
@@ -98,13 +98,14 @@ const ImageRail: React.FC<ImageRailProps> = ({open, onClose}) => {
                         okButtonProps={{danger: true, loading: vm.busy}}
                         onConfirm={() => vm.deleteIds([...vm.selected])}
                     >
-                        <Button danger size="small" icon={<DeleteOutlined/>} loading={vm.busy}>Delete</Button>
+                        <Button data-testid="image-rail-bulk-delete-button" danger size="small" icon={<DeleteOutlined/>} loading={vm.busy}>Delete</Button>
                     </Popconfirm>
-                    <Button size="small" onClick={vm.clearSelection} disabled={vm.busy}>Clear</Button>
+                    <Button data-testid="image-rail-clear-selection-button" size="small" onClick={vm.clearSelection} disabled={vm.busy}>Clear</Button>
                 </div>
             )}
             <div style={{padding: 8}}>
                 <Input
+                    data-testid="image-rail-filter-input"
                     allowClear
                     size="small"
                     prefix={<SearchOutlined/>}
@@ -145,6 +146,7 @@ const ImageRail: React.FC<ImageRailProps> = ({open, onClose}) => {
                         return (
                             <Tooltip key={id ?? i} title={selectMode ? undefined : image.name} mouseEnterDelay={0.3}>
                                 <div
+                                    data-testid={`image-rail-tile-${id}`}
                                     draggable={!selectMode}
                                     onDragStart={onDragStart}
                                     onClick={onBodyClick}

@@ -26,12 +26,13 @@ class PreviewDialog extends React.Component<{
     render() {
         return (
             <div>
-                <Button type="primary" onClick={() => {
+                <Button data-testid="preview-open-button" type="primary" onClick={() => {
                     this.setState({dialogOpen: true})
                 }}>
                     Preview
                 </Button>
                 <Modal
+                    data-testid="preview-modal"
                     width={'90%'}
                     title={this.props.t('Preview')}
                     open={this.state.dialogOpen}

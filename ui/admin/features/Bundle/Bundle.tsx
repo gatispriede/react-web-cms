@@ -24,7 +24,7 @@ const BundleSettings = ({t}: { t: TFunction<"translation", undefined> }) => {
             <div>
                 <Title level={4}>{t('Export')}</Title>
                 <Paragraph>{t('Download a single JSON file with your navigation, sections, languages, logo and all referenced images inlined as base64.')}</Paragraph>
-                <Button type="primary" icon={<DownloadOutlined/>} loading={vm.exporting} onClick={vm.doExport}>
+                <Button data-testid="bundle-export-button" type="primary" icon={<DownloadOutlined/>} loading={vm.exporting} onClick={vm.doExport}>
                     {t('Download site bundle')}
                 </Button>
             </div>

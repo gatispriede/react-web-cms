@@ -43,7 +43,7 @@ const AdminSettingsInquiries: React.FC = () => {
         {title: t('Actions'), key: 'actions', width: 180,
             render: (_: unknown, r: InquirySummary) => (
                 <Space size={4}>
-                    <Button size="small" icon={<MailOutlined/>} onClick={() => vm.openDetail(r.id)}>{t('View')}</Button>
+                    <Button data-testid={`inquiries-row-${r.id}-view-button`} size="small" icon={<MailOutlined/>} onClick={() => vm.openDetail(r.id)}>{t('View')}</Button>
                     <Popconfirm
                         title={t('Delete inquiry?')}
                         description={t('Removes the audit row. This cannot be undone.')}
@@ -52,7 +52,7 @@ const AdminSettingsInquiries: React.FC = () => {
                         cancelText={t('Cancel')}
                         onConfirm={() => vm.remove(r.id)}
                     >
-                        <Button size="small" danger icon={<DeleteOutlined/>}/>
+                        <Button data-testid={`inquiries-row-${r.id}-delete-button`} size="small" danger icon={<DeleteOutlined/>}/>
                     </Popconfirm>
                 </Space>
             )},
@@ -66,7 +66,7 @@ const AdminSettingsInquiries: React.FC = () => {
                     <Badge count={vm.rows.length} showZero color="#5e554b"/>
                 </Space>
                 <Space>
-                    <Button icon={<ReloadOutlined/>} loading={vm.loading} onClick={vm.refresh}>{t('Refresh')}</Button>
+                    <Button data-testid="inquiries-refresh-button" icon={<ReloadOutlined/>} loading={vm.loading} onClick={vm.refresh}>{t('Refresh')}</Button>
                     <Popconfirm
                         title={t('Delete ALL inquiries?')}
                         description={t('Permanently removes every audit row. This cannot be undone.')}
@@ -76,7 +76,7 @@ const AdminSettingsInquiries: React.FC = () => {
                         disabled={vm.rows.length === 0}
                         onConfirm={vm.removeAll}
                     >
-                        <Button danger icon={<DeleteOutlined/>} disabled={vm.rows.length === 0}>{t('Delete all')}</Button>
+                        <Button data-testid="inquiries-delete-all-button" danger icon={<DeleteOutlined/>} disabled={vm.rows.length === 0}>{t('Delete all')}</Button>
                     </Popconfirm>
                 </Space>
             </Space>
@@ -103,17 +103,20 @@ const AdminSettingsInquiries: React.FC = () => {
                     columns={columns}
                     pagination={{pageSize: 25}}
                     size="middle"
+                    onRow={(r: InquirySummary) => ({'data-testid': `inquiries-row-${r.id}`} as any)}
                 />
             )}
 
             <Modal
+                data-testid="inquiries-detail-modal"
                 title={t('Inquiry')}
                 open={vm.openId !== null}
                 onCancel={vm.closeDetail}
                 footer={[
-                    <Button key="close" onClick={vm.closeDetail}>{t('Close')}</Button>,
+                    <Button data-testid="inquiries-detail-close-button" key="close" onClick={vm.closeDetail}>{t('Close')}</Button>,
                     vm.openDoc && (
                         <Button
+                            data-testid="inquiries-detail-reply-button"
                             key="reply"
                             type="primary"
                             icon={<MailOutlined/>}

@@ -69,6 +69,7 @@ const FontPicker: React.FC<{
 
     return (
         <Modal
+            data-testid="themes-font-picker-modal"
             open={open}
             title={`Pick a font — ${SLOT_LABEL[slot]}`}
             width={760}
@@ -79,6 +80,7 @@ const FontPicker: React.FC<{
         >
             <Space orientation="vertical" style={{width: '100%'}} size={12}>
                 <Input
+                    data-testid="themes-font-picker-search-input"
                     allowClear
                     placeholder="Search families"
                     prefix={<SearchOutlined/>}
@@ -110,6 +112,7 @@ const FontPicker: React.FC<{
                             return (
                                 <button
                                     key={font.family}
+                                    data-testid={`themes-font-picker-row-${font.family}`}
                                     type="button"
                                     onClick={() => vm.setPicked(font.family)}
                                     style={{
@@ -173,7 +176,7 @@ const FontPicker: React.FC<{
                     <Space size={6}>
                         <Typography.Text type="secondary" style={{fontSize: 12}}>Current stack:</Typography.Text>
                         <Typography.Text code style={{fontSize: 11}}>{currentStack}</Typography.Text>
-                        <Button size="small" type="link" onClick={() => onPick('')}>Clear</Button>
+                        <Button data-testid="themes-font-picker-clear-button" size="small" type="link" onClick={() => onPick('')}>Clear</Button>
                     </Space>
                 )}
             </Space>

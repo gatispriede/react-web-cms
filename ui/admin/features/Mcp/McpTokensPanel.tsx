@@ -42,7 +42,7 @@ const McpTokensPanel: React.FC = () => {
         <div>
             <Space style={{marginBottom: 16}}>
                 <Button data-testid="mcp-issue-btn" type="primary" onClick={vm.openIssueDialog}>{t('Issue token')}</Button>
-                <Button onClick={vm.refresh} loading={vm.loading}>{t('Refresh')}</Button>
+                <Button data-testid="mcp-refresh-button" onClick={vm.refresh} loading={vm.loading}>{t('Refresh')}</Button>
             </Space>
 
             <Table<IMcpTokenSummary>
@@ -52,9 +52,11 @@ const McpTokensPanel: React.FC = () => {
                 columns={columns as any}
                 size="small"
                 pagination={false}
+                onRow={(r: IMcpTokenSummary) => ({'data-testid': `mcp-row-${r.id}`} as any)}
             />
 
             <Modal
+                data-testid="mcp-issue-modal"
                 title={t('Issue MCP token')}
                 open={vm.issueOpen}
                 onOk={vm.issue}
@@ -68,7 +70,7 @@ const McpTokensPanel: React.FC = () => {
                                placeholder="e.g. Claude Code laptop"/>
                     </Form.Item>
                     <Form.Item label={t('Preset')}>
-                        <Select value={vm.preset} onChange={vm.setPreset}
+                        <Select data-testid="mcp-issue-preset-select" value={vm.preset} onChange={vm.setPreset}
                                 options={[
                                     {value: 'read-only', label: 'Read-only'},
                                     {value: 'translations-only', label: 'Translations only'},
@@ -85,6 +87,7 @@ const McpTokensPanel: React.FC = () => {
                     </Form.Item>
                     <Form.Item label={t('Expires in')}>
                         <Select<number | null>
+                            data-testid="mcp-issue-ttl-select"
                             value={vm.ttlDays}
                             onChange={(v) => vm.setTtlDays(v)}
                             options={[
@@ -99,11 +102,12 @@ const McpTokensPanel: React.FC = () => {
             </Modal>
 
             <Modal
+                data-testid="mcp-reveal-modal"
                 title={t('Token issued')}
                 open={Boolean(vm.issuedSecret)}
                 onCancel={vm.closeIssuedSecret}
                 footer={[
-                    <Button key="copy" onClick={vm.copySecret}>{t('Copy secret')}</Button>,
+                    <Button data-testid="mcp-reveal-copy-button" key="copy" onClick={vm.copySecret}>{t('Copy secret')}</Button>,
                     <Button key="done" data-testid="mcp-reveal-close-btn" type="primary" onClick={vm.closeIssuedSecret}>{t('Done')}</Button>,
                 ]}
                 width={600}

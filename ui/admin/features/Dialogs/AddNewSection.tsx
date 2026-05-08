@@ -123,6 +123,7 @@ class AddNewSection extends React.Component <{
                 {SECTION_TEMPLATES.map(tpl => (
                     <Col xs={24} sm={12} md={8} key={tpl.key}>
                         <Card
+                            data-testid={`section-template-card-${tpl.key}`}
                             hoverable
                             size="small"
                             style={{
@@ -172,12 +173,13 @@ class AddNewSection extends React.Component <{
                     {t("Add new section")} <PlusCircleOutlined/>
                 </Button>
                 <Modal
+                    data-testid="section-add-modal"
                     width={'90%'}
                     open={this.state.dialogOpen}
                     title={t('Add new section')}
                     onCancel={this.close}
                     footer={[
-                        <Button key="cancel" onClick={this.close}>{t('Cancel')}</Button>,
+                        <Button data-testid="section-add-cancel-btn" key="cancel" onClick={this.close}>{t('Cancel')}</Button>,
                         this.state.mode === 'blank' ? (
                             <Button data-testid="section-create-btn" key="ok" type="primary" onClick={this.createFromBlank}>{t('Create')}</Button>
                         ) : (
@@ -189,6 +191,7 @@ class AddNewSection extends React.Component <{
                 >
                     <div style={{marginBottom: 16}}>
                         <Segmented
+                            data-testid="section-add-mode-segmented"
                             value={this.state.mode}
                             onChange={(v) => this.setState({mode: v as Mode})}
                             options={[

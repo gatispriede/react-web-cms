@@ -80,7 +80,7 @@ const AdminSettingsInventory: React.FC = () => {
             render: (s: string) => <Tag color={statusColor(s)}>{s}</Tag>},
         {title: t('Actions'), key: 'a',
             render: (_: unknown, r: IInventoryRun) => (
-                <Button size="small" onClick={() => vm.setErrorDrawer(r)} disabled={!r.errors?.length}>
+                <Button data-testid={`inventory-row-${r.id}-errors-button`} size="small" onClick={() => vm.setErrorDrawer(r)} disabled={!r.errors?.length}>
                     {t('Errors')} ({r.errors?.length || 0})
                 </Button>
             )},
@@ -97,11 +97,12 @@ const AdminSettingsInventory: React.FC = () => {
                 {vm.status?.lastSuccessfulRun?.startedAt
                     ? <Typography.Text type="secondary">{t('Last sync')}: {vm.status.lastSuccessfulRun.startedAt}</Typography.Text>
                     : <Typography.Text type="secondary">{t('No successful sync yet')}</Typography.Text>}
-                <Button icon={<ReloadOutlined/>} onClick={vm.refreshStatus} loading={vm.loadingStatus}>{t('Refresh')}</Button>
+                <Button data-testid="inventory-status-refresh-button" icon={<ReloadOutlined/>} onClick={vm.refreshStatus} loading={vm.loadingStatus}>{t('Refresh')}</Button>
             </Space>
 
             <Space wrap style={{marginBottom: 16}}>
                 <Button
+                    data-testid="inventory-sync-delta-button"
                     type="primary"
                     onClick={() => vm.runSync('delta')}
                     loading={vm.syncing === 'delta'}
@@ -113,9 +114,9 @@ const AdminSettingsInventory: React.FC = () => {
                     okText={t('Sync all')}
                     cancelText={t('Cancel')}
                 >
-                    <Button loading={vm.syncing === 'all'} disabled={vm.isRunning || !!vm.syncing}>{t('Sync all')}</Button>
+                    <Button data-testid="inventory-sync-all-button" loading={vm.syncing === 'all'} disabled={vm.isRunning || !!vm.syncing}>{t('Sync all')}</Button>
                 </Popconfirm>
-                <Button onClick={vm.openDeadLetters}>{t('Show dead letters')}</Button>
+                <Button data-testid="inventory-dead-letters-button" onClick={vm.openDeadLetters}>{t('Show dead letters')}</Button>
             </Space>
 
             {vm.lastReport && (
@@ -163,7 +164,7 @@ const AdminSettingsInventory: React.FC = () => {
             </Typography.Paragraph>
             <Form layout="vertical">
                 <Form.Item label={t('Adapter')}>
-                    <Select value={vm.kind} onChange={vm.setKind} style={{width: 240}} options={[
+                    <Select data-testid="inventory-adapter-kind-select" value={vm.kind} onChange={vm.setKind} style={{width: 240}} options={[
                         {value: 'mock', label: 'Mock (dev / tests)'},
                         {value: 'generic-feed', label: 'Generic feed (HTTP URL)'},
                     ]}/>
@@ -171,10 +172,10 @@ const AdminSettingsInventory: React.FC = () => {
                 {vm.kind === 'generic-feed' && (
                     <>
                         <Form.Item label={t('URL')}>
-                            <Input value={vm.feedUrl} onChange={e => vm.setFeedUrl(e.target.value)} placeholder="https://example.com/products.json"/>
+                            <Input data-testid="inventory-feed-url-input" value={vm.feedUrl} onChange={e => vm.setFeedUrl(e.target.value)} placeholder="https://example.com/products.json"/>
                         </Form.Item>
                         <Form.Item label={t('Auth mode')}>
-                            <Select value={vm.authMode} onChange={vm.setAuthMode} style={{width: 200}} options={[
+                            <Select data-testid="inventory-auth-mode-select" value={vm.authMode} onChange={vm.setAuthMode} style={{width: 200}} options={[
                                 {value: 'none', label: 'None'},
                                 {value: 'bearer', label: 'Bearer token'},
                                 {value: 'apiKey', label: 'API key (header)'},
@@ -183,24 +184,25 @@ const AdminSettingsInventory: React.FC = () => {
                         </Form.Item>
                         {vm.authMode !== 'none' && (
                             <Form.Item label={t('Credential (write-only)')}>
-                                <Input.Password value={vm.credential} onChange={e => vm.setCredential(e.target.value)} placeholder="•••••"/>
+                                <Input.Password data-testid="inventory-credential-input" value={vm.credential} onChange={e => vm.setCredential(e.target.value)} placeholder="•••••"/>
                             </Form.Item>
                         )}
                         <Form.Item label={t('Items path (dot-notation, optional)')}>
-                            <Input value={vm.itemsPath} onChange={e => vm.setItemsPath(e.target.value)} placeholder="data.products"/>
+                            <Input data-testid="inventory-items-path-input" value={vm.itemsPath} onChange={e => vm.setItemsPath(e.target.value)} placeholder="data.products"/>
                         </Form.Item>
                         <Form.Item label={t('Pagination (JSON)')}>
-                            <Input.TextArea value={vm.paginationJson} onChange={e => vm.setPaginationJson(e.target.value)} rows={4}/>
+                            <Input.TextArea data-testid="inventory-pagination-json-textarea" value={vm.paginationJson} onChange={e => vm.setPaginationJson(e.target.value)} rows={4}/>
                         </Form.Item>
                         <Form.Item label={t('Field map (JSON)')}>
-                            <Input.TextArea value={vm.fieldMapJson} onChange={e => vm.setFieldMapJson(e.target.value)} rows={9}/>
+                            <Input.TextArea data-testid="inventory-field-map-json-textarea" value={vm.fieldMapJson} onChange={e => vm.setFieldMapJson(e.target.value)} rows={9}/>
                         </Form.Item>
                     </>
                 )}
-                <Button type="primary" loading={vm.savingCfg} onClick={vm.saveConfig}>{t('Save adapter config')}</Button>
+                <Button data-testid="inventory-save-config-button" type="primary" loading={vm.savingCfg} onClick={vm.saveConfig}>{t('Save adapter config')}</Button>
             </Form>
 
             <Drawer
+                data-testid="inventory-errors-drawer"
                 open={!!vm.errorDrawer}
                 onClose={() => vm.setErrorDrawer(null)}
                 title={t('Run errors')}
@@ -221,6 +223,7 @@ const AdminSettingsInventory: React.FC = () => {
             </Drawer>
 
             <Modal
+                data-testid="inventory-dead-letters-modal"
                 open={vm.deadOpen}
                 onCancel={() => vm.setDeadOpen(false)}
                 onOk={() => vm.setDeadOpen(false)}

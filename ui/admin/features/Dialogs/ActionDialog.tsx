@@ -19,6 +19,7 @@ const ActionDialog = ({item, open, close, t, tApp}: {
     }
     return (
         <Modal
+            data-testid="action-preview-modal"
             title={''}
             width={'90%'}
             open={open}

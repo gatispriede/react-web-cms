@@ -89,7 +89,7 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
                         }))}
                     />
                     <div style={{display: 'flex', justifyContent: 'center', padding: 16}}>
-                        <Button type="default" onClick={vm.openDialog}>
+                        <Button data-testid="translations-add-language-button" type="default" onClick={vm.openDialog}>
                             <PlusCircleOutlined/>{tAdmin('Add New Language')}
                         </Button>
                     </div>
@@ -98,6 +98,7 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
                     <Header style={{padding: '0 16px', background: '#fff'}}>
                         <div style={{display: 'flex', alignItems: 'center', gap: 12}}>
                             <Segmented
+                                data-testid="translations-mode-segmented"
                                 value={vm.mode}
                                 onChange={v => vm.setMode(v as 'edit' | 'compare')}
                                 options={[
@@ -110,6 +111,7 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
                                     <p style={{margin: '0 16px'}}>{vm.currentLanguageName}</p>
                                     <Button data-testid="translations-save-btn" type="primary" loading={vm.saving} onClick={vm.saveNewTranslation}>{tAdmin('Save')}</Button>
                                     <Button
+                                        data-testid="translations-set-default-button"
                                         loading={vm.saving}
                                         onClick={vm.setAsDefault}
                                         disabled={vm.currentLanguage === 'default' || !!vm.languages[vm.currentLanguage]?.default}
@@ -117,7 +119,7 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
                                     >
                                         {vm.languages[vm.currentLanguage]?.default ? tAdmin('Default') : tAdmin('Set as Default')}
                                     </Button>
-                                    <Button danger type="primary" loading={vm.saving} onClick={vm.deleteTranslation}
+                                    <Button data-testid="translations-delete-button" danger type="primary" loading={vm.saving} onClick={vm.deleteTranslation}
                                         disabled={vm.currentLanguage === 'default' || !!vm.languages[vm.currentLanguage]?.default}>
                                         {tAdmin('Delete')}
                                     </Button>

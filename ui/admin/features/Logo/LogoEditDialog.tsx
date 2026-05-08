@@ -11,6 +11,7 @@ const LogoEditDialog = ({open, setOpen, t}: {
     const [file, setFile] = React.useState<File | null>(null)
     return (
         <Modal
+            data-testid="logo-edit-modal"
             title={''}
             width={'90%'}
             open={open}

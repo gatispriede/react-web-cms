@@ -112,6 +112,7 @@ const ModulePickerDialog: React.FC<Props> = ({open, onClose, onSelect, t, curren
 
     return (
         <Modal
+            data-testid="section-module-picker-modal"
             open={open}
             onCancel={onClose}
             footer={null}
@@ -122,6 +123,7 @@ const ModulePickerDialog: React.FC<Props> = ({open, onClose, onSelect, t, curren
             <div onKeyDown={onKeyDown}>
                 <div style={{display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', marginBottom: 16}}>
                     <Input.Search
+                        data-testid="section-module-picker-search-input"
                         ref={searchRef}
                         placeholder={t('Search modules')}
                         allowClear

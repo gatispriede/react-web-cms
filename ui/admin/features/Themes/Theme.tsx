@@ -84,9 +84,9 @@ const ThemeCard: React.FC<{
         </div>
         <Space size={4} wrap>
             {theme.custom && (
-                <Button size="small" icon={<EditOutlined/>} onClick={onEdit}>{t('Edit')}</Button>
+                <Button data-testid={`themes-row-${theme.id}-edit-button`} size="small" icon={<EditOutlined/>} onClick={onEdit}>{t('Edit')}</Button>
             )}
-            <Button size="small" icon={<CopyOutlined/>} onClick={onDuplicate}>{t('Duplicate')}</Button>
+            <Button data-testid={`themes-row-${theme.id}-duplicate-button`} size="small" icon={<CopyOutlined/>} onClick={onDuplicate}>{t('Duplicate')}</Button>
             {!theme.custom && JSON_PRESET_NAMES.has(theme.name) && (
                 <Popconfirm
                     title={t('Reset this preset to its on-disk JSON defaults?')}
@@ -94,7 +94,7 @@ const ThemeCard: React.FC<{
                     cancelText={t('Cancel')}
                     onConfirm={onReset}
                 >
-                    <Button size="small">{t('Reset to preset')}</Button>
+                    <Button data-testid={`themes-row-${theme.id}-reset-button`} size="small">{t('Reset to preset')}</Button>
                 </Popconfirm>
             )}
             {theme.custom && (
@@ -105,7 +105,7 @@ const ThemeCard: React.FC<{
                     okButtonProps={{danger: true, loading: !!deletePending}}
                     onConfirm={onDelete}
                 >
-                    <Button size="small" danger icon={<DeleteOutlined/>} loading={!!deletePending}/>
+                    <Button data-testid={`themes-row-${theme.id}-delete-button`} size="small" danger icon={<DeleteOutlined/>} loading={!!deletePending}/>
                 </Popconfirm>
             )}
         </Space>
@@ -133,6 +133,7 @@ const ThemeEditor: React.FC<{vm: ThemesViewModel; t: (k: string) => string}> = (
 
     return (
         <Modal
+            data-testid="themes-editor-modal"
             title={draft.id ? t('Edit theme') : t('New theme')}
             open
             width={720}
@@ -144,6 +145,7 @@ const ThemeEditor: React.FC<{vm: ThemesViewModel; t: (k: string) => string}> = (
             <Form layout="vertical">
                 <Form.Item label={t('Name')}>
                     <Input
+                        data-testid="themes-name-input"
                         value={draft.name}
                         onChange={e => vm.setName(e.target.value)}
                     />
@@ -210,7 +212,7 @@ const ThemeEditor: React.FC<{vm: ThemesViewModel; t: (k: string) => string}> = (
                                     }}>
                                         {stack ? 'The quick brown fox' : t('System default')}
                                     </span>
-                                    <Button size="small" onClick={() => vm.openPicker(slot)}>{t('Pick…')}</Button>
+                                    <Button data-testid={`themes-font-pick-${slot}-button`} size="small" onClick={() => vm.openPicker(slot)}>{t('Pick…')}</Button>
                                 </div>
                             );
                         })}
@@ -251,8 +253,8 @@ const AdminSettingsTheme: React.FC = () => {
     return (
         <div style={{padding: 16}}>
             <Space style={{marginBottom: 16}} align="center">
-                <Button type="primary" icon={<PlusOutlined/>} onClick={vm.createBlank}>{t('New theme')}</Button>
-                <Button onClick={vm.refresh} loading={vm.loading}>{t('Refresh')}</Button>
+                <Button data-testid="themes-create-button" type="primary" icon={<PlusOutlined/>} onClick={vm.createBlank}>{t('New theme')}</Button>
+                <Button data-testid="themes-refresh-button" onClick={vm.refresh} loading={vm.loading}>{t('Refresh')}</Button>
                 <AuditBadge editedBy={vm.activeAudit.editedBy} editedAt={vm.activeAudit.editedAt}/>
             </Space>
             <Row gutter={[12, 12]}>

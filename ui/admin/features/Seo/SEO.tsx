@@ -29,6 +29,7 @@ const AdminSettingsSEO: React.FC = () => {
                 <Col xs={24}>
                     <Typography.Text strong>{t('Site name')}</Typography.Text>
                     <Input
+                        data-testid="seo-site-name-input"
                         value={seo.siteName ?? ''}
                         onChange={e => vm.update({siteName: e.target.value})}
                         placeholder="Acme Co."
@@ -37,6 +38,7 @@ const AdminSettingsSEO: React.FC = () => {
                 <Col xs={24}>
                     <Typography.Text strong>{t('Primary domain')}</Typography.Text>
                     <Input
+                        data-testid="seo-primary-domain-input"
                         value={seo.primaryDomain ?? ''}
                         onChange={e => vm.update({primaryDomain: e.target.value})}
                         placeholder="https://example.com"
@@ -45,6 +47,7 @@ const AdminSettingsSEO: React.FC = () => {
                 <Col xs={24}>
                     <Typography.Text strong>{t('Default description')}</Typography.Text>
                     <Input.TextArea
+                        data-testid="seo-default-description-textarea"
                         value={seo.defaultDescription ?? ''}
                         onChange={e => vm.update({defaultDescription: e.target.value})}
                         rows={3}
@@ -55,6 +58,7 @@ const AdminSettingsSEO: React.FC = () => {
                 <Col xs={24} md={12}>
                     <Typography.Text strong>{t('Default keywords')}</Typography.Text>
                     <Input
+                        data-testid="seo-default-keywords-input"
                         value={seo.defaultKeywords ?? ''}
                         onChange={e => vm.update({defaultKeywords: e.target.value})}
                         placeholder="react, next.js, cms"
@@ -63,6 +67,7 @@ const AdminSettingsSEO: React.FC = () => {
                 <Col xs={24} md={12}>
                     <Typography.Text strong>{t('Default author')}</Typography.Text>
                     <Input
+                        data-testid="seo-default-author-input"
                         value={seo.defaultAuthor ?? ''}
                         onChange={e => vm.update({defaultAuthor: e.target.value})}
                     />
@@ -79,6 +84,7 @@ const AdminSettingsSEO: React.FC = () => {
                 <Col xs={24} md={6}>
                     <Typography.Text strong>{t('Twitter handle')}</Typography.Text>
                     <Input
+                        data-testid="seo-twitter-handle-input"
                         value={seo.twitterHandle ?? ''}
                         onChange={e => vm.update({twitterHandle: e.target.value})}
                         placeholder="@example"
@@ -87,6 +93,7 @@ const AdminSettingsSEO: React.FC = () => {
                 <Col xs={24} md={6}>
                     <Typography.Text strong>{t('Default locale')}</Typography.Text>
                     <Input
+                        data-testid="seo-default-locale-input"
                         value={seo.defaultLocale ?? ''}
                         onChange={e => vm.update({defaultLocale: e.target.value})}
                         placeholder="en_US"
@@ -94,8 +101,8 @@ const AdminSettingsSEO: React.FC = () => {
                 </Col>
             </Row>
             <Space style={{marginTop: 24}} align="center">
-                <Button type="primary" onClick={() => void vm.save()} loading={vm.saving}>{t('Save')}</Button>
-                <Button onClick={() => void vm.refresh()} loading={vm.loading}>{t('Refresh')}</Button>
+                <Button data-testid="seo-save-button" type="primary" onClick={() => void vm.save()} loading={vm.saving}>{t('Save')}</Button>
+                <Button data-testid="seo-refresh-button" onClick={() => void vm.refresh()} loading={vm.loading}>{t('Refresh')}</Button>
                 <AuditBadge editedBy={seo.editedBy} editedAt={seo.editedAt}/>
             </Space>
             {vm.conflict && (() => {

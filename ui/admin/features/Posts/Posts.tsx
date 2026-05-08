@@ -100,13 +100,14 @@ const AdminSettingsPosts: React.FC = () => {
             width: 340,
             render: (_: unknown, post: IPost) => (
                 <Space size={4}>
-                    <Button size="small" icon={<EditOutlined/>} onClick={() => vm.openEdit(post)}>{t('Edit')}</Button>
+                    <Button data-testid={`posts-row-${post.id}-edit-button`} size="small" icon={<EditOutlined/>} onClick={() => vm.openEdit(post)}>{t('Edit')}</Button>
                     {/* Always pulls the slug from the row, so a server-side
                         rename (collision-bump) is automatically reflected
                         once `vm.refresh()` repopulates after save — no stale
                         URL ever lingers in the admin. */}
                     {post.slug ? (
                         <Button
+                            data-testid={`posts-row-${post.id}-view-button`}
                             size="small"
                             icon={<LinkOutlined/>}
                             href={`/blog/${post.slug}`}
@@ -118,7 +119,7 @@ const AdminSettingsPosts: React.FC = () => {
                             {t('View')}
                         </Button>
                     ) : null}
-                    <Button size="small" icon={<EyeOutlined/>} onClick={() => vm.togglePublish(post)}>
+                    <Button data-testid={`posts-row-${post.id}-publish-toggle-button`} size="small" icon={<EyeOutlined/>} onClick={() => vm.togglePublish(post)}>
                         {post.draft ? t('Publish') : t('Unpublish')}
                     </Button>
                     <Popconfirm
@@ -128,7 +129,7 @@ const AdminSettingsPosts: React.FC = () => {
                         okButtonProps={{danger: true, loading: vm.removeAction.pending}}
                         cancelText={t('Cancel')}
                     >
-                        <Button size="small" danger icon={<DeleteOutlined/>} loading={vm.removeAction.pending}/>
+                        <Button data-testid={`posts-row-${post.id}-delete-button`} size="small" danger icon={<DeleteOutlined/>} loading={vm.removeAction.pending}/>
                     </Popconfirm>
                 </Space>
             ),
@@ -139,10 +140,10 @@ const AdminSettingsPosts: React.FC = () => {
         <div style={{padding: 16}}>
             <Space style={{marginBottom: 16}} align="center" wrap>
                 <Button data-testid="posts-new-btn" type="primary" icon={<PlusOutlined/>} onClick={vm.openCreate}>{t('New post')}</Button>
-                <Button onClick={vm.refresh} loading={vm.loading}>{t('Refresh')}</Button>
+                <Button data-testid="posts-refresh-button" onClick={vm.refresh} loading={vm.loading}>{t('Refresh')}</Button>
                 <AuditBadge editedBy={vm.latestAudit.editedBy} editedAt={vm.latestAudit.editedAt}/>
                 <Space>
-                    <Switch checked={vm.blogEnabled} onChange={vm.toggleBlog}/>
+                    <Switch data-testid="posts-blog-enabled-switch" checked={vm.blogEnabled} onChange={vm.toggleBlog}/>
                     <Typography.Text>
                         {vm.blogEnabled ? t('Blog is visible to visitors') : t('Blog is hidden (no link, /blog returns 404)')}
                     </Typography.Text>
@@ -155,8 +156,10 @@ const AdminSettingsPosts: React.FC = () => {
                 columns={columns}
                 pagination={{pageSize: 20}}
                 size="middle"
+                onRow={(p: IPost) => ({'data-testid': `posts-row-${p.id}`} as any)}
             />
             <Drawer
+                data-testid="posts-editor-drawer"
                 open={vm.editing !== null}
                 onClose={vm.close}
                 title={vm.editing?.id ? t('Edit post') : t('New post')}
@@ -172,16 +175,16 @@ const AdminSettingsPosts: React.FC = () => {
                         <Input data-testid="posts-slug-input" placeholder="my-first-post"/>
                     </Form.Item>
                     <Form.Item name="excerpt" label={t('Excerpt')}>
-                        <Input.TextArea rows={2}/>
+                        <Input.TextArea data-testid="posts-excerpt-textarea" rows={2}/>
                     </Form.Item>
                     <Form.Item name="coverImage" label={t('Cover image URL')}>
                         <ImageUrlInput t={t} placeholder="api/cover.jpg"/>
                     </Form.Item>
                     <Form.Item name="author" label={t('Author')}>
-                        <Input/>
+                        <Input data-testid="posts-author-input"/>
                     </Form.Item>
                     <Form.Item name="tags" label={t('Tags')}>
-                        <Select mode="tags" tokenSeparators={[',', ';']}/>
+                        <Select data-testid="posts-tags-select" mode="tags" tokenSeparators={[',', ';']}/>
                     </Form.Item>
                     <Form.Item
                         name="pageId"

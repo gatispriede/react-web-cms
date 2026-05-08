@@ -29,6 +29,7 @@ const AddNewLanguageDialog = ({t, open, close}: AddNewLanguageDialogProps) => {
 
     return (
         <Modal
+            data-testid="languages-add-modal"
             width={560}
             title={t('Add new language')}
             open={open}
@@ -40,6 +41,7 @@ const AddNewLanguageDialog = ({t, open, close}: AddNewLanguageDialogProps) => {
                 {t('Pick a preset to prefill, or enter your own below.')}
             </Typography.Text>
             <Input.Search
+                data-testid="languages-add-preset-filter-input"
                 allowClear
                 size="small"
                 placeholder={t('Filter presets')}
@@ -51,6 +53,7 @@ const AddNewLanguageDialog = ({t, open, close}: AddNewLanguageDialogProps) => {
                 {vm.filteredPresets.map(p => (
                     <Tag.CheckableTag
                         key={p.symbol + '-' + p.label}
+                        data-testid={`languages-add-preset-${p.symbol}`}
                         checked={false}
                         onChange={() => pickPreset(p)}
                         style={{marginBottom: 6, cursor: 'pointer', userSelect: 'none'}}
@@ -68,7 +71,7 @@ const AddNewLanguageDialog = ({t, open, close}: AddNewLanguageDialogProps) => {
                     label={t("Language name")}
                     rules={[{required: true, message: t('Please enter a language name')}]}
                 >
-                    <Input maxLength={40} placeholder="English"/>
+                    <Input data-testid="languages-add-label-input" maxLength={40} placeholder="English"/>
                 </Form.Item>
                 <Form.Item
                     name="symbol"
@@ -82,14 +85,14 @@ const AddNewLanguageDialog = ({t, open, close}: AddNewLanguageDialogProps) => {
                         },
                     ]}
                 >
-                    <Input showCount maxLength={2} placeholder="en"/>
+                    <Input data-testid="languages-add-symbol-input" showCount maxLength={2} placeholder="en"/>
                 </Form.Item>
                 <Form.Item
                     name="flag"
                     label={t("Flag (emoji or image URL)")}
                     tooltip={t("Shown next to the language name in the public menu dropdown.")}
                 >
-                    <Input maxLength={80} placeholder="🇬🇧"/>
+                    <Input data-testid="languages-add-flag-input" maxLength={80} placeholder="🇬🇧"/>
                 </Form.Item>
             </Form>
         </Modal>

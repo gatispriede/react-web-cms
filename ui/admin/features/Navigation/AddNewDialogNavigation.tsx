@@ -322,7 +322,7 @@ class AddNewDialogNavigation extends React.Component<IProps, {}> {
         ];
         return (
             <>
-                <Modal width={'90%'} open={this.props.open}
+                <Modal data-testid="nav-page-edit-modal" width={'90%'} open={this.props.open}
                        okButtonProps={{disabled: tooShort || reserved, 'data-testid': 'nav-page-save-btn'}}
                        onOk={async () => {
                            await this.createEditNavigation()
@@ -378,7 +378,7 @@ class AddNewDialogNavigation extends React.Component<IProps, {}> {
                                     this.seoFields.map((field: string, index: number) => (
                                         <div key={index} className={'seo-config'}>
                                             <label>{this.props.t(field.toLocaleUpperCase())}</label>
-                                            <Input value={(seo as any)[field]}
+                                            <Input data-testid={`nav-page-seo-${field}-input`} value={(seo as any)[field]}
                                                    onChange={(input) => {
                                                        this.setState({
                                                            seo: {

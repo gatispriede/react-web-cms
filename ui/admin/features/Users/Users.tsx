@@ -65,7 +65,7 @@ const AdminSettingsUsers = () => {
         {title: t('Actions'), key: 'actions', width: 180,
             render: (_: unknown, user: IUser) => (
                 <Space>
-                    <Button size="small" icon={<EditOutlined/>} onClick={() => vm.openEdit(user)}>{t('Edit')}</Button>
+                    <Button data-testid={`users-row-${user.id}-edit-button`} size="small" icon={<EditOutlined/>} onClick={() => vm.openEdit(user)}>{t('Edit')}</Button>
                     <Popconfirm
                         title={t('Remove user?')}
                         description={t('This cannot be undone.')}
@@ -76,6 +76,7 @@ const AdminSettingsUsers = () => {
                         onConfirm={() => vm.remove(user)}
                     >
                         <Button
+                            data-testid={`users-row-${user.id}-delete-button`}
                             size="small"
                             danger
                             icon={<DeleteOutlined/>}
@@ -90,8 +91,8 @@ const AdminSettingsUsers = () => {
     return (
         <div style={{padding: 16}}>
             <Space style={{marginBottom: 16}}>
-                <Button type="primary" icon={<PlusOutlined/>} onClick={vm.openCreate}>{t('Add user')}</Button>
-                <Button onClick={vm.refresh} loading={vm.loading}>{t('Refresh')}</Button>
+                <Button data-testid="users-create-button" type="primary" icon={<PlusOutlined/>} onClick={vm.openCreate}>{t('Add user')}</Button>
+                <Button data-testid="users-refresh-button" onClick={vm.refresh} loading={vm.loading}>{t('Refresh')}</Button>
             </Space>
             <Table
                 rowKey="id"
@@ -100,9 +101,11 @@ const AdminSettingsUsers = () => {
                 columns={columns}
                 pagination={{pageSize: 10}}
                 size="middle"
+                onRow={(u: IUser) => ({'data-testid': `users-row-${u.id}`} as any)}
             />
             {vm.editing !== null && (
                 <Modal
+                    data-testid="users-editor-modal"
                     title={vm.editing?.id ? t('Edit user') : t('Add user')}
                     open
                     onCancel={onClose}
@@ -134,13 +137,14 @@ const AdminSettingsUsers = () => {
                                 {type: 'email', message: t('Enter a valid email')},
                             ]}
                         >
-                            <Input disabled={!!vm.editing?.id} autoComplete="off"/>
+                            <Input data-testid="users-email-input" disabled={!!vm.editing?.id} autoComplete="off"/>
                         </Form.Item>
                         <Form.Item name="name" label={t('Name')}>
-                            <Input autoComplete="off"/>
+                            <Input data-testid="users-name-input" autoComplete="off"/>
                         </Form.Item>
                         <Form.Item name="role" label={t('Role')}>
                             <Select
+                                data-testid="users-role-select"
                                 options={ROLE_OPTIONS.map(r => ({value: r.value, label: t(r.label)}))}
                             />
                         </Form.Item>
@@ -150,14 +154,14 @@ const AdminSettingsUsers = () => {
                             valuePropName="checked"
                             tooltip={t('Allows copying the draft site state into the live published snapshot.')}
                         >
-                            <Switch/>
+                            <Switch data-testid="users-can-publish-switch"/>
                         </Form.Item>
                         <Form.Item
                             name="password"
                             label={vm.editing?.id ? t('New password (leave blank to keep)') : t('Password')}
                             rules={vm.editing?.id ? [] : [{required: true, message: t('Password is required')}]}
                         >
-                            <Input.Password autoComplete="new-password"/>
+                            <Input.Password data-testid="users-password-input" autoComplete="new-password"/>
                         </Form.Item>
                         {/* Q10 — three-dimension grants: feature / page / locale.
                             Constrained multi-selects (not free-text tags) — options
@@ -172,6 +176,7 @@ const AdminSettingsUsers = () => {
                             tooltip={t('User can mutate these features (e.g. Posts, Themes).')}
                         >
                             <Select
+                                data-testid="users-grant-features-select"
                                 mode="multiple"
                                 allowClear
                                 placeholder={t('Pick features…')}
@@ -186,6 +191,7 @@ const AdminSettingsUsers = () => {
                             tooltip={t('Pages the user can edit.')}
                         >
                             <Select
+                                data-testid="users-grant-pages-select"
                                 mode="multiple"
                                 allowClear
                                 placeholder={t('Pick pages…')}
@@ -200,6 +206,7 @@ const AdminSettingsUsers = () => {
                             tooltip={t('Languages the user can edit / translate.')}
                         >
                             <Select
+                                data-testid="users-grant-locales-select"
                                 mode="multiple"
                                 allowClear
                                 placeholder={t('Pick locales…')}
