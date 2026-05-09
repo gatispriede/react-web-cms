@@ -2,7 +2,10 @@
 
 Source-of-truth for the DigitalOcean droplets, reserved IPs, firewalls, and DNS records under `terraform/`. Wave 1 (Terraform/Kamal migration) is the first time the production infra has a declarative reflection — before this, the droplets were hand-crafted in the DO console and the only "spec" was institutional knowledge.
 
-**Status:** funisimo.pro scaffolded, not imported yet. skyclimber pending funisimo cutover stable.
+**Status (2026-05-09):** both droplets imported + on Kamal-managed deploys.
+- **funisimo.pro** — imported 2026-05-08 (`terraform/environments/funisimo/`); `terraform plan` returns "No changes". Live on Kamal-managed `cms-web` container since `93e6066`.
+- **skyclimber.pro** — imported 2026-05-09 (`terraform/environments/skyclimber/`); `terraform plan` returns "No changes". Live on Kamal-managed `cms-web` container since `c14fae3`.
+- Both run on local terraform state for now; switch to TF Cloud workspaces (`funisimo-prod`, `skyclimber-prod`) when convenient — see backend.tf in each env dir for the migration command.
 
 ## Setup
 
