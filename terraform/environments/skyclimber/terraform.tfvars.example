@@ -1,0 +1,10 @@
+# Copy this file to `terraform.tfvars` (gitignored) and fill the
+# values from your local environment, OR set them as TF Cloud
+# workspace variables (preferred — keeps the values out of any
+# local file too).
+
+# Fingerprint of the SSH key authorised on the droplet. Treat as
+# secret-adjacent: it identifies which key authenticates against
+# your DigitalOcean account. Get it with:
+#   doctl --access-token $DO_TOKEN_SKY compute ssh-key list
+ssh_key_fingerprint = "REPLACE_WITH_FINGERPRINT"

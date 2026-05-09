@@ -1,0 +1,10 @@
+# Kamal destination overlay — funisimo.pro.
+#
+# Loaded on top of `config/deploy.yml` when CI invokes
+# `kamal app boot --destination=funisimo --version=<sha>`. Carries
+# only the values that differ from the shared base.
+
+servers:
+  web:
+    hosts:
+      - funisimo.pro

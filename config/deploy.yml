@@ -1,27 +1,29 @@
-# Kamal deploy config — funisimo.pro.
+# Kamal deploy config — shared base for funisimo + skyclimber.
 #
-# Read by `kamal deploy` from CI (and locally
-# during cutover). Replaces the inline ssh script in `.github/workflows/
-# ci.yml` for funisimo only — skyclimber stays on the legacy bash deploy
-# until funisimo runs stable on Kamal for ≥ 1 release cycle.
+# Per-tenant `hosts:` override lives in:
+#   - `config/deploy.funisimo.yml`
+#   - `config/deploy.skyclimber.yml`
+#
+# CI invokes `kamal app boot --destination=<tenant> --version=<sha>`
+# which loads this file first, then merges the destination overlay on
+# top. Anything tenant-specific belongs in the overlay; anything shared
+# stays here.
 #
 # Operator runbook: `docs/runbooks/kamal-deploy.md`.
 
 service: cms
 
-# GHCR image. CI pushes `ghcr.io/gatispriede/cms:<sha>` per commit; Kamal
-# resolves `<sha>` from the working-tree git SHA at deploy time, so a
-# `kamal deploy` always lines up with whatever HEAD points to.
+# GHCR image. CI pushes `ghcr.io/gatispriede/cms:<sha>` per commit.
 image: gatispriede/cms
 
-# `app.servers` lists the production droplet by domain. The reserved IP
-# is what DNS resolves to, so referencing the apex domain works for both
-# Terraform-managed and pre-Terraform droplets — Kamal SSH-connects, no
-# DNS-cache concerns.
+# `servers.web.hosts:` is mandatory in kamal v2 schema. We provide a
+# placeholder here that destination overlays replace; bare `kamal config`
+# (no destination) would target this placeholder if invoked, but we
+# never run kamal without `--destination=` in CI.
 servers:
   web:
     hosts:
-      - funisimo.pro
+      - placeholder.invalid
     # Disable kamal-proxy registration for this role.
     # `lib/kamal/configuration/role.rb:168` (kamal v2.11):
     #   "only false means no proxy for non-primary roles"
@@ -29,35 +31,28 @@ servers:
     # tries to `docker exec kamal-proxy kamal-proxy deploy cms-web ...`
     # which fails because kamal-proxy isn't running. The failed proxy
     # registration causes kamal to stop the otherwise-healthy container.
-    # Caddy is the public front (see deploy.yml header decision).
+    # Caddy is the public front (operator decision: option A, 2026-05-08).
     proxy: false
     # Container runtime config.
     #
-    # `env-file: /opt/cms/.env` — droplet already carries the full
-    # runtime env (MONGODB_URI, SMTP_*, INITIAL_ADMIN_*, etc.) at
-    # /opt/cms/.env from the legacy compose stack. Pointing kamal at
-    # it avoids mirroring the same 9 secrets into GHA repo settings.
-    # Drops the entire `env: secret:` block as a result.
+    # `env-file: /opt/cms/.env` — both droplets carry the full runtime
+    # env (MONGODB_URI, SMTP_*, INITIAL_ADMIN_*, etc.) at /opt/cms/.env
+    # from the legacy compose stack. Same path on both, so this stays
+    # in the shared base.
     #
     # Network:
     #   Kamal v2.11 hardcodes `--network kamal` in
     #   `lib/kamal/commands/app.rb:21` — no override available via
-    #   deploy.yml. CI step pre-creates the `kamal` network on the
-    #   droplet so kamal app boot doesn't fail. Real connectivity
+    #   deploy.yml. CI step pre-creates the `kamal` network on each
+    #   droplet so `kamal app boot` doesn't fail. Real connectivity
     #   comes from a post-boot `docker network connect cms_back-end`
-    #   + `cms_front-end` (see ci.yml#deploy-funisimo).
+    #   + `cms_front-end` (see ci.yml#deploy-funisimo / deploy-skyclimber).
     options:
       env-file: /opt/cms/.env
 
-# SSH — funisimo's sshd currently allows root (verified 2026-05-08:
-# `PermitRootLogin yes`, only `root` has authorised keys, no
-# non-system user accounts). Hardening to a non-root operator user is
-# a separate item; for now Kamal connects as root, same as the legacy
-# bash deploy.
-#
-# Key auth uses the same `secrets.DEPLOY_SSH_KEY` the legacy CI deploy
-# uses; Kamal's `ssh-agent` integration picks it up via `ssh-add` in
-# the GHA workflow step.
+# SSH — both droplets currently allow root login. Same `DEPLOY_SSH_KEY`
+# private key authorises against both `/root/.ssh/authorized_keys`.
+# Hardening to a non-root operator user is a separate item.
 ssh:
   user: root
 
@@ -66,75 +61,21 @@ registry:
   username: gatispriede
   password:
     # Read from Kamal's host env at deploy time. CI sets this from
-    # `secrets.GITHUB_TOKEN` (which already has packages:read on the
-    # repo); operator can use a personal token with `read:packages` for
-    # local `kamal deploy` runs.
+    # `secrets.GITHUB_TOKEN` (which has packages:read on the repo).
     - GHCR_PAT
 
-# Skip kamal-proxy entirely (operator decision 2026-05-08, option A):
-# Caddy is the existing public front — it terminates TLS, serves
-# `/uploads/*`, `/design-v2/*`, MCP routing, SWR cache. kamal-proxy
-# would either need a non-default port or fight Caddy for 80/443.
-#
-# How proxy is disabled: `servers.web.proxy: false` (above). Without
-# it, `kamal app boot` succeeds at `docker run` then fails registering
-# the new container with `docker exec kamal-proxy ...` (no kamal-proxy
-# running) and stops the just-booted container.
-#
-# Cutover behaviour:
-#   1. CI's "Ensure kamal docker network exists" pre-creates the
-#      hardcoded `kamal` network (kamal v2.11 hardcodes
-#      `--network kamal`).
-#   2. `kamal app boot --version=<sha>` pulls + runs `cms-web-<sha>`.
-#   3. CI's "Rotate to new container" stops the prior cms-web*,
-#      attaches the new one to cms_back-end + cms_front-end with
-#      `--alias cms-web`. Caddy's upstream `cms-web:80` resolves to
-#      whichever container currently holds the alias.
-
-# Runtime env comes from /opt/cms/.env on the droplet (see
-# `servers.web.options.env-file` above). No `env: clear:` / `env: secret:`
-# blocks because the `--env-file` covers everything the running container
-# needs (MONGODB_URI, SMTP_*, NODE_ENV, DOMAIN, INITIAL_ADMIN_*, …).
-#
-# To rotate a secret: edit /opt/cms/.env on the droplet directly, then
-# `kamal app boot` to recreate the container. Same pattern the legacy
-# compose stack used.
-
-# Healthcheck — Kamal v2 only accepts a `healthcheck:` block when the
-# proxy is on (it's how kamal-proxy decides when to flip slots). With
-# `proxy: false` (Caddy stays in front), the container's readiness is
-# verified two other ways:
-#   1. Kamal waits for `docker run` to exit successfully, then leaves
-#      the container running. If `node ui/client/server.js` crashes on
-#      boot the container exits and kamal aborts the deploy.
-#   2. `.kamal/hooks/post-deploy` runs after kamal considers the deploy
-#      successful, hits `https://funisimo.pro/api/health` over the public
-#      Caddy path, and fails the CI step on non-200.
-# Net effect: same gate as a kamal-native healthcheck, just split between
-# the boot exit code and the public-side smoke. Adequate for our setup.
-
-# Asset persistence. The site reads `/srv/uploads/{images,bundles}`
-# from a host bind mount; same dirs the legacy compose uses. Kamal's
-# `volumes` survives container swaps, so admins keep their uploaded
-# images across deploys without involving DO Spaces.
+# Asset persistence — both droplets keep uploads at /opt/cms/uploads.
 volumes:
   - "/opt/cms/uploads:/srv/uploads"
 
 # Builder — runs `docker build` against the multi-stage AppDockerfile.
-# `local: false` + `arch: amd64` would push the build to a remote builder;
-# we use the GHA runner (amd64) so this stays local-to-CI.
 builder:
   dockerfile: infra/AppDockerfile
   arch: amd64
   args:
     GIT_SHA: <%= `git rev-parse HEAD`.strip %>
 
-# Aliases — convenience commands for operator workflows. Ship a one-off
-# bundle import without tearing down the running container:
-#   kamal app exec --interactive 'node tools/bundle-import.js /srv/uploads/bundles/latest.zip'
-#
-# `console` opens a node REPL inside the running container — handy for
-# poking at the running process during incidents.
+# Aliases — convenience commands for operator workflows.
 aliases:
   console: app exec --interactive 'node'
   logs: app logs --follow

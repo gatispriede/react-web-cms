@@ -238,10 +238,13 @@ jobs:
           # skip flag. We don't run kamal-proxy (Caddy is the public
           # front). `app boot` is the proxy-agnostic primitive: pulls
           # image, stops old, starts new.
+          # `--destination=funisimo` loads `config/deploy.funisimo.yml`
+          # on top of `config/deploy.yml`, providing the funisimo-specific
+          # hosts list. Skyclimber uses `--destination=skyclimber` in the
+          # parallel `deploy-skyclimber:` job below.
           # `--version` pins to the master SHA already on GHCR via
-          # the `ghcr-push:` job above — reproducible vs whatever
-          # `:latest` happens to point to.
-          kamal app boot --version=${{ github.sha }}
+          # the `ghcr-push:` job above.
+          kamal app boot --destination=funisimo --version=${{ github.sha }}
 
       - name: Rotate to new container + public smoke
         run: |
@@ -289,6 +292,131 @@ jobs:
           done
           echo "!! public /api/health did not return 200 within 40s" >&2
           ssh root@funisimo.pro 'docker ps --format "{{.Names}}: {{.Status}}"; docker logs $(docker ps --filter "name=cms-web-" -q | head -1) --tail=30' >&2 || true
+          exit 1
+
+  # ----------------------------------------------------------------
+  # Kamal deploy to skyclimber.pro — mirror of `deploy-funisimo:` with
+  # skyclimber-specific hosts/IPs. Same `DEPLOY_SSH_KEY` (the same
+  # public half is on both droplets' authorized_keys per operator
+  # decision 2026-05-09: reuse).
+  #
+  # Skyclimber's legacy `Deploy to skyclimber.pro` matrix entry stays
+  # `auto: false` from 2026-05-08 — kept as emergency fallback via
+  # `workflow_dispatch --target=skyclimber.pro`.
+  deploy-skyclimber:
+    name: Kamal deploy → skyclimber.pro
+    runs-on: ubuntu-latest
+    needs: [test-and-typecheck, ghcr-push]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+
+      - name: Install Kamal
+        run: gem install kamal -v '~> 2.0' --no-document
+
+      - name: Mask SSH key identifiers in workflow logs
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          # Same mask logic as deploy-funisimo: register pubkey + fingerprint
+          # + comment so subsequent `ssh-add` output shows `***`.
+          TMP=$(mktemp)
+          umask 077
+          printf '%s\n' "$SSH_KEY" > "$TMP"
+          PUBKEY=$(ssh-keygen -y -f "$TMP" 2>/dev/null || true)
+          FP=$(ssh-keygen -lf "$TMP" 2>/dev/null | awk '{print $2}')
+          COMMENT=$(printf '%s' "$PUBKEY" | awk '{print $NF}')
+          rm -f "$TMP"
+          [ -n "$PUBKEY" ]  && echo "::add-mask::$PUBKEY"
+          [ -n "$FP" ]      && echo "::add-mask::$FP"
+          [ -n "$COMMENT" ] && echo "::add-mask::$COMMENT"
+          echo "ssh key identifiers registered for masking"
+
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+          log-public-key: false
+
+      - name: Ensure `kamal` docker network exists on skyclimber
+        run: |
+          # Same hardcoded-network workaround as funisimo (see deploy-funisimo).
+          ssh -o StrictHostKeyChecking=accept-new root@skyclimber.pro \
+            "docker network inspect kamal >/dev/null 2>&1 || docker network create kamal"
+
+      - name: Configure SSH for skyclimber.pro
+        run: |
+          # Skip strict host-key check — Net::SSH 7.3 honours ~/.ssh/config.
+          # Skyclimber IPs: 138.68.115.204 (reserved, DNS apex points here)
+          # + 165.245.212.249 (eth0).
+          mkdir -p ~/.ssh
+          {
+            printf 'Host skyclimber.pro 138.68.115.204 165.245.212.249\n'
+            printf '    StrictHostKeyChecking no\n'
+            printf '    UserKnownHostsFile /dev/null\n'
+            printf '    LogLevel ERROR\n'
+          } >> ~/.ssh/config
+          chmod 600 ~/.ssh/config
+          ssh-keyscan skyclimber.pro 138.68.115.204 165.245.212.249 >> ~/.ssh/known_hosts 2>/dev/null
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Kamal app boot
+        env:
+          GHCR_PAT: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # `--destination=skyclimber` loads `config/deploy.skyclimber.yml`
+          # on top of `config/deploy.yml`. Same image + builder + registry
+          # + ssh user as funisimo; only `servers.web.hosts:` differs.
+          kamal app boot --destination=skyclimber --version=${{ github.sha }}
+
+      - name: Rotate to new container + public smoke
+        run: |
+          # Identical rotation logic to deploy-funisimo: stop prior
+          # cms-web*, attach the new versioned container to cms_back-end
+          # + cms_front-end with `--alias cms-web` so Caddy's upstream
+          # resolves correctly. Caddy's `lb_try_duration 30s` covers
+          # the brief gap during swap.
+          ssh root@skyclimber.pro bash -s <<'REMOTE'
+          set -e
+          NEW=$(docker ps --filter "name=cms-web-" --format "{{.Names}}" | head -1)
+          if [ -z "$NEW" ]; then
+            echo "!! no kamal-booted cms-web-<sha> container found" >&2
+            docker ps --format "{{.Names}}: {{.Status}}" >&2
+            exit 1
+          fi
+          echo "new container: $NEW"
+
+          # Stop + remove the unversioned `cms-web` (manual cutover from
+          # 2026-05-09) and any prior versioned cms-web-* that aren't $NEW.
+          for c in $(docker ps -a --filter "name=cms-web" --format "{{.Names}}"); do
+            if [ "$c" != "$NEW" ]; then
+              echo "stopping prior: $c"
+              docker stop "$c" 2>/dev/null || true
+              docker rm "$c" 2>/dev/null || true
+            fi
+          done
+
+          docker network connect cms_back-end "$NEW" --alias cms-web 2>/dev/null || true
+          docker network connect cms_front-end "$NEW" --alias cms-web 2>/dev/null || true
+          REMOTE
+
+          # Public smoke from the runner.
+          for i in 1 2 3 4 5 6 7 8; do
+            CODE=$(curl -sf -o /dev/null -w "%{http_code}" --max-time 10 https://skyclimber.pro/api/health || echo "000")
+            if [ "$CODE" = "200" ]; then
+              echo "public smoke 200 after $((i*5))s"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "!! public /api/health did not return 200 within 40s" >&2
+          ssh root@skyclimber.pro 'docker ps --format "{{.Names}}: {{.Status}}"; docker logs $(docker ps --filter "name=cms-web-" -q | head -1) --tail=30' >&2 || true
           exit 1
 
   # ----------------------------------------------------------------
