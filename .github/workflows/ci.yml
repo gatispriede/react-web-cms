@@ -155,6 +155,34 @@ jobs:
       - name: Install Kamal
         run: gem install kamal -v '~> 2.0' --no-document
 
+      - name: Mask SSH key identifiers in workflow logs
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          # Pre-register the SSH key's public half + fingerprint + comment
+          # as GitHub-Actions masks. Any subsequent log line that contains
+          # these values (`ssh-add`'s `Identity added: ... (comment)` line,
+          # or any third-party step that echoes the public key) is rendered
+          # as `***`. Without this, the comment (operator machine name like
+          # `User@Funisimo-pc`) leaks into the public-repo Actions logs.
+          #
+          # `webfactory/ssh-agent`'s `log-public-key: false` flag (below)
+          # also suppresses its own pubkey dump, but `ssh-add` itself
+          # writes to stderr and `log-public-key` doesn't catch that —
+          # ::add-mask:: does.
+          TMP=$(mktemp)
+          umask 077
+          printf '%s\n' "$SSH_KEY" > "$TMP"
+          PUBKEY=$(ssh-keygen -y -f "$TMP" 2>/dev/null || true)
+          FP=$(ssh-keygen -lf "$TMP" 2>/dev/null | awk '{print $2}')
+          COMMENT=$(printf '%s' "$PUBKEY" | awk '{print $NF}')
+          rm -f "$TMP"
+          [ -n "$PUBKEY" ]  && echo "::add-mask::$PUBKEY"
+          [ -n "$FP" ]      && echo "::add-mask::$FP"
+          [ -n "$COMMENT" ] && echo "::add-mask::$COMMENT"
+          # Empty echo so we don't accidentally surface anything via $?.
+          echo "ssh key identifiers registered for masking"
+
       - name: Set up SSH agent
         uses: webfactory/ssh-agent@v0.9.0
         with:
@@ -163,7 +191,7 @@ jobs:
           # the comment embeds the operator's machine name (e.g.
           # `User@Funisimo-pc`) which is identifying info we don't want
           # in public CI logs. Auth still works; only the log line is
-          # silenced.
+          # silenced. Belt-and-braces with the mask step above.
           log-public-key: false
 
       - name: Ensure `kamal` docker network exists on funisimo
