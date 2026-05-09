@@ -130,6 +130,13 @@ RUN npm prune --omit=dev --legacy-peer-deps \
 # the 2.97 GB image.
 FROM node:20-alpine AS runtime
 
+# Re-declare ARG in runtime stage — multi-stage doesn't propagate ARGs
+# automatically. Then export as ENV so DiagnosticsService can read it
+# via `process.env.GIT_SHA` (the admin Diagnostics page surfaces it as
+# "Git SHA"). Falls back to "unknown" if the build-arg wasn't passed.
+ARG GIT_SHA=unknown
+ENV GIT_SHA=$GIT_SHA
+
 ENV NODE_ENV=production
 
 RUN apk add --no-cache curl
