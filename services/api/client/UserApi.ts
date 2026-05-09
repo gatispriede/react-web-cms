@@ -78,12 +78,33 @@ export class UserApi {
     }
 
     async removeUser(id: string, opts: {idempotencyKey?: string} = {}): Promise<{id?: string; error?: string}> {
+        // Direct POST (not gqty.resolve) — operator reported 2026-05-09 that
+        // clicking Remove on the Users pane hangs the UI: button stays in
+        // loading state forever, no network response, looks dead. Same
+        // gqty-stalls-on-mutation bug we hit with `listThemes()` (see
+        // ThemeApi.ts header comment). Raw POST to /api/graphql always
+        // resolves cleanly. Same pattern is fine here because the response
+        // shape is just `{removeUser: {id, deleted}}` JSON-stringified.
         try {
-            const args: any = {id};
-            if (opts.idempotencyKey) args.idempotencyKey = opts.idempotencyKey;
-            const raw = await resolve(({mutation}) => mutation.mongo.removeUser(args as any));
-            return JSON.parse(raw || '{}').removeUser ?? JSON.parse(raw || '{}');
+            const idempotencyKey = opts.idempotencyKey;
+            const r = await fetch('/api/graphql', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    query: `mutation R($id: String!, $idempotencyKey: String) { mongo { removeUser(id: $id, idempotencyKey: $idempotencyKey) } }`,
+                    variables: {id, idempotencyKey},
+                }),
+            });
+            const json = await r.json();
+            const raw = json?.data?.mongo?.removeUser;
+            if (json?.errors?.length) {
+                return {error: json.errors.map((e: any) => e.message).join('; ')};
+            }
+            const parsed = JSON.parse(raw || '{}');
+            return parsed.removeUser ?? parsed;
         } catch (err) {
+            log.error({scope: 'users.remove', err, id}, 'removeUser failed');
             return {error: String(err)};
         }
     }
