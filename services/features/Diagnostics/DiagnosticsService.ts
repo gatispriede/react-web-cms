@@ -144,40 +144,62 @@ function countSdlFields(sdl: string, typeName: string): number {
 }
 
 async function readStorageHealth(deps: DiagnosticsDeps): Promise<StorageHealth> {
+    // Parallelise the three probes so a stuck one (Redis with no server
+    // running, common on our deploy where REDIS_URL falls back to
+    // localhost:6379 with nothing listening) can't eat mongo's budget.
+    // Each probe has its own race against a tight 1500ms timeout — well
+    // under the 5s outer cap on the snapshot composition. Caught
+    // 2026-05-09 when post-cutover diagnostics page showed "Mongo: down"
+    // because the sequential-then-outer-timeout pattern let redis hang
+    // for >5s, returning the FALLBACK_STORAGE before mongo could report.
     const opts = deps.mongoClientOptions ?? {};
     const replicaSet = Boolean((opts as {replicaSet?: string}).replicaSet);
-    let mongoConnected = false;
-    try {
-        await deps.db.command({ping: 1});
-        mongoConnected = true;
-    } catch (err) {
-        log.warn({scope: 'diagnostics.mongo.ping', err}, 'mongo ping failed');
-    }
-    let redisAvailable = false;
-    let dbSize: number | null = null;
-    if (deps.redis) {
-        try {
-            // Redis reachability probe — a get on a known-absent key.
-            await deps.redis.get('cms:diagnostics:probe');
-            redisAvailable = true;
-        } catch (err) {
-            log.warn({scope: 'diagnostics.redis.probe', err}, 'redis probe failed');
-        }
-    }
-    let cacheVersions: Record<string, number> = {};
-    try {
-        const {composedCacheVersionKeys} = await import('@services/infra/featureRegistry');
-        const {getFeatureVersions} = await import('@services/infra/cacheVersion');
-        const map = composedCacheVersionKeys();
-        const allKeys = Array.from(new Set(Object.values(map).flat()));
-        cacheVersions = await getFeatureVersions(allKeys);
-    } catch (err) {
-        log.warn({scope: 'diagnostics.cv', err}, 'cache version snapshot failed');
-    }
+
+    const probeTimeout = <T,>(p: Promise<T>, ms = 1500): Promise<T | null> =>
+        Promise.race([
+            p.catch(() => null as T | null),
+            new Promise<T | null>(resolve => setTimeout(() => resolve(null), ms)),
+        ]);
+
+    const mongoPromise = probeTimeout(
+        deps.db.command({ping: 1}).then(() => true).catch(err => {
+            log.warn({scope: 'diagnostics.mongo.ping', err}, 'mongo ping failed');
+            return false;
+        }),
+    );
+
+    const redisPromise = deps.redis
+        ? probeTimeout(
+              deps.redis.get('cms:diagnostics:probe').then(() => true).catch(err => {
+                  log.warn({scope: 'diagnostics.redis.probe', err}, 'redis probe failed');
+                  return false;
+              }),
+          )
+        : Promise.resolve(false);
+
+    const cvPromise = probeTimeout(
+        (async () => {
+            const {composedCacheVersionKeys} = await import('@services/infra/featureRegistry');
+            const {getFeatureVersions} = await import('@services/infra/cacheVersion');
+            const map = composedCacheVersionKeys();
+            const allKeys = Array.from(new Set(Object.values(map).flat()));
+            return getFeatureVersions(allKeys);
+        })().catch(err => {
+            log.warn({scope: 'diagnostics.cv', err}, 'cache version snapshot failed');
+            return {} as Record<string, number>;
+        }),
+    );
+
+    const [mongoConnectedRaw, redisAvailableRaw, cacheVersionsRaw] = await Promise.all([
+        mongoPromise,
+        redisPromise,
+        cvPromise,
+    ]);
+
     return {
-        mongo: {connected: mongoConnected, replicaSet, transactionsSupported: replicaSet},
-        redis: {available: redisAvailable, dbSize},
-        cacheVersions,
+        mongo: {connected: Boolean(mongoConnectedRaw), replicaSet, transactionsSupported: replicaSet},
+        redis: {available: Boolean(redisAvailableRaw), dbSize: null},
+        cacheVersions: cacheVersionsRaw ?? {},
     };
 }
 
