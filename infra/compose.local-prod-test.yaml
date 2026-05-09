@@ -42,7 +42,7 @@ services:
     environment:
       NODE_ENV: production
       MONGODB_URI: mongodb://mongo:27017
-      MONGODB_DB: MAIN-DB
+      MONGODB_DB: DB
       DOMAIN: localhost
       SITE_DOMAIN_WWW: www.localhost
       ACTIVE_UPSTREAM: app:80

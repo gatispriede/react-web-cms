@@ -1,5 +1,5 @@
 import React, {useEffect} from 'react';
-import {GetStaticProps} from 'next';
+import {GetServerSideProps} from 'next';
 import Link from 'next/link';
 import Head from 'next/head';
 import {Card, Col, ConfigProvider, Empty, Row, Typography} from 'antd';
@@ -80,7 +80,12 @@ const DocsIndex: React.FC<Props> = ({docs, themeTokens, footer, navPages}) => {
     );
 };
 
-export const getStaticProps: GetStaticProps<Props> = async ({locale}) => {
+// Switched from `getStaticProps + revalidate: 3600` to `getServerSideProps`
+// 2026-05-09. Same root cause as `pages/index.tsx`, `pages/blog/index.tsx`,
+// `pages/products/index.tsx` — build-time empty Mongo baked an empty docs
+// list into the static page; ~1h stale window after every deploy until ISR
+// caught up. Per-request render against runtime Mongo eliminates it.
+export const getServerSideProps: GetServerSideProps<Props> = async ({locale}) => {
     let docs: DocPage[] = [];
     let themeTokens: any | null = null;
     let footer: IFooterConfig = {...DEFAULT_FOOTER};
@@ -116,7 +121,6 @@ export const getStaticProps: GetStaticProps<Props> = async ({locale}) => {
             navPages,
             ...(await serverSideTranslations(locale ?? 'en', ['common', 'app'])),
         },
-        revalidate: 3600,
     };
 };
 

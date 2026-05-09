@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useState} from 'react';
-import {GetStaticProps} from 'next';
+import {GetServerSideProps} from 'next';
 import {gqlFetch} from '@client/lib/gqlFetch';
 import {gatePath} from '@client/lib/loaders/applyPublicGates';
 import Link from 'next/link';
@@ -112,7 +112,13 @@ const ProductsIndex = ({products, themeTokens, footer, pages}: Props) => {
     );
 };
 
-export const getStaticProps: GetStaticProps<Props> = gatePath('/products', async ({locale}: {locale?: string}) => {
+// Switched from `getStaticProps + revalidate: 3600` to `getServerSideProps`
+// 2026-05-09. The static path baked an empty-Mongo state at image build
+// time (the prebuild's in-memory Mongo holds no products), so /products
+// served an empty grid for ~1h after every deploy until ISR caught up.
+// Per-request render against runtime Mongo eliminates the staleness
+// window. Same fix pattern as `pages/index.tsx` and `pages/blog/index.tsx`.
+export const getServerSideProps: GetServerSideProps<Props> = gatePath('/products', async ({locale}: {locale?: string}) => {
     let products: IProduct[] = [];
     let themeTokens: any | null = null;
     let footer: IFooterConfig = {...DEFAULT_FOOTER};
@@ -137,8 +143,7 @@ export const getStaticProps: GetStaticProps<Props> = gatePath('/products', async
             pages,
             ...(await serverSideTranslations(locale ?? 'en', ['common', 'app'])),
         },
-        revalidate: 3600,
     };
-}) as GetStaticProps<Props>;
+}) as GetServerSideProps<Props>;
 
 export default ProductsIndex;

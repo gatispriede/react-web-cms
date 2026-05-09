@@ -1,5 +1,5 @@
 import React, {useEffect} from 'react';
-import {GetStaticProps} from 'next';
+import {GetServerSideProps} from 'next';
 import {gqlFetch} from '@client/lib/gqlFetch';
 import Link from 'next/link';
 import Head from 'next/head';
@@ -110,7 +110,13 @@ const BlogIndex = ({posts, themeTokens, footer, pages}: Props) => {
     );
 };
 
-export const getStaticProps: GetStaticProps<Props> = async ({locale}) => {
+// Switched from `getStaticProps + revalidate: 3600` to `getServerSideProps`
+// 2026-05-09. The static path baked an empty-Mongo state at image build
+// time (the prebuild's in-memory Mongo holds no posts), so /blog served
+// "No posts published yet." for ~1h after every deploy until ISR caught
+// up. Per-request render against runtime Mongo eliminates the staleness
+// window. Same fix pattern as `pages/index.tsx`.
+export const getServerSideProps: GetServerSideProps<Props> = async ({locale}) => {
     let posts: IPost[] = [];
     let themeTokens: any | null = null;
     let footer: IFooterConfig = {...DEFAULT_FOOTER};
@@ -129,7 +135,7 @@ export const getStaticProps: GetStaticProps<Props> = async ({locale}) => {
     } catch (err) {
         console.error('[blog/index] parse error:', err);
     }
-    if (!blogEnabled) return {notFound: true, revalidate: 3600};
+    if (!blogEnabled) return {notFound: true};
     return {
         props: {
             posts,
@@ -138,7 +144,6 @@ export const getStaticProps: GetStaticProps<Props> = async ({locale}) => {
             pages,
             ...(await serverSideTranslations(locale ?? 'en', ['common', 'app'])),
         },
-        revalidate: 3600,
     };
 };
 
