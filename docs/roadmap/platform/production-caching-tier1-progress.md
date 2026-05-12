@@ -3,7 +3,7 @@
 _Session: 2026-04-24_
 
 End-to-end execution of the roadmap in
-[`production-caching.md`](./production-caching.md) plus deploy plumbing
+[`production-caching.md`](production-caching.md) plus deploy plumbing
 adjustments. All four tiers landed in this session; Tier 5 (CDN,
 per-PR previews) remains deferred.
 

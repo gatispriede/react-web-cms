@@ -1,6 +1,6 @@
 # Runbook — `/v1/**` namespace migration (F3) — CANCELLED 2026-05-03
 
-> **Cancelled — superseded by [docs/roadmap/v1-url-namespace.md](../roadmap/v1-url-namespace.md) postmortem.** Pages Router special-cases `pages/api/*`; moving it broke server/browser bundle isolation. F3 was reverted within a single working session and never ran in production. This runbook is preserved (not deleted) only because operators may have bookmarked it during the in-flight period. **Do not follow any instructions below.** Routes stay at `/admin/*` and `/api/*`; no OAuth callback URL changes; no 308 redirect drops to schedule.
+> **Cancelled — superseded by [docs/roadmap/v1-url-namespace.md](../roadmap/platform/v1-url-namespace.md) postmortem.** Pages Router special-cases `pages/api/*`; moving it broke server/browser bundle isolation. F3 was reverted within a single working session and never ran in production. This runbook is preserved (not deleted) only because operators may have bookmarked it during the in-flight period. **Do not follow any instructions below.** Routes stay at `/admin/*` and `/api/*`; no OAuth callback URL changes; no 308 redirect drops to schedule.
 
 ---
 

@@ -107,7 +107,7 @@ Per surface a new file under `services/features/Mcp/tools/`. Plus shared helpers
 ## Acceptance
 
 - `tool.list` returns ≥ 70 tools (38 today + ~32 new).
-- An LLM agent walks the [docs/runbooks/mcp-onboarding-walkthrough.md](../runbooks/mcp-onboarding-walkthrough.md) (new) — create site, add pages, set theme, upload logo, add inquiry form, publish — without any UI clicks. End-to-end test in CI.
+- An LLM agent walks the [docs/runbooks/mcp-onboarding-walkthrough.md](../../runbooks/mcp-onboarding-walkthrough.md) (new) — create site, add pages, set theme, upload logo, add inquiry form, publish — without any UI clicks. End-to-end test in CI.
 - 0 destructive tools bypass `enforceModeForTool` + idempotencyKey + audit (CI check).
 - Bundle round-trip via `bundle.export` → `bundle.import` produces zero diff (already tested; F8 doesn't regress).
 - Rate limit responds 429 with `Retry-After` when exceeded (test).

@@ -48,7 +48,7 @@ On upload receive (single or batch):
 4. **Strip EXIF** (sharp does this by default when re-encoding, but be explicit
    with `.withMetadata({orientation})` so rotation survives).
 5. **Extract dimensions** (`width`, `height`) and persist on the image record —
-   downstream consumers ([picker-improvements.md](picker-improvements.md),
+   downstream consumers ([picker-improvements.md](../admin/picker-improvements.md),
    [gallery-improvements.md](gallery-improvements.md)) want this.
 6. **If output > input bytes**, keep the original — never regress.
 
@@ -99,7 +99,7 @@ p95 upload time > 3 s (measurable; not today's problem).
 
 - [bulk-image-upload-with-ratio.md](bulk-image-upload-with-ratio.md) — same
   pipeline, batch entry point.
-- [picker-improvements.md](picker-improvements.md) — consumes the new
+- [picker-improvements.md](../admin/picker-improvements.md) — consumes the new
   `width`/`height` for orientation filter + preview box.
 
 ## Effort

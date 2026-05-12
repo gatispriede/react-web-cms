@@ -8,7 +8,7 @@ Out of scope for v1: real-time metrics dashboards (Grafana/Prom belong outside t
 
 ## Why now
 
-- Operators need a way to verify a deploy in production — "is `/admin/build` reachable, is `/api/graphql` returning, are core services healthy." Today this requires `curl` + log-grep. (F3 `/v1/**` namespace was attempted and cancelled — see [v1-url-namespace.md](v1-url-namespace.md) postmortem; routes stayed at `/admin/*` and `/api/*`.)
+- Operators need a way to verify a deploy in production — "is `/admin/build` reachable, is `/api/graphql` returning, are core services healthy." Today this requires `curl` + log-grep. (F3 `/v1/**` namespace was attempted and cancelled — see [v1-url-namespace.md](../platform/v1-url-namespace.md) postmortem; routes stayed at `/admin/*` and `/api/*`.)
 - C9 caching introduced `bootId`. There's no UI surface that exposes it; ops have to read the response header `X-Cms-Cache-Tag` to find it.
 - F2 added `*.trash` collections + idempotency Redis namespace. Admins want a "what's in the trash today, how many idempotency keys are live" overview without going to mongo shell.
 - After every deploy, the operator's first instinct is "did the right SHA roll out, did the seamless deploy flip, are blue and green pointing at the right images." Surfacing this avoids ssh'ing the box.

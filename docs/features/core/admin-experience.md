@@ -16,7 +16,7 @@ Three roles control what an admin user can do:
 
 A separate `canPublishProduction` flag on the user doc gates the Publish button independently of role — useful for editor-level users who are trusted to publish.
 
-See [`../architecture/auth-roles.md`](../architecture/auth-roles.md) for the full auth model.
+See [`../architecture/auth-roles.md`](../../architecture/auth-roles.md) for the full auth model.
 
 ## Multi-admin conflict detection
 

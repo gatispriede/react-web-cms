@@ -8,7 +8,7 @@ Replaced the bash deploy stack (`tools/blue-green-deploy.sh` + the 250-line inli
 
 ## What actually shipped (vs the original plan)
 
-The original spec proposed `kamal deploy` with kamal-proxy + per-tenant secrets in GHA. The shipped reality (after several iterations on 2026-05-08) diverges in five ways. **Operator runbook with current truth: [`docs/runbooks/kamal-deploy.md`](../runbooks/kamal-deploy.md).**
+The original spec proposed `kamal deploy` with kamal-proxy + per-tenant secrets in GHA. The shipped reality (after several iterations on 2026-05-08) diverges in five ways. **Operator runbook with current truth: [`docs/runbooks/kamal-deploy.md`](../../runbooks/kamal-deploy.md).**
 
 | Spec said | Shipped reality | Why diverged |
 |---|---|---|
@@ -28,7 +28,7 @@ The original spec proposed `kamal deploy` with kamal-proxy + per-tenant secrets 
 6. **`tools/docker-prebuild.js` boots an empty in-memory Mongo at image build time.** Anything pre-rendered via `getStaticProps` bakes empty-Mongo state. Fix per page: convert to `getServerSideProps`, or add a post-deploy `/api/revalidate` step.
 7. **GHCR's `delete:packages` PAT scope is separate from `write:packages`.** Bulk version cleanup needs the delete scope explicitly.
 8. **A classic PAT pushing to `.github/workflows/*.yml` requires `workflow` scope.** Without it, push is rejected with "refusing to allow a Personal Access Token to create or update workflow".
-9. **Local `npm run dev` ≠ production image.** Set up a local-prod-test stack ([`docs/runbooks/local-prod-test.md`](../runbooks/local-prod-test.md)) and validate before pushing risky changes.
+9. **Local `npm run dev` ≠ production image.** Set up a local-prod-test stack ([`docs/runbooks/local-prod-test.md`](../../runbooks/local-prod-test.md)) and validate before pushing risky changes.
 
 ---
 

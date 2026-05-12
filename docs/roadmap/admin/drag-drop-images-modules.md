@@ -29,7 +29,7 @@ replacing the admin).
 
 1. **OS file drag** (`DataTransfer.files`): upload via existing
    `/api/upload` (or `/api/upload-batch` once
-   [bulk-image-upload-with-ratio.md](bulk-image-upload-with-ratio.md) lands),
+   [bulk-image-upload-with-ratio.md](../content/bulk-image-upload-with-ratio.md) lands),
    then set the resulting `src` on the module.
 2. **Internal picker drag** (`application/x-cms-image`): existing behaviour —
    set `src` from the dragged tile.
@@ -52,7 +52,7 @@ Applies to:
 
 - `PlainImage` admin preview
 - `InputGallery` tiles (drop on an empty slot appends; drop on filled replaces)
-- `InputLogo` once [logo-style-options.md](logo-style-options.md) formalises it
+- `InputLogo` once [logo-style-options.md](../content/logo-style-options.md) formalises it
 - Any Card-like section with a cover image
 
 ### Visual feedback
@@ -86,9 +86,9 @@ button path stays. Document this in the a11y section of the picker modal.
 
 ## Depends on / pairs with
 
-- [bulk-image-upload-with-ratio.md](bulk-image-upload-with-ratio.md) — multi-file
+- [bulk-image-upload-with-ratio.md](../content/bulk-image-upload-with-ratio.md) — multi-file
   drops route through the batch endpoint.
-- [image-optimization-on-upload.md](image-optimization-on-upload.md) — dropped
+- [image-optimization-on-upload.md](../content/image-optimization-on-upload.md) — dropped
   files get the same optimisation pipeline as picker uploads.
 
 ## Effort

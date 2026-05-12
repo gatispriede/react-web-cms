@@ -28,7 +28,7 @@ Three bugs flagged by the client in a screenshot. Latvian originals + translatio
 - Add a scrim / gradient overlay behind text (semi-transparent dark rectangle, or full-image gradient)
 - Or text-shadow fallback for smaller copy
 - Drive via theme token so each preset can choose its scrim opacity
-- Pairs with [module-transparency-style.md](module-transparency-style.md) (shipped C8) contrast-warning concept — same idea, different direction (forcing readability rather than warning about it).
+- Pairs with [module-transparency-style.md](../content/module-transparency-style.md) (shipped C8) contrast-warning concept — same idea, different direction (forcing readability rather than warning about it).
 
 ## 3. Can't create a new module in Services section
 

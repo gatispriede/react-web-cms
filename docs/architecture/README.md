@@ -7,13 +7,13 @@ Single entry point for "how is this CMS built?" — onboarding target is **30 mi
 For someone seeing the codebase for the first time:
 
 1. [`overview.md`](overview.md) — what this is, two paragraphs.
-2. [`../../PROJECT_ANALYSIS.md`](../../PROJECT_ANALYSIS.md) — comprehensive rundown: tech stack, file layout, runtime topology, data model, rendering modes, admin panel, scripts. Single longest doc, the one to skim first.
+2. [`../../PROJECT_ANALYSIS.md`](../PROJECT_ANALYSIS.md) — comprehensive rundown: tech stack, file layout, runtime topology, data model, rendering modes, admin panel, scripts. Single longest doc, the one to skim first.
 3. [`data-model.md`](data-model.md) — collections, relationships, audit + version fields.
 4. [`request-lifecycle.md`](request-lifecycle.md) — what happens when a public URL or admin mutation is hit, from browser to Mongo and back.
 5. [`auth-roles.md`](auth-roles.md) — viewer / editor / admin gates, NextAuth flow, first-boot admin password, `authz` Proxy.
 6. [`publishing.md`](publishing.md) — snapshots, rollback, bundle export/import, draft posts, optimistic-concurrency `version` field.
-7. [`../../THEMING.md`](../../THEMING.md) — admin chrome vs. module output, `[data-theme-name]` scoping contract, fonts pipeline, accessibility themes.
-8. [`../../DEPLOY.md`](../../DEPLOY.md) — Docker compose stack, env vars, MongoDB seed, boot order.
+7. [`../../THEMING.md`](../THEMING.md) — admin chrome vs. module output, `[data-theme-name]` scoping contract, fonts pipeline, accessibility themes.
+8. [`../../DEPLOY.md`](../DEPLOY.md) — Docker compose stack, env vars, MongoDB seed, boot order.
 9. [`admin-systems.md`](admin-systems.md) — admin i18n, inline translation editing, icon system, DnD architecture, Google Fonts proxy.
 
 ## At-a-glance index
@@ -27,9 +27,9 @@ For someone seeing the codebase for the first time:
 | [`publishing.md`](publishing.md) | Snapshots, rollback, bundle export/import, drafts, version conflicts | New |
 | [`module-interfaces.md`](module-interfaces.md) | Content JSON shapes for all 17 item types | New |
 | [`admin-systems.md`](admin-systems.md) | Admin i18n, inline translation, icon system, DnD split, Google Fonts proxy | New |
-| [`../../PROJECT_ANALYSIS.md`](../../PROJECT_ANALYSIS.md) | Tech stack · file structure · runtime topology · 17 item types · admin panel · 7 themes · scripts | Canonical |
-| [`../../THEMING.md`](../../THEMING.md) | Chrome / module split · CSS-var pipeline · scoping contract · fonts · a11y themes | Canonical |
-| [`../../DEPLOY.md`](../../DEPLOY.md) | Docker compose · env vars · MongoDB Atlas vs. local | Canonical |
+| [`../../PROJECT_ANALYSIS.md`](../PROJECT_ANALYSIS.md) | Tech stack · file structure · runtime topology · 17 item types · admin panel · 7 themes · scripts | Canonical |
+| [`../../THEMING.md`](../THEMING.md) | Chrome / module split · CSS-var pipeline · scoping contract · fonts · a11y themes | Canonical |
+| [`../../DEPLOY.md`](../DEPLOY.md) | Docker compose · env vars · MongoDB Atlas vs. local | Canonical |
 
 ## Feature docs
 

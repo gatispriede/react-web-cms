@@ -80,7 +80,7 @@ enums. Logo gets its own.
 - All three new styles render correctly across the four existing themes
   (Paper, Studio, Industrial, HighContrast)
 - Style change in admin reflects on public page after save
-  (covered by [production-caching.md](production-caching.md) revalidation)
+  (covered by [production-caching.md](../platform/production-caching.md) revalidation)
 - Circle variant handles non-square source images gracefully (`object-fit`)
 - Bordered variant's colour updates when theme's `colorPrimary` changes
 - Keyboard-accessible style dropdown (re-uses existing component, so free)
@@ -89,7 +89,7 @@ enums. Logo gets its own.
 
 - [module-transparency-style.md](module-transparency-style.md) — transparency
   is the sibling concept, handled generically.
-- [themes-as-files.md](themes-as-files.md) — new tokens need listing in the
+- [themes-as-files.md](../platform/themes-as-files.md) — new tokens need listing in the
   theme JSON schema.
 
 ## Effort

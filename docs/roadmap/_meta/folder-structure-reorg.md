@@ -48,7 +48,7 @@ Open questions — resolve with user before moving a file:
 - No cross-layer imports that skip the intended hierarchy
 - Moving or deleting a feature touches one folder
 - Build + tests green after each phase
-- [PROJECT_ANALYSIS.md](../PROJECT_ANALYSIS.md) and architecture docs updated to reflect new tree
+- [PROJECT_ANALYSIS.md](../../PROJECT_ANALYSIS.md) and architecture docs updated to reflect new tree
 
 ## Effort
 

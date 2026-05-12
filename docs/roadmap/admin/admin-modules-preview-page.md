@@ -106,14 +106,14 @@ without variants render once (default).
 
 ## Depends on / pairs with
 
-- [themes-as-files.md](themes-as-files.md) (C1) — dropdown is populated from the
+- [themes-as-files.md](../platform/themes-as-files.md) (C1) — dropdown is populated from the
   shipped theme registry. Can ship before C1 by hardcoding the current list, then
   rewire.
-- [logo-style-options.md](logo-style-options.md) (C7) — first consumer of
+- [logo-style-options.md](../content/logo-style-options.md) (C7) — first consumer of
   `styleVariants` contract.
-- [gallery-improvements.md](gallery-improvements.md) (C6) — each gallery layout
+- [gallery-improvements.md](../content/gallery-improvements.md) (C6) — each gallery layout
   variant appears in the matrix.
-- [module-transparency-style.md](module-transparency-style.md) (C8, shipped) —
+- [module-transparency-style.md](../content/module-transparency-style.md) (C8, shipped) —
   the transparent toggle reuses that flag.
 
 ## Effort

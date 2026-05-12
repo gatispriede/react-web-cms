@@ -42,7 +42,7 @@ wrong-image selections before closing.
 - `ui/admin/features/Assets/ImageUpload.tsx` — layout (grid + side panel)
 - `ui/admin/features/Assets/ImageUpload.scss` (new or extend existing)
 - `shared/types/IImage.ts` — add `width`, `height`, `uploadedBy` (hydrated by
-  [image-optimization-on-upload.md](image-optimization-on-upload.md))
+  [image-optimization-on-upload.md](../content/image-optimization-on-upload.md))
 - `services/AssetService.ts` — add `listImagesWithUsage()` method
 
 ## Acceptance
@@ -54,7 +54,7 @@ wrong-image selections before closing.
 
 ## Depends on
 
-- [image-optimization-on-upload.md](image-optimization-on-upload.md) — provides
+- [image-optimization-on-upload.md](../content/image-optimization-on-upload.md) — provides
   width/height + normalised formats.
 
 ## Effort

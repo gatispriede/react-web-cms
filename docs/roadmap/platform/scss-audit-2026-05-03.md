@@ -1,6 +1,6 @@
 # SCSS scope audit — 2026-05-03
 
-Audit step for [F4 SCSS scoping](./scss-scoping.md). Inventory + violation report only — the architectural sweep is a separate task.
+Audit step for [F4 SCSS scoping](scss-scoping.md). Inventory + violation report only — the architectural sweep is a separate task.
 
 > **2026-05-04 closeout — F4 sweep complete.** All 18 violations resolved.
 > Pattern 3 (admin multi-component AntD overrides): the raw `.ant-tabs`

@@ -23,7 +23,7 @@ Breakdown by what matters:
 
 ## 2026-05-03 — single-day blitz
 
-The day F1 sub-pages + F2 data integrity + AUI simplified + EL-feat-rest + everything else landed (F3 `/v1/**` namespace was attempted and cancelled the same day — see [v1-url-namespace.md](../roadmap/v1-url-namespace.md) postmortem):
+The day F1 sub-pages + F2 data integrity + AUI simplified + EL-feat-rest + everything else landed (F3 `/v1/**` namespace was attempted and cancelled the same day — see [v1-url-namespace.md](../roadmap/platform/v1-url-namespace.md) postmortem):
 
 - **+50 new files** (services, admin panes, tests, runbooks, fixtures, roadmap docs)
 - **644 → 685 tests** (+41 passing, no regressions)

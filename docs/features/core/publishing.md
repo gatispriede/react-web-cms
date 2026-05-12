@@ -31,4 +31,4 @@ Every publish and rollback event is recorded in the `AuditLog` collection with `
 
 ## Architecture reference
 
-Full technical detail: [`../architecture/publishing.md`](../architecture/publishing.md).
+Full technical detail: [`../architecture/publishing.md`](../../architecture/publishing.md).

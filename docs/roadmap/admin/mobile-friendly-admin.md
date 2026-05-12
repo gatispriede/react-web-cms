@@ -21,7 +21,7 @@ Three subsystems, all in scope of the single deliverable.
 
 ### Section / module editors
 
-- **Every multi-column editor row collapses via the same drawer-style accordion as the public site** below 768 px. Reuses the shared `@mixin section-row-collapsible` from `ui/client/styles/Common/_responsive.scss` (defined in [mobile-column-behavior.md](mobile-column-behavior.md) — public side ships the mixin first). First column visible, subsequent columns collapsed under a chevron-rotate toggle matching `MobileNav.scss`'s pattern. Two-column inputs (`Label · Value`) stack with `min-height: 44px` per row when they're inside a collapsed drawer body.
+- **Every multi-column editor row collapses via the same drawer-style accordion as the public site** below 768 px. Reuses the shared `@mixin section-row-collapsible` from `ui/client/styles/Common/_responsive.scss` (defined in [mobile-column-behavior.md](../platform/mobile-column-behavior.md) — public side ships the mixin first). First column visible, subsequent columns collapsed under a chevron-rotate toggle matching `MobileNav.scss`'s pattern. Two-column inputs (`Label · Value`) stack with `min-height: 44px` per row when they're inside a collapsed drawer body.
 - **InlineEdit (Alt+click) → long-press fallback.** Alt isn't a thing on phones; long-press (~500 ms) opens the same editor.
 - **Drag-reorder gets explicit up/down/move-to controls.** Already partially shipped (`a12c7b6`); confirm those are the canonical mobile path and remove the `@dnd-kit` dependency on touch in admin (still ok for the public-site preview pane).
 - **Image rail switches from horizontal scroll to a tray.** Below 768 px the rail folds into a sticky-bottom tray button that opens a full-screen sheet with a 2-column grid; tap to insert into the active editor, instead of drag-from-rail.
@@ -124,6 +124,6 @@ Edge case: the PWA manifest at `ui/client/pages/admin/manifest.json` is content-
 
 ## Out of scope for v1
 
-- Native iOS / Android wrapper. Web works fine; a Capacitor / React Native shell is a separate roadmap item (see [`backlog.md`](backlog.md)) if the value emerges.
+- Native iOS / Android wrapper. Web works fine; a Capacitor / React Native shell is a separate roadmap item (see [`backlog.md`](../backlog.md)) if the value emerges.
 - Offline editing. Admin requires fresh server state for conflict-aware writes; offline mode would need a complete optimistic-concurrency rewrite.
 - Touch gestures for drag-reorder. The explicit up/down/move-to model is the canonical path on all viewports going forward.

@@ -1,6 +1,6 @@
 # Runbook — Upgrading existing prod droplets to the new master
 
-Audience: ops upgrading the 2 existing prod droplets running pre-F3 code to the new master that ships F1 (sub-pages), F2 (cascade engine + soft-delete), F5 (admin info), per-locale slugs, grant-gated mutations, simplified AUI panes, and the Redis idempotency namespace. (F3 `/v1/**` namespace was cancelled — see [v1-url-namespace.md](../roadmap/v1-url-namespace.md) postmortem.)
+Audience: ops upgrading the 2 existing prod droplets running pre-F3 code to the new master that ships F1 (sub-pages), F2 (cascade engine + soft-delete), F5 (admin info), per-locale slugs, grant-gated mutations, simplified AUI panes, and the Redis idempotency namespace. (F3 `/v1/**` namespace was cancelled — see [v1-url-namespace.md](../roadmap/platform/v1-url-namespace.md) postmortem.)
 
 Cross-links:
 - [v1-namespace-migration.md](v1-namespace-migration.md) — what changed in F3 and how to verify.

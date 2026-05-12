@@ -12,12 +12,31 @@ The headline [ROADMAP.md](../ROADMAP.md) stays as the short bullet list; these f
 
 Shipped items live in [`shipped.md`](shipped.md) — kept for archaeology, not active triage.
 
+## Directory layout
+
+Roadmap items are organised by track. Each subdir has its own README listing what's inside.
+
+| Subdir | What lives there |
+|---|---|
+| [`_meta/`](_meta/) | References + standards + catalogues (not roadmap items themselves) — research findings, project standards, agent-handoff format, MCP coverage catalogue, modules catalogue, target architecture |
+| [`storefront/`](storefront/) | Public-facing program: themes, signup, receipt emails, faceted filters, ss.com cars, accessibility (Waves 5-8) |
+| [`admin/`](admin/) | Operator-grade admin polish: command palette, content releases, inline editing, dark-mode audit, permissions, empty states, motion tokens, Sonner, mobile-friendly admin (Waves 0-2.5) |
+| [`platform/`](platform/) | Infra / MCP / migrations / caching / tooling (Waves 2-4) |
+| [`content/`](content/) | Content module + media pipeline polish (image opt, gallery, logo variants, carousel) |
+| [`archive/`](archive/) | Historical items kept for archaeology (postmortems, client reports) |
+| [`production/`](production/) | Pre-existing production-bootstrap notes (kept as-is) |
+
+Files at this level (`docs/roadmap/`):
+- `README.md` — this file
+- `shipped.md` — commit-ref archive of completed items
+- `backlog.md` — concrete-trigger parking lot for ideas deferred until a real driver emerges
+
 ## Universal requirements — every roadmap item
 
 These apply to every active item regardless of size or wave. Treat them as acceptance criteria, not nice-to-haves.
 
 1. **Docs reflect the work.** When an item ships, update — at minimum — the relevant spec doc (mark it shipped or amend), `docs/roadmap/shipped.md`, and any architecture / runbook docs that diverge from the new shape. Inline code comments cover the *why*; markdown docs cover the *where to look first*.
-2. **MCP coverage parity for editable surfaces.** Every feature whose content / state / config can be authored through the admin UI must also be manageable via MCP — same operations, same guards. MCP is the canonical write path for AI authoring; admin UI is the human surface on top. New editable field → MCP tool (or extension to an existing tool's schema) lands in the same PR. Read-side parity follows the introspection pattern (`includeUsage` / `includeMissing` / etc. — see [`mcp-bulk-and-introspection.md`](mcp-bulk-and-introspection.md)). Items that touch only infra, tests, or read-only investigations are exempt.
+2. **MCP coverage parity for editable surfaces.** Every feature whose content / state / config can be authored through the admin UI must also be manageable via MCP — same operations, same guards. MCP is the canonical write path for AI authoring; admin UI is the human surface on top. New editable field → MCP tool (or extension to an existing tool's schema) lands in the same PR. Read-side parity follows the introspection pattern (`includeUsage` / `includeMissing` / etc. — see [`mcp-bulk-and-introspection.md`](platform/mcp-bulk-and-introspection.md)). Items that touch only infra, tests, or read-only investigations are exempt.
 3. **Ship as chunks, not phases.** Each roadmap item is one complete deliverable. No "Phase 1 / Phase 2 / Phase 3" inside an item — that just means three follow-up items, each requiring more context-restoration. If a feature is genuinely too large for one chunk, split it into separately-named roadmap items in `README.md`, each with its own complete acceptance criteria. A chunk lands or doesn't; there's no useful intermediate state to merge. Effort estimates can break down internally (shell ~1.5d, editors ~2.5d, polish ~1d) but those are time-share notes, not separate ship targets.
 4. **`data-testid` on every interactive surface.** Any new or modified UI component lands with `data-testid` attributes on every element an e2e test could plausibly target — buttons, inputs, options, list items with identity, modals, drawer toggles, status indicators. Naming convention:
    - **Static elements:** `feature-component-role` (kebab-case) — e.g. `admin-shell-drawer-toggle`, `link-target-picker-search-input`, `themes-pane-bulk-delete-button`.
@@ -75,19 +94,59 @@ Patterns: mechanical work (bulk extensions, schema additions, test scaffolding) 
 | # | Item | Size | Notes |
 |---|------|------|-------|
 | C13b | link-target stable-anchor — Manifesto only | S (~30 min AI) | Timeline portion shipped 2026-05-03. Manifesto still needs a per-row anchor model (single body paragraph today, no row identity) |
-| C17 | [field-level sample audit](./samples-audit.md) | S (~30 min AI) | Broad per-EItemType coverage already exists; open when a client surfaces a specific gap |
-| F6 | [site-mode-toggle.md](site-mode-toggle.md) | M (~2h AI) | Per-site flag: scroll (single-page sections) vs multipage (current default). One chunk: flag + admin Select + nav/footer mode-aware rendering + getStaticProps branch + runbook + tests. Also resolves the standing scroll-vs-menu styling drift. |
-| Mobile column behavior | [mobile-column-behavior.md](mobile-column-behavior.md) | S (~1h AI) | **Section-level** `ISection.layout.mobileBehavior: 'stack'\|'collapse'\|'keep-ratio'`. `'collapse'` uses drawer-style accordion with chevron-rotate, mirroring the existing public-side `MobileNav` pattern (consistent gesture across the mobile UX). Shared `@mixin section-row-collapsible` in `ui/client/styles/Common/_responsive.scss` — reused by the Mobile-friendly admin chunk so both surfaces collapse the same way. Visual reference: impeccable design plugin's collapsible-content patterns. |
+| C17 | field-level sample audit (parked in [backlog.md](backlog.md)) | S (~30 min AI) | Broad per-EItemType coverage already exists; open when a client surfaces a specific gap |
+| F6 | [site-mode-toggle.md](platform/site-mode-toggle.md) | M (~2h AI) | Per-site flag: scroll (single-page sections) vs multipage (current default). One chunk: flag + admin Select + nav/footer mode-aware rendering + getStaticProps branch + runbook + tests. Also resolves the standing scroll-vs-menu styling drift. |
+| Mobile column behavior | [mobile-column-behavior.md](platform/mobile-column-behavior.md) | S (~1h AI) | **Section-level** `ISection.layout.mobileBehavior: 'stack'\|'collapse'\|'keep-ratio'`. `'collapse'` uses drawer-style accordion with chevron-rotate, mirroring the existing public-side `MobileNav` pattern (consistent gesture across the mobile UX). Shared `@mixin section-row-collapsible` in `ui/client/styles/Common/_responsive.scss` — reused by the Mobile-friendly admin chunk so both surfaces collapse the same way. Visual reference: impeccable design plugin's collapsible-content patterns. |
 | Bundle-import restart | bundle-import → `markRestartRequired()` hook | XS (~15 min AI) | Currently a successful import doesn't surface the "restart to pick up new modules" hint. Wire through the existing flag |
 | Section drag-reorder bug | original report; up/down arrows are the workaround | S-M (~1-2h AI) | Drag-reorder for both sections and per-module rows stopped working. Up/down + label cluster (`a12c7b6` + `cc306a7`) is the user-facing fix. Root cause investigation finds why `getChangedPos` + `DraggableWrapper` chain stopped firing. |
-| Mobile-friendly admin | [mobile-friendly-admin.md](mobile-friendly-admin.md) | L (~6-8h AI + on-device QA) | Operator-grade editing on a phone. Shell drawer + editor row collapse + image tray + PWA + presence + pull-to-refresh shipped together as one chunk. Reuses the shared `@mixin section-row-collapsible` from the public-side mobile column work. Acceptance: full content-edit round-trip on mobile Safari without horizontal scroll. |
-| Terraform + Kamal migration | [terraform-kamal-migration.md](terraform-kamal-migration.md) | L (~6-8h AI + cutover wall-clock) | Single chunk that replaces the bash deploy stack end-to-end: Terraform-imported infra + GHCR-built images + Kamal app deploy + cutover of both droplets. Subsumes the previously-separate Image-registry / Declarative-env / Terraform-droplet items — splitting created half-migrated states. Eliminates 6-8min cold deploys and the entire 250-line inline ssh script. |
+| Mobile-friendly admin | [mobile-friendly-admin.md](admin/mobile-friendly-admin.md) | L (~6-8h AI + on-device QA) | Operator-grade editing on a phone. Shell drawer + editor row collapse + image tray + PWA + presence + pull-to-refresh shipped together as one chunk. Reuses the shared `@mixin section-row-collapsible` from the public-side mobile column work. Acceptance: full content-edit round-trip on mobile Safari without horizontal scroll. |
+| Terraform + Kamal migration | [terraform-kamal-migration.md](platform/terraform-kamal-migration.md) | L (~6-8h AI + cutover wall-clock) | Single chunk that replaces the bash deploy stack end-to-end: Terraform-imported infra + GHCR-built images + Kamal app deploy + cutover of both droplets. Subsumes the previously-separate Image-registry / Declarative-env / Terraform-droplet items — splitting created half-migrated states. Eliminates 6-8min cold deploys and the entire 250-line inline ssh script. |
+
+### Foundational references (read these first)
+
+| # | Item | Size | Notes |
+|---|------|------|-------|
+| MOT | [motion-token-system.md](admin/motion-token-system.md) | S (~1h AI) | CSS custom properties on Carbon / Material 3 motion-token shape. `--motion-scalar` gates `prefers-reduced-motion` globally. Foundational — first-class themes + admin animations consume it. |
+| STD | [project-standards-additions-2026-05-12.md](_meta/project-standards-additions-2026-05-12.md) | — | Reference doc cataloguing **14 new standards** (Sonner / kbar / dnd-kit / motion tokens / design-token hierarchy / light-dark / cssVar / WCAG 2.2 AA / 44 px touch / container queries / EmailService.sendTemplated / data-edit-target / **§13 jumps-not-iterations delivery philosophy** / **§14 AI-agent-unit estimates only**). |
+| AHF | [agent-handoff-format.md](_meta/agent-handoff-format.md) | — | Template + 9 starter-code patterns (Pattern A-I) that every active roadmap item paste-uses. |
+| RES | [research-findings-2026-05-12.md](_meta/research-findings-2026-05-12.md) | — | Consolidated research source-of-truth. Cite, don't re-derive. |
+| MCP | [mcp-coverage-storefront-program.md](_meta/mcp-coverage-storefront-program.md) | catalogue, ~6-8h AI distributed | Comprehensive MCP tool catalogue for every new editable surface. Each tool ships with its parent roadmap item; this is the parity gate. |
+| MOD | [new-modules-catalogue.md](_meta/new-modules-catalogue.md) | catalogue, ~80-110h AI distributed | All new modules needed: cars vertical, customer account, restaurant / SaaS / event / agency / portfolio themes, cross-theme shared. Each module is an independent jump. |
+
+### Design & themes
+
+| # | Item | Size | Notes |
+|---|------|------|-------|
+| FCT | [first-class-themes.md](storefront/first-class-themes.md) | XL (multi-week, parallelisable per theme) | **8 themes (revised from 5 after research):** editorial / agency / commerce / local-business / restaurant / saas-landing / event / portfolio. Each ships light + dark via `light-dark()`, design doc, theme.json, per-theme SCSS layer (net-new), header+logo treatment, footer styling, scroll-driven animations, per-module styling pass, mobile parity. Stitch = structural draft only (research confirmed 70-90% accuracy, no token export, no animations). Retire simpleton presets after ≥3 first-class themes ship. |
+| DM-audit | [admin-dark-mode-audit.md](admin/admin-dark-mode-audit.md) | M (~1 day) | Step 1 = enable `cssVar: true` (currently off; load-bearing). Then screenshot 5 admin pages × 2 modes → Stitch punch list → global AntD token fix → migrate `[data-admin-theme="dark"]` SCSS to `var(--ant-color-*)` → per-feature stragglers → commit baselines. |
+| MTS | [motion-token-system.md](admin/motion-token-system.md) | S | (see Foundational) — gates first-class-themes' per-theme animation work |
+| A11Y | [accessibility-wcag22-audit.md](storefront/accessibility-wcag22-audit.md) | L (~1-2 weeks AI) | WCAG 2.2 AA across all public surfaces. axe-core in e2e + Pa11y batch + Lighthouse ≥95. Per-theme audit gate. **Pre-public-deploy blocker** — EU EAA legally required from 2025. |
+
+### Admin UX robustness (research-driven)
+
+| # | Item | Size | Notes |
+|---|------|------|-------|
+| SON | [admin-toast-system-sonner.md](admin/admin-toast-system-sonner.md) | S (~30-60 min AI) | Sonner as single toast library; replace AntD `message.*`; wrap async ops in `toast.promise`; Undo on destructive ops. Highest-ROI perceived-quality lift. |
+| CMD | [admin-command-palette.md](admin/admin-command-palette.md) | M (~2-3h AI) | ⌘K palette via kbar; auto-populated from `adminUILoaderRegistry`; standard shortcuts (⌘S save, ⌘↵ publish, ? cheatsheet, / list-search). |
+| INL | [admin-inline-editing.md](admin/admin-inline-editing.md) | L (~4-6h AI) | Click-to-edit overlay on admin preview iframe via `data-edit-target` attributes. Sanity Presentation pattern. The visible payoff of MCP-driven authoring. |
+| EMP | [admin-empty-states-onboarding.md](admin/admin-empty-states-onboarding.md) | M (~2-3h AI) | Designed empty states for 14 list panes + first-run wizard + seeded sample bundle. Operator never sees blank-canvas paralysis. |
+| REL | [admin-content-releases.md](admin/admin-content-releases.md) | XL (~2-3 days AI) | First-class `Release` entity: group N drafts → preview at perspective → publish atomically → rollback. 2025 Sanity differentiator vs Strapi / Payload / Contentful. |
+| PRM | [admin-permissions-ux.md](admin/admin-permissions-ux.md) | L (~5-6h AI) | 4 named tiers (Full / Edit / Comment / View) + role presets + groups, replacing per-action checkbox grid. Notion 3.0 + Webflow pattern. |
+
+### Storefront / commerce
+
+| # | Item | Size | Notes |
+|---|------|------|-------|
+| FFS | [storefront-faceted-filter-system.md](storefront/storefront-faceted-filter-system.md) | L (~6-8h AI) | Generic faceted filter system. Multi-select with cascading, range sliders with min/max inputs, live counts, pinned chips, saved searches + alerts. First consumer ss.com cars; reused by `/products`. Solves #1 ss.com user complaint (no multi-select make/model). |
+| EML | [storefront-receipt-emails.md](storefront/storefront-receipt-emails.md) | M (~3h AI) | Receipt + transactional emails as a product surface. Visual progress timeline (high-AOV anxiety reducer), one focused CTA, mobile-first markup. Theme-aware tokens. |
+| Signup | [client-signup-and-anonymous-checkout.md](storefront/client-signup-and-anonymous-checkout.md) | M-L (~5-7 days AI) | **Delayed account creation as ONLY default** (research-binding — 26% abandonment vs forced signup). Magic-link primary + password optional + OAuth equal-prominence. Mixpanel-shape attribution. Cross-device pre-fetch mitigation. Account dashboard flat hierarchy. Builds on shipped `CustomerAuthService` + `IUser.kind` + `IOrder.guestEmail/orderToken` + NextAuth. |
+| ss.com | [ss-com-cars-integration.md](storefront/ss-com-cars-integration.md) | L (~1-2 weeks AI) | **Collapsed from XL** — Inventory + adapter system is already shipped; ss.com is one new `IWarehouseAdapter` (`SsComCarsAdapter`). **Reservation, not D2C checkout** (research-binding — Cazoo / Vroom failure mode avoided). Marketplace-style anonymous inquiry → account at deposit (€100-200, 48-72h hold). VAT regime as listing fact. Path-segment URL crawl against committed fixtures (no API exists). Per-theme car surfaces in commerce theme. |
 
 ### Bulk migrations
 
 | # | Item | Size | Notes |
 |---|------|------|-------|
-| AUI-mode | [aui-mode-hierarchy.md](aui-mode-hierarchy.md) | M (~1-2h AI per chunk) | Hierarchy decided 2026-05-07: **simplified is the base; advanced composes simplified + extras**. Both variants co-located under `ui/admin/features/<Name>/` (no parallel hierarchy). Lazy-loaded so simplified mode never downloads advanced. Optional site-flag gating per advanced sub-feature. Foundational chunk: refactor Themes + Posts onto inheritance shape + ESLint rule + lazy-load convention (~1-2h AI). Each future pane onboarding (Navigation → Modules → Inquiries → Languages → Bundle → Users → SEO) is its own ~1-2h AI roadmap item, picked up by demand. |
+| AUI-mode | [aui-mode-hierarchy.md](admin/aui-mode-hierarchy.md) | M (~1-2h AI per chunk) | Hierarchy decided 2026-05-07: **simplified is the base; advanced composes simplified + extras**. Both variants co-located under `ui/admin/features/<Name>/` (no parallel hierarchy). Lazy-loaded so simplified mode never downloads advanced. Optional site-flag gating per advanced sub-feature. Foundational chunk: refactor Themes + Posts onto inheritance shape + ESLint rule + lazy-load convention (~1-2h AI). Each future pane onboarding (Navigation → Modules → Inquiries → Languages → Bundle → Users → SEO) is its own ~1-2h AI roadmap item, picked up by demand. |
 
 ### MCP — F8 deferred
 
@@ -95,7 +154,7 @@ Patterns: mechanical work (bulk extensions, schema additions, test scaffolding) 
 |---|------|------|-------|
 | F8-stream | streaming transport for bundle/image tools | M (~2h AI + 30min SDK check) | Long-running tools (bundle export, image rescan) currently buffer; streaming progress events queued for post-merge |
 | F8-e2e | un-skip MCP E2E suite | S (~30-60 min AI) | Spec exists; `test.skip` blocks pending fixture wiring |
-| F8-bulk-introspection | [mcp-bulk-and-introspection.md](mcp-bulk-and-introspection.md) | M (~2-3h AI) | Two parallel gaps. **Bulk-write**: extend ~12 mutation tools (`section.update`, `module.add/update/remove`, `page.update`, `post.upsert`, `product.create/update`, `permission.grant/revoke`, `user.setRole/update`, `translation.delete`, `trash.restore/purge`) with optional `items[]` / `ids[]` arrays. Reference impl: `image.delete { ids[] }` shipped 2026-05-07 (~45 min AI). **Introspection**: extend ~10 `*.list` tools with aggregating flags (`i18n.listLanguages { includeMissing }` for translation gap analysis, `theme.list { includeUsage }`, etc.). Reference impl: `image.list { includeUsage }` same day. Plus `i18n.diff` + `i18n.scanCodebase` translation-specific helpers. Same shared scanner pattern as `ImageUsageService` so admin UI's "show unused / missing" filters reuse the backend. |
+| F8-bulk-introspection | [mcp-bulk-and-introspection.md](platform/mcp-bulk-and-introspection.md) | M (~2-3h AI) | Two parallel gaps. **Bulk-write**: extend ~12 mutation tools (`section.update`, `module.add/update/remove`, `page.update`, `post.upsert`, `product.create/update`, `permission.grant/revoke`, `user.setRole/update`, `translation.delete`, `trash.restore/purge`) with optional `items[]` / `ids[]` arrays. Reference impl: `image.delete { ids[] }` shipped 2026-05-07 (~45 min AI). **Introspection**: extend ~10 `*.list` tools with aggregating flags (`i18n.listLanguages { includeMissing }` for translation gap analysis, `theme.list { includeUsage }`, etc.). Reference impl: `image.list { includeUsage }` same day. Plus `i18n.diff` + `i18n.scanCodebase` translation-specific helpers. Same shared scanner pattern as `ImageUsageService` so admin UI's "show unused / missing" filters reuse the backend. |
 
 ### Visual + observability
 
@@ -114,53 +173,204 @@ Patterns: mechanical work (bulk extensions, schema additions, test scaffolding) 
 
 ## Reference docs
 
-- [target-architecture.md](target-architecture.md) — naming conventions + top-level layout the reshape landed on. Open this before proposing structural changes.
-- [migration-mapping.md](migration-mapping.md) — full old→new path table from the N15 reshape. Useful when chasing a stale import in docs / legacy notes.
+- [target-architecture.md](_meta/target-architecture.md) — naming conventions + top-level layout the reshape landed on. Open this before proposing structural changes.
+- [migration-mapping.md](_meta/migration-mapping.md) — full old→new path table from the N15 reshape. Useful when chasing a stale import in docs / legacy notes.
 - [shipped.md](shipped.md) — archive of completed items with commit refs.
 
-## Suggested ordering — big to small (2026-05-07)
+## Suggested ordering — big to small (2026-05-12, post-research)
 
-Strict size-first ordering: largest items lead so deep work isn't fragmented; quick wins fill the tail. Dependencies override pure size-order in two places — flagged inline.
+Five reality shifts:
 
-### Wave 1 — L (3-8h AI each, shipped as chunks)
+1. **Local POC scope is explicit** — GDPR / consent / PII deferred to pre-public-deploy ([memory note](../../C:/Users/User/.claude/projects/D--Work-redis-node-js-cloud/memory/project_local_poc_scope.md)). Compliance work is no longer dragged into v1 acceptance for any item.
+2. **Storefront direction is a real track** — four original items (themes / dark mode / signup / ss.com) expanded into the storefront program. Research surfaced **6 more high-ROI items** (Sonner, command palette, inline editing, empty states, content releases, permissions UX, receipt emails, faceted filter system, motion tokens, WCAG audit).
+3. **Architecture verification (2026-05-12)** shrunk three of the original four items materially:
+   - **`IUser.kind = 'customer'`, `CustomerAuthService`, `IOrder.{guestEmail, orderToken}`, Cart + Checkout, NextAuth credentials + Google OAuth all already shipped.** Signup = "complete UX + add magic-link + attribution," not "build from scratch."
+   - **`IProduct.source = 'manual' | 'warehouse'`, `externalId`, `attributes` already exist.** ss.com ingest writes `source: 'warehouse'` + `externalId` + car fields. **Zero `IProduct` schema change.**
+   - **Inventory + adapter system already shipped with 12 adapters.** ss.com is one new `IWarehouseAdapter`. **Collapsed from XL → L.**
+   - **`ThemeService.bootstrap()` already loads JSON presets.** Per-theme SCSS layer + design docs + Stitch frames = net-new; loader = reuse.
+   - **`cssVar: true` is NOT yet on AntD `ConfigProvider`** — load-bearing prerequisite for dark-mode audit + first-class themes' per-theme SCSS.
+4. **Research validated key trade-offs**:
+   - Forced account creation = **26% cart abandonment** → guest-default is the only acceptable checkout
+   - Cazoo collapsed May 2024 with £260M debt → **reservation, not D2C checkout** for cars
+   - ss.com has **no API, no partner program** → fixture-driven dev + rate-limited HTML crawl post-operator-approval
+   - **8 themes, not 5** — add Portfolio + Restaurant; differentiate agency vs SaaS hard
+   - WCAG 2.2 AA **legally required in EU from 2025** (EAA / EN 301 549)
+5. **Project standards expanded** — 12 new standards added (see [project-standards-additions-2026-05-12.md](_meta/project-standards-additions-2026-05-12.md)). Each lands with the roadmap item that introduces it; older code migrates opportunistically.
 
-1. **Mobile-friendly admin** — [`mobile-friendly-admin.md`](mobile-friendly-admin.md). **L · ~6-8h AI work + on-device QA wall-clock.** Shell drawer + editor row collapse + image tray + PWA + presence + pull-to-refresh ship together as one chunk. Reuses SCSS mixin from Wave 2 mobile column work — schedule mobile column either before or in parallel since the mixin is what feeds both surfaces. The wall-clock blocker is real-phone QA passes (iOS Safari + Android Chrome); AI doesn't compress that.
-   - **Dependency exception:** Q4-cap visual baselines (Wave 3) ideally lands first — the chunk is structural enough that silent regressions become possible without baselines.
-2. ~~**Terraform / Kamal migration (funisimo)**~~ — **Shipped 2026-05-08.** See [`terraform-kamal-migration.md`](terraform-kamal-migration.md) for the full migration story (5 spec divergences + 9 footguns we hit). Operator runbook: [`../runbooks/kamal-deploy.md`](../runbooks/kamal-deploy.md). Skyclimber stays on legacy ssh+rsync deploy until it has its own DO API token; when that lands, the runbook covers the per-tenant split. Standalone-image refactor was attempted + reverted same day — revisit later with the local-prod-test workflow ([`../runbooks/local-prod-test.md`](../runbooks/local-prod-test.md)) gating the change.
+**Delivery philosophy (binding):** Per [project-standards §13](_meta/project-standards-additions-2026-05-12.md#13-delivery-philosophy--jumps-not-iterations), every roadmap item is **one jump = one PR**. No phase 1 / phase 2 within an item; if it doesn't fit one jump, split into named sub-items. WIP working tree may go red; tests + e2e at PR-open is the gate. AI estimates only — no man-days mixed in (per §14).
 
-### Wave 2 — M (1-3h AI each, shipped as chunks)
+**Three coordinated tracks now run in parallel:**
 
-3. **F8-bulk-introspection** — [`mcp-bulk-and-introspection.md`](mcp-bulk-and-introspection.md). **M · ~2-3h AI.** Bulk-write extensions across ~12 tools + introspection flags + per-feature scanners + translation helpers all ship together. Mechanical pattern (image.delete `ids[]` is the reference impl from this session — ~45 min). Unblocks translation work + bulk authoring via MCP.
-4. **F6 site-mode-toggle** — [`site-mode-toggle.md`](site-mode-toggle.md). **M · ~2h AI.** Flag + admin Select + nav/footer mode-aware rendering + getStaticProps branch + runbook + tests as one chunk. Also resolves the standing scroll-vs-menu styling drift.
-5. **F8-stream** — **M · ~2h AI** + ~30 min SDK SSE-support investigation up front. Streaming transport for `bundle.export` / `image.rescan`. Pair with mcp-rollout #12 (bundle sanitiser fix) — the same flow gets stress-tested.
-6. **Section drag-reorder root cause** — **S-M · ~1-2h AI for diagnosis; fix scope opens after.** Investigate why `getChangedPos` + `DraggableWrapper` chain stopped firing. Up/down arrows already ship as workaround.
-7. **link-target-autosearch** — [`link-target-autosearch.md`](link-target-autosearch.md). **M · ~3h AI.** Picker + anchor registry + MCP tools + every editor swap (~8 surfaces) + module-title id emission + hashchange listener as one chunk. **Depends on F6** (picker emits `/page#anchor` vs `/#anchor` based on mode).
-8. **AUI mode infrastructure refactor** — [`aui-mode-hierarchy.md`](aui-mode-hierarchy.md). **M · ~1-2h AI.** Refactor existing Themes + Posts onto inheritance shape + ESLint rule + lazy-load convention. Foundational chunk; subsequent per-pane onboardings (Navigation, Modules, Inquiries, …) are each their own roadmap items, picked up by demand. Each pane onboarding ≈ M (~1-2h AI).
-9. ~~**E-commerce real-flow specs**~~ — **Shipped** 2026-05-03. `tests/e2e/ecommerce/` carries 15 happy-path tests; `playwright test --list` enumerates them all. No further work needed.
+- **Platform track** — Waves 1-4: admin polish, MCP coverage, observability, mobile, deploy. Mostly mechanical; AI-pace.
+- **Admin UX track** — Wave 2.5 (new): Sonner, command palette, inline editing, empty states, content releases, permissions UX. High-ROI compounds — each lifts perceived quality of the whole admin.
+- **Storefront track** — Waves 5-7: design system overhaul, public auth, third-party inventory ingest. Multi-week per item; design-heavy; operator decisions on data acquisition + branding.
 
-### Wave 3 — S (15-60 min AI each)
+**Shared prerequisites** (lands before any track-specific wave):
 
-10. **Q4-cap visual baselines** — **S · ~30 min AI + capture-run wall-clock.** Capture mobile + desktop. **Should land before Wave 1 Mobile-friendly admin** to protect the chunk against silent regressions.
-11. **Mobile column behavior** — [`mobile-column-behavior.md`](mobile-column-behavior.md). **S · ~1h AI.** Section-level `mobileBehavior` enum + drawer accordion mixin + admin Select + e2e visual baselines as one chunk. The shared `@mixin section-row-collapsible` is what Mobile-friendly admin reuses, so this lands first or in parallel.
-12. **C13b Manifesto link-target** — **S · ~30 min AI.** Depends on link-target-autosearch landing first.
-13. **Bundle-import restart hook** — **XS · ~15 min AI.** `markRestartRequired()` wiring.
-14. **F8-e2e** — **S · ~30-60 min AI.** Un-skip MCP E2E suite + re-enable e2e.yml triggers (mcp-rollout #10 same workstream).
-15. **mcp-rollout aftermath quick fixes** — **S · ~30 min AI combined.** Single chunk batching the trivial fixes:
-    - `#1` section.update description / upsert (1 line)
-    - `#5` admin:bundle scope in dev-token (1 line)
-    - `#9` `page.touch` MCP tool (audit-triplet stamp)
-    - `#11` INFRA_TOPOLOGY normalize step
-    - `#12` bundle sanitiser fix
-16. **Q5-del** — **XS · ~15 min AI.** Admin-segregation Phase 3 cleanup after ≥1 release with zero `legacy-route` errors. Pure deletion.
-17. ~~**Themes direct-route gqty**~~ — **Shipped** 2026-05-08 via investigation. `ThemeApi.listThemes()` already uses the raw-POST workaround (same pattern as Platform / Users / Observability panes); `getActive()` is shielded by its 30s module cache + SSR/SPA pre-warming. No code change needed.
+- **Q4-cap visual baselines** — gates Wave 1 Mobile-friendly admin AND every storefront item
+- **Motion token system** — gates first-class themes' animation work + per-feature motion adoption
+- **Project standards adoption** — Sonner / kbar / dnd-kit / cssVar / motion-tokens — items land standards opportunistically; no big-bang sweep
 
-### Wave 4 — XS
-
-18. **gqty schema regen** — **XS · ~5 min AI.** Surfaces `isFreshInstall` / `onboardingBootstrap` to typed clients.
+Strict size-first ordering within each track; dependencies override size-order where flagged.
 
 ---
 
-**Total AI work to drain Waves 1-3 ≈ 30-40 hours of focused AI time.** Calendar time depends on user review cycles, deploy waits, and on-device QA — realistic estimate is 1-2 weeks of working calendar time, not the ~26 working days the old human-pace estimates suggested.
+### Wave 0 — Foundation (do this first, before everything else)
+
+0a. **Q4-cap visual baselines** — **S · ~30 min AI + capture-run wall-clock.** Promoted from Wave 3 because 6 downstream items need it: Mobile-friendly admin, dark-mode audit, first-class themes, ss.com cars, accessibility audit, content releases.
+
+0b. **Motion token system** — [motion-token-system.md](admin/motion-token-system.md). **S · ~1h AI.** CSS custom properties; `--motion-scalar` gates `prefers-reduced-motion`. Foundational — first-class themes consume it; admin animations migrate opportunistically.
+
+0c. **Sonner adoption** — [admin-toast-system-sonner.md](admin/admin-toast-system-sonner.md). **S · ~30-60 min AI.** Quickest high-ROI lift; every async operator action gets immediate visual feedback. No dependencies; can land any time.
+
+0d. **testid-coverage CI** — [testid-coverage-ci.md](platform/testid-coverage-ci.md). **S · ~1 h AI.** AST-walk script + CI wiring. Closes the only universal-requirement gate without automation. Catches missing `data-testid` at PR time across all 44+ new modules landing in Waves 5-7.
+
+Wave 0 total: ~2 hours AI. Land these before anything else; they all gate later items + cost almost nothing.
+
+### Wave 1 — Platform L (3-8h AI, ship as chunks)
+
+1. **Mobile-friendly admin** — [`mobile-friendly-admin.md`](admin/mobile-friendly-admin.md). **L · ~6-8h AI work + on-device QA wall-clock.** Shell drawer + editor row collapse + image tray + PWA + presence + pull-to-refresh as one chunk. Reuses SCSS mixin from Wave 3 mobile column work — schedule mobile column either before or in parallel. AI doesn't compress the real-phone QA passes (iOS Safari + Android Chrome).
+2. ~~**Terraform / Kamal migration (funisimo)**~~ — **Shipped 2026-05-08.**
+
+### Wave 2 — Platform M (1-3h AI, ship as chunks)
+
+3. **F8-bulk-introspection** — [`mcp-bulk-and-introspection.md`](platform/mcp-bulk-and-introspection.md). **M · ~2-3h AI.** Bulk-write + introspection + scanners + translation helpers as one chunk. Unblocks translation work + bulk authoring via MCP.
+4. **F6 site-mode-toggle** — [`site-mode-toggle.md`](platform/site-mode-toggle.md). **M · ~2h AI.** One chunk: flag + admin Select + nav/footer mode-aware rendering + getStaticProps branch + runbook + tests. Also resolves the standing scroll-vs-menu styling drift.
+5. **Admin dark-mode audit** — [`admin-dark-mode-audit.md`](admin/admin-dark-mode-audit.md). **M · ~1 day AI.** **Step 1 is enabling `cssVar: true` on `ConfigProvider`** (currently off — `ui/admin/shell/AdminApp.tsx:243-246`); without it, the existing `[data-admin-theme="dark"]` SCSS and the AntD ConfigProvider are two parallel systems and the audit is fighting both. Then: screenshot 5 pages × 2 modes → Stitch punch list → global AntD token fix pass → migrate the dark-theme SCSS to `var(--ant-color-*)` → per-feature stragglers → commit baselines. Cheap quality-bar fix; pairs with Wave 5 since first-class themes' per-theme SCSS layer needs `cssVar: true` for token consumption.
+6. **F8-stream** — **M · ~2h AI** + ~30 min SDK SSE check up front. Streaming transport for `bundle.export` / `image.rescan`. Pair with mcp-rollout #12.
+7. **Section drag-reorder root cause** — **S-M · ~1-2h AI** for diagnosis; fix scope opens after.
+8. **link-target-autosearch** — [`link-target-autosearch.md`](platform/link-target-autosearch.md). **M · ~3h AI.** Picker + anchor registry + MCP tools + 8 editor swaps + module-title id emission + hashchange listener as one chunk. **Depends on F6.**
+9. **AUI mode infrastructure refactor** — [`aui-mode-hierarchy.md`](admin/aui-mode-hierarchy.md). **M · ~1-2h AI.** Themes + Posts onto inheritance shape + ESLint rule + lazy-load convention. Foundational; per-pane onboardings are each their own roadmap items.
+
+### Wave 2.5 — Admin UX track (research-driven, ship in parallel with Wave 2)
+
+These items compound — each is independently shippable, but the operator-grade lift comes from having all of them. Schedule in any order; no inter-dependencies within the wave. Pairs naturally with Sonner (Wave 0c) — kbar action → toast.promise.
+
+W2.5a. **Admin command palette** — [admin-command-palette.md](admin/admin-command-palette.md). **M · ~2-3h AI.** ⌘K via kbar; auto-populated from `adminUILoaderRegistry`; standard shortcuts catalogue (⌘S / ⌘↵ / ? / / / chords).
+
+W2.5b. **Admin empty states + onboarding** — [admin-empty-states-onboarding.md](admin/admin-empty-states-onboarding.md). **M · ~2-3h AI.** 14 designed empty states + 3-step first-run wizard + seeded sample bundle. Illustrations are wall-clock cost (out of AI budget).
+
+W2.5c. **Admin permissions UX** — [admin-permissions-ux.md](admin/admin-permissions-ux.md). **L · ~5-6h AI.** 4-tier UX (Full / Edit / Comment / View) + role presets + groups. Underlying grants engine already shipped.
+
+W2.5d. **Admin inline editing** — [admin-inline-editing.md](admin/admin-inline-editing.md). **L · ~4-6h AI.** Click-to-edit overlay on preview iframe; `data-edit-target` plumbing. The MCP-narrative aligner.
+
+W2.5e. **Admin content releases** — [admin-content-releases.md](admin/admin-content-releases.md). **XL · ~2-3 days AI.** First-class Release entity, atomic publish, preview-at-perspective, rollback. 2025 Sanity differentiator vs Strapi / Payload.
+
+### Wave 3 — Platform S/XS (15-60 min AI each)
+
+10. **Mobile column behavior** — [`mobile-column-behavior.md`](platform/mobile-column-behavior.md). **S · ~1h AI.** Section-level `mobileBehavior` enum + drawer accordion mixin + admin Select. Shared `@mixin section-row-collapsible` is what Mobile-friendly admin reuses — schedule before or in parallel with Wave 1 #1.
+11. **C13b Manifesto link-target** — **S · ~30 min AI.** Depends on link-target-autosearch.
+12. **Bundle-import restart hook** — **XS · ~15 min AI.**
+13. **F8-e2e** — **S · ~30-60 min AI.** Un-skip MCP E2E + re-enable triggers.
+14. **mcp-rollout aftermath quick fixes** — **S · ~30 min AI combined.** Batched chunk for #1 / #5 / #9 / #11 / #12.
+15. **Q5-del** — **XS · ~15 min AI.** Admin-segregation Phase 3 cleanup after ≥1 release with zero `legacy-route` errors.
+
+### Wave 4 — Platform XS
+
+16. **gqty schema regen** — **XS · ~5 min AI.**
+
+---
+
+### Wave 5 — Storefront foundation (design system)
+
+This is the gate to everything storefront. Don't start Wave 6/7 until at least one first-class theme has shipped, otherwise the new public-facing surfaces ship under the simpleton presets we're trying to retire.
+
+17. **First-class themes (first 2-3 of ≥5)** — [`first-class-themes.md`](storefront/first-class-themes.md). **XL · multi-week, parallelisable per theme.** Ship the first **two or three** themes as the foundation, then add the rest in parallel with Wave 6/7. Recommended first three by audience coverage:
+    - `editorial` (portfolios, writers — closest to current `Paper`, lowest design risk)
+    - `agency` (motion-forward, dark-first — exercises the animation primitives + dark-mode discipline from Wave 2 #5)
+    - `commerce` (catalogue-first — directly used by Wave 7 ss.com)
+    Each theme: Stitch design doc + theme.json + SCSS + header+logo + footer + animations + per-module pass + 375 px mobile + plugin/module additions where needed. Retire the unused simpleton presets only after ≥3 first-class themes have shipped + at least one site has migrated cleanly.
+    **Depends on Q4-cap (Wave 0), [logo-style-options.md](content/logo-style-options.md), [mobile-column-behavior.md](platform/mobile-column-behavior.md) (Wave 3 #10).**
+
+### Wave 5.5 — Cross-theme shared modules + customer-account modules (ship in parallel with Wave 5)
+
+Picked from [new-modules-catalogue.md](_meta/new-modules-catalogue.md). Each module is its own jump. Ship opportunistically with the first theme / surface that needs each one.
+
+W5.5a. **Cross-theme shared modules** — `StickyCtaBar` · `ComparisonTable` · `SchemaOrgInjector` · `OgImageGenerator` · `SaveSearchPrompt` · `BreadcrumbBar` · `EmptyStateBlock` · `CookieConsentBanner` (stub). **~15-20h AI total** distributed by demand.
+
+W5.5b. **Customer-account modules** — `AccountDashboardGrid` · `OrderProgressTimeline` · `OrderDetailModule` · `WishlistGrid` · `SavedSearchList` · `MagicLinkRequestForm` + `MagicLinkConfirmation` · `OauthButtonStack`. **~12-15h AI total.** Bundle with Wave 6c signup.
+
+### Wave 6 — Storefront enabler
+
+W6a. **Receipt + transactional emails** — [storefront-receipt-emails.md](storefront/storefront-receipt-emails.md). **M · ~3h AI.** Email templates as a product surface. Land before signup so magic-link + receipt flow has its templates ready.
+
+W6b. **Faceted filter system** — [storefront-faceted-filter-system.md](storefront/storefront-faceted-filter-system.md). **L · ~6-8h AI.** Reusable across `/products` + `/cars`. Multi-select cascading, range sliders, live counts, saved searches. Can start in parallel with W6c — they don't depend.
+
+W6c. **Public signup + marketing attribution + anonymous checkout** — [`client-signup-and-anonymous-checkout.md`](storefront/client-signup-and-anonymous-checkout.md). **M-L · ~5-7 days AI** (revised down from L · 1-2 weeks after verification confirmed `CustomerAuthService` + `IOrder.guestEmail/orderToken` + Cart/Checkout + NextAuth credentials/Google OAuth are all already shipped).
+    - Magic-link via NextAuth `EmailProvider` (~1 day) — **the only net-new auth method**; wires to existing `EmailService`.
+    - Public `/account/*` pages (~1-2 days): signup / login / verify / reset / magic-link / account / orders / order-by-token — VM4-compliant, on top of existing `CustomerAuthService` primitives.
+    - Anonymous checkout polish (~half day): thread guest path through existing `/checkout` using existing `guestEmail`+`orderToken` fields; add receipt-email trigger to `OrderService` finalize.
+    - Marketing attribution (~1-2 days): NET-NEW `MarketingReferrer` table + UTM/`ref` capture + admin attribution pane.
+    - Email templates + theme integration (~1 day): per-theme auth/checkout/account frames in Stitch (carries into Wave 5).
+    - Facebook/Apple OAuth providers + per-site OAuth secret encryption via existing `secretBox.ts` (~half day, opt-in).
+    - E2E (~1 day): signup flow + anonymous-checkout flow + guest→customer upgrade by email match.
+    Can start in parallel with Wave 5 once Q4-cap lands; the per-theme styling is the only piece that gates on themes being ready (do at least `commerce` theme + signup screens together).
+
+### Wave 7 — Storefront long pole
+
+W7a. **Cars vertical modules** — [new-modules-catalogue.md](_meta/new-modules-catalogue.md) §Cars. `CarListingCard` · `CarVehicleDetailPage` (composite) · `CarPhotoGallery` · `CarSpecTable` · `CarReservationCta` · `VatBadge` · `CarComparisonTable` · `CarFinanceEstimator` (stub). **~20-30h AI total** as one jump (modules tightly coupled to the cars surface).
+
+W7b. **ss.com cars integration** — [`ss-com-cars-integration.md`](storefront/ss-com-cars-integration.md). **L · ~1-2 weeks AI** (collapsed from XL — Inventory adapter system already shipped, `IProduct.source/externalId/attributes` already shipped, ss.com is one new `IWarehouseAdapter`).
+    - **Acquisition path (operator decision, blocking external traffic):** A (partner data licence — recommended) / B (public RSS + paginated HTML — prototype-friendly) / C (full scrape — off the table for commercial). Engineering can start on path B against fixtures while A negotiates.
+    - Fetcher + normaliser + lifecycle (~3-5 days against fixtures). Idempotency follows the existing per-mutation `idempotencyKey` pattern (no generic engine), cascade lifecycle reuses the existing `cascadeRules` + `.trash` + 24h TTL machinery (`services/infra/cascadeDelete.ts`).
+    - Admin pane + MCP tools (~2 days).
+    - First theme's car surface (Stitch design + code — pairs with the `commerce` theme from Wave 5) (~4-5 days).
+    - Buyer e2e + fixtures (~2 days).
+    - Per-additional-theme car surface: ~2 days each.
+    **Depends on Wave 5 first-class themes (≥`commerce`), Wave 6 (anonymous checkout + receipt emails + faceted filter system), Q4-cap (Wave 0).**
+
+### Wave 8 — Pre-public-deploy gates
+
+W8a. **Accessibility WCAG 2.2 AA audit** — [accessibility-wcag22-audit.md](storefront/accessibility-wcag22-audit.md). **L · ~1-2 weeks AI.** All public surfaces audited × every theme × both modes. axe-core in e2e + Pa11y batch + Lighthouse ≥95. **Legally required in EU from 2025.** Pre-public-deploy blocker.
+
+W8b. **GDPR / consent / PII / data rights** — [storefront/gdpr-privacy-consent.md](storefront/gdpr-privacy-consent.md). **XL · ~3-4 days AI.** Cookie consent banner with category opt-in, DNT/GPC honour, data export, delete-my-account cascade, PII redaction on ss.com upstream data, cookie classification, retention TTLs, privacy policy + ToS pages.
+
+W8c. **Email deliverability hardening** — [storefront/email-deliverability-hardening.md](storefront/email-deliverability-hardening.md). **L · ~6-8h AI.** SPF / DKIM / DMARC + Resend domain verification + bounce/complaint webhook → suppression list + RFC 8058 one-click unsubscribe + send-rate warmup + deliverability dashboard.
+
+W8d. **Performance budget CI** — [platform/performance-budget-ci.md](platform/performance-budget-ci.md). **M · ~3h AI.** Lighthouse CI + Core Web Vitals gates + size-limit per-route + 10% RUM beacons. Sibling of W8a a11y audit.
+
+W8e. **Backup + disaster recovery** — [platform/backup-and-disaster-recovery.md](platform/backup-and-disaster-recovery.md). **L · ~5-6h AI.** Restic + B2 daily/6h backups + weekly automated restore drill + 4 failure-mode runbook + admin pane. RPO ≤ 6h / RTO ≤ 1h.
+
+W8f. **Customer notification preferences** — [storefront/customer-notification-preferences.md](storefront/customer-notification-preferences.md). **L · ~6-7h AI.** Per-category opt-in/out, in-app inbox via Presence, quiet hours, digest cadence, RFC 8058 unsubscribe integration. Pairs with W8c.
+
+W8g. **Multi-currency + tax** — [storefront/multi-currency-and-tax.md](storefront/multi-currency-and-tax.md). **L · ~6-8h AI.** Multi-currency `IProduct.prices`, daily ECB FX, VAT regime resolver, Stripe Tax + VIES B2B validation. Closes the "no multi-currency in v1" note.
+
+W8h. **SEO program** — [storefront/seo-program.md](storefront/seo-program.md). **L · ~6-8h AI.** robots.txt env-gating, dynamic sitemap with per-feature contributors, OG image generator, canonical + hreflang, schema.org injection, redirect map, meta pre-flight. Required for ss.com listings to be discoverable.
+
+---
+
+### Coordination notes
+
+- **Stitch + design plugin is now load-bearing.** Three roadmap items (first-class themes, dark-mode audit, ss.com per-theme car surfaces) all use Stitch as the design source. Treat the design plugin as critical-path tooling — file a sub-task if the plugin gaps block code handoff.
+- **Local POC scope** means GDPR / consent / PII redaction are deferred for ss.com + signup + attribution. They'll be a separate pre-deploy roadmap item later, not v1 acceptance.
+- **Email deliverability** is a soft prerequisite for Wave 6 (magic-link auth lives or dies on email delivery). On local POC, MailHog or similar is fine; production-grade SPF/DKIM/DMARC is deferred to deploy time.
+- **Stitch frames belong in the repo** alongside the theme they document (link in each theme's `README.md`). Same for the dark-mode audit punch list (`docs/audits/admin-dark-mode-…/`).
+
+### Total work estimate (post-research 2026-05-12) — AI agent hours only
+
+Per §14 standards, all sizing in **AI agent units**. Wall-clock cost (deploys, design pass, operator review) is tracked separately.
+
+| Wave | Track | AI hours | Notable wall-clock |
+|---|---|---|---|
+| 0 | Foundation (Q4-cap + motion tokens + Sonner + testid CI) | ~3h | — |
+| 1 | Platform L (Mobile-friendly admin) | ~6-8h | On-device QA |
+| 2 | Platform M (F8-bulk / F6 / dark-mode audit / F8-stream / drag-reorder / link-target / AUI-mode) | ~12-15h | — |
+| 2.5 | Admin UX (command palette / empty states / permissions / inline editing / content releases) | ~24-32h | Illustration design |
+| 3 | Platform S/XS | ~3-4h | — |
+| 4 | Platform XS | ~5 min | — |
+| 5 | Storefront foundation (8 first-class themes) | ~110-200h | Stitch design + operator review per theme |
+| 5.5 | Cross-theme + customer-account modules | ~27-35h | — |
+| 6 | Storefront enabler (receipt emails + faceted filters + signup) | ~80-100h | Email-client QA |
+| 7 | Cars modules + ss.com integration | ~60-80h | Acquisition-path operator decision |
+| 8 | Pre-public-deploy (8 sub-items: WCAG a11y / GDPR / email-deliverability / perf-CI / backup-DR / notification-prefs / multi-currency-tax / SEO) | ~120-160h | Manual screen-reader passes + DNS propagation + B2 setup |
+
+**MCP coverage** ([mcp-coverage-storefront-program.md](_meta/mcp-coverage-storefront-program.md)) and **module catalogue** ([new-modules-catalogue.md](_meta/new-modules-catalogue.md)) — counted in the parent waves above; no double-count.
+
+**Platform + admin UX tracks (Waves 0-4 + 2.5):** ~50-60h AI total.
+**Storefront program (Waves 5-7):** ~280-415h AI total — multi-day-AI runs even with jumps.
+**Pre-public-deploy gating (Wave 8 — 8 sub-items):** ~120-160h AI.
+
+**Total to public launch: ~450-635h AI agent work**, parallelisable across tracks. At single-agent throughput on jump-sized chunks, that's roughly **11-16 weeks** of focused agent time; operator-decision wall-clock + design wall-clock + on-device QA + DNS propagation + B2 setup adds another 4-8 weeks calendar.
 
 ### Backlog — concrete-trigger parking lot
 

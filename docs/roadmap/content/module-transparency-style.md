@@ -92,7 +92,7 @@ stays focused on framing / bordering / clipping treatments.
 
 - [logo-style-options.md](logo-style-options.md) — defers transparency to this
   item.
-- [themes-as-files.md](themes-as-files.md) — no direct dep, but transparent
+- [themes-as-files.md](../platform/themes-as-files.md) — no direct dep, but transparent
   sections put more visual weight on theme bg tokens; worth eyeballing across
   all four presets.
 

@@ -60,7 +60,7 @@ When an admin saves a section / page:
    ambiguity.
 
 For uploaded images: filename already collision-suffixed (once
-[bulk-image-upload-with-ratio.md](bulk-image-upload-with-ratio.md) lands),
+[bulk-image-upload-with-ratio.md](../content/bulk-image-upload-with-ratio.md) lands),
 so browsers never see a stale `src` — the URL changes when the content changes.
 
 ### Caddy config hardening
@@ -107,7 +107,7 @@ so browsers never see a stale `src` — the URL changes when the content changes
 
 ## Depends on / pairs with
 
-- [image-optimization-on-upload.md](image-optimization-on-upload.md) — smaller
+- [image-optimization-on-upload.md](../content/image-optimization-on-upload.md) — smaller
   files, caching benefits compound.
 
 ## Risks
