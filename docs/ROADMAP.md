@@ -46,7 +46,6 @@ Runbook: [runbooks/upgrade-droplets.md](runbooks/upgrade-droplets.md). Smoke che
 - [F6 — site-mode toggle: scroll vs multipage](roadmap/platform/site-mode-toggle.md) — `siteFlags.siteMode` switch so sites can render as single-page-scroll or multipage-routed. **M** (1-2 days). 4-phase plan in [roadmap/README.md](roadmap/README.md).
 - [Admin dark-mode audit](roadmap/admin/admin-dark-mode-audit.md) — screenshot 5 representative admin pages, run through Stitch, fix global-first via AntD ConfigProvider `cssVar: true` tokens. **M** (~1 day). Depends on Q4-cap baselines.
 - **Mobile column behavior** — per-module flag (`stack` / `keep-ratio` / `reorder-N`) for multi-column sections on narrow viewports. **S**; needs spec doc.
-- **Section + module drag-reorder root cause** — explicit up/down arrow buttons ship as the immediate fix; the underlying drag flow (`getChangedPos` + `DraggableWrapper`) still needs an actual diagnosis. **M**.
 - **Visual baseline capture** — `--workers=1` run failed with 1ms instant errors per spec; needs spec-load diagnosis.
 - **F8 MCP follow-ups** — streaming transport for bundle/image ops (✅ partly shipped 6c091be), plugin SDK for third-party tools, E2E un-skip post Windows-fanout fix. See [roadmap/platform/mcp-real-world-ready.md](roadmap/platform/mcp-real-world-ready.md).
 - **2 lingering `test.skip`s** — Trash restore-flow (Popconfirm OK button needs a stable testid) + idempotency reusable-button (no non-destructive guarded button candidate exists). Low priority.
@@ -106,3 +105,11 @@ See [`roadmap/shipped.md`](roadmap/shipped.md) for the full archive. Highlights 
 - **Turbopack global-CSS systemic fix** (`3f56f2f`) — Next 16 / Turbopack enforces "global CSS only from `_app.tsx`". Hoisted 68 module SCSS imports to `pages/_app.tsx` as a one-shot fix; per-component `.tsx` files no longer import their own SCSS. Class names + DOM structure unchanged.
 - **Car-parts distributor API research roadmap item filed** — `docs/roadmap/storefront/car-parts-distributor-research.md`.
 - **Cleanup:** `products/[slug]` rules-of-hooks bug fix; motion-token sample migration across 5 SCSS files (33→24 stylelint warnings).
+
+---
+
+## Cancelled
+
+Items removed from the open queue with the rationale recorded so a future maintainer doesn't reopen them.
+
+- **Section + module drag-reorder root cause** (cancelled 2026-05-13). The explicit up/down + label arrow buttons shipped in 2026-05-04 commits `cc306a7` + `576b212` + `a12c7b6` are the permanent UX — flat arrow controls are clearer, keyboard-accessible, and predictable on mobile. The underlying `getChangedPos` + `DraggableWrapper` drag flow is no longer the operator-facing affordance; diagnosing it would cost an M with no user-visible payoff. F3 v1-url-namespace (cancelled earlier) sets the precedent for this kind of strategic close.
