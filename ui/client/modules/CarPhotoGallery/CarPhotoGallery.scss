@@ -1,0 +1,108 @@
+.car-photo-gallery {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    outline: none;
+
+    &:focus-visible {
+        outline: 2px solid var(--accent, var(--theme-colorPrimary, #1677ff));
+        outline-offset: 2px;
+    }
+
+    &__hero-wrap {
+        position: relative;
+        aspect-ratio: 4 / 3;
+        background: var(--theme-colorBgInset, color-mix(in srgb, currentColor 6%, transparent));
+        border-radius: var(--theme-borderRadius, 8px);
+        overflow: hidden;
+    }
+
+    &__hero {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        touch-action: pinch-zoom;
+    }
+
+    &__nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        // WCAG 2.2 AA: 44 px minimum touch target.
+        min-width: 44px;
+        min-height: 44px;
+        padding: 0;
+        border: none;
+        border-radius: 50%;
+        background: color-mix(in srgb, var(--theme-colorBgContainer, #fff) 80%, transparent);
+        color: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+        font-size: 1.5rem;
+        line-height: 1;
+        cursor: pointer;
+        transition: background calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &:hover {
+            background: var(--theme-colorBgContainer, #fff);
+        }
+
+        &--prev { left: 0.5rem; }
+        &--next { right: 0.5rem; }
+    }
+
+    &__count {
+        position: absolute;
+        bottom: 0.5rem;
+        right: 0.5rem;
+        padding: 0.25rem 0.5rem;
+        background: color-mix(in srgb, var(--ink, #000) 70%, transparent);
+        color: var(--theme-colorTextLightSolid, #fff);
+        border-radius: var(--theme-borderRadius, 8px);
+        font-size: 0.8125rem;
+        font-weight: 500;
+    }
+
+    &__thumbs {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        gap: 0.5rem;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+    }
+
+    &__thumb-item {
+        flex: 0 0 auto;
+        scroll-snap-align: start;
+    }
+
+    &__thumb {
+        // 44 px touch target even when the rendered visual is smaller.
+        min-width: 44px;
+        min-height: 44px;
+        padding: 0;
+        border: 2px solid transparent;
+        background: none;
+        border-radius: var(--theme-borderRadius, 6px);
+        overflow: hidden;
+        cursor: pointer;
+        transition: border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &.is-active {
+            border-color: var(--accent, var(--theme-colorPrimary, #1677ff));
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--accent, var(--theme-colorPrimary, #1677ff));
+            outline-offset: 1px;
+        }
+    }
+
+    &__thumb-img {
+        display: block;
+        width: 72px;
+        height: 54px;
+        object-fit: cover;
+    }
+}
