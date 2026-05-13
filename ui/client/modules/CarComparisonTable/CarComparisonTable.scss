@@ -1,0 +1,30 @@
+.car-comparison-table {
+    &__header {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: stretch;
+    }
+
+    &__header-link {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    &__thumb {
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        object-fit: cover;
+        border-radius: var(--theme-borderRadius, 8px);
+        display: block;
+    }
+
+    &__price {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--accent, var(--theme-colorPrimary, #1677ff));
+    }
+}
