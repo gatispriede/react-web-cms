@@ -3,6 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "type": "esnext",
+  "config": {
+    "mongodbMemoryServer": {
+      "version": "7.0.14",
+      "disablePostinstall": "1"
+    }
+  },
   "scripts": {
     "predev": "npm run features:codegen && node tools/dev-predev.js",
     "prebuild": "npm run features:codegen && node tools/check-schema-stale.js",
