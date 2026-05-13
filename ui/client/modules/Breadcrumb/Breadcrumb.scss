@@ -23,16 +23,12 @@
 
     &--empty { min-height: 1.5rem; }
 
-    // Mobile collapse — full chain hides, "← Back" + current page title shows.
-    // CSS-driven so the same DOM serves both viewports (no JS branching).
     &__mobile { display: none; align-items: center; gap: 0.5rem; }
     &__back { display: inline-flex; align-items: center; }
     &__current { opacity: 0.7; }
 
-    &--mobile-collapse {
-        @media (max-width: 540px) {
-            .breadcrumb__full { display: none; }
-            .breadcrumb__mobile { display: inline-flex; }
-        }
+    @media (max-width: 540px) {
+        &--mobile-collapse &__full { display: none; }
+        &--mobile-collapse &__mobile { display: inline-flex; }
     }
 }
