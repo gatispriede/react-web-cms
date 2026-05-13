@@ -1,0 +1,142 @@
+.order-detail-module {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 1.25rem;
+    border-radius: var(--theme-borderRadius, 8px);
+    background: var(--theme-colorBgContainer, #fff);
+    color: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+
+    &__head h2,
+    &__title {
+        margin: 0;
+        font-size: 1.25rem;
+    }
+
+    &__section h3 {
+        margin: 0 0 0.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    &__lines {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    &__line {
+        display: grid;
+        grid-template-columns: auto 1fr auto auto;
+        gap: 0.75rem;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid color-mix(in srgb, currentColor 8%, transparent);
+
+        &:last-child { border-bottom: none; }
+    }
+
+    &__line-thumb {
+        width: 48px;
+        height: 48px;
+        object-fit: cover;
+        border-radius: var(--theme-borderRadius, 6px);
+    }
+
+    &__line-qty,
+    &__line-total {
+        color: var(--ink-2, color-mix(in srgb, currentColor 70%, transparent));
+        font-variant-numeric: tabular-nums;
+    }
+
+    &__line-total { font-weight: 600; color: var(--ink, var(--theme-colorTextBase, #1f1f1f)); }
+
+    &__addresses {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+    }
+
+    &__address {
+        padding: 0.75rem;
+        background: var(--theme-colorBgInset, color-mix(in srgb, currentColor 4%, transparent));
+        border-radius: var(--theme-borderRadius, 8px);
+
+        h4 { margin: 0 0 0.5rem; font-size: 0.875rem; }
+        address { font-style: normal; font-size: 0.875rem; line-height: 1.45; }
+    }
+
+    &__payment {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 0.25rem 1rem;
+        margin: 0;
+
+        div { display: contents; }
+        dt { color: var(--ink-2, color-mix(in srgb, currentColor 70%, transparent)); font-size: 0.875rem; margin: 0; }
+        dd { margin: 0; font-variant-numeric: tabular-nums; }
+    }
+
+    &__total {
+        dt, dd { font-weight: 700; font-size: 1rem; padding-top: 0.5rem; border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent); }
+    }
+
+    &__history {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+
+        li {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 0.5rem;
+            padding: 0.375rem 0;
+            border-bottom: 1px dashed color-mix(in srgb, currentColor 8%, transparent);
+        }
+
+        &-at, &-note { color: var(--ink-2, color-mix(in srgb, currentColor 70%, transparent)); font-size: 0.8125rem; }
+    }
+
+    &__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    &__btn {
+        // WCAG 2.2 AA: 44 px tap target.
+        min-height: 44px;
+        padding: 0.625rem 1.25rem;
+        border-radius: var(--theme-borderRadius, 8px);
+        border: 1px solid var(--ink-2, color-mix(in srgb, currentColor 25%, transparent));
+        background: transparent;
+        color: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+        font-size: 0.9375rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &:hover { background: var(--theme-colorBgInset, color-mix(in srgb, currentColor 6%, transparent)); }
+
+        &--primary {
+            background: var(--accent, var(--theme-colorPrimary, #1677ff));
+            border-color: var(--accent, var(--theme-colorPrimary, #1677ff));
+            color: var(--theme-colorTextLightSolid, #fff);
+
+            &:hover {
+                background: var(--accent-hover, color-mix(in srgb, var(--accent, var(--theme-colorPrimary, #1677ff)) 88%, #000));
+            }
+        }
+
+        &--danger {
+            color: var(--theme-colorError, #d4380d);
+            border-color: var(--theme-colorError, #d4380d);
+        }
+    }
+}
