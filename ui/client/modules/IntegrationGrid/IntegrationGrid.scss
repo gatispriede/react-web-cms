@@ -1,0 +1,99 @@
+.integration-grid {
+    color: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+
+    &__chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    &__chip {
+        min-height: 44px;
+        padding: 0.5rem 1rem;
+        border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+        border-radius: 999px;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+        transition:
+            background calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+            color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &--active {
+            background: var(--accent, var(--theme-colorPrimary, #1677ff));
+            color: var(--theme-colorBgContainer, #fff);
+            border-color: transparent;
+        }
+    }
+
+    &__list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 0.75rem;
+    }
+
+    &__tile {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+        min-height: 44px;
+        padding: 0.875rem;
+        background: var(--theme-colorBgContainer, #fff);
+        border-radius: var(--theme-borderRadius, 8px);
+        color: inherit;
+        text-decoration: none;
+        transition: transform calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &:hover,
+        &:focus-visible {
+            transform: translateY(-2px);
+        }
+    }
+
+    &__logo {
+        max-width: 2rem;
+        max-height: 2rem;
+
+        &--placeholder {
+            display: inline-block;
+            width: 2rem;
+            height: 2rem;
+            border-radius: var(--theme-borderRadius, 8px);
+            background: var(--theme-colorBgInset, color-mix(in srgb, currentColor 6%, transparent));
+        }
+    }
+
+    &__name {
+        font-weight: 600;
+        font-size: 0.9375rem;
+    }
+
+    &__status {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.125rem 0.5rem;
+        border-radius: 999px;
+
+        &--live {
+            background: color-mix(in srgb, #16a34a 18%, transparent);
+            color: #15803d;
+        }
+
+        &--beta {
+            background: color-mix(in srgb, #2563eb 18%, transparent);
+            color: #1d4ed8;
+        }
+
+        &--soon {
+            background: var(--theme-colorBgInset, color-mix(in srgb, currentColor 8%, transparent));
+            color: var(--ink-2, color-mix(in srgb, currentColor 65%, transparent));
+        }
+    }
+}

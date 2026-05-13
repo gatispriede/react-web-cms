@@ -1,0 +1,80 @@
+.testimonial-wall {
+    color: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+    column-gap: 1.25rem;
+
+    &--cols-2 {
+        column-count: 2;
+    }
+
+    &--cols-3 {
+        column-count: 3;
+    }
+
+    &--cols-4 {
+        column-count: 4;
+    }
+
+    @media (max-width: 720px) {
+        &--cols-2,
+        &--cols-3,
+        &--cols-4 {
+            column-count: 1;
+        }
+    }
+
+    &__card {
+        break-inside: avoid;
+        margin: 0 0 1.25rem;
+        padding: 1.25rem;
+        background: var(--theme-colorBgContainer, #fff);
+        border-radius: var(--theme-borderRadius, 8px);
+        transition: transform calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+    }
+
+    &__quote {
+        margin: 0 0 1rem;
+        font-size: 1rem;
+        line-height: 1.55;
+        quotes: "\201C" "\201D";
+
+        &::before {
+            content: open-quote;
+            margin-right: 0.125rem;
+        }
+
+        &::after {
+            content: close-quote;
+            margin-left: 0.125rem;
+        }
+    }
+
+    &__author {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    &__photo {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 50%;
+        object-fit: cover;
+        background: var(--theme-colorBgInset, color-mix(in srgb, currentColor 6%, transparent));
+    }
+
+    &__author-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 0.125rem;
+    }
+
+    &__name {
+        font-style: normal;
+        font-weight: 600;
+    }
+
+    &__role {
+        font-size: 0.8125rem;
+        color: var(--ink-2, color-mix(in srgb, currentColor 65%, transparent));
+    }
+}
