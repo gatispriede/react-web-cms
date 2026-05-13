@@ -4,11 +4,11 @@ Forward-looking only. Architecture: [PROJECT_ANALYSIS.md](PROJECT_ANALYSIS.md) +
 
 ---
 
-## Status (2026-05-04, late)
+## Status (2026-05-13)
 
-- **Master HEAD:** `2c7be30` — F7 slug source-of-truth, F8 MCP coverage, email config, admin nav reorg, admin click-parent (option B), themed 404/500, e2e prod-mode smoke, Hero portrait dimension inputs, mode-aware click handling.
-- **🚨 Prod hotfix on develop, awaiting merge:** `0390491` pins `--webpack` on every `next build` invocation in `package.json`. Next 16 defaults `next build` to Turbopack and rejects the existing `webpack:` block in `ui/client/next.config.js` — production deploy on funisimo.pro / skyclimber.pro failed health checks. Once merged to master, `deploy.yml` redeploys both droplets.
-- **Develop is 8 commits ahead of master** (1 prod-blocker + 4 admin polish + 2 CI hygiene + 1 roadmap update). See [roadmap/README.md](roadmap/README.md#current-status-2026-05-04-late) for the per-commit list.
+- **Develop HEAD:** `76b1658` — commerce + auth track: Phase 0 shared abstractions + Phase 1 (6 main items + 6 deferred sub-jumps). 185 files / ~10.7K insertions / ~50 new MCP tools / ~15 e2e specs. Single-merge ready.
+- **Pending follow-ups:** wire `useCart()` + `useCheckoutMachine()` into the 12 locked Phase-1.D presentational modules; `npm run features:codegen` (1.D hand-edits); `npm run lint` (sandbox-blocked across agents); optional `@react-pdf/renderer` install for PDF spec sheets.
+- **Operator post-merge ops queued:** email DNS (SPF/DKIM/DMARC), B2+restic, Stripe test keys, ss.com path A/B/C, legal `/privacy`+`/terms`, screen-reader passes, Q4-cap visual baselines.
 
 ---
 
@@ -69,6 +69,35 @@ Import bundle into local build → open public client → walk every page side-b
 ## What landed recently
 
 See [`roadmap/shipped.md`](roadmap/shipped.md) for the full archive.
+
+### 2026-05-13 — Commerce + auth track (Phase 0 + Phase 1, 12 jumps)
+
+Single-merge landing across the full commerce + auth + storefront-composability track. 185 files modified, ~520 net-new files, ~10.7K insertions, ~50 new MCP tools, ~15 e2e specs. Commit `76b1658`.
+
+- **Phase 0 — shared abstractions:** `ISection.locked` + `lockReason` + admin LockedSectionAffordance + server delete-guard (0a); `IPage.source` (`'manual'|'product'|'system-page'`) + `systemKey` + `productId` + depth-cap lift + `SystemPageRegistry` service with onBoot bootstrap + operator-override preservation + 3 read MCP tools + `page.list` source filter (0b); `ISiteFlags` sub-records (commerce / auth / theme / seo) + `defineFlag()` helper registry + type-guard primitives + `site.flagDefinitions.list` MCP (0c)
+- **1.A auth-split:** two NextAuth instances (`cms.admin-session` Path=/admin + `cms.customer-session` Path=/account|/checkout|/orders), 6 flags via `defineFlag`, 5 storefront Auth components + admin/customer signin pages, 4 MCP tools (`auth.config.*`, `auth.providers.list`, `auth.session.invalidate`), customer-login-enabled middleware gate
+- **1.B Product module + checkoutEnabled:** `EItemType.Product` with 5 mode variants (featured/grid/carousel/comparison/related), `commerce.checkoutEnabled` master flag, 4 commerce components (BuyCta, CartDrawer, CartDrawerToggle, AddToCartButton) self-suppress when flag off, admin Commerce Settings pane, 3 MCP tools
+- **1.C products-as-composable-page:** `WarehousePageSyncWorker` (cron), CategoryTemplate + ProductDetailTemplate auto-injection with locked sections, 5 new modules (ProductDetailHero, ProductSpecTable, Pagination, ProductDescription, Breadcrumb), Pages ServiceLoader wires `SystemPageRegistry.bootstrapAll`, `commerce.warehouseAutoSync` flag, 5 MCP tools + `page.list includeWarehouseDerived`
+- **1.D checkout-as-composable-page:** 8 system page registrations (cart, checkout-{address,shipping,payment,confirmation}, order-by-token, account-dashboard, magic-link-verify), 18 new modules (12 locked transactional + 6 operator-composable), 6 hand-coded routes refactored onto system-page loader, admin SystemPagesPanel, 3 write MCP tools (`systemPages.update/reset/preview`) with locked-section enforcement
+- **1.E client-account-settings:** `IUser.customerType` (`'client'|'company'`) + `ICompanyProfile` + `IPaymentMethodRef` + `IAddress` extensions, account-settings system page, 10 settings UI components, signup B2B toggle, admin CustomerAccountSettingsPanel, 16 MCP tools (`accountSettings.*`, `customer.profile.*`, `customer.addresses.*`, `customer.paymentMethods.*`, `customer.company.viesRefresh`)
+- **1.F product-display-templates:** `IProductTemplate` library + `ProductTemplateService` with cascade-on-delete, 5 built-in templates seeded at boot (premium/standard/quick-buy/bundle/b2b-spec-sheet), 4 new modules (LargeGallery, SubProductsGrid, DownloadablePdf, WarrantyInfo), render dispatch via `ProductContext` (per-product IPage override beats template), admin pane with section editor + preview-against-fixture + duplicate + delete, preview route `/admin/preview/template/[id]`, 8 MCP tools
+- **Deferred sub-jumps (all shipped):** 1.B-c checkout customization (single-step flow + 3 payment adapters Stripe/BankTransfer/CashOnDelivery + `ShippingMethodService` CRUD + admin CheckoutCustomizationPanel + 8 MCP tools); 1.B-d abandoned cart (60-min recovery worker + abandoned-cart email + signed `cartTokens` 30-day TTL + admin AbandonedCartPanel + 4 MCP tools + conversion tracking on `OrderService.finalize`); 1.C-c port wiring + auto-301 (`NavigationService.listDerivedPages/createDerivedPage/softDeletePage`, `RedirectsService.create` on warehouse slug rename); 1.D-c dispatch + bespoke editors + LV (`SystemPageDispatch` renders sections, 18 bespoke per-module editors replace PlaceholderJsonEditor, idiomatic LV checkout translations); 1.E inline tabs (`NotificationPreferencesForm` + `DataRightsForm` extracted, `/account/notifications`+`/account/privacy` server-redirect to settings); 1.F polish (inline TemplateSectionEditor, constrained Select TemplatePickerControl filtered by `applicableTo`+audience, Sonner Undo via softDelete + 24h `.trash` TTL, PDF endpoint `/api/products/[id]/spec-sheet.pdf` env-gated on `@react-pdf/renderer` optionalDep, `useSiblingProducts()` hook)
+
+**Caveats / follow-ups (each its own future jump):**
+- Phase 1.D 12 locked transactional modules (CartLineItems, CheckoutAddressForm, OrderSummary, PlaceOrderButton, etc.) are presentational stubs — wiring real `useCart()` + `useCheckoutMachine()` state into them is the natural next jump
+- `features:codegen` was hand-edited in 1.D — operator should run `npm run features:codegen` once to confirm no drift
+- `npm run lint` was sandbox-blocked for several agents — operator should run locally before merging upstream
+- `@react-pdf/renderer` listed as `optionalDependencies`; install if operator wants PDF spec sheets
+
+**Operator post-merge ops (credentials / decisions / ops, no code from agents):**
+- DNS records for email (SPF + DKIM + DMARC + Resend domain verify)
+- B2 bucket + restic init + passphrase for backups
+- Stripe test keys in `.env` (`STRIPE_SECRET_KEY`, `STRIPE_PUBLIC_KEY`, `STRIPE_TAX_ENABLED`)
+- ss.com acquisition path A (partner licence) / B (RSS prototype) / C (scrape, off the table) decision
+- Operator legal review on `/privacy` + `/terms` placeholders
+- Per-theme Stitch design pass per first-class theme
+- Manual screen-reader passes for Wave 8a accessibility audit
+- Q4-cap visual baselines capture run
 
 ### 2026-05-04 — F7 + UX polish + dev-loop hardening
 
