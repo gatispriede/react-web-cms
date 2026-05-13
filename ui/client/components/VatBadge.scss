@@ -1,0 +1,24 @@
+.vat-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.78125rem;
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
+
+    &--private-no-vat {
+        background: color-mix(in srgb, var(--theme-colorSuccess, #16a34a) 12%, transparent);
+        color: color-mix(in srgb, var(--theme-colorSuccess, #16a34a) 85%, #000);
+    }
+
+    &--standard-21 {
+        background: color-mix(in srgb, var(--theme-colorInfo, #2563eb) 12%, transparent);
+        color: color-mix(in srgb, var(--theme-colorInfo, #2563eb) 85%, #000);
+    }
+
+    &--margin-scheme {
+        background: color-mix(in srgb, var(--theme-colorWarning, #d97706) 14%, transparent);
+        color: color-mix(in srgb, var(--theme-colorWarning, #d97706) 85%, #000);
+    }
+}
