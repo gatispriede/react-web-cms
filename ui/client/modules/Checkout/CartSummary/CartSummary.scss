@@ -1,0 +1,9 @@
+.cart-summary {
+    padding: 1rem; border: 1px solid var(--theme-colorBorder, #eee); border-radius: 6px;
+    &__title { font-size: 1rem; font-weight: 600; margin: 0 0 0.5rem; }
+    &__rows { margin: 0; padding: 0;
+        > div { display: flex; justify-content: space-between; padding: 0.25rem 0; }
+        dt, dd { margin: 0; }
+    }
+    &__total { font-weight: 700; border-top: 1px solid var(--theme-colorBorder, #eee); padding-top: 0.5rem !important; margin-top: 0.5rem; }
+}

@@ -13,7 +13,7 @@ import {AdminUILoader, AdminPaneDescriptor} from '@admin/lib/loaders/AdminUILoad
  * never download the advanced bundle (and vice versa). The shell
  * dispatcher wraps the active pane in `<Suspense>`.
  */
-const PostsAdvanced = React.lazy(() => import('./Posts'));
+const PostsAdvanced = React.lazy(() => import('./PostsAdvancedView'));
 const PostsSimplified = React.lazy(() => import('./PostsSimplifiedView'));
 
 export class PostsAdminUILoader extends AdminUILoader {

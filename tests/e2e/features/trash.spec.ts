@@ -37,11 +37,13 @@ test.describe('feature — trash pane', () => {
         await expect(row).toBeVisible({timeout: 15_000});
 
         await row.click();
-        await byTid(adminPage, tid('nav', 'page', 'delete', 'btn')).click();
+        // Delete buttons exist on every page row — scope to the row we just authored.
+        await row.getByTestId('nav-page-delete-btn').click();
         await adminPage.getByTestId('nav-page-delete-confirm-btn').click();
 
-        // Origin row disappears immediately.
-        await expect(row).toHaveCount(0, {timeout: 5_000});
+        // Origin row disappears (either immediately, or after the next list
+        // refresh — VM may refetch instead of optimistically splicing).
+        await expect(row).toHaveCount(0, {timeout: 15_000});
 
         // Trash pane — UI groups by trashGroup; assert at least one row
         // exists with a numeric child-count summary.

@@ -12,7 +12,7 @@ import {AdminUILoader, AdminPaneDescriptor} from '@admin/lib/loaders/AdminUILoad
  * never download the advanced bundle (and vice versa). The shell
  * dispatcher wraps the active pane in `<Suspense>`.
  */
-const ThemeAdvanced = React.lazy(() => import('./Theme'));
+const ThemeAdvanced = React.lazy(() => import('./ThemeAdvancedView'));
 const ThemeSimplified = React.lazy(() => import('./ThemeSimplifiedView'));
 
 export class ThemeAdminUILoader extends AdminUILoader {

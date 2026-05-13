@@ -1,5 +1,6 @@
 import React, {useEffect, useMemo} from "react";
-import {Button, Drawer, Form, Input, InputNumber, Popconfirm, Select, Space, Switch, Table, Tag, Tooltip, Typography, message} from "antd";
+import {Button, Drawer, Form, Input, InputNumber, Popconfirm, Select, Space, Switch, Table, Tag, Tooltip, Typography} from "antd";
+import {notifyError} from '@admin/lib/notify';
 import {DeleteOutlined, EditOutlined, EyeOutlined, LinkOutlined, PlusOutlined} from "@client/lib/icons";
 import {useTranslation} from "react-i18next";
 import {IProduct, InProduct} from "@interfaces/IProduct";
@@ -7,7 +8,9 @@ import AuditBadge from "@admin/shell/AuditBadge";
 import {useRefreshView} from "@client/lib/refreshBus";
 import ConflictDialog from "@client/lib/ConflictDialog";
 import {useViewModel} from "@client/lib/state/observable";
+import EmptyState from "@admin/lib/EmptyState";
 import {ProductsViewModel} from "./ProductsViewModel";
+import TemplatePickerControl from "./TemplatePickerControl";
 
 /** Render-only Products pane — VM3 (2026-05-02). */
 
@@ -36,9 +39,10 @@ const AdminSettingsProducts: React.FC = () => {
                 categories: vm.editing.categories ?? [],
                 images: (vm.editing.images ?? []).join('\n'),
                 draft: vm.editing.draft ?? false,
+                templateId: (vm.editing as {templateId?: string}).templateId ?? '',
             });
         } else {
-            form.setFieldsValue({draft: true, currency: 'EUR', price: 0, stock: 0, categories: [], images: ''});
+            form.setFieldsValue({draft: true, currency: 'EUR', price: 0, stock: 0, categories: [], images: '', templateId: ''});
         }
     }, [vm.editing, form]);
 
@@ -121,15 +125,28 @@ const AdminSettingsProducts: React.FC = () => {
                 />
                 <AuditBadge editedBy={vm.latestAudit.editedBy} editedAt={vm.latestAudit.editedAt}/>
             </Space>
-            <Table
-                rowKey="id"
-                loading={vm.loading}
-                dataSource={vm.filtered}
-                columns={columns}
-                pagination={{pageSize: 20}}
-                size="middle"
-                onRow={(p: IProduct) => ({'data-testid': `admin-products-row-${p.slug}`} as any)}
-            />
+            {!vm.loading && vm.filtered.length === 0 && !vm.search ? (
+                <EmptyState
+                    testId="products-empty-state"
+                    title={t('empty.products.title')}
+                    description={t('empty.products.description')}
+                    primary={{
+                        label: t('empty.products.primary'),
+                        onClick: vm.openCreate,
+                        testId: 'products-empty-primary-btn',
+                    }}
+                />
+            ) : (
+                <Table
+                    rowKey="id"
+                    loading={vm.loading}
+                    dataSource={vm.filtered}
+                    columns={columns}
+                    pagination={{pageSize: 20}}
+                    size="middle"
+                    onRow={(p: IProduct) => ({'data-testid': `admin-products-row-${p.slug}`} as any)}
+                />
+            )}
             <Drawer
                 open={vm.editing !== null}
                 onClose={onClose}
@@ -177,6 +194,20 @@ const AdminSettingsProducts: React.FC = () => {
                     >
                         <Input.TextArea data-testid="admin-products-image-input" rows={4} disabled={vm.fieldDisabled('images' as keyof InProduct)} placeholder="https://…"/>
                     </Form.Item>
+                    {/* Phase 1.F polish — constrained `<Select>` driven by
+                       `productTemplate.list` filtered by category + source +
+                       `commerce.defaultProductAudience`. See
+                       `TemplatePickerControl.tsx`. */}
+                    <Form.Item
+                        name="templateId"
+                        label={t('Display template')}
+                        tooltip={t('Leave blank to use the default (built-in:standard). See Content → Product templates.')}
+                    >
+                        <TemplatePickerControl
+                            category={(vm.editing?.categories ?? [])[0]}
+                            source={vm.editing?.source as 'manual' | 'warehouse' | undefined}
+                        />
+                    </Form.Item>
                     <Form.Item name="draft" label={t('Draft')} valuePropName="checked">
                         <Switch/>
                     </Form.Item>
@@ -195,7 +226,7 @@ const AdminSettingsProducts: React.FC = () => {
                         onTakeTheirs={vm.takeTheirs}
                         onKeepMine={async () => {
                             try { await vm.conflict?.retry(); }
-                            catch (err) { message.error(String((err as Error)?.message ?? err)); vm.dismissConflict(); }
+                            catch (err) { notifyError(err); vm.dismissConflict(); }
                         }}
                     />
                 );

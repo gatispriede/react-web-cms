@@ -7,6 +7,7 @@ import {translateOrKeep} from "@utils/translateOrKeep";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import RevealOnScroll from "@client/lib/RevealOnScroll";
 import {slugifyAnchor} from "@utils/stringFunctions";
+import {inlineEditAttr} from "@client/lib/inlineEditAttr";
 import type {IServices} from "./Services.types";
 export type {IServices, IServiceRow} from "./Services.types";
 export {EServicesStyle} from "./Services.types";
@@ -39,12 +40,14 @@ function renderAccentRuns(text: string, tr: (s: string) => string): React.ReactN
     });
 }
 
-const Services = ({item, tApp}: {
+const Services = ({item, tApp, admin}: {
     item: IItem;
     t: TFunction<"translation", undefined>;
     tApp: TFunction<string, undefined>;
+    admin?: boolean;
 }) => {
     const c = new ServicesContent(EItemType.Services, item.content).data;
+    const editId = item.name || EItemType.Services;
     // trStr: string-returning, used inside renderAccentRuns which splits on
     // the translated value. tr: JSX-returning, wraps the string in
     // `<InlineTranslatable>` so Alt-click editors can find it.
@@ -55,12 +58,12 @@ const Services = ({item, tApp}: {
         <section className={`services-module ${item.style ?? ''}`}>
             {(c.sectionNumber || c.sectionTitle || c.sectionSubtitle) && (
                 <header className="services-module__head">
-                    {c.sectionNumber && <div className="services-module__num">{tr(c.sectionNumber)}</div>}
+                    {c.sectionNumber && <div className="services-module__num" {...inlineEditAttr(admin, editId, 'sectionNumber')}>{tr(c.sectionNumber)}</div>}
                     {c.sectionTitle && (
-                        <h2 id={slugifyAnchor(c.sectionTitle)} className="services-module__title">{renderAccentRuns(c.sectionTitle, trStr)}</h2>
+                        <h2 id={slugifyAnchor(c.sectionTitle)} className="services-module__title" {...inlineEditAttr(admin, editId, 'sectionTitle')}>{renderAccentRuns(c.sectionTitle, trStr)}</h2>
                     )}
                     {c.sectionSubtitle && (
-                        <div className="services-module__sub">{tr(c.sectionSubtitle)}</div>
+                        <div className="services-module__sub" {...inlineEditAttr(admin, editId, 'sectionSubtitle')}>{tr(c.sectionSubtitle)}</div>
                     )}
                 </header>
             )}
@@ -70,9 +73,9 @@ const Services = ({item, tApp}: {
                         {r.iconGlyph && (
                             <div className="services-module__row-icon" aria-hidden>{r.iconGlyph}</div>
                         )}
-                        <div className="services-module__row-num">{tr(r.number)}</div>
-                        <h3 id={slugifyAnchor(r.title)} className="services-module__row-title">{renderAccentRuns(r.title, trStr)}</h3>
-                        <div className="services-module__row-desc">{tr(r.description)}</div>
+                        <div className="services-module__row-num" {...inlineEditAttr(admin, editId, `rows.${i}.number`)}>{tr(r.number)}</div>
+                        <h3 id={slugifyAnchor(r.title)} className="services-module__row-title" {...inlineEditAttr(admin, editId, `rows.${i}.title`)}>{renderAccentRuns(r.title, trStr)}</h3>
+                        <div className="services-module__row-desc" {...inlineEditAttr(admin, editId, `rows.${i}.description`)}>{tr(r.description)}</div>
                         {r.tags && r.tags.length > 0 && (
                             <div className="services-module__row-tags">
                                 {r.tags.map((tag, j) => (

@@ -1,5 +1,11 @@
 @use 'base-colors';
 
+// Motion tokens — duration / easing / distance custom properties shared by
+// client + admin. `prefers-reduced-motion` flips `--motion-scalar` to 0
+// globally. See `ui/client/styles/_motion-tokens.scss` and the spec at
+// `docs/roadmap/admin/motion-token-system.md`.
+@use '../motion-tokens';
+
 @use "../../../admin/styles/Admin/EditSection";
 @use "../Layout/Content";
 @use "../../../admin/styles/Admin/Navigation";
@@ -28,6 +34,20 @@
 @use "../Themes/Studio";
 @use "../Themes/Industrial";
 @use "../Themes/HighContrast";
+
+// Wave 5 first-class themes — each theme lives at `services/themes/<slug>/`
+// with `theme.scss` (semantic-token overrides) + `module-styles.scss` (per-
+// module override layer). Active-theme dispatch is by the same
+// `[data-theme-name="<slug>"]` data-attribute mechanism the simpleton themes
+// use — the body attribute is driven by `applyThemeCssVars(tokens.themeSlug)`
+// at runtime, so the matching block lights up only when its theme is active.
+// Real visual design lands per-theme in subsequent jumps via these slots.
+@use "../../../../services/themes/editorial/theme" as editorialTheme;
+@use "../../../../services/themes/editorial/module-styles" as editorialModules;
+@use "../../../../services/themes/agency/theme" as agencyTheme;
+@use "../../../../services/themes/agency/module-styles" as agencyModules;
+@use "../../../../services/themes/commerce/theme" as commerceTheme;
+@use "../../../../services/themes/commerce/module-styles" as commerceModules;
 
 // Per-module public renderers — one folder per item type under modules/.
 @use "../../modules/PlainImage/PlainImage";
@@ -263,9 +283,31 @@
   text-decoration: none;
   border-radius: 0 0 4px 0;
 
-  &:focus {
+  &:focus,
+  &:focus-visible {
     left: 0;
+    outline: 2px solid var(--theme-colorAccent, #fff);
+    outline-offset: 2px;
   }
+}
+
+// W8a — global focus-visible polish. Keyboard users always get a visible
+// ring; mouse users keep the existing component styles (browsers only fire
+// `:focus-visible` for keyboard / programmatic focus). Accent comes from the
+// active theme token chain so each first-class theme keeps brand identity.
+// Outline-offset gives ~2 px breathing room so the ring doesn't kiss the
+// element's edge; this is the WCAG SC 2.4.7 minimum-visibility recipe.
+:focus-visible {
+  outline: 2px solid var(--theme-colorAccent, var(--theme-colorPrimary, #1677ff));
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+// `<main id="main" tabIndex={-1}>` is the skip-link target. The browser
+// programmatic-focuses it on `#main` hash navigation; without this rule the
+// default UA outline would draw a giant ring around the whole page region.
+main#main:focus,
+main#main:focus-visible {
+  outline: none;
 }
 
 html {

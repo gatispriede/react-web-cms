@@ -6,6 +6,7 @@ import {useSession} from "next-auth/react";
 import {IUser, UserRole} from "@interfaces/IUser";
 import {Grant, FeatureGrant, PageGrant, LocaleGrant} from "@interfaces/IPermission";
 import {useViewModel} from "@client/lib/state/observable";
+import EmptyState from "@admin/lib/EmptyState";
 import {UsersViewModel} from "./UsersViewModel";
 
 /** Render-only Users pane — VM3 (2026-05-02). */
@@ -94,15 +95,28 @@ const AdminSettingsUsers = () => {
                 <Button data-testid="users-create-button" type="primary" icon={<PlusOutlined/>} onClick={vm.openCreate}>{t('Add user')}</Button>
                 <Button data-testid="users-refresh-button" onClick={vm.refresh} loading={vm.loading}>{t('Refresh')}</Button>
             </Space>
-            <Table
-                rowKey="id"
-                loading={vm.loading}
-                dataSource={vm.users}
-                columns={columns}
-                pagination={{pageSize: 10}}
-                size="middle"
-                onRow={(u: IUser) => ({'data-testid': `users-row-${u.id}`} as any)}
-            />
+            {!vm.loading && vm.users.length === 0 ? (
+                <EmptyState
+                    testId="users-empty-state"
+                    title={t('empty.users.title')}
+                    description={t('empty.users.description')}
+                    primary={{
+                        label: t('empty.users.primary'),
+                        onClick: vm.openCreate,
+                        testId: 'users-empty-primary-btn',
+                    }}
+                />
+            ) : (
+                <Table
+                    rowKey="id"
+                    loading={vm.loading}
+                    dataSource={vm.users}
+                    columns={columns}
+                    pagination={{pageSize: 10}}
+                    size="middle"
+                    onRow={(u: IUser) => ({'data-testid': `users-row-${u.id}`} as any)}
+                />
+            )}
             {vm.editing !== null && (
                 <Modal
                     data-testid="users-editor-modal"

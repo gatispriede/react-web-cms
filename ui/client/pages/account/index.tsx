@@ -36,6 +36,13 @@ const AccountHome = () => {
                             ? me.shippingAddresses.map((a: any) => <div key={a.id}>{a.name}</div>)
                             : <Text type="secondary">No saved addresses yet.</Text>}
                     </Card>
+                    <Card
+                        title="Notification preferences"
+                        style={{marginTop: 16}}
+                        extra={<Link href="/account/notifications" data-testid="account-notifications-link">Manage</Link>}
+                    >
+                        <Text type="secondary">Choose how you receive order updates, marketing, and other notifications.</Text>
+                    </Card>
                 </>
             )}
         </div>

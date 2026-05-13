@@ -15,6 +15,7 @@ Infra, MCP, caching, migrations, tooling. Everything that's neither admin UX nor
 | [mobile-column-behavior.md](mobile-column-behavior.md) | 3 | S | `mobileBehavior` enum + drawer accordion mixin |
 | [performance-budget-ci.md](performance-budget-ci.md) | 8 (pre-deploy) | M | Active — Lighthouse CI + Core Web Vitals gates + size-limit + RUM beacons + per-theme PERFORMANCE.md |
 | [backup-and-disaster-recovery.md](backup-and-disaster-recovery.md) | 8 (pre-deploy) | L | Active — Restic + B2 backups, weekly automated restore drill, runbook, RPO ≤6h / RTO ≤1h |
+| [auth-split-client-admin.md](auth-split-client-admin.md) | (new — post-W6c) | L | Active — split admin auth from customer auth into two NextAuth instances (disjoint cookies + providers + signin pages); add `siteFlags.clientLoginEnabled` master switch + per-provider sub-toggles; auto-mount storefront login surface UI (header dropdown, footer links, login CTA, signup banner) only when flag is on |
 | [terraform-kamal-migration.md](terraform-kamal-migration.md) | — | shipped 2026-05-08 (funisimo); Skyclimber pending |
 
 ## Background / context

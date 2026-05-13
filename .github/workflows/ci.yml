@@ -70,6 +70,137 @@ jobs:
       - name: Tests
         run: npm test -- --reporter=dot
 
+      - name: data-testid coverage (changed files)
+        # Universal requirement #4 — every interactive surface in new
+        # or modified `.tsx` carries `data-testid`. Diff mode only (no
+        # big-bang sweep of the 700+ legacy gaps); the script reads
+        # `tools/scripts/.testid-coverage-allow` for opt-outs.
+        # Requires `origin/master` ref — actions/checkout@v4 fetches
+        # depth=1 by default, so refresh it here.
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch --no-tags --depth=1 origin master
+          npm run testid-coverage
+
+  # ----------------------------------------------------------------
+  # W8d performance gates — bundle-size + Lighthouse. PR-only because
+  # both jobs need a full `next build` (~3-5 min on the GHA runner) and
+  # push-to-master already runs the deploy path on the droplet. Both
+  # `continue-on-error: true` for now — configs are bedding in, the
+  # signal lives in the PR comment + log artefact, not in a red X.
+  # Flip to required after one calm week of accurate budgets.
+
+  size-limit:
+    name: size-limit (bundle budgets)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 20
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install deps
+        run: npm install --legacy-peer-deps --ignore-scripts --no-audit --no-fund
+      - name: Build (frontend only)
+        run: npm run build
+        env:
+          # Skip the mongo-required postbuild step (`next-sitemap` reads
+          # data sources). Bundle size doesn't depend on it.
+          NEXT_PUBLIC_SKIP_POSTBUILD: '1'
+      - name: Run size-limit
+        run: npx size-limit
+
+  lhci:
+    name: Lighthouse CI
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 25
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install deps
+        run: npm install --legacy-peer-deps --ignore-scripts --no-audit --no-fund
+      - name: Install Chrome
+        # LHCI needs a real Chromium to drive Lighthouse. `puppeteer`
+        # ships one but we already build w/o native scripts here, so the
+        # GHA-provided Chrome on the ubuntu image is the cleanest path.
+        run: |
+          if ! command -v google-chrome >/dev/null 2>&1; then
+            sudo apt-get update -y
+            sudo apt-get install -y google-chrome-stable || true
+          fi
+      - name: Build
+        run: npm run build
+      - name: Run Lighthouse CI
+        run: npx lhci autorun --config=lighthouserc.cjs
+        env:
+          LHCI_BUILD_CONTEXT__CURRENT_HASH: ${{ github.sha }}
+
+  # ----------------------------------------------------------------
+  # W8a — Pa11y accessibility batch. Runs `pa11y-ci` over the route list in
+  # `.pa11yci.json` against a built+started server. PR-only;
+  # `continue-on-error: true` for the bedding-in window so the operator can
+  # see the baseline before we flip it to a required gate (per spec). Flip
+  # the flag once the report stabilises at zero serious errors across the
+  # seven listed routes.
+  pa11y:
+    name: pa11y (WCAG 2.2 AA batch)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 25
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install deps
+        run: npm install --legacy-peer-deps --ignore-scripts --no-audit --no-fund
+      - name: Install Chrome
+        # pa11y drives a headless Chromium under the hood (puppeteer-core).
+        # GHA's ubuntu image already ships google-chrome-stable; install
+        # defensively in case the base image rotates.
+        run: |
+          if ! command -v google-chrome >/dev/null 2>&1; then
+            sudo apt-get update -y
+            sudo apt-get install -y google-chrome-stable || true
+          fi
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SKIP_POSTBUILD: '1'
+      - name: Start server (background)
+        run: |
+          # `npm run start` boots Next on port 80 by default which needs
+          # root; pin to 3000 to match `.pa11yci.json` and lhci.
+          (cross-env NODE_ENV=production npx next start -p 3000 ui/client &) >/tmp/next.log 2>&1
+          for i in $(seq 1 40); do
+            if curl -sf http://localhost:3000/ >/dev/null 2>&1; then
+              echo "server up after ${i} * 2 s"
+              break
+            fi
+            sleep 2
+          done
+      - name: Run Pa11y batch
+        run: npm run pa11y
+        env:
+          BASE_URL: http://localhost:3000
+      - name: Upload pa11y report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pa11y-report
+          path: var/pa11y-report.json
+          if-no-files-found: ignore
+
   # Visual regression + e2e jobs removed 2026-05-08 — operator runs
   # Playwright tests locally only. To re-introduce, see git history
   # for `visual:` here and the deleted `.github/workflows/e2e.yml`.

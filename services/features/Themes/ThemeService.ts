@@ -6,6 +6,7 @@ import {ITheme, IThemeTokens, InTheme} from '@interfaces/ITheme';
 import {auditStamp} from '@services/features/Audit/audit';
 import {nextVersion, requireVersion} from '@services/infra/conflict';
 import {log} from '@services/infra/logger';
+import {loadFirstClassPresetRows, firstClassThemeNames} from './ThemeRegistry';
 
 /**
  * Editorial presets live as source-controlled JSON in `ui/client/themes/`
@@ -30,12 +31,17 @@ function loadJsonPresets(): Omit<ITheme, 'id'>[] {
 }
 
 /** Names of presets backed by on-disk JSON — eligible for "Reset to preset". */
-export const JSON_PRESET_NAMES: Set<string> = new Set(
-    loadJsonPresets().map(p => p.name),
-);
+export const JSON_PRESET_NAMES: Set<string> = new Set([
+    ...loadJsonPresets().map(p => p.name),
+    ...firstClassThemeNames(),
+]);
 
 export const PRESETS: Omit<ITheme, 'id'>[] = [
     ...loadJsonPresets(),
+    // Wave 5 first-class themes — see `services/themes/<slug>/theme.json`.
+    // ThemeRegistry validates each manifest at module init; failed loads are
+    // logged and skipped so a single malformed file can't break boot.
+    ...loadFirstClassPresetRows(),
     {
         name: 'Classic',
         custom: false,

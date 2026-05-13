@@ -1,5 +1,6 @@
 import React, {useEffect} from 'react';
-import {Button, DatePicker, Drawer, Empty, Input, Select, Space, Table, Tag, Typography} from 'antd';
+import {Button, DatePicker, Drawer, Input, Select, Space, Table, Tag, Typography} from 'antd';
+import EmptyState from '@admin/lib/EmptyState';
 import {useTranslation} from 'react-i18next';
 import type {AuditEntry, AuditOp} from '@services/features/Audit/AuditService';
 import {useRefreshView} from '@client/lib/refreshBus';
@@ -81,7 +82,11 @@ const AuditTab: React.FC = () => {
             </Space>
 
             {vm.page.rows.length === 0 && !vm.loading ? (
-                <Empty description={t('No audit entries')}/>
+                <EmptyState
+                    testId="audit-empty-state"
+                    title={t('empty.audit.title')}
+                    description={t('empty.audit.description')}
+                />
             ) : (
                 <Table
                     rowKey="id"

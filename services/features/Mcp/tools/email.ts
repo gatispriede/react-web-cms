@@ -18,6 +18,9 @@ import {getMongoConnection}       from '@services/infra/mongoDBConnection';
 import {defineTool}               from './_shared';
 import {sendEmail}                from '@services/features/Email/EmailService';
 import {mask}                     from '@services/infra/secretBox';
+import {listTemplates, renderTemplate} from '@services/features/Email/templates/registry';
+import {resolveEmailTheme}        from '@services/features/Email/templates/_shared/theme';
+import sampleReceiptFixture       from '@services/features/Email/templates/_fixtures/sample-receipt.json';
 
 function sanitiseForRead(mail: any): any {
     if (!mail || typeof mail !== 'object') return null;
@@ -131,4 +134,47 @@ export const emailConfigTest: McpTool = defineTool({
     };
 });
 
-export const EMAIL_TOOLS: McpTool[] = [emailConfigGet, emailConfigUpdate, emailConfigTest];
+/**
+ * W6a — `email.preview` MCP tool.
+ *
+ * Renders any registered email template (`receipt`, `order-confirmation`,
+ * `shipped`, `magic-link`, `password-reset`, `account-welcome`) against
+ * caller-supplied fixture data (or the bundled sample-receipt fixture
+ * when none is given for the receipt-family templates). Returns subject
+ * + HTML + plaintext — the AI-driven previewing path.
+ *
+ * Read-only, no side effects, no audit row.
+ */
+export const emailPreview: McpTool = defineTool({
+    // SAFE: pure render, no email actually sent.
+    name: 'email.preview',
+    description: 'Render an email template against fixture data and return subject, HTML, and plaintext. No email is sent. Use `email.config.test` for a real send.',
+    scopes: ['read:site'],
+    auditScope: 'email',
+    inputSchema: {
+        type: 'object',
+        required: ['template'],
+        properties: {
+            template: {type: 'string', description: 'Template id — receipt | order-confirmation | shipped | magic-link | password-reset | account-welcome'},
+            fixture: {type: 'object', description: 'Template input. Defaults to the bundled sample-receipt fixture when omitted (only valid for receipt-family templates).'},
+            themeOverrides: {type: 'object', description: 'Partial IEmailTheme overrides — e.g. {"colorAccent":"#0a4"}.'},
+        },
+    },
+}, async (args) => {
+    const tpls = listTemplates();
+    if (!tpls.some(t => t.id === args.template)) {
+        throw new Error(`Unknown template "${args.template}". Known: ${tpls.map(t => t.id).join(', ')}`);
+    }
+    const fixture = args.fixture ?? (
+        ['receipt', 'order-confirmation', 'shipped'].includes(args.template)
+            ? sampleReceiptFixture
+            : undefined
+    );
+    if (!fixture) {
+        throw new Error(`Template "${args.template}" has no bundled fixture — supply one via the "fixture" arg.`);
+    }
+    const theme = resolveEmailTheme(args.themeOverrides);
+    return renderTemplate(args.template, fixture, theme);
+});
+
+export const EMAIL_TOOLS: McpTool[] = [emailConfigGet, emailConfigUpdate, emailConfigTest, emailPreview];

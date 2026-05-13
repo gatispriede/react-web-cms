@@ -3,6 +3,7 @@ import {Button, Card, Select, Space, Table, Tag, Typography} from 'antd';
 import {useTranslation} from 'react-i18next';
 import type {IErrorLog, ErrorSource, ErrorLevel} from '@interfaces/IErrorLog';
 import {useViewModel} from '@client/lib/state/observable';
+import EmptyState from '@admin/lib/EmptyState';
 import {ErrorLogViewModel} from './ErrorLogViewModel';
 
 /** Render-only ErrorLog pane — VM3 (2026-05-02). */
@@ -97,7 +98,15 @@ const AdminErrorLog: React.FC = () => {
                     dataSource={vm.rows}
                     columns={columns as any}
                     pagination={{pageSize: 25}}
-                    locale={{emptyText: t('No errors recorded — that means everything is fine, or LOG_SAMPLE_RATE is shedding too aggressively.')}}
+                    locale={{
+                        emptyText: (
+                            <EmptyState
+                                testId="errors-empty-state"
+                                title={t('empty.errors.title')}
+                                description={t('empty.errors.description')}
+                            />
+                        ),
+                    }}
                 />
             </Card>
         </div>

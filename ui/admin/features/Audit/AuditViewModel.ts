@@ -1,4 +1,4 @@
-import {message} from 'antd';
+import {notifyError} from '@admin/lib/notify';
 import AuditApi, {AuditFilter, AuditPage} from '@services/api/client/AuditApi';
 import type {AuditEntry, AuditOp} from '@services/features/Audit/AuditService';
 import {observable} from '@client/lib/state/observable';
@@ -52,7 +52,7 @@ export class AuditViewModel {
         try {
             this.page = await this.api.list(this.filter());
         } catch (err) {
-            message.error(String((err as Error)?.message ?? err));
+            notifyError(err);
         } finally {
             this.loading = false;
         }

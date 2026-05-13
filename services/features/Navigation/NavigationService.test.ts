@@ -450,3 +450,45 @@ describe("NavigationService.reorderPages (F8 W2)", () => {
     });
 });
 
+describe('NavigationService.removeSectionItem — locked guard (Phase 0a)', () => {
+    it('refuses to delete a section with locked === true and surfaces SECTION_LOCKED', async () => {
+        await sections.insertOne({id: 's-locked', type: 1, content: [], locked: true, lockReason: 'section.locked.checkout-payment'} as any);
+        await navigation.insertOne({type: 'navigation', id: 'n1', page: 'Checkout', sections: ['s-locked'], seo: {}});
+
+        const raw = await service.removeSectionItem('s-locked');
+        const parsed = JSON.parse(raw);
+        expect(parsed.error).toBe('SECTION_LOCKED');
+        expect(parsed.code).toBe('SECTION_LOCKED');
+        expect(parsed.sectionId).toBe('s-locked');
+        expect(parsed.message).toBe('section.locked.checkout-payment');
+        // Section is still in the DB + still referenced from the nav doc.
+        expect(await sections.findOne({id: 's-locked'})).not.toBeNull();
+        const nav = await navigation.findOne({id: 'n1'}) as any;
+        expect(nav.sections).toContain('s-locked');
+    });
+
+    it('falls back to section.locked.default when no lockReason is set', async () => {
+        await sections.insertOne({id: 's-locked-2', type: 1, content: [], locked: true} as any);
+        const raw = await service.removeSectionItem('s-locked-2');
+        expect(JSON.parse(raw).message).toBe('section.locked.default');
+    });
+
+    it('deletes an unlocked section (sanity)', async () => {
+        await sections.insertOne({id: 's-free', type: 1, content: []} as any);
+        await navigation.insertOne({type: 'navigation', id: 'n2', page: 'Free', sections: ['s-free'], seo: {}});
+
+        const raw = await service.removeSectionItem('s-free');
+        const parsed = JSON.parse(raw);
+        expect(parsed.removeSectionItem?.deleted).toBe(1);
+        expect(await sections.findOne({id: 's-free'})).toBeNull();
+        const nav = await navigation.findOne({id: 'n2'}) as any;
+        expect(nav.sections).not.toContain('s-free');
+    });
+
+    it('treats locked === false as unlocked (back-compat)', async () => {
+        await sections.insertOne({id: 's-explicit-false', type: 1, content: [], locked: false} as any);
+        const raw = await service.removeSectionItem('s-explicit-false');
+        expect(JSON.parse(raw).removeSectionItem?.deleted).toBe(1);
+    });
+});
+

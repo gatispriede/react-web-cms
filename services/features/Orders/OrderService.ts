@@ -17,6 +17,9 @@ import {StockReservationService} from './StockReservationService';
 import type {IPaymentProvider} from './payment/IPaymentProvider';
 import {OrderCounter} from './OrderCounter';
 import {roundMinor, taxRateFor} from './tax';
+import {getVatRegimeService} from '@services/features/Pricing/VatRegimeService';
+import {getViesService} from '@services/features/Pricing/ViesService';
+import {getStripeTaxService} from '@services/features/Pricing/StripeTaxService';
 import {getShippingMethod, shippingMethodList} from './shippingMethods';
 import {log} from '@services/infra/logger';
 
@@ -130,6 +133,9 @@ export class OrderService {
             status: (d.status ?? 'pending') as OrderStatus,
             statusHistory: Array.isArray(d.statusHistory) ? d.statusHistory : [],
             inventoryReservationId: d.inventoryReservationId,
+            customerVatId: d.customerVatId,
+            businessBuyer: typeof d.businessBuyer === 'boolean' ? d.businessBuyer : undefined,
+            vatRegime: d.vatRegime,
             createdAt: d.createdAt ?? '',
             updatedAt: d.updatedAt ?? '',
             version: typeof d.version === 'number' ? d.version : 1,
@@ -149,6 +155,104 @@ export class OrderService {
             taxTotal,
             total,
         };
+    }
+
+    /**
+     * Regime-aware recalc (W8g). Defers to Stripe Tax when configured;
+     * otherwise resolves via the internal VAT regime service (which
+     * encodes EU rules + reverse-charge for VIES-verified B2B). Snapshots
+     * the regime onto the order for invoice + audit. Called from
+     * `attachOrderAddress` so the totals settle as soon as we know the
+     * shipping country.
+     */
+    private async recalcWithRegime(order: IOrder): Promise<IOrder> {
+        const subtotal = order.lineItems.reduce((s, l) => s + l.lineTotal, 0);
+        const country = order.shippingAddress?.country;
+        if (!country) {
+            return this.recalc(order);
+        }
+        const stripe = getStripeTaxService();
+        const sellerCountry = (process.env.SITE_SELLER_COUNTRY || 'LV').toUpperCase();
+        // Stripe Tax path (when configured) — defers VAT to Stripe.
+        if (stripe.isAvailable()) {
+            try {
+                const calc = await stripe.calculate({
+                    currency: order.currency,
+                    customerCountry: country,
+                    customerPostalCode: order.shippingAddress?.postalCode,
+                    customerVatId: order.customerVatId,
+                    lineItems: order.lineItems.map(l => ({id: l.productId, amount: l.lineTotal})),
+                });
+                const taxTotal = calc.totals.tax;
+                const total = subtotal + (order.shippingTotal ?? 0) + taxTotal - (order.discountTotal ?? 0);
+                return {
+                    ...order,
+                    subtotal,
+                    taxTotal,
+                    total,
+                    vatRegime: {
+                        kind: calc.regime.kind,
+                        vatRate: calc.regime.vatRate,
+                        buyerCountry: calc.regime.buyerCountry,
+                        sellerCountry: calc.regime.sellerCountry,
+                        note: calc.regime.note,
+                        provider: 'stripe-tax',
+                    },
+                };
+            } catch (err) {
+                log.warn({scope: 'orders.recalcWithRegime.stripe', err}, 'Stripe Tax failed; falling back to internal regime');
+            }
+        }
+        // Internal regime path.
+        const regimeSvc = getVatRegimeService(getViesService());
+        const regime = await regimeSvc.resolve({
+            customerCountry: country,
+            customerVatId: order.customerVatId,
+            businessType: order.businessBuyer ? 'b2b' : 'b2c',
+            sellerCountry,
+        });
+        const taxBase = subtotal + (order.shippingTotal ?? 0);
+        const taxTotal = roundMinor(taxBase * regime.vatRate);
+        const total = subtotal + (order.shippingTotal ?? 0) + taxTotal - (order.discountTotal ?? 0);
+        return {
+            ...order,
+            subtotal,
+            taxTotal,
+            total,
+            vatRegime: {
+                kind: regime.kind,
+                vatRate: regime.vatRate,
+                buyerCountry: regime.buyerCountry,
+                sellerCountry: regime.sellerCountry,
+                vatNumber: regime.vatNumber,
+                viesVerified: regime.viesVerified,
+                note: regime.note,
+                provider: 'internal',
+            },
+        };
+    }
+
+    /**
+     * Attaches buyer business context + recalculates tax. Public hook used
+     * by the checkout B2B toggle / VAT-ID input. Re-runs the regime
+     * resolver, which may flip the order to reverse-charge if VIES
+     * validates the VAT number.
+     */
+    async setBusinessBuyer(args: {
+        orderId: string;
+        businessBuyer: boolean;
+        customerVatId?: string;
+        session?: OrderSession;
+    }): Promise<IOrder> {
+        const order = await this.requireOrder(args.orderId, args.session);
+        if (order.status !== 'pending') throw new OrderError('IMMUTABLE_ORDER', {status: order.status});
+        const merged: IOrder = {
+            ...order,
+            businessBuyer: args.businessBuyer,
+            customerVatId: args.customerVatId,
+        };
+        const updated = await this.recalcWithRegime(merged);
+        return this.write(updated, order.version);
     }
 
     private validateAddress(addr: IOrderAddress): void {
@@ -184,6 +288,9 @@ export class OrderService {
                 status: next.status,
                 statusHistory: next.statusHistory,
                 inventoryReservationId: next.inventoryReservationId,
+                customerVatId: next.customerVatId,
+                businessBuyer: next.businessBuyer,
+                vatRegime: next.vatRegime,
                 orderNumber: next.orderNumber,
                 updatedAt: next.updatedAt,
                 version: next.version,
@@ -283,7 +390,7 @@ export class OrderService {
         if (order.status !== 'pending') throw new OrderError('IMMUTABLE_ORDER', {status: order.status});
         this.validateAddress(args.shipping);
         if (args.billing) this.validateAddress(args.billing);
-        const updated = this.recalc({
+        const updated = await this.recalcWithRegime({
             ...order,
             shippingAddress: args.shipping,
             billingAddress: args.billing ?? args.shipping,
@@ -495,6 +602,20 @@ export class OrderService {
     async getByToken(token: string, cookieToken: string | null | undefined): Promise<IOrder | null> {
         if (!token || !cookieToken) return null;
         if (token !== cookieToken) return null;
+        await this.ensureIndexes();
+        const doc = await this.orders.findOne({orderToken: token}, {projection: {_id: 0}});
+        return doc ? this.normalize(doc) : null;
+    }
+
+    /**
+     * W6c — token-only public order lookup for the `/orders/<token>`
+     * URL that ships in the receipt email. Presence-only auth: bearer
+     * of the ≥128-bit token sees just that one order. Caller is
+     * responsible for per-IP rate limiting (5/min) — see
+     * `pages/orders/[token].tsx`.
+     */
+    async getByTokenPublic(token: string): Promise<IOrder | null> {
+        if (!token || token.length < 24) return null;
         await this.ensureIndexes();
         const doc = await this.orders.findOne({orderToken: token}, {projection: {_id: 0}});
         return doc ? this.normalize(doc) : null;

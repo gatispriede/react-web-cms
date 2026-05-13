@@ -1,0 +1,32 @@
+{
+    "slug": "commerce",
+    "name": "Commerce",
+    "tagline": "Catalogue-first, tight grid, soft palette — for product shops and makers.",
+    "audience": "Small product shops, makers, also home of ss.com cars",
+    "mood": ["clean", "catalogue-first", "tactile", "soft"],
+    "palette": {
+        "surface":      {"light": "#fafaf7", "dark": "#171716"},
+        "ink":          {"light": "#181816", "dark": "#f0efe9"},
+        "accent":       {"light": "#2e6f5e", "dark": "#7ad3b6"},
+        "accentInk":    {"light": "#fafaf7", "dark": "#0e1a16"},
+        "surfaceInset": {"light": "#f1efe8", "dark": "#1f1f1d"},
+        "rule":         {"light": "#e2dfd5", "dark": "#2c2c29"}
+    },
+    "typography": {
+        "display": "system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "body":    "system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "mono":    "ui-monospace, 'SF Mono', Menlo, monospace",
+        "baseSize": 16
+    },
+    "motion": "snappy-default",
+    "headerBehavior": "shrink-on-scroll",
+    "footerLayout": "brand-led-xxl",
+    "logoLockup": "combined",
+    "moduleStyleHints": {
+        "hero": "photo-bleed",
+        "productGrid": "tight-grid",
+        "posts": "card-grid"
+    },
+    "darkDefault": false,
+    "placeholder": true
+}

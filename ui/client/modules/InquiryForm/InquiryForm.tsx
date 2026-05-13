@@ -6,6 +6,7 @@ import {TFunction} from "i18next";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import RevealOnScroll from "@client/lib/RevealOnScroll";
 import {slugifyAnchor} from "@utils/stringFunctions";
+import {inlineEditAttr} from "@client/lib/inlineEditAttr";
 import type {IInquiryForm} from "./InquiryForm.types";
 export type {IInquiryForm, IInquiryFormField, IInquiryFormTopic} from "./InquiryForm.types";
 export {EInquiryFormStyle} from "./InquiryForm.types";
@@ -27,13 +28,15 @@ export class InquiryFormContent extends ContentManager {
     setField<K extends keyof IInquiryForm>(k: K, v: IInquiryForm[K]) { this._parsedContent[k] = v; }
 }
 
-const InquiryForm = ({item, tApp}: {
+const InquiryForm = ({item, tApp, admin}: {
     item: IItem;
     t: TFunction<"translation", undefined>;
     tApp: TFunction<string, undefined>;
+    admin?: boolean;
 }) => {
     const c = new InquiryFormContent(EItemType.InquiryForm, item.content).data;
     const tr = (v: string) => <InlineTranslatable tApp={tApp as any} source={v}/>;
+    const editId = item.name || EItemType.InquiryForm;
     const topics = c.topics ?? [];
     const fields = c.fields ?? [];
     const [topic, setTopic] = useState<string | undefined>(topics[0]?.value);
@@ -88,16 +91,16 @@ const InquiryForm = ({item, tApp}: {
         <RevealOnScroll className={`inquiry-form ${item.style ?? ''}`}>
             {(c.eyebrow || c.title || c.subtitle) && (
                 <header className="inquiry-form__head">
-                    {c.eyebrow && <div className="inquiry-form__eyebrow">{tr(c.eyebrow)}</div>}
-                    {c.title && <h2 id={slugifyAnchor(c.title)} className="inquiry-form__title">{tr(c.title)}</h2>}
-                    {c.subtitle && <p className="inquiry-form__subtitle">{tr(c.subtitle)}</p>}
+                    {c.eyebrow && <div className="inquiry-form__eyebrow" {...inlineEditAttr(admin, editId, 'eyebrow')}>{tr(c.eyebrow)}</div>}
+                    {c.title && <h2 id={slugifyAnchor(c.title)} className="inquiry-form__title" {...inlineEditAttr(admin, editId, 'title')}>{tr(c.title)}</h2>}
+                    {c.subtitle && <p className="inquiry-form__subtitle" {...inlineEditAttr(admin, editId, 'subtitle')}>{tr(c.subtitle)}</p>}
                 </header>
             )}
             <form className="inquiry-form__form" onSubmit={onSubmit}>
                 {topics.length > 0 && (
                     <div className="inquiry-form__topics">
                         {c.topicsLabel && (
-                            <div className="inquiry-form__topics-label">{tr(c.topicsLabel)}</div>
+                            <div className="inquiry-form__topics-label" {...inlineEditAttr(admin, editId, 'topicsLabel')}>{tr(c.topicsLabel)}</div>
                         )}
                         <div className="inquiry-form__topic-row" role="radiogroup">
                             {topics.map(tp => (
@@ -157,7 +160,7 @@ const InquiryForm = ({item, tApp}: {
                     style={{position: 'absolute', left: '-9999px', width: 0, height: 0, opacity: 0}}
                 />
                 <div className="inquiry-form__footer">
-                    {c.sideNote && <div className="inquiry-form__sidenote">{tr(c.sideNote)}</div>}
+                    {c.sideNote && <div className="inquiry-form__sidenote" {...inlineEditAttr(admin, editId, 'sideNote')}>{tr(c.sideNote)}</div>}
                     <button
                         type="submit"
                         className="inquiry-form__submit"

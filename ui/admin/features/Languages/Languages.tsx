@@ -1,5 +1,6 @@
 import TranslationManager from "@admin/shell/TranslationManager";
-import {Button, Layout, Menu, Segmented, Spin, message} from 'antd';
+import {Button, Layout, Menu, Segmented, Spin} from 'antd';
+import {notifyError} from '@admin/lib/notify';
 import React, {Suspense, useEffect, useMemo} from "react";
 import {LoadingOutlined, PlusCircleOutlined} from "@client/lib/icons";
 import {ContentLoader} from "@admin/features/Bundle/ContentLoader";
@@ -162,7 +163,7 @@ const AdminSettingsLanguages = ({translationManager, i18n, tAdmin}: {
                         onTakeTheirs={() => { void vm.takeTheirs(); }}
                         onKeepMine={async () => {
                             try { await vm.conflict?.retry(); }
-                            catch (err) { message.error(String((err as Error)?.message ?? err)); vm.dismissConflict(); }
+                            catch (err) { notifyError(err); vm.dismissConflict(); }
                         }}
                     />
                 );

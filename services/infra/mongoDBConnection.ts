@@ -30,6 +30,7 @@ import {IFooterConfig} from '@interfaces/IFooter';
 import type {SiteFlagsService} from '@services/features/Seo/SiteFlagsService';
 import type {ISiteFlags} from '@services/features/Seo/SiteFlagsService';
 import type {SiteSeoService} from '@services/features/Seo/SiteSeoService';
+import type {RedirectsService} from '@services/features/Seo/RedirectsService';
 import {ISiteSeoDefaults} from '@interfaces/ISiteSeo';
 import type {TranslationMetaService} from '@services/features/Languages/TranslationMetaService';
 import type {ITranslationMetaMap} from '@services/features/Languages/TranslationMetaService';
@@ -194,6 +195,9 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
     public get assetService(): AssetService { return this.featureServices.assets as AssetService; }
     public get navigationService(): NavigationService { return this.featureServices.navigation as NavigationService; }
     public get bundleService(): BundleService { return this.featureServices.bundle as BundleService; }
+    public get releaseService(): import('@services/features/Releases/ReleaseService').ReleaseService {
+        return this.featureServices.releases as import('@services/features/Releases/ReleaseService').ReleaseService;
+    }
     public get publishService(): PublishService { return this.featureServices.publish as PublishService; }
     public get themeService(): ThemeService { return this.featureServices.themes as ThemeService; }
     public get postService(): PostService { return this.featureServices.posts as PostService; }
@@ -215,6 +219,17 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
      */
     public get productService(): ProductService {
         return this.featureServices.products as ProductService;
+    }
+    /**
+     * ProductTemplates is owned by
+     * `services/features/ProductTemplates/feature.manifest.ts` (Phase
+     * 1.F — product-display-templates). Hangs off `featureServices`
+     * exactly like the other manifest-built services; the getter is a
+     * thin accessor MCP tools + the leaf-page renderer + the admin pane
+     * dispatch through.
+     */
+    public get productTemplateService(): import('@services/features/ProductTemplates/ProductTemplateService').ProductTemplateService {
+        return this.featureServices.productTemplates as import('@services/features/ProductTemplates/ProductTemplateService').ProductTemplateService;
     }
     /**
      * Cart is owned by `services/features/Cart/feature.manifest.ts` (Phase B
@@ -262,6 +277,7 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
     public get footerService(): FooterService { return this.featureServices.footer as FooterService; }
     public get siteFlagsService(): SiteFlagsService { return this.featureServices.siteFlags as SiteFlagsService; }
     public get siteSeoService(): SiteSeoService { return this.featureServices.siteSeo as SiteSeoService; }
+    public get redirectsService(): RedirectsService { return this.featureServices.redirects as RedirectsService; }
     public get translationMetaService(): TranslationMetaService { return this.featureServices.translationMeta as TranslationMetaService; }
     public get presenceService(): PresenceService { return this.featureServices.presence as PresenceService; }
     public get errorLogService(): ErrorLogService { return this.featureServices.errorLog as ErrorLogService; }
@@ -386,6 +402,76 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
         if (!svc) return JSON.stringify({error: 'diagnostics service unavailable'});
         try {
             return JSON.stringify(await svc.snapshot());
+        } catch (err) {
+            return JSON.stringify({error: String((err as Error).message ?? err)});
+        }
+    }
+
+    // -----------------------------------------------------------------
+    // W8e — Backup + disaster recovery delegates.
+    // -----------------------------------------------------------------
+
+    private get backupService(): import('@services/features/Backup/BackupService').BackupService | undefined {
+        return this.featureServices.backup as
+            import('@services/features/Backup/BackupService').BackupService | undefined;
+    }
+
+    async backupStatus(): Promise<string> {
+        const svc = this.backupService;
+        if (!svc) return JSON.stringify({error: 'backup service unavailable'});
+        try {
+            const [last, lastDrill, history] = await Promise.all([
+                svc.lastBackup(),
+                svc.lastDrill(),
+                svc.history(20),
+            ]);
+            return JSON.stringify({last, lastDrill, history});
+        } catch (err) {
+            return JSON.stringify({error: String((err as Error).message ?? err)});
+        }
+    }
+
+    async backupListSnapshots(): Promise<string> {
+        const svc = this.backupService;
+        if (!svc) return JSON.stringify({error: 'backup service unavailable'});
+        try {
+            return JSON.stringify(await svc.listSnapshots());
+        } catch (err) {
+            return JSON.stringify({error: String((err as Error).message ?? err)});
+        }
+    }
+
+    async backupNow({label, _session}: {label?: string; _session?: {email?: string}} = {}): Promise<string> {
+        const svc = this.backupService;
+        if (!svc) return JSON.stringify({error: 'backup service unavailable'});
+        try {
+            const result = await svc.backupNow({label, actor: _session?.email});
+            return JSON.stringify(result);
+        } catch (err) {
+            return JSON.stringify({error: String((err as Error).message ?? err)});
+        }
+    }
+
+    async backupVerify({_session}: {_session?: {email?: string}} = {}): Promise<string> {
+        const svc = this.backupService;
+        if (!svc) return JSON.stringify({error: 'backup service unavailable'});
+        try {
+            return JSON.stringify(await svc.verifyLatest({actor: _session?.email}));
+        } catch (err) {
+            return JSON.stringify({error: String((err as Error).message ?? err)});
+        }
+    }
+
+    async backupRestoreToStaging({snapshotId, _session}: {snapshotId: string; _session?: {email?: string}}): Promise<string> {
+        const svc = this.backupService;
+        if (!svc) return JSON.stringify({error: 'backup service unavailable'});
+        try {
+            const os = await import('node:os');
+            const pathMod = await import('node:path');
+            const fs = await import('node:fs/promises');
+            const target = await fs.mkdtemp(pathMod.join(os.tmpdir(), 'cms-restore-staging-'));
+            const result = await svc.restoreSnapshot(snapshotId, target, {actor: _session?.email});
+            return JSON.stringify(result);
         } catch (err) {
             return JSON.stringify({error: String((err as Error).message ?? err)});
         }
@@ -533,6 +619,19 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
             this.featureServices = bootFeaturesSync({db: this.db!, redis: this.cartRedis, reconnect});
             this.auditService = (this.featureServices.audit as AuditService) ?? this.auditService;
             await bootFeaturesAsync({db: this.db!, redis: this.cartRedis, services: this.featureServices, reconnect});
+            // W8h SEO polish — wire the redirects service into the
+            // navigation service so a slug rename auto-writes a 301.
+            // Additive: NavigationService still works fine when this
+            // service is absent (feature flag off / boot failure).
+            try {
+                const nav = this.featureServices.navigation as NavigationService | undefined;
+                const redirects = this.featureServices.redirects as RedirectsService | undefined;
+                if (nav && redirects && typeof (nav as any).attachRedirectsService === 'function') {
+                    (nav as any).attachRedirectsService(redirects);
+                }
+            } catch (err) {
+                log.error({scope: 'feature.boot.wire', err}, 'attachRedirectsService wiring failed');
+            }
         } catch (err) {
             log.error({scope: 'feature.boot', err}, 'feature registry boot failed');
         }
@@ -596,6 +695,78 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
     }
     async deleteMyAddress(args: {id: string; _session?: {email?: string}}) {
         return this.customerAuthOrFail(svc => svc.deleteMyAddress(args), 'deleteMyAddress failed');
+    }
+
+    // ── Customer notifications (W8f) ────────────────────────────────────
+    // Lookup runs once per call — featureServices.notifications is set
+    // synchronously in the constructor, but stays undefined when the
+    // feature is plug-and-play disabled. We fail-soft (return defaults /
+    // no-op envelope) so resolvers never crash on a disabled feature.
+    private get notificationsService(): import('@services/features/Notifications/NotificationsService').NotificationsService | undefined {
+        return this.featureServices.notifications as any;
+    }
+    private async resolveUserIdFromSession(email?: string): Promise<string | null> {
+        if (!email) return null;
+        const u = await this.db.collection('Users').findOne({email: email.trim().toLowerCase()}, {projection: {id: 1}}) as any;
+        return u?.id ?? null;
+    }
+    async myNotificationPreferences({_session}: {_session?: {email?: string}} = {}) {
+        const svc = this.notificationsService;
+        if (!svc) return JSON.stringify({error: 'notifications feature disabled'});
+        const userId = await this.resolveUserIdFromSession(_session?.email);
+        if (!userId) return JSON.stringify({error: 'not signed in'});
+        return JSON.stringify(await svc.getPreferences(userId));
+    }
+    async setMyNotificationPreferences({prefs, _session}: {prefs: any; _session?: {email?: string}}) {
+        const svc = this.notificationsService;
+        if (!svc) return JSON.stringify({error: 'notifications feature disabled'});
+        const userId = await this.resolveUserIdFromSession(_session?.email);
+        if (!userId) return JSON.stringify({error: 'not signed in'});
+        try {
+            const updated = await svc.setPreferences(userId, prefs ?? {});
+            try {
+                void this.auditService?.record({
+                    collection: 'NotificationPreferences', docId: userId, op: 'update',
+                    actor: {email: _session?.email, role: 'customer'},
+                    diff: {before: null, after: updated},
+                    tag: 'notifications:self-edit',
+                });
+            } catch { /* non-fatal */ }
+            return JSON.stringify({setMyNotificationPreferences: updated});
+        } catch (err) {
+            return JSON.stringify({error: String((err as Error).message ?? err)});
+        }
+    }
+    async myInbox({limit, unreadOnly, _session}: {limit?: number; unreadOnly?: boolean; _session?: {email?: string}}) {
+        const svc = this.notificationsService;
+        if (!svc) return JSON.stringify([]);
+        const userId = await this.resolveUserIdFromSession(_session?.email);
+        if (!userId) return JSON.stringify([]);
+        return JSON.stringify(await svc.listInbox({userId, limit, unreadOnly}));
+    }
+    async myInboxUnreadCount({_session}: {_session?: {email?: string}} = {}) {
+        const svc = this.notificationsService;
+        if (!svc) return 0;
+        const userId = await this.resolveUserIdFromSession(_session?.email);
+        if (!userId) return 0;
+        return svc.unreadCount(userId);
+    }
+    async notificationStats() {
+        const svc = this.notificationsService;
+        if (!svc) return JSON.stringify({error: 'notifications feature disabled'});
+        try {
+            return JSON.stringify(await svc.aggregateStats());
+        } catch (err) {
+            return JSON.stringify({error: String((err as Error).message ?? err)});
+        }
+    }
+    async markInboxNotificationRead({id, _session}: {id: string; _session?: {email?: string}}) {
+        const svc = this.notificationsService;
+        if (!svc) return JSON.stringify({error: 'notifications feature disabled'});
+        const userId = await this.resolveUserIdFromSession(_session?.email);
+        if (!userId) return JSON.stringify({error: 'not signed in'});
+        const ok = await svc.markRead({userId, id});
+        return JSON.stringify({markInboxNotificationRead: {id, ok}});
     }
 
     // Delegate LanguageService methods

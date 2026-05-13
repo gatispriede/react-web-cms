@@ -1,0 +1,70 @@
+/* ==========================================================================
+   Commerce — per-module override slot.
+
+   Placeholder. Real per-module styling (Hero photo-bleed, ProductGrid
+   tight-grid, Posts card-grid) lands in the Stitch design pass jump per
+   `first-class-themes.md` §3.6 acceptance.
+   ========================================================================== */
+
+[data-theme-name="commerce"] {
+    /* Per-module overrides go here. Empty by design — see file header. */
+
+    /* Product module — commerce theme tightens the grid + prominents prices. */
+    .product--grid { gap: 12px; }
+    .product-card {
+        border: none;
+        background: var(--theme-colorBgContainer, #fff);
+        box-shadow: 0 1px 0 var(--theme-colorBorder, #eee);
+        &:hover { box-shadow: 0 8px 28px rgba(0, 0, 0, 0.1); }
+    }
+    .product-card__price {
+        font-size: 18px;
+        font-weight: 700;
+    }
+    .buy-cta--card {
+        background: var(--theme-colorPrimary, #1677ff);
+        color: #fff;
+    }
+
+    /* client-account-settings-page (Phase 1.E) — minimal default. */
+    .account-settings-layout {
+        max-width: 1080px; margin: 0 auto; padding: 24px 16px;
+        .account-settings-hero { padding-bottom: 12px; border-bottom: 1px solid var(--theme-colorBorder, #eee); }
+        .account-settings-nav ul {
+            display: flex; gap: 8px; padding: 0; margin: 16px 0; list-style: none; flex-wrap: wrap;
+            li a { padding: 6px 10px; border-radius: 6px; }
+            li.is-active a { background: var(--theme-colorPrimary, #1677ff); color: #fff; }
+        }
+    }
+}
+
+/* Phase 1.C — new product-page modules. Minimal defaults; design pass follows. */
+[data-theme-name="commerce"] {
+    .product-detail-hero { background: #fafafa; padding: 2rem; }
+    .product-detail-hero__cta { background: var(--theme-colorPrimary, #1677ff); color: #fff; border: 0; border-radius: 6px; }
+    .product-spec-table th { color: #555; }
+    .pagination__button { background: var(--theme-colorPrimary, #1677ff); color: #fff; border: 0; }
+    .breadcrumb a { color: var(--theme-colorPrimary, #1677ff); }
+}
+
+/* Phase 1.D — checkout-as-composable-page minimal defaults. */
+[data-theme-name="commerce"] {
+    .cart-summary, .order-summary, .magic-link-account-upgrade { background: var(--theme-colorBgContainer, #fff); }
+    .place-order-button { background: var(--theme-colorPrimary, #1677ff); }
+    .cart-actions__proceed { background: var(--theme-colorPrimary, #1677ff); }
+    .trust-badges li { background: var(--theme-colorBgContainer, #fff); border-color: var(--theme-colorBorder, #eee); }
+    .checkout-progress-bar__step.is-active { color: var(--theme-colorPrimary, #1677ff); }
+    .refer-a-friend-cta { border-color: var(--theme-colorPrimary, #1677ff); }
+    .money-back-guarantee { border-left-color: var(--theme-colorPrimary, #1677ff); }
+    .checkout-address-form input, .checkout-payment-form input, .shipping-calculator input {
+        border-radius: 6px;
+    }
+}
+
+/* Phase 1.F — product-display-templates. */
+[data-theme-name="commerce"] {
+    .large-gallery__tile img { border-radius: 8px; }
+    .downloadable-pdf__link { background: var(--theme-accent, #2563eb); color: #fff; border-radius: 8px; }
+    .downloadable-pdf__link:hover { background: var(--theme-accent-hover, #1d4ed8); }
+    .warranty-info { border-radius: 8px; }
+}

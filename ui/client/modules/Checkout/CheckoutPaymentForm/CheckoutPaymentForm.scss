@@ -1,0 +1,4 @@
+.checkout-payment-form {
+    display: flex; flex-direction: column; gap: 0.5rem; padding: 1rem 0;
+    input { padding: 0.5rem; border: 1px solid var(--theme-colorBorder, #ddd); border-radius: 4px; }
+}

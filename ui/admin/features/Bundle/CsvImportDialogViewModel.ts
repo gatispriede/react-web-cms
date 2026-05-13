@@ -1,4 +1,4 @@
-import {message} from 'antd';
+import {notifyError, notifySuccess} from '@admin/lib/notify';
 import {parseCsv, translationsFromCsv} from '@utils/csvTranslations';
 import TranslationManager from '@admin/shell/TranslationManager';
 import {triggerRevalidate} from '@client/lib/triggerRevalidate';
@@ -56,11 +56,11 @@ export class CsvImportDialogViewModel {
             // ISR cache busting — fire-and-forget so a slow webhook doesn't
             // block the modal close.
             void triggerRevalidate({scope: 'all'});
-            void message.success(`Imported ${previewCount} translations into ${lang.label} — rebuilding public pages`);
+            notifySuccess(`Imported ${previewCount} translations into ${lang.label} — rebuilding public pages`);
             this.raw = '';
             this.closeCb(true);
         } catch (err) {
-            void message.error(String((err as Error)?.message ?? err));
+            notifyError(err);
         } finally { this.saving = false; }
     }
 }

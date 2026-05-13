@@ -7,6 +7,7 @@ import {translateOrKeep} from "@utils/translateOrKeep";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import RevealOnScroll from "@client/lib/RevealOnScroll";
 import {slugifyAnchor} from "@utils/stringFunctions";
+import {inlineEditAttr} from "@client/lib/inlineEditAttr";
 import type {IProjectGrid} from "./ProjectGrid.types";
 export type {IProjectGrid, IProjectGridItem} from "./ProjectGrid.types";
 export {EProjectGridStyle} from "./ProjectGrid.types";
@@ -34,14 +35,16 @@ function renderAccentRuns(text: string, tr: (s: string) => string): React.ReactN
     });
 }
 
-const ProjectGrid = ({item, tApp}: {
+const ProjectGrid = ({item, tApp, admin}: {
     item: IItem;
     t: TFunction<"translation", undefined>;
     tApp: TFunction<string, undefined>;
+    admin?: boolean;
 }) => {
     const c = new ProjectGridContent(EItemType.ProjectGrid, item.content).data;
     const trStr = (v: string) => translateOrKeep(tApp, v);
     const tr = (v: string) => <InlineTranslatable tApp={tApp as any} source={v}/>;
+    const editId = item.name || EItemType.ProjectGrid;
 
     return (
         <section className={`project-grid ${item.style ?? ''}`}>
@@ -49,10 +52,10 @@ const ProjectGrid = ({item, tApp}: {
                 <header className="project-grid__head">
                     {c.sectionNumber && <div className="project-grid__num">{tr(c.sectionNumber)}</div>}
                     {c.sectionTitle && (
-                        <h2 id={slugifyAnchor(c.sectionTitle)} className="project-grid__title">{renderAccentRuns(c.sectionTitle, trStr)}</h2>
+                        <h2 id={slugifyAnchor(c.sectionTitle)} className="project-grid__title" {...inlineEditAttr(admin, editId, 'sectionTitle')}>{renderAccentRuns(c.sectionTitle, trStr)}</h2>
                     )}
                     {c.sectionSubtitle && (
-                        <div className="project-grid__sub">{tr(c.sectionSubtitle)}</div>
+                        <div className="project-grid__sub" {...inlineEditAttr(admin, editId, 'sectionSubtitle')}>{tr(c.sectionSubtitle)}</div>
                     )}
                 </header>
             )}
@@ -70,7 +73,7 @@ const ProjectGrid = ({item, tApp}: {
                             </div>
                             <div className="project-grid__meta">
                                 <div className="project-grid__meta-main">
-                                    <h3 className="project-grid__card-title">{tr(p.title)}</h3>
+                                    <h3 className="project-grid__card-title" {...inlineEditAttr(admin, editId, `items.${i}.title`)}>{tr(p.title)}</h3>
                                     {p.stack && <div className="project-grid__stack">{tr(p.stack)}</div>}
                                 </div>
                                 {p.kind && <div className="project-grid__kind" dangerouslySetInnerHTML={{__html: trStr(p.kind)}}/>}

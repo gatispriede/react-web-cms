@@ -150,8 +150,10 @@ export const BgColorsOutlined: React.FC<IconBaseProps> = (p) => <IconBase compon
 export const BulbFilled: React.FC<IconBaseProps> = (p) => <IconBase component={Lightbulb} filled {...p}/>;
 export const BulbOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Lightbulb} {...p}/>;
 export const CheckCircleFilled: React.FC<IconBaseProps> = (p) => <IconBase component={CheckCircle2} filled {...p}/>;
+export const CheckCircleOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={CheckCircle2} {...p}/>;
 export const ClockCircleOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={Clock} {...p}/>;
 export const CloseCircleFilled: React.FC<IconBaseProps> = (p) => <IconBase component={XCircle} filled {...p}/>;
+export const CloseCircleOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={XCircle} {...p}/>;
 export const CloseOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={X} {...p}/>;
 export const CloudUploadOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={CloudUpload} {...p}/>;
 export const ColumnWidthOutlined: React.FC<IconBaseProps> = (p) => <IconBase component={MoveHorizontal} {...p}/>;

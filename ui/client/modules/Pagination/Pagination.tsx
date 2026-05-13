@@ -1,0 +1,51 @@
+/**
+ * Pagination — Phase 1.C.
+ *
+ * Surface-level renderer; the actual cursor wiring sits in the page-level
+ * query controller, which this module subscribes to via a callback prop.
+ * The auto-injected template emits the `load-more` variant by default.
+ */
+import React from 'react';
+import type {IPagination} from './Pagination.types';
+import './Pagination.scss';
+
+export interface PaginationProps {
+    content: IPagination | string;
+    onLoadMore?: () => void;
+    hasMore?: boolean;
+}
+
+function parseContent(raw: string | IPagination): IPagination {
+    if (typeof raw === 'string') {
+        try { return JSON.parse(raw) as IPagination; } catch { return {variant: 'load-more'}; }
+    }
+    return raw;
+}
+
+const Pagination: React.FC<PaginationProps> = ({content, onLoadMore, hasMore = true}) => {
+    const c = parseContent(content);
+    if (!hasMore) return null;
+    if (c.variant === 'infinite-scroll') {
+        // The IntersectionObserver wiring lives in the page-level
+        // controller; the module just renders a sentinel marker. Keeps
+        // SSR + hydration symmetric.
+        return (
+            <div className="pagination pagination--infinite" data-testid="pagination-sentinel" aria-hidden />
+        );
+    }
+    return (
+        <div className="pagination pagination--load-more" data-testid="pagination">
+            <button
+                type="button"
+                onClick={onLoadMore}
+                className="pagination__button"
+                data-testid="pagination-load-more"
+            >
+                Load more
+            </button>
+        </div>
+    );
+};
+
+export default Pagination;
+export {Pagination};

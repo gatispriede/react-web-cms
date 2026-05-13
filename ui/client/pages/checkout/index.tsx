@@ -1,51 +1,67 @@
+/**
+ * Phase 1.B-c — `/checkout` storefront route, flag-aware.
+ *
+ * Reads `commerce.checkout.flow` at SSR. When `single-step` (default),
+ * loads the `checkout` system page snapshot and renders the stacked
+ * layout. When `multi-step`, redirects to `/checkout/address` (the
+ * existing multi-step entry point).
+ */
 import React, {useEffect, useState} from 'react';
 import {useRouter} from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
-import {Button, ConfigProvider, Empty, Input, Typography, message} from 'antd';
+import {Alert, Button, Card, ConfigProvider, Empty, Form, Input, Radio, Space, Typography, message} from 'antd';
+import type {GetServerSideProps} from 'next';
 import staticTheme from '@client/features/Themes/themeConfig';
 import {useCart} from '@client/features/Cart/useCart';
 import {useCheckoutMachine} from '@client/lib/checkout/useCheckoutMachine';
 import {createDraftOrder, formatMoney} from '@client/lib/checkout/api';
 import {gatePath} from '@client/lib/loaders/applyPublicGates';
-import type {GetServerSideProps} from 'next';
+import {loadSystemPageSnapshot, type ISystemPageSnapshot} from '@client/lib/systemPage/loadSystemPage';
+import {getMongoConnection} from '@services/infra/mongoDBConnection';
 
-/**
- * Step 1 — review cart, capture optional guest email, create the
- * draft order. The draft creation is what commits a stock reservation,
- * so we run it on click rather than on mount to avoid background-tab
- * reservation pile-up.
- */
-const CheckoutIndex: React.FC = () => {
+type CheckoutFlow = 'single-step' | 'multi-step';
+
+interface IPageProps {
+    systemPage: ISystemPageSnapshot | null;
+    flow: CheckoutFlow;
+    providers: Array<{id: string; displayName: string}>;
+}
+
+const SingleStepCheckout: React.FC<IPageProps> = ({providers}) => {
     const router = useRouter();
     const {cart, loading} = useCart();
     const machine = useCheckoutMachine();
-    const [guestEmail, setGuestEmail] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [form] = Form.useForm();
+    const [provider, setProvider] = useState<string>(providers[0]?.id ?? 'bankTransfer');
 
     useEffect(() => {
-        // If we already have a draft and the cart is empty, fast-forward
-        // to the right step on resume.
+        // Resume an in-flight multi-step session if the operator just flipped
+        // the flag — kick the user back to where they left off.
         if (machine.orderId && machine.step !== 'cart') {
             void router.push(`/checkout/${machine.step}`);
         }
     }, [machine.orderId, machine.step, router]);
 
-    const onProceed = async () => {
+    const onSubmit = async (values: Record<string, unknown>) => {
         if (!cart.items.length) return;
         setSubmitting(true);
         try {
-            const result = await createDraftOrder({
-                currency: cart.currency || 'USD',
-                guestEmail: guestEmail || undefined,
+            const draft = await createDraftOrder({
+                currency: cart.currency || 'EUR',
+                guestEmail: typeof values.email === 'string' ? values.email : undefined,
             });
-            if (!result || result.error) {
-                message.error(result?.error || 'Could not start checkout.');
+            if (!draft || (draft as {error?: string}).error) {
+                message.error((draft as {error?: string})?.error || 'Could not start checkout.');
                 return;
             }
-            machine.setOrderId(result.id as string);
-            machine.goTo('address');
-            await router.push('/checkout/address');
+            machine.setOrderId(draft.id as string);
+            // The single-step placeholder flow simply lands on the
+            // confirmation page; live provider dispatch lands as the
+            // `CheckoutPaymentForm` module wires `paymentRegistry`
+            // through the API layer in a follow-up.
+            await router.push(`/checkout/confirmation/${draft.id}`);
         } finally {
             setSubmitting(false);
         }
@@ -54,34 +70,118 @@ const CheckoutIndex: React.FC = () => {
     return (
         <ConfigProvider theme={staticTheme}>
             <Head><title>Checkout</title></Head>
-            <div style={{maxWidth: 720, margin: '0 auto', padding: '32px 20px 80px'}}>
+            <div style={{maxWidth: 960, margin: '0 auto', padding: '32px 20px 80px'}}>
                 <Link href="/cart"><Button type="link">← Back to cart</Button></Link>
                 <Typography.Title level={2}>Checkout</Typography.Title>
                 {loading ? <Typography.Text type="secondary">Loading…</Typography.Text> : cart.items.length === 0 ? (
                     <Empty description="Your cart is empty"/>
                 ) : (
-                    <>
-                        <div style={{marginBottom: 16}}>
+                    <div style={{display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 24}}>
+                        <Form form={form} layout="vertical" onFinish={onSubmit}>
+                            <Card title="Address" style={{marginBottom: 16}} data-testid="single-step-address">
+                                <Form.Item name="email" label="Email" rules={[{required: true, type: 'email'}]}>
+                                    <Input data-testid="single-step-email"/>
+                                </Form.Item>
+                                <Form.Item name="name" label="Full name" rules={[{required: true}]}>
+                                    <Input data-testid="single-step-name"/>
+                                </Form.Item>
+                                <Form.Item name="line1" label="Address line 1" rules={[{required: true}]}>
+                                    <Input data-testid="single-step-line1"/>
+                                </Form.Item>
+                                <Form.Item name="city" label="City" rules={[{required: true}]}>
+                                    <Input data-testid="single-step-city"/>
+                                </Form.Item>
+                                <Form.Item name="postalCode" label="Postal code" rules={[{required: true}]}>
+                                    <Input data-testid="single-step-postal"/>
+                                </Form.Item>
+                                <Form.Item name="country" label="Country" rules={[{required: true}]}>
+                                    <Input data-testid="single-step-country"/>
+                                </Form.Item>
+                            </Card>
+                            <Card title="Payment method" style={{marginBottom: 16}} data-testid="single-step-payment">
+                                {providers.length === 0 ? (
+                                    <Alert type="warning" message="No payment providers enabled."/>
+                                ) : (
+                                    <Radio.Group
+                                        data-testid="single-step-provider-radio"
+                                        value={provider}
+                                        onChange={(e) => setProvider(e.target.value)}
+                                    >
+                                        <Space direction="vertical">
+                                            {providers.map(p => (
+                                                <Radio key={p.id} value={p.id} data-testid={`single-step-provider-${p.id}`}>
+                                                    {p.displayName}
+                                                </Radio>
+                                            ))}
+                                        </Space>
+                                    </Radio.Group>
+                                )}
+                            </Card>
+                            <Button
+                                data-testid="single-step-place-order-btn"
+                                htmlType="submit"
+                                type="primary"
+                                block
+                                size="large"
+                                loading={submitting}
+                                disabled={providers.length === 0}
+                            >
+                                Place order
+                            </Button>
+                        </Form>
+                        <Card title="Order summary" data-testid="single-step-summary" style={{position: 'sticky', top: 16, alignSelf: 'flex-start'}}>
                             {cart.items.map(line => (
-                                <div key={`${line.productId}:${line.sku}`} style={{display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #eee'}}>
+                                <div key={`${line.productId}:${line.sku}`} style={{display: 'flex', justifyContent: 'space-between', padding: '6px 0'}}>
                                     <span>{line.sku} × {line.qty}</span>
                                     <span>{formatMoney(line.qty * line.priceSnapshot, line.currency)}</span>
                                 </div>
                             ))}
-                        </div>
-                        <div style={{marginBottom: 16}}>
-                            <label>Email (for guest checkout)</label>
-                            <Input value={guestEmail} onChange={e => setGuestEmail(e.target.value)} placeholder="you@example.com" type="email"/>
-                        </div>
-                        <Typography.Title level={4}>Subtotal: {formatMoney(cart.subtotal, cart.currency)}</Typography.Title>
-                        <Button block type="primary" size="large" loading={submitting} onClick={onProceed}>Proceed to address</Button>
-                    </>
+                            <hr/>
+                            <Typography.Title level={4}>Total: {formatMoney(cart.subtotal, cart.currency)}</Typography.Title>
+                        </Card>
+                    </div>
                 )}
             </div>
         </ConfigProvider>
     );
 };
 
-export const getServerSideProps: GetServerSideProps = gatePath('/checkout') as GetServerSideProps;
+const MultiStepRedirect: React.FC = () => {
+    const router = useRouter();
+    useEffect(() => { void router.replace('/checkout/address'); }, [router]);
+    return <Typography.Text>Redirecting…</Typography.Text>;
+};
+
+const CheckoutIndex: React.FC<IPageProps> = (props) => {
+    if (props.flow === 'multi-step') return <MultiStepRedirect/>;
+    return <SingleStepCheckout {...props}/>;
+};
+
+export const getServerSideProps: GetServerSideProps<IPageProps> = gatePath('/checkout', async () => {
+    let flow: CheckoutFlow = 'single-step';
+    let providerFlags: Record<string, boolean> = {};
+    try {
+        const raw = await getMongoConnection().getSiteFlags();
+        const flags = JSON.parse(raw);
+        const co = (flags?.commerce?.checkout ?? {}) as Record<string, unknown>;
+        if (co.flow === 'multi-step') flow = 'multi-step';
+        providerFlags = ((co.providers as Record<string, boolean>) ?? {});
+    } catch {
+        // fall through to defaults
+    }
+
+    const systemPage = flow === 'single-step' ? loadSystemPageSnapshot('checkout') : null;
+    const providers: Array<{id: string; displayName: string}> = [];
+    if (providerFlags.stripe !== false && process.env.STRIPE_SECRET_KEY) {
+        providers.push({id: 'stripe', displayName: 'Credit / debit card'});
+    }
+    if (providerFlags.bankTransfer !== false) {
+        providers.push({id: 'bankTransfer', displayName: 'Bank transfer'});
+    }
+    if (providerFlags.cashOnDelivery !== false) {
+        providers.push({id: 'cashOnDelivery', displayName: 'Cash on delivery'});
+    }
+    return {props: {systemPage, flow, providers}};
+}) as GetServerSideProps<IPageProps>;
 
 export default CheckoutIndex;

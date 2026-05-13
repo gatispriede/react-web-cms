@@ -12,18 +12,32 @@ function safeParse(s: string): unknown {
 export const pageList: McpTool = defineTool({
     // SAFE: not a GraphQL mutation
     name: 'page.list',
-    description: 'Returns the navigation tree (every page) plus high-level metadata. Set `includeSeoStatus:true` to also annotate each page with `hasDescription`, `hasOgImage`, `hasKeywords`, `hasAuthor`, and `missingFields[]`.',
+    description: 'Returns the navigation tree (every page) plus high-level metadata. Set `includeSeoStatus:true` to also annotate each page with `hasDescription`, `hasOgImage`, `hasKeywords`, `hasAuthor`, and `missingFields[]`. Pass `source` to filter by page discriminator (Phase 0b): `\'manual\'` (legacy operator-authored — also matches rows where `source` is unset), `\'product\'`, or `\'system-page\'`.',
     scopes: ['read:content'],
     inputSchema: {
         type: 'object',
         properties: {
             includeSeoStatus: {type: 'boolean', description: 'When true, each page is annotated with per-field SEO completeness flags + a hyphenated `missingFields[]` list (description, og-image, keywords, author).'},
+            source: {
+                type: 'string',
+                enum: ['manual', 'product', 'system-page'],
+                description: 'Phase 0b page-source filter. `\'manual\'` matches rows with `source === \'manual\'` AND legacy rows where `source` is unset (back-compat).',
+            },
         },
     },
 }, async (args, ctx) => {
     const navs = await ctx.services.navigationService.getNavigationCollection();
-    if (!args.includeSeoStatus) return navs;
-    const list = (navs ?? []) as Array<{page: string; seo?: any}>;
+    // Phase 0b — apply the source filter before any further annotation.
+    // Legacy rows with no `source` are treated as `'manual'`.
+    const filtered = args.source
+        ? (navs ?? []).filter((n: any) => {
+            const s = n?.source as string | undefined;
+            if (args.source === 'manual') return s === 'manual' || s === undefined || s === null;
+            return s === args.source;
+        })
+        : (navs ?? []);
+    if (!args.includeSeoStatus) return filtered;
+    const list = filtered as Array<{page: string; seo?: any}>;
     const status = scanPageSeo(list.map(n => ({page: n.page, seo: n.seo ?? null})));
     const byPage = new Map(status.map(s => [s.page, s]));
     return list.map(n => {
@@ -94,7 +108,31 @@ export const sectionUpdate: McpTool = defineTool({
     inputSchema: {
         type: 'object',
         properties: {
-            section: {type: 'object', properties: {}, description: 'Single-item form. Mutually exclusive with `items`.'},
+            section: {
+                type: 'object',
+                description: 'Single-item form. Mutually exclusive with `items`.',
+                properties: {
+                    locked: {
+                        type: 'boolean',
+                        description: 'Phase 0a — when true, marks the section as system-managed. NavigationService.removeSectionItem refuses delete with SECTION_LOCKED. Content edits remain allowed. Use for composable system pages (checkout, account-settings, product-leaf).',
+                    },
+                    lockReason: {
+                        type: 'string',
+                        description: 'Operator-facing reason shown in the admin lock-affordance tooltip. Either a literal string or an i18n key prefixed `section.locked.` (resolved through the admin `t()` table).',
+                    },
+                    layout: {
+                        type: 'object',
+                        description: 'Section-level layout flags. Currently a single `mobileBehavior` enum controlling how multi-column rows render below 768 px (Wave 3 mobile-column-behavior).',
+                        properties: {
+                            mobileBehavior: {
+                                type: 'string',
+                                enum: ['stack', 'collapse', 'keep-ratio'],
+                                description: 'Mobile column layout. "stack" (default) flattens columns to 100% width in DOM order. "collapse" renders subsequent columns under a chevron-rotate accordion mirroring the public-side MobileNav gesture. "keep-ratio" preserves column widths via horizontal scroll — for tables / wide diagrams that don\'t decompose.',
+                            },
+                        },
+                    },
+                },
+            },
             pageName: {type: 'string'},
             expectedVersion: {type: 'integer'},
             items: {
@@ -102,7 +140,22 @@ export const sectionUpdate: McpTool = defineTool({
                 items: {
                     type: 'object',
                     properties: {
-                        section: {type: 'object', properties: {}},
+                        section: {
+                            type: 'object',
+                            properties: {
+                                locked: {type: 'boolean'},
+                                lockReason: {type: 'string'},
+                                layout: {
+                                    type: 'object',
+                                    properties: {
+                                        mobileBehavior: {
+                                            type: 'string',
+                                            enum: ['stack', 'collapse', 'keep-ratio'],
+                                        },
+                                    },
+                                },
+                            },
+                        },
                         pageName: {type: 'string'},
                         expectedVersion: {type: 'integer'},
                     },

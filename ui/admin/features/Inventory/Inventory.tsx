@@ -6,6 +6,7 @@ import type {IInventoryRun} from "@interfaces/IInventory";
 import type {IProduct} from "@interfaces/IProduct";
 import AuditBadge from "@admin/shell/AuditBadge";
 import {useViewModel} from "@client/lib/state/observable";
+import EmptyState from "@admin/lib/EmptyState";
 import {InventoryViewModel} from "./InventoryViewModel";
 
 /** Render-only Inventory pane — VM3 (2026-05-02). */
@@ -156,6 +157,15 @@ const AdminSettingsInventory: React.FC = () => {
                 columns={runColumns as any}
                 dataSource={vm.runs}
                 style={{marginBottom: 24}}
+                locale={{
+                    emptyText: (
+                        <EmptyState
+                            testId="inventory-runs-empty-state"
+                            title={t('empty.inventoryRuns.title')}
+                            description={t('empty.inventoryRuns.description')}
+                        />
+                    ),
+                }}
             />
 
             <Typography.Title level={5}>{t('Adapter config')}</Typography.Title>

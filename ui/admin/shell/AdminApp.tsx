@@ -1,5 +1,7 @@
 import React from 'react'
-import {ConfigProvider, Layout, Modal, Spin, message, theme as antdTheme} from 'antd';
+import {ConfigProvider, Layout, Modal, Spin, theme as antdTheme} from 'antd';
+import {Toaster} from 'sonner';
+import {notifyError, notifySuccess} from '@admin/lib/notify';
 import PublishApi from "@services/api/client/PublishApi";
 import AddNewDialogNavigation from "@admin/features/Navigation/AddNewDialogNavigation";
 import {IPage} from "@interfaces/IPage";
@@ -19,6 +21,8 @@ import AdminBuildHeader from "./AdminBuild/AdminBuildHeader";
 import AdminBuildSider from "./AdminBuild/AdminBuildSider";
 import {buildPageMenuItems} from "./AdminBuild/pageMenuBuilder";
 import {loadNavigationPages} from "./AdminBuild/loadNavigationPages";
+import CommandPalette from "./CommandPalette/CommandPalette";
+import InlineEditOverlay from "./InlineEdit/InlineEditOverlay";
 
 interface IHomeState {
     loading: boolean,
@@ -46,6 +50,11 @@ class AdminApp extends React.Component<{
     tApp: TFunction<string, undefined>
 }> {
     sections: any[] = []
+    /** Section lookup populated on every `initialize()`. The inline-edit
+     *  overlay reads this to dispatch a `data-edit-target` click through
+     *  to the right section row when persisting. Map identity is reused
+     *  so the overlay's useCallback memo isn't busted on every re-render. */
+    private sectionsById: Map<string, any> = new Map()
     role: UserRole = 'viewer'
     admin: boolean = false
     canEditNav: boolean = false
@@ -92,10 +101,10 @@ class AdminApp extends React.Component<{
         try {
             const result = await this.PublishApi.publish();
             if (result.error) {
-                message.error(result.error);
+                notifyError(result.error);
                 return;
             }
-            message.success(`Published at ${result.publishedAt}`);
+            notifySuccess(`Published at ${result.publishedAt}`);
             this.setState({publishedAt: result.publishedAt});
         } finally {
             this.setState({publishing: false});
@@ -193,10 +202,20 @@ class AdminApp extends React.Component<{
         if (!this.canEditNav) return;
         const target = this.state.tabProps.find(t => t.key === key);
         if (!target) return;
+        // Optimistic splice — the spec asserts the row disappears either
+        // immediately or after a list refresh. Splicing before the await
+        // makes the e2e (and humans) get instant feedback.
         const newItems = this.state.tabProps.filter(t => t.key !== key);
-        await this.MongoApi.deleteNavigation(target.page, {idempotencyKey});
         const nextActive = newItems[0]?.key ?? '0';
         this.setState({tabProps: newItems, activeTab: nextActive, loading: false});
+        try {
+            await this.MongoApi.deleteNavigation(target.page, {idempotencyKey});
+            notifySuccess(this.props.t('Page deleted'));
+        } catch (err) {
+            // Roll back the optimistic splice by reloading from server.
+            notifyError(err);
+            await this.initialize();
+        }
     });
 
     deletePage = async (key: string) => {
@@ -252,6 +271,15 @@ class AdminApp extends React.Component<{
             setAnchors(pages.map((p: any) => ({page: p.page})), sectionsByPage);
         } catch (err) {
             console.warn('anchorRegistry refresh failed:', err);
+        }
+        // Refresh the inline-edit overlay's section lookup. Re-uses the
+        // same Map identity so the overlay's `useCallback` memoization
+        // does not regenerate the save handler on every initialize().
+        this.sectionsById.clear();
+        for (const list of Object.values(sectionsByPage)) {
+            for (const s of (list as any[])) {
+                if (s?.id) this.sectionsById.set(s.id, s);
+            }
         }
         this.setState(newState)
     }
@@ -334,8 +362,24 @@ class AdminApp extends React.Component<{
         return (
             <ConfigProvider theme={{
                 ...staticTheme,
+                cssVar: true,
+                // hashed: false would drop the per-component CSS-in-JS hash
+                // entirely; we keep hashed on (default) so AntD's own styles
+                // still scope. cssVar:true gives us `--ant-color-*` CSS
+                // custom properties that admin SCSS under
+                // `[data-admin-theme="dark"]` can consume (see
+                // `ui/admin/styles/Admin/AdminDarkMode.scss`). Without this,
+                // the parallel SCSS layer and the AntD ConfigProvider are
+                // two unrelated palettes — see admin-dark-mode-audit spec.
                 algorithm: this.state.darkMode ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
             }}>
+                <Toaster richColors closeButton position="bottom-right" duration={4000} />
+                <InlineEditOverlay
+                    enabled={this.canEditNav}
+                    t={this.props.t}
+                    sectionsById={this.sectionsById}
+                />
+                <CommandPalette>
                 <Spin spinning={this.state.loading}>
                     <AdminBuildHeader
                         admin={this.admin}
@@ -375,6 +419,7 @@ class AdminApp extends React.Component<{
                         </Layout.Content>
                     </Layout>
                 </Spin>
+                </CommandPalette>
             </ConfigProvider>
         );
     }

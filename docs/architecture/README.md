@@ -27,6 +27,10 @@ For someone seeing the codebase for the first time:
 | [`publishing.md`](publishing.md) | Snapshots, rollback, bundle export/import, drafts, version conflicts | New |
 | [`module-interfaces.md`](module-interfaces.md) | Content JSON shapes for all 17 item types | New |
 | [`admin-systems.md`](admin-systems.md) | Admin i18n, inline translation, icon system, DnD split, Google Fonts proxy | New |
+| [`site-flags.md`](site-flags.md) | `ISiteFlags` sub-record namespaces (commerce/auth/theme/seo) + `defineFlag()` registry | New |
+| [`section-lock-affordance.md`](section-lock-affordance.md) | `ISection.locked` primitive — server-side delete-guard + admin lock UI for system-managed sections | New |
+| [`system-pages.md`](system-pages.md) | `SystemPageRegistry` — framework-required pages (cart, checkout, account-settings) + `IPage.source` discriminator + depth-cap lift | New |
+| [`auth-stacks.md`](auth-stacks.md) | Two NextAuth instances · cookie scoping · provider lists · session-shape isolation · `clientLoginEnabled` master switch | New |
 | [`../../PROJECT_ANALYSIS.md`](../PROJECT_ANALYSIS.md) | Tech stack · file structure · runtime topology · 17 item types · admin panel · 7 themes · scripts | Canonical |
 | [`../../THEMING.md`](../THEMING.md) | Chrome / module split · CSS-var pipeline · scoping contract · fonts · a11y themes | Canonical |
 | [`../../DEPLOY.md`](../DEPLOY.md) | Docker compose · env vars · MongoDB Atlas vs. local | Canonical |

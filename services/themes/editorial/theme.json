@@ -1,0 +1,32 @@
+{
+    "slug": "editorial",
+    "name": "Editorial",
+    "tagline": "Quiet, generous whitespace, serif display — for writers, photographers, journalism.",
+    "audience": "Writers, photographers, journalism",
+    "mood": ["quiet", "considered", "literary", "spacious"],
+    "palette": {
+        "surface":      {"light": "#fdfdfd", "dark": "#161616"},
+        "ink":          {"light": "#1a1a1a", "dark": "#ededed"},
+        "accent":       {"light": "#c8102e", "dark": "#ff5566"},
+        "accentInk":    {"light": "#fdfdfd", "dark": "#161616"},
+        "surfaceInset": {"light": "#f4f1ea", "dark": "#1f1f1f"},
+        "rule":         {"light": "#d8d2c4", "dark": "#2d2d2d"}
+    },
+    "typography": {
+        "display": "ui-serif, Georgia, 'Times New Roman', serif",
+        "body":    "system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "mono":    "ui-monospace, 'SF Mono', Menlo, monospace",
+        "baseSize": 16
+    },
+    "motion": "gentle-slow",
+    "headerBehavior": "hide-on-down-show-on-up",
+    "footerLayout": "minimal-1row",
+    "logoLockup": "wordmark",
+    "moduleStyleHints": {
+        "hero": "split-text-media",
+        "timeline": "broken-grid",
+        "posts": "editorial"
+    },
+    "darkDefault": false,
+    "placeholder": true
+}

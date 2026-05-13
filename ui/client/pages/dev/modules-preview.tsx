@@ -3,6 +3,7 @@ import {GetServerSideProps} from 'next';
 import {useTranslation} from 'next-i18next/pages';
 import {serverSideTranslations} from 'next-i18next/pages/serverSideTranslations';
 import ModulesPreview from '@client/lib/preview/ModulesPreview';
+import SeoHead from '@client/lib/seo/SeoHead';
 
 /**
  * Dev-only modules preview — same renderer as `/admin/modules-preview` but
@@ -16,7 +17,13 @@ import ModulesPreview from '@client/lib/preview/ModulesPreview';
  */
 const DevModulesPreview = () => {
     const {t, i18n} = useTranslation('app');
-    return <ModulesPreview t={t as any} tApp={i18n.getFixedT(i18n.language, 'app') as any}/>;
+    return (
+        <>
+            {/* W8h SEO polish — dev-only preview route, never indexable. */}
+            <SeoHead indexable={false} title="Dev · Modules preview"/>
+            <ModulesPreview t={t as any} tApp={i18n.getFixedT(i18n.language, 'app') as any}/>
+        </>
+    );
 };
 
 export const getServerSideProps: GetServerSideProps = async ({locale}) => {

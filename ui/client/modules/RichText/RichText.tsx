@@ -5,6 +5,7 @@ import {IItem} from "@interfaces/IItem";
 import {TFunction} from "i18next";
 import {extractTranslationsFromHTML} from "@utils/translationsutils";
 import {sanitizeHtml} from "@utils/sanitize";
+import {inlineEditAttr} from "@client/lib/inlineEditAttr";
 import type {IRichText} from "./RichText.types";
 export type {IRichText} from "./RichText.types";
 export {ERichTextStyle} from "./RichText.types";
@@ -27,13 +28,15 @@ export class RichTextContent extends ContentManager {
 
 }
 
-const RichText = ({item, t, tApp}: {
+const RichText = ({item, t, tApp, admin}: {
     item: IItem,
     t: TFunction<"translation", undefined>,
-    tApp: TFunction<string, undefined>
+    tApp: TFunction<string, undefined>,
+    admin?: boolean,
 }) => {
     const richTextContent = new RichTextContent(EItemType.RichText, item.content);
     const contentRef: RefObject<HTMLDivElement | null> = React.createRef();
+    const editId = item.name || EItemType.RichText;
 
     useEffect(() => {
         if(contentRef.current){
@@ -43,7 +46,7 @@ const RichText = ({item, t, tApp}: {
     }, [contentRef, richTextContent.data.value, tApp]);
     return (
         <div className={`rich-text ${item.style}`}>
-            <div ref={contentRef} />
+            <div ref={contentRef} {...inlineEditAttr(admin, editId, 'value')} />
         </div>
     )
 }

@@ -55,9 +55,12 @@ describe('parentTree.ancestorIds', () => {
 describe('parentTree.depthOf', () => {
     it('root = 0', () => expect(depthOf(fixture(), 'r')).toBe(0));
     it('child = 1', () => expect(depthOf(fixture(), 's')).toBe(1));
-    it('grandchild = 2 (= MAX_DEPTH)', () => {
+    it('grandchild = 2 (below soft MAX_DEPTH threshold)', () => {
         expect(depthOf(fixture(), 'c')).toBe(2);
-        expect(depthOf(fixture(), 'c')).toBe(MAX_DEPTH);
+        // Phase 0b — MAX_DEPTH lifted to 8. Grandchild is now well below
+        // the soft-warning threshold; assert the relationship instead of
+        // equality so future bumps to MAX_DEPTH don't break this test.
+        expect(depthOf(fixture(), 'c')).toBeLessThanOrEqual(MAX_DEPTH);
     });
 });
 

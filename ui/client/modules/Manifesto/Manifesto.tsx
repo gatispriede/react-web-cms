@@ -7,6 +7,7 @@ import {translateOrKeep} from "@utils/translateOrKeep";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import RevealOnScroll from "@client/lib/RevealOnScroll";
 import {slugifyAnchor} from "@utils/stringFunctions";
+import {inlineEditAttr} from "@client/lib/inlineEditAttr";
 import type {IManifesto, IManifestoChip} from "./Manifesto.types";
 export type {IManifesto, IManifestoChip} from "./Manifesto.types";
 export {EManifestoStyle} from "./Manifesto.types";
@@ -68,24 +69,26 @@ function renderBody(body: string, chips: IManifestoChip[], tr: (s: string) => st
     });
 }
 
-const Manifesto = ({item, tApp}: {
+const Manifesto = ({item, tApp, admin}: {
     item: IItem;
     t: TFunction<"translation", undefined>;
     tApp: TFunction<string, undefined>;
+    admin?: boolean;
 }) => {
     const c = new ManifestoContent(EItemType.Manifesto, item.content).data;
     const trStr = (v: string) => translateOrKeep(tApp, v);
     const tr = (v: string) => <InlineTranslatable tApp={tApp as any} source={v}/>;
+    const editId = item.name || EItemType.Manifesto;
 
     return (
         <section className={`manifesto ${item.style ?? ''}`}>
             {c.body && (
-                <RevealOnScroll as="p" className="manifesto__body">
+                <RevealOnScroll as="p" className="manifesto__body" {...inlineEditAttr(admin, editId, 'body')}>
                     {renderBody(c.body, c.chips ?? [], trStr)}
                 </RevealOnScroll>
             )}
             {c.addendum && (
-                <RevealOnScroll as="p" className="manifesto__addendum" delay={120}>
+                <RevealOnScroll as="p" className="manifesto__addendum" delay={120} {...inlineEditAttr(admin, editId, 'addendum')}>
                     {tr(c.addendum)}
                 </RevealOnScroll>
             )}

@@ -145,6 +145,7 @@ const HeroEditor = ({content, setContent, t}: IInputContent) => {
                                         value={ctaPrimary}
                                         onChange={(link) => update('ctaPrimary', {...ctaPrimary, ...link, primary: true})}
                                         placeholder="#career-record"
+                                        hostId="hero-cta-primary"
                                     />
                                 </Col>
                                 <Col xs={12}>
@@ -154,6 +155,7 @@ const HeroEditor = ({content, setContent, t}: IInputContent) => {
                                         value={ctaSecondary}
                                         onChange={(link) => update('ctaSecondary', {...ctaSecondary, ...link})}
                                         placeholder="mailto:you@example.com"
+                                        hostId="hero-cta-secondary"
                                     />
                                 </Col>
                             </Row>

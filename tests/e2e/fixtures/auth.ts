@@ -133,6 +133,24 @@ export {expect} from '@playwright/test';
  * worth surfacing in the unit suite, not the e2e one.
  */
 function attachHydrationFilter(page: Page): void {
+    // Pre-seed the cookie-consent record so the public banner never mounts
+    // during e2e. Without this, the banner intercepts pointer events on
+    // the first navigation of every fresh context (admin or anonymous),
+    // and every click in the underlying page retries until timeout.
+    // Mirrors the schema in ui/client/components/CookieConsent/consentStore.ts.
+    void page.addInitScript(() => {
+        try {
+            const STORAGE_KEY = 'cms.privacy.consent.v1';
+            const record = {
+                version: 1,
+                categories: {necessary: true, functional: false, analytics: false, marketing: false},
+                source: 'user',
+                recordedAt: new Date().toISOString(),
+            };
+            window.localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
+        } catch {/* localStorage not available — banner will fall back to its default */}
+    });
+
     const HYDRATION_PATTERNS = [
         /Hydration failed/i,
         /Text content does not match/i,

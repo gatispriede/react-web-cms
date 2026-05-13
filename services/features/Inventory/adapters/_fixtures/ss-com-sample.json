@@ -1,0 +1,92 @@
+{
+    "comment": "Wave 7b — ss.com cars fixture. Hand-curated rows mimicking the public RSS+HTML shape (raw form). Normaliser maps these into WarehouseProductRow. Captured 2026-05-12 from publicly listed ads (PII scrubbed, prices nominal).",
+    "items": [
+        {
+            "adId": "70491771",
+            "url": "https://www.ss.com/msg/lv/transport/cars/audi/a4/70491771.html",
+            "title": "Audi A4 2.0 TDI quattro",
+            "description": "Quattro, full service history, EU import.",
+            "priceEur": 14500,
+            "year": 2018,
+            "make": "audi",
+            "model": "a4",
+            "trim": "2.0 TDI quattro",
+            "mileageKm": 162000,
+            "fuel": "diesel",
+            "transmission": "manual",
+            "body": "sedan",
+            "drive": "awd",
+            "color": "black",
+            "region": "riga",
+            "engineCc": 1968,
+            "inspectionDate": "2026-09-30",
+            "vatRegime": "b2c-eu-margin",
+            "countryOfOrigin": "DE",
+            "dealType": "sell",
+            "images": [
+                "https://i.ss.com/gallery/8/3520/879788/52786743.t.jpg",
+                "https://i.ss.com/gallery/8/3520/879788/52786744.t.jpg",
+                "https://i.ss.com/gallery/8/3520/879788/52786745.t.jpg"
+            ],
+            "updatedAt": "2026-05-10T12:00:00.000Z"
+        },
+        {
+            "adId": "70544010",
+            "url": "https://www.ss.com/msg/lv/transport/cars/vw/golf-vii/70544010.html",
+            "title": "VW Golf 1.4 TSI",
+            "description": "Single owner LV-new, comfortline.",
+            "priceEur": 9200,
+            "year": 2016,
+            "make": "vw",
+            "model": "golf-vii",
+            "trim": "1.4 TSI Comfortline",
+            "mileageKm": 124500,
+            "fuel": "petrol",
+            "transmission": "automatic",
+            "body": "hatchback",
+            "drive": "fwd",
+            "color": "white",
+            "region": "riga",
+            "engineCc": 1395,
+            "inspectionDate": "2026-12-15",
+            "vatRegime": "b2c-eu",
+            "countryOfOrigin": "LV",
+            "dealType": "sell",
+            "images": [
+                "https://i.ss.com/gallery/8/3621/905223/55012001.t.jpg",
+                "https://i.ss.com/gallery/8/3621/905223/55012002.t.jpg"
+            ],
+            "updatedAt": "2026-05-09T08:30:00.000Z"
+        },
+        {
+            "adId": "70612488",
+            "url": "https://www.ss.com/msg/lv/transport/cars/bmw/3er-330/70612488.html",
+            "title": "BMW 330d xDrive Touring",
+            "description": "M-Sport package, panoramic roof, heated seats.",
+            "priceEur": 22900,
+            "year": 2020,
+            "make": "bmw",
+            "model": "3-series",
+            "trim": "330d xDrive M-Sport",
+            "mileageKm": 84000,
+            "fuel": "diesel",
+            "transmission": "automatic",
+            "body": "wagon",
+            "drive": "awd",
+            "color": "blue",
+            "region": "jurmala",
+            "engineCc": 2993,
+            "inspectionDate": "2027-03-20",
+            "vatRegime": "b2c-eu-margin",
+            "countryOfOrigin": "DE",
+            "dealType": "sell",
+            "images": [
+                "https://i.ss.com/gallery/8/3702/925550/56680501.t.jpg",
+                "https://i.ss.com/gallery/8/3702/925550/56680502.t.jpg",
+                "https://i.ss.com/gallery/8/3702/925550/56680503.t.jpg",
+                "https://i.ss.com/gallery/8/3702/925550/56680504.t.jpg"
+            ],
+            "updatedAt": "2026-05-11T17:45:00.000Z"
+        }
+    ]
+}

@@ -12,13 +12,23 @@ import {nextVersion, requireVersion} from "@services/infra/conflict";
 import {log} from "@services/infra/logger";
 import {slugifyAnchor} from "@utils/stringFunctions";
 import {normalizeSlugForMatch} from "@utils/slug";
+import type {RedirectsService} from "@services/features/Seo/RedirectsService";
 
 /**
- * F1 sub-pages — depth cap is root + 2 child levels = max chain length 3.
- * Server-side enforcement is the source of truth (covers MCP / API callers
- * that bypass the admin UI).
+ * Phase 0b — depth cap lifted to a soft warning.
+ *
+ * Real product taxonomies need 4–6 levels (e.g. cars → make → model →
+ * trim → year), so the previous hard cap of 3 blocked legitimate trees.
+ * `setParent` no longer throws on deep chains; instead, when the resulting
+ * page depth exceeds `SOFT_DEPTH_WARNING_AT`, a `PAGE_DEPTH_DEEP` log
+ * line is emitted so operators can spot pathological cases.
+ *
+ * Cycle prevention is unchanged (still a hard reject in `setParent`).
+ *
+ * Tune this if your taxonomy genuinely needs deeper trees — the value is
+ * UX hygiene, not a correctness invariant.
  */
-const MAX_PAGE_DEPTH = 3;
+const SOFT_DEPTH_WARNING_AT = 8;
 
 /**
  * F1 follow-up — pick a slug from a `string | Record<locale, string>`
@@ -62,11 +72,22 @@ export class NavigationService implements INavigationService{
     private navigationDB: Collection;
     private sectionsDB: Collection;
     private setupClient: () => Promise<void>;
+    private redirectsService?: RedirectsService;
 
     constructor(navigationDB: Collection, sectionsDB: Collection, setupClient: () => Promise<void>) {
         this.navigationDB = navigationDB;
         this.sectionsDB = sectionsDB;
         this.setupClient = setupClient;
+    }
+
+    /**
+     * W8h SEO polish — wire the redirects service post-construction so a
+     * slug rename auto-writes a 301. Optional; if absent the rename still
+     * works, we just don't drop a redirect row. Stays additive: callers
+     * that don't know about the redirects feature aren't forced to.
+     */
+    public attachRedirectsService(svc: RedirectsService | undefined): void {
+        this.redirectsService = svc;
     }
 
     async createNavigation(newNavigation: INavigation): Promise<string> {
@@ -242,6 +263,21 @@ export class NavigationService implements INavigationService{
 
     async removeSectionItem(sectionId: string): Promise<string> {
         try {
+            // System-managed sections (Phase 0a — `ISection.locked`) refuse
+            // delete. Content edits stay allowed; only structural removal is
+            // blocked. Source-of-truth check here covers GraphQL, MCP, REST,
+            // and bundle-import paths since they all funnel through this
+            // method. Reason string (literal or i18n key) is surfaced so the
+            // admin layer can render a meaningful tooltip / toast.
+            const existing = await this.sectionsDB.findOne({id: sectionId}) as ({locked?: boolean; lockReason?: string} | null);
+            if (existing?.locked === true) {
+                return JSON.stringify({
+                    error: 'SECTION_LOCKED',
+                    code: 'SECTION_LOCKED',
+                    sectionId,
+                    message: existing.lockReason ?? 'section.locked.default',
+                });
+            }
             const result = await this.sectionsDB.deleteOne({ id: sectionId });
             await this.navigationDB.updateMany(
                 { sections: sectionId },
@@ -262,6 +298,13 @@ export class NavigationService implements INavigationService{
             // renaming it to "admin".
             assertNotReservedPageSlug(navigation?.page);
             const audit = auditStamp(editedBy);
+            // W8h SEO polish — capture the pre-rename slug so we can drop
+            // an auto-301 if it changes. Read once before any update so
+            // the read happens against the un-mutated row.
+            const existingDoc = navigation?.id
+                ? await this.navigationDB.findOne({type: 'navigation', id: navigation.id})
+                : null;
+            const oldSlug = (existingDoc as any)?.slug as string | Record<string, string> | undefined;
             const result: { navigation: any, sections: any } = {navigation: undefined, sections: undefined};
             if (oldPageName !== navigation.page) {
                 result.sections = await this.navigationDB.updateMany(
@@ -273,11 +316,116 @@ export class NavigationService implements INavigationService{
                 {type: 'navigation', id: navigation.id},
                 {$set: {...navigation, ...audit}}
             );
+            // W8h SEO polish — slug changed: write a 301 from the old
+            // public path to the new. Idempotent — `RedirectsService.create`
+            // throws when an entry for `from` already exists; we swallow
+            // that so a stale redirect can't block a legitimate rename.
+            // Any other error is logged but never bubbled — a missing
+            // redirect is a soft regression, not a publish blocker.
+            await this.maybeAutoRedirectOnSlugChange(oldSlug, navigation, editedBy);
             return JSON.stringify(result);
         } catch (err) {
             log.error({scope: 'navigation.replace', err, oldPageName, newPage: navigation?.page}, 'replaceUpdateNavigation failed');
             await this.setupClient();
             return 'Error while fetching navigation data';
+        }
+    }
+
+    private async maybeAutoRedirectOnSlugChange(
+        oldSlugRaw: string | Record<string, string> | undefined,
+        navigation: INavigation,
+        editedBy?: string,
+    ): Promise<void> {
+        if (!this.redirectsService) return;
+        try {
+            const oldSlug = typeof oldSlugRaw === 'string'
+                ? oldSlugRaw
+                : (oldSlugRaw && typeof oldSlugRaw === 'object' ? Object.values(oldSlugRaw).find(v => typeof v === 'string' && v.length > 0) : undefined);
+            const newSlugRaw = navigation?.slug as string | Record<string, string> | undefined;
+            const newSlug = typeof newSlugRaw === 'string'
+                ? newSlugRaw
+                : (newSlugRaw && typeof newSlugRaw === 'object' ? Object.values(newSlugRaw).find(v => typeof v === 'string' && v.length > 0) : undefined);
+            if (!oldSlug || !newSlug || oldSlug === newSlug) return;
+            const from = `/${oldSlug}`;
+            const to = `/${newSlug}`;
+            await this.redirectsService.create(
+                {from, to, code: 301, note: `Auto-created on page rename (${navigation.page})`},
+                editedBy,
+            );
+            log.info({scope: 'navigation.autoRedirect', from, to, page: navigation.page}, 'auto-301 written on slug change');
+        } catch (err) {
+            const msg = String((err as Error)?.message ?? err);
+            // `redirect already exists for …` — idempotent path, expected.
+            if (msg.startsWith('redirect already exists')) return;
+            log.error({scope: 'navigation.autoRedirect', err, page: navigation?.page}, 'auto-redirect on rename failed (swallowed)');
+        }
+    }
+
+    /**
+     * Phase 1.C-c — list every Navigation row produced by the warehouse
+     * sync worker for a given adapter. `source === 'product'` is the
+     * canonical discriminator; the `adapterId` filter is best-effort —
+     * older rows pre-dating multi-adapter support lack the field, so we
+     * include them when `adapterId` is omitted.
+     */
+    async listDerivedPages(adapterId?: string): Promise<INavigation[]> {
+        try {
+            const filter: any = {type: 'navigation', source: 'product'};
+            if (adapterId) {
+                filter.$or = [{adapterId}, {adapterId: {$exists: false}}];
+            }
+            const docs = await this.navigationDB.find(filter).toArray();
+            return docs.map(d => d as unknown as INavigation);
+        } catch (err) {
+            log.error({scope: 'navigation.listDerivedPages', err, adapterId}, 'listDerivedPages failed');
+            await this.setupClient();
+            return [];
+        }
+    }
+
+    /**
+     * Phase 1.C-c — insert a fresh derived page row. Writes the section
+     * rows first (so they have stable ids the nav row can reference),
+     * then the nav row itself. Returns the new nav id on success, empty
+     * string on failure.
+     */
+    async createDerivedPage(input: {
+        page: string;
+        slug: string;
+        seo?: any;
+        source: 'product' | 'system-page';
+        productId?: string;
+        systemKey?: string;
+        adapterId?: string;
+        sections: ISection[];
+    }, editedBy?: string): Promise<string> {
+        try {
+            assertNotReservedPageSlug(input.page);
+            const sectionRows = input.sections.map(s => ({...s, id: s.id ?? guid(), version: 1}));
+            if (sectionRows.length > 0) {
+                await this.sectionsDB.insertMany(sectionRows as any[]);
+            }
+            const navId = guid();
+            const audit = auditStamp(editedBy);
+            const doc: any = {
+                id: navId,
+                type: 'navigation',
+                page: input.page,
+                slug: input.slug,
+                seo: input.seo ?? {},
+                sections: sectionRows.map(s => s.id),
+                source: input.source,
+                ...(input.productId ? {productId: input.productId} : {}),
+                ...(input.systemKey ? {systemKey: input.systemKey} : {}),
+                ...(input.adapterId ? {adapterId: input.adapterId} : {}),
+                ...audit,
+            };
+            await this.navigationDB.insertOne(doc);
+            return navId;
+        } catch (err) {
+            log.error({scope: 'navigation.createDerivedPage', err, slug: input?.slug}, 'createDerivedPage failed');
+            await this.setupClient();
+            return '';
         }
     }
 
@@ -407,7 +555,21 @@ export class NavigationService implements INavigationService{
                     if (!walker) break;
                     parentDepth += 1;
                 }
-                if (parentDepth + 1 > MAX_PAGE_DEPTH) throw new Error('depth-cap');
+                // Phase 0b — soft-warn instead of throw. Lets product
+                // taxonomies (4–6 levels) work without operator surgery.
+                const resultingDepth = parentDepth + 1;
+                if (resultingDepth > SOFT_DEPTH_WARNING_AT) {
+                    log.warn(
+                        {
+                            scope: 'navigation.setParent',
+                            code: 'PAGE_DEPTH_DEEP',
+                            pageId,
+                            parentDepth: resultingDepth,
+                            threshold: SOFT_DEPTH_WARNING_AT,
+                        },
+                        'page nested deeper than soft-warning threshold (no hard cap)',
+                    );
+                }
             }
 
             // F1 — slug uniqueness scoped to (new) parent. Sibling
@@ -438,6 +600,9 @@ export class NavigationService implements INavigationService{
         } catch (err) {
             const msg = String((err as Error).message || err);
             // Validation errors are expected — surface as-is, no reconnect.
+            // Phase 0b — `'depth-cap'` retained in the allowlist for back-compat
+            // (older bundles / tests may still assert against it). It is no
+            // longer emitted from this method.
             if (msg === 'not-found' || msg === 'cycle' || msg === 'depth-cap' || msg === 'slug-conflict') {
                 return JSON.stringify({error: msg});
             }

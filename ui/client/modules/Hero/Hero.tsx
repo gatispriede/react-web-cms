@@ -9,6 +9,7 @@ import RevealOnScroll from "@client/lib/RevealOnScroll";
 import {slugifyAnchor} from "@utils/stringFunctions";
 import {toImageRef, IImageRef} from "@interfaces/IImageRef";
 import {toLinkRef} from "@interfaces/ILinkRef";
+import {inlineEditAttr} from "@client/lib/inlineEditAttr";
 import type {IHero, IHeroCta, IHeroCtaLegacy, IHeroLegacy} from "./Hero.types";
 export type {IHero, IHeroCta, IHeroMeta, IHeroCoord} from "./Hero.types";
 export {EHeroStyle} from "./Hero.types";
@@ -122,11 +123,13 @@ const dimToCss = (v: IImageRef['width']): string | undefined => {
     return typeof v === 'number' ? `${v}px` : v;
 };
 
-const Hero = ({item, tApp}: {
+const Hero = ({item, tApp, admin}: {
     item: IItem;
     t: TFunction<"translation", undefined>;
     tApp: TFunction<string, undefined>;
+    admin?: boolean;
 }) => {
+    const editId = item.name || EItemType.Hero;
     const c = new HeroContent(EItemType.Hero, item.content).data;
     const trStr = (v: string) => translateOrKeep(tApp, v);
     const tr = (v: string) => <InlineTranslatable tApp={tApp as any} source={v}/>;
@@ -159,7 +162,7 @@ const Hero = ({item, tApp}: {
             )}
             <div className="hero__main">
                 {c.eyebrow && (
-                    <RevealOnScroll as="div" className="hero__eyebrow">
+                    <RevealOnScroll as="div" className="hero__eyebrow" {...inlineEditAttr(admin, editId, 'eyebrow')}>
                         <span className="hero__eyebrow-bullet">◆</span>&nbsp;&nbsp;{tr(c.eyebrow)}
                     </RevealOnScroll>
                 )}
@@ -168,6 +171,7 @@ const Hero = ({item, tApp}: {
                         as="h1"
                         className="hero__headline"
                         id={slugifyAnchor(c.headline) || undefined}
+                        {...inlineEditAttr(admin, editId, 'headline')}
                     >
                         <span style={{color: c.accent || undefined}}>{renderAccentRuns(c.headline, trStr)}</span>
                         {c.headlineSoft && (
@@ -189,12 +193,12 @@ const Hero = ({item, tApp}: {
                     </p>
                 )}
                 {c.subtitle && (
-                    <RevealOnScroll as="h2" className="hero__subtitle" delay={120}>
+                    <RevealOnScroll as="h2" className="hero__subtitle" delay={120} {...inlineEditAttr(admin, editId, 'subtitle')}>
                         {renderAccentRuns(c.subtitle, trStr)}
                     </RevealOnScroll>
                 )}
                 {c.tagline && (
-                    <RevealOnScroll as="p" className="hero__tagline" delay={220}>
+                    <RevealOnScroll as="p" className="hero__tagline" delay={220} {...inlineEditAttr(admin, editId, 'tagline')}>
                         <em>{renderAccentRuns(c.tagline, trStr)}</em>
                         {c.taglineAttribution && (
                             <span className="hero__tagline-attr">&nbsp;{tr(c.taglineAttribution)}</span>

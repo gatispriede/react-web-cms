@@ -24,6 +24,14 @@ export interface IProductVariant {
     attributes: Record<string, string>;
 }
 
+/**
+ * Multi-currency price map. Sparse — operators set native prices only for
+ * the markets they care about; `EcbFxService.convert` fills in the rest at
+ * display time. Backwards-compat: legacy single-currency products are read
+ * as `prices: { [currency]: price }` by `ProductService.normalize`.
+ */
+export type ProductPrices = Record<string, number>;
+
 export interface IProduct {
     id: string;
     sku: string;
@@ -32,6 +40,8 @@ export interface IProduct {
     description: string;
     price: number;
     currency: string;
+    /** Multi-currency map, minor units keyed by ISO-4217. See ProductPrices. */
+    prices?: ProductPrices;
     stock: number;
     images: string[];
     categories: string[];
@@ -49,6 +59,29 @@ export interface IProduct {
     version?: number;
     editedBy?: string;
     editedAt?: string;
+    /**
+     * Reference to an `IProductTemplate.id`. When omitted/undefined the
+     * leaf product page renders with `built-in:standard` fallback.
+     *
+     * Operator-edited per-product `IPage.sections` for the leaf page
+     * override the template (template is the default; per-product is the
+     * override). Phase 1.F (product-display-templates).
+     */
+    templateId?: string;
+    /**
+     * Optional per-product section diff applied on top of the resolved
+     * template's sections. Reserved for future use — today operators
+     * override via direct `IPage.sections` edits on the leaf product
+     * page. Phase 1.F (product-display-templates).
+     */
+    templateOverrides?: Partial<unknown>[];
+    /**
+     * Optional pointer to a parent bundle product. When set, the
+     * `SubProductsGrid` module renders this product as a sibling under
+     * the same parent. Used by the `built-in:bundle` template.
+     * Phase 1.F follow-up (sibling-products fetch).
+     */
+    bundleParentId?: string;
 }
 
 export interface InProduct {
@@ -59,6 +92,7 @@ export interface InProduct {
     description?: string;
     price: number;
     currency: string;
+    prices?: ProductPrices;
     stock?: number;
     images?: string[];
     categories?: string[];
@@ -69,6 +103,8 @@ export interface InProduct {
     manualOverrides?: string[];
     draft?: boolean;
     publishedAt?: string;
+    /** Phase 1.F — template-picker write-side passthrough. */
+    templateId?: string;
 }
 
 /**

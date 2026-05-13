@@ -39,6 +39,36 @@ export interface Cart {
     warnings?: CartWarning[];
 }
 
+/**
+ * Phase 1.B-d — abandoned-cart recovery lifecycle status.
+ *
+ *  - `active`    : cart has items + customer is still shopping (default).
+ *  - `recovered` : a recovery email was sent AND the cart converted to an order.
+ *  - `converted` : cart became an order without ever triggering recovery.
+ *  - `abandoned` : recovery email was sent, no order followed within the
+ *                  observation window — terminal bucket for analytics.
+ */
+export type CartLifecycleStatus = 'active' | 'recovered' | 'converted' | 'abandoned';
+
+/**
+ * Phase 1.B-d — persisted abandoned-cart metadata. Stored as extra
+ * fields on the Mongo `Carts` document (customer carts only) — guest
+ * carts have no email-of-record so they never get a recovery row. The
+ * worker queries on these fields directly so they live on the cart
+ * doc rather than in a sidecar collection.
+ */
+export interface CartRecoveryFields {
+    /** Lifecycle marker. Default `active` when omitted. */
+    status?: CartLifecycleStatus;
+    /** ISO timestamp when the single recovery email was dispatched. `null`
+     *  until the worker fires; `null` again is never re-set (one-shot). */
+    recoveryEmailSentAt?: string | null;
+    /** Optional cached email for guest-cart recovery. Customer carts read
+     *  the address off the User row; this slot is a future hook for
+     *  guest-cart recovery (Phase 2). */
+    guestEmail?: string | null;
+}
+
 /** Discriminated owner — derived server-side from session/cookie, never from args. */
 export type CartOwner =
     | {kind: 'guest'; cartId: string}

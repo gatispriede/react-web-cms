@@ -153,6 +153,15 @@ const nextConfig = {
             source: "/sitemap-:id.xml",
             destination: "/api/sitemap-:id.xml",
         },
+        // Admin PWA manifest — referenced as `/admin/manifest.json` from
+        // the admin shell `<link rel="manifest">`. The actual handler
+        // lives under `pages/api/admin/` (Next pages-router only invokes
+        // the `(req,res)=>…` shape under `pages/api/`); the rewrite gives
+        // it the clean admin URL the spec + browsers expect.
+        {
+            source: "/admin/manifest.json",
+            destination: "/api/admin/manifest.json",
+        },
     ],
     // Locale JSON files are the runtime translation store — admin saves
     // rewrite them live, so browsers MUST fetch fresh every time. Without

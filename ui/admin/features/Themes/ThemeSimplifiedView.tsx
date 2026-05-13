@@ -6,6 +6,7 @@ import {ITheme} from '@interfaces/ITheme';
 import ThemePreviewFrame from './ThemePreviewFrame';
 import {useRefreshView} from '@client/lib/refreshBus';
 import {useViewModel} from '@client/lib/state/observable';
+import EmptyState from '@admin/lib/EmptyState';
 import {ThemesViewModel} from './ThemesViewModel';
 
 interface Props {
@@ -19,6 +20,13 @@ interface Props {
      * simplified mode (admin-ui-modes decision 4 — VM is shared).
      */
     vm?: ThemesViewModel;
+    /**
+     * Mode the pane is rendering as. Drives the mode-prefixed card
+     * testid (`themes-simplified-card-{id}` vs `themes-advanced-card-{id}`)
+     * per the AUI hierarchy spec (2026-05-07). Defaults to 'simplified'
+     * — the advanced view passes 'advanced' when composing this base.
+     */
+    mode?: 'simplified' | 'advanced';
     /** Optional extras rendered after the gallery (modal editors, conflict dialog). */
     children?: ReactNode;
 }
@@ -36,7 +44,7 @@ interface Props {
  * their `themes-list-row-{id}` testids so e2e specs target the same
  * surface in both modes.
  */
-const ThemeSimplifiedView: React.FC<Props> = ({headerExtra, renderCardActions, vm: vmProp, children}) => {
+const ThemeSimplifiedView: React.FC<Props> = ({headerExtra, renderCardActions, vm: vmProp, mode = 'simplified', children}) => {
     const {t} = useTranslation();
     const ownVm = useViewModel(() => new ThemesViewModel(undefined, t));
     const vm = vmProp ?? ownVm;
@@ -51,13 +59,26 @@ const ThemeSimplifiedView: React.FC<Props> = ({headerExtra, renderCardActions, v
                     {headerExtra}
                 </Space>
             )}
+            {vm.themes.length === 0 ? (
+                <EmptyState
+                    testId={`themes-${mode}-empty-state`}
+                    title={t('empty.themes.title')}
+                    description={t('empty.themes.description')}
+                    primary={{
+                        label: t('empty.themes.primary'),
+                        onClick: () => void vm.refresh(),
+                        testId: 'themes-empty-primary-btn',
+                    }}
+                />
+            ) : null}
             <Row gutter={[12, 12]}>
                 {vm.themes.map((theme: ITheme) => {
                     const active = theme.id === vm.activeId;
                     return (
                         <Col xs={24} md={12} lg={8} key={theme.id}>
                             <Card
-                                data-testid={`themes-list-row-${theme.id}`}
+                                data-testid={`themes-${mode}-card-${theme.id}`}
+                                data-legacy-testid={`themes-list-row-${theme.id}`}
                                 size="small"
                                 title={
                                     <Space>

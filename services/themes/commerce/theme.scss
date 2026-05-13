@@ -1,0 +1,22 @@
+/* ==========================================================================
+   Commerce — placeholder layer.
+
+   Catalogue-first, tight grid, soft palette. Placeholder until the Stitch
+   design pass lands. See `first-class-themes.md` §3 + the per-theme README.
+   ========================================================================== */
+
+[data-theme-name="commerce"] {
+    --color-surface:       light-dark(#fafaf7, #171716);
+    --color-ink:           light-dark(#181816, #f0efe9);
+    --color-accent:        light-dark(#2e6f5e, #7ad3b6);
+    --color-accent-ink:    light-dark(#fafaf7, #0e1a16);
+    --color-surface-inset: light-dark(#f1efe8, #1f1f1d);
+    --color-rule:          light-dark(#e2dfd5, #2c2c29);
+
+    /* Motion overrides — snappy-default profile. */
+    --motion-duration-base: 220ms;
+    --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+    --font-display: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-body:    system-ui, -apple-system, 'Segoe UI', sans-serif;
+}

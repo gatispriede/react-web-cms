@@ -1,4 +1,4 @@
-import {message} from 'antd';
+import {notifyError, notifySuccess} from '@admin/lib/notify';
 import TranslationMetaApi from '@services/api/client/TranslationMetaApi';
 import {observable} from '@client/lib/state/observable';
 
@@ -89,7 +89,7 @@ export class ContentLoaderViewModel {
             if (v != null) this.metaVersion = v;
         } catch (err) {
             console.error('translationMeta toggle failed:', err);
-            void message.error('Could not save "Same as source" — reloading.');
+            notifyError('Could not save "Same as source" — reloading.');
             await this.loadMeta(currentLanguageKey);
         }
     }
@@ -121,10 +121,10 @@ export class ContentLoaderViewModel {
             const result = await this.metaApi.save(patch as Record<string, {acceptedSources: string[]}>, this.metaVersion);
             const v = (result as {version?: number})?.version;
             if (v != null) this.metaVersion = v;
-            void message.success(`${checked ? 'Marked' : 'Cleared'} ${visibleKeys.length} row${visibleKeys.length === 1 ? '' : 's'}`);
+            notifySuccess(`${checked ? 'Marked' : 'Cleared'} ${visibleKeys.length} row${visibleKeys.length === 1 ? '' : 's'}`);
         } catch (err) {
             console.error('bulk acceptSource failed:', err);
-            void message.error('Bulk save failed — reloading.');
+            notifyError('Bulk save failed — reloading.');
             await this.loadMeta(currentLanguageKey);
         }
     }

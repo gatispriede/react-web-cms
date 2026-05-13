@@ -16,6 +16,23 @@
         "severity": "error",
         "message": "Top-level bare element selectors must be wrapped under the file's owning component class — see docs/roadmap/scss-scoping.md. The audit script (tools/scripts/scss-scope-audit.mjs) enforces the per-file owner-class rule; this stylelint hook gates additional patterns added to the list."
       }
+    ],
+    "declaration-property-value-disallowed-list": [
+      {
+        "/^transition(-duration)?$/": ["/\\d+m?s/"],
+        "/^animation(-duration)?$/": ["/\\d+m?s/"]
+      },
+      {
+        "severity": "warning",
+        "message": "Motion durations must come from the token system — use calc(var(--motion-duration-*) * var(--motion-scalar)). See docs/roadmap/admin/motion-token-system.md."
+      }
+    ],
+    "function-disallowed-list": [
+      ["cubic-bezier"],
+      {
+        "severity": "warning",
+        "message": "Inline cubic-bezier(...) is banned — use var(--motion-ease-*). See docs/roadmap/admin/motion-token-system.md."
+      }
     ]
   },
   "ignoreFiles": [
@@ -30,6 +47,8 @@
     "ui/client/styles/Themes/**",
     "ui/client/styles/Marketing/**",
     "ui/admin/styles/Admin/AdminDarkMode.scss",
-    "ui/admin/styles/Admin/AdminAntdOverrides.scss"
+    "ui/admin/styles/Admin/AdminAntdOverrides.scss",
+    "ui/client/styles/_motion-tokens.scss",
+    "ui/admin/styles/_motion-tokens.scss"
   ]
 }

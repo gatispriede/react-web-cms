@@ -1,0 +1,26 @@
+// Commerce theme — per-template style overrides. Phase 1.F.
+// Minimal defaults — commerce optimises for Buy CTA prominence.
+
+.template-built-in-premium {
+    --product-template-hero-gap: 2rem;
+    --product-template-gallery-max-cols: 3;
+}
+
+.template-built-in-standard {
+    --product-template-hero-gap: 1.25rem;
+}
+
+.template-built-in-quick-buy {
+    --product-template-hero-gap: 0.5rem;
+    --product-template-cta-emphasis: 1.35;
+}
+
+.template-built-in-bundle {
+    --product-template-hero-gap: 1.5rem;
+    --product-template-grid-min-card: 240px;
+}
+
+.template-built-in-b2b-spec-sheet {
+    --product-template-hero-gap: 1rem;
+    --product-template-spec-density: compact;
+}

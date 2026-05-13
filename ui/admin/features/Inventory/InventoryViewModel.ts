@@ -1,4 +1,4 @@
-import {message} from 'antd';
+import {notifyError, notifySuccess, notifyWarning} from '@admin/lib/notify';
 import InventoryApi from '@services/api/client/InventoryApi';
 import ProductApi from '@services/api/client/ProductApi';
 import type {IProduct, InProduct} from '@interfaces/IProduct';
@@ -76,7 +76,7 @@ export class InventoryViewModel {
 
     async saveProductStock(slug: string, qty: number): Promise<void> {
         const product = this.products.find(p => p.slug === slug);
-        if (!product) { message.error(this.t('Product not found')); return; }
+        if (!product) { notifyError(this.t('Product not found')); return; }
         const next = new Set(this.pendingSaves);
         next.add(slug);
         this.pendingSaves = next;
@@ -100,12 +100,12 @@ export class InventoryViewModel {
                 draft: product.draft ?? false,
             };
             const result = await this.productApi.save(payload, typeof product.version === 'number' ? product.version : undefined);
-            if (result.error) { message.error(result.error); return; }
-            message.success(this.t('Stock updated'));
+            if (result.error) { notifyError(result.error); return; }
+            notifySuccess(this.t('Stock updated'));
             this.lastSavedSlug = slug;
             await this.refreshProducts();
         } catch (err) {
-            message.error(String((err as Error)?.message ?? err));
+            notifyError(err);
         } finally {
             const after = new Set(this.pendingSaves);
             after.delete(slug);
@@ -128,7 +128,7 @@ export class InventoryViewModel {
         try {
             const s = await this.api.status();
             if ((s as {error?: string}).error) {
-                message.error((s as {error: string}).error);
+                notifyError((s as {error: string}).error);
                 return;
             }
             this.status = s as InventoryStatus;
@@ -146,15 +146,15 @@ export class InventoryViewModel {
         try {
             const out = kind === 'all' ? await this.api.syncAll() : await this.api.syncDelta();
             if ((out as {error?: string}).error) {
-                message.error((out as {error: string}).error);
+                notifyError((out as {error: string}).error);
                 return;
             }
             this.lastReport = out as SyncReport;
             const s = out as SyncReport;
             const summary = `${this.t('Sync')} ${kind === 'all' ? this.t('all') : this.t('delta')}: ${s.itemsCreated} ${this.t('created')}, ${s.itemsUpdated} ${this.t('updated')}, ${s.itemsArchived} ${this.t('archived')}, ${s.errors.length} ${this.t('errors')}`;
-            if (s.status === 'succeeded') message.success(summary);
-            else if (s.status === 'partial') message.warning(summary);
-            else message.error(summary);
+            if (s.status === 'succeeded') notifySuccess(summary);
+            else if (s.status === 'partial') notifyWarning(summary);
+            else notifyError(summary);
             await this.refreshStatus();
         } finally {
             this.syncing = null;
@@ -165,9 +165,9 @@ export class InventoryViewModel {
         let pagination: unknown;
         let fieldMap: unknown;
         try { pagination = JSON.parse(this.paginationJson); }
-        catch { message.error(this.t('Pagination JSON is invalid')); return; }
+        catch { notifyError(this.t('Pagination JSON is invalid')); return; }
         try { fieldMap = JSON.parse(this.fieldMapJson); }
-        catch { message.error(this.t('Field map JSON is invalid')); return; }
+        catch { notifyError(this.t('Field map JSON is invalid')); return; }
         const cfg: IAdapterConfig = this.kind === 'mock'
             ? {kind: 'mock'}
             : {
@@ -182,8 +182,8 @@ export class InventoryViewModel {
         this.savingCfg = true;
         try {
             const out = await this.api.saveAdapterConfig(cfg);
-            if (out.error) { message.error(out.error); return; }
-            message.success(this.t('Adapter config saved'));
+            if (out.error) { notifyError(out.error); return; }
+            notifySuccess(this.t('Adapter config saved'));
             this.credential = '';
             await this.refreshStatus();
         } finally {

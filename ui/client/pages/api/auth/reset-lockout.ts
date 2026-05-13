@@ -1,6 +1,6 @@
 import type {NextApiRequest, NextApiResponse} from 'next';
 import {ROLE_RANK, sessionFromReq} from '@services/features/Auth/authz';
-import {authOptions} from './authOptions';
+import {adminAuthOptions as authOptions} from './authOptions';
 import {resetAllLockouts} from '../_loginLockout';
 import {getMongoConnection} from '@services/infra/mongoDBConnection';
 import {log} from '@services/infra/logger';

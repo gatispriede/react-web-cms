@@ -7,6 +7,7 @@ import {IPost} from "@interfaces/IPost";
 import {useRefreshView} from "@client/lib/refreshBus";
 import ConflictDialog from "@client/lib/ConflictDialog";
 import {useViewModel} from "@client/lib/state/observable";
+import EmptyState from "@admin/lib/EmptyState";
 import {PostsViewModel} from "./PostsViewModel";
 
 interface Props {
@@ -28,6 +29,13 @@ interface Props {
      * but still uses the simplified table + create button.
      */
     renderDrawer?: (vm: PostsViewModel) => ReactNode;
+    /**
+     * Mode the pane is rendering as. Drives mode-prefixed row testid
+     * (`posts-simplified-row-{id}` vs `posts-advanced-row-{id}`) per the
+     * AUI hierarchy spec (2026-05-07). Defaults to 'simplified' — the
+     * advanced view passes 'advanced' when composing this base.
+     */
+    mode?: 'simplified' | 'advanced';
     /** Optional extras rendered after the table (e.g. blog-visible row). */
     children?: ReactNode;
 }
@@ -44,7 +52,7 @@ interface Props {
  * (`headerExtra`, `extraColumns`, `renderRowExtras`, `renderDrawer`)
  * + a shared `vm`.
  */
-const PostsSimplifiedView: React.FC<Props> = ({headerExtra, extraColumns, renderRowExtras, vm: vmProp, renderDrawer, children}) => {
+const PostsSimplifiedView: React.FC<Props> = ({headerExtra, extraColumns, renderRowExtras, vm: vmProp, renderDrawer, mode = 'simplified', children}) => {
     const {t} = useTranslation();
     const ownVm = useViewModel(() => new PostsViewModel(undefined, undefined, t));
     const vm = vmProp ?? ownVm;
@@ -124,15 +132,29 @@ const PostsSimplifiedView: React.FC<Props> = ({headerExtra, extraColumns, render
                 <Button data-testid="posts-refresh-button" onClick={vm.refresh} loading={vm.loading}>{t('Refresh')}</Button>
                 {headerExtra}
             </Space>
-            <Table
-                rowKey="id"
-                loading={vm.loading}
-                dataSource={vm.posts}
-                columns={columns}
-                pagination={{pageSize: 20}}
-                size="middle"
-                onRow={(p: IPost) => ({'data-testid': `posts-row-${p.id}`} as any)}
-            />
+            {!vm.loading && vm.posts.length === 0 ? (
+                <EmptyState
+                    testId={`posts-${mode}-empty-state`}
+                    icon={<EditOutlined style={{fontSize: 48, opacity: 0.4}}/>}
+                    title={t('empty.posts.title')}
+                    description={t('empty.posts.description')}
+                    primary={{
+                        label: t('empty.posts.primary'),
+                        onClick: () => vm.openCreate(),
+                        testId: 'posts-empty-primary-btn',
+                    }}
+                />
+            ) : (
+                <Table
+                    rowKey="id"
+                    loading={vm.loading}
+                    dataSource={vm.posts}
+                    columns={columns}
+                    pagination={{pageSize: 20}}
+                    size="middle"
+                    onRow={(p: IPost) => ({'data-testid': `posts-${mode}-row-${p.id}`, 'data-legacy-testid': `posts-row-${p.id}`} as any)}
+                />
+            )}
             {renderDrawer ? renderDrawer(vm) : (
                 <Drawer
                     open={vm.editing !== null}

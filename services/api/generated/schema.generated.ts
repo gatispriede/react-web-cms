@@ -375,6 +375,13 @@ export const generatedSchema = {
     },
     addUser: { __type: "String!", __args: { user: "InUser!" } },
     analyticsFiltersUpdate: { __type: "String!", __args: { input: "JSON!" } },
+    attachMarketingSession: { __type: "String!", __args: { input: "JSON!" } },
+    backupNow: { __type: "String!", __args: { label: "String" } },
+    backupRestoreToStaging: {
+      __type: "String!",
+      __args: { snapshotId: "String!" },
+    },
+    backupVerify: { __type: "String!" },
     changeMyPassword: {
       __type: "String!",
       __args: { newPassword: "String!", oldPassword: "String!" },
@@ -406,6 +413,7 @@ export const generatedSchema = {
       __type: "String!",
       __args: { resourceId: "String!", scope: "String!", userId: "String!" },
     },
+    markInboxNotificationRead: { __type: "String!", __args: { id: "String!" } },
     mcpIssueToken: {
       __type: "String!",
       __args: { name: "String!", scopes: "[String!]!", ttlDays: "Int" },
@@ -422,6 +430,7 @@ export const generatedSchema = {
       },
     },
     publishSnapshot: { __type: "String!", __args: { note: "String" } },
+    recordMarketingHit: { __type: "String!", __args: { input: "JSON!" } },
     removeSectionItem: {
       __type: "String!",
       __args: { id: "String!", idempotencyKey: "String" },
@@ -483,6 +492,10 @@ export const generatedSchema = {
       __args: { enabled: "Boolean!", id: "String!" },
     },
     setMyAdminUiMode: { __type: "String!", __args: { mode: "String!" } },
+    setMyNotificationPreferences: {
+      __type: "String!",
+      __args: { prefs: "JSON!" },
+    },
     setParent: {
       __type: "String!",
       __args: { pageId: "String!", parentId: "String" },
@@ -508,6 +521,8 @@ export const generatedSchema = {
       __type: "String!",
       __args: { audience: "String", range: "String" },
     },
+    backupListSnapshots: { __type: "String!" },
+    backupStatus: { __type: "String!" },
     functionalRoles: { __type: "String!" },
     getActiveTheme: { __type: "String" },
     getAuditActors: { __type: "String!" },
@@ -553,9 +568,20 @@ export const generatedSchema = {
     getUsers: { __type: "[IUser!]!" },
     isFreshInstall: { __type: "Boolean!" },
     loadData: { __type: "[ILoadData!]!" },
+    marketingAttributionReport: {
+      __type: "String!",
+      __args: { groupBy: "String", range: "String" },
+    },
     mcpListTokens: { __type: "String!" },
     me: { __type: "ICustomer" },
     myAdminUiMode: { __type: "String!" },
+    myInbox: {
+      __type: "String!",
+      __args: { limit: "Int", unreadOnly: "Boolean" },
+    },
+    myInboxUnreadCount: { __type: "Int!" },
+    myNotificationPreferences: { __type: "String!" },
+    notificationStats: { __type: "String!" },
     permissionsForUser: { __type: "String!", __args: { userId: "String!" } },
     setupAdmin: { __type: "IUser" },
   },
@@ -747,6 +773,28 @@ export interface MutationMongo {
   analyticsFiltersUpdate: (args: {
     input: Scalars["JSON"]["input"];
   }) => Scalars["String"]["output"];
+  /**
+   * Public — bind an anonymous sessionId to the signed-in user id. Called on signup + magic-link redeem.
+   */
+  attachMarketingSession: (args: {
+    input: Scalars["JSON"]["input"];
+  }) => Scalars["String"]["output"];
+  /**
+   * W8e — trigger an immediate backup. Admin-only.
+   */
+  backupNow: (args?: {
+    label?: Maybe<Scalars["String"]["input"]>;
+  }) => Scalars["String"]["output"];
+  /**
+   * W8e — restore a snapshot into a sandbox staging directory. Admin-only.
+   */
+  backupRestoreToStaging: (args: {
+    snapshotId: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
+  /**
+   * W8e — run `restic check` against the latest snapshot. Admin-only.
+   */
+  backupVerify?: Scalars["String"]["output"];
   changeMyPassword: (args: {
     newPassword: Scalars["String"]["input"];
     oldPassword: Scalars["String"]["input"];
@@ -791,6 +839,12 @@ export interface MutationMongo {
     userId: Scalars["String"]["input"];
   }) => Scalars["String"]["output"];
   /**
+   * Mark an inbox row as read.
+   */
+  markInboxNotificationRead: (args: {
+    id: Scalars["String"]["input"];
+  }) => Scalars["String"]["output"];
+  /**
    * Admin-only — issue a new MCP token. Secret is returned ONCE in the response.
    */
   mcpIssueToken: (args: {
@@ -813,6 +867,12 @@ export interface MutationMongo {
   }) => Scalars["String"]["output"];
   publishSnapshot: (args?: {
     note?: Maybe<Scalars["String"]["input"]>;
+  }) => Scalars["String"]["output"];
+  /**
+   * Public — record one attribution hit. Body: sessionId, utm{}, ref, landingPath, referrer. Idempotent on identical hits.
+   */
+  recordMarketingHit: (args: {
+    input: Scalars["JSON"]["input"];
   }) => Scalars["String"]["output"];
   removeSectionItem: (args: {
     id: Scalars["String"]["input"];
@@ -897,6 +957,12 @@ export interface MutationMongo {
   setMyAdminUiMode: (args: {
     mode: Scalars["String"]["input"];
   }) => Scalars["String"]["output"];
+  /**
+   * Patch the calling customer's notification preferences. Returns the merged blob.
+   */
+  setMyNotificationPreferences: (args: {
+    prefs: Scalars["JSON"]["input"];
+  }) => Scalars["String"]["output"];
   setParent: (args: {
     pageId: Scalars["String"]["input"];
     parentId?: Maybe<Scalars["String"]["input"]>;
@@ -937,6 +1003,14 @@ export interface QueryMongo {
     audience?: Maybe<Scalars["String"]["input"]>;
     range?: Maybe<Scalars["String"]["input"]>;
   }) => Scalars["String"]["output"];
+  /**
+   * W8e — recent backup snapshots from the restic repo. Admin-only.
+   */
+  backupListSnapshots?: Scalars["String"]["output"];
+  /**
+   * W8e — latest backup status + last drill result. Admin-only.
+   */
+  backupStatus?: Scalars["String"]["output"];
   /**
    * Read — list of functional roles declared by every active feature, with assignable flag.
    */
@@ -1012,6 +1086,13 @@ export interface QueryMongo {
    */
   loadData: Array<ILoadData>;
   /**
+   * Admin — aggregated attribution report. Args: groupBy (source|campaign|ref), range (7d|30d|all).
+   */
+  marketingAttributionReport: (args?: {
+    groupBy?: Maybe<Scalars["String"]["input"]>;
+    range?: Maybe<Scalars["String"]["input"]>;
+  }) => Scalars["String"]["output"];
+  /**
    * Admin-only — list issued MCP tokens (no secrets returned).
    */
   mcpListTokens?: Scalars["String"]["output"];
@@ -1020,6 +1101,22 @@ export interface QueryMongo {
    * Resolved admin UI mode for the calling session. Per-user setting wins; falls back to siteFlags.defaultAdminUiMode then 'advanced'.
    */
   myAdminUiMode?: Scalars["String"]["output"];
+  /**
+   * Customer's inbox — most recent first.
+   */
+  myInbox: (args?: {
+    limit?: Maybe<Scalars["Int"]["input"]>;
+    unreadOnly?: Maybe<Scalars["Boolean"]["input"]>;
+  }) => Scalars["String"]["output"];
+  myInboxUnreadCount?: Scalars["Int"]["output"];
+  /**
+   * Customer's own notification preferences (with defaults merged).
+   */
+  myNotificationPreferences?: Scalars["String"]["output"];
+  /**
+   * Admin observability — per-category routing distribution + 24h inbox volume.
+   */
+  notificationStats?: Scalars["String"]["output"];
   /**
    * Admin — list every permission grant for a user.
    */

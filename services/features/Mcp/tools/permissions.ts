@@ -178,4 +178,61 @@ export const permissionRevoke: McpTool = defineTool({
     return batch;
 });
 
-export const PERMISSION_TOOLS: McpTool[] = [permissionList, permissionGrant, permissionRevoke];
+/**
+ * `permission.applyTier` — UX-convenience tool that maps the 4-tier model
+ * (Full / Edit / Comment / View) used by the admin permissions pane onto
+ * the engine's `(scope, resourceId)` rows. Same as the client-side
+ * `tierToGrants` translator, surfaced to MCP so agents can speak the
+ * tier vocabulary directly.
+ *
+ * Per `docs/roadmap/admin/admin-permissions-ux.md`:
+ *   - View / Comment  → no engine grant rows (reads are open)
+ *   - Edit            → grant `(scope, resourceId='*')`
+ *   - Full            → same as Edit; publish/delete are role-rank gated
+ *                       on the user doc (not modelled per-tier yet)
+ *
+ * Idempotent — applying the same tier twice is a no-op against the
+ * underlying rows.
+ */
+const TIER_VALUES = ['Full', 'Edit', 'Comment', 'View'] as const;
+type Tier = typeof TIER_VALUES[number];
+
+export const permissionApplyTier: McpTool = defineTool({
+    name: 'permission.applyTier',
+    description: 'Set a tier (Full / Edit / Comment / View) for a user on a scope. Expands the tier into the granular `(scope, resourceId)` grants the engine consumes — View/Comment removes the wildcard row, Edit/Full upserts it. Use this instead of `permission.grant` when agents speak the tier vocabulary surfaced by the admin pane.',
+    scopes: ['admin:auth'],
+    idempotent: true,
+    inputSchema: {
+        type: 'object',
+        properties: {
+            userId: {type: 'string', minLength: 1},
+            scope: {type: 'string', minLength: 1, description: 'Engine scope — `page` / `module` / `element`.'},
+            tier: {type: 'string', enum: [...TIER_VALUES]},
+            idempotencyKey: {type: 'string'},
+        },
+        required: ['userId', 'scope', 'tier'],
+    },
+}, async (args, ctx) => {
+    await enforceModeForTool(ctx.actor, 'permission.applyTier');
+    const tier = args.tier as Tier;
+    const wildcardResource = '*';
+    if (tier === 'Edit' || tier === 'Full') {
+        await ctx.services.permissionService.grant({
+            userId: args.userId,
+            scope: args.scope,
+            resourceId: wildcardResource,
+            grantedBy: ctx.actor,
+        });
+        return {ok: true, tier, applied: 'grant'};
+    }
+    // View / Comment — strip the wildcard row if present (per-resource
+    // override rows are left alone; operators manage those explicitly).
+    await ctx.services.permissionService.revoke({
+        userId: args.userId,
+        scope: args.scope,
+        resourceId: wildcardResource,
+    });
+    return {ok: true, tier, applied: 'revoke'};
+});
+
+export const PERMISSION_TOOLS: McpTool[] = [permissionList, permissionGrant, permissionRevoke, permissionApplyTier];

@@ -1,0 +1,13 @@
+.pagination {
+    display: flex;
+    justify-content: center;
+    padding: 1.5rem 0;
+
+    &__button {
+        padding: 0.625rem 1.5rem;
+        border-radius: 999px;
+        font-weight: 600;
+    }
+
+    &--infinite { min-height: 1px; }
+}

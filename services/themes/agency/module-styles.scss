@@ -1,0 +1,58 @@
+/* ==========================================================================
+   Agency — per-module override slot.
+
+   Placeholder. Real per-module styling (Hero oversized-type, Timeline
+   horizontal-scroll, Posts card-grid) lands in the Stitch design pass jump
+   per `first-class-themes.md` §3.6 acceptance.
+   ========================================================================== */
+
+[data-theme-name="agency"] {
+    /* Per-module overrides go here. Empty by design — see file header. */
+
+    /* Product module — agency pass bumps card scale + rounds corners more. */
+    .product-card {
+        border-radius: 14px;
+        &__title { font-size: 18px; }
+    }
+    .product__price { color: var(--theme-colorPrimary, #ff5630); }
+
+    /* client-account-settings-page (Phase 1.E) — minimal default. */
+    .account-settings-layout {
+        max-width: 960px; margin: 0 auto; padding: 24px 16px;
+        .account-settings-hero h1 { font-size: 32px; }
+        .account-settings-nav ul {
+            display: flex; gap: 12px; padding: 0; margin: 0 0 20px; list-style: none; flex-wrap: wrap;
+            li.is-active a { color: var(--theme-colorPrimary, #ff5630); font-weight: 700; }
+        }
+    }
+}
+
+/* Phase 1.C — new product-page modules. */
+[data-theme-name="agency"] {
+    .product-detail-hero { padding: 2rem; }
+    .product-detail-hero__cta { background: #111; color: #fff; border-radius: 999px; padding: 0.75rem 1.5rem; }
+    .product-spec-table th { color: #222; }
+    .pagination__button { border-radius: 999px; background: #111; color: #fff; border: 0; }
+    .breadcrumb a { color: #111; text-decoration: underline; text-underline-offset: 4px; }
+}
+
+/* Phase 1.D — checkout-as-composable-page minimal defaults. */
+[data-theme-name="agency"] {
+    .cart-line-items, .cart-summary, .cart-actions, .checkout-progress-bar, .checkout-address-form,
+    .checkout-shipping-method, .checkout-payment-form, .checkout-cart-summary, .place-order-button,
+    .order-summary, .magic-link-account-upgrade, .account-welcome, .shipping-calculator,
+    .download-invoice-button, .trust-badges, .money-back-guarantee, .refer-a-friend-cta, .social-share-buttons { }
+    .place-order-button { background: #111; color: #fff; border-radius: 999px; padding: 0.75rem 1.5rem; }
+    .cart-actions__proceed { background: #111; color: #fff; border-radius: 999px; }
+    .trust-badges li { border-radius: 999px; }
+    .checkout-progress-bar__num { border-radius: 50%; }
+    .magic-link-account-upgrade { border-radius: 12px; }
+    .order-summary { border-radius: 12px; }
+}
+
+/* Phase 1.F — product-display-templates. */
+[data-theme-name="agency"] {
+    .large-gallery__tile img { border-radius: 4px; }
+    .downloadable-pdf__link { border-radius: 4px; font-weight: 600; }
+    .warranty-info { border-radius: 4px; }
+}

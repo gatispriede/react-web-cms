@@ -21,6 +21,8 @@
     "lint:scss": "stylelint \"ui/**/*.scss\" --allow-empty-input",
     "audit:scss": "node tools/scripts/scss-scope-audit.mjs",
     "lint:mcp-schema": "node tools/scripts/mcp-schema-drift.mjs",
+    "testid-coverage": "node tools/scripts/testid-coverage.mjs",
+    "testid-coverage:test": "node --test tools/scripts/testid-coverage.test.mjs",
     "clean": "rm -rf ui/client/.next",
     "dev-server": "nodemon --config ./nodemon.json",
     "standalone-graphql": "cross-env npx tsx --tsconfig services/tsconfig.custom.json services/index.ts",
@@ -48,7 +50,11 @@
     "e2e:full:nobuild:headed": "cross-env PLAYWRIGHT_E2E_PROD=1 playwright test tests/e2e/modules/ tests/e2e/features/ --headed",
     "e2e:bundle:refresh": "node tools/e2e-bundle-refresh.js",
     "e2e:update-screenshots": "cross-env PLAYWRIGHT_E2E_REUSE_DEV=1 playwright test --update-snapshots",
-    "e2e:install": "playwright install --with-deps chromium"
+    "e2e:install": "playwright install --with-deps chromium",
+    "size-limit": "size-limit",
+    "lhci": "lhci autorun",
+    "pa11y": "node tools/scripts/pa11y-batch.mjs",
+    "a11y:contrast": "node tools/scripts/contrast-audit.mjs"
   },
   "gqty": {
     "introspections": {
@@ -100,6 +106,7 @@
     "i18next-xhr-backend": "^3.2.2",
     "isbot": "^5.1.40",
     "isomorphic-dompurify": "^3.9.0",
+    "kbar": "^0.1.0-beta.48",
     "lodash": "^4.17.21",
     "lucide-react": "^1.11.0",
     "mongodb": "^7.2.0",
@@ -121,10 +128,12 @@
     "redis": "^5.12.1",
     "sass": "^1.85.1",
     "sharp": "^0.34.0",
+    "sonner": "^1.7.4",
     "styled-components": "^6.1.14",
     "tls": "^0.0.1",
     "ua-parser-js": "^2.0.9",
     "uppload": "^3.2.1",
+    "web-vitals": "^4.2.4",
     "zod": "^4.3.6"
   },
   "browser": {
@@ -144,7 +153,11 @@
     ]
   },
   "devDependencies": {
+    "@lhci/cli": "^0.14.0",
+    "axe-core": "^4.10.2",
+    "pa11y": "^8.0.0",
     "@playwright/test": "^1.55.0",
+    "@size-limit/file": "^11.1.6",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -163,6 +176,7 @@
     "mongodb-memory-server": "^11.0.1",
     "nodemon": "^3.1.9",
     "postcss-scss": "^4.0.9",
+    "size-limit": "^11.1.6",
     "stylelint": "^17.10.0",
     "stylelint-config-standard-scss": "^17.0.0",
     "stylelint-scss": "^7.0.0",
@@ -172,6 +186,7 @@
     "vitest": "^4.1.4"
   },
   "optionalDependencies": {
-    "@node-rs/xxhash": "^1.7.6"
+    "@node-rs/xxhash": "^1.7.6",
+    "@react-pdf/renderer": "^4.0.0"
   }
 }

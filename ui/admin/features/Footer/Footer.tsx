@@ -1,5 +1,6 @@
 import React, {useEffect} from "react";
-import {Alert, Button, Card, Col, Input, Row, Space, Switch, Typography, message} from "antd";
+import {Alert, Button, Card, Col, Input, Row, Space, Switch, Typography} from "antd";
+import {notifyError} from '@admin/lib/notify';
 import {DeleteOutlined, PlusOutlined} from "@client/lib/icons";
 import {useTranslation} from "react-i18next";
 import AuditBadge from "@admin/shell/AuditBadge";
@@ -66,6 +67,7 @@ const AdminSettingsFooter: React.FC = () => {
                                                         value={entry.url ?? ''}
                                                         onChange={(v) => vm.patchEntry(i, j, {url: v})}
                                                         placeholder={t('Pick page or anchor')}
+                                                        hostId={`footer-col-${i}-entry-${j}`}
                                                     />
                                                 ) : (
                                                     <Input
@@ -123,7 +125,7 @@ const AdminSettingsFooter: React.FC = () => {
                         onTakeTheirs={vm.takeTheirs}
                         onKeepMine={async () => {
                             try { await vm.conflict?.retry(); }
-                            catch (err) { message.error(String((err as Error)?.message ?? err)); vm.dismissConflict(); }
+                            catch (err) { notifyError(err); vm.dismissConflict(); }
                         }}
                     />
                 );

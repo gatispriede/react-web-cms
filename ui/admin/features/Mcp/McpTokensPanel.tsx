@@ -3,6 +3,7 @@ import {Alert, Button, Checkbox, Form, Input, Modal, Popconfirm, Select, Space, 
 import {useTranslation} from "react-i18next";
 import {ALL_MCP_SCOPES, IMcpTokenSummary, McpScope} from "@interfaces/IMcp";
 import {useViewModel} from "@client/lib/state/observable";
+import EmptyState from "@admin/lib/EmptyState";
 import {McpTokensViewModel} from "./McpTokensViewModel";
 
 /**
@@ -45,15 +46,28 @@ const McpTokensPanel: React.FC = () => {
                 <Button data-testid="mcp-refresh-button" onClick={vm.refresh} loading={vm.loading}>{t('Refresh')}</Button>
             </Space>
 
-            <Table<IMcpTokenSummary>
-                rowKey="id"
-                loading={vm.loading}
-                dataSource={vm.tokens}
-                columns={columns as any}
-                size="small"
-                pagination={false}
-                onRow={(r: IMcpTokenSummary) => ({'data-testid': `mcp-row-${r.id}`} as any)}
-            />
+            {vm.tokens.length === 0 && !vm.loading ? (
+                <EmptyState
+                    testId="mcp-tokens-empty-state"
+                    title={t('empty.mcpTokens.title')}
+                    description={t('empty.mcpTokens.description')}
+                    primary={{
+                        label: t('empty.mcpTokens.primary'),
+                        onClick: vm.openIssueDialog,
+                        testId: 'mcp-tokens-empty-state-primary',
+                    }}
+                />
+            ) : (
+                <Table<IMcpTokenSummary>
+                    rowKey="id"
+                    loading={vm.loading}
+                    dataSource={vm.tokens}
+                    columns={columns as any}
+                    size="small"
+                    pagination={false}
+                    onRow={(r: IMcpTokenSummary) => ({'data-testid': `mcp-row-${r.id}`} as any)}
+                />
+            )}
 
             <Modal
                 data-testid="mcp-issue-modal"

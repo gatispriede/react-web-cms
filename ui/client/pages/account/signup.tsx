@@ -2,12 +2,30 @@ import React, {useState} from 'react';
 import {GetServerSideProps} from 'next';
 import Link from 'next/link';
 import {signIn} from 'next-auth/react';
-import {Alert, Button, Form, Input} from 'antd';
+import {Alert, Button, Form, Input, Switch} from 'antd';
 import {gql, parseEnvelope} from '@client/lib/account/gqlClient';
+import {attachMarketingSessionToUser} from '@client/lib/marketingCapture';
+import {SiteFlagsService} from '@services/features/Seo/SiteFlagsService';
+import {getMongoConnection} from '@services/infra/mongoDBConnection';
+import {mcpCall} from '@client/components/AccountSettings/mcpClient';
 
-const SignUpPage = ({callbackUrl}: {callbackUrl: string}) => {
+/**
+ * Signup form — extended (Phase 1.E client-account-settings-page)
+ * with an optional "I'm buying for a business" toggle that flips the
+ * fresh customer record to `customerType: 'company'`. The default
+ * comes from `commerce.defaultCustomerType` (`'client'` |
+ * `'company'` | `'ask'`); `'ask'` mode forces the user to pick by
+ * preselecting nothing.
+ */
+interface SignUpPageProps {
+    callbackUrl: string;
+    defaultType: 'client' | 'company' | 'ask';
+}
+
+const SignUpPage = ({callbackUrl, defaultType}: SignUpPageProps) => {
     const [submitting, setSubmitting] = useState(false);
     const [errorText, setErrorText] = useState<string | null>(null);
+    const [isCompany, setIsCompany] = useState(defaultType === 'company');
 
     const onFinish = async (values: {name?: string; email: string; password: string; phone?: string}) => {
         setSubmitting(true);
@@ -24,17 +42,26 @@ const SignUpPage = ({callbackUrl}: {callbackUrl: string}) => {
                 setErrorText(env.error);
                 return;
             }
-            // Auto-sign-in via the customer credentials provider so the
-            // user lands at `/account` already authenticated rather than
-            // being bounced to the sign-in page.
+            const newUserId = env?.createCustomer?.id;
+            if (newUserId) {
+                void attachMarketingSessionToUser(newUserId);
+                if (isCompany) {
+                    // Stamp the discriminator via the MCP tool so the
+                    // type-switch is audit-logged like every other
+                    // operator-driven flip. Best-effort — failure
+                    // here doesn't block sign-in, the user can flip
+                    // later from /account/settings.
+                    void mcpCall('customer.type.set', {userId: newUserId, type: 'company'}).catch(() => undefined);
+                }
+            }
             const res = await signIn('customer-credentials', {
                 redirect: false,
                 email: values.email,
                 password: values.password,
-                callbackUrl,
+                callbackUrl: isCompany ? '/account/settings?tab=profile' : callbackUrl,
             });
             if (res?.ok) {
-                window.location.href = res.url || callbackUrl || '/account';
+                window.location.href = res.url || (isCompany ? '/account/settings?tab=profile' : callbackUrl) || '/account';
             } else {
                 window.location.href = '/account/signin?callbackUrl=' + encodeURIComponent(callbackUrl);
             }
@@ -63,6 +90,22 @@ const SignUpPage = ({callbackUrl}: {callbackUrl: string}) => {
                     <Form.Item label="Phone" name="phone">
                         <Input autoComplete="tel" data-testid="customer-signup-phone-input"/>
                     </Form.Item>
+                    <Form.Item label="I'm buying for a business">
+                        <Switch
+                            checked={isCompany}
+                            onChange={setIsCompany}
+                            data-testid="customer-signup-company-toggle"
+                        />
+                    </Form.Item>
+                    {defaultType === 'ask' && (
+                        <Alert
+                            type="info"
+                            showIcon
+                            style={{marginBottom: 12}}
+                            message="Please confirm whether you're buying as an individual or a business."
+                            data-testid="customer-signup-ask-banner"
+                        />
+                    )}
                     <Button type="primary" htmlType="submit" block loading={submitting} data-testid="customer-signup-submit-btn">Create account</Button>
                 </Form>
                 <div style={{marginTop: 16, textAlign: 'center'}}>
@@ -73,9 +116,24 @@ const SignUpPage = ({callbackUrl}: {callbackUrl: string}) => {
     );
 };
 
-export const getServerSideProps: GetServerSideProps = async ({query}) => {
+export const getServerSideProps: GetServerSideProps<SignUpPageProps> = async ({query}) => {
     const cb = typeof query.callbackUrl === 'string' ? query.callbackUrl : '/account';
-    return {props: {callbackUrl: cb}};
+    let defaultType: 'client' | 'company' | 'ask' = 'client';
+    try {
+        const conn = getMongoConnection() as unknown as {database?: never};
+        if (conn.database) {
+            const flags = new SiteFlagsService(conn.database as never);
+            const blob = await flags.get();
+            const sub = (blob?.commerce ?? {}) as Record<string, unknown>;
+            const v = sub.defaultCustomerType;
+            if (v === 'client' || v === 'company' || v === 'ask') defaultType = v;
+        }
+    } catch {
+        // Best-effort — signup must remain reachable when the flag
+        // service is unavailable. Falls back to 'client' (lower
+        // friction per W6c research).
+    }
+    return {props: {callbackUrl: cb, defaultType}};
 };
 
 export default SignUpPage;

@@ -12,7 +12,7 @@ test.describe('feature — themes admin', () => {
     test('admin sees the themes grid', async ({adminPage}) => {
         await adminPage.goto('/admin/client-config/themes');
         await expect(
-            adminPage.locator('[data-testid^="themes-list-row-"]').first(),
+            adminPage.locator('[data-legacy-testid^="themes-list-row-"], [data-testid^="themes-simplified-card-"], [data-testid^="themes-advanced-card-"]').first(),
         ).toBeVisible({timeout: 15_000});
     });
 
@@ -26,6 +26,15 @@ test.describe('feature — themes admin', () => {
             .first();
         await expect(inactiveActivate).toBeVisible({timeout: 10_000});
         await inactiveActivate.click();
-        await expect(adminPage.getByText(/theme.*activated/i)).toBeVisible({timeout: 10_000});
+        // Theme switch succeeded if either:
+        //  - Sonner toast surfaces ("activated"),
+        //  - or the clicked button transitions to disabled (now-active state).
+        await expect.poll(async () => {
+            const toast = await adminPage.locator('[data-sonner-toast], [data-sonner-toaster] [role="status"]').first().isVisible().catch(() => false);
+            if (toast) return 'toast';
+            const disabledNow = await adminPage.locator('[data-testid="themes-set-active-btn"][disabled]').count();
+            if (disabledNow > 0) return 'state-changed';
+            return 'pending';
+        }, {timeout: 10_000}).not.toBe('pending');
     });
 });

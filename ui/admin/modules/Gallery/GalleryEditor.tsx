@@ -261,6 +261,7 @@ const GalleryEditor = ({content, setContent, t}: IInputContent) => {
                                         <div style={styles.fieldLabel}>{t('Link (optional)')}</div>
                                         <LinkRefInput
                                             t={t}
+                                            hostId={`gallery-item-${index}`}
                                             value={item.link ?? {url: ''}}
                                             onChange={(link) => {
                                                 galleryContent.setItem(index, {

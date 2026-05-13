@@ -11,6 +11,7 @@ import RevealOnScroll from "@client/lib/RevealOnScroll";
 import {usePrefetchedPosts} from "@client/lib/PostsContext";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import {slugifyAnchor} from "@utils/stringFunctions";
+import {inlineEditAttr} from "@client/lib/inlineEditAttr";
 import type {IBlogFeed} from "./BlogFeed.types";
 export type {IBlogFeed} from "./BlogFeed.types";
 export {EBlogFeedStyle} from "./BlogFeed.types";
@@ -26,13 +27,15 @@ export class BlogFeedContent extends ContentManager {
 
 const postApi = new PostApi();
 
-const BlogFeed = ({item, tApp}: {
+const BlogFeed = ({item, tApp, admin}: {
     item: IItem;
     t: TFunction<"translation", undefined>;
     tApp: TFunction<string, undefined>;
+    admin?: boolean;
 }) => {
     const c = new BlogFeedContent(EItemType.BlogFeed, item.content).data;
     const tr = (v: string) => <InlineTranslatable tApp={tApp as any} source={v}/>;
+    const editId = item.name || EItemType.BlogFeed;
     const prefetched = usePrefetchedPosts();
     const filterPrefetched = (list: IPost[]) => (c.tag ? list.filter(p => p.tags.includes(c.tag)) : list).slice(0, c.limit);
     const [posts, setPosts] = useState<IPost[] | null>(prefetched ? filterPrefetched(prefetched) : null);
@@ -54,7 +57,7 @@ const BlogFeed = ({item, tApp}: {
 
     return (
         <div>
-            {c.heading && <h3 id={slugifyAnchor(c.heading) || undefined} style={{marginTop: 0}}>{tr(c.heading)}</h3>}
+            {c.heading && <h3 id={slugifyAnchor(c.heading) || undefined} style={{marginTop: 0}} {...inlineEditAttr(admin, editId, 'heading')}>{tr(c.heading)}</h3>}
             <div className="blog-feed">
                 {posts.map((p, i) => (
                     <RevealOnScroll key={p.id} delay={i * 60}>

@@ -13,7 +13,7 @@
 
 import type {NextApiRequest, NextApiResponse} from 'next';
 import {getServerSession}                     from 'next-auth/next';
-import {authOptions}                          from '../auth/authOptions';
+import {adminAuthOptions as authOptions}      from '../auth/authOptions';
 import {getMongoConnection}                   from '@services/infra/mongoDBConnection';
 import {getMcpToolDefinitions, makeMcpDispatch} from '@services/agent/mcpAgentTools';
 import {SUPPLEMENTAL_TOOL_DEFINITIONS, makeSupplementalDispatch} from '@services/agent/cmsAgentTools';

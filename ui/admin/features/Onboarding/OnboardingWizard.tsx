@@ -159,6 +159,18 @@ const StepTheme: React.FC<{vm: OnboardingViewModel; t: (k: string) => string}> =
         <Typography.Paragraph type="secondary">
             {t('Pick a starting theme. You can change it later under Themes.')}
         </Typography.Paragraph>
+        <div style={{marginBottom: 20, padding: 12, border: '1px dashed var(--ant-color-border, #d9d9d9)', borderRadius: 8}}>
+            <Checkbox
+                checked={vm.seedSample}
+                onChange={(e) => vm.setSeedSample(e.target.checked)}
+                data-testid="onboarding-seed-sample-checkbox"
+            >
+                <strong>{t('empty.onboarding.seedTitle')}</strong>
+            </Checkbox>
+            <Typography.Paragraph type="secondary" style={{marginBottom: 0, marginTop: 4, marginLeft: 24, fontSize: 12}}>
+                {t('empty.onboarding.seedDescription')}
+            </Typography.Paragraph>
+        </div>
         <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16}}>
             {THEME_PICKS.map(pick => {
                 const selected = vm.draft.themeKey === pick.key;

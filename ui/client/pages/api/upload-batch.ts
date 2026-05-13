@@ -31,7 +31,7 @@ import {InImage} from "@interfaces/IImage";
 import {getMongoConnection} from "@services/infra/mongoDBConnection";
 import {ROLE_RANK, sessionFromReq} from "@services/features/Auth/authz";
 import {optimizeImageFile, type RatioLock} from "@services/features/Assets/imageOptimize";
-import {authOptions} from "./auth/authOptions";
+import {adminAuthOptions as authOptions} from "./auth/authOptions";
 
 export const config = {
     api: {

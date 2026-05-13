@@ -1,5 +1,6 @@
 import React, {useEffect, useMemo} from "react";
-import {Alert, Badge, Button, Card, Empty, Modal, Popconfirm, Space, Spin, Table, Tag, Typography} from "antd";
+import {Alert, Badge, Button, Card, Modal, Popconfirm, Space, Spin, Table, Tag, Typography} from "antd";
+import EmptyState from "@admin/lib/EmptyState";
 import {DeleteOutlined, MailOutlined, ReloadOutlined} from "@client/lib/icons";
 import {useTranslation} from "react-i18next";
 import {useRefreshView} from "@client/lib/refreshBus";
@@ -124,7 +125,11 @@ const AdminSettingsInquiries: React.FC = () => {
 
             {vm.rows.length === 0 && !vm.loading ? (
                 <Card>
-                    <Empty description={t('No inquiries yet. Submissions from the public contact form will land here.')}/>
+                    <EmptyState
+                        testId="inquiries-empty-state"
+                        title={t('empty.inquiries.title')}
+                        description={t('empty.inquiries.description')}
+                    />
                 </Card>
             ) : (
                 <Table

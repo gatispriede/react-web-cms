@@ -1,0 +1,3 @@
+.trust-badges { display: flex; gap: 1rem; flex-wrap: wrap; padding: 1rem 0; margin: 0; list-style: none;
+    li { padding: 0.4rem 0.8rem; border: 1px solid var(--theme-colorBorder, #ddd); border-radius: 4px; font-size: 0.85rem; color: var(--theme-colorTextSecondary, #555); }
+}

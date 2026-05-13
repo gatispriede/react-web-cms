@@ -124,7 +124,7 @@ describe('useIsMobile', () => {
                     addListener: vi.fn(),
                     removeListener: vi.fn(),
                 };
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 
                 currentMql = mql as any;
                 return mql;
             }),

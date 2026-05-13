@@ -1,5 +1,6 @@
 import React, {useEffect} from "react";
-import {Alert, Button, Col, Input, Row, Space, Typography, message} from "antd";
+import {Alert, Button, Col, Input, Row, Space, Typography} from "antd";
+import {notifyError} from '@admin/lib/notify';
 import {useTranslation} from "react-i18next";
 import ImageUrlInput from "@client/lib/ImageUrlInput";
 import AuditBadge from "@admin/shell/AuditBadge";
@@ -119,7 +120,7 @@ const AdminSettingsSEO: React.FC = () => {
                         onTakeTheirs={async () => { vm.dismissConflict(); await vm.refresh(); }}
                         onKeepMine={async () => {
                             try { await c.retry(); }
-                            catch (err) { message.error(String((err as Error)?.message ?? err)); vm.dismissConflict(); }
+                            catch (err) { notifyError(err); vm.dismissConflict(); }
                         }}
                     />
                 );

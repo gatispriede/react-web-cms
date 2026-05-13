@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import {buildFooterColumns, IFooterColumn, IFooterConfig} from "@interfaces/IFooter";
 import RevealOnScroll from "@client/lib/RevealOnScroll";
+import AccountLinks from "@client/components/Auth/AccountLinks";
 
 interface Props {
     config: IFooterConfig;
@@ -96,6 +97,9 @@ const SiteFooter: React.FC<Props> = ({config, pages, hasPosts, blogEnabled, t, l
                     </div>
                 ))}
             </RevealOnScroll>
+            {/* Phase 1.A — auth-split-client-admin: account-link column.
+             *  Renders null when `siteFlags.auth.clientLoginEnabled === false`. */}
+            <AccountLinks/>
             {config.bottom && <div className="site-footer__bottom">{config.bottom}</div>}
         </footer>
     );

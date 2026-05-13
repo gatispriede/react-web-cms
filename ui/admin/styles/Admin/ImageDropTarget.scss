@@ -18,7 +18,10 @@
 
 .image-drop-target {
     position: relative;
-    transition: outline-color 160ms ease, background-color 160ms ease;
+    // Motion tokens — see docs/roadmap/admin/motion-token-system.md.
+    transition:
+        outline-color    calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+        background-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
     outline: 2px dashed transparent;
     outline-offset: 2px;
     border-radius: 4px;

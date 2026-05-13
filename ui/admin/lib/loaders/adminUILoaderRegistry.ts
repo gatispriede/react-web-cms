@@ -23,12 +23,14 @@ import {FooterAdminUILoader} from '@admin/features/Footer/FooterAdminUILoader';
 import {AnalyticsAdminUILoader} from '@admin/features/Analytics/AnalyticsAdminUILoader';
 import {AnalyticsFiltersAdminUILoader} from '@admin/features/Analytics/AnalyticsFiltersAdminUILoader';
 import {ErrorLogAdminUILoader} from '@admin/features/Observability/ErrorLogAdminUILoader';
+import {PerfBeaconsAdminUILoader} from '@admin/features/Observability/PerfBeaconsAdminUILoader';
 import {McpAdminUILoader} from '@admin/features/Mcp/McpAdminUILoader';
 import {AuditAdminUILoader} from '@admin/features/Audit/AuditAdminUILoader';
 import {PublishingAdminUILoader} from '@admin/features/Publishing/PublishingAdminUILoader';
 import {LogoAdminUILoader} from '@admin/features/Logo/LogoAdminUILoader';
 import {InquiriesAdminUILoader} from '@admin/features/Inquiries/InquiriesAdminUILoader';
 import {UsersAdminUILoader} from '@admin/features/Users/UsersAdminUILoader';
+import {PermissionsAdminUILoader} from '@admin/features/Permissions/PermissionsAdminUILoader';
 import {BundleAdminUILoader} from '@admin/features/Bundle/BundleAdminUILoader';
 import {OrdersAdminUILoader} from '@admin/features/Orders/OrdersAdminUILoader';
 import {InventoryAdminUILoader} from '@admin/features/Inventory/InventoryAdminUILoader';
@@ -42,6 +44,22 @@ import {ThingsToDoAdminUILoader} from '@admin/features/ThingsToDo/ThingsToDoAdmi
 import {TrashAdminUILoader} from '@admin/features/Trash/TrashAdminUILoader';
 import {DiagnosticsAdminUILoader} from '@admin/features/Diagnostics/DiagnosticsAdminUILoader';
 import {EmailAdminUILoader} from '@admin/features/Email/EmailAdminUILoader';
+import {EmailTemplatesAdminUILoader} from '@admin/features/Email/EmailTemplatesAdminUILoader';
+import {ReleasesAdminUILoader} from '@admin/features/Releases/ReleasesAdminUILoader';
+import {RedirectsAdminUILoader} from '@admin/features/Redirects/RedirectsAdminUILoader';
+import {BackupAdminUILoader} from '@admin/features/Platform/BackupAdminUILoader';
+import {CarsAdminUILoader} from '@admin/features/Cars/CarsAdminUILoader';
+import {AttributionAdminUILoader} from '@admin/features/Observability/AttributionAdminUILoader';
+import {SeoOverviewAdminUILoader} from '@admin/features/SeoOverview/SeoOverviewAdminUILoader';
+import {ComplianceAdminUILoader} from '@admin/features/Compliance/ComplianceAdminUILoader';
+import {CommerceAdminUILoader} from '@admin/features/Commerce/CommerceAdminUILoader';
+import {AuthAdminUILoader} from '@admin/features/Auth/AuthAdminUILoader';
+import {WarehouseSyncAdminUILoader} from '@admin/features/Pages/WarehouseSyncAdminUILoader';
+import {SystemPagesAdminUILoader} from '@admin/features/Pages/SystemPagesAdminUILoader';
+import {CustomerAccountSettingsAdminUILoader} from '@admin/features/CustomerAccountSettings/CustomerAccountSettingsAdminUILoader';
+import {ProductTemplatesAdminUILoader} from '@admin/features/ProductTemplates/ProductTemplatesAdminUILoader';
+import {CheckoutCustomizationAdminUILoader} from '@admin/features/Checkout/CheckoutCustomizationAdminUILoader';
+import {AbandonedCartAdminUILoader} from '@admin/features/Checkout/AbandonedCartAdminUILoader';
 
 const REGISTERED: AdminUILoader[] = [
     new PostsAdminUILoader(),
@@ -49,12 +67,14 @@ const REGISTERED: AdminUILoader[] = [
     new AnalyticsAdminUILoader(),
     new AnalyticsFiltersAdminUILoader(),
     new ErrorLogAdminUILoader(),
+    new PerfBeaconsAdminUILoader(),
     new McpAdminUILoader(),
     new AuditAdminUILoader(),
     new PublishingAdminUILoader(),
     new LogoAdminUILoader(),
     new InquiriesAdminUILoader(),
     new UsersAdminUILoader(),
+    new PermissionsAdminUILoader(),
     new BundleAdminUILoader(),
     new OrdersAdminUILoader(),
     new InventoryAdminUILoader(),
@@ -68,6 +88,22 @@ const REGISTERED: AdminUILoader[] = [
     new TrashAdminUILoader(),
     new DiagnosticsAdminUILoader(),
     new EmailAdminUILoader(),
+    new EmailTemplatesAdminUILoader(),
+    new ReleasesAdminUILoader(),
+    new RedirectsAdminUILoader(),
+    new BackupAdminUILoader(),
+    new CarsAdminUILoader(),
+    new AttributionAdminUILoader(),
+    new SeoOverviewAdminUILoader(),
+    new ComplianceAdminUILoader(),
+    new CommerceAdminUILoader(),
+    new AuthAdminUILoader(),
+    new WarehouseSyncAdminUILoader(),
+    new SystemPagesAdminUILoader(),
+    new CustomerAccountSettingsAdminUILoader(),
+    new ProductTemplatesAdminUILoader(),
+    new CheckoutCustomizationAdminUILoader(),
+    new AbandonedCartAdminUILoader(),
 ];
 
 /**

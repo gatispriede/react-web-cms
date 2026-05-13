@@ -1,8 +1,10 @@
 import React, {useEffect} from 'react';
 import {Button, Card, DatePicker, Drawer, Select, Space, Table, Tag, Typography} from 'antd';
 import {ReloadOutlined} from '@client/lib/icons';
+import {useTranslation} from 'react-i18next';
 import type {IOrder, OrderStatus} from '@interfaces/IOrder';
 import {useViewModel} from '@client/lib/state/observable';
+import EmptyState from '@admin/lib/EmptyState';
 import {OrdersViewModel} from './OrdersViewModel';
 
 /** Render-only Orders pane — VM3 (2026-05-02). */
@@ -37,6 +39,7 @@ const statusColor = (s: OrderStatus): string => {
 };
 
 const AdminOrders: React.FC = () => {
+    const {t} = useTranslation();
     const vm = useViewModel(() => new OrdersViewModel());
 
     useEffect(() => { void vm.refresh(); }, [vm]);
@@ -53,6 +56,13 @@ const AdminOrders: React.FC = () => {
                 <DatePicker.RangePicker onChange={(v) => vm.setDateRange(v as any)}/>
                 <Button icon={<ReloadOutlined/>} onClick={vm.refresh} loading={vm.loading}>Refresh</Button>
             </Space>
+            {!vm.loading && vm.filtered.length === 0 && vm.statusFilter === 'all' ? (
+                <EmptyState
+                    testId="orders-empty-state"
+                    title={t('empty.orders.title')}
+                    description={t('empty.orders.description')}
+                />
+            ) : null}
             <Table<IOrder>
                 rowKey="id"
                 dataSource={vm.filtered}

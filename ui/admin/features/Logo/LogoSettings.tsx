@@ -1,5 +1,6 @@
 import React, {useEffect} from "react";
-import {Alert, Button, InputNumber, Popconfirm, Select, Space, Typography, message} from "antd";
+import {Alert, Button, InputNumber, Popconfirm, Select, Space, Typography} from "antd";
+import {notifyError} from '@admin/lib/notify';
 import {DeleteOutlined} from "@client/lib/icons";
 import {ELogoStyle} from "@enums/ELogoStyle";
 import {useTranslation} from "react-i18next";
@@ -108,7 +109,7 @@ const AdminSettingsLogo: React.FC = () => {
                         onTakeTheirs={vm.takeTheirs}
                         onKeepMine={async () => {
                             try { await vm.conflict?.retry(); }
-                            catch (err) { message.error(String((err as Error)?.message ?? err)); vm.dismissConflict(); }
+                            catch (err) { notifyError(err); vm.dismissConflict(); }
                         }}
                     />
                 );

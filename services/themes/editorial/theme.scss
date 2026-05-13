@@ -1,0 +1,29 @@
+/* ==========================================================================
+   Editorial — placeholder layer.
+
+   Scoped under `[data-theme-name="editorial"]`. The semantic-token block
+   below is consumed by the `:root` cascade via `light-dark()` so the same
+   selector covers both modes — see spec `first-class-themes.md` §3.
+
+   This file ships intentionally minimal: the real visual design pass lands
+   in a follow-up jump from Stitch frames. Slot is wired; content is the
+   next deliverable.
+   ========================================================================== */
+
+[data-theme-name="editorial"] {
+    /* Semantic overrides — values mirror `theme.json` palette (light, dark). */
+    --color-surface:      light-dark(#fdfdfd, #161616);
+    --color-ink:          light-dark(#1a1a1a, #ededed);
+    --color-accent:       light-dark(#c8102e, #ff5566);
+    --color-accent-ink:   light-dark(#fdfdfd, #161616);
+    --color-surface-inset: light-dark(#f4f1ea, #1f1f1f);
+    --color-rule:         light-dark(#d8d2c4, #2d2d2d);
+
+    /* Motion overrides — gentle-slow profile. */
+    --motion-duration-base: 400ms;
+    --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+    /* Typography — display serif, system body. */
+    --font-display: ui-serif, Georgia, 'Times New Roman', serif;
+    --font-body:    system-ui, -apple-system, 'Segoe UI', sans-serif;
+}

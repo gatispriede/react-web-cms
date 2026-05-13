@@ -8,7 +8,7 @@
  */
 import {McpTool} from '../types';
 import {enforceModeForTool} from '../modeEnforcement';
-import {defineTool} from './_shared';
+import {defineTool, runBatch} from './_shared';
 import {cascadePurge} from '@services/infra/cascadePurge';
 import {getMongoConnection} from '@services/infra/mongoDBConnection';
 
@@ -40,40 +40,50 @@ export const trashList: McpTool = defineTool({
 
 export const trashRestore: McpTool = defineTool({
     name: 'trash.restore',
-    description: 'Restore a previously soft-deleted cohort. Idempotent — re-running on a partially-restored group restores the survivors.',
+    description: 'Restore one or many previously soft-deleted cohorts. Single form: pass {trashGroup}. Bulk form: pass {groups: string[]}. Bulk returns per-item failures via `data.failed[]` so a partial-batch failure doesn\'t abort the rest. Idempotent — re-running on a partially-restored group restores the survivors. Reference: image.delete { ids[] }.',
     scopes: ['write:content'],
     idempotent: true,
     gqlMutation: 'restoreFromTrash',
     inputSchema: {
         type: 'object',
-        required: ['trashGroup'],
         properties: {
-            trashGroup: {type: 'string', minLength: 1},
+            trashGroup: {type: 'string', minLength: 1, description: 'Single-item form. Mutually exclusive with `groups`.'},
+            groups: {type: 'array', items: {type: 'string', minLength: 1}, description: 'Bulk variant. Up to 500 groups. Mutually exclusive with `trashGroup`.'},
             idempotencyKey: {type: 'string'},
         },
     },
 }, async (args, ctx) => {
     await enforceModeForTool(ctx.actor, 'trash.restore');
     const conn: any = ctx.services;
-    const res = await conn.restoreFromTrash({
-        trashGroup: args.trashGroup,
-        _session: {email: ctx.actor},
+    const isBulk = Array.isArray(args.groups);
+    const groups: string[] = isBulk
+        ? args.groups.filter((s: unknown): s is string => typeof s === 'string' && s.length > 0)
+        : (typeof args.trashGroup === 'string' && args.trashGroup ? [args.trashGroup] : []);
+    if (!groups.length) {
+        throw new Error('trash.restore requires `trashGroup` or non-empty `groups[]`');
+    }
+    if (!isBulk) {
+        const res = await conn.restoreFromTrash({trashGroup: groups[0], _session: {email: ctx.actor}});
+        return safeParse(res);
+    }
+    return runBatch(groups.map(g => ({id: g})), async (id) => {
+        const res = await conn.restoreFromTrash({trashGroup: id, _session: {email: ctx.actor}});
+        return {result: safeParse(res)};
     });
-    return safeParse(res);
 });
 
 export const trashPurge: McpTool = defineTool({
     // SAFE: not a GraphQL mutation — direct cascadePurge engine
     name: 'trash.purge',
-    description: 'IRREVERSIBLY hard-delete a trash group. Cannot be restored. Admin-only, audited, idempotent.',
+    description: 'IRREVERSIBLY hard-delete one or many trash groups. Single form: pass {trashGroup}. Bulk form: pass {groups: string[]}. Bulk returns per-item failures via `data.failed[]` so a partial-batch failure doesn\'t abort the rest. Cannot be restored. Admin-only, audited, idempotent. Reference: image.delete { ids[] }.',
     scopes: ['write:content'],
     idempotent: true,
     rateLimit: {maxPerMinute: 10},
     inputSchema: {
         type: 'object',
-        required: ['trashGroup'],
         properties: {
-            trashGroup: {type: 'string', minLength: 1},
+            trashGroup: {type: 'string', minLength: 1, description: 'Single-item form. Mutually exclusive with `groups`.'},
+            groups: {type: 'array', items: {type: 'string', minLength: 1}, description: 'Bulk variant. Up to 500 groups. Mutually exclusive with `trashGroup`.'},
             idempotencyKey: {type: 'string'},
         },
     },
@@ -88,8 +98,21 @@ export const trashPurge: McpTool = defineTool({
         services: conn.featureServices ?? {},
         reconnect: typeof conn.setupClient === 'function' ? conn.setupClient.bind(conn) : async () => {/* noop */},
     } as any;
-    const res = await cascadePurge(args.trashGroup, featureCtx);
-    return {trashGroup: args.trashGroup, ...res};
+    const isBulk = Array.isArray(args.groups);
+    const groups: string[] = isBulk
+        ? args.groups.filter((s: unknown): s is string => typeof s === 'string' && s.length > 0)
+        : (typeof args.trashGroup === 'string' && args.trashGroup ? [args.trashGroup] : []);
+    if (!groups.length) {
+        throw new Error('trash.purge requires `trashGroup` or non-empty `groups[]`');
+    }
+    if (!isBulk) {
+        const res = await cascadePurge(groups[0], featureCtx);
+        return {trashGroup: groups[0], ...res};
+    }
+    return runBatch(groups.map(g => ({id: g})), async (id) => {
+        const res = await cascadePurge(id, featureCtx);
+        return {result: res};
+    });
 });
 
 export const TRASH_TOOLS: McpTool[] = [trashList, trashRestore, trashPurge];

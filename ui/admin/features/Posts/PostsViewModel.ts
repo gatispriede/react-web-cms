@@ -1,4 +1,4 @@
-import {message} from 'antd';
+import {notifyError, notifySuccess, notifyWarning} from '@admin/lib/notify';
 import PostApi from '@services/api/client/PostApi';
 import SiteFlagsApi from '@services/api/client/SiteFlagsApi';
 import NavigationApi from '@services/api/client/NavigationApi';
@@ -61,8 +61,9 @@ export class PostsViewModel {
         proxy.removeAction = new GuardedAction<[IPost]>(
             async ({idempotencyKey}, post) => {
                 const result = await proxy.postApi.remove(post.id, {idempotencyKey});
-                if (result.error) { message.error(result.error); return; }
-                message.success(proxy.t('Post deleted'));
+                if (result.error) { notifyError(result.error); return; }
+                // TODO: wire Undo — post delete routes through trash but the remove() API does not return a trashGroup yet.
+                notifySuccess(proxy.t('Post deleted'));
                 await proxy.refresh();
             },
             {onPendingChange: (v) => { proxy.removePending = v; }},
@@ -92,10 +93,10 @@ export class PostsViewModel {
         const result = await this.siteFlagsApi.save({blogEnabled: on});
         if ((result as {error?: string}).error) {
             this.blogEnabled = prev;
-            message.error((result as {error?: string}).error ?? '');
+            notifyError((result as {error?: string}).error ?? '');
             return;
         }
-        message.success(on ? this.t('Blog enabled') : this.t('Blog hidden from the public site'));
+        notifySuccess(on ? this.t('Blog enabled') : this.t('Blog hidden from the public site'));
     }
 
     openCreate(): void {
@@ -115,17 +116,16 @@ export class PostsViewModel {
 
     private async performSave(payload: InPost, expectedVersion: number | undefined): Promise<boolean> {
         const result = await this.postApi.save(payload, expectedVersion);
-        if (result.error) { message.error(result.error); return false; }
+        if (result.error) { notifyError(result.error); return false; }
         // Server-side slug rename surface — same as the legacy inline path.
         const requestedSlug = (payload.slug || '').trim();
         const finalSlug = (result.slug || '').trim();
         if (finalSlug && requestedSlug && finalSlug !== requestedSlug) {
-            message.warning(
+            notifyWarning(
                 this.t('Slug "{{requested}}" was already taken — saved as "{{final}}"', {requested: requestedSlug, final: finalSlug}),
-                6,
             );
         } else {
-            message.success(payload.id ? this.t('Post updated') : this.t('Post created'));
+            notifySuccess(payload.id ? this.t('Post updated') : this.t('Post created'));
         }
         this.close();
         await this.refresh();
@@ -164,7 +164,7 @@ export class PostsViewModel {
                     },
                 };
             } else {
-                message.error(String((err as Error)?.message ?? err));
+                notifyError(err);
             }
         } finally {
             this.saving = false;
@@ -188,8 +188,8 @@ export class PostsViewModel {
 
     async togglePublish(post: IPost): Promise<void> {
         const result = await this.postApi.setPublished(post.id, post.draft);
-        if (result.error) { message.error(result.error); return; }
-        message.success(result.draft ? this.t('Unpublished') : this.t('Published'));
+        if (result.error) { notifyError(result.error); return; }
+        notifySuccess(result.draft ? this.t('Unpublished') : this.t('Published'));
         await this.refresh();
     }
 

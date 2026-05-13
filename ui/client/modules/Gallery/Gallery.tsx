@@ -9,6 +9,7 @@ import type {IGallery, IGalleryItem, IGalleryItemLegacy} from "./Gallery.types";
 import SizedImage from "@client/lib/SizedImage";
 import {toImageRef} from "@interfaces/IImageRef";
 import {toLinkRef} from "@interfaces/ILinkRef";
+import {inlineEditAttr} from "@client/lib/inlineEditAttr";
 export type {IGallery, IGalleryItem} from "./Gallery.types";
 export {EGalleryStyle} from "./Gallery.types";
 
@@ -89,11 +90,13 @@ export class GalleryContent extends ContentManager {
     }
 }
 
-const Gallery = ({item, t: _t, tApp: _tApp}: {
+const Gallery = ({item, t: _t, tApp: _tApp, admin}: {
     item: IItem,
     t: TFunction<"translation", undefined>,
-    tApp: TFunction<string, undefined>
+    tApp: TFunction<string, undefined>,
+    admin?: boolean,
 }) => {
+    const editId = item.name || EItemType.Image;
     const gallery = new GalleryContent(EItemType.Image, item.content);
     gallery.setDisablePreview(item.action !== "onClick");
     const data = gallery.data
@@ -133,7 +136,7 @@ const Gallery = ({item, t: _t, tApp: _tApp}: {
                 )}
                 {galleryItem.text && (
                     <div className={'text'}>
-                        <p>{galleryItem.text}</p>
+                        <p {...inlineEditAttr(admin, editId, `items.${index}.text`)}>{galleryItem.text}</p>
                     </div>
                 )}
             </>

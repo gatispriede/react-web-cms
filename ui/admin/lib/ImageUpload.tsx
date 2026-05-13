@@ -1,4 +1,5 @@
-import {Alert, Button, Empty, Image as AntImage, Input, message, Modal, Popconfirm, Select, Space, Tag, Tooltip} from "antd";
+import {Alert, Button, Empty, Image as AntImage, Input, Modal, Popconfirm, Select, Space, Tag, Tooltip} from "antd";
+import {notifyError, notifySuccess, notifyWarning} from '@admin/lib/notify';
 import {CheckCircleFilled, CloudUploadOutlined, DeleteOutlined, EyeOutlined, InfoCircleOutlined, ReloadOutlined, SearchOutlined} from "@client/lib/icons";
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import UpploadManager from "@services/infra/UpploadeManager";
@@ -105,8 +106,8 @@ const ImageUpload = ({setFile, t}: { setFile: (file: File) => void, t: TFunction
         }
         setBulkBusy(false);
         clearSelection();
-        if (fail === 0) message.success(t('Deleted {{count}} images', {count: ok}) as string);
-        else message.warning(t('Deleted {{ok}}, {{fail}} failed', {ok, fail}) as string);
+        if (fail === 0) notifySuccess(t('Deleted {{count}} images', {count: ok}) as string);
+        else notifyWarning(t('Deleted {{ok}}, {{fail}} failed', {ok, fail}) as string);
         await loadImages();
     }
 
@@ -174,10 +175,10 @@ const ImageUpload = ({setFile, t}: { setFile: (file: File) => void, t: TFunction
         setRescanning(true)
         try {
             const r = await mongoApi.rescanDiskImages()
-            message.success(String(t('Rescan complete: {{added}} added, {{skipped}} already known ({{total}} on disk)', r as any)))
+            notifySuccess(String(t('Rescan complete: {{added}} added, {{skipped}} already known ({{total}} on disk)', r as any)))
             await loadImages()
         } catch (e: any) {
-            message.error(String(e?.message ?? e))
+            notifyError(e)
         } finally {
             setRescanning(false)
         }

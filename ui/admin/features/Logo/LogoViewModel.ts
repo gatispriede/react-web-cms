@@ -1,4 +1,4 @@
-import {message} from 'antd';
+import {notifyError, notifySuccess, notifyWarning} from '@admin/lib/notify';
 import {ELogoStyle} from '@enums/ELogoStyle';
 import MongoApi from '@services/api/client/MongoApi';
 import {PUBLIC_IMAGE_PATH} from '@utils/imgPath';
@@ -62,7 +62,7 @@ export class LogoViewModel {
     handleFile(f: any): void {
         const src = this.inferLocation(f);
         if (!src) {
-            message.warning(this.t('Could not determine the uploaded image location yet — try again.'));
+            notifyWarning(this.t('Could not determine the uploaded image location yet — try again.'));
             return;
         }
         this.logo = {...this.logo, src};
@@ -82,11 +82,11 @@ export class LogoViewModel {
 
     private async performSave(payload: LogoState, expectedVersion: number | undefined, okMessage: string): Promise<boolean> {
         const result = await this.api.saveLogo(JSON.stringify(payload), expectedVersion);
-        if ((result as {error?: string}).error) { message.error((result as {error?: string}).error ?? ''); return false; }
+        if ((result as {error?: string}).error) { notifyError((result as {error?: string}).error ?? ''); return false; }
         if (typeof (result as {version?: number}).version === 'number') {
             this.version = (result as {version?: number}).version;
         }
-        message.success(okMessage);
+        notifySuccess(okMessage);
         return true;
     }
 
@@ -107,7 +107,7 @@ export class LogoViewModel {
                     },
                 };
             } else {
-                message.error(String((err as Error)?.message ?? err));
+                notifyError(err);
             }
         } finally { this.saving = false; }
     }
@@ -131,7 +131,7 @@ export class LogoViewModel {
                     },
                 };
             } else {
-                message.error(String((err as Error)?.message ?? err));
+                notifyError(err);
             }
         } finally { this.saving = false; }
     }

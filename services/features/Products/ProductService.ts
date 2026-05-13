@@ -94,6 +94,60 @@ export class ProductService {
         return doc ? this.normalize(doc) : null;
     }
 
+    /**
+     * Phase 1.F follow-up — sibling-products fetch for `SubProductsGrid`.
+     *
+     * Resolution order:
+     *   1. If the source product has `bundleParentId`, return every other
+     *      product sharing the same parent (excluding self).
+     *   2. If the source product IS a bundle parent (other products
+     *      reference it via `bundleParentId === source.id`), return them.
+     *   3. Fall back to category siblings — same first category, excluding
+     *      self. Ordered by `publishedAt desc`.
+     *
+     * Drafts are always excluded. `limit` clamps to [1, 50].
+     */
+    async listSiblings(
+        productId: string,
+        opts: {limit?: number} = {},
+    ): Promise<IProduct[]> {
+        await this.ensureIndexes();
+        const cap = Math.max(1, Math.min(50, Math.floor(opts.limit ?? 8) || 8));
+        const src = await this.getById(productId);
+        if (!src) return [];
+
+        // (1) sibling-of-sibling: same explicit bundleParentId.
+        if (src.bundleParentId) {
+            const docs = await this.products
+                .find({
+                    bundleParentId: src.bundleParentId,
+                    id: {$ne: src.id},
+                    draft: {$ne: true},
+                } as any, {projection: {_id: 0}})
+                .limit(cap).toArray();
+            if (docs.length > 0) return docs.map(d => this.normalize(d));
+        }
+        // (2) children of this bundle parent.
+        const children = await this.products
+            .find({bundleParentId: src.id, draft: {$ne: true}} as any, {projection: {_id: 0}})
+            .limit(cap).toArray();
+        if (children.length > 0) return children.map(d => this.normalize(d));
+
+        // (3) category fallback — same first category.
+        const firstCategory = Array.isArray(src.categories) ? src.categories[0] : undefined;
+        if (!firstCategory) return [];
+        const cat = await this.products
+            .find({
+                categories: firstCategory,
+                id: {$ne: src.id},
+                draft: {$ne: true},
+            } as any, {projection: {_id: 0}})
+            .sort({publishedAt: -1, createdAt: -1})
+            .limit(cap)
+            .toArray();
+        return cat.map(d => this.normalize(d));
+    }
+
     async search(q: string, {limit = 50, includeDrafts = false}: {limit?: number; includeDrafts?: boolean} = {}): Promise<IProduct[]> {
         await this.ensureIndexes();
         const cap = Math.max(1, Math.min(500, Math.floor(limit) || 50));
@@ -157,6 +211,16 @@ export class ProductService {
                 updatedAt: now,
                 version,
             };
+            // Phase 1.F — templateId passthrough. Empty string / explicit
+            // `null` clears the assignment; undefined keeps the existing
+            // value so non-template-aware editors don't accidentally drop
+            // it on a generic save.
+            if (Object.prototype.hasOwnProperty.call(product, 'templateId')) {
+                const tid = (product as any).templateId;
+                (update as any).templateId = tid === null || tid === '' ? undefined : tid;
+            } else if ((existing as any).templateId !== undefined) {
+                (update as any).templateId = (existing as any).templateId;
+            }
             if (editedBy) update.editedBy = editedBy;
             if (product.publishedAt !== undefined) update.publishedAt = product.publishedAt;
             if (update.draft === false && !(existing as any).publishedAt) update.publishedAt = now;
@@ -198,6 +262,8 @@ export class ProductService {
             updatedAt: now,
             version: 1,
             ...(editedBy ? {editedBy} : {}),
+            // Phase 1.F — templateId passthrough for new products.
+            ...(product.templateId ? {templateId: product.templateId} : {}),
         };
         await this.products.insertOne(doc as any);
         return {id, version: 1, slug};
@@ -301,6 +367,23 @@ export class ProductService {
             description: d.description ?? '',
             price: typeof d.price === 'number' ? d.price : 0,
             currency: d.currency ?? '',
+            // Multi-currency map (W8g). Backwards-compat: if `prices` is
+            // missing or empty, synthesize from legacy single-currency
+            // `price` + `currency`. Reads never see undefined; writes that
+            // only set `price` keep working.
+            prices: (() => {
+                const stored = (d.prices && typeof d.prices === 'object') ? d.prices as Record<string, unknown> : null;
+                const out: Record<string, number> = {};
+                if (stored) {
+                    for (const [k, v] of Object.entries(stored)) {
+                        if (typeof v === 'number' && Number.isFinite(v)) out[k.toUpperCase()] = v;
+                    }
+                }
+                if (Object.keys(out).length === 0 && typeof d.price === 'number' && typeof d.currency === 'string' && d.currency.trim()) {
+                    out[d.currency.toUpperCase()] = d.price;
+                }
+                return out;
+            })(),
             stock: typeof d.stock === 'number' ? d.stock : 0,
             images: Array.isArray(d.images) ? d.images : [],
             categories: Array.isArray(d.categories) ? d.categories : [],

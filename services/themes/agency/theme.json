@@ -1,0 +1,32 @@
+{
+    "slug": "agency",
+    "name": "Agency",
+    "tagline": "Bold, motion-forward, dark-default — case-study-led storytelling.",
+    "audience": "Design / dev / marketing agencies",
+    "mood": ["bold", "motion-forward", "confident", "modern"],
+    "palette": {
+        "surface":      {"light": "#0f0f10", "dark": "#0a0a0b"},
+        "ink":          {"light": "#f5f5f6", "dark": "#f5f5f6"},
+        "accent":       {"light": "#7dffaf", "dark": "#7dffaf"},
+        "accentInk":    {"light": "#0a0a0b", "dark": "#0a0a0b"},
+        "surfaceInset": {"light": "#1a1a1c", "dark": "#141416"},
+        "rule":         {"light": "#2a2a2d", "dark": "#222225"}
+    },
+    "typography": {
+        "display": "system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "body":    "system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "mono":    "ui-monospace, 'SF Mono', Menlo, monospace",
+        "baseSize": 16
+    },
+    "motion": "expressive-bold",
+    "headerBehavior": "shrink-on-scroll",
+    "footerLayout": "multi-column",
+    "logoLockup": "wordmark",
+    "moduleStyleHints": {
+        "hero": "oversized-type",
+        "timeline": "horizontal-scroll",
+        "posts": "card-grid"
+    },
+    "darkDefault": true,
+    "placeholder": true
+}

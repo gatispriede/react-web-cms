@@ -1,9 +1,10 @@
 import React, {useEffect} from 'react';
-import {Button, Empty, Popconfirm, Space, Table, Tag, Typography} from 'antd';
+import {Button, Popconfirm, Space, Table, Tag, Typography} from 'antd';
 import {useTranslation} from 'react-i18next';
 import type {TrashGroupSummary} from '@services/api/client/TrashApi';
 import {useRefreshView} from '@client/lib/refreshBus';
 import {useViewModel} from '@client/lib/state/observable';
+import EmptyState from '@admin/lib/EmptyState';
 import {TrashViewModel} from './TrashViewModel';
 
 /** Render-only Trash admin pane — VM4 (F2 / data-integrity.md). */
@@ -77,7 +78,11 @@ const TrashPane: React.FC = () => {
             </Space>
 
             {vm.groups.length === 0 && !vm.loading ? (
-                <Empty description={t('Trash is empty')}/>
+                <EmptyState
+                    testId="trash-empty-state"
+                    title={t('empty.trash.title')}
+                    description={t('empty.trash.description')}
+                />
             ) : (
                 <Table
                     rowKey="trashGroup"

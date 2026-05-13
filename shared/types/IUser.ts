@@ -94,6 +94,66 @@ export interface IUser {
      * See `shared/types/IPermission.ts` + `docs/features/platform/edit-levels.md`.
      */
     grants?: import('./IPermission').Grant[];
+    /**
+     * W8f — per-customer notification preferences. Per-category routing
+     * (email / inbox / both / off) + optional quiet hours + digest
+     * cadence. See `shared/types/INotificationPreferences.ts`.
+     * Missing → defaults from `DEFAULT_NOTIFICATION_PREFERENCES`.
+     */
+    notificationPreferences?: import('./INotificationPreferences').INotificationPreferences;
+    /**
+     * W6c — marketing attribution. `firstTouchUtm` is immutable after
+     * first set (the original ad / referrer the customer came in on);
+     * `lastTouchUtm` is overwritten on every subsequent attributable
+     * visit so the order-level "what brought them back for this order"
+     * view stays current. Both populated by
+     * `MarketingAttributionService.attachToUser`.
+     */
+    firstTouchUtm?: IUserUtm;
+    lastTouchUtm?: IUserUtm;
+    /**
+     * client-account-settings-page (Phase 1.E) — customer-account
+     * discriminator. `'client'` = individual / B2C, `'company'` = B2B
+     * with company sub-record + VAT id. Implicit `'client'` for
+     * legacy customer rows (back-compat — no migration required).
+     * Only meaningful when `kind === 'customer'`.
+     */
+    customerType?: 'client' | 'company';
+    /**
+     * Company sub-record — required when `customerType === 'company'`.
+     * Single-user-per-company today; multi-user roster is a future
+     * `ICompanyAccount` expansion path (decision tracked in spec).
+     */
+    company?: import('./ICompanyProfile').ICompanyProfile;
+    /**
+     * Saved payment methods (Stripe-tokenized refs — see
+     * `IPaymentMethodRef`). Empty for guest checkouts and for shoppers
+     * who only ever use one-off cards.
+     */
+    paymentMethods?: import('./IPaymentMethodRef').IPaymentMethodRef[];
+    /**
+     * Optional date-of-birth (ISO date, `YYYY-MM-DD`) — collected only
+     * from `'client'`-type customers for marketing segmentation (W6c).
+     * Omitted for `'company'` customers.
+     */
+    dateOfBirth?: string;
+    /** Preferred site language (ISO code, e.g. `'en'`, `'lv'`) — drives
+     *  the storefront locale picker for signed-in customers and the
+     *  default `lang` for outbound emails. */
+    preferredLanguage?: string;
+    /** Preferred currency (ISO 4217, e.g. `'EUR'`) — W8g cart default. */
+    preferredCurrency?: string;
+}
+
+export interface IUserUtm {
+    source?: string;
+    medium?: string;
+    campaign?: string;
+    term?: string;
+    content?: string;
+    referrer?: string;
+    landingPath?: string;
+    capturedAt: string;
 }
 
 export interface InUser {
@@ -114,4 +174,11 @@ export interface InUser {
     shippingAddresses?: IAddress[];
     createdAt?: string;
     grants?: import('./IPermission').Grant[];
+    notificationPreferences?: import('./INotificationPreferences').INotificationPreferences;
+    customerType?: 'client' | 'company';
+    company?: import('./ICompanyProfile').ICompanyProfile;
+    paymentMethods?: import('./IPaymentMethodRef').IPaymentMethodRef[];
+    dateOfBirth?: string;
+    preferredLanguage?: string;
+    preferredCurrency?: string;
 }

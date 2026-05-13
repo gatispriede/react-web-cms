@@ -1,0 +1,25 @@
+.breadcrumb {
+    padding: 0.5rem 0;
+    font-size: 0.875rem;
+
+    ol {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0;
+    }
+
+    li {
+        display: inline-flex;
+        align-items: center;
+    }
+
+    a { text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    &__sep { opacity: 0.5; padding: 0 0.25rem; }
+
+    &--empty { min-height: 1.5rem; }
+}

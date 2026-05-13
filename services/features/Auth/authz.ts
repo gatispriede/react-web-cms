@@ -58,6 +58,30 @@ export async function sessionFromReq(req: any, res: any, authOptions: NextAuthOp
     }
 }
 
+/**
+ * Phase 1.A — `auth-split-client-admin`. Resolves a session by trying
+ * the admin NextAuth instance first, then falling back to the customer
+ * instance. The two instances use disjoint cookie names
+ * (`cms.admin-session` vs `cms.customer-session`) so only one will
+ * ever match — but we try both because a single GraphQL endpoint
+ * serves both populations.
+ *
+ * Admin takes precedence on the (impossible-by-design) tie: if a
+ * browser somehow holds both cookies, the request runs with admin
+ * privileges. Customers get the customer scope.
+ */
+export async function resolveSessionFromReq(
+    req: any,
+    res: any,
+    opts: {adminAuthOptions: NextAuthOptions; customerAuthOptions: NextAuthOptions},
+): Promise<GraphqlSession> {
+    const adminSession = await sessionFromReq(req, res, opts.adminAuthOptions);
+    if (adminSession.kind === 'admin') return adminSession;
+    const customerSession = await sessionFromReq(req, res, opts.customerAuthOptions);
+    if (customerSession.kind === 'customer') return customerSession;
+    return {kind: 'anonymous', role: 'viewer'};
+}
+
 export class AuthzError extends Error {
     constructor(message: string) {
         super(message);

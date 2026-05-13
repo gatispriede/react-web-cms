@@ -59,9 +59,15 @@ export function isDescendantOrSelf(
     return ancestorIds(items, candidateId).includes(targetId);
 }
 
-/** Depth from root. Root = 0. Used for the 3-level depth cap UX hint. */
+/** Depth from root. Root = 0. Used for the soft depth-warning UX hint. */
 export function depthOf(items: INavigation[], id: string): number {
     return ancestorIds(items, id).length;
 }
 
-export const MAX_DEPTH = 2; // root (0) + 2 child levels = 3 levels total
+/**
+ * Phase 0b — lifted from 2 (= 3-level hard cap) to 8 to match the
+ * server-side `SOFT_DEPTH_WARNING_AT` constant. The number is a UX
+ * threshold, not a correctness invariant; deeper trees still work, the
+ * admin just stops surfacing "Add child" suggestions past this depth.
+ */
+export const MAX_DEPTH = 8;

@@ -77,6 +77,7 @@ const ListEditor: React.FC<IInputContent> = ({content, setContent, t}) => {
                                         value={it.href ?? ''}
                                         onChange={(v) => patchItem(i, {href: v})}
                                         placeholder="Link (optional)"
+                                        hostId={`list-item-${i}`}
                                     />
                                 </div>
                                 <Button danger size="small" icon={<DeleteOutlined/>} onClick={() => removeItem(i)}/>

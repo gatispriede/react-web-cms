@@ -1,0 +1,5 @@
+.checkout-cart-summary { padding: 1rem; border: 1px solid var(--theme-colorBorder, #eee); border-radius: 6px;
+    h3 { margin: 0 0 0.5rem; font-size: 1rem; }
+    &__lines { margin: 0 0 0.5rem; padding: 0; list-style: none; }
+    &__total { font-weight: 700; }
+}

@@ -1,0 +1,64 @@
+/* ==========================================================================
+   Editorial — per-module override slot.
+
+   Placeholder. Real per-module styling (Hero split-text-media, Timeline
+   broken-grid, Posts editorial layout) lands in the Stitch design pass jump
+   per `first-class-themes.md` §3.6 acceptance.
+   ========================================================================== */
+
+[data-theme-name="editorial"] {
+    /* Per-module overrides go here. Empty by design — see file header. */
+
+    /* Product module — editorial pass uses a quieter card with hairline borders. */
+    .product-card {
+        border-color: var(--theme-colorBorderSecondary, #e6e6e6);
+        border-radius: 4px;
+        &:hover { box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06); }
+    }
+    .product__title { font-family: var(--font-display, serif); }
+
+    /* client-account-settings-page (Phase 1.E) — minimal default. */
+    .account-settings-layout {
+        max-width: 960px; margin: 0 auto; padding: 24px 16px;
+        .account-settings-hero { margin-bottom: 16px;
+            .breadcrumb { font-size: 0.85em; color: var(--muted, #6b7280); }
+        }
+        .account-settings-nav ul {
+            display: flex; gap: 8px; padding: 0; margin: 0 0 16px; list-style: none; flex-wrap: wrap;
+            li.is-active a { font-weight: 600; text-decoration: underline; }
+        }
+    }
+}
+
+/* Phase 1.C — new product-page modules. */
+[data-theme-name="editorial"] {
+    .product-detail-hero { padding: 2.5rem 0; border-bottom: 1px solid #eee; }
+    .product-detail-hero__title { font-family: var(--theme-headingFont, Georgia, serif); }
+    .product-spec-table th { font-weight: 500; letter-spacing: 0.02em; }
+    .pagination__button { background: transparent; border: 1px solid #222; }
+    .breadcrumb { letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.75rem; }
+}
+
+/* Phase 1.D — checkout-as-composable-page minimal defaults. */
+[data-theme-name="editorial"] {
+    .cart-line-items, .cart-summary, .cart-actions, .checkout-progress-bar, .checkout-address-form,
+    .checkout-shipping-method, .checkout-payment-form, .checkout-cart-summary, .place-order-button,
+    .order-summary, .magic-link-account-upgrade, .account-welcome, .shipping-calculator,
+    .download-invoice-button, .trust-badges, .money-back-guarantee, .refer-a-friend-cta, .social-share-buttons {
+        font-family: var(--theme-bodyFont, Georgia, serif);
+    }
+    .place-order-button { background: #111; color: #fff; border-radius: 0; letter-spacing: 0.04em; text-transform: uppercase; }
+    .cart-actions__proceed { background: #111; color: #fff; border-radius: 0; }
+    .trust-badges li { border-radius: 0; }
+    .checkout-progress-bar__num { border-radius: 0; }
+}
+
+/* Phase 1.F — product-display-templates: 4 new modules consumed by the
+   5 built-in IProductTemplate seeds + operator-created custom templates. */
+[data-theme-name="editorial"] {
+    .large-gallery__tile img { border-radius: 0; }
+    .large-gallery__title { font-family: var(--theme-headingFont, Georgia, serif); }
+    .sub-products-grid__title { font-family: var(--theme-headingFont, Georgia, serif); }
+    .downloadable-pdf__link { border-radius: 0; }
+    .warranty-info { border-left-color: #111; border-radius: 0; }
+}
