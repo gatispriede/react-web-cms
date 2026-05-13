@@ -1,6 +1,5 @@
 import React from 'react';
 import type {LogoCloudProps, LogoEntry} from './LogoCloud.types';
-import './LogoCloud.scss';
 
 const MAX_LOGOS = 10;
 

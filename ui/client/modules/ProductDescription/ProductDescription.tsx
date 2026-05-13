@@ -6,7 +6,6 @@
  */
 import React from 'react';
 import type {IProductDescription} from './ProductDescription.types';
-import './ProductDescription.scss';
 
 export interface ProductDescriptionProps {
     content: IProductDescription | string;

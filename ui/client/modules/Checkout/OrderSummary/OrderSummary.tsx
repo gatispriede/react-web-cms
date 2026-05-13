@@ -6,7 +6,6 @@ import {useCheckoutMachine} from '@client/lib/checkout/useCheckoutMachine';
 import {formatMoney, orderByToken} from '@client/lib/checkout/api';
 import {OrderApi} from '@services/api/client/OrderApi';
 import type {IOrderSummary} from './OrderSummary.types';
-import './OrderSummary.scss';
 
 export interface OrderSummaryProps {
     item: IItem;

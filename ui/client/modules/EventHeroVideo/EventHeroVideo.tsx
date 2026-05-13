@@ -1,7 +1,6 @@
 import React from 'react';
 import CountdownTimer from '@client/modules/CountdownTimer/CountdownTimer';
 import type {EventHeroVideoProps} from './EventHeroVideo.types';
-import './EventHeroVideo.scss';
 
 function detectReducedMotion(force: boolean | undefined): boolean {
     if (force !== undefined) return force;

@@ -1,6 +1,5 @@
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import type {EventScheduleAgendaProps, ScheduleSession} from './EventScheduleAgenda.types';
-import './EventScheduleAgenda.scss';
 
 type Variant = 'mobile' | 'desktop';
 

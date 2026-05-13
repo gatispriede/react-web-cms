@@ -2,7 +2,6 @@ import React, {useState} from 'react';
 import ComparisonTable from '@client/lib/ComparisonTable/ComparisonTable';
 import type {ComparisonColumn, ComparisonRow} from '@client/lib/ComparisonTable/ComparisonTable.types';
 import type {PricingTableProps} from './PricingTable.types';
-import './PricingTable.scss';
 
 const MAX_TIERS = 5;
 

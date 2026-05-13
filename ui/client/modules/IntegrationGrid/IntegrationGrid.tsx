@@ -1,6 +1,5 @@
 import React, {useState} from 'react';
 import type {Integration, IntegrationGridProps} from './IntegrationGrid.types';
-import './IntegrationGrid.scss';
 
 function Tile({item, testId}: {item: Integration; testId: string}): React.ReactElement {
     const inner = (

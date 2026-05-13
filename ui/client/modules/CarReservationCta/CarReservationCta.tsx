@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from 'react';
 import type {CarReservationCtaProps} from './CarReservationCta.types';
-import './CarReservationCta.scss';
 
 function detectVariant(force: 'mobile' | 'desktop' | undefined): 'mobile' | 'desktop' {
     if (force) return force;

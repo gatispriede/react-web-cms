@@ -1,6 +1,5 @@
 import React from 'react';
 import type {TestimonialWallProps} from './TestimonialWall.types';
-import './TestimonialWall.scss';
 
 const TestimonialWall: React.FC<TestimonialWallProps> = ({testId, items, desktopColumns = 3}) => {
     if (items.length === 0) return null;

@@ -1,7 +1,6 @@
 import React from 'react';
 import OrderProgressTimeline from '@client/modules/OrderProgressTimeline/OrderProgressTimeline';
 import type {OrderAddress, OrderDetailModuleProps} from './OrderDetailModule.types';
-import './OrderDetailModule.scss';
 
 function formatAddress(a: OrderAddress): string[] {
     const parts: string[] = [a.name, a.line1];

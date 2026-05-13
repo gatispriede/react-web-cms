@@ -1,6 +1,5 @@
 import React from 'react';
 import type {ServicesGridFancyProps} from './ServicesGridFancy.types';
-import './ServicesGridFancy.scss';
 
 const ServicesGridFancy: React.FC<ServicesGridFancyProps> = ({testId, services, columns = 3}) => {
     if (services.length === 0) return null;

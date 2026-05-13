@@ -1,6 +1,5 @@
 import React, {useCallback, useState} from 'react';
 import type {MagicLinkConfirmationProps} from './MagicLinkConfirmation.types';
-import './MagicLinkConfirmation.scss';
 
 const MagicLinkConfirmation: React.FC<MagicLinkConfirmationProps> = ({
     testId,

@@ -1,6 +1,5 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import type {EventBuyTicketsCtaProps} from './EventBuyTicketsCta.types';
-import './EventBuyTicketsCta.scss';
 
 type Variant = 'mobile' | 'desktop';
 

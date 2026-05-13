@@ -6,7 +6,6 @@ import {
     WEB_ORDER,
     IOS_ORDER,
 } from './OauthButtonStack.types';
-import './OauthButtonStack.scss';
 
 function detectPlatform(): 'ios' | 'web' {
     if (typeof navigator === 'undefined') return 'web';

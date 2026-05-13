@@ -1,6 +1,5 @@
 import React, {useCallback, useRef, useState} from 'react';
 import type {BeforeAfterSliderProps} from './BeforeAfterSlider.types';
-import './BeforeAfterSlider.scss';
 
 function clamp(v: number): number {
     return Math.max(0, Math.min(100, v));

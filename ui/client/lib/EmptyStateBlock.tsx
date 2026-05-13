@@ -1,5 +1,4 @@
 import React from 'react';
-import './EmptyStateBlock.scss';
 
 /**
  * Public-side empty-state primitive — sibling of `ui/admin/lib/EmptyState.tsx`.

@@ -1,6 +1,5 @@
 import React from 'react';
 import type {FeatureGridProps} from './FeatureGrid.types';
-import './FeatureGrid.scss';
 
 const MAX_FEATURES = 6;
 

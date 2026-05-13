@@ -2,7 +2,6 @@
 import React from 'react';
 import type {IItem} from '@interfaces/IItem';
 import type {IReferAFriendCta} from './ReferAFriendCta.types';
-import './ReferAFriendCta.scss';
 export interface ReferAFriendCtaProps { item: IItem; }
 function parseContent(raw: string|object|undefined): IReferAFriendCta {
     if (!raw) return {} as IReferAFriendCta;

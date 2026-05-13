@@ -3,7 +3,6 @@ import React from 'react';
 import type {IItem} from '@interfaces/IItem';
 import {useCheckoutMachine} from '@client/lib/checkout/useCheckoutMachine';
 import type {IDownloadInvoiceButton} from './DownloadInvoiceButton.types';
-import './DownloadInvoiceButton.scss';
 
 export interface DownloadInvoiceButtonProps { item: IItem; orderId?: string; }
 

@@ -1,6 +1,5 @@
 import React from 'react';
 import type {DietaryFlag, RestaurantMenuItem, RestaurantMenuProps, RestaurantMenuSection} from './RestaurantMenu.types';
-import './RestaurantMenu.scss';
 
 const DIETARY_LABEL: Record<DietaryFlag, string> = {
     'vegan': 'Vegan',

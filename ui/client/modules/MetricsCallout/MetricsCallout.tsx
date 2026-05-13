@@ -1,6 +1,5 @@
 import React from 'react';
 import type {MetricsCalloutProps} from './MetricsCallout.types';
-import './MetricsCallout.scss';
 
 const MetricsCallout: React.FC<MetricsCalloutProps> = ({testId, items, align = 'center'}) => {
     if (items.length === 0) return null;

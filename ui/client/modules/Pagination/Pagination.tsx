@@ -7,7 +7,6 @@
  */
 import React from 'react';
 import type {IPagination} from './Pagination.types';
-import './Pagination.scss';
 
 export interface PaginationProps {
     content: IPagination | string;

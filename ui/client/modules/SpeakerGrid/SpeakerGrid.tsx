@@ -1,6 +1,5 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import type {Speaker, SpeakerGridProps} from './SpeakerGrid.types';
-import './SpeakerGrid.scss';
 
 function SpeakerCard({
     speaker,

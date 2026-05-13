@@ -1,6 +1,5 @@
 import React from 'react';
 import type {ProjectTileGridProps} from './ProjectTileGrid.types';
-import './ProjectTileGrid.scss';
 
 const ProjectTileGrid: React.FC<ProjectTileGridProps> = ({testId, tiles, columns = 3}) => {
     if (tiles.length === 0) return null;

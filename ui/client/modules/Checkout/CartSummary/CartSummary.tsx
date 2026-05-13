@@ -4,7 +4,6 @@ import type {IItem} from '@interfaces/IItem';
 import {useCart} from '@client/features/Cart/useCart';
 import {formatMoney} from '@client/lib/checkout/api';
 import type {ICartSummary} from './CartSummary.types';
-import './CartSummary.scss';
 
 export interface CartSummaryProps { item: IItem; }
 

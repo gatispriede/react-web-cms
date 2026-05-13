@@ -1,6 +1,5 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import type {CtaAction, StickyCtaBarProps} from './StickyCtaBar.types';
-import './StickyCtaBar.scss';
 
 type Variant = 'mobile' | 'desktop';
 

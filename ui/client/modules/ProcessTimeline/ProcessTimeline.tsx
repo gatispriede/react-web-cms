@@ -1,6 +1,5 @@
 import React from 'react';
 import type {ProcessTimelineProps, ProcessPhaseStatus} from './ProcessTimeline.types';
-import './ProcessTimeline.scss';
 
 function formatDate(iso: string): string {
     const d = new Date(iso);

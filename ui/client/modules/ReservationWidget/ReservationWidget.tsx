@@ -1,6 +1,5 @@
 import React, {useState} from 'react';
 import type {ReservationSubmission, ReservationWidgetProps} from './ReservationWidget.types';
-import './ReservationWidget.scss';
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 

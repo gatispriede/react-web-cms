@@ -1,6 +1,5 @@
 import React from 'react';
 import type {ContactBlockProps, SocialPlatform} from './ContactBlock.types';
-import './ContactBlock.scss';
 
 const SOCIAL_LABEL: Record<SocialPlatform, string> = {
     facebook: 'Facebook',

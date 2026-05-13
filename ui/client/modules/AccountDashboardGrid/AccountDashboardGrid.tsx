@@ -1,6 +1,5 @@
 import React from 'react';
 import type {AccountDashboardGridProps} from './AccountDashboardGrid.types';
-import './AccountDashboardGrid.scss';
 
 const AccountDashboardGrid: React.FC<AccountDashboardGridProps> = ({testId, cards, ariaLabel = 'Account dashboard'}) => {
     if (cards.length === 0) return null;

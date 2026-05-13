@@ -1,6 +1,5 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import type {SaveSearchPromptProps} from './SaveSearchPrompt.types';
-import './SaveSearchPrompt.scss';
 
 const STORAGE_PREFIX = 'savesearch.dismissed.';
 const ACTIVITY_DELAY_MS = 5000;

@@ -1,6 +1,5 @@
 import React from 'react';
 import type {ProjectCaseStudyProps} from './ProjectCaseStudy.types';
-import './ProjectCaseStudy.scss';
 
 function detectReducedMotion(force: boolean | undefined): boolean {
     if (force !== undefined) return force;

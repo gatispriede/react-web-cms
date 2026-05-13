@@ -4,7 +4,6 @@ import type {IItem} from '@interfaces/IItem';
 import {useCheckoutMachine} from '@client/lib/checkout/useCheckoutMachine';
 import {OrderApi} from '@services/api/client/OrderApi';
 import type {ICheckoutPaymentForm} from './CheckoutPaymentForm.types';
-import './CheckoutPaymentForm.scss';
 
 export interface CheckoutPaymentFormProps { item: IItem; }
 

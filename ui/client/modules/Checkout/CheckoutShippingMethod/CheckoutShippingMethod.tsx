@@ -6,7 +6,6 @@ import {useCheckoutMachine} from '@client/lib/checkout/useCheckoutMachine';
 import {formatMoney} from '@client/lib/checkout/api';
 import {OrderApi} from '@services/api/client/OrderApi';
 import type {ICheckoutShippingMethod} from './CheckoutShippingMethod.types';
-import './CheckoutShippingMethod.scss';
 
 export interface CheckoutShippingMethodProps { item: IItem; }
 

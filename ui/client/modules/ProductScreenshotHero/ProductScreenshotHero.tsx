@@ -1,6 +1,5 @@
 import React from 'react';
 import type {ProductScreenshotHeroProps} from './ProductScreenshotHero.types';
-import './ProductScreenshotHero.scss';
 
 function detectReducedMotion(force: boolean | undefined): boolean {
     if (force !== undefined) return force;

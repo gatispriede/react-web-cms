@@ -8,7 +8,6 @@ import type {IItem} from '@interfaces/IItem';
 import {useCart} from '@client/features/Cart/useCart';
 import {formatMoney} from '@client/lib/checkout/api';
 import type {ICartLineItems} from './CartLineItems.types';
-import './CartLineItems.scss';
 
 export interface CartLineItemsProps {
     item: IItem;

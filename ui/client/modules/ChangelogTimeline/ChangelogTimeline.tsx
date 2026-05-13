@@ -1,6 +1,5 @@
 import React from 'react';
 import type {ChangelogEntry, ChangelogTimelineProps} from './ChangelogTimeline.types';
-import './ChangelogTimeline.scss';
 
 function formatDate(iso: string): string {
     try {
