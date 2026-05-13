@@ -1,64 +1,344 @@
 /* ==========================================================================
-   Editorial — per-module override slot.
+   Editorial — per-module overrides.
 
-   Placeholder. Real per-module styling (Hero split-text-media, Timeline
-   broken-grid, Posts editorial layout) lands in the Stitch design pass jump
-   per `first-class-themes.md` §3.6 acceptance.
+   Scope: [data-theme-name="editorial"]. Every block here either tweaks a
+   module that genuinely diverges from default (Hero, Gallery, MainMenu,
+   Footer, ProjectCaseStudy …) or polishes a commerce/customer-account
+   module to match the warm-paper + serif aesthetic.
+
+   Token-driven modules (most of the 47 in the catalogue) are NOT touched
+   here — they pick up the theme palette + typography + motion overrides
+   from `theme.scss` automatically via the CSS custom properties. The
+   overrides below are reserved for cases where a default value is
+   geometrically wrong for the theme (e.g. rounded radii on a flat
+   editorial aesthetic, or sticky-static header where Editorial wants
+   centered-hero-integrated).
+
+   Visual baselines for these blocks live under
+   `tests/e2e/visual/__snapshots__/themes/editorial/`. The per-theme
+   capture spec at `tests/e2e/visual/themes/editorial.spec.ts` walks
+   every EItemType under `[data-theme-name="editorial"]` and snapshots
+   the result.
    ========================================================================== */
 
 [data-theme-name="editorial"] {
-    /* Per-module overrides go here. Empty by design — see file header. */
 
-    /* Product module — editorial pass uses a quieter card with hairline borders. */
-    .product-card {
-        border-color: var(--theme-colorBorderSecondary, #e6e6e6);
-        border-radius: 4px;
-        &:hover { box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06); }
-    }
-    .product__title { font-family: var(--font-display, serif); }
+    /* ===================================================================
+       Header / nav — Editorial picks `centered-hero-integrated`.
+       Nav floats over the hero, condenses to a slim bar after scroll
+       past the hero's bottom edge. See moduleStyleHints.hero =
+       'full-bleed-overlay-nav' in theme.json.
+       =================================================================== */
+    .main-nav {
+        background: transparent;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 10;
+        padding: 1.5rem 2rem;
 
-    /* client-account-settings-page (Phase 1.E) — minimal default. */
-    .account-settings-layout {
-        max-width: 960px; margin: 0 auto; padding: 24px 16px;
-        .account-settings-hero { margin-bottom: 16px;
-            .breadcrumb { font-size: 0.85em; color: var(--muted, #6b7280); }
+        a {
+            color: var(--color-surface);
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.4);
+            font-family: var(--font-body);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            font-size: 0.8125rem;
         }
-        .account-settings-nav ul {
-            display: flex; gap: 8px; padding: 0; margin: 0 0 16px; list-style: none; flex-wrap: wrap;
-            li.is-active a { font-weight: 600; text-decoration: underline; }
+
+        // Condensed state once the hero scrolls out (toggled by client JS).
+        &.is-condensed {
+            position: sticky;
+            background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+            backdrop-filter: blur(6px);
+            padding: 0.75rem 2rem;
+
+            a {
+                color: var(--color-ink);
+                text-shadow: none;
+            }
         }
     }
-}
 
-/* Phase 1.C — new product-page modules. */
-[data-theme-name="editorial"] {
-    .product-detail-hero { padding: 2.5rem 0; border-bottom: 1px solid #eee; }
-    .product-detail-hero__title { font-family: var(--theme-headingFont, Georgia, serif); }
-    .product-spec-table th { font-weight: 500; letter-spacing: 0.02em; }
-    .pagination__button { background: transparent; border: 1px solid #222; }
-    .breadcrumb { letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.75rem; }
-}
+    /* ===================================================================
+       Hero — full-bleed banner with overlaid title.
+       =================================================================== */
+    .hero {
+        position: relative;
+        min-height: 75vh;
+        display: flex;
+        align-items: flex-end;
+        padding: 4rem 2rem;
 
-/* Phase 1.D — checkout-as-composable-page minimal defaults. */
-[data-theme-name="editorial"] {
-    .cart-line-items, .cart-summary, .cart-actions, .checkout-progress-bar, .checkout-address-form,
-    .checkout-shipping-method, .checkout-payment-form, .checkout-cart-summary, .place-order-button,
-    .order-summary, .magic-link-account-upgrade, .account-welcome, .shipping-calculator,
-    .download-invoice-button, .trust-badges, .money-back-guarantee, .refer-a-friend-cta, .social-share-buttons {
-        font-family: var(--theme-bodyFont, Georgia, serif);
+        // Background image rendered by Hero module via inline style —
+        // dim it slightly so overlaid text always has 4.5:1 contrast.
+        &::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0.35) 100%);
+            pointer-events: none;
+        }
+
+        &__inner { position: relative; z-index: 1; }
+
+        h1,
+        &__headline {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 400;
+            line-height: 1.05;
+            color: var(--color-surface);
+            margin: 0 0 1rem;
+        }
+
+        &__subtitle,
+        &__tagline {
+            font-family: var(--font-body);
+            font-size: 1.125rem;
+            color: color-mix(in srgb, var(--color-surface) 90%, transparent);
+            max-width: 56ch;
+        }
+
+        // Hero reveal — slow + deliberate, large distance.
+        animation: editorial-hero-enter calc(var(--motion-duration-deliberate) * var(--motion-scalar)) var(--motion-ease-emphasized) backwards;
     }
-    .place-order-button { background: #111; color: #fff; border-radius: 0; letter-spacing: 0.04em; text-transform: uppercase; }
-    .cart-actions__proceed { background: #111; color: #fff; border-radius: 0; }
-    .trust-badges li { border-radius: 0; }
-    .checkout-progress-bar__num { border-radius: 0; }
-}
 
-/* Phase 1.F — product-display-templates: 4 new modules consumed by the
-   5 built-in IProductTemplate seeds + operator-created custom templates. */
-[data-theme-name="editorial"] {
-    .large-gallery__tile img { border-radius: 0; }
-    .large-gallery__title { font-family: var(--theme-headingFont, Georgia, serif); }
-    .sub-products-grid__title { font-family: var(--theme-headingFont, Georgia, serif); }
-    .downloadable-pdf__link { border-radius: 0; }
-    .warranty-info { border-left-color: #111; border-radius: 0; }
+    @keyframes editorial-hero-enter {
+        from { opacity: 0; transform: translateY(var(--motion-distance-lg)); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===================================================================
+       Manifesto — large-type editorial pull-quote feel.
+       =================================================================== */
+    .manifesto {
+        max-width: 64ch;
+        margin: 5rem auto;
+        padding: 0 2rem;
+        font-family: var(--font-display);
+        font-size: clamp(1.5rem, 2.5vw, 2rem);
+        line-height: 1.4;
+        font-style: italic;
+        color: var(--color-ink);
+
+        &::before { content: '\201C'; font-size: 4rem; line-height: 0.5; color: var(--color-accent); margin-right: 0.25em; vertical-align: -0.4em; }
+    }
+
+    /* ===================================================================
+       Gallery — magazine-spread feel (asymmetric grid, ample whitespace).
+       =================================================================== */
+    .gallery {
+        gap: 2rem;
+        padding: 3rem 2rem;
+
+        .gallery__item:nth-child(3n) { grid-column: span 2; }
+
+        img {
+            border-radius: 0;
+            filter: contrast(1.02) saturate(0.95);
+        }
+    }
+
+    /* ===================================================================
+       ProjectCaseStudy + ProjectTileGrid + BlogFeed — the storefront
+       reading surfaces. Inherit display serif on titles.
+       =================================================================== */
+    .project-case-study {
+        max-width: 72ch;
+        margin: 0 auto;
+        padding: 4rem 2rem;
+
+        &__title { font-family: var(--font-display); font-size: clamp(2rem, 4.5vw, 3.5rem); font-weight: 400; line-height: 1.1; }
+        &__section h2 { font-family: var(--font-display); font-size: 1.75rem; font-weight: 400; margin-top: 3rem; }
+        &__section { font-family: var(--font-body); font-size: 1.0625rem; line-height: 1.65; }
+    }
+
+    .project-tile-grid {
+        column-gap: 2rem;
+
+        .project-tile {
+            border-radius: 0;
+            margin-bottom: 2rem;
+
+            &__title { font-family: var(--font-display); font-weight: 400; }
+        }
+    }
+
+    .blog-feed {
+        max-width: 64ch;
+        margin: 0 auto;
+
+        article {
+            border-bottom: 1px solid var(--color-rule);
+            padding: 2rem 0;
+
+            h2 { font-family: var(--font-display); font-size: 1.625rem; font-weight: 400; }
+            time { color: var(--ink-2); letter-spacing: 0.05em; text-transform: uppercase; font-size: 0.75rem; }
+        }
+
+        article:last-child { border-bottom: none; }
+    }
+
+    /* ===================================================================
+       Timeline — broken-grid (alternating sides, hairline rules).
+       =================================================================== */
+    .timeline {
+        --timeline-rule: var(--color-rule);
+
+        &__entry {
+            border-left: 1px solid var(--timeline-rule);
+            padding-left: 2rem;
+            padding-bottom: 2rem;
+            position: relative;
+
+            &::before {
+                content: '';
+                position: absolute;
+                left: -5px;
+                top: 0.5rem;
+                width: 9px;
+                height: 9px;
+                background: var(--color-accent);
+                border-radius: 50%;
+            }
+        }
+    }
+
+    /* ===================================================================
+       Footer — minimal one-row, hairline top rule.
+       =================================================================== */
+    .site-footer {
+        background: transparent;
+        border-top: 1px solid var(--color-rule);
+        padding: 2rem;
+        font-size: 0.875rem;
+        color: var(--ink-2);
+
+        a {
+            color: var(--color-ink);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+        }
+
+        a:hover { border-bottom-color: var(--color-accent); }
+    }
+
+    /* ===================================================================
+       Breadcrumb — uppercase mono-look tracking.
+       =================================================================== */
+    .breadcrumb {
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-2);
+
+        a { color: var(--color-ink); }
+        &__sep { color: var(--color-rule); }
+    }
+
+    /* ===================================================================
+       Commerce + customer-account modules — pick up palette + serif on
+       titles. Buttons drop their radius to match the flat aesthetic.
+       =================================================================== */
+    .cart-line-items, .cart-summary, .cart-actions, .checkout-progress-bar,
+    .checkout-address-form, .checkout-shipping-method, .checkout-payment-form,
+    .checkout-cart-summary, .place-order-button, .order-summary,
+    .magic-link-account-upgrade, .account-welcome, .shipping-calculator,
+    .download-invoice-button, .trust-badges, .money-back-guarantee,
+    .refer-a-friend-cta, .social-share-buttons,
+    .product-card, .product-detail-hero, .product-spec-table,
+    .car-listing-card, .car-photo-gallery, .car-spec-table,
+    .car-reservation-cta, .car-comparison-table, .car-finance-estimator,
+    .car-vdp, .order-detail-module, .order-progress-timeline,
+    .wishlist-grid, .saved-search-list, .account-dashboard-grid,
+    .magic-link-request-form, .magic-link-confirmation,
+    .oauth-button-stack, .pricing-table, .feature-grid,
+    .product-screenshot-hero, .logo-cloud, .testimonial-wall,
+    .integration-grid, .changelog-timeline,
+    .restaurant-menu, .reservation-widget, .opening-hours, .contact-block,
+    .countdown-timer, .event-schedule-agenda, .speaker-grid,
+    .sponsor-strip, .event-buy-tickets-cta, .event-hero-video,
+    .before-after-slider, .metrics-callout, .process-timeline,
+    .services-grid-fancy,
+    .empty-state-block, .sticky-cta-bar, .comparison-table,
+    .save-search-prompt, .vat-badge {
+        font-family: var(--font-body);
+    }
+
+    h1, h2, h3, h4,
+    .cart-line-items__title, .cart-summary__title,
+    .checkout-cart-summary h3, .order-summary h2,
+    .product__title, .product-detail-hero__title,
+    .car-vdp__title, .order-detail-module__title,
+    .pricing-table__plan-name, .feature-grid__title,
+    .project-case-study__title, .blog-feed article h2,
+    .changelog-timeline__title, .restaurant-menu__title,
+    .speaker-grid__name {
+        font-family: var(--font-display);
+    }
+
+    /* Square the buttons + cards (editorial = flat, not rounded). */
+    .place-order-button,
+    .cart-actions__proceed,
+    .empty-state-block__action,
+    .car-reservation-cta__reserve,
+    .car-reservation-cta__cancel,
+    .car-reservation-cta__contact,
+    .oauth-button,
+    .pricing-table__cta,
+    .magic-link-request-form button[type="submit"],
+    .car-finance-estimator__submit,
+    .reservation-widget__submit,
+    .event-buy-tickets-cta__trigger,
+    .save-search-prompt button {
+        border-radius: 2px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        font-size: 0.875rem;
+    }
+
+    .product-card,
+    .car-listing-card,
+    .car-vdp__trust-item,
+    .pricing-table__plan,
+    .feature-grid__card,
+    .changelog-timeline__entry,
+    .speaker-grid__card,
+    .integration-grid__tile,
+    .project-tile-grid__cell,
+    .saved-search-list__row,
+    .account-dashboard-grid__cell,
+    .wishlist-grid__cell {
+        border-radius: 2px;
+    }
+
+    /* VatBadge keeps semantic colours — only flatten its radius. */
+    .vat-badge { border-radius: 2px; }
+
+    /* Cars VDP price block — display serif on the price. */
+    .car-vdp__price,
+    .pricing-table__price {
+        font-family: var(--font-display);
+        font-weight: 400;
+    }
+
+    /* ===================================================================
+       Cross-theme primitives — minor palette + radius polish.
+       =================================================================== */
+    .empty-state-block { padding: 6rem 2rem; }
+    .empty-state-block__title { font-family: var(--font-display); font-weight: 400; }
+
+    .comparison-table caption {
+        font-family: var(--font-display);
+        font-weight: 400;
+        font-size: 1.5rem;
+        text-align: left;
+        margin-bottom: 1rem;
+    }
+
+    .schema-org-injector { /* invisible primitive — no overrides needed */ }
+    .cookie-consent-banner { /* forward-stub — no overrides */ }
 }
