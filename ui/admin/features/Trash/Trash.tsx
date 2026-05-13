@@ -58,8 +58,24 @@ const TrashPane: React.FC = () => {
                     onConfirm={() => void vm.restore(row.trashGroup)}
                     okText={t('Restore')}
                     cancelText={t('Cancel')}
+                    // Stable testids on the popconfirm OK / Cancel buttons —
+                    // the trash restore e2e (`tests/e2e/features/trash.spec.ts`)
+                    // needs to click the inner OK reliably and AntD doesn't
+                    // expose one by default. okButtonProps / cancelButtonProps
+                    // are the canonical pass-through.
+                    okButtonProps={{
+                        ['data-testid' as never]: `trash-restore-confirm-${row.trashGroup}`,
+                    }}
+                    cancelButtonProps={{
+                        ['data-testid' as never]: `trash-restore-cancel-${row.trashGroup}`,
+                    }}
                 >
-                    <Button size="small" type="primary" loading={Boolean(vm.restoring[row.trashGroup])}>
+                    <Button
+                        size="small"
+                        type="primary"
+                        loading={Boolean(vm.restoring[row.trashGroup])}
+                        data-testid={`trash-restore-${row.trashGroup}`}
+                    >
                         {t('Restore')}
                     </Button>
                 </Popconfirm>
