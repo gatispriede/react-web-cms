@@ -77,7 +77,7 @@ export const redirectUpdate: McpTool = defineTool({
             to: {type: 'string'},
             code: {type: 'integer', enum: [301, 302]},
             note: {type: 'string'},
-            expiresAt: {type: ['string', 'null']},
+            expiresAt: {type: 'string'},
             version: {type: 'integer'},
             idempotencyKey: {type: 'string'},
         },

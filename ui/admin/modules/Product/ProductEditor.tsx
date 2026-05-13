@@ -123,7 +123,7 @@ const ProductEditor: React.FC<IInputContent> = ({content, setContent, t}) => {
                 {t('Buy CTA only renders when commerce.checkoutEnabled is on. Catalogue-only sites can leave the toggle on safely.')}
             </Typography.Text>
 
-            <Divider orientation="left">{t('Mode-specific')}</Divider>
+            <Divider>{t('Mode-specific')}</Divider>
 
             {data.mode === 'featured' && (
                 <Space wrap>

@@ -25,7 +25,22 @@ import {waitForVisualReady, maskVolatile} from './_shared/visualHelpers';
  *  10. <Footer> standalone         — via /dev/visual?type=footer
  */
 
+/** Like `page.waitForLoadState('networkidle')` but tolerant of the
+ *  persistent connections shipped in this codebase (perf RUM beacons,
+ *  marketing UTM capture, presence WebSocket, analytics host). Falls back
+ *  to `domcontentloaded` + a brief rAF settle when networkidle never
+ *  arrives within `softTimeoutMs`. */
+async function waitForSurfaceReady(page: Page, softTimeoutMs = 5000): Promise<void> {
+    await page.waitForLoadState('domcontentloaded');
+    try {
+        await page.waitForLoadState('networkidle', {timeout: softTimeoutMs});
+    } catch {
+        // Continue — page is interactive even if networkidle never fires.
+    }
+}
+
 async function snap(page: Page, name: string): Promise<void> {
+    await waitForSurfaceReady(page);
     await waitForVisualReady(page);
     await expect(page).toHaveScreenshot(name, {
         fullPage: true,
@@ -36,7 +51,7 @@ async function snap(page: Page, name: string): Promise<void> {
 authTest.describe('visual — public surfaces', () => {
     authTest('homepage · /en', async ({anonPage: page}) => {
         await page.goto('/en');
-        await page.waitForLoadState('networkidle');
+        await waitForSurfaceReady(page);
         await snap(page, 'surface-homepage.png');
     });
 
@@ -45,37 +60,37 @@ authTest.describe('visual — public surfaces', () => {
         // hasn't been imported in this worker the page 404s; the runbook
         // documents how to wire it in.
         await page.goto('/en/about');
-        await page.waitForLoadState('networkidle');
+        await waitForSurfaceReady(page);
         await snap(page, 'surface-public-page.png');
     });
 
     authTest('blog index · /en/blog', async ({anonPage: page}) => {
         await page.goto('/en/blog');
-        await page.waitForLoadState('networkidle');
+        await waitForSurfaceReady(page);
         await snap(page, 'surface-blog-index.png');
     });
 
     authTest('blog post · /en/blog/<slug>', async ({anonPage: page}) => {
         await page.goto('/en/blog/hello');
-        await page.waitForLoadState('networkidle');
+        await waitForSurfaceReady(page);
         await snap(page, 'surface-blog-post.png');
     });
 
     authTest('signin · /auth/signin', async ({anonPage: page}) => {
         await page.goto('/auth/signin');
-        await page.waitForLoadState('networkidle');
+        await waitForSurfaceReady(page);
         await snap(page, 'surface-signin.png');
     });
 
     authTest('checkout · /checkout', async ({anonPage: page}) => {
         await page.goto('/checkout');
-        await page.waitForLoadState('networkidle');
+        await waitForSurfaceReady(page);
         await snap(page, 'surface-checkout.png');
     });
 
     authTest('marketing landing · /welcome', async ({anonPage: page}) => {
         await page.goto('/welcome');
-        await page.waitForLoadState('networkidle');
+        await waitForSurfaceReady(page);
         await snap(page, 'surface-marketing-landing.png');
     });
 });
@@ -83,19 +98,19 @@ authTest.describe('visual — public surfaces', () => {
 authTest.describe('visual — admin surfaces', () => {
     authTest('admin shell · /admin', async ({adminPage: page}) => {
         await page.goto('/admin');
-        await page.waitForLoadState('networkidle');
+        await waitForSurfaceReady(page);
         await snap(page, 'surface-admin.png');
     });
 
     authTest('admin build · /admin/build', async ({adminPage: page}) => {
         await page.goto('/admin/build');
-        await page.waitForLoadState('networkidle');
+        await waitForSurfaceReady(page);
         await snap(page, 'surface-admin-build.png');
     });
 
     authTest('admin bundle · /admin/release/bundle', async ({adminPage: page}) => {
         await page.goto('/admin/release/bundle');
-        await page.waitForLoadState('networkidle');
+        await waitForSurfaceReady(page);
         await snap(page, 'surface-admin-bundle.png');
     });
 });

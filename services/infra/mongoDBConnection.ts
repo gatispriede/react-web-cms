@@ -707,6 +707,7 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
     }
     private async resolveUserIdFromSession(email?: string): Promise<string | null> {
         if (!email) return null;
+        if (!this.db) return null;
         const u = await this.db.collection('Users').findOne({email: email.trim().toLowerCase()}, {projection: {id: 1}}) as any;
         return u?.id ?? null;
     }

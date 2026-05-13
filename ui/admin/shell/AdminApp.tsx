@@ -362,7 +362,7 @@ class AdminApp extends React.Component<{
         return (
             <ConfigProvider theme={{
                 ...staticTheme,
-                cssVar: true,
+                cssVar: {key: 'admin'},
                 // hashed: false would drop the per-component CSS-in-JS hash
                 // entirely; we keep hashed on (default) so AntD's own styles
                 // still scope. cssVar:true gives us `--ant-color-*` CSS

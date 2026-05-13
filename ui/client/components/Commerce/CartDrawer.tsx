@@ -40,7 +40,7 @@ const CartDrawer: React.FC = () => {
                     <li className="cart-drawer__empty">Your cart is empty.</li>
                 ) : cart.items.map(it => (
                     <li key={`${it.productId}:${it.sku}`} className="cart-drawer__item">
-                        <span>{it.title ?? it.productId}</span>
+                        <span>{(it as any).title ?? it.productId}</span>
                         <span>× {it.qty}</span>
                         <button
                             type="button"
