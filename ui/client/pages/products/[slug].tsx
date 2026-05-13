@@ -66,6 +66,9 @@ const ProductPage = ({product, themeTokens, footer, pages}: Props) => {
         if (ref.current && i18nDescription) ref.current.innerHTML = sanitizeHtml(i18nDescription);
     }, [i18nDescription]);
 
+    const {addItem} = useCart();
+    const [messageApi, messageCtx] = message.useMessage();
+
     if (!product) {
         return (
             <ConfigProvider theme={themeConfig}>
@@ -81,8 +84,6 @@ const ProductPage = ({product, themeTokens, footer, pages}: Props) => {
 
     const attributeRows = Object.entries(product.attributes ?? {}).map(([key, value]) => ({key, value}));
 
-    const {addItem} = useCart();
-    const [messageApi, messageCtx] = message.useMessage();
     const onAddToCart = async () => {
         if (!product) return;
         const sku = activeVariant?.sku ?? product.sku;
