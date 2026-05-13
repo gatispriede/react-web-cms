@@ -12,12 +12,15 @@ import {useViewModel} from '@client/lib/state/observable';
 import {ThemesViewModel} from './ThemesViewModel';
 import ThemeSimplifiedView from './ThemeSimplifiedView';
 
-/** Preset names with a source-controlled JSON in `ui/client/themes/<slug>.json`.
- *  Only these presets expose the "Reset to preset" affordance — the colour-only
- *  basics (Classic, Ocean, Forest, Midnight, Brandappart) live only in code, so
- *  there's nothing to reset against on disk. Keep in sync with
- *  `services/features/Themes/ThemeService.ts` JSON_PRESET_SLUGS. */
-const JSON_PRESET_NAMES = new Set(['Industrial', 'Studio', 'Paper', 'High contrast']);
+/** Preset names eligible for the "Reset to preset" affordance — backed by an
+ *  on-disk first-class theme manifest at `services/themes/<slug>/theme.json`.
+ *  Legacy colour-only presets removed 2026-05-13; the manifest-backed first-
+ *  class themes are the only resettable surface now.
+ *
+ *  Keep in sync with `services/features/Themes/ThemeService.ts` JSON_PRESET_NAMES
+ *  (which re-exports `firstClassThemeNames()` from ThemeRegistry). The strings
+ *  below mirror the `name` field in each `services/themes/<slug>/theme.json`. */
+const JSON_PRESET_NAMES = new Set(['Editorial', 'Commerce', 'SaaS Landing', 'Agency', 'Restaurant']);
 
 const COLOR_TOKENS: {key: keyof IThemeTokens; label: string}[] = [
     {key: 'colorPrimary', label: 'Primary'},

@@ -1,12 +1,17 @@
 import {describe, it, expect} from 'vitest';
 import {scanThemeUsage} from './ThemeUsageService';
 
+// Fixture names mirror the first-class theme set after the 2026-05-13
+// colour-only-presets cleanup. `scanThemeUsage` doesn't validate names
+// against a registry — they're opaque labels here — so updating the
+// strings is cosmetic but keeps the test readable.
+
 describe('scanThemeUsage', () => {
     it('marks the active theme via the activeId field', () => {
         const result = scanThemeUsage({
             themes: [
-                {id: 't1', name: 'Industrial'},
-                {id: 't2', name: 'Studio'},
+                {id: 't1', name: 'Editorial'},
+                {id: 't2', name: 'Commerce'},
             ],
             activeId: 't1',
             publishHistoryThemeIds: [],
@@ -18,8 +23,8 @@ describe('scanThemeUsage', () => {
     it('flags themes that appear in publish history even when not currently active', () => {
         const result = scanThemeUsage({
             themes: [
-                {id: 't1', name: 'Industrial'},
-                {id: 't2', name: 'Studio'},
+                {id: 't1', name: 'Editorial'},
+                {id: 't2', name: 'Commerce'},
             ],
             activeId: 't1',
             publishHistoryThemeIds: ['t2', 't1', 't2'],
@@ -40,7 +45,7 @@ describe('scanThemeUsage', () => {
 
     it('handles a null activeId (no theme set yet)', () => {
         const result = scanThemeUsage({
-            themes: [{id: 't1', name: 'Industrial'}],
+            themes: [{id: 't1', name: 'Editorial'}],
             activeId: null,
             publishHistoryThemeIds: [],
         });

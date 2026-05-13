@@ -10,12 +10,19 @@ import {LANGUAGE_PRESETS} from '@admin/features/Languages/languagePresets';
  * shell. The VM owns all state; this file is render + delegate.
  */
 
-// Editorial preset names — match what `ThemeService.PRESETS` seeds.
+// First-class theme picks — match what `ThemeService.PRESETS` seeds.
+// Each preset is differentiated on palette + typography + motion + header
+// behaviour + radii, not just colour. Legacy colour-only presets removed
+// 2026-05-13 (Industrial / Studio / Paper / High contrast + the inline
+// Classic / Ocean / Brandappart / Forest / Midnight blocks) — see the
+// cleanup commit. A theme that doesn't differentiate the page isn't a
+// theme worth picking.
 const THEME_PICKS: ReadonlyArray<{key: string; label: string; description: string}> = [
-    {key: 'Industrial', label: 'Industrial', description: 'Bold typography, deep neutrals — agency / studio.'},
-    {key: 'Studio', label: 'Studio', description: 'Parchment palette, serif display — boutique / portfolio.'},
-    {key: 'Paper', label: 'Paper', description: 'Minimal whitespace, hairline rules — editorial / journal.'},
-    {key: 'Classic', label: 'Classic', description: 'Familiar AntD blue — safest default.'},
+    {key: 'Editorial', label: 'Editorial', description: 'Warm cream paper, Source Serif Pro, slow + deliberate motion — writers, photographers, considered portfolios.'},
+    {key: 'Commerce', label: 'Commerce', description: 'Pure white + emerald, Space Grotesk, snappy retail motion — DTC product shops, makers, the cars vertical.'},
+    {key: 'SaaS Landing', label: 'SaaS Landing', description: 'Dark-default + violet gradient, Mona Sans + JetBrains Mono, sticky-blur header — B2B SaaS, developer tools, infra.'},
+    {key: 'Agency', label: 'Agency', description: 'Stark white + true black + coral, Geist, expressive-bold spring motion, hide-on-down nav — design studios, case-study portfolios.'},
+    {key: 'Restaurant', label: 'Restaurant', description: 'Warm khaki paper + burgundy, Fraunces + Manrope, considered motion — restaurants, cafes, neighbourhood hospitality.'},
 ];
 
 export interface OnboardingWizardProps {

@@ -29,13 +29,7 @@
 @use "../Common/Logo";
 @use "../Common/Animations";
 
-// Editorial theme overrides (scoped via `[data-theme-name=…]` — see THEMING.md)
-@use "../Themes/Paper";
-@use "../Themes/Studio";
-@use "../Themes/Industrial";
-@use "../Themes/HighContrast";
-
-// Wave 5 first-class themes — each theme lives at `services/themes/<slug>/`
+// First-class themes — each theme lives at `services/themes/<slug>/`
 // with `theme.scss` (semantic-token overrides) + `module-styles.scss` (per-
 // module override layer). Active-theme dispatch is by the same
 // `[data-theme-name="<slug>"]` data-attribute mechanism the simpleton themes
