@@ -90,7 +90,7 @@ EAA-mandated + operational hygiene before any public-internet deploy:
 - **Image registry (GHCR)** — biggest single deploy-fragility win. Cold start 6-8 min → ~30 sec. **M** (~half day), $0-3/mo.
 - **Declarative `.env` (split static vs runtime)** — pairs with image-registry. **S**.
 - **Terraform droplet + DNS + firewall** — replace imperative SSH bootstrap with `terraform apply`. Multi-droplet provisioning becomes a matrix entry. **L** (1-2 days), $0-5/mo for state backend.
-- **Bundle-import → `markRestartRequired()` hook** — set restart banner when imported bundle's language symbol set differs from current `next-i18next.config.js` locales. **S** (1-2 hr).
+- ~~**Bundle-import → `markRestartRequired()` hook**~~ — ✅ shipped 2026-05-13. `detectLocaleDrift()` in `BundleService.ts` compares the imported bundle's language symbol set to the runtime `next-i18next.config.js` locale list; any drift surfaces as a `source: 'i18n'` restart-required reason (idempotent via `key: 'bundle-locale-drift'`). 7 unit tests cover drift / no-drift / dedupe / empty-symbol / whitespace / live-config paths. Avoids the locale-stale errors seen on skyclimber import.
 
 ---
 
