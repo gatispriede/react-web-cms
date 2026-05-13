@@ -1,6 +1,8 @@
 /** CartSummary — Phase 1.D. Locked subtotal/VAT/shipping/total panel. */
 import React from 'react';
 import type {IItem} from '@interfaces/IItem';
+import {useCart} from '@client/features/Cart/useCart';
+import {formatMoney} from '@client/lib/checkout/api';
 import type {ICartSummary} from './CartSummary.types';
 import './CartSummary.scss';
 
@@ -14,14 +16,18 @@ function parseContent(raw: string | object | undefined): ICartSummary {
 
 const CartSummary: React.FC<CartSummaryProps> = ({item}) => {
     const c = parseContent(item.content);
+    const {cart} = useCart();
+    const subtotal = formatMoney(cart.subtotal, cart.currency);
+    // Cart-tier panel shows the snapshot only; shipping + VAT are computed
+    // server-side on order draft and surfaced via OrderSummary downstream.
     return (
         <div className="cart-summary" data-testid="module-cart-summary">
             <h3 className="cart-summary__title">{c.title ?? 'Summary'}</h3>
             <dl className="cart-summary__rows" data-testid="cart-summary-rows">
-                <div><dt>Subtotal</dt><dd data-testid="cart-summary-subtotal">—</dd></div>
-                <div><dt>Shipping</dt><dd>—</dd></div>
-                <div><dt>VAT</dt><dd>—</dd></div>
-                <div className="cart-summary__total"><dt>Total</dt><dd data-testid="cart-summary-total">—</dd></div>
+                <div><dt>Subtotal</dt><dd data-testid="cart-summary-subtotal">{subtotal}</dd></div>
+                <div><dt>Shipping</dt><dd data-testid="cart-summary-shipping">Calculated at checkout</dd></div>
+                <div><dt>VAT</dt><dd data-testid="cart-summary-vat">Calculated at checkout</dd></div>
+                <div className="cart-summary__total"><dt>Total</dt><dd data-testid="cart-summary-total">{subtotal}</dd></div>
             </dl>
         </div>
     );

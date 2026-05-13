@@ -1,6 +1,7 @@
 /** CartActions — Phase 1.D. Locked Clear cart + Proceed to checkout CTAs. */
 import React from 'react';
 import type {IItem} from '@interfaces/IItem';
+import {useCart} from '@client/features/Cart/useCart';
 import type {ICartActions} from './CartActions.types';
 import './CartActions.scss';
 
@@ -14,12 +15,26 @@ function parseContent(raw: string | object | undefined): ICartActions {
 
 const CartActions: React.FC<CartActionsProps> = ({item}) => {
     const c = parseContent(item.content);
+    const {cart, clear} = useCart();
     const proceedLabel = c.proceedLabel ?? 'Proceed to checkout';
     const clearLabel = c.clearLabel ?? 'Clear cart';
+    const isEmpty = cart.items.length === 0;
     return (
         <div className="cart-actions" data-testid="module-cart-actions">
-            <button type="button" className="cart-actions__clear" data-testid="cart-actions-clear">{clearLabel}</button>
-            <a className="cart-actions__proceed" href="/checkout/address" data-testid="cart-actions-proceed">{proceedLabel}</a>
+            <button
+                type="button"
+                className="cart-actions__clear"
+                data-testid="cart-actions-clear"
+                disabled={isEmpty}
+                onClick={() => { void clear(); }}
+            >{clearLabel}</button>
+            <a
+                className="cart-actions__proceed"
+                href="/checkout/address"
+                data-testid="cart-actions-proceed"
+                aria-disabled={isEmpty}
+                onClick={e => { if (isEmpty) e.preventDefault(); }}
+            >{proceedLabel}</a>
         </div>
     );
 };

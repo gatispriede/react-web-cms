@@ -1,10 +1,19 @@
 /** CheckoutProgressBar — Phase 1.D. Locked address→shipping→payment indicator. */
 import React from 'react';
 import type {IItem} from '@interfaces/IItem';
+import {useCheckoutMachine, type CheckoutStep} from '@client/lib/checkout/useCheckoutMachine';
 import type {ICheckoutProgressBar} from './CheckoutProgressBar.types';
 import './CheckoutProgressBar.scss';
 
-export interface CheckoutProgressBarProps { item: IItem; currentStep?: 'address' | 'shipping' | 'payment' | 'confirmation'; }
+type Step = 'address' | 'shipping' | 'payment' | 'confirmation';
+
+export interface CheckoutProgressBarProps { item: IItem; currentStep?: Step; }
+
+const machineToBarStep = (s: CheckoutStep): Step => {
+    if (s === 'cart' || s === 'address') return 'address';
+    if (s === 'review') return 'payment';
+    return s;
+};
 
 function parseContent(raw: string | object | undefined): ICheckoutProgressBar {
     if (!raw) return {} as ICheckoutProgressBar;
@@ -19,10 +28,12 @@ const STEPS: ReadonlyArray<{key: 'address'|'shipping'|'payment'|'confirmation'; 
     {key: 'confirmation', label: 'Done'},
 ];
 
-const CheckoutProgressBar: React.FC<CheckoutProgressBarProps> = ({item, currentStep = 'address'}) => {
+const CheckoutProgressBar: React.FC<CheckoutProgressBarProps> = ({item, currentStep}) => {
     const c = parseContent(item.content);
     void c;
-    const activeIdx = STEPS.findIndex(s => s.key === currentStep);
+    const {step} = useCheckoutMachine();
+    const resolved: Step = currentStep ?? machineToBarStep(step);
+    const activeIdx = STEPS.findIndex(s => s.key === resolved);
     return (
         <ol className="checkout-progress-bar" data-testid="module-checkout-progress-bar">
             {STEPS.map((s, i) => (

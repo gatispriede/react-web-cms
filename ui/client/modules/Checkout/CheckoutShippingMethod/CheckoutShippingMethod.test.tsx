@@ -7,8 +7,9 @@ import CheckoutShippingMethod from './CheckoutShippingMethod';
 import {EItemType} from '@enums/EItemType';
 
 describe('CheckoutShippingMethod', () => {
-    it('renders options', () => {
+    it('renders empty state when no orderId is on the machine', () => {
         render(<CheckoutShippingMethod item={{type: EItemType.CheckoutShippingMethod, content: ''}} />);
-        expect(screen.getByTestId('shipping-option-standard')).toBeInTheDocument();
+        expect(screen.getByTestId('module-checkout-shipping-method')).toBeInTheDocument();
+        expect(screen.getByTestId('shipping-empty')).toBeInTheDocument();
     });
 });
