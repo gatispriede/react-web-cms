@@ -4,10 +4,11 @@ Forward-looking only. Architecture: [PROJECT_ANALYSIS.md](PROJECT_ANALYSIS.md) +
 
 ---
 
-## Status (2026-05-13)
+## Status (2026-05-13, later)
 
 - **Develop HEAD:** `76b1658` — commerce + auth track: Phase 0 shared abstractions + Phase 1 (6 main items + 6 deferred sub-jumps). 185 files / ~10.7K insertions / ~50 new MCP tools / ~15 e2e specs. Single-merge ready.
-- **Pending follow-ups:** wire `useCart()` + `useCheckoutMachine()` into the 12 locked Phase-1.D presentational modules; `npm run features:codegen` (1.D hand-edits); `npm run lint` (sandbox-blocked across agents); optional `@react-pdf/renderer` install for PDF spec sheets.
+- **`claude/test-lEADs` HEAD:** `53af901` — 7 commits ahead of develop covering Phase-1.D state wiring (closes the natural-next-jump follow-up), motion-token sample migrations, BreadcrumbBar (Schema.org JSON-LD + mobile collapse), `EmptyStateBlock` + `StickyCtaBar` + `ComparisonTable` cross-theme primitives, and a real react-hooks/rules-of-hooks bug fix on `/products/[slug]`. 67 new tests; lint + stylelint clean across touched files.
+- **Pending follow-ups:** `features:codegen` ✅ clean, `npm run lint` ✅ 0 errors, `useCart`+`useCheckoutMachine` wiring ✅ shipped; optional `@react-pdf/renderer` install remains operator-decision.
 - **Operator post-merge ops queued:** email DNS (SPF/DKIM/DMARC), B2+restic, Stripe test keys, ss.com path A/B/C, legal `/privacy`+`/terms`, screen-reader passes, Q4-cap visual baselines.
 
 ---
@@ -98,6 +99,17 @@ Single-merge landing across the full commerce + auth + storefront-composability 
 - Per-theme Stitch design pass per first-class theme
 - Manual screen-reader passes for Wave 8a accessibility audit
 - Q4-cap visual baselines capture run
+
+### 2026-05-13 (later) — Phase-1.D wiring + Wave 0 closeout + cross-theme primitives
+
+- **Phase-1.D 12 locked transactional modules wired** — closes the natural-next-jump follow-up from `76b1658`. Cart-tier (CartLineItems, CartSummary, CheckoutCartSummary, CartActions) read `useCart` live; checkout-tier (CheckoutProgressBar, CheckoutAddressForm, CheckoutShippingMethod, CheckoutPaymentForm, PlaceOrderButton) wire `useCheckoutMachine` + `OrderApi` (createDraftOrder → attachOrderAddress → attachOrderShipping → authorizeOrderPayment with crypto.randomUUID idempotency → finalizeOrder → clear cart → /orders/<token>); confirmation-tier (OrderSummary, DownloadInvoiceButton) resolve via token prop or machine.orderId. 15/15 checkout module tests green. Commit `fbc5dda`.
+- **Motion-token system sample migration** — 5 representative SCSS files migrated to `calc(var(--motion-duration-*) * var(--motion-scalar))` + `var(--motion-ease-standard)`: InlineEditOverlay (admin chrome), Hero CTA, InquiryForm (3 rules), ProjectCard (3 rules — base/slow/deliberate), Gallery thumb. Stylelint warnings drop from 33 → 24. Closes acceptance criterion #6 for [motion-token-system.md](roadmap/admin/motion-token-system.md). Commit `aee53f6`.
+- **products/[slug] rules-of-hooks fix** — real bug: `useCart()` + `message.useMessage()` were called after a not-found early return, breaking hook ordering when product transitions null → resolved. Hooks hoisted above the branch. Commit `22e6d75`.
+- **BreadcrumbBar enhancements** — Phase-1.C `Breadcrumb` module lifted to the cross-theme `BreadcrumbBar` spec ([new-modules-catalogue.md](roadmap/_meta/new-modules-catalogue.md)): Schema.org `BreadcrumbList` JSON-LD (opt-out via `schemaOrg: false`, URL absolutisation via `origin` prop), mobile collapse to `← Back` + current page title at ≤540 px (opt-out via `mobileBehavior: 'full'`). 7/7 tests green. Commit `59573f3`.
+- **EmptyStateBlock primitive** — public-side sibling of `ui/admin/lib/EmptyState`. Theme-driven via CSS custom properties (no AntD in client bundle), 44 px min touch targets, `--motion-scalar`-aware icon fade. Used by `/cars` / `/products` empty filter results, wishlist, saved searches, gone listings. 7/7 tests green. Commit `065ffee`.
+- **StickyCtaBar primitive** — cross-theme sticky CTA: mobile full-width bottom bar (1-3 buttons, non-dismissable), desktop floating bottom-right (first CTA only, dismissable per-key via sessionStorage, escape-key support). Used by cars VDP (Call/Message/Reserve), events (Buy Tickets), restaurant (Reserve/Order delivery), SaaS landing (Start free trial). 9/9 tests green. Commit `8a47c5b`.
+- **ComparisonTable primitive** — generic semantic `<table>` with caption, scope-headed rows/cols, boolean ✓/em-dash glyph via CSS ::before (localisable), `highlightDifferences` bucket logic, `groupHeader` row separators, highlighted column accent. Mobile horizontally scrolls. Used by CarComparisonTable, SaaS PricingTable, product alternatives. 8/8 tests green. Commit `53af901`.
+- **Wave 0 closeout status** — `admin-toast-system-sonner` already shipped pre-session (notify.ts + Toaster + Undo VMs verified). `motion-token-system` acceptance criteria 1-4 + 6 met (5 + 7 wait on Q4-cap visual baselines + first-class-themes). `testid-coverage-ci` already shipped pre-session (script + CI step + allowlist + 477-LOC test fixture verified).
 
 ### 2026-05-04 — F7 + UX polish + dev-loop hardening
 
