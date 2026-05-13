@@ -190,8 +190,20 @@ class App extends NextApp {
             router,
         };
 
+        // Auth-split-client-admin (Phase 1.A) — admin routes talk to the
+        // admin NextAuth instance at /api/admin/auth/*; everything else
+        // (storefront, /account/*, customer flows) uses the customer
+        // instance at /api/auth/*. Without this, `useSession()` polls the
+        // wrong endpoint and `signIn()` reads the wrong `pages.signIn`
+        // setting — admin users hitting /admin get bounced to
+        // /account/signin (which itself 404s when clientLoginEnabled is
+        // off). See ui/client/pages/api/auth/authOptions.ts and
+        // ui/client/pages/api/admin/auth/[...nextauth].ts.
+        const pathname = router?.pathname ?? '';
+        const sessionBasePath = pathname.startsWith('/admin') ? '/api/admin/auth' : '/api/auth';
+
         return (
-            <SessionProvider session={(pageProps as any)?.session}>
+            <SessionProvider session={(pageProps as any)?.session} basePath={sessionBasePath}>
                 {/* W8a — skip link must be the FIRST focusable element. */}
                 <SkipLink/>
                 <Component {...modifiedPageProps} />

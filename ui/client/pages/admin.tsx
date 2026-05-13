@@ -8,8 +8,13 @@ import {adminAuthOptions as authOptions} from "./api/auth/authOptions";
 import {serverSideTranslations} from "next-i18next/pages/serverSideTranslations";
 
 const Admin = ({session}: { session: Session }) => {
+    // basePath pins this provider to the admin NextAuth instance —
+    // /api/admin/auth/* — so useSession() / signIn() inside the admin
+    // chrome don't fall through to the customer /api/auth/* surface
+    // and bounce to /account/signin. See auth-split-client-admin
+    // (Phase 1.A) + the parallel guard in _app.tsx.
     return (
-        <SessionProvider session={session}>
+        <SessionProvider session={session} basePath="/api/admin/auth">
             <LoginBtn/>
         </SessionProvider>
     )
