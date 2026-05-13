@@ -48,6 +48,10 @@
 @use "../../../../services/themes/agency/module-styles" as agencyModules;
 @use "../../../../services/themes/commerce/theme" as commerceTheme;
 @use "../../../../services/themes/commerce/module-styles" as commerceModules;
+@use "../../../../services/themes/saas-landing/theme" as saasLandingTheme;
+@use "../../../../services/themes/saas-landing/module-styles" as saasLandingModules;
+@use "../../../../services/themes/restaurant/theme" as restaurantTheme;
+@use "../../../../services/themes/restaurant/module-styles" as restaurantModules;
 
 // Per-module public renderers — one folder per item type under modules/.
 @use "../../modules/PlainImage/PlainImage";

@@ -44,7 +44,7 @@ const VisualSlot = () => {
     // falls through to the unthemed slot — keeps a malformed query param
     // from setting an arbitrary attribute that a CSS rule somewhere
     // unrelated might match.
-    const KNOWN_THEME_SLUGS = new Set(['editorial', 'agency', 'commerce']);
+    const KNOWN_THEME_SLUGS = new Set(['editorial', 'agency', 'commerce', 'saas-landing', 'restaurant']);
     const themeSlug = theme && KNOWN_THEME_SLUGS.has(theme) ? theme : undefined;
 
     if (editor === '1') {

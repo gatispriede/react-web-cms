@@ -1,0 +1,34 @@
+{
+    "slug": "saas-landing",
+    "name": "SaaS Landing",
+    "tagline": "Dark-default tech-modern, violet accent, sticky-blur header — for B2B SaaS landing pages and developer tools.",
+    "audience": "B2B SaaS, developer tools, API products, infra companies",
+    "mood": ["tech-modern", "confident", "sharp", "gradient-aware", "conversion-funnel"],
+    "palette": {
+        "surface":      {"light": "#FFFFFF", "dark": "#0F172A"},
+        "ink":          {"light": "#0F172A", "dark": "#E2E8F0"},
+        "accent":       {"light": "#7C3AED", "dark": "#A78BFA"},
+        "accentInk":    {"light": "#FFFFFF", "dark": "#1E1B4B"},
+        "surfaceInset": {"light": "#F8FAFC", "dark": "#1E293B"},
+        "rule":         {"light": "#E2E8F0", "dark": "#334155"}
+    },
+    "typography": {
+        "display": "'Mona Sans', 'Inter Tight', system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "body":    "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "mono":    "'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace",
+        "baseSize": 16
+    },
+    "motion": "snappy-default",
+    "headerBehavior": "sticky-static",
+    "footerLayout": "multi-column",
+    "logoLockup": "combined",
+    "moduleStyleHints": {
+        "hero": "gradient-bg-product-screenshot",
+        "pricingTable": "highlighted-middle-tier-gradient",
+        "featureGrid": "icon-on-gradient-tile",
+        "logoCloud": "monochrome-hover-color",
+        "changelogTimeline": "version-tag-mono",
+        "posts": "card-grid"
+    },
+    "darkDefault": true
+}

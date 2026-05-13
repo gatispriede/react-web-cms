@@ -1,0 +1,421 @@
+/* ==========================================================================
+   SaaS Landing — per-module overrides.
+
+   Tech-modern, dark-default, violet-gradient accents, sticky-static
+   header with backdrop-blur, 12px radii, JetBrains Mono for version
+   tags + code labels.
+
+   Visual baselines under `tests/e2e/visual/__snapshots__/themes/saas-landing/`.
+   ========================================================================== */
+
+[data-theme-name="saas-landing"] {
+
+    /* ===================================================================
+       Header — sticky-static. Distinct from Editorial overlay nav,
+       Commerce shrink-on-scroll, Agency hide-on-down. Stays put,
+       gains a backdrop blur + gradient bottom-border on scroll.
+       =================================================================== */
+    .main-nav {
+        background: color-mix(in srgb, var(--color-surface) 80%, transparent);
+        backdrop-filter: blur(12px);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        padding: 1rem 2rem;
+        border-bottom: 1px solid var(--color-rule);
+
+        a {
+            color: var(--color-ink);
+            font-family: var(--font-body);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        // Gradient bottom border on scroll — toggled via .is-scrolled.
+        &.is-scrolled {
+            border-bottom: 1px solid transparent;
+            background-image:
+                linear-gradient(color-mix(in srgb, var(--color-surface) 80%, transparent), color-mix(in srgb, var(--color-surface) 80%, transparent)),
+                var(--accent-gradient);
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+        }
+    }
+
+    /* ===================================================================
+       Hero — gradient background + product screenshot on the right.
+       Different from every other theme's hero.
+       =================================================================== */
+    .hero {
+        position: relative;
+        min-height: 70vh;
+        padding: 5rem 2rem;
+        background:
+            radial-gradient(ellipse at top right, color-mix(in srgb, var(--color-accent) 25%, transparent) 0%, transparent 50%),
+            radial-gradient(ellipse at bottom left, color-mix(in srgb, #38BDF8 25%, transparent) 0%, transparent 50%),
+            var(--color-surface);
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 3rem;
+        align-items: center;
+
+        @media (min-width: 900px) {
+            grid-template-columns: 1.1fr 1fr;
+        }
+
+        h1,
+        &__headline {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 700;
+            line-height: 1.05;
+            letter-spacing: -0.03em;
+            color: var(--color-ink);
+            margin: 0 0 1.5rem;
+
+            // Gradient text on the second half of the headline (use a span if needed).
+            .accent-gradient {
+                background: var(--accent-gradient);
+                -webkit-background-clip: text;
+                background-clip: text;
+                color: transparent;
+            }
+        }
+
+        &__subtitle,
+        &__tagline {
+            font-family: var(--font-body);
+            font-size: 1.125rem;
+            color: var(--ink-2);
+            max-width: 56ch;
+            margin-bottom: 2rem;
+        }
+
+        animation: saas-hero-enter calc(var(--motion-duration-slow) * var(--motion-scalar)) var(--motion-ease-emphasized) backwards;
+    }
+
+    @keyframes saas-hero-enter {
+        from { opacity: 0; transform: translateY(var(--motion-distance-md)); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===================================================================
+       Pricing table — highlighted middle tier with violet gradient
+       outline + glow.
+       =================================================================== */
+    .pricing-table__plan {
+        background: var(--color-surface-inset);
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+        padding: 2rem;
+        transition: transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+                    box-shadow calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        &--highlighted {
+            position: relative;
+            border: 2px solid transparent;
+            background:
+                linear-gradient(var(--color-surface-inset), var(--color-surface-inset)) padding-box,
+                var(--accent-gradient) border-box;
+            box-shadow: 0 0 0 8px color-mix(in srgb, var(--color-accent) 8%, transparent);
+
+            &::before {
+                content: 'Most popular';
+                position: absolute;
+                top: -0.75rem;
+                left: 50%;
+                transform: translateX(-50%);
+                background: var(--accent-gradient);
+                color: var(--color-accent-ink);
+                font-family: var(--font-mono);
+                font-size: 0.6875rem;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                padding: 0.25rem 0.875rem;
+                border-radius: 999px;
+            }
+        }
+    }
+
+    .pricing-table__price {
+        font-family: var(--font-display);
+        font-size: 3rem;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        background: var(--accent-gradient);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    /* ===================================================================
+       Feature grid — icon-on-gradient tiles. Each card has a soft
+       gradient halo on hover.
+       =================================================================== */
+    .feature-grid__card {
+        background: var(--color-surface-inset);
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+        padding: 1.75rem;
+        position: relative;
+        overflow: hidden;
+        transition: border-color calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            background: var(--accent-gradient);
+            border-radius: var(--theme-borderRadius);
+            opacity: 0;
+            z-index: -1;
+            transition: opacity calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+        }
+
+        &:hover {
+            border-color: transparent;
+
+            &::before { opacity: 1; }
+        }
+    }
+
+    .feature-grid__icon {
+        color: var(--color-accent);
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .feature-grid__title {
+        font-family: var(--font-display);
+        font-weight: 600;
+        letter-spacing: -0.02em;
+    }
+
+    /* ===================================================================
+       Logo cloud — monochrome by default, accent on hover.
+       =================================================================== */
+    .logo-cloud {
+        img, svg {
+            filter: grayscale(1) brightness(0.6);
+            opacity: 0.7;
+            transition: filter calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+                        opacity calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &:hover {
+                filter: none;
+                opacity: 1;
+            }
+        }
+    }
+
+    /* ===================================================================
+       Changelog timeline — version tags rendered as mono pills.
+       =================================================================== */
+    .changelog-timeline__entry {
+        background: var(--color-surface-inset);
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .changelog-timeline__version {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+        color: var(--color-accent);
+        padding: 0.25rem 0.625rem;
+        border-radius: 999px;
+        display: inline-block;
+    }
+
+    .changelog-timeline__date {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        color: var(--ink-2);
+        letter-spacing: 0.04em;
+    }
+
+    /* ===================================================================
+       Integration grid + sponsor strip — gradient outline on tiles.
+       =================================================================== */
+    .integration-grid__tile,
+    .sponsor-strip__sponsor {
+        background: var(--color-surface-inset);
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+        transition: border-color calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &:hover { border-color: var(--color-accent); }
+    }
+
+    /* ===================================================================
+       ProductScreenshotHero — the SaaS signature. Soft drop shadow,
+       gradient halo behind the screenshot.
+       =================================================================== */
+    .product-screenshot-hero {
+        background:
+            radial-gradient(ellipse at center, color-mix(in srgb, var(--color-accent) 20%, transparent) 0%, transparent 60%),
+            var(--color-surface);
+        padding: 4rem 2rem;
+
+        &__screenshot {
+            box-shadow:
+                0 24px 64px rgba(0, 0, 0, 0.15),
+                0 0 0 1px var(--color-rule);
+            border-radius: var(--theme-borderRadius);
+        }
+    }
+
+    /* ===================================================================
+       TestimonialWall — 3-up grid, soft cards with quote marks.
+       =================================================================== */
+    .testimonial-wall {
+        gap: 1.5rem;
+
+        &__card {
+            background: var(--color-surface-inset);
+            border: 1px solid var(--color-rule);
+            border-radius: var(--theme-borderRadius);
+            padding: 1.75rem;
+            position: relative;
+
+            &::before {
+                content: '\201C';
+                font-family: var(--font-display);
+                font-size: 3rem;
+                line-height: 1;
+                color: var(--color-accent);
+                position: absolute;
+                top: 0.5rem;
+                left: 1rem;
+                opacity: 0.5;
+            }
+        }
+    }
+
+    /* ===================================================================
+       Buttons + primary CTAs — violet gradient on primary, ghost on
+       secondary.
+       =================================================================== */
+    .buy-cta, .place-order-button, .cart-actions__proceed,
+    .pricing-table__cta--primary, .pricing-table__cta,
+    .empty-state-block__action--primary,
+    .car-reservation-cta__reserve, .product-detail-hero__cta,
+    .magic-link-request-form button[type="submit"],
+    .car-finance-estimator__submit, .reservation-widget__submit,
+    .event-buy-tickets-cta__trigger {
+        background: var(--accent-gradient);
+        color: var(--color-accent-ink);
+        border: none;
+        border-radius: var(--theme-borderRadius);
+        font-family: var(--font-body);
+        font-weight: 600;
+        font-size: 0.9375rem;
+        padding: 0.75rem 1.75rem;
+        min-height: 44px;
+        cursor: pointer;
+        transition: transform calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                    box-shadow calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px color-mix(in srgb, var(--color-accent) 40%, transparent);
+        }
+
+        &:active:not(:disabled) { transform: translateY(0); }
+    }
+
+    /* ===================================================================
+       Commerce + customer-account modules — pick up dark surface
+       inheritance + violet accent.
+       =================================================================== */
+    .product-card, .car-listing-card, .order-detail-module,
+    .account-dashboard-grid__cell, .wishlist-grid__cell,
+    .saved-search-list__row, .car-vdp__trust-item,
+    .speaker-grid__card, .empty-state-block, .save-search-prompt {
+        background: var(--color-surface-inset);
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+    }
+
+    .order-progress-timeline__step[data-status="done"] .order-progress-timeline__dot,
+    .order-progress-timeline__step[data-status="active"] .order-progress-timeline__dot {
+        background: var(--accent-gradient);
+    }
+
+    .saved-search-list__cadence--realtime { background: color-mix(in srgb, var(--color-accent) 18%, transparent); color: var(--color-accent); }
+    .vat-badge { border-radius: 6px; font-family: var(--font-mono); font-size: 0.6875rem; letter-spacing: 0.04em; }
+
+    /* ===================================================================
+       Code blocks + version chips — JetBrains Mono.
+       =================================================================== */
+    code,
+    pre,
+    .label--mono,
+    .meta--mono,
+    .breadcrumb,
+    .car-spec-table th {
+        font-family: var(--font-mono);
+        font-size: 0.875rem;
+    }
+
+    /* ===================================================================
+       Footer — multi-column dark.
+       =================================================================== */
+    .site-footer {
+        background: var(--color-surface);
+        color: var(--ink-2);
+        padding: 4rem 2rem 2rem;
+        border-top: 1px solid var(--color-rule);
+
+        h4, .site-footer__heading {
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 0.8125rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--color-ink);
+            margin-bottom: 1rem;
+        }
+
+        a {
+            color: var(--ink-2);
+            text-decoration: none;
+            transition: color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &:hover { color: var(--color-accent); }
+        }
+    }
+
+    /* All shipped modules — Inter body, Mona Sans titles. */
+    .cart-line-items, .cart-summary, .cart-actions, .checkout-progress-bar,
+    .checkout-address-form, .checkout-shipping-method, .checkout-payment-form,
+    .checkout-cart-summary, .place-order-button, .order-summary,
+    .magic-link-account-upgrade, .account-welcome, .shipping-calculator,
+    .download-invoice-button, .trust-badges, .money-back-guarantee,
+    .refer-a-friend-cta, .social-share-buttons,
+    .car-vdp, .order-detail-module, .order-progress-timeline,
+    .wishlist-grid, .saved-search-list, .account-dashboard-grid,
+    .magic-link-request-form, .magic-link-confirmation,
+    .oauth-button-stack, .restaurant-menu, .reservation-widget,
+    .opening-hours, .contact-block, .countdown-timer,
+    .event-schedule-agenda, .speaker-grid, .sponsor-strip,
+    .event-buy-tickets-cta, .event-hero-video,
+    .before-after-slider, .metrics-callout, .process-timeline,
+    .services-grid-fancy, .project-case-study, .project-tile-grid,
+    .empty-state-block, .sticky-cta-bar, .comparison-table {
+        font-family: var(--font-body);
+
+        h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.02em; }
+    }
+
+    .schema-org-injector { /* noop */ }
+    .cookie-consent-banner { /* forward-stub */ }
+}

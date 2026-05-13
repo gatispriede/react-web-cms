@@ -1,0 +1,33 @@
+{
+    "slug": "restaurant",
+    "name": "Restaurant",
+    "tagline": "Warm khaki paper, handmade serif, considered motion — for restaurants, cafes, local hospitality.",
+    "audience": "Restaurants, cafes, bistros, neighbourhood food businesses, wineries, bakeries",
+    "mood": ["warm", "appetising", "handmade", "considered", "photo-led"],
+    "palette": {
+        "surface":      {"light": "#F4EFE6", "dark": "#1C1814"},
+        "ink":          {"light": "#2A1F1A", "dark": "#F0E8DC"},
+        "accent":       {"light": "#7A1F2B", "dark": "#C44A5B"},
+        "accentInk":    {"light": "#F4EFE6", "dark": "#1C1310"},
+        "surfaceInset": {"light": "#EAE2D2", "dark": "#26201A"},
+        "rule":         {"light": "#C9BEA8", "dark": "#3D362D"}
+    },
+    "typography": {
+        "display": "'Fraunces', ui-serif, Georgia, 'Times New Roman', serif",
+        "body":    "'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "mono":    "ui-monospace, 'SF Mono', Menlo, monospace",
+        "baseSize": 16
+    },
+    "motion": "gentle-slow",
+    "headerBehavior": "centered-hero-integrated",
+    "footerLayout": "minimal-1row",
+    "logoLockup": "combined",
+    "moduleStyleHints": {
+        "hero": "photo-bleed-warm-overlay",
+        "restaurantMenu": "printed-menu-flat",
+        "openingHours": "always-visible-large",
+        "reservationWidget": "sticky-mobile-bottom",
+        "posts": "card-grid"
+    },
+    "darkDefault": false
+}

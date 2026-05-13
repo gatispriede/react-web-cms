@@ -1,0 +1,62 @@
+/* ==========================================================================
+   SaaS Landing — first-class theme.
+
+   Dark-default surface + violet accent, Mona Sans display + Inter body,
+   snappy motion with subtle gradient flourishes. Scoped under
+   `[data-theme-name="saas-landing"]`. 12px radii — distinctly more
+   rounded than Commerce's 8px or Editorial's 2px. Sticky-static header.
+
+   Bespoke visuals live in `module-styles.scss` alongside.
+   ========================================================================== */
+
+[data-theme-name="saas-landing"] {
+    --color-surface:       light-dark(#FFFFFF, #0F172A);
+    --color-ink:           light-dark(#0F172A, #E2E8F0);
+    --color-accent:        light-dark(#7C3AED, #A78BFA);
+    --color-accent-ink:    light-dark(#FFFFFF, #1E1B4B);
+    --color-surface-inset: light-dark(#F8FAFC, #1E293B);
+    --color-rule:          light-dark(#E2E8F0, #334155);
+
+    --background: var(--color-surface);
+    --ink:    var(--color-ink);
+    --ink-2:  color-mix(in srgb, var(--color-ink) 60%, transparent);
+    --accent: var(--color-accent);
+    --accent-hover: color-mix(in srgb, var(--color-accent) 85%, #fff);
+    --accent-gradient: linear-gradient(135deg, var(--color-accent), color-mix(in srgb, var(--color-accent) 40%, #38BDF8));
+
+    --font-display: 'Mona Sans', 'Inter Tight', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-body:    'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+    --theme-headingFont: var(--font-display);
+    --theme-bodyFont:    var(--font-body);
+
+    /* snappy-default motion — same scale as Commerce. */
+    --motion-duration-fast:       100ms;
+    --motion-duration-base:       180ms;
+    --motion-duration-slow:       280ms;
+    --motion-duration-deliberate: 480ms;
+    --motion-ease-standard:       cubic-bezier(0.4, 0, 0.2, 1);
+    --motion-ease-entrance:       cubic-bezier(0, 0, 0.2, 1);
+    --motion-ease-exit:           cubic-bezier(0.4, 0, 1, 1);
+    --motion-ease-emphasized:     cubic-bezier(0.2, 0, 0, 1);
+
+    --motion-distance-sm: 8px;
+    --motion-distance-md: 20px;
+    --motion-distance-lg: 60px;
+
+    /* More rounded than Commerce (8px) or Editorial (2px). */
+    --theme-borderRadius: 12px;
+
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+
+    h1, h2, h3,
+    .heading,
+    .heading--display {
+        font-family: var(--font-display);
+        font-weight: 600;
+        letter-spacing: -0.03em;
+    }
+}
