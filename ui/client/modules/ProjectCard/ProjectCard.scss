@@ -1,7 +1,10 @@
 // ProjectCard module — public render only.
 
 .project-card {
-  transition: transform 300ms ease, box-shadow 300ms ease, border-color 300ms ease;
+  transition:
+    transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+    box-shadow calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+    border-color calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
   border-radius: var(--theme-borderRadius, 8px);
   overflow: hidden;
   position: relative;
@@ -30,7 +33,7 @@
     background: var(--theme-colorPrimary, #1677ff);
     transform: scaleY(0);
     transform-origin: top;
-    transition: transform 350ms ease;
+    transition: transform calc(var(--motion-duration-slow) * var(--motion-scalar)) var(--motion-ease-standard);
     z-index: 1;
   }
 
@@ -41,7 +44,7 @@
     &::before { transform: scaleY(1); }
   }
 
-  img { transition: transform 600ms ease; }
+  img { transition: transform calc(var(--motion-duration-deliberate) * var(--motion-scalar)) var(--motion-ease-standard); }
 
   .ant-card-meta-title { font-size: 1.15rem; font-weight: 600; }
   .ant-card-meta-description .ant-tag {

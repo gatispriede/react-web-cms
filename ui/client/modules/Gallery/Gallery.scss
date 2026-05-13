@@ -82,7 +82,9 @@
         border-radius: 4px;
         overflow: hidden;
         background: var(--theme-colorBgInset, #e4dfc9);
-        transition: transform 160ms ease, box-shadow 160ms ease;
+        transition:
+          transform calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+          box-shadow calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
 
         &:hover {
           transform: translateY(-3px);

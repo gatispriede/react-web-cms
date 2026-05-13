@@ -17,7 +17,7 @@
     outline: 2px solid var(--ant-color-primary, #1677ff);
     outline-offset: 2px;
     border-radius: 4px;
-    transition: outline-color 120ms ease;
+    transition: outline-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
 }
 
 .inline-edit-overlay__pill {
