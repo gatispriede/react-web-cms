@@ -11,6 +11,15 @@ import '../../admin/styles/Admin/AdminDarkMode.scss'
 // + highlight pill render on any admin-visible page.
 import '../../admin/shell/InlineEdit/InlineEditOverlay.scss'
 import '../../admin/shell/CommandPalette/CommandPalette.scss'
+// Breadcrumb module styles — hoisted here because Next 16 / Turbopack
+// treats `*.scss` (non-`.module.scss`) imports anywhere outside `_app.tsx`
+// as global-CSS violations. The Breadcrumb module's SCSS uses BEM
+// + nested `&--mobile-collapse &__full` rules that Turbopack classifies
+// as global, so the previous `import './Breadcrumb.scss'` from inside
+// the component file would break the dev build. All other module SCSS
+// files are simple enough that webpack/Turbopack still accepts them
+// inline; if more modules hit the same rule we'll hoist them here.
+import '../modules/Breadcrumb/Breadcrumb.scss'
 import { appWithTranslation } from 'next-i18next/pages'
 import nextI18NextConfig from '../../../next-i18next.config.js'
 import NextApp, {AppContext} from 'next/app';

@@ -18,7 +18,10 @@
  */
 import React from 'react';
 import type {IBreadcrumb, IBreadcrumbCrumb} from './Breadcrumb.types';
-import './Breadcrumb.scss';
+// Breadcrumb.scss is imported by `ui/client/pages/_app.tsx` — Next 16 /
+// Turbopack treats this file's BEM + nested `&--mobile-collapse &__full`
+// rules as global CSS and forbids non-`_app.tsx` imports, so the SCSS
+// import stays out of this component file.
 
 export interface BreadcrumbProps {
     content: IBreadcrumb | string;
