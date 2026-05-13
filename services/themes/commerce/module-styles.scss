@@ -1,70 +1,406 @@
 /* ==========================================================================
-   Commerce — per-module override slot.
+   Commerce — per-module overrides.
 
-   Placeholder. Real per-module styling (Hero photo-bleed, ProductGrid
-   tight-grid, Posts card-grid) lands in the Stitch design pass jump per
-   `first-class-themes.md` §3.6 acceptance.
+   Scope: [data-theme-name="commerce"]. Snappy retail aesthetic — every
+   module reads as 'add to cart in <2 taps'. White surface + emerald
+   accent + 8px radii + 180ms transitions.
+
+   Visual baselines for these blocks live under
+   `tests/e2e/visual/__snapshots__/themes/commerce/`. The per-theme
+   capture spec at `tests/e2e/visual/themes/commerce.spec.ts` walks
+   every EItemType under `[data-theme-name="commerce"]`.
    ========================================================================== */
 
 [data-theme-name="commerce"] {
-    /* Per-module overrides go here. Empty by design — see file header. */
 
-    /* Product module — commerce theme tightens the grid + prominents prices. */
-    .product--grid { gap: 12px; }
-    .product-card {
-        border: none;
-        background: var(--theme-colorBgContainer, #fff);
-        box-shadow: 0 1px 0 var(--theme-colorBorder, #eee);
-        &:hover { box-shadow: 0 8px 28px rgba(0, 0, 0, 0.1); }
-    }
-    .product-card__price {
-        font-size: 18px;
-        font-weight: 700;
-    }
-    .buy-cta--card {
-        background: var(--theme-colorPrimary, #1677ff);
-        color: #fff;
-    }
+    /* ===================================================================
+       Header / nav — shrink-on-scroll. Default state is roomy; on scroll
+       past ~80px the bar height halves and a soft shadow lands.
+       =================================================================== */
+    .main-nav {
+        background: var(--color-surface);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        padding: 1.25rem 1.5rem;
+        transition: padding calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+                    box-shadow calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
 
-    /* client-account-settings-page (Phase 1.E) — minimal default. */
-    .account-settings-layout {
-        max-width: 1080px; margin: 0 auto; padding: 24px 16px;
-        .account-settings-hero { padding-bottom: 12px; border-bottom: 1px solid var(--theme-colorBorder, #eee); }
-        .account-settings-nav ul {
-            display: flex; gap: 8px; padding: 0; margin: 16px 0; list-style: none; flex-wrap: wrap;
-            li a { padding: 6px 10px; border-radius: 6px; }
-            li.is-active a { background: var(--theme-colorPrimary, #1677ff); color: #fff; }
+        a {
+            color: var(--color-ink);
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            font-weight: 500;
+        }
+
+        &.is-shrunk {
+            padding: 0.625rem 1.5rem;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
         }
     }
-}
 
-/* Phase 1.C — new product-page modules. Minimal defaults; design pass follows. */
-[data-theme-name="commerce"] {
-    .product-detail-hero { background: #fafafa; padding: 2rem; }
-    .product-detail-hero__cta { background: var(--theme-colorPrimary, #1677ff); color: #fff; border: 0; border-radius: 6px; }
-    .product-spec-table th { color: #555; }
-    .pagination__button { background: var(--theme-colorPrimary, #1677ff); color: #fff; border: 0; }
-    .breadcrumb a { color: var(--theme-colorPrimary, #1677ff); }
-}
+    /* ===================================================================
+       Hero — photo-bleed: full-width product photography, copy stacked
+       below or overlaid bottom-left. Not the editorial overlay-nav case;
+       Commerce keeps nav above the hero so 'shop' is always one tap away.
+       =================================================================== */
+    .hero {
+        position: relative;
+        min-height: 60vh;
+        display: flex;
+        align-items: flex-end;
+        padding: 3rem 2rem;
+        background-size: cover;
+        background-position: center;
 
-/* Phase 1.D — checkout-as-composable-page minimal defaults. */
-[data-theme-name="commerce"] {
-    .cart-summary, .order-summary, .magic-link-account-upgrade { background: var(--theme-colorBgContainer, #fff); }
-    .place-order-button { background: var(--theme-colorPrimary, #1677ff); }
-    .cart-actions__proceed { background: var(--theme-colorPrimary, #1677ff); }
-    .trust-badges li { background: var(--theme-colorBgContainer, #fff); border-color: var(--theme-colorBorder, #eee); }
-    .checkout-progress-bar__step.is-active { color: var(--theme-colorPrimary, #1677ff); }
-    .refer-a-friend-cta { border-color: var(--theme-colorPrimary, #1677ff); }
-    .money-back-guarantee { border-left-color: var(--theme-colorPrimary, #1677ff); }
-    .checkout-address-form input, .checkout-payment-form input, .shipping-calculator input {
-        border-radius: 6px;
+        &::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, transparent 50%, rgba(0, 0, 0, 0.5) 100%);
+            pointer-events: none;
+        }
+
+        &__inner { position: relative; z-index: 1; max-width: 720px; }
+
+        h1,
+        &__headline {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 600;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            color: var(--color-surface);
+            margin: 0 0 0.75rem;
+        }
+
+        &__subtitle,
+        &__tagline {
+            font-family: var(--font-body);
+            font-size: 1.0625rem;
+            color: color-mix(in srgb, var(--color-surface) 92%, transparent);
+            max-width: 56ch;
+            margin-bottom: 1.5rem;
+        }
+
+        // Reveal — short distance, snappy.
+        animation: commerce-hero-enter calc(var(--motion-duration-slow) * var(--motion-scalar)) var(--motion-ease-emphasized) backwards;
     }
-}
 
-/* Phase 1.F — product-display-templates. */
-[data-theme-name="commerce"] {
-    .large-gallery__tile img { border-radius: 8px; }
-    .downloadable-pdf__link { background: var(--theme-accent, #2563eb); color: #fff; border-radius: 8px; }
-    .downloadable-pdf__link:hover { background: var(--theme-accent-hover, #1d4ed8); }
-    .warranty-info { border-radius: 8px; }
+    @keyframes commerce-hero-enter {
+        from { opacity: 0; transform: translateY(var(--motion-distance-md)); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===================================================================
+       Product grid + card — tight-grid: 12-16px gap, no border, soft
+       hover lift, prominent price.
+       =================================================================== */
+    .product-card,
+    .car-listing-card {
+        background: var(--color-surface);
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+        overflow: hidden;
+        transition: transform calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                    box-shadow calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                    border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            border-color: var(--color-accent);
+        }
+
+        img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+    }
+
+    .product-card__price,
+    .car-listing-card__price {
+        font-family: var(--font-display);
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: var(--color-ink);
+    }
+
+    /* Product grid — denser gutter than default. */
+    .product--grid,
+    .product-grid {
+        gap: 0.75rem;
+    }
+
+    /* ===================================================================
+       Buy-CTA — primary action; emerald + crisp 8px radius + 180ms
+       hover. Every commerce module's "primary" gets the same treatment
+       so cart conversion is visually consistent.
+       =================================================================== */
+    .buy-cta,
+    .buy-cta--card,
+    .place-order-button,
+    .cart-actions__proceed,
+    .add-to-cart-button,
+    .car-reservation-cta__reserve,
+    .product-detail-hero__cta,
+    .pricing-table__cta,
+    .empty-state-block__action--primary {
+        background: var(--color-accent);
+        color: var(--color-accent-ink);
+        border: 1px solid var(--color-accent);
+        border-radius: var(--theme-borderRadius);
+        font-family: var(--font-body);
+        font-weight: 600;
+        font-size: 0.9375rem;
+        padding: 0.75rem 1.5rem;
+        min-height: 44px;
+        transition: background calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                    transform calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &:hover:not(:disabled) {
+            background: var(--accent-hover);
+            border-color: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        &:active:not(:disabled) {
+            transform: translateY(0);
+        }
+    }
+
+    /* ===================================================================
+       Cart drawer + checkout — soft cards, emerald accent, tight typography.
+       =================================================================== */
+    .cart-line-items, .cart-summary, .cart-actions, .checkout-progress-bar,
+    .checkout-address-form, .checkout-shipping-method, .checkout-payment-form,
+    .checkout-cart-summary, .order-summary, .magic-link-account-upgrade,
+    .account-welcome, .shipping-calculator, .download-invoice-button,
+    .trust-badges, .money-back-guarantee, .refer-a-friend-cta,
+    .social-share-buttons {
+        font-family: var(--font-body);
+    }
+
+    .checkout-progress-bar__step.is-active,
+    .checkout-progress-bar__step.is-done {
+        color: var(--color-accent);
+    }
+
+    .cart-summary, .order-summary, .checkout-cart-summary {
+        background: var(--color-surface-inset);
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+        padding: 1.25rem;
+    }
+
+    .checkout-address-form input,
+    .checkout-payment-form input,
+    .shipping-calculator input,
+    .car-finance-estimator input,
+    .car-finance-estimator textarea {
+        border-radius: var(--theme-borderRadius);
+        border: 1px solid var(--color-rule);
+
+        &:focus { border-color: var(--color-accent); outline: 2px solid color-mix(in srgb, var(--color-accent) 30%, transparent); outline-offset: 1px; }
+    }
+
+    /* ===================================================================
+       Pricing table + feature grid — SaaS-tier modules but at home in
+       commerce too. Emerald accent on highlighted plan.
+       =================================================================== */
+    .pricing-table__plan {
+        background: var(--color-surface);
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+
+        &--highlighted {
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 25%, transparent);
+        }
+    }
+
+    .pricing-table__price {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 2.5rem;
+    }
+
+    .feature-grid__card {
+        background: var(--color-surface);
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+        padding: 1.5rem;
+    }
+
+    /* ===================================================================
+       Cars-vertical — Commerce is the home theme for ss.com. Tighten
+       the CarListingCard density + emerald accent on Reserve CTA.
+       =================================================================== */
+    .car-vdp {
+        background: var(--color-surface);
+    }
+
+    .car-vdp__title {
+        font-family: var(--font-display);
+        font-weight: 600;
+    }
+
+    .car-vdp__price {
+        font-family: var(--font-display);
+        font-weight: 700;
+        color: var(--color-ink);
+    }
+
+    .car-reservation-cta {
+        background: var(--color-surface);
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+    }
+
+    .car-photo-gallery__nav {
+        background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+        color: var(--color-ink);
+    }
+
+    .vat-badge { border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+
+    /* ===================================================================
+       Customer account — AccountDashboardGrid + OrderProgressTimeline
+       + WishlistGrid + SavedSearchList. Soft cards, emerald accent.
+       =================================================================== */
+    .account-dashboard-grid__cell {
+        background: var(--color-surface);
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+    }
+
+    .account-dashboard-grid__icon,
+    .account-dashboard-grid__count {
+        color: var(--color-accent);
+    }
+
+    .order-progress-timeline__step[data-status="done"] .order-progress-timeline__dot,
+    .order-progress-timeline__step[data-status="active"] .order-progress-timeline__dot {
+        background: var(--color-accent);
+    }
+
+    .saved-search-list__cadence--realtime { background: color-mix(in srgb, var(--color-accent) 15%, transparent); color: var(--color-accent); }
+
+    /* ===================================================================
+       Footer — brand-led XXL: big logo + multi-column. Slate-on-white.
+       =================================================================== */
+    .site-footer {
+        background: var(--color-surface-inset);
+        color: var(--color-ink);
+        padding: 4rem 2rem 2rem;
+        font-size: 0.875rem;
+
+        h4, .site-footer__heading {
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 0.875rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+            margin-bottom: 0.75rem;
+        }
+
+        a {
+            color: var(--color-ink);
+            text-decoration: none;
+            transition: color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+        }
+
+        a:hover { color: var(--color-accent); }
+    }
+
+    /* ===================================================================
+       Breadcrumb + Pagination + Trust strip — quiet, accent-tinted.
+       =================================================================== */
+    .breadcrumb {
+        font-size: 0.8125rem;
+        color: var(--ink-2);
+
+        a { color: var(--color-ink); }
+        a:hover { color: var(--color-accent); }
+    }
+
+    .pagination__button {
+        background: var(--color-surface);
+        color: var(--color-ink);
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+
+        &:hover { border-color: var(--color-accent); color: var(--color-accent); }
+    }
+
+    .trust-badges li,
+    .money-back-guarantee {
+        background: var(--color-surface);
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+    }
+
+    /* ===================================================================
+       OAuth + magic-link forms — emerald accent on the primary button,
+       neutral on social providers.
+       =================================================================== */
+    .oauth-button {
+        border-radius: var(--theme-borderRadius);
+        border: 1px solid var(--color-rule);
+
+        &:hover { border-color: var(--color-accent); }
+    }
+
+    .magic-link-request-form input {
+        border-radius: var(--theme-borderRadius);
+        border: 1px solid var(--color-rule);
+    }
+
+    /* ===================================================================
+       Cross-theme primitives — minor palette + radius polish.
+       =================================================================== */
+    .empty-state-block { background: var(--color-surface); }
+    .empty-state-block__title { font-family: var(--font-display); font-weight: 600; }
+    .empty-state-block__icon { color: var(--color-accent); }
+
+    .sticky-cta-bar {
+        background: var(--color-accent);
+        color: var(--color-accent-ink);
+    }
+
+    .comparison-table caption {
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 1.25rem;
+        text-align: left;
+        margin-bottom: 1rem;
+    }
+
+    .comparison-table__col--highlighted {
+        background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+    }
+
+    .save-search-prompt {
+        background: var(--color-surface-inset);
+        border-radius: var(--theme-borderRadius);
+    }
+
+    /* ===================================================================
+       Restaurant / event / agency modules — borrow neutral commerce
+       palette so cross-vertical pages still read coherently.
+       =================================================================== */
+    .restaurant-menu, .reservation-widget, .opening-hours, .contact-block,
+    .countdown-timer, .event-schedule-agenda, .speaker-grid,
+    .sponsor-strip, .event-buy-tickets-cta, .event-hero-video,
+    .before-after-slider, .metrics-callout, .process-timeline,
+    .services-grid-fancy,
+    .changelog-timeline, .integration-grid, .logo-cloud,
+    .testimonial-wall, .product-screenshot-hero,
+    .project-case-study, .project-tile-grid {
+        font-family: var(--font-body);
+
+        h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; }
+    }
+
+    /* invisible primitives — no overrides */
+    .schema-org-injector { /* noop */ }
+    .cookie-consent-banner { /* forward-stub — no overrides */ }
 }
