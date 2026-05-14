@@ -116,11 +116,13 @@ vi.mock('@client/lib/reportError', () => ({
     installErrorReporter: () => {},
 }));
 
-// CommandPalette — render-free placeholder + a no-op hotkey hook.
-vi.mock('@admin/shell/CommandPalette', () => ({
+// CommandPalette — render-through provider placeholder + trigger stub.
+// The kbar palette is mounted at the shell level; the test only needs
+// it to render its children without pulling kbar into the test bundle.
+vi.mock('@admin/shell/CommandPalette/CommandPalette', () => ({
     __esModule: true,
-    default: () => <div data-testid="command-palette"/>,
-    useCommandPaletteHotkey: () => {},
+    default: ({children}: {children?: React.ReactNode}) => <div data-testid="command-palette">{children}</div>,
+    CommandPaletteTrigger: ({label}: {label: string}) => <button data-testid="cmdk-trigger">{label}</button>,
 }));
 
 // Chrome placeholders.

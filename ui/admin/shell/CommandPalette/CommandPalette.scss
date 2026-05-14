@@ -93,3 +93,23 @@
     background: var(--theme-colorBgElevated, #1f1f1f);
     color: var(--theme-colorText, #f5f5f5);
 }
+
+/* Top-bar trigger — styled to sit flush with the AntD link buttons in
+   the admin nav row. The inner <button> is kbar's `useKBar` toggle. */
+.admin-topbar-command-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    color: var(--theme-colorPrimary, #1677ff);
+    cursor: pointer;
+
+    &__btn {
+        background: transparent;
+        border: 0;
+        padding: 0;
+        font: inherit;
+        color: inherit;
+        cursor: pointer;
+    }
+}

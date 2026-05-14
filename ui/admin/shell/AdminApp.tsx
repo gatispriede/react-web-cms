@@ -22,7 +22,6 @@ import AdminBuildHeader from "./AdminBuild/AdminBuildHeader";
 import AdminBuildSider from "./AdminBuild/AdminBuildSider";
 import {buildPageMenuItems} from "./AdminBuild/pageMenuBuilder";
 import {loadNavigationPages} from "./AdminBuild/loadNavigationPages";
-import CommandPalette from "./CommandPalette/CommandPalette";
 import InlineEditOverlay from "./InlineEdit/InlineEditOverlay";
 
 interface IHomeState {
@@ -371,7 +370,9 @@ class AdminApp extends React.Component<{
                     t={this.props.t}
                     sectionsById={this.sectionsById}
                 />
-                <CommandPalette>
+                {/* The kbar command palette provider is mounted once at the
+                    shell level (`UserStatusBar`) so it wraps the top-bar
+                    trigger + every pane — not just the build view. */}
                 <Spin spinning={this.state.loading}>
                     <AdminBuildHeader
                         admin={this.admin}
@@ -411,7 +412,6 @@ class AdminApp extends React.Component<{
                         </Layout.Content>
                     </Layout>
                 </Spin>
-                </CommandPalette>
             </ConfigProvider>
         );
     }
