@@ -69,7 +69,7 @@ import {
  * becomes `{conflict: true, currentVersion, currentDoc, message}`; other
  * errors become `{error: …}`. Frontend API wrappers detect the `.conflict`
  * key and surface a `ConflictError` to the caller via
- * `src/frontend/lib/conflict.ts`.
+ * `services/infra/conflict.ts`.
  */
 interface AuditTrace {
     collection: string;

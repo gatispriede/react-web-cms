@@ -7,7 +7,7 @@
  * throws `ConflictError` (carrying the current server doc) when they
  * disagree. The MongoQuery layer in `mongoDBConnection.ts` catches the
  * error and serialises it through GraphQL as a JSON wrapper the frontend
- * detects in API wrappers — see `src/frontend/lib/conflict.ts`.
+ * detects in API wrappers — see `services/infra/conflict.ts`.
  *
  * Callers that omit `expectedVersion` apply the write unconditionally
  * (legacy path, kept for backward compatibility while editor surfaces

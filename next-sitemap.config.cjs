@@ -24,7 +24,7 @@ module.exports = {
         // "scroll" mode all pages stack on `/`, so we only emit the root
         // (URL fragments aren't valid sitemap locs). Legacy `/<slug>` routes
         // in scroll mode redirect client-side to `/#<slug>` — see
-        // `src/frontend/pages/[...slug].tsx`.
+        // `ui/client/pages/[...slug].tsx`.
         const query = `{ mongo { getNavigationCollection { page } getSiteFlags getPosts(limit: 200) } }`;
         const resp = await fetch(`${fetchOrigin}/api/graphql`, {
             method: 'POST',
