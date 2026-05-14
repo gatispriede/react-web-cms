@@ -138,10 +138,13 @@ export const emailConfigTest: McpTool = defineTool({
  * W6a — `email.preview` MCP tool.
  *
  * Renders any registered email template (`receipt`, `order-confirmation`,
- * `shipped`, `magic-link`, `password-reset`, `account-welcome`) against
- * caller-supplied fixture data (or the bundled sample-receipt fixture
- * when none is given for the receipt-family templates). Returns subject
- * + HTML + plaintext — the AI-driven previewing path.
+ * `shipped`, `magic-link`, `verify-email`, `password-reset`,
+ * `account-welcome`, `abandoned-cart`, `car-reservation-confirmation`,
+ * `inquiry-acknowledgement`, `scheduled-publish-failed`,
+ * `low-stock-alert`, `saved-search-alert`) against caller-supplied
+ * fixture data (or the bundled sample-receipt fixture when none is given
+ * for the receipt-family templates). Returns subject + HTML + plaintext
+ * — the AI-driven previewing path.
  *
  * Read-only, no side effects, no audit row.
  */
@@ -155,7 +158,7 @@ export const emailPreview: McpTool = defineTool({
         type: 'object',
         required: ['template'],
         properties: {
-            template: {type: 'string', description: 'Template id — receipt | order-confirmation | shipped | magic-link | password-reset | account-welcome'},
+            template: {type: 'string', description: 'Template id — receipt | order-confirmation | shipped | magic-link | verify-email | password-reset | account-welcome | abandoned-cart | car-reservation-confirmation | inquiry-acknowledgement | scheduled-publish-failed | low-stock-alert | saved-search-alert'},
             fixture: {type: 'object', description: 'Template input. Defaults to the bundled sample-receipt fixture when omitted (only valid for receipt-family templates).'},
             themeOverrides: {type: 'object', description: 'Partial IEmailTheme overrides — e.g. {"colorAccent":"#0a4"}.'},
         },
