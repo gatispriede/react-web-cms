@@ -1,6 +1,5 @@
 import React from 'react';
 import {GetServerSideProps} from 'next';
-import {useTranslation} from 'next-i18next/pages';
 import {serverSideTranslations} from 'next-i18next/pages/serverSideTranslations';
 import ModulesPreview from '@client/lib/preview/ModulesPreview';
 import SeoHead from '@client/lib/seo/SeoHead';
@@ -16,12 +15,14 @@ import SeoHead from '@client/lib/seo/SeoHead';
  * is for the developer running `npm run dev` locally.
  */
 const DevModulesPreview = () => {
-    const {t, i18n} = useTranslation('app');
+    // admin-module-composed: `ModulesPreview` is now the `AdminLoader`
+    // bridge — it resolves `t` / `tApp` itself via `useTranslation`, so
+    // this dev route renders it with no props (same as the dispatch).
     return (
         <>
             {/* W8h SEO polish — dev-only preview route, never indexable. */}
             <SeoHead indexable={false} title="Dev · Modules preview"/>
-            <ModulesPreview t={t as any} tApp={i18n.getFixedT(i18n.language, 'app') as any}/>
+            <ModulesPreview/>
         </>
     );
 };
