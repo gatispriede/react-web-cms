@@ -12,9 +12,13 @@
  * Server-side persistence happens via the public GraphQL mutation
  * `recordMarketingHit` (anonOpen, rate-limited at the service).
  *
- * Local POC scope: no GPC/DNT honour yet (deferred until pre-public-deploy
- * per project_local_poc_scope memory).
+ * W8b — consent gating: marketing attribution is the `marketing` cookie
+ * category. Capture (and the `attr_session_id` cookie write that backs it)
+ * is gated on `hasConsent('marketing')`, which also returns false whenever a
+ * DNT / GPC signal is active. If the visitor later grants marketing consent
+ * via the banner, `captureMarketingHit()` re-runs off the consent change bus.
  */
+import {hasConsent, onConsentChange} from '@client/lib/consent';
 
 const COOKIE_NAME = 'attr_session_id';
 const SESSION_KEY = 'attr_session_id';
@@ -100,13 +104,30 @@ async function postHit(hit: CapturedHit): Promise<void> {
     } catch { /* ignore — telemetry is best-effort */ }
 }
 
+let consentSubscribed = false;
+
 /**
  * Capture marketing attribution on first hit per page-load. Idempotent
  * via `sessionStorage[HIT_FLAG_KEY]` so SPA route changes inside the
  * same session don't double-post.
+ *
+ * Consent-gated (W8b): no-op unless `marketing` consent is granted — which
+ * also covers DNT / GPC (those force `marketing` off). When called without
+ * consent, it subscribes once to the consent change bus so a later "Accept"
+ * in the banner re-triggers capture without a page reload.
  */
 export function captureMarketingHit(): void {
     if (typeof window === 'undefined') return;
+    if (!hasConsent('marketing')) {
+        // Re-attempt capture if the visitor grants marketing consent later.
+        if (!consentSubscribed) {
+            consentSubscribed = true;
+            onConsentChange(() => {
+                if (hasConsent('marketing')) captureMarketingHit();
+            });
+        }
+        return;
+    }
     try {
         if (sessionStorage.getItem(HIT_FLAG_KEY) === '1') return;
     } catch { /* fall through — best-effort */ }

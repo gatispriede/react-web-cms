@@ -3,8 +3,13 @@
  * stored shape (with version + audit fields), `InProduct` is the input shape
  * the admin UI (or warehouse adapter) sends.
  *
- * Pricing: a single `price` (integer minor units) + ISO-4217 `currency`. No
- * multi-currency in v1 — see docs/features/products.md §10.1.
+ * Pricing (multi-currency, W8g — multi-currency-and-tax): `price` + `currency`
+ * stay as the legacy single-currency fields (transaction currency + invoice
+ * fallback). `prices` is the multi-currency map operators publish native
+ * prices into; `baseCurrency` is the FX-fallback pivot when a visitor's
+ * display currency has no native entry; `tax` carries the VAT regime hint +
+ * Stripe Tax category + tax-inclusive flag. See
+ * docs/roadmap/storefront/multi-currency-and-tax.md.
  *
  * Stock semantics: when `variants[]` is non-empty, the variants own stock and
  * the parent `stock` is ignored at runtime (still stored for backward compat).
@@ -29,8 +34,27 @@ export interface IProductVariant {
  * the markets they care about; `EcbFxService.convert` fills in the rest at
  * display time. Backwards-compat: legacy single-currency products are read
  * as `prices: { [currency]: price }` by `ProductService.normalize`.
+ *
+ * Values are integer minor units (cents), keyed by uppercase ISO-4217.
  */
 export type ProductPrices = Record<string, number>;
+
+/**
+ * Per-product tax handling hint (W8g). All fields optional — when absent
+ * the `VatRegimeService` resolves a standard regime from buyer/seller
+ * jurisdiction alone. `regime` lets an operator force a treatment (e.g.
+ * `margin` for second-hand goods / cars — see ss.com cars integration);
+ * `category` is the Stripe Tax product-tax-code passed straight through to
+ * the `StripeTaxService`; `included` flags whether the listed price is
+ * already VAT-inclusive (EU storefronts default true).
+ */
+export interface IProductTax {
+    regime?: 'standard' | 'margin' | 'private-seller' | 'zero-rated' | 'exempt';
+    /** Stripe Tax product tax code, e.g. 'txcd_99999999'. */
+    category?: string;
+    /** Is the listed price tax-inclusive? EU default: true. */
+    included?: boolean;
+}
 
 export interface IProduct {
     id: string;
@@ -42,6 +66,14 @@ export interface IProduct {
     currency: string;
     /** Multi-currency map, minor units keyed by ISO-4217. See ProductPrices. */
     prices?: ProductPrices;
+    /**
+     * Base currency for FX fallback — the currency `EcbFxService.convert`
+     * pivots from when a visitor's display currency has no native `prices`
+     * entry. Defaults to `currency` when omitted. Always uppercase ISO-4217.
+     */
+    baseCurrency?: string;
+    /** Per-product tax handling hint. See IProductTax. */
+    tax?: IProductTax;
     stock: number;
     images: string[];
     categories: string[];
@@ -93,6 +125,8 @@ export interface InProduct {
     price: number;
     currency: string;
     prices?: ProductPrices;
+    baseCurrency?: string;
+    tax?: IProductTax;
     stock?: number;
     images?: string[];
     categories?: string[];

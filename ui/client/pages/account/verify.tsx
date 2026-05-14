@@ -1,8 +1,9 @@
 import React, {useState} from 'react';
 import {GetServerSideProps} from 'next';
 import Link from 'next/link';
-import {signIn} from 'next-auth/react';
+import {signIn, getSession} from 'next-auth/react';
 import {Alert, Button, Spin} from 'antd';
+import {attachMarketingSessionToUser} from '@client/lib/marketingCapture';
 
 /**
  * W6c — magic-link verify (click-to-confirm) page.
@@ -32,11 +33,22 @@ const VerifyPage = ({token, callbackUrl}: {token: string | null; callbackUrl: st
                 token,
                 callbackUrl,
             });
-            // NOTE: marketing-attribution attach on magic-link redeem
-            // is a follow-up — we don't have the userId here without a
-            // /api/auth/session round-trip. The first-touch + last-touch
-            // copy already runs on signup (signup.tsx); magic-link-only
-            // users will pick it up the next time they sign up properly.
+            if (res?.ok) {
+                // W6c gap-close — anonymous → identified merge on the
+                // magic-link path. The credential provider doesn't hand
+                // the userId back to `signIn`, so we read it off the
+                // freshly-minted session and forward the `attr_session_id`
+                // cookie to `attachMarketingSession`. This makes
+                // firstTouchUtm/lastTouchUtm flow into the user record
+                // for magic-link sign-ups, matching the password-signup
+                // path (authWrappers.tsx). Best-effort: a telemetry miss
+                // never blocks the redirect.
+                try {
+                    const session = await getSession();
+                    const userId = (session?.user as {id?: string} | undefined)?.id;
+                    if (userId) await attachMarketingSessionToUser(userId);
+                } catch { /* ignore — attribution is best-effort */ }
+            }
             if (res?.ok && res.url) {
                 window.location.href = res.url;
             } else if (res?.ok) {

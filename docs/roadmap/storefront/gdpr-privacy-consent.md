@@ -6,6 +6,17 @@ research: see _meta/research-findings-2026-05-12.md §2 (attribution capture) fo
 
 # GDPR + EU EAA compliance — pre-public-deploy
 
+> **Status (2026-05-14): consent / cookie / DNT-GPC slice SHIPPED.** The
+> cookie consent banner (categorised opt-in), DNT + GPC signal honour, cookie
+> classification registry, analytics/marketing capture gating, and a
+> client-visible data-retention summary are live. The data-rights APIs
+> (`data-export` / `delete`) + `/account/settings?tab=privacy` surface shipped
+> separately. Still **flagged-for-operator**: server-side Mongo TTL indexes,
+> `Users.privacy.consent` cross-device mirror, PII redaction middleware on
+> ss.com upstream data, `/privacy` + `/privacy/cookies` + `/privacy/preferences`
+> + `/terms` standalone pages, the `privacy_*` MCP tools, operator legal-copy
+> editor, and the `cookie-coverage.mjs` CI script. See `shipped.md`.
+
 ## Goal
 
 Bring the platform from **local POC scope** to **public-internet ready** on the privacy / consent / data-rights axis. Closes the standing deferral in [project_local_poc_scope](../../C:/Users/User/.claude/projects/D--Work-redis-node-js-cloud/memory/project_local_poc_scope.md).
@@ -221,16 +232,24 @@ function stripKeys(attrs: Record<string, string>, keys: Set<string>): Record<str
 
 ## Acceptance
 
-1. First public visit shows consent banner with 4 categories + Accept All + Manage Preferences (never a dark-pattern single button)
-2. DNT or GPC signal flips analytics + marketing categories to off pre-emptively
-3. `/account/privacy/export` triggers async export; customer receives email with signed download URL containing all keyed data
-4. `/account/settings/privacy → Delete` triggers 7-day cool-off, then cascade-anonymises per spec
-5. ss.com seller phone + name are redacted in public view; revealed after paid reservation
-6. `/privacy`, `/privacy/cookies`, `/privacy/preferences`, `/terms` all render under the active theme
-7. CI script fails if a new cookie is set without registering it
-8. Mongo TTL indexes in place; e2e advances time + verifies expiry behaviour
-9. MCP coverage: `privacy_*` tools cover export / delete / cookie list / retention config
-10. Operator can edit legal copy + the diff history is audit-tracked
+1. **[SHIPPED]** First public visit shows consent banner with 4 categories + Accept All + Manage Preferences (never a dark-pattern single button) — `ui/client/features/Consent/ConsentBanner.tsx`
+2. **[SHIPPED]** DNT or GPC signal flips analytics + marketing categories to off pre-emptively — `privacySignalActive()` in `ui/client/lib/consent.ts`; banner self-suppresses + writes `MIN_CONSENT`
+3. **[SHIPPED separately]** `/account/privacy/export` triggers async export — data-export API pre-exists (`ui/client/pages/api/account/data-export.ts`)
+4. **[SHIPPED separately]** `/account/settings/privacy → Delete` — delete API pre-exists (`ui/client/pages/api/account/delete.ts`)
+5. **[FLAGGED]** ss.com seller phone + name redacted in public view — PII redaction middleware not yet built
+6. **[FLAGGED]** `/privacy`, `/privacy/cookies`, `/privacy/preferences`, `/terms` standalone themed pages — not yet built (registry + retention data exist in `lib/consent.ts` ready to render)
+7. **[FLAGGED]** CI script fails if a new cookie is set without registering it — `cookie-coverage.mjs` not yet built; `COOKIE_REGISTRY` is the manual source of truth
+8. **[FLAGGED]** Mongo TTL indexes in place — server-side; `DATA_RETENTION_RULES` documents the intended TTLs client-side
+9. **[FLAGGED]** MCP coverage: `privacy_*` tools — not yet built (consent state is client-local; no admin-authored surface yet)
+10. **[FLAGGED]** Operator can edit legal copy + diff history audit-tracked — not yet built
+
+### Shipped this slice — implementation notes
+
+- `ui/client/lib/consent.ts` — canonical lib: `ConsentRecord` model, `COOKIE_REGISTRY` classification, `isDoNotTrackOn()` / `isGpcOn()` / `privacySignalActive()`, `readConsent` / `persistConsent` / `hasConsent`, `onConsentChange` change bus, `DATA_RETENTION_RULES`. Storage: `localStorage['cms.privacy.consent.v1']` + `cookie_consent` mirror cookie (13-month max-age).
+- `ui/client/features/Consent/ConsentBanner.tsx` + `ConsentPreferences.tsx` — banner with categorised opt-in, "Accept all" / "Manage preferences" / "Reject all" + per-category toggles; `data-testid` on every button (`consent-banner-accept` / `-manage` / `-save` / `-reject`, `consent-preferences-toggle-{cat}`). Mounted globally in `ui/client/pages/_app.tsx`.
+- `ui/client/lib/marketingCapture.ts` — `captureMarketingHit()` gated on `hasConsent('marketing')`; re-runs off the consent change bus if marketing consent is granted later.
+- `ui/client/lib/analytics/track.ts` — `privacyOptOut()` now folds through `hasConsent('analytics')` (single gate; DNT/GPC included).
+- Note: `ui/client/components/CookieConsent/` is the earlier partial — no longer globally mounted, still imported by `components/Account/DataRightsForm.tsx` + `app/providers.tsx`; shares the same storage keys so records are mutually readable. Consolidate when those call sites are touched.
 
 ## Effort
 

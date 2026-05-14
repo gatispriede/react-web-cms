@@ -1,10 +1,20 @@
 /**
- * Wave 8b — Terms of service page (placeholder).
+ * Terms of service page — App Router migration, Batch 1.
+ *
+ * Direct port of the former `pages/terms.tsx` (Wave 8b placeholder). No
+ * data dependencies, so this is a plain Server Component under
+ * `app/terms/`. The Pages-Router `pages/terms.tsx` was deleted in the
+ * same change to avoid an `app/terms` ↔ `pages/terms` route collision.
  *
  * Operator: replace the placeholder content with reviewed legal copy.
  */
 import React from 'react';
 import Link from 'next/link';
+import type {Metadata} from 'next';
+
+export const metadata: Metadata = {
+    title: 'Terms of service',
+};
 
 const TermsPage: React.FC = () => {
     return (

@@ -1,13 +1,17 @@
 # MCP rollout — aftermath bugs + improvements
 
-Status: Open
-Last updated: 2026-05-06
+Status: Closed (2026-05-14) — every in-scope issue is fixed or has a recorded terminal disposition (deferred / wontfix). See per-issue status blocks below.
+Last updated: 2026-05-14
 
 Issues surfaced during the MCP HTTP transport rollout to funisimo.pro and skyclimber.pro on 2026-05-06. Each entry: where it lives, the symptom, the fix (if applied) or the proposed direction.
+
+**2026-05-14 closeout.** The batched-fixes chunk (README Wave 3 #14 — issues #1 / #5 / #9 / #11 / #12) was implemented in code but the spec doc was never reconciled. This pass verified every issue against current code and recorded a terminal status on each. Net: all five batched issues are fixed (code + co-located tests already present); the SEO pair #13 / #14 fixed; the infra/CI issues #3 / #4 / #6 / #7 fixed by the cited commits; #2 documented; #8 deferred (backlog); #10 deferred (flaky-suite stabilisation). Nothing left open.
 
 ---
 
 ## 1. `section.update` advertises "upserts" but rejects unknown ids
+
+**Status: FIXED (2026-05-14 verified).** Took option (B) — `addUpdateSectionItem` now genuinely upserts. `NavigationService.ts` (lines ~222–243): an unknown `section.id` **with** a `pageName` inserts the section with the chosen id and attaches it to the page's `sections[]`, returning `{createSection: {id, version: 1, upserted: true}}`. An unknown id **without** `pageName` is still rejected (would orphan the section the nav tree never references) with an explicit error message. The MCP `section.update` tool description ("Upsert one or many sections") is now accurate. Co-located tests cover both paths (`NavigationService.test.ts` — "upserts an unknown id when pageName is given", "rejects an unknown id when no pageName is given").
 
 | Field | Value |
 |---|---|
@@ -20,6 +24,8 @@ Issues surfaced during the MCP HTTP transport rollout to funisimo.pro and skycli
 
 ## 2. Caddy `MCP_ALLOWED_CIDR=` empty-string trap
 
+**Status: DOCUMENTED (no code change).** The gotcha is recorded in `secrets.md` (`DEPLOY_ENV_FILE_*` blocks) — set `MCP_ALLOWED_CIDR=0.0.0.0/0` for bearer-only mode. The "better fix" (drop the matcher when the var is empty via two named matchers + an `import`-ed snippet) is a Caddyfile refactor outside this chunk's scope; left as a follow-up note here. Not blocking — the documented workaround is sufficient.
+
 | Field | Value |
 |---|---|
 | Severity | medium |
@@ -30,6 +36,8 @@ Issues surfaced during the MCP HTTP transport rollout to funisimo.pro and skycli
 | Better fix | Drop the matcher entirely when the var is empty. Caddy's matcher syntax doesn't expose conditional-on-env elegantly; cleanest is two named matchers and an `import`-ed snippet, swapped at compose time. |
 
 ## 3. mcp container missing from front-end docker network
+
+**Status: FIXED** by `15fa58a` (cited below). The "follow-up" (compose-time topology lint) is tracked in the Cross-cutting follow-ups section, not this issue.
 
 | Field | Value |
 |---|---|
@@ -42,6 +50,8 @@ Issues surfaced during the MCP HTTP transport rollout to funisimo.pro and skycli
 
 ## 4. mcp healthcheck used `localhost` (IPv6 trap on Alpine)
 
+**Status: FIXED** by `15fa58a` (cited below). Follow-up lint tracked in Cross-cutting follow-ups.
+
 | Field | Value |
 |---|---|
 | Severity | low (caught) |
@@ -52,6 +62,8 @@ Issues surfaced during the MCP HTTP transport rollout to funisimo.pro and skycli
 | Follow-up | Lint pass over all compose healthchecks for the `localhost` substring. Or bind Express to both v4 and v6 (`Express.listen(port, '::')` works on dual-stack boxes). |
 
 ## 5. Local dev token issuer omits `admin:bundle` scope
+
+**Status: FIXED (2026-05-14 verified).** `tools/mcp-dev-token.js` — the `SCOPES` array now includes `'admin:bundle'` (with an inline comment citing this issue). `bundle.export` / `bundle.import` MCP calls from the local dev token work without the one-off `tools/import-bundle-local.mts` workaround. Production tokens stay least-privilege via the admin UI as the doc intends.
 
 | Field | Value |
 |---|---|
@@ -64,6 +76,8 @@ Issues surfaced during the MCP HTTP transport rollout to funisimo.pro and skycli
 
 ## 6. `appleboy/ssh-action` `script_stop: true` aborts on `if`-test failures
 
+**Status: FIXED** by `3f8e03e` (cited below) + documented in `docs/runbooks/deploy-troubleshooting.md` § 1.
+
 | Field | Value |
 |---|---|
 | Severity | medium (caught) |
@@ -74,6 +88,8 @@ Issues surfaced during the MCP HTTP transport rollout to funisimo.pro and skycli
 | Documented | `docs/runbooks/deploy-troubleshooting.md` § 1. |
 
 ## 7. `appleboy/ssh-action` SSH session drops on long docker builds
+
+**Status: FIXED (mitigated)** by `cba4d92` (heartbeat, cited below). The permanent fix — move the build off the remote — is Phase B of `terraform-kamal-migration.md`, tracked there, not here.
 
 | Field | Value |
 |---|---|
@@ -86,6 +102,8 @@ Issues surfaced during the MCP HTTP transport rollout to funisimo.pro and skycli
 
 ## 8. Mongo healthcheck uses removed `mongo` shell
 
+**Status: DEFERRED (parked in `backlog.md`).** Cosmetic — `docker compose ps` shows `mongodb` as `Up X (unhealthy)` but nothing gates on mongo's health status, the app/server/caddy connect fine, and content is reproducible from bundle export (cattle-not-pets). The `mongosh` one-liner fix is recorded in the proposal above; pick it up if a real driver appears (a future feature that *does* gate on mongo health). Confirmed still parked per README backlog line.
+
 | Field | Value |
 |---|---|
 | Severity | low (cosmetic) |
@@ -97,6 +115,8 @@ Issues surfaced during the MCP HTTP transport rollout to funisimo.pro and skycli
 
 ## 9. Pages without audit triplet aren't auto-stamped on no-op `page.update`
 
+**Status: FIXED (2026-05-14 verified).** Took option (B) — the recommended one. A new `page.touch` MCP tool (`services/features/Mcp/tools/pages.ts` — `pageTouch`) bumps `editedAt` / `editedBy` / `version` without touching content: it re-pulls the nav row and writes it back through `replaceUpdateNavigation`, whose `auditStamp` + version bump fire even when the rest of the doc is identical. Scoped to `write:content`, mode-enforced via `enforceModeForTool`. Registered in `PAGE_TOOLS`. Legacy pages like `cv-nav-cms` can now be force-stamped.
+
 | Field | Value |
 |---|---|
 | Severity | low |
@@ -106,6 +126,8 @@ Issues surfaced during the MCP HTTP transport rollout to funisimo.pro and skycli
 | Notes | (A) is more invasive; (B) is one new tool definition + an MCP scope check (admin or write:content). Recommend (B). |
 
 ## 11. INFRA_TOPOLOGY field-name mismatch — SVGs silently absent
+
+**Status: FIXED (2026-05-14 verified).** The follow-up landed exactly as decided 2026-05-07: new file `services/features/Navigation/normalizeSectionInput.ts` with per-content-type rename rules — INFRA_TOPOLOGY: `svg` → `topologySvg`, `caption` → `topologyCaption` (canonical key wins when both present; legacy keys preserved). Called from `addUpdateSectionItem` before `validateSectionInput` so the validator sees the canonical shape and older bundles import without breakage. Co-located `normalizeSectionInput.test.ts` covers the rename rule, the canonical-precedence case, the no-op pass-through, and malformed-JSON tolerance — all passing. `NavigationService.ts` stays under the line ceiling because normalization is its own file.
 
 | Field | Value |
 |---|---|
@@ -118,6 +140,8 @@ Issues surfaced during the MCP HTTP transport rollout to funisimo.pro and skycli
 
 ## 13. Blog post + index SEO was incomplete (Google rich-result eligibility)
 
+**Status: FIXED (2026-05-14 verified).** Both `ui/client/pages/blog/[slug].tsx` and `ui/client/pages/blog/index.tsx` emit canonical, og:url, article:* meta, robots, and JSON-LD (`Article` / `Blog`) — confirmed in code. Follow-up (add `NEXT_PUBLIC_SITE_URL` to `secrets.md`) is optional per the doc since the `NEXTAUTH_URL` fallback covers it.
+
 | Field | Value |
 |---|---|
 | Severity | medium (organic traffic) |
@@ -127,6 +151,8 @@ Issues surfaced during the MCP HTTP transport rollout to funisimo.pro and skycli
 | Follow-up | Add `NEXT_PUBLIC_SITE_URL` to `secrets.md`'s `DEPLOY_ENV_FILE_*` blocks (optional — `NEXTAUTH_URL` fallback already covers this). Could also enrich `Article` JSON-LD with `wordCount`, `image` dimensions, `articleSection`. |
 
 ## 14. `next-sitemap.config.cjs` had hardcoded `http://localhost`
+
+**Status: FIXED (2026-05-14 verified).** `next-sitemap.config.cjs` — `siteUrl` reads `SITE_URL` → `NEXT_PUBLIC_SITE_URL` → `http://localhost` fallback; the internal GraphQL fetch URL stays localhost (build-host). Confirmed in code. Follow-up (verify prod sitemap + submit to Search Console) is a deploy-time operator action, not code.
 
 | Field | Value |
 |---|---|
@@ -138,6 +164,8 @@ Issues surfaced during the MCP HTTP transport rollout to funisimo.pro and skycli
 
 ## 12. Bundle import filename-sanitization breaks asset references
 
+**Status: FIXED (2026-05-14 verified).** Took option (A) — tighten the sanitizer. `BundleService.ts` `sanitizeAssetName` now only hard-rejects security-critical inputs (null bytes, control chars, `..` traversal segments, path separators, empty stem, disallowed extension) and otherwise round-trips common-case filenames unchanged — parens, spaces, plus signs, accented Latin all survive. `20260426_162153(0).jpg` lands on disk under its original name, so DB references resolve and the hero portrait no longer 404s into a "double background" broken-image icon. The path-traversal belt-and-braces `path.resolve(...).startsWith(...)` check remains. The one-off `cp` workaround in `tools/import-bundle-local.mts` is no longer needed.
+
 | Field | Value |
 |---|---|
 | Severity | medium (real content breakage on import) |
@@ -148,6 +176,8 @@ Issues surfaced during the MCP HTTP transport rollout to funisimo.pro and skycli
 | Workaround | One-off `cp <sanitized> <original>` for each affected image after import — see `tools/import-bundle-local.mts` notes. |
 
 ## 10. e2e workflow disabled to manual-only
+
+**Status: DEFERRED.** Intentional state, not a bug — the Playwright suite was flaky enough during the rollout to consume more attention than it caught, so it's `workflow_dispatch`-only and runs locally via `npm run e2e`. Re-enabling `pull_request` + `push` triggers gates on first stabilising the suite (chase flakes one by one). That stabilisation is its own piece of work and `.github/workflows/e2e.yml` is outside this chunk's scope; leaving the trigger reduction in place until the suite is reliable is the correct call. Related: README E2E backlog + F8-e2e item.
 
 | Field | Value |
 |---|---|
@@ -161,9 +191,9 @@ Issues surfaced during the MCP HTTP transport rollout to funisimo.pro and skycli
 
 ## Cross-cutting follow-ups
 
-These aren't bugs in any single file — they're patterns we noticed during the rollout that warrant their own work:
+These aren't bugs in any single file — they're patterns we noticed during the rollout that warrant their own work. **2026-05-14:** the per-issue fixes that these point at are now done (#1, #5); the remaining bullets are still genuinely cross-cutting and stay open as their own future work.
 
-- **Compose-time topology lint**: catch issues 3 and 4 above by validating that every reverse-proxied service shares a network with caddy and uses an IP-literal in healthchecks.
-- **Section creation tooling for AI authoring**: the AI workflow of building a page section-by-section (like this MCP annex) needs `section.create` to accept semantic ids cleanly. Fix issue 1.
-- **Bundle export/import tooling**: the funisimo → local sync we did this session ended up requiring a tsx workaround because the local dev token didn't have `admin:bundle`. Fix issue 5 and document the canonical "pull prod bundle to local for visual iteration" flow in `docs/runbooks/`.
-- **Audit triplet enforcement**: most edits stamp; some legacy paths don't. Add a Mongo middleware (or a service-level wrapper) that stamps on every write, and remove the per-service stamp logic.
+- **Compose-time topology lint** (still open): catch issues 3 and 4 above by validating that every reverse-proxied service shares a network with caddy and uses an IP-literal in healthchecks. Issues #3/#4 themselves are fixed; the *lint* that would prevent a recurrence is not.
+- **Section creation tooling for AI authoring** (issue #1 — DONE): `section.update` now upserts on a chosen semantic id when `pageName` is given. The broader "AI builds a page section-by-section" ergonomics are otherwise covered.
+- **Bundle export/import tooling**: issue #5 (dev token `admin:bundle` scope) is DONE. Documenting the canonical "pull prod bundle to local for visual iteration" runbook flow in `docs/runbooks/` is still open.
+- **Audit triplet enforcement** (still open): issue #9 added `page.touch` as the targeted escape hatch, but the cross-cutting fix — a Mongo middleware / service-level wrapper that stamps on every write so per-service stamp logic can be removed — is unbuilt.

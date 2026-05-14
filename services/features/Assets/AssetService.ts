@@ -10,6 +10,7 @@ import {nextVersion, requireVersion} from "@services/infra/conflict";
 import {PUBLIC_IMAGE_PATH} from "@utils/imgPath";
 import {log} from "@services/infra/logger";
 import {readImageMetadata} from "@services/features/Assets/imageOptimize";
+import {loadUsageSources, scanImageUsage, UsageConnection} from "@services/features/Assets/ImageUsageService";
 
 const IMAGE_EXT = /\.(jpe?g|png|gif|webp|svg|avif|bmp)$/i;
 const IMAGES_DIR = path.join(process.cwd(), 'ui/client/public/images');
@@ -185,11 +186,47 @@ export class AssetService  implements IAssetService {
             const query = !tags || tags === 'All'
                 ? {}
                 : {tags: {$regex: tags, $options: 'i'}};
+            // Raw Mongo docs — these carry the write-through metadata
+            // (`width` / `height` / `sizeBytes` / `uploadedBy` / `uploadedAt`)
+            // that `image-optimization-on-upload` persists. The fields are
+            // declared optional on `IImage`, so the picker reads them when
+            // present and degrades gracefully for legacy rows.
             return await this.imagesDB.find(query).toArray() as unknown as IImage[];
         } catch (err) {
             log.error({scope: 'asset.getImages', err}, 'getImages failed');
             await this.setupClient();
             return [];
+        }
+    }
+
+    /**
+     * Like `getImages`, but each returned record carries a `usageCount` — the
+     * number of places the image is referenced across pages / sections /
+     * posts / logo / footer / siteSeo / themes. Powers the admin picker's
+     * "unused" sort + per-tile usage-count row, and is the read-side analogue
+     * of the MCP `image.list { includeUsage:true }` tool (both go through the
+     * shared `ImageUsageService` scanner, so the answer is identical).
+     *
+     * `conn` is the live Mongo connection (`getMongoConnection()`); it's
+     * passed in rather than reached for so the method stays unit-testable
+     * with a hand-rolled `UsageConnection` fixture. When the usage scan fails
+     * (or no connection is supplied) the images still come back — just with
+     * `usageCount` left `undefined` — so a scanner hiccup never blanks the
+     * picker.
+     */
+    async listImagesWithUsage(tags: string, conn?: UsageConnection): Promise<IImage[]> {
+        const images = await this.getImages(tags);
+        if (!conn) return images;
+        try {
+            const sources = await loadUsageSources(conn);
+            const usage = scanImageUsage(sources);
+            return images.map(img => ({
+                ...img,
+                usageCount: usage.get(img.name)?.count ?? 0,
+            }));
+        } catch (err) {
+            log.error({scope: 'asset.listImagesWithUsage', err}, 'usage scan failed — returning images without counts');
+            return images;
         }
     }
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import type {IProductRenderable} from './Product.types';
 import BuyCta from '@client/components/Commerce/BuyCta';
+import ProductPrice from './ProductPrice';
 
 /**
  * Shared product card primitive — consumed by ProductGrid, ProductCarousel,
@@ -32,9 +33,15 @@ const ProductCard: React.FC<ProductCardProps> = ({product, showBuyCta = true, sh
                 <h3 className="product-card__title">
                     <a href={href} data-testid={`product-card-link-${product.slug}`}>{product.title}</a>
                 </h3>
-                {showPrice && typeof product.price === 'number' && (
-                    <p className="product-card__price" data-testid={`product-card-price-${product.slug}`}>
-                        {(product.price / 100).toFixed(2)} {product.currency ?? 'EUR'}
+                {showPrice && (typeof product.price === 'number' || product.prices) && (
+                    <p className="product-card__price">
+                        <ProductPrice
+                            prices={product.prices}
+                            price={product.price}
+                            currency={product.currency}
+                            baseCurrency={product.baseCurrency}
+                            testId={`product-card-price-${product.slug}`}
+                        />
                     </p>
                 )}
                 {showBuyCta && <BuyCta product={product} variant="card"/>}

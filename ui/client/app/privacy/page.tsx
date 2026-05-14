@@ -1,5 +1,12 @@
 /**
- * Wave 8b — Privacy policy page (placeholder).
+ * Privacy policy page — App Router migration, Batch 1.
+ *
+ * Direct port of the former `pages/privacy.tsx` (Wave 8b placeholder).
+ * It had no `getServerSideProps` / `getStaticProps` data deps, so the
+ * port is mechanical: a plain Server Component under `app/privacy/`.
+ * The Pages-Router `pages/privacy.tsx` was deleted in the same change —
+ * `app/privacy` and `pages/privacy` cannot both exist (Next errors on
+ * the route collision).
  *
  * Operator: replace the placeholder content blocks below with reviewed
  * legal copy before public deployment. The structure (sections, links to
@@ -8,6 +15,11 @@
  */
 import React from 'react';
 import Link from 'next/link';
+import type {Metadata} from 'next';
+
+export const metadata: Metadata = {
+    title: 'Privacy policy',
+};
 
 const PrivacyPolicyPage: React.FC = () => {
     return (

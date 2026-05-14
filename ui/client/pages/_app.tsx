@@ -105,7 +105,9 @@ import {installErrorReporter} from '@client/lib/reportError';
 import AnalyticsHost from '@client/lib/analytics/AnalyticsHost';
 import {startPerfBeacon} from '@client/lib/perfBeacon';
 import {captureMarketingHit} from '@client/lib/marketingCapture';
-import CookieConsent from '@client/components/CookieConsent';
+// W8b — GDPR cookie-consent banner. Built on the canonical
+// `@client/lib/consent` lib (storage + DNT/GPC signals + cookie registry).
+import {ConsentBanner} from '@client/features/Consent';
 import SkipLink from '@client/components/SkipLink';
 import CartDrawer from '@client/components/Commerce/CartDrawer';
 import SignupBanner from '@client/components/Auth/SignupBanner';
@@ -215,7 +217,7 @@ class App extends NextApp {
                 {/* Phase 1.A — auth-split-client-admin: storefront signup banner.
                     Self-suppresses when auth.clientLoginEnabled is false. */}
                 <SignupBanner/>
-                <CookieConsent/>
+                <ConsentBanner/>
                 {/* Commerce cart drawer — self-suppresses when
                     commerce.checkoutEnabled is false. Safe to mount
                     unconditionally; renders null on catalogue-only sites. */}

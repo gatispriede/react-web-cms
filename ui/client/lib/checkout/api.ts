@@ -100,3 +100,22 @@ export const formatMoney = (amount: number | undefined, currency: string | null 
         return `${(amount ?? 0) / 100} ${currency ?? ''}`;
     }
 };
+
+/**
+ * Display-currency-aware money formatter (W8g — multi-currency-and-tax).
+ *
+ * Wraps `formatMoney` but prefixes a `≈` when the amount is an
+ * FX-converted approximation rather than an operator-published native
+ * price (per the spec's "≈ €1,990 (converted)" pattern). Checkout / cart
+ * totals stay on the plain `formatMoney` — those are always in the locked
+ * transaction currency, never converted. Storefront catalogue price call
+ * sites (Product module, cars cards) use this one.
+ */
+export const formatDisplayMoney = (
+    amount: number | undefined,
+    currency: string | null | undefined,
+    opts: {approx?: boolean} = {},
+) => {
+    const formatted = formatMoney(amount, currency);
+    return opts.approx ? `≈ ${formatted}` : formatted;
+};
