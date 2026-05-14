@@ -108,6 +108,11 @@ export enum EItemType {
     SigninForm = "SIGNIN_FORM",
     SignupForm = "SIGNUP_FORM",
     MagicLinkRequestForm = "MAGIC_LINK_REQUEST_FORM",
+    // all-pages-module-composed — Blog batch. `BlogPost` is the
+    // single-post body module (title + cover + sanitised HTML + meta);
+    // its smart wrapper reads the `[slug]` route param and fetches via
+    // `PostApi.getBySlug`. `/blog` reuses the existing `BlogFeed` module.
+    BlogPost = "BLOG_POST",
     Empty = 'EMPTY',
 }
 export default EItemType

@@ -86,6 +86,8 @@ import {
     SignupFormHost,
     MagicLinkRequestFormHost,
 } from '@client/modules/_AccountPageModules/authWrappers';
+// all-pages-module-composed — Blog batch smart wrapper.
+import {BlogPostHost} from '@client/modules/_BlogPageModules/wrappers';
 
 export const CLIENT_ITEM_TYPES: readonly ClientItemType[] = [
     {key: EItemType.Text, Display: PlainText},
@@ -154,4 +156,6 @@ export const CLIENT_ITEM_TYPES: readonly ClientItemType[] = [
     {key: EItemType.SigninForm, Display: SigninFormHost as never},
     {key: EItemType.SignupForm, Display: SignupFormHost as never},
     {key: EItemType.MagicLinkRequestForm, Display: MagicLinkRequestFormHost as never},
+    // all-pages-module-composed — Blog batch.
+    {key: EItemType.BlogPost, Display: BlogPostHost as never},
 ];
