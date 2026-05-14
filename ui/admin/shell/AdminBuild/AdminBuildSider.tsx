@@ -90,7 +90,10 @@ const AdminBuildSider: React.FC<AdminBuildSiderProps> = ({
                     open={drawerOpen}
                     onClose={() => setDrawerOpen(false)}
                     width="80vw"
-                    styles={{body: {padding: 0, background: darkMode ? '#1f1f1f' : undefined}}}
+                    // Dark-mode audit: drop the hardcoded `#1f1f1f` — the
+                    // elevated chrome surface is the AntD `cssVar` token,
+                    // so it tracks the active mode without a literal.
+                    styles={{body: {padding: 0, background: darkMode ? 'var(--ant-color-bg-elevated)' : undefined}}}
                     closeIcon={null}
                     title={t('Navigation')}
                 >
@@ -108,7 +111,10 @@ const AdminBuildSider: React.FC<AdminBuildSiderProps> = ({
             breakpoint="md"
             width={240}
             theme={darkMode ? 'dark' : 'light'}
-            style={{borderRight: '1px solid rgba(0,0,0,0.06)', minHeight: '70vh'}}
+            // Dark-mode audit: the hardcoded `rgba(0,0,0,0.06)` border
+            // vanished into the dark sider; use the AntD border token so
+            // it stays visible in both modes.
+            style={{borderRight: '1px solid var(--ant-color-border)', minHeight: '70vh'}}
         >
             {body}
         </Layout.Sider>

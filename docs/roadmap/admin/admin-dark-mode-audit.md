@@ -5,6 +5,26 @@ description: Screenshot-driven audit of admin light + dark mode across 5 represe
 
 # Admin dark-mode audit — global-first, screenshots through Stitch
 
+> **SHIPPED 2026-05-14 (mechanism + first-pass token set).** The global-first
+> machinery is in place: `cssVar: {key: 'admin'}` enabled, a tuned light +
+> dark token set (`ui/admin/lib/adminTheme.ts` — `buildAdminTheme(dark)`),
+> the module-scoped persistence store (`ui/admin/lib/adminDarkMode.ts` —
+> localStorage `admin.darkMode` + `data-admin-theme` stamp + cross-tab sync),
+> and the top-bar toggle (`ui/admin/shell/DarkModeSwitcher.tsx`,
+> `data-testid="admin-dark-mode-switch"`) wired into `AdminTopBar`.
+> `AdminApp.tsx` now consumes `buildAdminTheme()` (it previously imported the
+> libs but ran dead local state + a broken inline `ConfigProvider`). Shell
+> SCSS offender fixed: `AppLoginWrapper.scss` no longer hardcodes `#fff` /
+> `rgba(0,0,0,…)` — it consumes the `--admin-*` tokens, and the redundant
+> `[data-admin-theme="dark"]` override for it was dropped.
+>
+> **Not done (needs a human pass):** Steps 2-3 + 6 — the Stitch screenshot
+> review of the 5 representative pages and the visual-baseline capture
+> couldn't run in this environment. The token set is the global first pass;
+> per-feature stragglers under `ui/admin/features/*` (table cell formatters,
+> theme-editor colour pickers, diagnostics code blocks, any custom
+> Tag/Badge) still need a manual visual audit + per-feature fixes.
+
 ## Goal
 
 Today's admin dark mode has visible legibility bugs: some text is unreadable on dark backgrounds, some text stays in light-mode colors (didn't switch at all). The pattern is per-feature drift — components written before dark mode was wired, or local SCSS hardcoding `#000` / `#fff` / `rgba(0,0,0,…)` instead of consuming tokens.
