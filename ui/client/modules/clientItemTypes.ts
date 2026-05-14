@@ -73,6 +73,13 @@ import TrustBadges from '@client/modules/Trust/TrustBadges';
 import MoneyBackGuarantee from '@client/modules/Trust/MoneyBackGuarantee';
 import ReferAFriendCta from '@client/modules/Marketing/ReferAFriendCta';
 import SocialShareButtons from '@client/modules/Marketing/SocialShareButtons';
+// all-pages-module-composed — Account batch smart wrappers.
+import {
+    OrdersListHost,
+    OrderDetailHost,
+    AddressListHost,
+    NotificationInboxHost,
+} from '@client/modules/_AccountPageModules/wrappers';
 
 export const CLIENT_ITEM_TYPES: readonly ClientItemType[] = [
     {key: EItemType.Text, Display: PlainText},
@@ -132,4 +139,9 @@ export const CLIENT_ITEM_TYPES: readonly ClientItemType[] = [
     {key: EItemType.MoneyBackGuarantee, Display: MoneyBackGuarantee as never},
     {key: EItemType.ReferAFriendCta, Display: ReferAFriendCta as never},
     {key: EItemType.SocialShareButtons, Display: SocialShareButtons as never},
+    // all-pages-module-composed — Account batch.
+    {key: EItemType.OrdersList, Display: OrdersListHost as never},
+    {key: EItemType.OrderDetail, Display: OrderDetailHost as never},
+    {key: EItemType.AddressList, Display: AddressListHost as never},
+    {key: EItemType.NotificationInbox, Display: NotificationInboxHost as never},
 ];

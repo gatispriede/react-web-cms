@@ -91,6 +91,15 @@ export enum EItemType {
     DownloadInvoiceButton = "DOWNLOAD_INVOICE_BUTTON",
     ReferAFriendCta = "REFER_A_FRIEND_CTA",
     SocialShareButtons = "SOCIAL_SHARE_BUTTONS",
+    // all-pages-module-composed — Account batch. Smart-wrapper modules
+    // (`ui/client/modules/_AccountPageModules/`) bind the pure
+    // presentational OrdersList / OrderDetailModule / AddressList /
+    // NotificationInbox modules to the customer GraphQL surface so the
+    // `/account/*` routes render through SystemPageDispatch.
+    OrdersList = "ORDERS_LIST",
+    OrderDetail = "ORDER_DETAIL",
+    AddressList = "ADDRESS_LIST",
+    NotificationInbox = "NOTIFICATION_INBOX",
     Empty = 'EMPTY',
 }
 export default EItemType

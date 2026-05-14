@@ -1,46 +1,47 @@
-import React, {useEffect, useState} from 'react';
-import {GetServerSideProps} from 'next';
-import Link from 'next/link';
-import {ConfigProvider, Spin, Table, Typography} from 'antd';
+/**
+ * `/account/orders` — system-page-backed thin loader
+ * (all-pages-module-composed, Account batch).
+ *
+ * Renders entirely via `<SystemPageDispatch>` over the registered
+ * `account-orders` system page. The order-history list + status
+ * filter chips live in the locked `OrdersList` smart-wrapper module
+ * (`ui/client/modules/_AccountPageModules/wrappers.tsx`), which binds
+ * to the customer GraphQL surface. The route is a customer-session
+ * guard + a single dispatch call.
+ */
+import React from 'react';
+import Head from 'next/head';
+import {ConfigProvider} from 'antd';
+import {useTranslation} from 'next-i18next/pages';
+import type {GetServerSideProps} from 'next';
 import staticTheme from '@client/features/Themes/themeConfig';
 import {requireCustomerSession} from '@client/lib/account/session';
-import {myOrders} from '@client/lib/checkout/api';
-import {formatMoney} from '@client/lib/checkout/api';
+import {loadSystemPageSnapshot, type ISystemPageSnapshot} from '@client/lib/systemPage/loadSystemPage';
+import SystemPageDispatch from '@client/lib/systemPage/SystemPageDispatch';
 
-const OrdersHistory = () => {
-    const [orders, setOrders] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+interface OrdersPageProps {
+    systemPage: ISystemPageSnapshot | null;
+}
 
-    useEffect(() => {
-        myOrders(50).then(setOrders).finally(() => setLoading(false));
-    }, []);
-
+const OrdersHistoryPage: React.FC<OrdersPageProps> = ({systemPage}) => {
+    const {t} = useTranslation('translation');
+    const {t: tApp} = useTranslation('app');
     return (
         <ConfigProvider theme={staticTheme}>
-            <div style={{maxWidth: 880, margin: '40px auto', padding: 16}}>
-                <Typography.Title level={2}>My orders</Typography.Title>
-                {loading ? <Spin/> : (
-                    <Table
-                        rowKey="id"
-                        dataSource={orders}
-                        pagination={false}
-                        columns={[
-                            {title: 'Order #', dataIndex: 'orderNumber', render: (n, r: any) => <Link href={`/account/orders/${r.id}`}>{n || r.id.slice(0, 8)}</Link>},
-                            {title: 'Status', dataIndex: 'status'},
-                            {title: 'Total', dataIndex: 'total', render: (v, r: any) => formatMoney(v, r.currency)},
-                            {title: 'Created', dataIndex: 'createdAt', render: v => new Date(v).toLocaleString()},
-                        ]}
-                    />
-                )}
-            </div>
+            <Head><title>My orders</title></Head>
+            <main data-testid="page-account-orders" style={{maxWidth: 880, margin: '0 auto', padding: '32px 20px 80px'}}>
+                {systemPage
+                    ? <SystemPageDispatch systemKey="account-orders" sections={systemPage.defaultSections} t={t} tApp={tApp}/>
+                    : null}
+            </main>
         </ConfigProvider>
     );
 };
 
-export const getServerSideProps: GetServerSideProps = async (ctx) => {
+export const getServerSideProps: GetServerSideProps<OrdersPageProps> = async (ctx) => {
     const guard = await requireCustomerSession(ctx);
     if (!guard.ok) return {redirect: guard.redirect};
-    return {props: {session: guard.session}};
+    return {props: {systemPage: loadSystemPageSnapshot('account-orders')}};
 };
 
-export default OrdersHistory;
+export default OrdersHistoryPage;
