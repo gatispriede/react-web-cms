@@ -23,9 +23,9 @@ interface LanguageRowLike {
  * Exported for tests; callers in the import path use this to decide
  * whether to surface a locale-drift restart-required banner. Pure —
  * does not read the filesystem unless `configLocales` is omitted, in
- * which case it best-effort reads `next-i18next.config.js` at process
- * cwd. A read failure returns `[]` (fail-open — the rest of the import
- * is more important than this one warning).
+ * which case it best-effort reads the repo-root `next-i18next.config.js`.
+ * A read failure returns `[]` (fail-open — the rest of the import is
+ * more important than this one warning).
  */
 export function detectLocaleDrift(
     languages: ReadonlyArray<LanguageRowLike>,
@@ -48,8 +48,12 @@ export function detectLocaleDrift(
 
 function readConfigLocales(): readonly string[] | null {
     try {
+        // Static relative path (not `path.join(process.cwd(), …)`): a
+        // computed `require()` argument is unresolvable for the Turbopack
+        // bundler — it can't trace `process.cwd()` and aborts the build.
+        // `next-i18next.config.js` lives at the repo root, three levels up.
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const cfg = require(path.join(process.cwd(), 'next-i18next.config.js'));
+        const cfg = require('../../../next-i18next.config.js');
         const locales = cfg?.i18n?.locales;
         return Array.isArray(locales) ? locales.filter((l): l is string => typeof l === 'string') : null;
     } catch (err) {
