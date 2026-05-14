@@ -1,13 +1,22 @@
+/**
+ * admin-module-composed (Batch 1) — Audit log bridge.
+ *
+ * The `AdminLoader` bridge for `release/audit`. `AuditViewModel` is
+ * unchanged ("admin stays mostly same"); this maps it onto a single
+ * `AdminInfo` table block + a filter toolbar, and keeps the bespoke
+ * detail Drawer rendered alongside the module. VM3 — no `useState`.
+ */
 import React, {useEffect} from 'react';
-import {Button, DatePicker, Drawer, Input, Select, Space, Table, Tag, Typography} from 'antd';
+import {Button, DatePicker, Drawer, Input, Select, Space, Tag, Typography} from 'antd';
+import type {ColumnsType} from 'antd/es/table';
 import EmptyState from '@admin/lib/EmptyState';
 import {useTranslation} from 'react-i18next';
 import type {AuditEntry, AuditOp} from '@services/features/Audit/AuditService';
 import {useRefreshView} from '@client/lib/refreshBus';
 import {useViewModel} from '@client/lib/state/observable';
+import AdminInfoModule from '@admin/modules/shapes/AdminInfoModule';
+import type {AdminInfoBlock} from '@admin/modules/shapes/AdminInfoModule.types';
 import {AuditViewModel} from './AuditViewModel';
-
-/** Render-only Audit pane — VM3 (2026-05-02). */
 
 const OP_COLORS: Record<AuditOp, string> = {create: 'green', update: 'blue', delete: 'red'};
 
@@ -23,89 +32,97 @@ const AuditTab: React.FC = () => {
         {title: t('When'), dataIndex: 'at', key: 'at', width: 170,
             render: (at: string) => { try { return new Date(at).toLocaleString(); } catch { return at; } }},
         {title: t('Actor'), dataIndex: ['actor', 'email'], key: 'actor', width: 220,
-            render: (_: any, row: AuditEntry) => row.actor?.email ?? <Typography.Text type="secondary">—</Typography.Text>},
+            render: (_: unknown, row: AuditEntry) => row.actor?.email ?? <Typography.Text type="secondary">—</Typography.Text>},
         {title: t('Collection'), dataIndex: 'collection', key: 'collection', width: 140, render: (v: string) => <Tag>{v}</Tag>},
         {title: t('Op'), dataIndex: 'op', key: 'op', width: 100, render: (v: AuditOp) => <Tag color={OP_COLORS[v] ?? 'default'}>{v}</Tag>},
         {title: t('Doc'), dataIndex: 'docId', key: 'docId', ellipsis: true,
             render: (v: string) => v ? <Typography.Text code style={{fontSize: 11}}>{v}</Typography.Text> : <Typography.Text type="secondary">—</Typography.Text>},
         {title: t('Tag'), dataIndex: 'tag', key: 'tag', width: 120, render: (v?: string) => v ? <Tag color="purple">{v}</Tag> : null},
-    ];
+    ] as unknown as ColumnsType<Record<string, unknown>>;
 
-    return (
-        <div style={{padding: 16}}>
-            <Space style={{marginBottom: 12, flexWrap: 'wrap'}} size={8}>
-                <Select
-                    allowClear
-                    placeholder={t('Actor')}
-                    style={{width: 220}}
-                    value={vm.actor}
-                    onChange={vm.setActor}
-                    options={vm.actors.map(a => ({label: a, value: a}))}
-                    showSearch
-                />
-                <Select
-                    allowClear
-                    placeholder={t('Collection')}
-                    style={{width: 180}}
-                    value={vm.collection}
-                    onChange={vm.setCollection}
-                    options={vm.collections.map(c => ({label: c, value: c}))}
-                />
-                <Select
-                    allowClear
-                    placeholder={t('Op')}
-                    style={{width: 120}}
-                    value={vm.op}
-                    onChange={vm.setOp}
-                    options={[
-                        {label: 'create', value: 'create'},
-                        {label: 'update', value: 'update'},
-                        {label: 'delete', value: 'delete'},
-                    ]}
-                />
-                <Input
-                    allowClear
-                    placeholder={t('Doc id')}
-                    style={{width: 200}}
-                    value={vm.docIdFilter}
-                    onChange={e => vm.setDocIdFilter(e.target.value)}
-                    onPressEnter={() => void vm.refresh()}
-                />
-                <DatePicker.RangePicker
-                    showTime={{format: 'HH:mm'}}
-                    onChange={vals => {
-                        vm.setDateRange(vals ? [vals[0]?.toDate() ?? null, vals[1]?.toDate() ?? null] : null);
-                    }}
-                />
-                <Button onClick={vm.resetFilters}>{t('Reset')}</Button>
-                <Button type="primary" onClick={vm.refresh} loading={vm.loading}>{t('Refresh')}</Button>
-            </Space>
+    const toolbar = (
+        <Space style={{flexWrap: 'wrap'}} size={8}>
+            <Select
+                allowClear
+                placeholder={t('Actor')}
+                style={{width: 220}}
+                value={vm.actor}
+                onChange={vm.setActor}
+                options={vm.actors.map(a => ({label: a, value: a}))}
+                showSearch
+            />
+            <Select
+                allowClear
+                placeholder={t('Collection')}
+                style={{width: 180}}
+                value={vm.collection}
+                onChange={vm.setCollection}
+                options={vm.collections.map(c => ({label: c, value: c}))}
+            />
+            <Select
+                allowClear
+                placeholder={t('Op')}
+                style={{width: 120}}
+                value={vm.op}
+                onChange={vm.setOp}
+                options={[
+                    {label: 'create', value: 'create'},
+                    {label: 'update', value: 'update'},
+                    {label: 'delete', value: 'delete'},
+                ]}
+            />
+            <Input
+                allowClear
+                placeholder={t('Doc id')}
+                style={{width: 200}}
+                value={vm.docIdFilter}
+                onChange={e => vm.setDocIdFilter(e.target.value)}
+                onPressEnter={() => void vm.refresh()}
+            />
+            <DatePicker.RangePicker
+                showTime={{format: 'HH:mm'}}
+                onChange={vals => {
+                    vm.setDateRange(vals ? [vals[0]?.toDate() ?? null, vals[1]?.toDate() ?? null] : null);
+                }}
+            />
+            <Button onClick={vm.resetFilters}>{t('Reset')}</Button>
+            <Button type="primary" onClick={vm.refresh} loading={vm.loading}>{t('Refresh')}</Button>
+        </Space>
+    );
 
-            {vm.page.rows.length === 0 && !vm.loading ? (
+    const blocks: AdminInfoBlock[] = [
+        {
+            kind: 'table',
+            testId: 'audit-table',
+            columns,
+            rows: vm.page.rows as unknown as Record<string, unknown>[],
+            rowKey: 'id',
+            loading: vm.loading,
+            pageSize: AuditViewModel.pageSize,
+            pagination: {
+                total: vm.page.total,
+                current: Math.floor(vm.offset / AuditViewModel.pageSize) + 1,
+                onChange: (p) => vm.setOffset((p - 1) * AuditViewModel.pageSize),
+            },
+            onRowClick: (row) => vm.select(row as unknown as AuditEntry),
+            emptyText: (
                 <EmptyState
                     testId="audit-empty-state"
                     title={t('empty.audit.title')}
                     description={t('empty.audit.description')}
                 />
-            ) : (
-                <Table
-                    rowKey="id"
-                    loading={vm.loading}
-                    columns={columns as any}
-                    dataSource={vm.page.rows}
-                    size="small"
-                    scroll={{x: 'max-content'}}
-                    pagination={{
-                        pageSize: AuditViewModel.pageSize,
-                        current: Math.floor(vm.offset / AuditViewModel.pageSize) + 1,
-                        total: vm.page.total,
-                        showSizeChanger: false,
-                        onChange: (p) => vm.setOffset((p - 1) * AuditViewModel.pageSize),
-                    }}
-                    onRow={(row) => ({onClick: () => vm.select(row)})}
-                />
-            )}
+            ),
+        },
+    ];
 
+    return (
+        <>
+            <AdminInfoModule
+                testId="admin-audit"
+                title={t('Audit')}
+                toolbar={toolbar}
+                blocks={blocks}
+            />
             <Drawer
                 width={560}
                 open={Boolean(vm.selected)}
@@ -131,7 +148,7 @@ const AuditTab: React.FC = () => {
                     </Space>
                 )}
             </Drawer>
-        </div>
+        </>
     );
 };
 
