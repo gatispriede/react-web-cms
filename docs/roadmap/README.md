@@ -133,7 +133,7 @@ Patterns: mechanical work (bulk extensions, schema additions, test scaffolding) 
 | # | Item | Size | Notes |
 |---|------|------|-------|
 | SON | [admin-toast-system-sonner.md](admin/admin-toast-system-sonner.md) | S (~30-60 min AI) | Sonner as single toast library; replace AntD `message.*`; wrap async ops in `toast.promise`; Undo on destructive ops. Highest-ROI perceived-quality lift. |
-| CMD | [admin-command-palette.md](admin/admin-command-palette.md) | M (~2-3h AI) | ⌘K palette via kbar; auto-populated from `adminUILoaderRegistry`; standard shortcuts (⌘S save, ⌘↵ publish, ? cheatsheet, / list-search). |
+| ~~CMD~~ | ~~[admin-command-palette.md](admin/admin-command-palette.md)~~ | M (~2-3h AI) | **Shipped 2026-05-14** — kbar ⌘K palette, auto-populated from `adminUILoaderRegistry.listAdminPanes()`, `KBarProvider` mounted shell-wide, top-bar trigger, `?` cheatsheet, `g h/p/t` chords, mobile FAB. Per-feature `useRegisterActions` (⌘S/⌘↵/⌘⇧P/`/`) deferred to per-pane fast-follow. See [shipped.md](shipped.md). |
 | INL | [admin-inline-editing.md](admin/admin-inline-editing.md) | L (~4-6h AI) | Click-to-edit overlay on admin preview iframe via `data-edit-target` attributes. Sanity Presentation pattern. The visible payoff of MCP-driven authoring. |
 | EMP | [admin-empty-states-onboarding.md](admin/admin-empty-states-onboarding.md) | M (~2-3h AI) | Designed empty states for 14 list panes + first-run wizard + seeded sample bundle. Operator never sees blank-canvas paralysis. |
 | REL | [admin-content-releases.md](admin/admin-content-releases.md) | XL (~2-3 days AI) | First-class `Release` entity: group N drafts → preview at perspective → publish atomically → rollback. 2025 Sanity differentiator vs Strapi / Payload / Contentful. |
@@ -143,7 +143,7 @@ Patterns: mechanical work (bulk extensions, schema additions, test scaffolding) 
 
 | # | Item | Size | Notes |
 |---|------|------|-------|
-| FFS | [storefront-faceted-filter-system.md](storefront/storefront-faceted-filter-system.md) | L (~6-8h AI) | Generic faceted filter system. Multi-select with cascading, range sliders with min/max inputs, live counts, pinned chips, saved searches + alerts. First consumer ss.com cars; reused by `/products`. Solves #1 ss.com user complaint (no multi-select make/model). |
+| ~~FFS~~ | ~~[storefront-faceted-filter-system.md](storefront/storefront-faceted-filter-system.md)~~ | L (~6-8h AI) | **Shipped 2026-05-14** — filter-state lib (`ui/client/lib/facetedFilter/`: URL codec + `useFilterState` + chips + saved-search store + per-route configs) + chip/facet-control UI (`ui/client/components/FacetedFilter/`) + `/products` wired as reference consumer (sidebar + pinned chips + live counts + shareable URL state). `/cars` URL-sync + server `$facet` aggregation + saved-search server backend/worker/MCP + mobile drawer deferred. See [shipped.md](shipped.md). |
 | EML | [storefront-receipt-emails.md](storefront/storefront-receipt-emails.md) | M (~3h AI) | Receipt + transactional emails as a product surface. Visual progress timeline (high-AOV anxiety reducer), one focused CTA, mobile-first markup. Theme-aware tokens. |
 | Signup | [client-signup-and-anonymous-checkout.md](storefront/client-signup-and-anonymous-checkout.md) | M-L (~5-7 days AI) | **Delayed account creation as ONLY default** (research-binding — 26% abandonment vs forced signup). Magic-link primary + password optional + OAuth equal-prominence. Mixpanel-shape attribution. Cross-device pre-fetch mitigation. Account dashboard flat hierarchy. Builds on shipped `CustomerAuthService` + `IUser.kind` + `IOrder.guestEmail/orderToken` + NextAuth. |
 | ss.com | [ss-com-cars-integration.md](storefront/ss-com-cars-integration.md) | L (~1-2 weeks AI) | **Collapsed from XL** — Inventory + adapter system is already shipped; ss.com is one new `IWarehouseAdapter` (`SsComCarsAdapter`). **Reservation, not D2C checkout** (research-binding — Cazoo / Vroom failure mode avoided). Marketplace-style anonymous inquiry → account at deposit (€100-200, 48-72h hold). VAT regime as listing fact. Path-segment URL crawl against committed fixtures (no API exists). Per-theme car surfaces in commerce theme. |
@@ -252,7 +252,7 @@ Wave 0 total: ~2 hours AI. Land these before anything else; they all gate later 
 
 These items compound — each is independently shippable, but the operator-grade lift comes from having all of them. Schedule in any order; no inter-dependencies within the wave. Pairs naturally with Sonner (Wave 0c) — kbar action → toast.promise.
 
-W2.5a. **Admin command palette** — [admin-command-palette.md](admin/admin-command-palette.md). **M · ~2-3h AI.** ⌘K via kbar; auto-populated from `adminUILoaderRegistry`; standard shortcuts catalogue (⌘S / ⌘↵ / ? / / / chords).
+W2.5a. ~~**Admin command palette**~~ — ~~[admin-command-palette.md](admin/admin-command-palette.md)~~. **M · ~2-3h AI.** **Shipped 2026-05-14** — kbar ⌘K, auto-populated from `adminUILoaderRegistry`, shell-wide `KBarProvider` + top-bar trigger + `?` cheatsheet + `g h/p/t` chords + mobile FAB. Per-feature `useRegisterActions` (⌘S / ⌘↵ / ⌘⇧P / `/`) deferred to per-pane fast-follow. See [shipped.md](shipped.md).
 
 W2.5b. **Admin empty states + onboarding** — [admin-empty-states-onboarding.md](admin/admin-empty-states-onboarding.md). **M · ~2-3h AI.** 14 designed empty states + 3-step first-run wizard + seeded sample bundle. Illustrations are wall-clock cost (out of AI budget).
 
@@ -300,7 +300,7 @@ W5.5b. **Customer-account modules** — `AccountDashboardGrid` · `OrderProgress
 
 W6a. **Receipt + transactional emails** — [storefront-receipt-emails.md](storefront/storefront-receipt-emails.md). **M · ~3h AI.** Email templates as a product surface. Land before signup so magic-link + receipt flow has its templates ready.
 
-W6b. **Faceted filter system** — [storefront-faceted-filter-system.md](storefront/storefront-faceted-filter-system.md). **L · ~6-8h AI.** Reusable across `/products` + `/cars`. Multi-select cascading, range sliders, live counts, saved searches. Can start in parallel with W6c — they don't depend.
+W6b. ~~**Faceted filter system**~~ — [storefront-faceted-filter-system.md](storefront/storefront-faceted-filter-system.md). **L · ~6-8h AI. Shipped 2026-05-14** — filter-state lib + chip/facet UI + `/products` wired as reference consumer. `/cars` URL-sync + server `$facet` aggregation + saved-search backend/worker/MCP + mobile drawer deferred to follow-ups. See [shipped.md](shipped.md).
 
 W6c. **Public signup + marketing attribution + anonymous checkout** — [`client-signup-and-anonymous-checkout.md`](storefront/client-signup-and-anonymous-checkout.md). **M-L · ~5-7 days AI** (revised down from L · 1-2 weeks after verification confirmed `CustomerAuthService` + `IOrder.guestEmail/orderToken` + Cart/Checkout + NextAuth credentials/Google OAuth are all already shipped).
     - Magic-link via NextAuth `EmailProvider` (~1 day) — **the only net-new auth method**; wires to existing `EmailService`.

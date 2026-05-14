@@ -18,6 +18,7 @@ import '../../admin/shell/CommandPalette/CommandPalette.scss'
 // Custom <App>'. Hoisting them all here moves the imports into the only
 // chain Turbopack accepts. Component files keep a header comment
 // pointing here so future maintainers don't re-add inline imports.
+import '../components/FacetedFilter/FacetedFilter.scss'
 import '../components/VatBadge.scss'
 import '../lib/ComparisonTable/ComparisonTable.scss'
 import '../lib/CookieConsentBanner/CookieConsentBanner.scss'

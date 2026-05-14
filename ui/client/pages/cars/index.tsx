@@ -6,6 +6,18 @@
  * `<SystemPageDispatch>` over the registered `cars-index` system page,
  * whose locked `CarsList` module owns the faceted filter UI and binds
  * to the `/api/cars` storefront feed via its smart wrapper.
+ *
+ * Faceted-filter system (W6b) note: the reusable filter-state lib
+ * (`@client/lib/facetedFilter`) exposes `CARS_LIST_CONFIG` — the shared
+ * facet schema for this route (make→model cascade, price/year/mileage
+ * ranges, fuel/gearbox single-selects). URL-query-state sync for `/cars`
+ * is intentionally NOT wired here: the cars filter state lives inside
+ * `CarsListHost` (`modules/_CarsPageModules/wrappers.tsx`) as component
+ * state, and that module dir is owned by the Cars-batch composition.
+ * Swapping its `useState` for `useFilterState(CARS_LIST_CONFIG.facets)`
+ * is a clean one-file follow-up in that module; deferred to avoid a
+ * cross-agent edit. `/products` is fully wired as the reference
+ * consumer.
  */
 import React from 'react';
 import type {GetServerSideProps} from 'next';
