@@ -1,13 +1,23 @@
 import React from 'react';
-import {Alert, Button, Card, Checkbox, Form, Input, Select, Space, Steps, Typography} from 'antd';
+import {Alert, Button, Card, Checkbox, Form, Input, Select, Typography} from 'antd';
 import {useTranslation} from 'react-i18next';
 import {useViewModel} from '@client/lib/state/observable';
+import AdminWizardModule from '@admin/modules/shapes/AdminWizardModule';
 import {OnboardingViewModel, PASSWORD_MIN_LENGTH} from './OnboardingViewModel';
 import {LANGUAGE_PRESETS} from '@admin/features/Languages/languagePresets';
 
 /**
- * Q7 — first-run onboarding wizard. Three steps inside an AntD Steps
- * shell. The VM owns all state; this file is render + delegate.
+ * Q7 — first-run onboarding wizard.
+ *
+ * admin-module-composed — the bespoke `Steps` + Back/Next footer chrome
+ * moves into the generic `AdminWizard` shape; `OnboardingViewModel` is
+ * unchanged and still owns the 3-step state machine. This file maps the
+ * VM's `step` / `next` / `back` / `submit` onto the module's props and
+ * renders the active step's bespoke form in `children`.
+ *
+ * Registered with the `AdminPageRegistry` by `OnboardingAdminLoader`;
+ * the shell reaches it via `AdminPageDispatch` (see
+ * `OnboardingAdminUILoader`).
  */
 
 // First-class theme picks — match what `ThemeService.PRESETS` seeds.
@@ -33,48 +43,34 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({onComplete}) => {
     const {t} = useTranslation();
     const vm = useViewModel(() => new OnboardingViewModel(onComplete));
 
+    const steps = [
+        {key: 'site', title: t('Site')},
+        {key: 'admin', title: t('Admin account')},
+        {key: 'theme', title: t('Theme')},
+    ];
+
     return (
-        <div style={{maxWidth: 720, margin: '48px auto', padding: 24}}>
+        <div style={{maxWidth: 720, margin: '48px auto'}}>
             <Typography.Title level={2}>{t('Set up your site')}</Typography.Title>
             <Typography.Paragraph type="secondary">
                 {t('Three quick steps to get a fresh CMS install ready for content.')}
             </Typography.Paragraph>
 
-            <Steps
-                current={vm.step}
-                style={{marginBottom: 32}}
-                items={[
-                    {title: t('Site')},
-                    {title: t('Admin account')},
-                    {title: t('Theme')},
-                ]}
-            />
-
             {vm.error && (
                 <Alert type="error" showIcon style={{marginBottom: 16}} message={vm.error}/>
             )}
 
-            {vm.step === 0 && <StepSite vm={vm} t={t}/>}
-            {vm.step === 1 && <StepAdmin vm={vm} t={t}/>}
-            {vm.step === 2 && <StepTheme vm={vm} t={t}/>}
-
-            <Space style={{marginTop: 24}}>
-                {vm.step > 0 && (
-                    <Button onClick={() => vm.back()} disabled={vm.submitting}>
-                        {t('Back')}
-                    </Button>
-                )}
-                {vm.step < 2 && (
-                    <Button
-                        type="primary"
-                        onClick={() => vm.next()}
-                        disabled={!vm.canAdvance()}
-                        data-testid="onboarding-next-btn"
-                    >
-                        {t('Next')}
-                    </Button>
-                )}
-                {vm.step === 2 && (
+            <AdminWizardModule
+                testId="admin-onboarding"
+                steps={steps}
+                currentStep={vm.step}
+                onBack={() => vm.back()}
+                onNext={() => vm.next()}
+                nextLabel={t('Next')}
+                backLabel={t('Back')}
+                nextDisabled={!vm.canAdvance() || vm.submitting}
+                nextTestId="onboarding-next-btn"
+                finishSlot={
                     <Button
                         type="primary"
                         onClick={() => void vm.submit()}
@@ -84,8 +80,12 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({onComplete}) => {
                     >
                         {t('Finish setup')}
                     </Button>
-                )}
-            </Space>
+                }
+            >
+                {vm.step === 0 && <StepSite vm={vm} t={t}/>}
+                {vm.step === 1 && <StepAdmin vm={vm} t={t}/>}
+                {vm.step === 2 && <StepTheme vm={vm} t={t}/>}
+            </AdminWizardModule>
         </div>
     );
 };

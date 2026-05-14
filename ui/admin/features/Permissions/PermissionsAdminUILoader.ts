@@ -1,5 +1,7 @@
 import React from 'react';
 import {AdminUILoader, AdminPaneDescriptor} from '@admin/lib/loaders/AdminUILoader';
+import {AdminPageDispatch} from '@admin/lib/adminPages/AdminPageDispatch';
+import './PermissionsAdminLoader';
 
 /**
  * Permissions pane. Replaces the per-action checkbox / multiselect grid
@@ -10,11 +12,15 @@ import {AdminUILoader, AdminPaneDescriptor} from '@admin/lib/loaders/AdminUILoad
  * + preset picker; Advanced composes that base + per-resource override
  * disclosure. Both share the same VM so cells edit the same state.
  *
- * Both variants are `React.lazy`-imported so simplified-mode users
- * never download the advanced bundle.
+ * admin-module-composed: the pane is now module-composed — BOTH modes
+ * dispatch through the `AdminPageRegistry` via `AdminPageDispatch`. The
+ * registered `PermissionsAdminLoader` bridge reads `useAdminMode()` and
+ * picks the simplified vs advanced view internally, so both slots point
+ * at the same dispatch component. `./PermissionsAdminLoader` is
+ * side-imported so the `system/permissions` bridge registers at load.
  */
-const PermissionsAdvanced = React.lazy(() => import('./PermissionsAdvancedView'));
-const PermissionsSimplified = React.lazy(() => import('./PermissionsSimplifiedView'));
+const PermissionsPaneDispatch: React.FC = () =>
+    React.createElement(AdminPageDispatch, {paneId: 'system/permissions'});
 
 export class PermissionsAdminUILoader extends AdminUILoader {
     readonly id = 'permissions';
@@ -25,8 +31,8 @@ export class PermissionsAdminUILoader extends AdminUILoader {
         title: 'Permissions',
         route: '/admin/system/permissions',
         modes: {
-            advanced: PermissionsAdvanced,
-            simplified: PermissionsSimplified,
+            advanced: PermissionsPaneDispatch,
+            simplified: PermissionsPaneDispatch,
         },
     };
 }

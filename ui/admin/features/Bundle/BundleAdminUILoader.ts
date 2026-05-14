@@ -1,18 +1,16 @@
 import React from 'react';
 import {AdminUILoader, AdminPaneDescriptor} from '@admin/lib/loaders/AdminUILoader';
-import {useTranslation} from 'react-i18next';
-import BundleSettings from './Bundle';
+import {AdminPageDispatch} from '@admin/lib/adminPages/AdminPageDispatch';
+import './BundleAdminLoader';
 
 /**
- * BundleSettings still takes a `t` prop (legacy signature). Wrap it in a
- * zero-prop component so the AdminPaneDescriptor can mount it through
- * the registry without prop plumbing. Eventually BundleSettings should
- * use `useTranslation` directly and drop the prop.
+ * admin-module-composed: the Bundle pane is now module-composed —
+ * `modes.advanced` dispatches through the `AdminPageRegistry` instead
+ * of rendering the hand-coded pane directly. `./BundleAdminLoader` is
+ * side-imported so the `release/bundle` bridge registers at load.
  */
-const BundleSettingsHost: React.FC = () => {
-    const {t} = useTranslation();
-    return React.createElement(BundleSettings, {t: t as any});
-};
+const BundlePaneDispatch: React.FC = () =>
+    React.createElement(AdminPageDispatch, {paneId: 'release/bundle'});
 
 export class BundleAdminUILoader extends AdminUILoader {
     readonly id = 'bundle';
@@ -22,6 +20,6 @@ export class BundleAdminUILoader extends AdminUILoader {
         id: 'release/bundle',
         title: 'Bundle',
         route: '/admin/release/bundle',
-        modes: {advanced: BundleSettingsHost},
+        modes: {advanced: BundlePaneDispatch},
     };
 }
