@@ -62,47 +62,78 @@
     }
 
     /* ===================================================================
-       Hero — full-bleed banner with overlaid title.
+       Hero — VARIANT: PHOTO-BLEED banner, content bottom-aligned.
+       Real DOM: `.hero > .hero__main` (+ optional `.hero__bg`,
+       `.hero__portrait`, `.hero__meta`, `.hero__coords`). Editorial
+       turns the hero into a tall full-bleed banner: the title block
+       sits at the bottom-left over the photo, meta/coords kept as a
+       hairline strip beneath. No DOM change — pure layout.
+
+       Structural axis vs siblings: agency = OVERLAY (centred, stacked),
+       commerce / saas = SPLIT (copy ⇆ portrait). Editorial = PHOTO-BLEED.
        =================================================================== */
     .hero {
-        position: relative;
-        min-height: 75vh;
+        min-height: 78vh;
         display: flex;
-        align-items: flex-end;
-        padding: 4rem 2rem;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: flex-start;
+        padding: 4rem 2rem 2.5rem;
+        border-bottom: 0;
+        text-align: left;
 
-        // Background image rendered by Hero module via inline style —
-        // dim it slightly so overlaid text always has 4.5:1 contrast.
-        &::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(180deg, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0.35) 100%);
-            pointer-events: none;
+        // Editorial dims the photo with a top-to-bottom scrim so the
+        // bottom-anchored title block always clears contrast.
+        &.is-fullbleed::before {
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.55) 100%);
         }
 
-        &__inner { position: relative; z-index: 1; }
+        &__main {
+            max-width: 62ch;
+        }
 
-        h1,
         &__headline {
             font-family: var(--font-display);
-            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-size: clamp(2.5rem, 7vw, 5.5rem);
             font-weight: 400;
-            line-height: 1.05;
-            color: var(--color-surface);
-            margin: 0 0 1rem;
+            line-height: 1.02;
         }
 
         &__subtitle,
         &__tagline {
             font-family: var(--font-body);
-            font-size: 1.125rem;
-            color: color-mix(in srgb, var(--color-surface) 90%, transparent);
-            max-width: 56ch;
+        }
+
+        // Meta + coords drop to a single hairline strip under the title.
+        &__meta,
+        &__coords {
+            border-top: 1px solid color-mix(in srgb, var(--color-surface) 40%, transparent);
+            width: 100%;
+        }
+
+        // When a portrait tile is present Editorial still bottom-aligns
+        // it beside the copy rather than the default top-aligned split.
+        &--has-portrait {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            align-items: end;
+            gap: 3rem;
+        }
+
+        &__portrait {
+            justify-self: end;
+            border-radius: 0;
         }
 
         // Hero reveal — slow + deliberate, large distance.
         animation: editorial-hero-enter calc(var(--motion-duration-deliberate) * var(--motion-scalar)) var(--motion-ease-emphasized) backwards;
+
+        @media (max-width: 720px) {
+            min-height: 60vh;
+            padding: 3rem 1.25rem 2rem;
+
+            &--has-portrait { grid-template-columns: 1fr; }
+        }
     }
 
     @keyframes editorial-hero-enter {
@@ -127,17 +158,81 @@
     }
 
     /* ===================================================================
-       Gallery — magazine-spread feel (asymmetric grid, ample whitespace).
+       Gallery — VARIANT: LAYERED / broken-grid magazine spread.
+       Real DOM: `.gallery-wrapper.gallery-wrapper-app > .gallery-wrapper-images
+       > .container > (.image, .text)`. Editorial breaks the uniform grid:
+       a dense auto-flow grid where every 3rd / 5th tile spans two columns
+       or two rows, generous whitespace, hairline-free flat crops. The
+       layered feel comes from staggered row spans, not z-index.
+
+       Structural axis vs siblings: commerce = tight uniform grid,
+       agency = full-bleed banner band, restaurant = vertical list,
+       saas = depth-stacked. Editorial = broken/asymmetric grid.
        =================================================================== */
-    .gallery {
-        gap: 2rem;
-        padding: 3rem 2rem;
+    .gallery-wrapper.gallery-wrapper-app {
+        &.default, &.Default, &.masonry, &.BorderedAlignedByThree {
+            padding: 3rem 2rem;
 
-        .gallery__item:nth-child(3n) { grid-column: span 2; }
+            .gallery-wrapper-images {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                grid-auto-flow: dense;
+                grid-auto-rows: 14vw;
+                gap: 1.75rem;
+                column-count: initial;
+            }
 
-        img {
-            border-radius: 0;
-            filter: contrast(1.02) saturate(0.95);
+            .container {
+                border-radius: 0;
+                background: transparent;
+                margin: 0;
+                display: flex;
+                flex-direction: column;
+
+                // Broken-grid rhythm — alternating large + tall tiles.
+                &:nth-child(5n + 1) { grid-column: span 2; grid-row: span 2; }
+                &:nth-child(7n + 4) { grid-row: span 2; }
+                &:nth-child(4n + 3) { grid-column: span 2; }
+
+                .image {
+                    flex: 1;
+                    aspect-ratio: auto;
+                    overflow: hidden;
+                    .ant-image, img { width: 100%; height: 100%; }
+                    img {
+                        object-fit: cover;
+                        filter: contrast(1.02) saturate(0.95);
+                        transition: filter calc(var(--motion-duration-slow) * var(--motion-scalar)) var(--motion-ease-standard);
+                    }
+                }
+
+                &:hover .image img { filter: contrast(1.06) saturate(1); }
+
+                .text p {
+                    font-family: var(--font-body);
+                    font-size: 0.8125rem;
+                    text-transform: none;
+                    letter-spacing: 0.01em;
+                    color: var(--ink-2);
+                    border-top: 0;
+                    padding: 0.625rem 0 0;
+                }
+            }
+
+            .gallery-tile--text {
+                background: var(--color-surface-inset);
+                .text { padding: 1.5rem; font-family: var(--font-display); font-style: italic; }
+            }
+        }
+
+        @media (max-width: 720px) {
+            &.default, &.Default, &.masonry, &.BorderedAlignedByThree {
+                .gallery-wrapper-images {
+                    grid-template-columns: repeat(2, 1fr);
+                    grid-auto-rows: 32vw;
+                }
+                .container:nth-child(5n + 1) { grid-column: span 2; }
+            }
         }
     }
 
@@ -182,26 +277,91 @@
     }
 
     /* ===================================================================
-       Timeline — broken-grid (alternating sides, hairline rules).
+       Timeline — VARIANT: BROKEN-GRID, alternating-side entries.
+       Real DOM: `.timeline > .timeline__entry > (.timeline__when,
+       .timeline__body)`. Editorial drops the single left spine and
+       instead alternates entries left / right of a centred hairline,
+       each entry offset and indented for a literary, broken-column feel.
+
+       Structural axis vs siblings: agency / saas = HORIZONTAL track,
+       commerce = compact vertical, restaurant = centred spine.
+       Editorial = broken-grid alternation.
        =================================================================== */
     .timeline {
         --timeline-rule: var(--color-rule);
+        position: relative;
+        padding-left: 0;
+        max-width: 60rem;
+        margin: 0 auto;
+
+        // Centred hairline spine.
+        &::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: var(--timeline-rule);
+            opacity: 1;
+            transform: translateX(-50%);
+        }
 
         &__entry {
-            border-left: 1px solid var(--timeline-rule);
-            padding-left: 2rem;
-            padding-bottom: 2rem;
             position: relative;
+            width: 50%;
+            box-sizing: border-box;
+            padding: 0 2.5rem 3rem;
+            border-left: 0;
 
+            // Accent dot pinned to the spine.
             &::before {
                 content: '';
                 position: absolute;
-                left: -5px;
-                top: 0.5rem;
+                top: 0.4rem;
                 width: 9px;
                 height: 9px;
                 background: var(--color-accent);
                 border-radius: 50%;
+                left: auto;
+                right: -4.5px;
+            }
+
+            // Odd entries sit left of the spine, even entries right —
+            // each nudged outward for the broken-column rhythm.
+            &:nth-child(odd) {
+                margin-left: 0;
+                text-align: right;
+                transform: translateX(-1.5rem);
+            }
+            &:nth-child(even) {
+                margin-left: 50%;
+                text-align: left;
+                transform: translateX(1.5rem);
+                &::before { left: -4.5px; right: auto; }
+            }
+
+            .timeline__when {
+                font-family: var(--font-body);
+                letter-spacing: 0.06em;
+            }
+            .timeline__who { font-family: var(--font-display); font-weight: 400; }
+        }
+
+        @media (max-width: 720px) {
+            &::before { left: 4px; transform: none; }
+            &__entry {
+                width: 100%;
+                padding: 0 0 2rem 2rem;
+                text-align: left;
+                &:nth-child(odd),
+                &:nth-child(even) {
+                    margin-left: 0;
+                    text-align: left;
+                    transform: none;
+                }
+                &::before,
+                &:nth-child(even)::before { left: 0; right: auto; }
             }
         }
     }

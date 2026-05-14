@@ -69,27 +69,31 @@
     }
 
     /* ===================================================================
-       Hero — photo-bleed with warm overlay. Food photography stays the
-       hero element; copy is small and elegant.
+       Hero — VARIANT: PHOTO-BLEED CENTRED. Food photography stays the
+       hero element; the copy block is small, elegant, centred and
+       bottom-anchored over a warm scrim. Real DOM:
+       `.hero > .hero__main` (+ optional `.hero__bg`, `.hero__portrait`,
+       `.hero__meta`, `.hero__coords`).
+
+       Structural axis vs siblings: editorial = photo-bleed bottom-LEFT,
+       agency = centred overlay, commerce / saas = split.
+       Restaurant = photo-bleed bottom-CENTRE.
        =================================================================== */
     .hero {
         position: relative;
         min-height: 85vh;
         display: flex;
-        align-items: flex-end;
-        justify-content: center;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
         padding: 4rem 2rem;
         text-align: center;
 
-        &::before {
-            content: '';
-            position: absolute;
-            inset: 0;
+        &.is-fullbleed::before {
             background: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, transparent 30%, rgba(0, 0, 0, 0.55) 100%);
-            pointer-events: none;
         }
 
-        &__inner { position: relative; z-index: 1; max-width: 720px; }
+        &__main { position: relative; z-index: 2; max-width: 720px; }
 
         h1,
         &__headline {
@@ -109,6 +113,24 @@
             color: color-mix(in srgb, var(--color-surface) 90%, transparent);
             letter-spacing: 0.06em;
             text-transform: uppercase;
+        }
+
+        &__cta-row { justify-content: center; }
+        &__meta,
+        &__coords { justify-content: center; }
+
+        // If a portrait is supplied it becomes a centred framed inset
+        // above the copy rather than a side split.
+        &--has-portrait {
+            display: flex;
+            .hero__portrait {
+                position: relative;
+                justify-self: center;
+                margin: 0 auto 1.5rem;
+                max-width: 320px;
+                border-radius: var(--theme-borderRadius);
+                overflow: hidden;
+            }
         }
 
         animation: restaurant-hero-enter calc(var(--motion-duration-deliberate) * var(--motion-scalar)) var(--motion-ease-emphasized) backwards;
@@ -365,17 +387,171 @@
     }
 
     /* ===================================================================
-       Gallery — photo-led, generous spacing, square crops.
-       =================================================================== */
-    .gallery {
-        gap: 1rem;
-        padding: 3rem 2rem;
+       Gallery — VARIANT: VERTICAL LIST. Large alternating photo + caption
+       rows — the "house dishes" reading layout. Each tile is a full-width
+       row; odd rows put the caption right of the photo, even rows left.
+       Real DOM: `.gallery-wrapper.gallery-wrapper-app > .gallery-wrapper-images
+       > .container > (.image, .text)`.
 
-        img {
-            border-radius: var(--theme-borderRadius);
-            aspect-ratio: 1 / 1;
-            object-fit: cover;
-            filter: contrast(1.04) saturate(1.05);
+       Structural axis vs siblings: editorial = broken grid,
+       agency = banner band, commerce = tight uniform grid,
+       saas = depth stack. Restaurant = single-column alternating list.
+       =================================================================== */
+    .gallery-wrapper.gallery-wrapper-app {
+        &.default, &.Default, &.masonry, &.BorderedAlignedByThree {
+            padding: 3rem 2rem;
+
+            .gallery-wrapper-images {
+                display: flex;
+                flex-direction: column;
+                column-count: initial;
+                gap: 3rem;
+                max-width: 60rem;
+                margin: 0 auto;
+            }
+
+            .container {
+                display: grid;
+                grid-template-columns: 1.4fr 1fr;
+                align-items: center;
+                gap: 2rem;
+                margin: 0;
+                background: transparent;
+                border-radius: 0;
+                width: 100%;
+
+                // Even rows flip — caption left, photo right.
+                &:nth-child(even) {
+                    .image { order: 2; }
+                    .text  { order: 1; text-align: right; }
+                }
+
+                .image {
+                    aspect-ratio: 4 / 3;
+                    width: 100%;
+                    overflow: hidden;
+                    border-radius: var(--theme-borderRadius);
+                    .ant-image, img { width: 100%; height: 100%; }
+                    img {
+                        object-fit: cover;
+                        filter: contrast(1.04) saturate(1.05);
+                    }
+                }
+
+                .text {
+                    p {
+                        font-family: var(--font-display);
+                        font-size: clamp(1.125rem, 2vw, 1.5rem);
+                        line-height: 1.4;
+                        text-transform: none;
+                        letter-spacing: 0;
+                        color: var(--color-ink);
+                        border-top: 0;
+                        padding: 0;
+                    }
+                }
+            }
+
+            .gallery-tile--text {
+                grid-template-columns: 1fr;
+                text-align: center;
+                .text { order: 0; }
+            }
+        }
+
+        @media (max-width: 720px) {
+            &.default, &.Default, &.masonry, &.BorderedAlignedByThree {
+                .gallery-wrapper-images { gap: 2rem; }
+                .container {
+                    grid-template-columns: 1fr;
+                    gap: 1rem;
+                    &:nth-child(even) {
+                        .image { order: 0; }
+                        .text  { order: 0; text-align: left; }
+                    }
+                }
+            }
+        }
+    }
+
+    /* ===================================================================
+       Timeline — VARIANT: CENTRED SPINE, alternating sides. A formal
+       centred rule with entries set left / right — reads as a "since
+       1987" house-history strip. Real DOM:
+       `.timeline > .timeline__entry > (.timeline__when, .timeline__body)`.
+
+       Structural axis vs siblings: editorial = broken-grid (offset +
+       indented), agency / saas = horizontal track, commerce = compact
+       vertical. Restaurant = formal centred spine, symmetric alternation.
+       =================================================================== */
+    .timeline {
+        position: relative;
+        padding-left: 0;
+        max-width: 56rem;
+        margin: 0 auto;
+
+        &::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--color-rule);
+            opacity: 1;
+            transform: translateX(-50%);
+        }
+
+        &__entry {
+            position: relative;
+            width: 50%;
+            box-sizing: border-box;
+            padding: 0 2.5rem 2.5rem;
+            border-left: 0;
+
+            &::before {
+                content: '';
+                position: absolute;
+                top: 0.4rem;
+                width: 11px;
+                height: 11px;
+                background: var(--color-accent);
+                border-radius: 50%;
+                box-shadow: 0 0 0 4px var(--color-surface);
+            }
+
+            &:nth-child(odd) {
+                margin-left: 0;
+                text-align: right;
+                &::before { right: -5.5px; left: auto; }
+            }
+            &:nth-child(even) {
+                margin-left: 50%;
+                text-align: left;
+                &::before { left: -5.5px; right: auto; }
+            }
+
+            .timeline__when {
+                font-family: var(--font-body);
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+            }
+            .timeline__who { font-family: var(--font-display); font-weight: 500; }
+        }
+
+        @media (max-width: 720px) {
+            &::before { left: 5px; transform: none; }
+            &__entry {
+                width: 100%;
+                padding: 0 0 2rem 2rem;
+                text-align: left;
+                &:nth-child(odd),
+                &:nth-child(even) {
+                    margin-left: 0;
+                    text-align: left;
+                    &::before { left: 0; right: auto; }
+                }
+            }
         }
     }
 

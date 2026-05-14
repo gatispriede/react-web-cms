@@ -40,28 +40,44 @@
     }
 
     /* ===================================================================
-       Hero — photo-bleed: full-width product photography, copy stacked
-       below or overlaid bottom-left. Not the editorial overlay-nav case;
-       Commerce keeps nav above the hero so 'shop' is always one tap away.
+       Hero — VARIANT: SPLIT. 50/50 copy-left / portrait-right, both
+       vertically centred — the catalogue "shop the look" arrangement.
+       Real DOM: `.hero > .hero__main` (+ optional `.hero__portrait`,
+       `.hero__bg`, `.hero__meta`, `.hero__coords`). When no portrait is
+       present the copy column simply holds the left half against the
+       theme surface — still a deliberate split, not a centred block.
+
+       Structural axis vs siblings: editorial = photo-bleed (bottom-left),
+       agency = centred overlay, restaurant = photo-bleed centred.
+       Commerce / saas = split. Commerce keeps the split tight + snappy;
+       saas floats the portrait with a glow.
        =================================================================== */
     .hero {
         position: relative;
         min-height: 60vh;
-        display: flex;
-        align-items: flex-end;
+        display: grid;
+        grid-template-columns: 1fr;
+        align-items: center;
+        gap: 2.5rem;
         padding: 3rem 2rem;
         background-size: cover;
         background-position: center;
+        text-align: left;
 
-        &::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(180deg, transparent 50%, rgba(0, 0, 0, 0.5) 100%);
-            pointer-events: none;
+        @media (min-width: 860px) {
+            grid-template-columns: 1.05fr 0.95fr;
         }
 
-        &__inner { position: relative; z-index: 1; max-width: 720px; }
+        // Scrim only when a bg image is configured.
+        &.is-fullbleed::before {
+            background: linear-gradient(180deg, transparent 50%, rgba(0, 0, 0, 0.5) 100%);
+        }
+
+        &__main {
+            position: relative;
+            z-index: 1;
+            max-width: 56ch;
+        }
 
         h1,
         &__headline {
@@ -70,17 +86,37 @@
             font-weight: 600;
             line-height: 1.1;
             letter-spacing: -0.02em;
-            color: var(--color-surface);
+            color: var(--color-ink);
             margin: 0 0 0.75rem;
         }
+
+        &.is-fullbleed &__headline { color: var(--color-surface); }
 
         &__subtitle,
         &__tagline {
             font-family: var(--font-body);
             font-size: 1.0625rem;
-            color: color-mix(in srgb, var(--color-surface) 92%, transparent);
+            color: var(--ink-2);
             max-width: 56ch;
             margin-bottom: 1.5rem;
+        }
+
+        &.is-fullbleed &__subtitle,
+        &.is-fullbleed &__tagline {
+            color: color-mix(in srgb, var(--color-surface) 92%, transparent);
+        }
+
+        // Portrait holds the right column at a soft retail radius.
+        &--has-portrait {
+            display: grid;
+            grid-template-columns: 1fr;
+            @media (min-width: 860px) { grid-template-columns: 1.05fr 0.95fr; }
+        }
+        &__portrait {
+            justify-self: end;
+            border-radius: var(--theme-borderRadius);
+            overflow: hidden;
+            max-width: 100%;
         }
 
         // Reveal — short distance, snappy.
@@ -90,6 +126,137 @@
     @keyframes commerce-hero-enter {
         from { opacity: 0; transform: translateY(var(--motion-distance-md)); }
         to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===================================================================
+       Gallery — VARIANT: TIGHT UNIFORM GRID. Dense 4-up catalogue grid,
+       uniform square crops, soft radius, snappy hover lift. Real DOM:
+       `.gallery-wrapper.gallery-wrapper-app > .gallery-wrapper-images
+       > .container > (.image, .text)`.
+
+       Structural axis vs siblings: editorial = broken grid,
+       agency = banner band, restaurant = vertical list, saas = depth stack.
+       Commerce = tight uniform product-catalogue grid.
+       =================================================================== */
+    .gallery-wrapper.gallery-wrapper-app {
+        &.default, &.Default, &.masonry, &.BorderedAlignedByThree {
+            padding: 2rem;
+
+            .gallery-wrapper-images {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                column-count: initial;
+                gap: 0.875rem;
+            }
+
+            .container {
+                margin: 0;
+                border-radius: var(--theme-borderRadius);
+                overflow: hidden;
+                background: var(--color-surface-inset);
+                transition: transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-emphasized),
+                            box-shadow calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+
+                &:hover {
+                    transform: translateY(-4px);
+                    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+                }
+
+                .image {
+                    aspect-ratio: 1 / 1;
+                    width: 100%;
+                    overflow: hidden;
+                    .ant-image, img { width: 100%; height: 100%; }
+                    img { object-fit: cover; }
+                }
+
+                .text p {
+                    font-family: var(--font-body);
+                    font-size: 0.8125rem;
+                    text-transform: none;
+                    letter-spacing: 0;
+                    color: var(--ink-2);
+                    border-top: 0;
+                    padding: 0.625rem 0.75rem;
+                }
+            }
+
+            .gallery-tile--text {
+                background: var(--color-accent);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                .text p { color: var(--color-accent-ink); font-weight: 600; }
+            }
+        }
+
+        @media (max-width: 900px) {
+            &.default, &.Default, &.masonry, &.BorderedAlignedByThree {
+                .gallery-wrapper-images { grid-template-columns: repeat(3, 1fr); }
+            }
+        }
+        @media (max-width: 560px) {
+            &.default, &.Default, &.masonry, &.BorderedAlignedByThree {
+                .gallery-wrapper-images { grid-template-columns: repeat(2, 1fr); }
+            }
+        }
+    }
+
+    /* ===================================================================
+       Timeline — VARIANT: COMPACT VERTICAL. Clean single left spine,
+       tight card rows, snappy hover. Real DOM:
+       `.timeline > .timeline__entry > (.timeline__when, .timeline__body)`.
+
+       Structural axis vs siblings: editorial = broken-grid alternation,
+       agency / saas = horizontal track, restaurant = centred spine.
+       Commerce = compact, dense vertical spine.
+       =================================================================== */
+    .timeline {
+        position: relative;
+        padding-left: 1.5rem;
+        max-width: 44rem;
+
+        &::before {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 0.5rem;
+            bottom: 0.5rem;
+            width: 2px;
+            background: var(--color-rule);
+            opacity: 1;
+        }
+
+        &__entry {
+            position: relative;
+            padding: 0.875rem 1rem 0.875rem 1.25rem;
+            margin-bottom: 0.625rem;
+            border-left: 0;
+            border-radius: var(--theme-borderRadius);
+            background: var(--color-surface-inset);
+            transition: transform calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-emphasized);
+
+            &::before {
+                content: '';
+                position: absolute;
+                left: -1.5rem;
+                top: 1.15rem;
+                width: 10px;
+                height: 10px;
+                background: var(--color-accent);
+                border-radius: 50%;
+                box-shadow: 0 0 0 3px var(--color-surface);
+            }
+
+            &:hover { transform: translateX(3px); }
+
+            .timeline__when {
+                font-family: var(--font-mono);
+                font-size: 0.75rem;
+                color: var(--ink-2);
+            }
+            .timeline__who { font-family: var(--font-display); font-weight: 600; }
+        }
     }
 
     /* ===================================================================
