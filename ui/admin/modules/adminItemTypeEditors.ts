@@ -112,6 +112,13 @@ import {
 } from '@admin/modules/_AccountPageModules/editors';
 // all-pages-module-composed — Blog batch editor.
 import {BlogPostEditor} from '@admin/modules/_BlogPageModules/editors';
+// all-pages-module-composed — Marketing batch editors.
+import {
+    FeatureGridEditor,
+    LogoCloudEditor,
+    PricingTableEditor,
+    TestimonialWallEditor,
+} from '@admin/modules/_MarketingPageModules/editors';
 
 /**
  * Admin-side per-module metadata. `category` + label/description live
@@ -196,4 +203,9 @@ export const ADMIN_ITEM_TYPE_EDITORS: readonly AdminItemTypeEntry[] = [
     {key: EItemType.MagicLinkRequestForm,     Editor: MagicLinkRequestFormEditor,     styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Magic-link request',     descriptionKey: 'Locked — passwordless sign-in: emails a one-click link.',                     category: 'cta'},
     // all-pages-module-composed — Blog batch.
     {key: EItemType.BlogPost,                 Editor: BlogPostEditor,                 styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Blog post',              descriptionKey: 'Locked — single post body: title, cover, sanitised HTML, author, date, tags.', category: 'content'},
+    // all-pages-module-composed — Marketing batch.
+    {key: EItemType.FeatureGrid,              Editor: FeatureGridEditor,              styleEnum: asEnum({Default: 'default'}), defaultContent: '{"features":[]}',       labelKey: 'Feature grid',          descriptionKey: 'Marketing — 2/3-column feature cards (title + description).',                 category: 'content'},
+    {key: EItemType.LogoCloud,                Editor: LogoCloudEditor,                styleEnum: asEnum({Default: 'default'}), defaultContent: '{"logos":[]}',          labelKey: 'Logo cloud',            descriptionKey: 'Marketing — "trusted by" row of customer logos.',                            category: 'media'},
+    {key: EItemType.PricingTable,             Editor: PricingTableEditor,             styleEnum: asEnum({Default: 'default'}), defaultContent: '{"tiers":[],"features":[]}', labelKey: 'Pricing table',     descriptionKey: 'Marketing — tier columns + feature matrix with monthly/annual toggle.',       category: 'content'},
+    {key: EItemType.TestimonialWall,          Editor: TestimonialWallEditor,          styleEnum: asEnum({Default: 'default'}), defaultContent: '{"items":[]}',          labelKey: 'Testimonial wall',      descriptionKey: 'Marketing — multi-column quote cards with author + company.',                 category: 'content'},
 ];

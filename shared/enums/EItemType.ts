@@ -113,6 +113,14 @@ export enum EItemType {
     // its smart wrapper reads the `[slug]` route param and fetches via
     // `PostApi.getBySlug`. `/blog` reuses the existing `BlogFeed` module.
     BlogPost = "BLOG_POST",
+    // all-pages-module-composed — Marketing batch. Four pure
+    // presentational modules wired for the `/welcome` landing page;
+    // their content-parser wrappers in `_MarketingPageModules/` read
+    // the operator-authored arrays straight out of `item.content`.
+    FeatureGrid = "FEATURE_GRID",
+    LogoCloud = "LOGO_CLOUD",
+    PricingTable = "PRICING_TABLE",
+    TestimonialWall = "TESTIMONIAL_WALL",
     Empty = 'EMPTY',
 }
 export default EItemType
