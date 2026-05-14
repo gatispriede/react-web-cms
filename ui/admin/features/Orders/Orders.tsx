@@ -91,6 +91,7 @@ const AdminOrders: React.FC = () => {
                     testId: 'orders-empty-state',
                     title: t('empty.orders.title'),
                     description: t('empty.orders.description'),
+                    art: 'orders',
                 }}
             />
             <Drawer

@@ -9,6 +9,7 @@ import {auditStamp} from "@services/features/Audit/audit";
 import {nextVersion, requireVersion} from "@services/infra/conflict";
 import {PUBLIC_IMAGE_PATH} from "@utils/imgPath";
 import {log} from "@services/infra/logger";
+import {readImageMetadata} from "@services/features/Assets/imageOptimize";
 
 const IMAGE_EXT = /\.(jpe?g|png|gif|webp|svg|avif|bmp)$/i;
 const IMAGES_DIR = path.join(process.cwd(), 'ui/client/public/images');

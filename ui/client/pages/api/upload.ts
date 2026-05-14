@@ -7,6 +7,7 @@ import {InImage} from "@interfaces/IImage";
 import {getMongoConnection} from "@services/infra/mongoDBConnection";
 import {ROLE_RANK, sessionFromReq} from "@services/features/Auth/authz";
 import {optimizeImageFile} from "@services/features/Assets/imageOptimize";
+import {buildImageRecord} from "@services/infra/imageMetadata";
 import {adminAuthOptions as authOptions} from "./auth/authOptions";
 
 export const config = {
@@ -55,23 +56,49 @@ const uploadForm = (next: { (req: any, res: any): void; (arg0: any, arg1: any): 
                     // recompress, strip EXIF. Preserves the original bytes
                     // when the optimised output would be larger. Replaces
                     // the prior copyFileSync pass-through.
+                    //
+                    // Corrupt input → reject with 400 before writing anything,
+                    // so we never leave a half-written / garbage file in
+                    // public/images (spec "Failure modes"). `readable: false`
+                    // is sharp-can't-decode; SVG/GIF stay `readable: true` and
+                    // pass through the pipeline untouched.
                     const dest = path.join(process.cwd(), 'ui/client/', `public/images/${fileTargetName}`);
-                    const optResult = await optimizeImageFile(file.filepath, dest);
+                    let optResult;
+                    try {
+                        optResult = await optimizeImageFile(file.filepath, dest);
+                    } catch (optErr) {
+                        try { fs.unlinkSync(file.filepath); } catch { /* already gone */ }
+                        try { fs.unlinkSync(dest); } catch { /* nothing written */ }
+                        console.error('upload: optimise failed', optErr);
+                        return resolve(res.status(400).json({error: 'image processing failed — file may be corrupt'}));
+                    }
+                    if (!optResult.readable) {
+                        try { fs.unlinkSync(file.filepath); } catch { /* already gone */ }
+                        try { fs.unlinkSync(dest); } catch { /* best-effort */ }
+                        return resolve(res.status(400).json({error: 'unrecognised or corrupt image file'}));
+                    }
                     fs.unlinkSync(file.filepath);
                     const rawTags = (() => {
                         try { return JSON.parse(fields.tags) } catch { return [] }
                     })();
                     const tags = Array.isArray(rawTags) ? rawTags.filter(Boolean) : [];
                     const withAll = tags.includes('All') ? tags : ['All', ...tags];
-                    const image: InImage = {
-                        created: new Date().toDateString(),
+                    // Build the record via the shared helper so the persisted
+                    // shape (incl. width/height/sizeBytes/originalName/
+                    // uploadedBy/uploadedAt from the pipeline) matches the
+                    // batch endpoint exactly. `InImage` widened locally — the
+                    // extra fields write through to Mongo; the GraphQL SDL
+                    // exposure of them is a separate read-side migration.
+                    const image: InImage = buildImageRecord(optResult, {
                         id: guid(),
+                        storedName: fileTargetName,
                         location: `${PUBLIC_IMAGE_PATH}${fileTargetName}`,
-                        name: fileTargetName,
-                        size: optResult.size ?? file.size,
                         type: file.mimetype,
-                        tags: withAll
-                    }
+                        tags: withAll,
+                        originalName: file.originalFilename,
+                        uploadedBy: session?.email,
+                        fallbackSize: file.size,
+                    });
                     // Call the service directly — going through the frontend
                     // gqty client from an API route doesn't forward the caller's
                     // session cookie, so authz would reject it as 'viewer'.

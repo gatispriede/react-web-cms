@@ -1,6 +1,6 @@
 import React from 'react'
 import {ConfigProvider, Layout, Modal, Spin} from 'antd';
-import {Toaster} from 'sonner';
+import AdminToaster from '@admin/lib/AdminToaster';
 import {notifyError, notifySuccess} from '@admin/lib/notify';
 import {buildAdminTheme} from '@admin/lib/adminTheme';
 import {getCachedDarkMode, subscribeAdminDarkMode} from '@admin/lib/adminDarkMode';
@@ -364,7 +364,12 @@ class AdminApp extends React.Component<{
             // `adminDarkMode` store (top-bar `DarkModeSwitcher`). See
             // `docs/roadmap/admin/admin-dark-mode-audit.md`.
             <ConfigProvider theme={buildAdminTheme(this.state.darkMode)}>
-                <Toaster richColors closeButton position="bottom-right" duration={4000} />
+                {/* Single admin toast container. `AdminToaster` is a
+                    function-component wrapper that feeds Sonner's `theme`
+                    prop from the `adminDarkMode` store so toasts flip
+                    light/dark with the rest of the chrome — `AdminApp` is
+                    a class component and can't subscribe directly. */}
+                <AdminToaster />
                 <InlineEditOverlay
                     enabled={this.canEditNav}
                     t={this.props.t}

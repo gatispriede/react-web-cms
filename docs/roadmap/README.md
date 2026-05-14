@@ -48,7 +48,7 @@ These apply to every active item regardless of size or wave. Treat them as accep
 
 All four are CI-checkable:
 - The schema-drift CI (`tools/scripts/mcp-schema-drift.mjs`) already fails when a GraphQL arg lands without an MCP tool update.
-- Add follow-up CI steps: (a) any merged feature commit must touch at least one `docs/` markdown OR pass an explicit "no docs needed" gate in the PR description; (b) `tools/scripts/testid-coverage.mjs` (new) walks new/modified `.tsx` files and warns when an interactive element (`button`, `input`, `Select`, `Modal`, etc.) lacks `data-testid`.
+- Add follow-up CI steps: (a) any merged feature commit must touch at least one `docs/` markdown OR pass an explicit "no docs needed" gate in the PR description; ~~(b) `tools/scripts/testid-coverage.mjs` (new) walks new/modified `.tsx` files and warns when an interactive element (`button`, `input`, `Select`, `Modal`, etc.) lacks `data-testid`.~~ **(b) shipped 2026-05-14** — `tools/scripts/testid-coverage.mjs` AST-walks changed `.tsx` files and the PR-only `data-testid coverage` step in `ci.yml` hard-fails on any missing `data-testid`. See [shipped.md](shipped.md).
 
 ## Effort legend — AI-paced
 
@@ -132,7 +132,7 @@ Patterns: mechanical work (bulk extensions, schema additions, test scaffolding) 
 
 | # | Item | Size | Notes |
 |---|------|------|-------|
-| SON | [admin-toast-system-sonner.md](admin/admin-toast-system-sonner.md) | S (~30-60 min AI) | Sonner as single toast library; replace AntD `message.*`; wrap async ops in `toast.promise`; Undo on destructive ops. Highest-ROI perceived-quality lift. |
+| ~~SON~~ | ~~[admin-toast-system-sonner.md](admin/admin-toast-system-sonner.md)~~ | S (~30-60 min AI) | **Shipped 2026-05-14 (W0c)** — toast infrastructure: `sonner@^1.7.4` + `ui/admin/lib/notify.ts` wrapper (`notifySuccess`/`notifyError`/`notifyWarning`/`notifyInfo`/`notifyPromise`/`notifyDestructive`) + dark-mode-aware `AdminToaster` mounted once in the shell. Call-site cleanup (last `message.*` purge, `notifyPromise`/`notifyDestructive` adoption per pane, ESLint guard, e2e) deferred as mechanical per-pane follow-ups. See [shipped.md](shipped.md). |
 | ~~CMD~~ | ~~[admin-command-palette.md](admin/admin-command-palette.md)~~ | M (~2-3h AI) | **Shipped 2026-05-14** — kbar ⌘K palette, auto-populated from `adminUILoaderRegistry.listAdminPanes()`, `KBarProvider` mounted shell-wide, top-bar trigger, `?` cheatsheet, `g h/p/t` chords, mobile FAB. Per-feature `useRegisterActions` (⌘S/⌘↵/⌘⇧P/`/`) deferred to per-pane fast-follow. See [shipped.md](shipped.md). |
 | INL | [admin-inline-editing.md](admin/admin-inline-editing.md) | L (~4-6h AI) | Click-to-edit overlay on admin preview iframe via `data-edit-target` attributes. Sanity Presentation pattern. The visible payoff of MCP-driven authoring. |
 | EMP | [admin-empty-states-onboarding.md](admin/admin-empty-states-onboarding.md) | M (~2-3h AI) | Designed empty states for 14 list panes + first-run wizard + seeded sample bundle. Operator never sees blank-canvas paralysis. |
@@ -227,9 +227,9 @@ Strict size-first ordering within each track; dependencies override size-order w
 
 0b. **Motion token system** — [motion-token-system.md](admin/motion-token-system.md). **S · ~1h AI.** CSS custom properties; `--motion-scalar` gates `prefers-reduced-motion`. Foundational — first-class themes consume it; admin animations migrate opportunistically.
 
-0c. **Sonner adoption** — [admin-toast-system-sonner.md](admin/admin-toast-system-sonner.md). **S · ~30-60 min AI.** Quickest high-ROI lift; every async operator action gets immediate visual feedback. No dependencies; can land any time.
+0c. ~~**Sonner adoption**~~ — [admin-toast-system-sonner.md](admin/admin-toast-system-sonner.md). **S · ~30-60 min AI. Shipped 2026-05-14** — `sonner@^1.7.4` + `ui/admin/lib/notify.ts` wrapper + dark-mode-aware `AdminToaster` mounted once in the shell. Call-site cleanup deferred as mechanical per-pane follow-ups. See [shipped.md](shipped.md).
 
-0d. **testid-coverage CI** — [testid-coverage-ci.md](platform/testid-coverage-ci.md). **S · ~1 h AI.** AST-walk script + CI wiring. Closes the only universal-requirement gate without automation. Catches missing `data-testid` at PR time across all 44+ new modules landing in Waves 5-7.
+0d. ~~**testid-coverage CI**~~ — [testid-coverage-ci.md](platform/testid-coverage-ci.md). **S · ~1 h AI. Shipped 2026-05-14** — AST-walk script (`tools/scripts/testid-coverage.mjs` via `@typescript-eslint/parser`) + unit-test fixture + allowlist + PR-only hard-gate CI step. Closes the only universal-requirement gate without automation. Catches missing `data-testid` at PR time across all 44+ new modules landing in Waves 5-7. See [shipped.md](shipped.md).
 
 Wave 0 total: ~2 hours AI. Land these before anything else; they all gate later items + cost almost nothing.
 

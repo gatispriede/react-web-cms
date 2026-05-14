@@ -12,12 +12,18 @@ import {Button, Space, Table} from 'antd';
 import {PlusOutlined, ReloadOutlined} from '@client/lib/icons';
 import type {ColumnsType} from 'antd/es/table';
 import EmptyState from '@admin/lib/EmptyState';
+import type {EmptyStateArtKey} from '@admin/lib/emptyStateArt';
 
 export interface AdminCrudListEmptyState {
     testId: string;
     title: string;
     description?: string;
+    /** Designed illustration key — see `ui/admin/lib/emptyStateArt`. */
+    art?: EmptyStateArtKey;
     primary?: {label: string; onClick: () => void; testId?: string};
+    /** Secondary link — e.g. an `onboardingCta(...)` deep-link or a
+     *  feature-specific destination (connect warehouse, learn roles …). */
+    secondary?: {label: string; onClick: () => void; testId?: string};
 }
 
 export interface AdminCrudListModuleProps {
@@ -107,7 +113,9 @@ const AdminCrudListModule: React.FC<AdminCrudListModuleProps> = ({
                     testId={emptyState.testId}
                     title={emptyState.title}
                     description={emptyState.description}
+                    art={emptyState.art}
                     primary={emptyState.primary}
+                    secondary={emptyState.secondary}
                 />
             ) : (
                 <Table

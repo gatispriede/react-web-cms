@@ -6,6 +6,12 @@ research: see research-findings-2026-05-12.md §1 Toasts + optimistic UI
 
 # Sonner adoption across admin
 
+## Status
+
+**Shipped 2026-05-14 (W0c) — toast infrastructure.** `sonner@^1.7.4` is in `package.json` + `node_modules`; `ui/admin/lib/notify.ts` wraps `sonner`'s `toast.*` (exports `notifySuccess` / `notifyError` / `notifyWarning` / `notifyInfo` / `notifyPromise` / `notifyDestructive`) and is the only module that imports `sonner` directly besides the Toaster. The dozens of `ui/admin/features/**` ViewModels already call those helpers. The `<Toaster/>` is mounted exactly once via the new `ui/admin/lib/AdminToaster.tsx` wrapper in `ui/admin/shell/AdminApp.tsx` — the wrapper subscribes to the `@admin/lib/adminDarkMode` store (`useAdminDarkMode()`) and feeds Sonner's `theme` prop so toasts flip light/dark in lockstep with the top-bar `DarkModeSwitcher` + AntD `ConfigProvider`. `data-testid`: a wrapping `<div data-testid="admin-toaster">` plus a stable `admin-toast` class on every rendered toast (Sonner v1.x's `ToastOptions` doesn't accept `data-testid`). See [shipped.md](../shipped.md).
+
+**Deferred (mechanical per-pane follow-ups, touch `ui/admin/features/**`):** acceptance items 3-6 below — purging the last AntD `message.*` call sites, routing every ServiceLoader mutation through `notifyPromise`, wiring `notifyDestructive` Undo onto every destructive mutation, the `no-restricted-imports` ESLint rule, and the e2e smoke assertions. `notify.ts` already exposes `notifyPromise` + `notifyDestructive`, so these are call-site-only.
+
 ## Goal
 
 Standardise on **Sonner** as the only toast library in the admin. The current admin uses a mix of AntD `message.*`, custom inline error strips, and silent failure on some flows. Replacing all of it with Sonner gives:
