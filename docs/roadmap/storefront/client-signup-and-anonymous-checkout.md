@@ -6,6 +6,23 @@ research: see research-findings-2026-05-12.md §2 Auth + checkout UX
 
 # Public signup + marketing attribution + anonymous checkout
 
+## Status — SHIPPED 2026-05-14 (W6c)
+
+Verification + gap-close pass. All three spec-flagged gaps were already closed by prior work; this pass confirmed each end-to-end.
+
+| Item | Disposition | Notes |
+|---|---|---|
+| Magic-link cross-device pre-fetch mitigation | **shipped** | `account/verify.tsx` renders a click-to-confirm page on GET and only redeems via an explicit `signIn('customer-magic')` POST — email-client pre-fetchers can't burn the token. `CustomerAuthService.issueMagicLinkToken/redeemMagicLinkToken`: 15-min TTL, single-use via atomic `findOneAndUpdate({consumedAt:null,expiresAt:{$gt:now}})`, sha256-hashed at rest, per-email 5/hour + per-IP 10/min rate limits, generic no-enumeration response. **Deviation from spec letter:** token hash is stored in a Mongo `CustomerMagicTokens` collection (TTL index `expireAfterSeconds:0` + unique `tokenHash` index) rather than Redis. Functionally equivalent — hashed at rest, auto-swept, single-use — and avoids a second datastore dependency on the auth path. Treated as gap-closed. |
+| Delayed account creation as the only checkout default | **shipped** | `/checkout` flows straight into the form — no "sign in or guest" choice screen exists (grep-confirmed). Email is captured in the step-1 contact block. `createDraftOrder` writes the guest path (`guestEmail` + `orderToken`, `customerId` implicit-null). The receipt page (`/checkout/confirmation/[id]`) renders the `MagicLinkAccountUpgrade` module as a **locked** default section of the `checkout-confirmation` system page — the one-click "save these details" account-upgrade card. |
+| first-touch / last-touch UTM attribution | **shipped** | `IUser.firstTouchUtm` (immutable — only set when absent) + `IUser.lastTouchUtm` (always overwritten) in `shared/types/IUser.ts`. `MarketingAttributionService.attachToUser` does the anonymous→identified merge; `marketingCapture.ts` (`captureMarketingHit` + `attachMarketingSessionToUser`) drives client capture. Wired into both the password-signup path and the magic-link verify path (`account/verify.tsx` reads the fresh session userId and forwards `attr_session_id`). |
+
+**Deferred / operator decisions (carried, not blocking this item):**
+- `report()` per-key **order** counts are stubbed `0` pending `OrderService` stamping `sessionId` on guest orders (see `MarketingAttributionService.report` TODO). Operator/product decision on whether order-attribution joins on `sessionId` or on `guestEmail`.
+- Redis-vs-Mongo magic-token store — see deviation note above. If an operator wants strict Redis-at-rest, it's a one-file swap in `CustomerAuthServiceLoader`.
+- `marketingCapture.ts` consent-gating (GPC/DNT) is intentionally **out of scope** — owned by the Consent agent (`ui/client/features/Consent/*`). Per local-POC scope, deferred to pre-public-deploy.
+
+The remaining body below is the original plan, kept for archaeology.
+
 ## Goal
 
 Customer auth **partially exists** today — `IUser.kind = 'customer'` is wired, `CustomerAuthService.signUpCustomer / addCustomerFromGoogle` ship, `IOrder.guestEmail / orderToken` exist, Cart + Checkout are public features, NextAuth `CredentialsProvider` + `GoogleProvider` are configured. What's missing:
