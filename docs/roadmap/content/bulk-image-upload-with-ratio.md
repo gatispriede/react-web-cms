@@ -1,19 +1,30 @@
 # Bulk image upload with aspect-ratio normalisation
 
-> **Shipped (2026-04-24)** — new `POST /api/upload-batch` handler accepts
-> `multiple` files + a `ratio` field (`free / 1:1 / 4:3 / 3:2 / 16:9`).
-> Each file runs through sharp: auto-orient via EXIF → `resize(w,h,{fit:
-> 'cover', position: 'attention'})` when ratio is locked → recompress
-> (mozjpeg q82 / png compressionLevel 9 / webp q82) → strip EXIF. Collisions
-> are resolved with `-N` suffix instead of rejecting (fixes the `IMG_0001.jpg`
-> phone-batch case noted in the spec). Per-file results come back in a
-> parallel array so one bad file never aborts a 30-image batch.
+> **Shipped (2026-04-24, re-confirmed complete 2026-05-14)** — new
+> `POST /api/upload-batch` handler accepts `multiple` files + a `ratio` field
+> (`free / 1:1 / 4:3 / 3:2 / 16:9`). Each file runs through sharp: auto-orient
+> via EXIF → `resize(w,h,{fit: 'cover', position: 'attention'})` when ratio is
+> locked → recompress (mozjpeg / png compressionLevel 9 / webp q82) → strip
+> EXIF. Collisions are resolved with `-N` suffix instead of rejecting (fixes
+> the `IMG_0001.jpg` phone-batch case noted in the spec). Per-file results
+> come back in a parallel array so one bad file never aborts a 30-image batch.
+> The C2 jump (2026-05-14) routed the file *and* URL-fetch paths through
+> `buildImageRecord` so the batch endpoint persists the full optimisation /
+> provenance record shape, and added corrupt-input rejection before write.
 >
-> Admin surface: new `BulkImageUploadModal` (drop-zone + file-picker + ratio
-> select + XHR upload with real progress + per-file error list). Wired into
-> `GalleryEditor` as a "Bulk upload" button next to the aspect-ratio select
-> — pre-fills the modal with the gallery's current ratio and appends each
-> accepted image as a new gallery item.
+> Admin surface: `BulkImageUploadModal` (`ui/admin/lib/BulkImageUploadModal.tsx`)
+> — drop-zone + file-picker + `From device` / `From URL` tabs + aspect-ratio
+> `Select` + XHR upload with real progress + per-file error list. Wired into
+> `GalleryEditor` (`ui/admin/modules/Gallery/GalleryEditor.tsx`) as a "Bulk
+> upload" button next to the aspect-ratio select — pre-fills the modal with
+> the gallery's current ratio and appends each accepted image as a new gallery
+> item. The `GalleryEditor` ratio select + bulk-upload button carry
+> `data-testid` (`gallery-editor-aspect-ratio-select`,
+> `gallery-editor-bulk-upload-button`).
+>
+> **MCP parity:** `image.upload` (`services/features/Mcp/tools/images.ts`)
+> accepts the same `ratio` enum and runs the identical sharp cover-crop, so
+> the AI write path matches the human bulk-upload flow.
 >
 > `sharp` made an explicit dependency in `package.json` (was transitive via
 > Next.js).
@@ -21,7 +32,11 @@
 > **Deferred:** per-image crop-handle UI (drag centre pre-upload). The
 > `position: 'attention'` heuristic handles most phone shots well; a proper
 > crop UI pairs better with C5 picker-improvements which needs preview work
-> anyway.
+> anyway. Also outstanding — `data-testid` attributes on
+> `BulkImageUploadModal.tsx`'s own controls (ratio select / drop-zone / tabs /
+> upload button); the file currently lives under `ui/admin/lib/*`, owned by a
+> concurrent agent track, so the testid pass on the modal is left to whichever
+> jump next touches that file.
 
 ## Goal
 
@@ -73,10 +88,15 @@ look wrong in the gallery's grid.
 
 ## Acceptance
 
-- 30 files / 80 MB uploads in one drop, progress visible
-- All images land cropped to the chosen ratio
-- Partial failure doesn't abort the batch; failed ones clearly marked
-- Batch upload triggered from Gallery editor auto-adds images to that gallery
+- ✅ 30 files / 80 MB uploads in one drop, progress visible — `upload-batch.ts`
+  `maxTotalFileSize` 200 MB, XHR `upload.onprogress` drives the `Progress` bar
+- ✅ All images land cropped to the chosen ratio — `optimizeImageFile({ratio})`
+  cover-crop on every file + URL path
+- ✅ Partial failure doesn't abort the batch; failed ones clearly marked —
+  per-file `PerFileResult[]`, modal renders a failed-files `List`
+- ✅ Batch upload triggered from Gallery editor auto-adds images to that
+  gallery — `GalleryEditor` `handleBulkUploaded` appends each accepted image
+  as a new gallery item
 
 ## Depends on / pairs with
 

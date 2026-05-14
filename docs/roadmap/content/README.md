@@ -4,7 +4,7 @@ Items affecting content modules, images / galleries / carousels, logos. Module-d
 
 | Item | Size | Status |
 |---|---|---|
-| [bulk-image-upload-with-ratio.md](bulk-image-upload-with-ratio.md) | S | Backlog — bulk image uploads with crop ratio enforcement |
+| ~~[bulk-image-upload-with-ratio.md](bulk-image-upload-with-ratio.md)~~ | S | **Shipped 2026-04-24, re-confirmed 2026-05-14** — `/api/upload-batch` (sharp cover-crop + EXIF strip + collision-safe) + `BulkImageUploadModal` + GalleryEditor "Bulk upload" button + `image.upload` MCP `ratio` parity. See [shipped.md](../shipped.md) |
 | [carousel-preview-layout-fix.md](carousel-preview-layout-fix.md) | S | Backlog — carousel preview misalignment |
 | [gallery-improvements.md](gallery-improvements.md) | M | Backlog — gallery module polish |
 | ~~[image-optimization-on-upload.md](image-optimization-on-upload.md)~~ | M | **Shipped 2026-05-14** — pipeline on all 4 ingest paths (upload / batch / MCP / rescan), corrupt-input reject, dimension persistence. See [shipped.md](../shipped.md) |
