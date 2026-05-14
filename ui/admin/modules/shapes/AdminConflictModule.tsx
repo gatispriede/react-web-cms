@@ -16,7 +16,9 @@ export interface AdminConflictModuleProps {
     open: boolean;
     /** Human label for the document kind ("Product", "Page", …). */
     docKind: string;
-    peerVersion?: number;
+    /** Peer's version counter — always known at conflict time
+     *  (`ConflictError.currentVersion`). */
+    peerVersion: number;
     peerEditedBy?: string;
     peerEditedAt?: string;
     /** Discard the local edit, take the peer's version. */

@@ -203,7 +203,12 @@ const UserStatusBarInner = ({session, view, tApp}: {
                 );
             case 'modules-preview':
             case 'build/modules-preview':
-                return <ModulesPreview t={tAdmin as TFunction<"translation", undefined>} tApp={tApp}/>;
+                // admin-module-composed: `ModulesPreview` is now the
+                // `AdminLoader` bridge — it resolves `t` / `tApp` itself and
+                // composes `AdminPreviewModule`. The registered
+                // `ModulesPreviewAdminUILoader` dispatches the same pane via
+                // `AdminPageDispatch`; this legacy case stays as a fallback.
+                return <ModulesPreview/>;
 
             // Area landings — render nothing in the pane; AreaNav covers it.
             case 'client-config':
