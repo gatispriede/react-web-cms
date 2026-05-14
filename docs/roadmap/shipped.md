@@ -2,6 +2,14 @@
 
 Archive of completed roadmap entries. Latest first. Active backlog lives in [README.md](README.md).
 
+## 2026-05-14 — admin-module-composed + 2 content banner reconciliations
+
+| # | Notes |
+|---|---|
+| **admin-module-composed** | Admin module-compose jump shipped — [admin/admin-module-composed.md](admin/admin-module-composed.md). Infrastructure: `AdminLoader` (the per-pane bridge — declares `paneId` + `slots` + a `Bridge` component that wires the pane's ViewModel to view-module props; VMs untouched), `AdminPageRegistry` (singleton, throws on dup `paneId`), `AdminPageDispatch` (admin analogue of `SystemPageDispatch`), `EAdminModuleType` enum. 7 view-module shapes under `ui/admin/modules/shapes/`: `AdminInfo` (key-value/pills/table/node blocks), `AdminCrudList`, `AdminForm`, `AdminActionPanel`, `AdminWizard`, `AdminPreview`, `AdminConflict`. All ~36 in-scope panes converted across 6 commits — each `ui/admin/features/<Name>/<Name>.tsx` is now its `AdminLoader` bridge, the `*AdminUILoader.ts` points `modes.advanced` at `<AdminPageDispatch paneId>`, the `*AdminLoader.ts` self-registers. Master-detail / row-testid-heavy surfaces keep bespoke JSX inside the bridge or `node` blocks. Exempt (stay hand-coded): `/admin/build`, Navigation, shell, signin, Translations/Languages, Agent, ThingsToDo, Dialogs, inline-edit overlay, ConflictDialog inline sites. |
+| **carousel-preview-layout-fix** | Banner reconciliation — the fix shipped 2026-04-24; verified still in code (`Carousel.scss` `display:flex !important` + `max-height` clip band + caption `z-index:3`; `ModulesPreview.tsx` `minWidth:0` grid carve-outs killing the 2^25 px `.slick` layout runaway). Doc is the postmortem record. |
+| **image-width-height-respect** | Banner reconciliation — acceptance met: `ui/client/lib/SizedImage.tsx` (`data-sized`-emitting helper) consumed by Gallery + Logo; PlainImage / ProjectCard / Carousel / Hero-portrait honour author `width`/`height` via inline `toImageRef`/`dimToCss`. Empty dims keep responsive fill. Uniform helper adoption across the inline call sites is optional churn — goal (dims respected at render) is done. |
+
 ## 2026-05-14 — W2.5d admin inline editing (data-edit-target round-trip closed)
 
 | # | Notes |

@@ -1,5 +1,15 @@
 # Respect image `width` / `height` fields across modules
 
+> **✅ SHIPPED.** `ui/client/lib/SizedImage.tsx` ships the
+> `data-sized`-emitting helper; Gallery + Logo consume it directly,
+> PlainImage / ProjectCard / Carousel / Hero-portrait honour
+> author-supplied `width`/`height` via their own `toImageRef` /
+> `dimToCss` inline paths (acceptance criteria met — author dims are
+> respected at render, empty dims keep responsive fill). SCSS blanket
+> `img` rules carry `:not([data-sized])` carve-outs where `SizedImage`
+> is used. Uniform helper adoption across the remaining inline call
+> sites is optional churn — the goal (dims respected) is done.
+
 ## Goal
 
 Widths and heights set by authors on image-bearing fields (Logo, PlainImage,

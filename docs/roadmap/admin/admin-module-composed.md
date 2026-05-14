@@ -4,6 +4,17 @@ description: Every admin pane is composed of admin modules — extract existing 
 filed: 2026-05-13 by operator feedback: "even admin should be made of our modules, hence we can create modules from existing content in admin, except for build page that is unique"
 ---
 
+> **✅ SHIPPED 2026-05-14.** Admin module-compose infrastructure
+> (`AdminLoader` bridge · `AdminPageRegistry` · `AdminPageDispatch` ·
+> `EAdminModuleType`) + 7 view-module shapes (`AdminInfo` / `AdminCrudList`
+> / `AdminForm` / `AdminActionPanel` / `AdminWizard` / `AdminPreview` /
+> `AdminConflict`) under `ui/admin/modules/shapes/`. All ~36 in-scope
+> admin panes converted — each pane file is now its `AdminLoader` bridge,
+> ViewModels untouched, dispatching through the registry. The 10 exempt
+> surfaces (`/admin/build`, Navigation, shell, signin, Translations,
+> Agent, ThingsToDo, Dialogs, inline-edit overlay, ConflictDialog inline
+> sites) stay hand-coded per the table below.
+
 # Admin module-composition
 
 ## Goal
