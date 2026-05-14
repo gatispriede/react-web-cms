@@ -119,6 +119,8 @@ import {
     PricingTableEditor,
     TestimonialWallEditor,
 } from '@admin/modules/_MarketingPageModules/editors';
+// all-pages-module-composed — Cars batch editors.
+import {CarsListEditor, CarDetailEditor} from '@admin/modules/_CarsPageModules/editors';
 
 /**
  * Admin-side per-module metadata. `category` + label/description live
@@ -208,4 +210,7 @@ export const ADMIN_ITEM_TYPE_EDITORS: readonly AdminItemTypeEntry[] = [
     {key: EItemType.LogoCloud,                Editor: LogoCloudEditor,                styleEnum: asEnum({Default: 'default'}), defaultContent: '{"logos":[]}',          labelKey: 'Logo cloud',            descriptionKey: 'Marketing — "trusted by" row of customer logos.',                            category: 'media'},
     {key: EItemType.PricingTable,             Editor: PricingTableEditor,             styleEnum: asEnum({Default: 'default'}), defaultContent: '{"tiers":[],"features":[]}', labelKey: 'Pricing table',     descriptionKey: 'Marketing — tier columns + feature matrix with monthly/annual toggle.',       category: 'content'},
     {key: EItemType.TestimonialWall,          Editor: TestimonialWallEditor,          styleEnum: asEnum({Default: 'default'}), defaultContent: '{"items":[]}',          labelKey: 'Testimonial wall',      descriptionKey: 'Marketing — multi-column quote cards with author + company.',                 category: 'content'},
+    // all-pages-module-composed — Cars batch.
+    {key: EItemType.CarsList,                 Editor: CarsListEditor,                 styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Cars list',              descriptionKey: 'Locked — faceted car listing (make / model / fuel / gearbox / year / price).',category: 'content'},
+    {key: EItemType.CarDetail,                Editor: CarDetailEditor,                styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Car detail',             descriptionKey: 'Locked — single car: gallery, spec table, VAT badge, reservation CTA.',       category: 'content'},
 ];

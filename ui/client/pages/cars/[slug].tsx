@@ -1,45 +1,56 @@
 /**
- * `/cars/[slug]` storefront detail page — Wave 7b.
+ * `/cars/[slug]` — system-page-backed car detail
+ * (all-pages-module-composed, Cars batch).
  *
- * Stitches the Cars module components into a vehicle detail page with
- * photo gallery, spec table, VAT badge, and reservation CTA. Style-light
- * — per-theme styling is Wave 5 follow-up.
+ * The vehicle detail composition is replaced by `<SystemPageDispatch>`
+ * over the registered `cars-detail` system page, whose locked
+ * `CarDetail` module reads the `[slug]` route param and fetches the
+ * car. The route keeps a server-side car lookup purely to drive the
+ * SEO `<Head>` (title + description) — the visible body is module-
+ * composed.
  */
 import React from 'react';
 import type {GetServerSideProps} from 'next';
 import Head from 'next/head';
+import {ConfigProvider} from 'antd';
 import {useTranslation} from 'next-i18next/pages';
 import {serverSideTranslations} from 'next-i18next/pages/serverSideTranslations';
-import {CarVehicleDetailPage, type CarListing} from '@client/modules/Cars';
+import staticTheme from '@client/features/Themes/themeConfig';
+import {loadSystemPageSnapshot, type ISystemPageSnapshot} from '@client/lib/systemPage/loadSystemPage';
+import SystemPageDispatch from '@client/lib/systemPage/SystemPageDispatch';
 
-interface Props {
-    car: CarListing | null;
+interface CarHead {
+    title: string;
+    description: string;
 }
 
-const CarSlugPage: React.FC<Props> = ({car}) => {
-    const {t} = useTranslation('common');
-    if (!car) {
-        return (
-            <div style={{padding: 16}} data-testid="car-detail-not-found">
-                <Head><title>{t('cars.detail.notFound', {defaultValue: 'Car not found'}) as string}</title></Head>
-                <h1>{t('cars.detail.notFound', {defaultValue: 'Car not found'}) as string}</h1>
-            </div>
-        );
-    }
+interface Props {
+    systemPage: ISystemPageSnapshot | null;
+    car: CarHead | null;
+}
+
+const CarSlugPage: React.FC<Props> = ({systemPage, car}) => {
+    const {t} = useTranslation('translation');
+    const {t: tApp} = useTranslation('app');
+    const {t: tCommon} = useTranslation('common');
     return (
-        <>
+        <ConfigProvider theme={staticTheme}>
             <Head>
-                <title>{car.title}</title>
-                <meta name="description" content={car.description?.slice(0, 160) || car.title}/>
+                <title>{car?.title || (tCommon('cars.detail.notFound', {defaultValue: 'Car not found'}) as string)}</title>
+                {car?.description ? <meta name="description" content={car.description}/> : null}
             </Head>
-            <CarVehicleDetailPage car={car}/>
-        </>
+            <main data-testid="page-cars-detail" style={{padding: '24px 16px 80px'}}>
+                {systemPage
+                    ? <SystemPageDispatch systemKey="cars-detail" sections={systemPage.defaultSections} t={t} tApp={tApp}/>
+                    : null}
+            </main>
+        </ConfigProvider>
     );
 };
 
 export const getServerSideProps: GetServerSideProps<Props> = async ({params, locale}) => {
     const slug = typeof params?.slug === 'string' ? params.slug : '';
-    let car: CarListing | null = null;
+    let car: CarHead | null = null;
     try {
         const {getMongoConnection} = await import('@services/infra/mongoDBConnection');
         const conn = getMongoConnection();
@@ -49,14 +60,20 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({params, loc
         if (conn.database && slug) {
             const row = await conn.database
                 .collection('Products')
-                .findOne({slug, categories: 'cars', draft: {$ne: true}}, {projection: {_id: 0}});
-            car = (row as unknown as CarListing) ?? null;
+                .findOne({slug, categories: 'cars', draft: {$ne: true}}, {projection: {_id: 0, title: 1, description: 1}});
+            if (row) {
+                const r = row as {title?: string; description?: string};
+                car = {
+                    title: String(r.title ?? ''),
+                    description: String(r.description ?? '').slice(0, 160),
+                };
+            }
         }
     } catch {
         car = null;
     }
-    const i18n = await serverSideTranslations(locale ?? 'en', ['common']).catch(() => ({}));
-    return {props: {car, ...(i18n as object)} as Props};
+    const i18n = await serverSideTranslations(locale ?? 'en', ['common', 'app', 'translation']).catch(() => ({}));
+    return {props: {systemPage: loadSystemPageSnapshot('cars-detail'), car, ...(i18n as object)} as Props};
 };
 
 export default CarSlugPage;

@@ -121,6 +121,12 @@ export enum EItemType {
     LogoCloud = "LOGO_CLOUD",
     PricingTable = "PRICING_TABLE",
     TestimonialWall = "TESTIMONIAL_WALL",
+    // all-pages-module-composed — Cars batch. `CarsList` is the new
+    // faceted listing module; `CarDetail` wraps the existing
+    // `Cars/CarVehicleDetailPage` composite. Both smart wrappers in
+    // `_CarsPageModules/` bind to the `/api/cars` storefront endpoint.
+    CarsList = "CARS_LIST",
+    CarDetail = "CAR_DETAIL",
     Empty = 'EMPTY',
 }
 export default EItemType

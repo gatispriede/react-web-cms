@@ -95,6 +95,8 @@ import {
     PricingTableHost,
     TestimonialWallHost,
 } from '@client/modules/_MarketingPageModules/wrappers';
+// all-pages-module-composed — Cars batch smart wrappers.
+import {CarsListHost, CarDetailHost} from '@client/modules/_CarsPageModules/wrappers';
 
 export const CLIENT_ITEM_TYPES: readonly ClientItemType[] = [
     {key: EItemType.Text, Display: PlainText},
@@ -170,4 +172,7 @@ export const CLIENT_ITEM_TYPES: readonly ClientItemType[] = [
     {key: EItemType.LogoCloud, Display: LogoCloudHost as never},
     {key: EItemType.PricingTable, Display: PricingTableHost as never},
     {key: EItemType.TestimonialWall, Display: TestimonialWallHost as never},
+    // all-pages-module-composed — Cars batch.
+    {key: EItemType.CarsList, Display: CarsListHost as never},
+    {key: EItemType.CarDetail, Display: CarDetailHost as never},
 ];
