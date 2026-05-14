@@ -1,5 +1,7 @@
+import React from 'react';
 import {AdminUILoader, AdminPaneDescriptor} from '@admin/lib/loaders/AdminUILoader';
-import AuthSettings from './AuthSettings';
+import {AdminPageDispatch} from '@admin/lib/adminPages/AdminPageDispatch';
+import './AuthAdminLoader';
 
 /**
  * Auth admin pane — auth-split-client-admin (Phase 1.A).
@@ -8,7 +10,15 @@ import AuthSettings from './AuthSettings';
  * per-provider sub-toggles. Read/write through the
  * `auth.config.*` MCP tools so the same surface is reachable from
  * an agent.
+ *
+ * admin-module-composed: `modes.advanced` dispatches through the
+ * `AdminPageRegistry` instead of rendering the hand-coded pane directly.
+ * `./AuthAdminLoader` is side-imported so the `system/auth` bridge
+ * registers at load.
  */
+const AuthPaneDispatch: React.FC = () =>
+    React.createElement(AdminPageDispatch, {paneId: 'system/auth'});
+
 export class AuthAdminUILoader extends AdminUILoader {
     readonly id = 'auth';
     readonly displayName = 'Customer login';
@@ -17,6 +27,6 @@ export class AuthAdminUILoader extends AdminUILoader {
         id: 'system/auth',
         title: 'Customer login',
         route: '/admin/system/auth',
-        modes: {advanced: AuthSettings},
+        modes: {advanced: AuthPaneDispatch},
     };
 }

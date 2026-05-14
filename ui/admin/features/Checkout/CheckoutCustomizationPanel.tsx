@@ -1,19 +1,23 @@
 /**
- * Phase 1.B-c — checkout customization admin pane.
+ * admin-module-composed — Checkout customization bridge.
  *
- * Sections:
- *   1. Flow shape (single-step | multi-step) + require-account toggle
- *   2. Payment providers (Stripe / BankTransfer / CashOnDelivery / PayPal / Klarna)
- *   3. Per-customer-type field config (8 selects)
- *   4. Order summary template + post-purchase redirect
- *   5. Shipping methods CRUD
+ * Was a bespoke hand-coded pane; now the `AdminLoader` *bridge* for
+ * `client-config/checkout`. `CheckoutCustomizationViewModel` + the
+ * bespoke section cards (flow / providers / fields / summary /
+ * shipping) stay 100% unchanged ("admin stays mostly same"); only the
+ * outer `<div>` chrome moves into the generic `AdminFormModule` shape.
+ * Sections auto-save via the VM, so the module renders without an
+ * `onSave` save bar.
  *
- * VM4 — no `useState`. Sonner notifyPromise via the VM.
+ * Registered with the `AdminPageRegistry` by
+ * `CheckoutCustomizationAdminLoader`; the shell reaches it via
+ * `AdminPageDispatch` (see `CheckoutCustomizationAdminUILoader`).
  */
 import React, {useEffect} from 'react';
 import {Alert, Button, Card, Input, Radio, Select, Skeleton, Space, Switch, Table} from 'antd';
 import {useTranslation} from 'react-i18next';
 import {useViewModel} from '@client/lib/state/observable';
+import AdminFormModule from '@admin/modules/shapes/AdminFormModule';
 import {
     CheckoutCustomizationViewModel,
     type CustomerKind,
@@ -52,8 +56,11 @@ const CheckoutCustomizationPanel: React.FC = () => {
     if (vm.error) return <Alert type="error" message={vm.error}/>;
 
     return (
-        <div style={{padding: 16, maxWidth: 960}} data-testid="checkout-customization-panel">
-            <Space direction="vertical" size={16} style={{width: '100%'}}>
+        <AdminFormModule
+            testId="checkout-customization-panel"
+            title={t('Checkout') as string}
+        >
+            <Space direction="vertical" size={16} style={{width: '100%', maxWidth: 960}}>
 
                 <Card title={t('Flow') as string} data-testid="checkout-section-flow">
                     <Space direction="vertical" size={12} style={{width: '100%'}}>
@@ -157,7 +164,7 @@ const CheckoutCustomizationPanel: React.FC = () => {
                 <ShippingMethodsTable vm={vm}/>
 
             </Space>
-        </div>
+        </AdminFormModule>
     );
 };
 

@@ -1,15 +1,22 @@
+/**
+ * admin-module-composed — Auth settings bridge.
+ *
+ * Was a bespoke hand-coded pane; now the `AdminLoader` *bridge* for
+ * `system/auth`. `AuthSettingsViewModel` + the bespoke per-provider
+ * toggle rows stay unchanged ("admin stays mostly same"); only the
+ * surrounding Card chrome moves into the generic `AdminFormModule`
+ * shape. Toggles auto-save via the VM, so the module renders without
+ * an `onSave` save bar.
+ *
+ * Registered with the `AdminPageRegistry` by `AuthAdminLoader`; the
+ * shell reaches it via `AdminPageDispatch` (see `AuthAdminUILoader`).
+ */
 import React, {useEffect} from 'react';
-import {Card, Switch, Alert, Skeleton, Tag, Space} from 'antd';
+import {Switch, Alert, Skeleton, Tag, Space} from 'antd';
 import {useTranslation} from 'react-i18next';
 import {useViewModel} from '@client/lib/state/observable';
+import AdminFormModule from '@admin/modules/shapes/AdminFormModule';
 import {AuthSettingsViewModel, type AuthFlagKey} from './AuthSettingsViewModel';
-
-/**
- * AuthSettings — admin pane for the auth-split-client-admin master
- * switch + per-provider sub-toggles. VM-backed (no `useState`,
- * mandatory under VM4 policy). Reads via `auth.config.get`,
- * writes via `auth.config.set`. Sonner toasts for save feedback.
- */
 
 const FLAG_LABELS: Array<{key: AuthFlagKey; labelKey: string; envKey?: string}> = [
     {key: 'clientLoginEnabled', labelKey: 'auth.masterToggle'},
@@ -26,10 +33,13 @@ export const AuthSettings: React.FC = () => {
     useEffect(() => { void vm.refresh(); }, [vm]);
 
     if (vm.loading) return <Skeleton active/>;
-    if (vm.error) return <Alert type="error" message={vm.error}/>;
 
     return (
-        <Card title={t('auth.title', {defaultValue: 'Customer login'}) as string} data-testid="admin-auth-settings">
+        <AdminFormModule
+            testId="admin-auth-settings"
+            title={t('auth.title', {defaultValue: 'Customer login'}) as string}
+            error={vm.error}
+        >
             <Alert
                 type="info"
                 showIcon
@@ -59,7 +69,7 @@ export const AuthSettings: React.FC = () => {
                     );
                 })}
             </Space>
-        </Card>
+        </AdminFormModule>
     );
 };
 

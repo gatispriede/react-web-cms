@@ -1,4 +1,14 @@
 /**
+ * admin-module-composed — Compliance bridge.
+ *
+ * The `AdminLoader` bridge for `system/compliance`.
+ * `CompliancePanelViewModel` is unchanged ("admin stays mostly same"),
+ * including the `useRefreshView` wiring and the row-level Popconfirm
+ * actions; the hand-coded page chrome is replaced by a single
+ * `AdminInfo` surface. The limit selector + sweep / refresh buttons
+ * ride in the `headerExtra` slot, the three stats in a bespoke `node`
+ * block, and the deletion requests in a `table` block.
+ *
  * Wave 8b — Admin compliance pane.
  *
  * Shows pending data-export requests + pending deletion requests +
@@ -10,11 +20,14 @@
  * `testid`s on every interactive. Predefined-select for limit picker.
  */
 import React, {useEffect, useMemo} from 'react';
-import {Button, Card, Popconfirm, Select, Space, Statistic, Table, Tag, Typography} from 'antd';
+import {Button, Popconfirm, Select, Space, Statistic, Table, Tag, Typography} from 'antd';
+import type {ColumnsType} from 'antd/es/table';
 import {ReloadOutlined, CheckCircleFilled, CloseCircleFilled, DeleteOutlined} from '@client/lib/icons';
 import {useTranslation} from 'react-i18next';
 import {useViewModel} from '@client/lib/state/observable';
 import {useRefreshView} from '@client/lib/refreshBus';
+import AdminInfoModule from '@admin/modules/shapes/AdminInfoModule';
+import type {AdminInfoBlock} from '@admin/modules/shapes/AdminInfoModule.types';
 import {CompliancePanelViewModel, type DeletionRow} from './CompliancePanelViewModel';
 
 const formatDate = (iso: string | undefined): string => {
@@ -72,42 +85,41 @@ const CompliancePanel: React.FC = () => {
                     </Space>
                 );
             }},
-    ], [t, vm]);
+    ] as unknown as ColumnsType<Record<string, unknown>>, [t, vm]);
 
-    return (
-        <div data-testid="compliance-admin-panel" style={{padding: 16, overflowY: 'auto'}}>
-            <Space style={{marginBottom: 12, width: '100%', justifyContent: 'space-between'}}>
-                <Typography.Title level={4} style={{margin: 0}}>
-                    {t('compliance.title', {defaultValue: 'Compliance'}) as string}
-                </Typography.Title>
-                <Space>
-                    <Select
-                        data-testid="compliance-limit-select"
-                        value={vm.limit}
-                        style={{minWidth: 100}}
-                        onChange={(v: number) => { vm.setLimit(v); void vm.refresh(); }}
-                        options={[
-                            {value: 25, label: '25'},
-                            {value: 50, label: '50'},
-                            {value: 100, label: '100'},
-                            {value: 250, label: '250'},
-                        ]}
-                    />
-                    <Button
-                        data-testid="compliance-sweep-button"
-                        icon={<DeleteOutlined/>}
-                        loading={vm.busy}
-                        onClick={() => void vm.runSweep()}
-                    >
-                        {t('compliance.sweep.cta', {defaultValue: 'Run retention sweep'}) as string}
-                    </Button>
-                    <Button data-testid="compliance-refresh-button" icon={<ReloadOutlined/>} loading={vm.loading} onClick={() => void vm.refresh()}>
-                        {t('Refresh', {defaultValue: 'Refresh'}) as string}
-                    </Button>
-                </Space>
-            </Space>
+    const headerExtra = (
+        <Space>
+            <Select
+                data-testid="compliance-limit-select"
+                value={vm.limit}
+                style={{minWidth: 100}}
+                onChange={(v: number) => { vm.setLimit(v); void vm.refresh(); }}
+                options={[
+                    {value: 25, label: '25'},
+                    {value: 50, label: '50'},
+                    {value: 100, label: '100'},
+                    {value: 250, label: '250'},
+                ]}
+            />
+            <Button
+                data-testid="compliance-sweep-button"
+                icon={<DeleteOutlined/>}
+                loading={vm.busy}
+                onClick={() => void vm.runSweep()}
+            >
+                {t('compliance.sweep.cta', {defaultValue: 'Run retention sweep'}) as string}
+            </Button>
+            <Button data-testid="compliance-refresh-button" icon={<ReloadOutlined/>} loading={vm.loading} onClick={() => void vm.refresh()}>
+                {t('Refresh', {defaultValue: 'Refresh'}) as string}
+            </Button>
+        </Space>
+    );
 
-            <Card style={{marginBottom: 16}}>
+    const blocks: AdminInfoBlock[] = [
+        {
+            kind: 'node',
+            testId: 'compliance-stats',
+            node: (
                 <Space size="large" wrap>
                     <Statistic
                         title={t('compliance.stats.pendingDeletions', {defaultValue: 'Pending deletions'}) as string}
@@ -123,20 +135,38 @@ const CompliancePanel: React.FC = () => {
                         value={1}
                     />
                 </Space>
-            </Card>
-
-            <Card title={t('compliance.deletions.title', {defaultValue: 'Pending deletion requests'}) as string}>
+            ),
+        },
+        {
+            // Kept as a bespoke `node` (not an `AdminInfo` `table`
+            // block) — the row-level `data-testid` the e2e suite
+            // asserts on isn't expressible through the `table` shape.
+            kind: 'node',
+            heading: t('compliance.deletions.title', {defaultValue: 'Pending deletion requests'}) as string,
+            testId: 'compliance-deletions-block',
+            node: (
                 <Table
                     data-testid="compliance-deletions-table"
                     rowKey={(r: DeletionRow) => r.id}
                     loading={vm.loading}
                     dataSource={vm.deletions}
-                    columns={columns}
+                    columns={columns as unknown as ColumnsType<DeletionRow>}
                     pagination={{pageSize: 25}}
                     size="middle"
                     onRow={(r: DeletionRow) => ({'data-testid': `compliance-deletion-row-${r.userId}`} as never)}
                 />
-            </Card>
+            ),
+        },
+    ];
+
+    return (
+        <div data-testid="compliance-admin-panel">
+            <AdminInfoModule
+                testId="admin-compliance"
+                title={t('compliance.title', {defaultValue: 'Compliance'}) as string}
+                headerExtra={headerExtra}
+                blocks={blocks}
+            />
         </div>
     );
 };

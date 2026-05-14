@@ -1,8 +1,20 @@
+/**
+ * admin-module-composed — Redirects bridge.
+ *
+ * The `AdminLoader` bridge for `system/redirects`. `RedirectsViewModel`
+ * is unchanged ("admin stays mostly same"); the hand-coded list chrome
+ * (Card + Table + EmptyState) is replaced by `AdminCrudListModule`, and
+ * the bespoke create/edit Modal is kept rendered alongside the module.
+ *
+ * Registered with the `AdminPageRegistry` by `RedirectsAdminLoader`; the
+ * shell reaches it via `AdminPageDispatch` (see `RedirectsAdminUILoader`).
+ */
 import React, {useEffect} from 'react';
-import {Button, Card, Form, Input, Modal, Select, Space, Table, Typography} from 'antd';
+import {Button, Form, Input, Modal, Select, Space, Typography} from 'antd';
+import type {ColumnsType} from 'antd/es/table';
 import {useTranslation} from 'react-i18next';
 import {useViewModel} from '@client/lib/state/observable';
-import EmptyState from '@admin/lib/EmptyState';
+import AdminCrudListModule from '@admin/modules/shapes/AdminCrudListModule';
 import {RedirectsViewModel} from './RedirectsViewModel';
 import type {IRedirect} from '@interfaces/IRedirect';
 
@@ -69,53 +81,34 @@ const RedirectsPane: React.FC = () => {
     ];
 
     return (
-        <Card
-            data-testid="redirects-pane"
-            title={t('URL redirects')}
-            extra={
-                <Space>
-                    <Button
-                        data-testid="redirects-refresh-button"
-                        onClick={() => void vm.refresh()}
-                        loading={vm.loading}
-                    >
-                        {t('Refresh')}
-                    </Button>
-                    <Button
-                        type="primary"
-                        data-testid="redirects-create-button"
-                        onClick={() => vm.openCreate()}
-                    >
-                        {t('New redirect')}
-                    </Button>
-                </Space>
-            }
-        >
-            <Typography.Paragraph type="secondary">
-                {t('Exact-path redirects consulted by the edge middleware before route resolution. Source paths must start with /. Targets can be relative or absolute.')}
-            </Typography.Paragraph>
-            {vm.rows.length === 0 && !vm.loading ? (
-                <EmptyState
-                    testId="redirects-empty-state"
-                    title={t('No redirects yet')}
-                    description={t('Add a redirect when retiring a URL or restructuring your site.')}
-                    primary={{
+        <>
+            <AdminCrudListModule
+                testId="redirects-pane"
+                title={t('URL redirects')}
+                columns={columns as unknown as ColumnsType<Record<string, unknown>>}
+                rows={vm.rows as unknown as ReadonlyArray<Record<string, unknown>>}
+                rowKey="id"
+                loading={vm.loading}
+                pageSize={50}
+                onRefresh={() => void vm.refresh()}
+                refreshTestId="redirects-refresh-button"
+                onAdd={() => vm.openCreate()}
+                addLabel={t('New redirect')}
+                addTestId="redirects-create-button"
+                emptyState={{
+                    testId: 'redirects-empty-state',
+                    title: t('No redirects yet'),
+                    description: t('Add a redirect when retiring a URL or restructuring your site.'),
+                    primary: {
                         label: t('New redirect'),
                         onClick: () => vm.openCreate(),
                         testId: 'redirects-empty-primary-btn',
-                    }}
-                />
-            ) : (
-                <Table
-                    data-testid="redirects-table"
-                    rowKey={(r) => r.id ?? r.from}
-                    dataSource={vm.rows}
-                    columns={columns}
-                    loading={vm.loading}
-                    pagination={{pageSize: 50, hideOnSinglePage: true}}
-                    size="middle"
-                />
-            )}
+                    },
+                }}
+            />
+            <Typography.Paragraph type="secondary" style={{padding: '0 16px'}}>
+                {t('Exact-path redirects consulted by the edge middleware before route resolution. Source paths must start with /. Targets can be relative or absolute.')}
+            </Typography.Paragraph>
 
             <Modal
                 open={vm.editing !== null}
@@ -173,7 +166,7 @@ const RedirectsPane: React.FC = () => {
                     </Form.Item>
                 </Form>
             </Modal>
-        </Card>
+        </>
     );
 };
 

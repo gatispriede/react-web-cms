@@ -1,7 +1,23 @@
+/**
+ * admin-module-composed — Customer account settings bridge.
+ *
+ * Was a bespoke hand-coded pane; now the `AdminLoader` *bridge* for
+ * `system/account-settings`. `CustomerAccountSettingsViewModel` + the
+ * bespoke master-toggle / default-type / hidden-tabs fields stay 100%
+ * unchanged ("admin stays mostly same"); only the surrounding Card
+ * chrome moves into the generic `AdminFormModule` shape. Fields
+ * auto-save via the VM, so the module renders without an `onSave`
+ * save bar.
+ *
+ * Registered with the `AdminPageRegistry` by
+ * `CustomerAccountSettingsAdminLoader`; the shell reaches it via
+ * `AdminPageDispatch` (see `CustomerAccountSettingsAdminUILoader`).
+ */
 import React, {useEffect} from 'react';
-import {Alert, Card, Radio, Skeleton, Space, Switch} from 'antd';
+import {Alert, Radio, Skeleton, Space, Switch} from 'antd';
 import {useTranslation} from 'react-i18next';
 import {useViewModel} from '@client/lib/state/observable';
+import AdminFormModule from '@admin/modules/shapes/AdminFormModule';
 import {ALL_ADMIN_TABS, CustomerAccountSettingsViewModel, type AccountTab} from './CustomerAccountSettingsViewModel';
 
 /**
@@ -34,7 +50,10 @@ export const CustomerAccountSettingsPanel: React.FC = () => {
     if (vm.error) return <Alert type="error" message={vm.error}/>;
 
     return (
-        <Card title={t('accountSettings.adminTitle', {defaultValue: 'Customer account settings'}) as string} data-testid="admin-account-settings">
+        <AdminFormModule
+            testId="admin-account-settings"
+            title={t('accountSettings.adminTitle', {defaultValue: 'Customer account settings'}) as string}
+        >
             <Space direction="vertical" size="middle" style={{width: '100%'}}>
                 <div>
                     <strong>{t('accountSettings.masterToggle', {defaultValue: 'Enable customer account settings page'}) as string}</strong>
@@ -76,7 +95,7 @@ export const CustomerAccountSettingsPanel: React.FC = () => {
                     </div>
                 </div>
             </Space>
-        </Card>
+        </AdminFormModule>
     );
 };
 

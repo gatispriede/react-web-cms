@@ -1,10 +1,13 @@
-import React, {useEffect, useMemo} from 'react';
-import {Button, Card, Select, Space, Statistic, Table, Tag, Typography} from 'antd';
-import {useTranslation} from 'react-i18next';
-import {useViewModel} from '@client/lib/state/observable';
-import {PerfBeaconsViewModel, type PerfBeacon} from './PerfBeaconsViewModel';
-
 /**
+ * admin-module-composed — Performance (RUM) bridge.
+ *
+ * The `AdminLoader` bridge for `system/performance`.
+ * `PerfBeaconsViewModel` is unchanged ("admin stays mostly same"); the
+ * hand-coded card chrome is replaced by a single `AdminInfo` surface.
+ * The metric/limit selectors ride in the toolbar slot, the p50/p75/p95
+ * summary cards in a bespoke `node` block, and the recent samples in a
+ * `table` block.
+ *
  * Read-only RUM perf dashboard — W8d.
  *
  * Pulls the last N beacons from `/api/admin/perf-beacons` and renders:
@@ -15,6 +18,14 @@ import {PerfBeaconsViewModel, type PerfBeacon} from './PerfBeaconsViewModel';
  * per-route breakouts) is out of scope per the W8d brief. Confirms
  * beacons land + surfaces budget-violation visibility.
  */
+import React, {useEffect, useMemo} from 'react';
+import {Button, Card, Select, Space, Statistic, Tag, Typography} from 'antd';
+import type {ColumnsType} from 'antd/es/table';
+import {useTranslation} from 'react-i18next';
+import {useViewModel} from '@client/lib/state/observable';
+import AdminInfoModule from '@admin/modules/shapes/AdminInfoModule';
+import type {AdminInfoBlock} from '@admin/modules/shapes/AdminInfoModule.types';
+import {PerfBeaconsViewModel, type PerfBeacon} from './PerfBeaconsViewModel';
 
 const METRIC_OPTIONS = [
     {value: 'all', label: 'All metrics'},
@@ -60,40 +71,33 @@ const PerfBeaconsPanel: React.FC = () => {
             render: (p: string) => <Typography.Text code style={{fontSize: 12}}>{p}</Typography.Text>},
         {title: t('When'), dataIndex: 'ts', key: 'ts', width: 180,
             render: (ts: number) => <Typography.Text style={{fontFamily: 'monospace', fontSize: 12}}>{new Date(ts).toLocaleString()}</Typography.Text>},
-    ], [t]);
+    ] as unknown as ColumnsType<Record<string, unknown>>, [t]);
 
-    return (
-        <div style={{padding: 16}}>
-            <Card
-                title={t('Performance — Core Web Vitals (RUM)')}
-                extra={
-                    <Button
-                        data-testid="perf-beacons-refresh"
-                        onClick={() => { void vm.refresh(); }}
-                        loading={vm.loading}
-                    >
-                        {t('Refresh')}
-                    </Button>
-                }
-            >
-                <Space wrap style={{marginBottom: 16}}>
-                    <Select
-                        data-testid="perf-beacons-metric-filter"
-                        value={vm.metric}
-                        onChange={(v) => vm.setMetric(v)}
-                        style={{width: 160}}
-                        options={METRIC_OPTIONS}
-                    />
-                    <Select
-                        data-testid="perf-beacons-limit"
-                        value={vm.limit}
-                        onChange={(v) => vm.setLimit(v)}
-                        style={{width: 100}}
-                        options={LIMIT_OPTIONS}
-                    />
-                </Space>
+    const toolbar = (
+        <Space wrap>
+            <Select
+                data-testid="perf-beacons-metric-filter"
+                value={vm.metric}
+                onChange={(v) => vm.setMetric(v)}
+                style={{width: 160}}
+                options={METRIC_OPTIONS}
+            />
+            <Select
+                data-testid="perf-beacons-limit"
+                value={vm.limit}
+                onChange={(v) => vm.setLimit(v)}
+                style={{width: 100}}
+                options={LIMIT_OPTIONS}
+            />
+        </Space>
+    );
 
-                <Space wrap size="large" style={{marginBottom: 16}}>
+    const blocks: AdminInfoBlock[] = [
+        {
+            kind: 'node',
+            testId: 'perf-beacons-summary',
+            node: (
+                <Space wrap size="large">
                     {vm.summary.length === 0 ? (
                         <Typography.Text type="secondary" data-testid="perf-beacons-empty">
                             {t('No samples yet — beacons fire from 10% of public visitors.')}
@@ -110,18 +114,40 @@ const PerfBeaconsPanel: React.FC = () => {
                         </Card>
                     ))}
                 </Space>
+            ),
+        },
+        {
+            kind: 'table',
+            testId: 'perf-beacons-table',
+            columns,
+            // Composite key (`ts` alone can collide) projected onto a
+            // stable field — the VM stays unchanged.
+            rows: vm.filtered.map((r, i) => ({
+                ...r,
+                _rowKey: `${r.ts}-${r.name}-${r.path}-${i}`,
+            })) as unknown as Record<string, unknown>[],
+            rowKey: '_rowKey',
+            loading: vm.loading,
+            pageSize: 25,
+        },
+    ];
 
-                <Table<PerfBeacon>
-                    data-testid="perf-beacons-table"
-                    rowKey={(r) => `${r.ts}-${r.name}-${r.path}`}
-                    size="small"
+    return (
+        <AdminInfoModule
+            testId="admin-perf-beacons"
+            title={t('Performance — Core Web Vitals (RUM)')}
+            headerExtra={
+                <Button
+                    data-testid="perf-beacons-refresh"
+                    onClick={() => { void vm.refresh(); }}
                     loading={vm.loading}
-                    dataSource={vm.filtered}
-                    columns={columns as any}
-                    pagination={{pageSize: 25}}
-                />
-            </Card>
-        </div>
+                >
+                    {t('Refresh')}
+                </Button>
+            }
+            toolbar={toolbar}
+            blocks={blocks}
+        />
     );
 };
 

@@ -1,10 +1,22 @@
+/**
+ * admin-module-composed — Trash bridge.
+ *
+ * The `AdminLoader` bridge for `release/trash`. `TrashViewModel` is
+ * unchanged ("admin stays mostly same"); the hand-coded list chrome
+ * (header + Table + EmptyState) is replaced by `AdminCrudListModule`.
+ * The Restore action lives in the bridge-built Actions column.
+ *
+ * Registered with the `AdminPageRegistry` by `TrashAdminLoader`; the
+ * shell reaches it via `AdminPageDispatch` (see `TrashAdminUILoader`).
+ */
 import React, {useEffect} from 'react';
-import {Button, Popconfirm, Space, Table, Tag, Typography} from 'antd';
+import {Button, Popconfirm, Space, Tag, Typography} from 'antd';
+import type {ColumnsType} from 'antd/es/table';
 import {useTranslation} from 'react-i18next';
 import type {TrashGroupSummary} from '@services/api/client/TrashApi';
 import {useRefreshView} from '@client/lib/refreshBus';
 import {useViewModel} from '@client/lib/state/observable';
-import EmptyState from '@admin/lib/EmptyState';
+import AdminCrudListModule from '@admin/modules/shapes/AdminCrudListModule';
 import {TrashViewModel} from './TrashViewModel';
 
 /** Render-only Trash admin pane — VM4 (F2 / data-integrity.md). */
@@ -83,36 +95,29 @@ const TrashPane: React.FC = () => {
         },
     ];
 
-    return (
-        <div style={{padding: 16}}>
-            <Space style={{marginBottom: 12}}>
-                <Typography.Title level={4} style={{margin: 0}}>{t('Trash')}</Typography.Title>
-                <Typography.Text type="secondary">
-                    {t('Soft-deleted rows. Auto-purged after 24h.')}
-                </Typography.Text>
-                <Button onClick={() => void vm.refresh()} loading={vm.loading}>{t('Refresh')}</Button>
-            </Space>
+    const toolbar = (
+        <Typography.Text type="secondary">
+            {t('Soft-deleted rows. Auto-purged after 24h.')}
+        </Typography.Text>
+    );
 
-            {vm.groups.length === 0 && !vm.loading ? (
-                <EmptyState
-                    testId="trash-empty-state"
-                    title={t('empty.trash.title')}
-                    description={t('empty.trash.description')}
-                />
-            ) : (
-                <Table
-                    rowKey="trashGroup"
-                    loading={vm.loading}
-                    columns={columns as any}
-                    dataSource={vm.groups}
-                    size="small"
-                    pagination={false}
-                    onRow={(row: TrashGroupSummary) => ({
-                        'data-testid': `trash-group-${row.trashGroup}`,
-                    } as any)}
-                />
-            )}
-        </div>
+    return (
+        <AdminCrudListModule
+            testId="trash-pane"
+            title={t('Trash')}
+            columns={columns as unknown as ColumnsType<Record<string, unknown>>}
+            rows={vm.groups as unknown as ReadonlyArray<Record<string, unknown>>}
+            rowKey="trashGroup"
+            loading={vm.loading}
+            onRefresh={() => void vm.refresh()}
+            toolbar={toolbar}
+            rowTestId={(row) => `trash-group-${(row as unknown as TrashGroupSummary).trashGroup}`}
+            emptyState={{
+                testId: 'trash-empty-state',
+                title: t('empty.trash.title'),
+                description: t('empty.trash.description'),
+            }}
+        />
     );
 };
 
