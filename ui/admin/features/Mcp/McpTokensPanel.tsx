@@ -70,6 +70,7 @@ const McpTokensPanel: React.FC = () => {
                     testId: 'mcp-tokens-empty-state',
                     title: t('empty.mcpTokens.title'),
                     description: t('empty.mcpTokens.description'),
+                    art: 'mcp',
                     primary: {
                         label: t('empty.mcpTokens.primary'),
                         onClick: vm.openIssueDialog,

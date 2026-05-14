@@ -19,6 +19,7 @@ import {IUser, UserRole} from "@interfaces/IUser";
 import {FeatureGrant, PageGrant, LocaleGrant} from "@interfaces/IPermission";
 import {useViewModel} from "@client/lib/state/observable";
 import AdminCrudListModule from "@admin/modules/shapes/AdminCrudListModule";
+import {onboardingCta} from "@admin/lib/EmptyState";
 import {UsersViewModel} from "./UsersViewModel";
 
 /** Render-only Users pane — VM3 (2026-05-02). */
@@ -120,11 +121,13 @@ const AdminSettingsUsers = () => {
                     testId: 'users-empty-state',
                     title: t('empty.users.title'),
                     description: t('empty.users.description'),
+                    art: 'users',
                     primary: {
                         label: t('empty.users.primary'),
                         onClick: vm.openCreate,
                         testId: 'users-empty-primary-btn',
                     },
+                    secondary: onboardingCta(t('empty.cta.guidedSetup'), 'users-empty-secondary-btn'),
                 }}
             />
             {vm.editing !== null && (

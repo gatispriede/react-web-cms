@@ -99,6 +99,7 @@ const RedirectsPane: React.FC = () => {
                     testId: 'redirects-empty-state',
                     title: t('No redirects yet'),
                     description: t('Add a redirect when retiring a URL or restructuring your site.'),
+                    art: 'generic',
                     primary: {
                         label: t('New redirect'),
                         onClick: () => vm.openCreate(),

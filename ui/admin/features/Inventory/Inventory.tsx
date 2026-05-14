@@ -170,6 +170,7 @@ const AdminSettingsInventory: React.FC = () => {
                             testId="inventory-runs-empty-state"
                             title={t('empty.inventoryRuns.title')}
                             description={t('empty.inventoryRuns.description')}
+                            art="inventory"
                         />
                     ),
                 }}

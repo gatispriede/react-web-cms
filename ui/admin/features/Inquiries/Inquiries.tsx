@@ -153,6 +153,7 @@ const AdminSettingsInquiries: React.FC = () => {
                     testId: 'inquiries-empty-state',
                     title: t('empty.inquiries.title'),
                     description: t('empty.inquiries.description'),
+                    art: 'inquiries',
                 }}
             />
 

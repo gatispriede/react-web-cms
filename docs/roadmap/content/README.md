@@ -7,7 +7,7 @@ Items affecting content modules, images / galleries / carousels, logos. Module-d
 | [bulk-image-upload-with-ratio.md](bulk-image-upload-with-ratio.md) | S | Backlog — bulk image uploads with crop ratio enforcement |
 | [carousel-preview-layout-fix.md](carousel-preview-layout-fix.md) | S | Backlog — carousel preview misalignment |
 | [gallery-improvements.md](gallery-improvements.md) | M | Backlog — gallery module polish |
-| [image-optimization-on-upload.md](image-optimization-on-upload.md) | M | Backlog — automatic image resize / WebP / AVIF on upload |
+| ~~[image-optimization-on-upload.md](image-optimization-on-upload.md)~~ | M | **Shipped 2026-05-14** — pipeline on all 4 ingest paths (upload / batch / MCP / rescan), corrupt-input reject, dimension persistence. See [shipped.md](../shipped.md) |
 | [image-width-height-respect.md](image-width-height-respect.md) | S | Backlog — honour intrinsic image dims on render |
 | [logo-style-options.md](logo-style-options.md) | S-M | Active — multi-variant logo (full / icon / mono) per theme; needed by [first-class-themes](../storefront/first-class-themes.md) |
 | [module-transparency-style.md](module-transparency-style.md) | S | Backlog — per-section transparency / overlay options |

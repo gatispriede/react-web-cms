@@ -116,6 +116,7 @@ const TrashPane: React.FC = () => {
                 testId: 'trash-empty-state',
                 title: t('empty.trash.title'),
                 description: t('empty.trash.description'),
+                art: 'trash',
             }}
         />
     );

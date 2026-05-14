@@ -110,6 +110,7 @@ const AuditTab: React.FC = () => {
                     testId="audit-empty-state"
                     title={t('empty.audit.title')}
                     description={t('empty.audit.description')}
+                    art="audit"
                 />
             ),
         },

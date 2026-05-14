@@ -66,6 +66,7 @@ const SeoOverviewPane: React.FC = () => {
                     testId="seo-overview-empty-state"
                     title={t('seoOverview.empty.title')}
                     description={t('seoOverview.empty.description')}
+                    art="generic"
                     primary={{
                         label: t('seoOverview.refresh'),
                         onClick: () => void vm.refresh(),

@@ -22,6 +22,7 @@ import {useRefreshView} from "@client/lib/refreshBus";
 import {useViewModel} from "@client/lib/state/observable";
 import AdminCrudListModule from "@admin/modules/shapes/AdminCrudListModule";
 import AdminConflictModule from "@admin/modules/shapes/AdminConflictModule";
+import {onboardingCta} from "@admin/lib/EmptyState";
 import {ProductsViewModel} from "./ProductsViewModel";
 import TemplatePickerControl from "./TemplatePickerControl";
 
@@ -159,11 +160,13 @@ const AdminSettingsProducts: React.FC = () => {
                     testId: 'products-empty-state',
                     title: t('empty.products.title'),
                     description: t('empty.products.description'),
+                    art: 'products',
                     primary: {
                         label: t('empty.products.primary'),
                         onClick: vm.openCreate,
                         testId: 'products-empty-primary-btn',
                     },
+                    secondary: onboardingCta(t('empty.cta.guidedSetup'), 'products-empty-secondary-btn'),
                 }}
             />
             <Drawer

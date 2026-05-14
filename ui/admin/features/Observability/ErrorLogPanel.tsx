@@ -113,6 +113,7 @@ const AdminErrorLog: React.FC = () => {
                     testId="errors-empty-state"
                     title={t('empty.errors.title')}
                     description={t('empty.errors.description')}
+                    art="errors"
                 />
             ),
         },

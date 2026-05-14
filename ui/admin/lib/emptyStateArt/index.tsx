@@ -75,7 +75,7 @@ const ART: Record<EmptyStateArtKey, React.ReactNode> = {
     posts: (
         <Frame label="No posts">
             {docStack}
-            <path d="M150 116 l24 -24 a6 6 0 0 1 8 8 l-24 24 -12 4 z" fill={ACCENT} stroke={ACCENT} {...stroke}/>
+            <path d="M150 116 l24 -24 a6 6 0 0 1 8 8 l-24 24 -12 4 z" {...stroke} fill={ACCENT} stroke={ACCENT}/>
         </Frame>
     ),
     products: (
@@ -98,7 +98,7 @@ const ART: Record<EmptyStateArtKey, React.ReactNode> = {
             <circle cx="120" cy="76" r="18" fill="var(--ant-color-bg-container, #fff)" {...stroke}/>
             <path d="M88 134 a32 32 0 0 1 64 0" fill="var(--ant-color-bg-container, #fff)" {...stroke}/>
             <circle cx="166" cy="86" r="12" fill={ACCENT}/>
-            <path d="M148 132 a20 20 0 0 1 36 0" stroke={ACCENT} {...stroke} fill="none"/>
+            <path d="M148 132 a20 20 0 0 1 36 0" {...stroke} stroke={ACCENT} fill="none"/>
         </Frame>
     ),
     orders: (

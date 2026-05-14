@@ -114,6 +114,7 @@ const PermissionsSimplifiedView: React.FC<Props> = ({
                     testId: `permissions-${mode}-empty-state`,
                     title: t('empty.permissions.title'),
                     description: t('empty.permissions.description'),
+                    art: 'users',
                     primary: {
                         label: t('empty.permissions.primary'),
                         onClick: () => vm.refresh(),

@@ -194,6 +194,7 @@ const BackupPanel: React.FC = () => {
                                 testId="backup-snapshots-empty"
                                 title={t('backup.empty.title')}
                                 description={t('backup.empty.description')}
+                                art="generic"
                             />
                         ),
                     }}

@@ -129,8 +129,16 @@ export class AssetService  implements IAssetService {
                 if (existing) {
                     skipped++;
                 } else {
-                    const stat = fs.statSync(path.join(IMAGES_DIR, fileName));
+                    const filePath = path.join(IMAGES_DIR, fileName);
+                    const stat = fs.statSync(filePath);
                     const ext = path.extname(fileName).slice(1).toLowerCase();
+                    // Read dimensions for raster files so a rescanned record
+                    // carries the same width/height a fresh upload would
+                    // (the spec: "still persist dimensions for raster paths").
+                    // The file is already on disk + already optimised — we
+                    // only want its metadata, not another re-encode pass.
+                    // Unreadable / vector formats just yield no dimensions.
+                    const meta = await readImageMetadata(filePath);
                     const image: InImage = {
                         id: guid(),
                         name: fileName,
@@ -139,6 +147,13 @@ export class AssetService  implements IAssetService {
                         type: `image/${ext === 'jpg' ? 'jpeg' : ext}`,
                         size: stat.size,
                         tags: ['All'],
+                        // Write-through metadata — Mongo is schemaless so these
+                        // ride along; GraphQL SDL exposure is a separate
+                        // read-side migration (see imageMetadata.ts).
+                        width: meta.width,
+                        height: meta.height,
+                        sizeBytes: stat.size,
+                        format: meta.format ?? null,
                         ...auditStamp(editedBy),
                     } as InImage;
                     await this.imagesDB.insertOne(image);

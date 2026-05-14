@@ -85,6 +85,7 @@ const AdminSettingsPublishing: React.FC = () => {
             emptyState={{
                 testId: 'publishing-empty-state',
                 title: t('No snapshots yet — use the Publish button in App building to create one.'),
+                art: 'generic',
             }}
         />
     );

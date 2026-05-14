@@ -9,6 +9,7 @@ import {useRefreshView} from "@client/lib/refreshBus";
 import ConflictDialog from "@client/lib/ConflictDialog";
 import {useViewModel} from "@client/lib/state/observable";
 import AdminCrudListModule from "@admin/modules/shapes/AdminCrudListModule";
+import {onboardingCta} from "@admin/lib/EmptyState";
 import {PostsViewModel} from "./PostsViewModel";
 
 interface Props {
@@ -151,11 +152,13 @@ const PostsSimplifiedView: React.FC<Props> = ({headerExtra, extraColumns, render
                     testId: `posts-${mode}-empty-state`,
                     title: t('empty.posts.title'),
                     description: t('empty.posts.description'),
+                    art: 'posts',
                     primary: {
                         label: t('empty.posts.primary'),
                         onClick: () => vm.openCreate(),
                         testId: 'posts-empty-primary-btn',
                     },
+                    secondary: onboardingCta(t('empty.posts.secondary'), 'posts-empty-secondary-btn'),
                 }}
             />
             {renderDrawer ? renderDrawer(vm) : (
