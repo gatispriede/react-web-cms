@@ -20,7 +20,27 @@ Once every admin pane is module-composed, operators can re-arrange admin dashboa
 
 The page-section editor (`/admin/build`) is **explicitly out of scope** for this refactor. It IS the meta-editor — the surface where operators drag-reorder, add, remove, and edit the very modules every other page composes from. Trying to module-compose `/admin/build` itself is infinite regress (you'd need a build-page-for-the-build-page editor). The editor canvas + module library sidebar + drag/drop wiring stay hand-coded.
 
-Everything else in admin is fair game.
+Everything else in admin is fair game — **except the surfaces listed below where module-composition doesn't fit.**
+
+## Other admin areas explicitly out of scope
+
+Operator decision 2026-05-13: "leave parts that don't make sense being modules in admin alone." The following stay hand-coded for the reasons listed; the rest of the admin surface is in scope.
+
+| Area | Path / feature dir | Why exempt |
+| --- | --- | --- |
+| **Page-section editor** | `/admin/build` + `ui/admin/features/Pages/*` | Meta-editor for every other page; infinite regress if module-composed. |
+| **Navigation tree editor** | `ui/admin/features/Navigation/Layout.tsx` | Tightly coupled to the page-section editor (sets parent / slug / nav-order on pages). Same meta-editor reason as `/admin/build`. |
+| **Admin shell + chrome** | `ui/admin/shell/*` (AdminApp, top bar, sider, drawer, command palette, presence bar, inline-edit overlay) | The shell hosts every other admin pane. Can't be composed of modules that the shell itself renders — chicken-and-egg. |
+| **Admin sign-in** | `pages/admin/signin.tsx` | Auth surface; rendered outside the SessionProvider tree, can't safely depend on shell state. Same reason `/account/signin` is being module-composed *carefully* on the customer side — admin signs in on a stricter path. |
+| **Admin Translations editor** | `ui/admin/features/Translations/*`, `ui/admin/features/Languages/Languages.tsx` | The translation editor's whole UX is "edit JSON live + flip languages via sidebar." Suspense-driven loader, fixed-language `getFixedT` resolution, conflict-dialog flow — the surface is bespoke enough that an `AdminFormModule` shape wouldn't fit. |
+| **MCP agent stream** | `ui/admin/features/Agent/AgentPanel.tsx` | SSE event stream + token-by-token diff reconciliation + streaming tool-call surface. Real-time wire protocol; doesn't fit any of the 7 candidate module shapes. |
+| **Conflict dialog** | `ui/client/lib/ConflictDialog.tsx` + per-feature inlines | Modal that mediates optimistic-locking version conflicts; reads peer-version + offers take-mine / take-theirs / merge. Composed inline by mutations across many panes — refactoring is a centralisation jump but not a module-compose jump per se. |
+| **Inline-edit overlay** | `ui/admin/shell/InlineEdit/*` | Renders editable highlight pills over the public site when admin is signed in. Lives in the shell layer (per `_app.tsx`); not a pane. |
+| **Modal dialogs (AddNewSectionItem, etc.)** | `ui/admin/features/Dialogs/*` | Imperative dialogs invoked from across the admin; not page-level surfaces. |
+| **Diagnostics live probes** | `/admin/system/info` HEAD-probes block in `ui/admin/features/Diagnostics/*` | The "route registry HEAD-probes" subsection fans out N parallel HEAD requests per render. Wrappable as an `AdminInfoModule` only if the probe-fanout state is hoisted to a VM — and that VM doesn't compose; it IS the surface. |
+| **Things-to-do panel** | `ui/admin/features/ThingsToDo/*` | Heuristic-driven action feed that reads from every other service; the dispatch logic IS the panel. No clean module-shape fit. |
+
+These 10 surfaces remain hand-coded. Every other admin feature dir is in scope — same patterns the spec already lists (CRUD lists, single-doc forms, info surfaces, action panels, wizards, previews).
 
 ## Existing admin surface
 
