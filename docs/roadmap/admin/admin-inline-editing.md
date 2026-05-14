@@ -6,6 +6,28 @@ research: see research-findings-2026-05-12.md §1 Inline / contextual editing
 
 # Click-to-edit overlay on admin preview
 
+## Status — SHIPPED 2026-05-14
+
+The `data-edit-target` round-trip is closed. **As-built diverges from the original spec in one structural way:** there is no preview *iframe*. The admin build view (`/admin/build`) renders the public page **in-place** in the same document as the admin shell, so the cross-document `postMessage` bridge the spec describes (`inlinePreviewClickBridge.ts`, `targetOrigin` checks, `?__preview=1` handshake) is unnecessary — `useInlineEdit` attaches document-level capture listeners directly. The contract itself (the `data-edit-target` attribute string, parse/format, dispatch-by-collection) landed as designed.
+
+**What already existed (prior passes):**
+- `shared/types/InlineEdit.ts` — the `<collection>/<id>/<field>` wire contract + `formatInlineEditTarget` / `parseInlineEditTarget`.
+- `ui/client/lib/inlineEditAttr.ts` — the `inlineEditAttr(admin, id, field, collection)` helper; **already called across all ~24 public modules** (Hero, Manifesto, Gallery, Timeline, Stats, Testimonials, ProjectGrid, Services, SocialLinks, RichText, PlainText, BlogFeed, …) and `SectionContent.tsx` emits `data-edit-section` on every section root.
+- `ui/admin/shell/InlineEdit/` — the overlay scaffolding: `useInlineEdit` (hover + click capture listeners), `InlineEditHighlight` (outline + field pill), `InlineEditDrawer` (in-place quick-edit textarea), `InlineEditOverlay` (mounted once in `AdminApp`, persists module text via `SectionApi.addRemoveSectionItem`), `editTargetRoute.ts` (the **pure** resolver — `resolveEditTarget` / `buildFocusQuery` / `dispatchLabel`).
+
+**The gap this jump closed — the round-trip was open:** `InlineEditOverlay` imported `resolveEditTarget` + `dispatchLabel` but **never called them**. Every click — whatever the collection — just opened the drawer; `pages` / `posts` / `products` clicks did nothing useful (the drawer's own `handleSave` throws "not wired yet" for non-`modules`). What landed:
+1. **`ui/admin/shell/InlineEdit/editTargetNavigate.ts` (new)** — the impure navigation half. `navigateToEditTarget(target)` resolves + (for `kind:'route'`) `window.location.assign`s the deep-link; `navigateToFullEditor(target)` is the drawer's escape-hatch navigation. Kept separate so `editTargetRoute.ts` stays DOM-free + unit-testable.
+2. **`InlineEditOverlay`** now dispatches on click: a `useEffect` watching `active` resolves the target — `modules`/`sections` leave the drawer to open in-place; `pages`/`posts`/`products` fire `navigateToEditTarget` (deep-link to `/admin/build` / `/admin/content/posts` / `/admin/content/products` with `?focus=<field>` + `?editId=<id>` threaded) and `clearActive()` so the drawer never flashes. A toast (`notifyInfo`) announces the navigation.
+3. **`editTargetRoute.ts`** — `modules`/`sections` dispatch now carries a `fullEditorHref` (build view + `?editId`/`?focus`) instead of bare `{kind:'drawer'}`, so compound fields the textarea can't handle (image/link pickers, list reorder) have an escape hatch.
+4. **`InlineEditDrawer`** — new `onOpenFullEditor` prop renders an **"Open full editor"** link-button (`data-testid="inline-edit-drawer-open-full-editor-button"`) in the footer, shown only when the resolved dispatch has a `fullEditorHref`.
+5. i18n — `Open full editor` / `Opening {{label}}…` added to `en.json` + `lv.json`.
+
+**Deferred (per-feature follow-ups, all under `ui/admin/features/*` — owned by other agents):** the destination panes consuming `?focus=` / `?editId=` to scroll + focus the matching input on mount. The round-trip is closed **up to the route boundary** — the click now lands the operator on the right pane with the field hints in the URL; each pane wiring `useEffect` on `router.query.focus` is mechanical and pane-local. Also deferred: drawer-side persistence for non-`modules` collections (`handleSave` still throws "not wired yet" for `pages`/`posts`/`products` — those collections route to their full editor instead, which is the correct surface for them anyway).
+
+**MCP coverage:** N/A — this item adds no new editable *field*; it is a navigation/dispatch layer over content surfaces that already have MCP write paths (`section.update` / `module.*` / `post.upsert` / `product.update`). Exempt per universal-requirement #2 (no new editable surface).
+
+---
+
 ## Goal
 
 Adopt the **Sanity Presentation pattern**: the admin preview iframe shows the public site; clicking any rendered string / image / section in the preview jumps to the exact editor field for it.

@@ -18,12 +18,20 @@ import {getMongoConnection} from '@services/infra/mongoDBConnection';
 import {PUBLIC_IMAGE_PATH} from '@utils/imgPath';
 import {defineTool} from './_shared';
 import {loadUsageSources, scanImageUsage, UsageConnection} from '@services/features/Assets/ImageUsageService';
-import {optimizeImageBuffer} from '@services/features/Assets/imageOptimize';
+import {optimizeImageBuffer, type RatioLock} from '@services/features/Assets/imageOptimize';
 import {buildImageRecord} from '@services/infra/imageMetadata';
 
 const IMAGES_DIR = path.join(process.cwd(), 'ui/client/public/images');
 const NAME_RE = /[^a-zA-Z0-9._-]+/g;
 const ALLOWED_EXT = /\.(jpe?g|png|gif|webp|svg|avif|bmp)$/i;
+
+// Mirror the ratio set the admin bulk-upload modal + `/api/upload-batch`
+// accept. `free` (or omitted) keeps the upload uncropped; any other value
+// triggers the same sharp cover-crop the admin surface uses, so MCP — the
+// canonical AI write path — has parity with the human bulk-upload flow.
+const RATIO_LOCKS: RatioLock[] = ['free', '1:1', '4:3', '3:2', '16:9'];
+const normaliseRatio = (raw: unknown): RatioLock =>
+    (typeof raw === 'string' && (RATIO_LOCKS as string[]).includes(raw)) ? raw as RatioLock : 'free';
 
 function sanitiseFilename(name: string): string {
     const base = path.basename(name).replace(/\s+/g, '_').replace(NAME_RE, '');
@@ -74,7 +82,7 @@ export const imageList: McpTool = defineTool({
 export const imageUpload: McpTool = defineTool({
     // SAFE: not a GraphQL mutation — direct service write
     name: 'image.upload',
-    description: 'Upload an image from a base64 payload. Filename is sanitised; only standard image extensions allowed. The bytes run through the same optimise pipeline as the admin upload form — resize to a 1920px long edge, recompress, strip EXIF — and the persisted record carries width/height/sizeBytes/format. Corrupt payloads are rejected. Returns the public location + optimised size.',
+    description: 'Upload an image from a base64 payload. Filename is sanitised; only standard image extensions allowed. The bytes run through the same optimise pipeline as the admin upload form — resize to a 1920px long edge, recompress, strip EXIF — and the persisted record carries width/height/sizeBytes/format. Pass `ratio` (one of free/1:1/4:3/3:2/16:9) to cover-crop the image to that aspect ratio on ingest, matching the admin bulk-upload modal. Corrupt payloads are rejected. Returns the public location + optimised size.',
     scopes: ['write:content'],
     idempotent: true,
     rateLimit: {maxPerMinute: 20},
@@ -86,6 +94,7 @@ export const imageUpload: McpTool = defineTool({
             contentBase64: {type: 'string', minLength: 1},
             contentType: {type: 'string'},
             tags: {type: 'array', items: {type: 'string'}},
+            ratio: {type: 'string', enum: ['free', '1:1', '4:3', '3:2', '16:9'], description: 'Aspect-ratio lock — cover-crops the image to this ratio on ingest. Omit or pass "free" to keep the original framing.'},
             idempotencyKey: {type: 'string'},
         },
     },
@@ -98,11 +107,14 @@ export const imageUpload: McpTool = defineTool({
         return {ok: false, error: 'image already exists', filename};
     }
     const buf = Buffer.from(String(args.contentBase64), 'base64');
+    const ratio = normaliseRatio(args.ratio);
     // Run the shared optimise pipeline before writing — MCP is the canonical
     // write path, so an LLM-uploaded image gets the same resize/recompress/
-    // EXIF-strip treatment as one dropped through the admin form. Corrupt
+    // EXIF-strip treatment as one dropped through the admin form. When a
+    // `ratio` is passed the same sharp cover-crop the bulk-upload modal uses
+    // runs here too — MCP/admin parity for the aspect-ratio control. Corrupt
     // bytes (`readable: false`) are rejected; SVG/GIF pass through untouched.
-    const opt = await optimizeImageBuffer(buf);
+    const opt = await optimizeImageBuffer(buf, ratio !== 'free' ? {ratio} : {});
     if (!opt.readable) {
         return {ok: false, error: 'unrecognised or corrupt image file', filename};
     }
@@ -134,6 +146,7 @@ export const imageUpload: McpTool = defineTool({
         width: opt.width,
         height: opt.height,
         optimised: opt.optimised,
+        ratio,
     };
 });
 

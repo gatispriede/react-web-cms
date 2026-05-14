@@ -9,6 +9,7 @@ import {IUser} from '@interfaces/IUser';
 import {PermissionsViewModel} from './PermissionsViewModel';
 import {ROLE_PRESETS} from './rolePresets';
 import {SCOPE_ORDER, TIER_ORDER, Tier, ScopeKey} from './tierMapping';
+import GrantGrid from './GrantGrid';
 
 /**
  * Simplified Permissions pane — tier grid + role preset picker.
@@ -183,6 +184,13 @@ const PermissionsSimplifiedView: React.FC<Props> = ({
                             ))}
                         </tbody>
                     </table>
+
+                    {/* Grant-grid — feature/page/locale dimension grants.
+                        The richer UX per `admin-permissions-ux.md`: a
+                        toggle grid + per-resource overlays, replacing the
+                        Users pane's three flat multi-selects. Persists
+                        per-cell-immediate (no separate save step). */}
+                    <GrantGrid vm={vm}/>
 
                     {renderEditorExtra?.(vm)}
                 </Modal>

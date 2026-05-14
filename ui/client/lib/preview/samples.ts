@@ -86,6 +86,9 @@ export const sampleContent: Record<string, PreviewSample[]> = {
             label: 'full',
             content: s({
                 aspectRatio: '4:3',
+                // `showCaptions` on: every tile's `alt` renders as the primary
+                // caption line, `text` as the optional secondary line.
+                showCaptions: true,
                 items: [
                     {src: 'preview:cosmos1080p', alt: 'Cosmos', text: 'First light, 2024', href: '#work/cosmos', textPosition: 'bottom'},
                     {src: 'preview:nanocyte1080p', alt: 'Nanocyte', text: 'Microstructure', href: '', textPosition: 'bottom'},

@@ -34,6 +34,13 @@ export interface IGallery {
     items: IGalleryItem[];
     disablePreview: boolean;
     aspectRatio?: GalleryAspectRatio;
+    /**
+     * When `true` (the default), captions render the item's `alt` text as the
+     * primary label with `text` as an optional secondary line. When `false`,
+     * only the explicit `text` shows — the legacy behaviour. Lets operators
+     * opt out of alt-as-caption for galleries where alt is purely a11y noise.
+     */
+    showCaptions?: boolean;
 }
 
 export enum EGalleryStyle {
