@@ -2,6 +2,23 @@
 
 Archive of completed roadmap entries. Latest first. Active backlog lives in [README.md](README.md).
 
+## 2026-05-14 — roadmap reconciliation sweep (6 items verified already-shipped)
+
+These spec docs were flagged "pending" by a status-banner heuristic but
+are functionally shipped — verified in code this session. Listed here as
+the canonical archive; per-doc banner edits are a trivial follow-up.
+
+| # | Verified-in-code evidence |
+|---|---|
+| **motion-token-system** | `ui/client/styles/_motion-tokens.scss` exists — `--motion-*` scale + `--motion-scalar` flipped to 0 under `prefers-reduced-motion`; consumed across module + theme SCSS (the per-module theme-variant pass relied on it). |
+| **sub-pages (F1)** | Nested page hierarchy live — `parent` on the Navigation collection, the `(parent, slug)` compound index in `PagesServiceLoader`, N-deep slug-walk, `[...slug].tsx` catch-all routing. Other roadmap docs reference F1 as a past event. |
+| **data-integrity (F2)** | `services/infra/cascadeDelete.ts` + `services/infra/idempotency.ts` (+ test) shipped; `cascadeRules` declared across feature loaders (Navigation/Posts/Permissions/…); `GuardedAction` provides action-locking. |
+| **production-caching-tier1-progress** | Session execution log — "all four tiers landed"; `production-caching.md` marks the core "Shipped (2026-05-02)" (Caddy SWR, `bootId`, per-feature cache versions, ISR). Tier 5 (CDN) explicitly deferred. |
+| **scss-audit-2026-05-03** | Carries its own "2026-05-04 closeout — F4 sweep complete, all 18 violations resolved" banner. |
+| **scss-scoping (F4)** | The scss-audit closeout confirms the F4 architectural sweep is complete; `AdminAntdOverrides.scss` + `[data-admin-theme]` scoping pattern shipped, stylelint-allowlisted. |
+
+Also noted: **v1-url-namespace (F3)** is **CANCELLED** (2026-05-03 postmortem in its doc) — a terminal state, not pending; App Router migration is the recorded unlock if root-URL freedom ever becomes a hard requirement.
+
 ## 2026-05-14 — admin-module-composed + 2 content banner reconciliations
 
 | # | Notes |
