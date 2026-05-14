@@ -2,9 +2,23 @@
 name: multi-currency-and-tax
 description: Multi-currency pricing on IProduct + per-locale display + Stripe Tax + VAT regime resolution per buyer/seller jurisdiction. Closes the "no multi-currency in v1" note in IProduct.ts.
 research: see _meta/research-findings-2026-05-12.md §3 (EU VAT specifics — margin scheme, cross-border).
+status: shipped 2026-05-14
 ---
 
 # Multi-currency + tax calculation
+
+> **SHIPPED 2026-05-14.** See `docs/roadmap/shipped.md` (W8g). The backend
+> tax/FX/VIES/Stripe-Tax services + the `IProduct` multi-currency schema +
+> the `CurrencySwitcher` shipped in earlier passes; this pass closed the
+> remaining gaps: `ProductService.save` now **persists** `prices` /
+> `baseCurrency` / `tax` (it previously only synthesised them on read),
+> the storefront price-rendering path is **locale-driven display-currency
+> aware** via the new `@utils/displayCurrency` helper + `ProductPrice`
+> component, and the products MCP tool accepts the multi-currency/tax
+> config for parity. The **Stripe Tax call stays env-gated + stubbed**
+> (`STRIPE_TAX_ENABLED` + `sk_(test|live)_` key required; absent →
+> `isAvailable()` false → callers fall back to the internal
+> `VatRegimeService`). Sections below are kept as the original spec.
 
 ## Goal
 

@@ -24,7 +24,7 @@ Operator-grade admin polish. Foundational items (motion tokens / Sonner) sit at 
 | [admin-info-page.md](admin-info-page.md) | Parked / superseded by Diagnostics pane (already shipped) |
 | [admin-menu-icons.md](admin-menu-icons.md) | Parked |
 | [admin-modules-preview-page.md](admin-modules-preview-page.md) | Parked — overlaps with inline-editing |
-| [picker-improvements.md](picker-improvements.md) | Parked |
+| ~~[picker-improvements.md](picker-improvements.md)~~ | **Shipped 2026-05-14** — per-tile info drawer + persistent preview box + sort/filter URL round-trip. See [shipped.md](../shipped.md) |
 | [drag-drop-images-modules.md](drag-drop-images-modules.md) | Parked — folds into mobile-friendly admin's dnd-kit migration |
 
 Cross-references:

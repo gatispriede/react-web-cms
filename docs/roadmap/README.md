@@ -339,7 +339,7 @@ W8e. **Backup + disaster recovery** — [platform/backup-and-disaster-recovery.m
 
 W8f. **Customer notification preferences** — [storefront/customer-notification-preferences.md](storefront/customer-notification-preferences.md). **L · ~6-7h AI.** Per-category opt-in/out, in-app inbox via Presence, quiet hours, digest cadence, RFC 8058 unsubscribe integration. Pairs with W8c.
 
-W8g. **Multi-currency + tax** — [storefront/multi-currency-and-tax.md](storefront/multi-currency-and-tax.md). **L · ~6-8h AI.** Multi-currency `IProduct.prices`, daily ECB FX, VAT regime resolver, Stripe Tax + VIES B2B validation. Closes the "no multi-currency in v1" note.
+W8g. ~~**Multi-currency + tax**~~ — ~~[storefront/multi-currency-and-tax.md](storefront/multi-currency-and-tax.md)~~. **L · ~6-8h AI. Shipped 2026-05-14** — multi-currency `IProduct.prices` (now **persisted** by `ProductService.save`, not just read-synthesised) + `baseCurrency` + `tax` hint; locale-driven display currency via `@utils/displayCurrency` (`resolveDisplayCurrency` / `pickPrice`) wired through the storefront `ProductPrice` renderer + `formatDisplayMoney`; ECB FX / `VatRegimeService` / VIES / Stripe-Tax services shipped earlier (Stripe Tax env-gated + soft-fails to the internal resolver); products MCP tool extended with `prices`/`baseCurrency`/`tax`. See [shipped.md](shipped.md).
 
 W8h. **SEO program** — [storefront/seo-program.md](storefront/seo-program.md). **L · ~6-8h AI.** robots.txt env-gating, dynamic sitemap with per-feature contributors, OG image generator, canonical + hreflang, schema.org injection, redirect map, meta pre-flight. Required for ss.com listings to be discoverable.
 
