@@ -1,15 +1,20 @@
 /**
- * all-pages-module-composed (Account batch) — register the 4 customer
- * `/account/*` list/detail system pages on the `SystemPageRegistry`.
+ * all-pages-module-composed (Account + Auth batches) — register the
+ * customer `/account/*` system pages on the `SystemPageRegistry`.
  *
+ * Account batch (customer-session gated):
  *   1. account-orders        `/account/orders`
  *   2. account-order-detail  `/account/orders/[id]`
  *   3. account-addresses     `/account/addresses`
  *   4. account-inbox         `/account/inbox`
  *
+ * Auth batch (open — these are the surfaces you sign in *through*):
+ *   5. account-signin        `/account/signin`
+ *   6. account-signup        `/account/signup`
+ *   7. account-magic-link    `/account/magic-link`
+ *
  * Each default layout is a single locked section holding the matching
- * smart-wrapper module (`OrdersList` / `OrderDetail` / `AddressList` /
- * `NotificationInbox` from `ui/client/modules/_AccountPageModules/`).
+ * smart-wrapper module from `ui/client/modules/_AccountPageModules/`.
  * Operators can compose marketing / help modules around the locked
  * section but cannot remove the transactional block.
  *
@@ -74,5 +79,38 @@ systemPageRegistry.register({
     seo: {indexable: false},
     defaultSections: () => [
         lockedSection(EItemType.NotificationInbox, 'section.locked.account-inbox'),
+    ],
+});
+
+systemPageRegistry.register({
+    systemKey: 'account-signin',
+    slug: '/account/signin',
+    titleI18nKey: 'account.signin.title',
+    accessGate: 'open',
+    seo: {indexable: false},
+    defaultSections: () => [
+        lockedSection(EItemType.SigninForm, 'section.locked.account-signin'),
+    ],
+});
+
+systemPageRegistry.register({
+    systemKey: 'account-signup',
+    slug: '/account/signup',
+    titleI18nKey: 'account.signup.title',
+    accessGate: 'open',
+    seo: {indexable: false},
+    defaultSections: () => [
+        lockedSection(EItemType.SignupForm, 'section.locked.account-signup'),
+    ],
+});
+
+systemPageRegistry.register({
+    systemKey: 'account-magic-link',
+    slug: '/account/magic-link',
+    titleI18nKey: 'account.magicLink.title',
+    accessGate: 'open',
+    seo: {indexable: false},
+    defaultSections: () => [
+        lockedSection(EItemType.MagicLinkRequestForm, 'section.locked.account-magic-link'),
     ],
 });

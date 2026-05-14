@@ -93,3 +93,62 @@ export const NotificationInboxEditor: React.FC<IInputContent> = (props) => {
         </div>
     );
 };
+
+// ── Auth batch ───────────────────────────────────────────────────────
+
+interface SigninFormContent {
+    headline?: string;
+    submitLabel?: string;
+    forgotHref?: string;
+    signupHref?: string;
+}
+interface SignupFormContent {
+    headline?: string;
+    submitLabel?: string;
+    signinHref?: string;
+}
+interface MagicLinkRequestContent {
+    headline?: string;
+    body?: string;
+    placeholder?: string;
+    submitLabel?: string;
+    successHeadline?: string;
+    successBody?: string;
+}
+
+export const SigninFormEditor: React.FC<IInputContent> = (props) => {
+    const [d, patch] = useTypedContent<SigninFormContent>(props);
+    return (
+        <div className="account-editor account-editor--signin-form" data-testid="editor-signin-form">
+            <Field label="Headline" testid="signin-form-headline" value={d.headline ?? ''} onChange={v => patch({headline: v})} placeholder="Sign in"/>
+            <Field label="Submit button label" testid="signin-form-submit" value={d.submitLabel ?? ''} onChange={v => patch({submitLabel: v})} placeholder="Sign in"/>
+            <Field label="Forgot-password link target (optional)" testid="signin-form-forgot" value={d.forgotHref ?? ''} onChange={v => patch({forgotHref: v})}/>
+            <Field label="Sign-up link target (optional)" testid="signin-form-signup" value={d.signupHref ?? ''} onChange={v => patch({signupHref: v})} placeholder="/account/signup"/>
+        </div>
+    );
+};
+
+export const SignupFormEditor: React.FC<IInputContent> = (props) => {
+    const [d, patch] = useTypedContent<SignupFormContent>(props);
+    return (
+        <div className="account-editor account-editor--signup-form" data-testid="editor-signup-form">
+            <Field label="Headline" testid="signup-form-headline" value={d.headline ?? ''} onChange={v => patch({headline: v})} placeholder="Create your account"/>
+            <Field label="Submit button label" testid="signup-form-submit" value={d.submitLabel ?? ''} onChange={v => patch({submitLabel: v})} placeholder="Create account"/>
+            <Field label="Sign-in link target (optional)" testid="signup-form-signin" value={d.signinHref ?? ''} onChange={v => patch({signinHref: v})} placeholder="/account/signin"/>
+        </div>
+    );
+};
+
+export const MagicLinkRequestFormEditor: React.FC<IInputContent> = (props) => {
+    const [d, patch] = useTypedContent<MagicLinkRequestContent>(props);
+    return (
+        <div className="account-editor account-editor--magic-link-request" data-testid="editor-magic-link-request">
+            <Field label="Headline" testid="magic-link-headline" value={d.headline ?? ''} onChange={v => patch({headline: v})} placeholder="Sign in with a magic link"/>
+            <Field label="Body copy" testid="magic-link-body" value={d.body ?? ''} onChange={v => patch({body: v})} placeholder="We'll email you a one-click sign-in link."/>
+            <Field label="Email field placeholder" testid="magic-link-placeholder" value={d.placeholder ?? ''} onChange={v => patch({placeholder: v})} placeholder="you@example.com"/>
+            <Field label="Submit button label" testid="magic-link-submit" value={d.submitLabel ?? ''} onChange={v => patch({submitLabel: v})} placeholder="Email me a link"/>
+            <Field label="Success headline" testid="magic-link-success-headline" value={d.successHeadline ?? ''} onChange={v => patch({successHeadline: v})} placeholder="Check your inbox"/>
+            <Field label="Success body" testid="magic-link-success-body" value={d.successBody ?? ''} onChange={v => patch({successBody: v})}/>
+        </div>
+    );
+};

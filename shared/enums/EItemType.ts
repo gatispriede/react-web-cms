@@ -100,6 +100,14 @@ export enum EItemType {
     OrderDetail = "ORDER_DETAIL",
     AddressList = "ADDRESS_LIST",
     NotificationInbox = "NOTIFICATION_INBOX",
+    // all-pages-module-composed — Auth batch. Smart-wrapper modules for
+    // the `/account/signin` `/account/signup` `/account/magic-link`
+    // routes — bind the pure SigninForm / SignupForm /
+    // MagicLinkRequestForm modules to NextAuth + the customer GraphQL
+    // surface, reading provider config from `/api/site/auth-flags`.
+    SigninForm = "SIGNIN_FORM",
+    SignupForm = "SIGNUP_FORM",
+    MagicLinkRequestForm = "MAGIC_LINK_REQUEST_FORM",
     Empty = 'EMPTY',
 }
 export default EItemType

@@ -80,6 +80,12 @@ import {
     AddressListHost,
     NotificationInboxHost,
 } from '@client/modules/_AccountPageModules/wrappers';
+// all-pages-module-composed — Auth batch smart wrappers.
+import {
+    SigninFormHost,
+    SignupFormHost,
+    MagicLinkRequestFormHost,
+} from '@client/modules/_AccountPageModules/authWrappers';
 
 export const CLIENT_ITEM_TYPES: readonly ClientItemType[] = [
     {key: EItemType.Text, Display: PlainText},
@@ -144,4 +150,8 @@ export const CLIENT_ITEM_TYPES: readonly ClientItemType[] = [
     {key: EItemType.OrderDetail, Display: OrderDetailHost as never},
     {key: EItemType.AddressList, Display: AddressListHost as never},
     {key: EItemType.NotificationInbox, Display: NotificationInboxHost as never},
+    // all-pages-module-composed — Auth batch.
+    {key: EItemType.SigninForm, Display: SigninFormHost as never},
+    {key: EItemType.SignupForm, Display: SignupFormHost as never},
+    {key: EItemType.MagicLinkRequestForm, Display: MagicLinkRequestFormHost as never},
 ];
