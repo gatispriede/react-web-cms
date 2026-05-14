@@ -298,7 +298,7 @@ W5.5b. **Customer-account modules** — `AccountDashboardGrid` · `OrderProgress
 
 ### Wave 6 — Storefront enabler
 
-W6a. **Receipt + transactional emails** — [storefront-receipt-emails.md](storefront/storefront-receipt-emails.md). **M · ~3h AI.** Email templates as a product surface. Land before signup so magic-link + receipt flow has its templates ready.
+W6a. ~~**Receipt + transactional emails**~~ — [storefront-receipt-emails.md](storefront/storefront-receipt-emails.md). **M · ~3h AI. Shipped 2026-05-14** — all 9 spec templates exist, registered as a product surface, MCP tool + admin preview pane shipped. See [shipped.md](shipped.md).
 
 W6b. ~~**Faceted filter system**~~ — [storefront-faceted-filter-system.md](storefront/storefront-faceted-filter-system.md). **L · ~6-8h AI. Shipped 2026-05-14** — filter-state lib + chip/facet UI + `/products` wired as reference consumer. `/cars` URL-sync + server `$facet` aggregation + saved-search backend/worker/MCP + mobile drawer deferred to follow-ups. See [shipped.md](shipped.md).
 
