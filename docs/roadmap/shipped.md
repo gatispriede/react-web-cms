@@ -2,6 +2,12 @@
 
 Archive of completed roadmap entries. Latest first. Active backlog lives in [README.md](README.md).
 
+## 2026-05-14 — F6 site-mode toggle (scroll vs multipage)
+
+| # | Notes |
+|---|---|
+| **F6 site-mode toggle** | Per-site render-mode switch shipped as `siteFlags.layoutMode: 'tabs' \| 'scroll' \| 'auto'` (the spec's working name `siteMode` / `'multipage'` was superseded — `'tabs'` ≡ spec `'multipage'`; the codebase already carried `layoutMode` with identical semantics, so the implementation extended it rather than introducing a duplicate flag). Full chunk, one deliverable: flag definition + default (`'tabs'`) + read path (`SiteFlagsService.get/save` + `resolveLayoutMode()` resolving `'auto'`→`'tabs'`), public-site render branch (`ui/client/pages/app.tsx` — scroll mode stacks every page as `<section id>`, tabs mode keeps F1 per-page routing; `[...slug].tsx` hard-redirects deep paths to `/#anchor` in scroll mode), nav/footer mode-aware rendering (`MainMenu`, `SiteFooter` rewrites page URLs to `#anchor`, `ScrollNav` with IntersectionObserver smooth-scroll), anchor registry (`services/features/Anchors/AnchorRegistry.ts` — `siteMode`-aware href shapes), admin control (`ui/admin/features/Navigation/Layout.tsx` three-card Radio.Group + `LayoutViewModel.setMode`, `data-testid` on every card/radio), MCP coverage (`site.setLayoutMode` tool — dedicated tool rather than overloading `site.setFeatureFlag`, which targets boot-time feature manifests; `anchors.*` tools accept `siteMode` for href-shape parity), runbook ([docs/runbooks/site-mode-switch.md](../runbooks/site-mode-switch.md)), architecture doc ([docs/architecture/site-flags.md](../architecture/site-flags.md)). All four spec "Open questions" resolved as recommended: default `auto`→`tabs` (no page-count/footer heuristic), sub-pages flatten to top-level sections in scroll mode. Spec doc [platform/site-mode-toggle.md](platform/site-mode-toggle.md) marked shipped + amended with the naming reconciliation. |
+
 ## 2026-05-08 — Terraform/Kamal funisimo migration + admin polish + image hygiene
 
 | # | Notes |
