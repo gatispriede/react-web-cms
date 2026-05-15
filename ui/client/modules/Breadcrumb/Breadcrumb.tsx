@@ -20,7 +20,13 @@ import React from 'react';
 import type {IBreadcrumb, IBreadcrumbCrumb} from './Breadcrumb.types';
 
 export interface BreadcrumbProps {
-    content: IBreadcrumb | string;
+    /** Direct content (free-standing module use). */
+    content?: IBreadcrumb | string;
+    /** SystemPageDispatch contract — `{item, t, tApp, admin}`. When
+     *  rendered by `<SystemPageDispatch>` the wrapper hands the whole
+     *  item; we read `item.content`. Both prop shapes are tolerated so
+     *  the module works in either mounting path. */
+    item?: {content?: IBreadcrumb | string};
     /** Resolved crumbs from the page context. Used when
      *  `autoFromParentChain` is true (the default). */
     crumbs?: IBreadcrumbCrumb[];
@@ -31,9 +37,15 @@ export interface BreadcrumbProps {
     origin?: string;
 }
 
-function parseContent(raw: string | IBreadcrumb): IBreadcrumb {
+const DEFAULT_BREADCRUMB: IBreadcrumb = {autoFromParentChain: true};
+
+function parseContent(raw: string | IBreadcrumb | undefined | null): IBreadcrumb {
+    if (raw == null || raw === '') return DEFAULT_BREADCRUMB;
     if (typeof raw === 'string') {
-        try { return JSON.parse(raw) as IBreadcrumb; } catch { return {autoFromParentChain: true}; }
+        try {
+            const parsed = JSON.parse(raw);
+            return (parsed && typeof parsed === 'object') ? (parsed as IBreadcrumb) : DEFAULT_BREADCRUMB;
+        } catch { return DEFAULT_BREADCRUMB; }
     }
     return raw;
 }
@@ -57,8 +69,8 @@ function buildJsonLd(crumbs: IBreadcrumbCrumb[], origin: string): string {
     return JSON.stringify(ld);
 }
 
-const Breadcrumb: React.FC<BreadcrumbProps> = ({content, crumbs: injected, origin = ''}) => {
-    const c = parseContent(content);
+const Breadcrumb: React.FC<BreadcrumbProps> = ({content, item, crumbs: injected, origin = ''}) => {
+    const c = parseContent(content ?? item?.content);
     const auto = c.autoFromParentChain !== false;
     const crumbs = auto ? (injected ?? []) : (c.crumbs ?? []);
     const sep = c.separator ?? '›';
