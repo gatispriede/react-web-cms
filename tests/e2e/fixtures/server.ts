@@ -173,7 +173,10 @@ export async function startServer(opts: {mongoUri: string; workerIndex: number})
     }
 
     try {
-        await waitForReady(url);
+        // Match the auth-fixture's 240 s setup budget. Next dev's cold
+        // compile on this codebase routinely takes 130–180 s on Windows;
+        // the previous 120 s default tripped before compile finished.
+        await waitForReady(url, 240_000);
     } catch (err) {
         try { child.kill('SIGKILL'); } catch {/* noop */}
         throw err;
