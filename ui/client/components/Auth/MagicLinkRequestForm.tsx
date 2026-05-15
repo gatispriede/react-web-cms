@@ -1,4 +1,5 @@
 import React, {useState} from 'react';
+import {Alert, Button, Form, Input, Result} from 'antd';
 
 /**
  * Reusable magic-link request form. Extracted from the original
@@ -10,17 +11,17 @@ import React, {useState} from 'react';
  * single-use token, emails it, and the link returns to
  * `/account/verify?token=...` which calls `signIn('customer-magic')`.
  *
- * The form is intentionally minimal — no AntD or theme deps so the
- * component is bundle-safe to include on any storefront page.
+ * 2026-05-15: re-skinned with AntD so the form picks up the
+ * storefront theme (was raw HTML elements; rendered as bare
+ * unstyled inputs inside `/account/signin`).
  */
 export const MagicLinkRequestForm: React.FC<{returnTo?: string; autoFocus?: boolean}> = ({returnTo, autoFocus}) => {
-    const [email, setEmail] = useState('');
     const [submitting, setSubmitting] = useState(false);
-    const [sent, setSent] = useState(false);
+    const [sent, setSent] = useState<{email: string} | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [form] = Form.useForm<{email: string}>();
 
-    const onSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const onFinish = async ({email}: {email: string}) => {
         if (!email) return;
         setSubmitting(true);
         setError(null);
@@ -34,7 +35,7 @@ export const MagicLinkRequestForm: React.FC<{returnTo?: string; autoFocus?: bool
                 const data = await res.json().catch(() => ({}));
                 setError(data?.error ?? `Failed: ${res.status}`);
             } else {
-                setSent(true);
+                setSent({email});
             }
         } catch (err) {
             setError(String((err as Error).message || err));
@@ -45,31 +46,61 @@ export const MagicLinkRequestForm: React.FC<{returnTo?: string; autoFocus?: bool
 
     if (sent) {
         return (
-            <div className="magic-link-sent" data-testid="magic-link-sent">
-                Check your email — we sent a sign-in link to <strong>{email}</strong>.
-            </div>
+            <Result
+                status="success"
+                title="Check your email"
+                subTitle={<>We sent a sign-in link to <strong>{sent.email}</strong>.</>}
+                data-testid="magic-link-sent"
+                style={{padding: '12px 0'}}
+            />
         );
     }
 
     return (
-        <form onSubmit={onSubmit} className="magic-link-form" data-testid="magic-link-form">
-            <label>
-                Email
-                <input
+        <Form
+            form={form}
+            layout="vertical"
+            onFinish={onFinish}
+            data-testid="magic-link-form"
+            requiredMark={false}
+        >
+            <Form.Item
+                label="Email"
+                name="email"
+                rules={[
+                    {required: true, message: 'Email is required'},
+                    {type: 'email', message: 'Enter a valid email'},
+                ]}
+            >
+                <Input
                     type="email"
                     autoComplete="email"
                     autoFocus={autoFocus}
-                    required
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
+                    placeholder="you@example.com"
                     data-testid="magic-link-email-input"
+                    size="large"
                 />
-            </label>
-            {error ? <div role="alert" className="magic-link-error" data-testid="magic-link-error">{error}</div> : null}
-            <button type="submit" disabled={submitting} data-testid="magic-link-submit">
-                {submitting ? 'Sending…' : 'Email me a sign-in link'}
-            </button>
-        </form>
+            </Form.Item>
+            {error && (
+                <Alert
+                    type="error"
+                    showIcon
+                    message={error}
+                    style={{marginBottom: 12}}
+                    data-testid="magic-link-error"
+                />
+            )}
+            <Button
+                type="primary"
+                htmlType="submit"
+                block
+                size="large"
+                loading={submitting}
+                data-testid="magic-link-submit"
+            >
+                Email me a sign-in link
+            </Button>
+        </Form>
     );
 };
 

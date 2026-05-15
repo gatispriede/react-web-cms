@@ -163,6 +163,18 @@ const nextConfig = {
             destination: "/api/admin/manifest.json",
         },
     ],
+    // Next 16 introduced a per-middleware body-size cap (default 10 MB)
+    // that's independent of the per-route `bodyParser.sizeLimit`. The
+    // bundle import (`/api/import`) sends the entire serialised site —
+    // photos, CMS pages, themes — and routinely exceeds 10 MB on
+    // moderately-sized installs. Without this cap raised, the route
+    // handler sees a truncated body and the JSON parse rejects with
+    // "400 Invalid JSON". Key is `experimental.proxyClientMaxBodySize`
+    // (renamed from `middlewareClientMaxBodySize` in Next 16). Matches
+    // the route's 200 MB `api.bodyParser.sizeLimit` in import.ts.
+    experimental: {
+        proxyClientMaxBodySize: '200mb',
+    },
     // Locale JSON files are the runtime translation store — admin saves
     // rewrite them live, so browsers MUST fetch fresh every time. Without
     // this, the first reload after a save serves cached JSON and changes

@@ -2,7 +2,8 @@ import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {GetServerSideProps} from 'next';
 import Link from 'next/link';
 import {signIn} from 'next-auth/react';
-import {Alert, Button, Divider, Form, Input} from 'antd';
+import {Alert, Button, ConfigProvider, Divider, Form, Input} from 'antd';
+import staticTheme from '@client/features/Themes/themeConfig';
 import {GoogleOutlined, FacebookFilled, AppleFilled} from '@ant-design/icons';
 import {MagicLinkRequestForm} from '@client/components/Auth/MagicLinkRequestForm';
 import {getMongoConnection} from '@services/infra/mongoDBConnection';
@@ -131,6 +132,7 @@ const CustomerSignInPage = ({returnTo, providers}: PageProps) => {
     );
 
     return (
+        <ConfigProvider theme={staticTheme}>
         <div style={{minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: '#f5f5f5'}}>
             <div style={{width: '100%', maxWidth: 420, background: '#fff', padding: 24, borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.08)'}}>
                 <h2 style={{marginTop: 0, marginBottom: 16}}>Sign in</h2>
@@ -182,6 +184,7 @@ const CustomerSignInPage = ({returnTo, providers}: PageProps) => {
                 </div>
             </div>
         </div>
+        </ConfigProvider>
     );
 };
 
