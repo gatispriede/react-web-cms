@@ -22,6 +22,10 @@ async function signOutAdmin(): Promise<void> {
             headers: {'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json'},
             body: new URLSearchParams({csrfToken, callbackUrl: '/admin', json: 'true'}).toString(),
         });
+        // Hard-purge: also expire any stale `cms.admin-session` cookie at
+        // legacy paths (`/admin`, etc.) that NextAuth won't touch because
+        // it only clears the path defined in the current options.
+        await fetch(`${ADMIN_AUTH_BASE}/force-signout`, {method: 'POST', credentials: 'include'});
     } catch { /* best-effort; redirect below clears state visually */ }
     if (typeof window !== 'undefined') window.location.href = '/admin';
 }
