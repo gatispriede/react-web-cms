@@ -1,6 +1,5 @@
 import React, {useState} from 'react';
 import type {CarFinanceEstimatorProps, CarFinanceEstimatorSubmission} from './CarFinanceEstimator.types';
-import './CarFinanceEstimator.scss';
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 

@@ -1,7 +1,6 @@
 import React, {useCallback} from 'react';
 import EmptyStateBlock from '@client/lib/EmptyStateBlock';
 import type {SavedSearch, SavedSearchListProps} from './SavedSearchList.types';
-import './SavedSearchList.scss';
 
 const DEFAULT_EMPTY_TITLE = 'No saved searches';
 const EM_DASH = '—';

@@ -2,7 +2,7 @@
 import React from 'react';
 import type {IItem} from '@interfaces/IItem';
 import type {IMagicLinkAccountUpgrade} from './MagicLinkAccountUpgrade.types';
-import './MagicLinkAccountUpgrade.scss';
+
 export interface MagicLinkAccountUpgradeProps { item: IItem; guestEmail?: string; }
 function parseContent(raw: string|object|undefined): IMagicLinkAccountUpgrade {
     if (!raw) return {} as IMagicLinkAccountUpgrade;

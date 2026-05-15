@@ -1,6 +1,5 @@
 // Product module barrel.
 import Product from './Product';
-import './Product.scss';
 
 export default Product;
 export {ProductContent, EProductStyle} from './Product';

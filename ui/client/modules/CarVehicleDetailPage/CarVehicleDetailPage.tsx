@@ -5,7 +5,6 @@ import CarReservationCta from '@client/modules/CarReservationCta/CarReservationC
 import CarListingCard from '@client/modules/CarListingCard/CarListingCard';
 import VatBadge from '@client/components/VatBadge';
 import type {CarVehicleDetailPageProps} from './CarVehicleDetailPage.types';
-import './CarVehicleDetailPage.scss';
 
 const MAX_SIMILAR = 4;
 

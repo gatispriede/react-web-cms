@@ -6,7 +6,6 @@
  */
 import React from 'react';
 import type {IProductSpecTable} from './ProductSpecTable.types';
-import './ProductSpecTable.scss';
 
 export interface ProductSpecTableProps {
     content: IProductSpecTable | string;

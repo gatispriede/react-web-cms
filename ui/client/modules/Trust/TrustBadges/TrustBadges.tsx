@@ -2,7 +2,7 @@
 import React from 'react';
 import type {IItem} from '@interfaces/IItem';
 import type {ITrustBadges} from './TrustBadges.types';
-import './TrustBadges.scss';
+
 export interface TrustBadgesProps { item: IItem; }
 function parseContent(raw: string|object|undefined): ITrustBadges {
     if (!raw) return {} as ITrustBadges;

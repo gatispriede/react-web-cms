@@ -6,7 +6,6 @@ import {useCart} from '@client/features/Cart/useCart';
 import {useCheckoutMachine} from '@client/lib/checkout/useCheckoutMachine';
 import {OrderApi} from '@services/api/client/OrderApi';
 import type {ICheckoutAddressForm} from './CheckoutAddressForm.types';
-import './CheckoutAddressForm.scss';
 
 export interface CheckoutAddressFormProps { item: IItem; }
 

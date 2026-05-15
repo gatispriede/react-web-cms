@@ -1,6 +1,5 @@
 import React from 'react';
 import type {DayOfWeek, OpeningHoursDay, OpeningHoursProps} from './OpeningHours.types';
-import './OpeningHours.scss';
 
 const DAY_ORDER: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const DAY_INDEX: Record<DayOfWeek, number> = {Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6};

@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from 'react';
 import type {CountdownTimerProps} from './CountdownTimer.types';
-import './CountdownTimer.scss';
 
 interface Parts {
     days: number;

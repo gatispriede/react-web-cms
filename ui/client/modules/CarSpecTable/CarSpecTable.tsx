@@ -6,7 +6,6 @@ import {
     DEFAULT_GROUP_ORDER,
     GROUP_LABELS,
 } from './CarSpecTable.types';
-import './CarSpecTable.scss';
 
 function formatValue(attr: CarSpecAttribute): string {
     const v = typeof attr.value === 'number' ? attr.value.toLocaleString() : attr.value;

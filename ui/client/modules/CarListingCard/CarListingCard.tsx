@@ -1,7 +1,6 @@
 import React from 'react';
 import VatBadge from '@client/components/VatBadge';
 import type {CarListingCardProps} from './CarListingCard.types';
-import './CarListingCard.scss';
 
 const CarListingCard: React.FC<CarListingCardProps> = ({listing, testId}) => {
     const tid = testId ?? `car-listing-${listing.productId}`;

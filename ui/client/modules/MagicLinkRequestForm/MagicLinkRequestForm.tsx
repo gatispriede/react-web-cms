@@ -1,6 +1,5 @@
 import React, {useCallback, useState} from 'react';
 import type {MagicLinkRequestFormProps} from './MagicLinkRequestForm.types';
-import './MagicLinkRequestForm.scss';
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 

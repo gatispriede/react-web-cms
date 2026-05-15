@@ -1,6 +1,5 @@
 import React, {useCallback, useRef, useState} from 'react';
 import type {CarPhotoGalleryProps} from './CarPhotoGallery.types';
-import './CarPhotoGallery.scss';
 
 const CarPhotoGallery: React.FC<CarPhotoGalleryProps> = ({
     testId,

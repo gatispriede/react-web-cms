@@ -12,7 +12,6 @@
  */
 import React from 'react';
 import type {IProductDetailHero} from './ProductDetailHero.types';
-import './ProductDetailHero.scss';
 
 export interface ProductDetailHeroProps {
     content: IProductDetailHero | string;

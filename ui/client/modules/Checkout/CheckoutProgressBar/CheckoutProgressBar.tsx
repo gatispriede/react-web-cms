@@ -3,7 +3,6 @@ import React from 'react';
 import type {IItem} from '@interfaces/IItem';
 import {useCheckoutMachine, type CheckoutStep} from '@client/lib/checkout/useCheckoutMachine';
 import type {ICheckoutProgressBar} from './CheckoutProgressBar.types';
-import './CheckoutProgressBar.scss';
 
 type Step = 'address' | 'shipping' | 'payment' | 'confirmation';
 

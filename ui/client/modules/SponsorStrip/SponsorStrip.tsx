@@ -1,6 +1,5 @@
 import React, {useMemo} from 'react';
 import type {Sponsor, SponsorStripProps, SponsorTier} from './SponsorStrip.types';
-import './SponsorStrip.scss';
 
 const DEFAULT_ORDER: SponsorTier[] = ['platinum', 'gold', 'silver', 'bronze'];
 

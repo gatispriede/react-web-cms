@@ -1,6 +1,5 @@
 import React from 'react';
 import type {OrderProgressTimelineProps} from './OrderProgressTimeline.types';
-import './OrderProgressTimeline.scss';
 
 const OrderProgressTimeline: React.FC<OrderProgressTimelineProps> = ({
     testId,

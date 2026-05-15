@@ -3,7 +3,6 @@ import ComparisonTable from '@client/lib/ComparisonTable/ComparisonTable';
 import type {ComparisonColumn, ComparisonRow} from '@client/lib/ComparisonTable/ComparisonTable.types';
 import VatBadge from '@client/components/VatBadge';
 import type {CarComparisonRow, CarComparisonTableProps} from './CarComparisonTable.types';
-import './CarComparisonTable.scss';
 
 const MAX_CARS = 4;
 

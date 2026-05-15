@@ -3,7 +3,6 @@ import React from 'react';
 import type {IItem} from '@interfaces/IItem';
 import {useCart} from '@client/features/Cart/useCart';
 import type {ICartActions} from './CartActions.types';
-import './CartActions.scss';
 
 export interface CartActionsProps { item: IItem; }
 

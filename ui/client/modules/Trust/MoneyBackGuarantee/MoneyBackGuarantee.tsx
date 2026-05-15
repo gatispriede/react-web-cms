@@ -2,7 +2,7 @@
 import React from 'react';
 import type {IItem} from '@interfaces/IItem';
 import type {IMoneyBackGuarantee} from './MoneyBackGuarantee.types';
-import './MoneyBackGuarantee.scss';
+
 export interface MoneyBackGuaranteeProps { item: IItem; }
 function parseContent(raw: string|object|undefined): IMoneyBackGuarantee {
     if (!raw) return {} as IMoneyBackGuarantee;

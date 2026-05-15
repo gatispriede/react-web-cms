@@ -1,7 +1,6 @@
 import React, {useCallback} from 'react';
 import EmptyStateBlock from '@client/lib/EmptyStateBlock';
 import type {WishlistGridProps, WishlistItem} from './WishlistGrid.types';
-import './WishlistGrid.scss';
 
 const DEFAULT_EMPTY_TITLE = 'Nothing in your wishlist yet';
 

@@ -18,7 +18,6 @@
  */
 import React from 'react';
 import type {IBreadcrumb, IBreadcrumbCrumb} from './Breadcrumb.types';
-import './Breadcrumb.scss';
 
 export interface BreadcrumbProps {
     content: IBreadcrumb | string;
