@@ -30,11 +30,20 @@ export interface RedisLike {
 export class RedisAdapter implements RedisLike {
     private client: any;
     private connecting: Promise<void> | undefined;
+    /** Sticky failure: once a connect attempt times out, every subsequent
+     *  call rejects immediately so the consumer's catch-and-fall-through
+     *  path runs without a per-call socket retry. node-redis@4's default
+     *  reconnect loop will otherwise keep the socket open in the
+     *  background and freshly issued `get()`s sit on `client.connect()`
+     *  forever when there's no Redis server listening. */
+    private failed = false;
+    private static readonly CONNECT_TIMEOUT_MS = Number(process.env.REDIS_CONNECT_TIMEOUT_MS) || 1000;
 
     constructor(private readonly url?: string) {}
 
     private async connect(): Promise<any> {
         if (this.client && this.client.isOpen) return this.client;
+        if (this.failed) throw new Error('redis unreachable');
         if (this.connecting) {
             await this.connecting;
             if (this.client) return this.client;
@@ -46,16 +55,41 @@ export class RedisAdapter implements RedisLike {
             const url = this.url ?? process.env.REDIS_URL ?? 'redis://localhost:6379';
             // Dynamic require keeps `redis` off the client bundle graph;
             // bundlers won't statically resolve `eval('require')`.
-             
+
             const nodeRequire = eval('require') as NodeJS.Require;
             const {createClient} = nodeRequire('redis');
-            const client = createClient({url});
+            const client = createClient({
+                url,
+                // Bounded connect timeout — without this, node-redis sits
+                // on a TCP connect indefinitely when Redis isn't running
+                // (common on dev machines that haven't started the
+                // optional cart-redis service). That stalls every
+                // mutation that flows through the idempotency wrapper
+                // (`removeUser`, page trash delete, etc.) because the
+                // wrapper calls `redis.get()` first.
+                socket: {connectTimeout: RedisAdapter.CONNECT_TIMEOUT_MS, reconnectStrategy: false as any},
+            });
             client.on('error', (err: unknown) => log.error({scope: 'redis.client', err}, 'redis client error'));
-            await client.connect();
+            // Hard ceiling around `client.connect()` itself — belt-and-
+            // braces over `socket.connectTimeout` in case the driver
+            // hands back a promise that never settles for some reason
+            // (DNS lookup, TLS handshake, etc).
+            await Promise.race([
+                client.connect(),
+                new Promise<never>((_, reject) =>
+                    setTimeout(() => reject(new Error(`redis connect timed out after ${RedisAdapter.CONNECT_TIMEOUT_MS}ms`)), RedisAdapter.CONNECT_TIMEOUT_MS),
+                ),
+            ]);
             this.client = client;
         })();
         try {
             await this.connecting;
+        } catch (err) {
+            // Trip the sticky-fail flag so the next caller bounces
+            // immediately instead of retrying the socket.
+            this.failed = true;
+            log.warn({scope: 'redis.connect', err}, 'redis unreachable; cache backends will fall through');
+            throw err;
         } finally {
             this.connecting = undefined;
         }
