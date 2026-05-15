@@ -1,7 +1,10 @@
 import {IMcpToken, McpScope} from '@interfaces/IMcp';
 import type {AuditService} from '@services/features/Audit/AuditService';
 import {McpError, McpTool, McpToolResult} from './types';
-import {buildToolRegistry} from './tools';
+// Resolve explicitly to `./tools/index` so the full tool registry
+// (PRODUCT_TOOLS, MODULE_TOOLS, etc.) loads — bare `./tools` resolves
+// to the legacy stub `tools.ts` that only exports `page.create`.
+import {buildToolRegistry} from './tools/index';
 import {validateArgs} from './validate';
 import {log} from '@services/infra/logger';
 
