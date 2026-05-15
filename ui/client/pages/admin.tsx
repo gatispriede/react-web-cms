@@ -8,8 +8,14 @@ import {adminAuthOptions as authOptions} from "./api/auth/authOptions";
 import {serverSideTranslations} from "next-i18next/pages/serverSideTranslations";
 
 const Admin = ({session}: { session: Session }) => {
+    // Phase 1.A auth-split: admin auth lives under /api/admin/auth/*.
+    // SessionProvider's default `basePath` is `/api/auth` (customer
+    // instance) — without overriding, `useSession()` refetches from the
+    // wrong base and always returns null for admin users. Pinning
+    // `basePath` here keeps client-side session reads coherent with the
+    // admin cookie + admin signin form.
     return (
-        <SessionProvider session={session}>
+        <SessionProvider session={session} basePath="/api/admin/auth">
             <LoginBtn/>
         </SessionProvider>
     )
