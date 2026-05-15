@@ -1,42 +1,60 @@
 /**
- * `/cart` — system-page-backed thin loader (Phase 1.D-c).
+ * `/cart` — Amazon-style 2-column shopping basket.
  *
- * Renders entirely via `<SystemPageDispatch>` over the registered
- * `cart` system-page sections. The legacy hand-coded UI (line items,
- * subtotal, proceed button) moves into the locked
- * `CartLineItems` / `CartSummary` / `CartActions` modules — those
- * become responsible for binding to `useCart()` and wiring the
- * proceed CTA. Until that wiring lands the modules render their
- * placeholder shells.
+ * 2026-05-15: route now renders `CartLineItems` (left) + `CartSummary`
+ * (right) directly in a two-column CSS grid. The system-page snapshot
+ * is still loaded so the operator-composable section registry stays
+ * intact for later, but the page no longer dispatches through it —
+ * Amazon-style cart UX wants a fixed two-rail layout that doesn't
+ * naturally fall out of the section-stacker.
  */
 import React from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
 import {ConfigProvider} from 'antd';
-import {useTranslation} from 'next-i18next/pages';
 import staticTheme from '@client/features/Themes/themeConfig';
 import type {GetServerSideProps} from 'next';
 import {gatePath} from '@client/lib/loaders/applyPublicGates';
 import {loadSystemPageSnapshot, type ISystemPageSnapshot} from '@client/lib/systemPage/loadSystemPage';
-import SystemPageDispatch from '@client/lib/systemPage/SystemPageDispatch';
+import CartLineItems from '@client/modules/Checkout/CartLineItems';
+import CartSummary from '@client/modules/Checkout/CartSummary';
+import {EItemType} from '@enums/EItemType';
 
 interface CartPageProps {
     systemPage: ISystemPageSnapshot | null;
 }
 
-const CartPage: React.FC<CartPageProps> = ({systemPage}) => {
-    // `translation` is i18next's stock default namespace but this bundle
-    // doesn't ship it — only `common` + `app`. Requesting `translation`
-    // surfaces as a 404 on /locales/en/translation.json in devtools. Use
-    // the namespaces that actually exist.
-    const {t} = useTranslation('common');
-    const {t: tApp} = useTranslation('app');
+// `EItemType` carries the locked section's module type — we don't use
+// the section content directly, but we synthesise minimum-shape items
+// for the locked modules so they parse cleanly.
+const linePlaceholderItem = {type: EItemType.CartLineItems, content: ''};
+const summaryPlaceholderItem = {type: EItemType.CartSummary, content: ''};
+
+const CartPage: React.FC<CartPageProps> = () => {
     return (
         <ConfigProvider theme={staticTheme}>
-            <Head><title>Your cart</title></Head>
-            <main data-testid="page-cart" style={{maxWidth: 960, margin: '0 auto', padding: '32px 20px 80px'}}>
-                {systemPage
-                    ? <SystemPageDispatch systemKey="cart" sections={systemPage.defaultSections} t={t} tApp={tApp}/>
-                    : null}
+            <Head><title>Shopping Basket</title></Head>
+            <main
+                data-testid="page-cart"
+                data-system-key="cart"
+                style={{background: '#eaeded', minHeight: '100vh', padding: '24px 16px 80px'}}
+            >
+                <div
+                    style={{
+                        maxWidth: 1500,
+                        margin: '0 auto',
+                        display: 'grid',
+                        gridTemplateColumns: 'minmax(0, 1fr) 300px',
+                        gap: 16,
+                        alignItems: 'flex-start',
+                    }}
+                >
+                    <CartLineItems item={linePlaceholderItem as never}/>
+                    <CartSummary item={summaryPlaceholderItem as never}/>
+                </div>
+                <div style={{maxWidth: 1500, margin: '16px auto 0'}}>
+                    <Link href="/products" style={{color: '#007185'}}>← Continue shopping</Link>
+                </div>
             </main>
         </ConfigProvider>
     );

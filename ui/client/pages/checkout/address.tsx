@@ -1,8 +1,5 @@
 /**
- * `/checkout/address` — system-page-backed thin loader (Phase 1.D-c).
- * Renders via `<SystemPageDispatch>` over the `checkout-address`
- * system-page sections. The CheckoutAddressForm module owns the
- * form + submit behaviour.
+ * `/checkout/address` — Amazon-style shell + SystemPageDispatch.
  */
 import React from 'react';
 import Head from 'next/head';
@@ -12,6 +9,7 @@ import type {GetServerSideProps} from 'next';
 import staticTheme from '@client/features/Themes/themeConfig';
 import {loadSystemPageSnapshot, type ISystemPageSnapshot} from '@client/lib/systemPage/loadSystemPage';
 import SystemPageDispatch from '@client/lib/systemPage/SystemPageDispatch';
+import CheckoutShell from '@client/components/Checkout/CheckoutShell';
 
 const AddressStep: React.FC<{systemPage: ISystemPageSnapshot | null}> = ({systemPage}) => {
     const {t} = useTranslation('common');
@@ -19,11 +17,13 @@ const AddressStep: React.FC<{systemPage: ISystemPageSnapshot | null}> = ({system
     return (
         <ConfigProvider theme={staticTheme}>
             <Head><title>Shipping address</title></Head>
-            <main data-testid="page-checkout-address" style={{maxWidth: 720, margin: '0 auto', padding: '32px 20px 80px'}}>
-                {systemPage
-                    ? <SystemPageDispatch systemKey="checkout-address" sections={systemPage.defaultSections} t={t} tApp={tApp}/>
-                    : null}
-            </main>
+            <CheckoutShell testId="page-checkout-address">
+                <div style={{background: '#fff', borderRadius: 8, padding: 24, boxShadow: '0 1px 2px rgba(0,0,0,0.04)'}}>
+                    {systemPage
+                        ? <SystemPageDispatch systemKey="checkout-address" sections={systemPage.defaultSections} t={t} tApp={tApp}/>
+                        : null}
+                </div>
+            </CheckoutShell>
         </ConfigProvider>
     );
 };
