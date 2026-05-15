@@ -7,7 +7,24 @@ import {
     ThunderboltOutlined,
 } from "@client/lib/icons";
 import {Session} from "next-auth";
-import {signOut} from "next-auth/react";
+/** Phase 1.A auth-split: `signOutAdmin()` from next-auth/react targets
+ *  `/api/auth/signout` (customer instance) — wrong cookie, no-op for
+ *  admin. Manual POST against the admin instance hits the right
+ *  endpoint and clears `cms.admin-session`. */
+async function signOutAdmin(): Promise<void> {
+    const ADMIN_AUTH_BASE = '/api/admin/auth';
+    try {
+        const csrfRes = await fetch(`${ADMIN_AUTH_BASE}/csrf`, {credentials: 'include'});
+        const {csrfToken} = await csrfRes.json();
+        await fetch(`${ADMIN_AUTH_BASE}/signout`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json'},
+            body: new URLSearchParams({csrfToken, callbackUrl: '/admin', json: 'true'}).toString(),
+        });
+    } catch { /* best-effort; redirect below clears state visually */ }
+    if (typeof window !== 'undefined') window.location.href = '/admin';
+}
 import {TFunction} from "i18next";
 import {useTranslation as useReactTranslation} from "react-i18next";
 import {ADMIN_LOCALES, AdminLocale, setAdminLocale} from "@admin/i18n/adminI18n";
@@ -120,7 +137,7 @@ const AdminTopBar = ({
                             aria-label={tAdmin("Open admin menu")}
                             aria-expanded={drawerOpen}
                         />
-                        <Button type={"link"} icon={<LogoutOutlined/>} onClick={() => signOut()} aria-label={tAdmin("Sign out")}/>
+                        <Button type={"link"} icon={<LogoutOutlined/>} onClick={() => signOutAdmin()} aria-label={tAdmin("Sign out")}/>
                         <Drawer
                             data-testid="admin-topbar-mobile-drawer"
                             data-state={drawerOpen ? 'open' : 'closed'}
@@ -164,7 +181,7 @@ const AdminTopBar = ({
                         {localeDropdown}
                         <AdminModeSwitcher/>
                         <DarkModeSwitcher/>
-                        <Button type={"link"} icon={<LogoutOutlined/>} href={'#'} onClick={() => signOut()}>{tAdmin("Sign out")}</Button>
+                        <Button type={"link"} icon={<LogoutOutlined/>} href={'#'} onClick={() => signOutAdmin()}>{tAdmin("Sign out")}</Button>
                     </>
                 )}
             </nav>
