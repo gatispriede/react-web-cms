@@ -68,7 +68,7 @@ export const notificationPreferencesSet: McpTool = defineTool({
                 properties: {
                     byCategory: {
                         type: 'object',
-                        additionalProperties: {type: 'string', enum: NOTIFICATION_ROUTINGS},
+                        description: 'Map of category id → routing (one of NOTIFICATION_ROUTINGS). Free-form keys; values type-guarded server-side.',
                     },
                     digestCadence: {type: 'string', enum: DIGEST_CADENCES},
                     quietHours: {

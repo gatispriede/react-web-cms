@@ -172,7 +172,7 @@ async function buildServerForToken(
             })),
     }));
 
-    server.setRequestHandler(CallToolRequestSchema, async (req, extra) => {
+    server.setRequestHandler(CallToolRequestSchema, (async (req: any, extra: any) => {
         // MCP `notifications/progress` — wired only when the client
         // included `_meta.progressToken` on its `tools/call`. The SDK
         // hands us `extra.sendNotification` scoped to this request; we
@@ -206,7 +206,7 @@ async function buildServerForToken(
             };
         }
         return outcome.result!;
-    });
+    }) as any);
 
     const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: () => randomUUID(),

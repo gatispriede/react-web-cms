@@ -36,7 +36,6 @@ export const pricingPreviewVat: McpTool = defineTool({
             currency: {type: 'string', enum: [...SUPPORTED_CURRENCIES]},
             lines: {
                 type: 'array',
-                minItems: 1,
                 items: {
                     type: 'object',
                     required: ['id', 'net'],

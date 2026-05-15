@@ -55,7 +55,7 @@ export const backupNow: McpTool = defineTool({
     if (!s) return {ok: false, error: 'backup-service-unavailable'};
     return s.backupNow({
         label: typeof args.label === 'string' ? args.label : undefined,
-        actor: ctx.actor?.email ?? 'mcp',
+        actor: ctx.actor ?? 'mcp',
     });
 });
 
@@ -69,7 +69,7 @@ export const backupVerify: McpTool = defineTool({
     await enforceModeForTool(ctx.actor, 'backup.verify');
     const s = svc();
     if (!s) return {ok: false, error: 'backup-service-unavailable'};
-    return s.verifyLatest({actor: ctx.actor?.email ?? 'mcp'});
+    return s.verifyLatest({actor: ctx.actor ?? 'mcp'});
 });
 
 export const backupRestoreToStaging: McpTool = defineTool({
@@ -94,7 +94,7 @@ export const backupRestoreToStaging: McpTool = defineTool({
     const pathMod = await import('node:path');
     const fs = await import('node:fs/promises');
     const target = await fs.mkdtemp(pathMod.join(os.tmpdir(), 'cms-restore-staging-'));
-    return s.restoreSnapshot(String(args.snapshotId), target, {actor: ctx.actor?.email ?? 'mcp'});
+    return s.restoreSnapshot(String(args.snapshotId), target, {actor: ctx.actor ?? 'mcp'});
 });
 
 export const backupLastDrillResult: McpTool = defineTool({

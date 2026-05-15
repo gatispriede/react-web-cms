@@ -5,10 +5,11 @@
  * Pure renderer; product data injection lives at the page-context layer.
  */
 import React from 'react';
+import type {IItem} from '@interfaces/IItem';
 import type {IProductSpecTable} from './ProductSpecTable.types';
 
 export interface ProductSpecTableProps {
-    content: IProductSpecTable | string;
+    item: IItem;
     /** Test seam — inject attributes directly when used outside
      *  `ProductContext`. */
     attributes?: Record<string, string>;
@@ -17,15 +18,16 @@ export interface ProductSpecTableProps {
 const humanise = (k: string): string =>
     k.replace(/[_-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
-function parseContent(raw: string | IProductSpecTable): IProductSpecTable {
+function parseContent(raw: string | IProductSpecTable | undefined): IProductSpecTable {
+    if (!raw) return {productId: ''};
     if (typeof raw === 'string') {
         try { return JSON.parse(raw) as IProductSpecTable; } catch { return {productId: ''}; }
     }
     return raw;
 }
 
-const ProductSpecTable: React.FC<ProductSpecTableProps> = ({content, attributes}) => {
-    const c = parseContent(content);
+const ProductSpecTable: React.FC<ProductSpecTableProps> = ({item, attributes}) => {
+    const c = parseContent(item.content as string | IProductSpecTable | undefined);
     const rows: Array<{label: string; value: string}> = (() => {
         if (!c.autoFromAttributes && c.rows?.length) return c.rows;
         const attrs = attributes ?? {};

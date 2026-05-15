@@ -17,6 +17,7 @@
  *    `mobileBehavior: 'full'` opts out).
  */
 import React from 'react';
+import type {IItem} from '@interfaces/IItem';
 import type {IBreadcrumb, IBreadcrumbCrumb} from './Breadcrumb.types';
 // Breadcrumb.scss is imported by `ui/client/pages/_app.tsx` — Next 16 /
 // Turbopack treats this file's BEM + nested `&--mobile-collapse &__full`
@@ -24,7 +25,7 @@ import type {IBreadcrumb, IBreadcrumbCrumb} from './Breadcrumb.types';
 // import stays out of this component file.
 
 export interface BreadcrumbProps {
-    content: IBreadcrumb | string;
+    item: IItem;
     /** Resolved crumbs from the page context. Used when
      *  `autoFromParentChain` is true (the default). */
     crumbs?: IBreadcrumbCrumb[];
@@ -35,7 +36,8 @@ export interface BreadcrumbProps {
     origin?: string;
 }
 
-function parseContent(raw: string | IBreadcrumb): IBreadcrumb {
+function parseContent(raw: string | IBreadcrumb | undefined): IBreadcrumb {
+    if (!raw) return {autoFromParentChain: true};
     if (typeof raw === 'string') {
         try { return JSON.parse(raw) as IBreadcrumb; } catch { return {autoFromParentChain: true}; }
     }
@@ -61,7 +63,8 @@ function buildJsonLd(crumbs: IBreadcrumbCrumb[], origin: string): string {
     return JSON.stringify(ld);
 }
 
-const Breadcrumb: React.FC<BreadcrumbProps> = ({content, crumbs: injected, origin = ''}) => {
+const Breadcrumb: React.FC<BreadcrumbProps> = ({item, crumbs: injected, origin = ''}) => {
+    const content = item.content as string | IBreadcrumb | undefined;
     const c = parseContent(content);
     const auto = c.autoFromParentChain !== false;
     const crumbs = auto ? (injected ?? []) : (c.crumbs ?? []);

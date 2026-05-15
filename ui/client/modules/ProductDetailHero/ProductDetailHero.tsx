@@ -11,21 +11,23 @@
  * have a bound product (the placeholder reminds them to bind one).
  */
 import React from 'react';
+import type {IItem} from '@interfaces/IItem';
 import type {IProductDetailHero} from './ProductDetailHero.types';
 
 export interface ProductDetailHeroProps {
-    content: IProductDetailHero | string;
+    item: IItem;
 }
 
-function parseContent(raw: string | IProductDetailHero): IProductDetailHero {
+function parseContent(raw: string | IProductDetailHero | undefined): IProductDetailHero {
+    if (!raw) return {productId: ''};
     if (typeof raw === 'string') {
         try { return JSON.parse(raw) as IProductDetailHero; } catch { return {productId: ''}; }
     }
     return raw;
 }
 
-const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({content}) => {
-    const c = parseContent(content);
+const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({item}) => {
+    const c = parseContent(item.content as string | IProductDetailHero | undefined);
     if (!c.productId) {
         return (
             <div className="product-detail-hero product-detail-hero--unbound" data-testid="product-detail-hero-unbound">

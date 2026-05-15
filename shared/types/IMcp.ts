@@ -25,6 +25,8 @@ export type McpScope =
     | 'write:site'
     | 'read:audit'
     | 'read:analytics'
+    | 'read:users'
+    | 'write:users'
     | 'admin:auth'
     | 'admin:bundle';
 
@@ -37,6 +39,7 @@ export const ALL_MCP_SCOPES: readonly McpScope[] = [
     'read:site', 'write:site',
     'read:audit',
     'read:analytics',
+    'read:users', 'write:users',
     // Sensitive operator scope — clears login lockouts. Issue sparingly.
     'admin:auth',
     // Whole-site replace — export/import the full bundle JSON.
