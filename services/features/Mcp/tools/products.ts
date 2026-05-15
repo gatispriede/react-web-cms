@@ -48,6 +48,11 @@ const productInputProps = {
     categories: {type: 'array' as const, items: {type: 'string' as const}},
     draft: {type: 'boolean' as const, default: true},
     slug: {type: 'string' as const},
+    // Free-form key→value spec map. Surfaced on the storefront detail
+    // page as the searchable/filterable spec table. The MCP validator
+    // passes `type: 'object'` through with no `properties` checks, so
+    // any string→primitive shape is accepted.
+    attributes: {type: 'object' as const, description: 'Spec key→value map (Brand, Socket, Cores, …). Renders as the spec table on /products/[slug].'},
 };
 
 export const productCreate: McpTool = defineTool({

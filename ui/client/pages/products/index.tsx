@@ -4,7 +4,7 @@ import {gqlFetch} from '@client/lib/gqlFetch';
 import {gatePath} from '@client/lib/loaders/applyPublicGates';
 import Link from 'next/link';
 import Head from 'next/head';
-import {ConfigProvider, Card, Col, Empty, Row, Select, Space, Tag, Typography} from 'antd';
+import {ConfigProvider, Card, Col, Empty, Input, Row, Select, Space, Tag, Typography} from 'antd';
 import {serverSideTranslations} from 'next-i18next/pages/serverSideTranslations';
 import {useTranslation} from 'next-i18next/pages';
 import staticTheme from '@client/features/Themes/themeConfig';
@@ -39,6 +39,9 @@ const ProductsIndex = ({products, themeTokens, footer, pages}: Props) => {
     const themeConfig = themeTokens ? buildThemeConfig(themeTokens) : staticTheme;
 
     const [category, setCategory] = useState<string | undefined>(undefined);
+    const [query, setQuery] = useState<string>('');
+    type SortKey = 'relevance' | 'price-asc' | 'price-desc' | 'newest' | 'title-asc';
+    const [sort, setSort] = useState<SortKey>('relevance');
 
     const categories = useMemo(() => {
         const set = new Set<string>();
@@ -46,10 +49,36 @@ const ProductsIndex = ({products, themeTokens, footer, pages}: Props) => {
         return [...set].sort();
     }, [products]);
 
+    /**
+     * Wide search — substring-match across title, sku, brand attribute,
+     * categories, and every other attribute value. Case-insensitive.
+     * Filter runs client-side over the SSR-loaded list; the SSR limit
+     * (200) is far above the operator's catalogue today.
+     */
+    const matchesQuery = (p: IProduct, q: string): boolean => {
+        if (!q) return true;
+        const hay: string[] = [];
+        hay.push(p.title ?? '', p.sku ?? '', p.slug ?? '');
+        for (const c of (p.categories ?? [])) hay.push(c);
+        for (const v of Object.values(p.attributes ?? {})) hay.push(String(v ?? ''));
+        const lc = q.toLowerCase();
+        return hay.some(s => s.toLowerCase().includes(lc));
+    };
+
     const visible = useMemo(() => {
-        if (!category) return products;
-        return products.filter(p => (p.categories ?? []).includes(category));
-    }, [products, category]);
+        let out = products;
+        if (category) out = out.filter(p => (p.categories ?? []).includes(category));
+        if (query.trim()) out = out.filter(p => matchesQuery(p, query.trim()));
+        // Sort. `relevance` keeps the SSR order (newest-first today).
+        const sorted = [...out];
+        switch (sort) {
+            case 'price-asc':  sorted.sort((a, b) => (a.price ?? 0) - (b.price ?? 0)); break;
+            case 'price-desc': sorted.sort((a, b) => (b.price ?? 0) - (a.price ?? 0)); break;
+            case 'title-asc':  sorted.sort((a, b) => (a.title ?? '').localeCompare(b.title ?? '')); break;
+            case 'newest':     sorted.sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '')); break;
+        }
+        return sorted;
+    }, [products, category, query, sort]);
 
     return (
         <ConfigProvider theme={themeConfig}>
@@ -63,8 +92,23 @@ const ProductsIndex = ({products, themeTokens, footer, pages}: Props) => {
                 </div>
                 <Space style={{marginTop: 24, marginBottom: 16}} align="center" wrap>
                     <Typography.Title level={1} style={{margin: 0}}>{t('Products')}</Typography.Title>
+                </Space>
+                {/* Search + sort row. Wide search runs over title, SKU,
+                 *  categories and every attribute value — typing "DDR5"
+                 *  finds the RAM kit, typing "AM5" hits both the board
+                 *  and the Ryzen CPU. */}
+                <Space style={{marginBottom: 16, width: '100%'}} wrap>
+                    <Input.Search
+                        data-testid="storefront-product-search"
+                        placeholder={t('Search title, SKU, attributes…')}
+                        value={query}
+                        onChange={e => setQuery(e.target.value)}
+                        allowClear
+                        style={{minWidth: 320}}
+                    />
                     {categories.length > 0 && (
                         <Select
+                            data-testid="storefront-product-category-filter"
                             allowClear
                             placeholder={t('Filter by category')}
                             style={{minWidth: 200}}
@@ -73,7 +117,33 @@ const ProductsIndex = ({products, themeTokens, footer, pages}: Props) => {
                             options={categories.map(c => ({value: c, label: c}))}
                         />
                     )}
+                    <Select
+                        data-testid="storefront-product-sort"
+                        value={sort}
+                        onChange={v => setSort(v as SortKey)}
+                        style={{minWidth: 200}}
+                        options={[
+                            {value: 'relevance', label: t('Sort: Featured')},
+                            {value: 'price-asc', label: t('Price: low → high')},
+                            {value: 'price-desc', label: t('Price: high → low')},
+                            {value: 'title-asc', label: t('Name: A → Z')},
+                            {value: 'newest', label: t('Newest first')},
+                        ]}
+                    />
                 </Space>
+                {/* Category chips — link to /products/category/<slug> so
+                 *  visitors can pivot to a focused subpage instead of
+                 *  using the dropdown filter every time. */}
+                {categories.length > 0 && (
+                    <Space size={[6, 6]} wrap style={{marginBottom: 16}}>
+                        <Typography.Text type="secondary">{t('Browse by category')}:</Typography.Text>
+                        {categories.map(c => (
+                            <Link key={c} href={`/products/category/${encodeURIComponent(c)}`} data-testid={`storefront-products-category-chip-${c}`}>
+                                <Tag style={{cursor: 'pointer'}} color={category === c ? 'blue' : 'default'}>{c}</Tag>
+                            </Link>
+                        ))}
+                    </Space>
+                )}
                 {visible.length === 0 && <Empty description={t('No products available yet.')}/>}
                 <Row gutter={[16, 16]}>
                     {visible.map((p, i) => (

@@ -38,7 +38,7 @@ export const RESERVED_PAGE_SLUGS: ReadonlyArray<string> = [
     'checkout',     // pages/checkout/index.tsx + /address /shipping /payment /confirmation
     'account',      // pages/account/* (customer dashboard tree)
     'orders',       // pages/orders/[token].tsx
-    'products',     // pages/products/index.tsx + pages/products/[slug].tsx
+    'products',     // pages/products/index.tsx + pages/products/[slug].tsx + pages/products/category/[slug].tsx
 
     // Static marketing + legal pages.
     'welcome',      // pages/welcome.tsx (marketing landing)

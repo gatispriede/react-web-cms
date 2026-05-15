@@ -133,14 +133,36 @@ const ProductPage = ({product, themeTokens, footer, pages}: Props) => {
                         )}
                     </div>
                     <div>
-                        <Typography.Title data-testid="storefront-product-title" level={1} style={{marginTop: 0}}>{i18nTitle}</Typography.Title>
-                        <Typography.Title data-testid="storefront-product-price" level={2} style={{marginTop: 0}}>
+                        <Typography.Title data-testid="storefront-product-title" level={1} style={{marginTop: 0, marginBottom: 6}}>{i18nTitle}</Typography.Title>
+                        {/* Brand row — pulled from attributes.brand (when set)
+                         *  or the first category as a soft fallback. Mirrors
+                         *  the "Brand: NVIDIA" row on the Amazon detail page. */}
+                        {(product.attributes?.brand || product.categories?.[0]) && (
+                            <Typography.Text data-testid="storefront-product-brand" style={{display: 'block', color: '#007185', marginBottom: 8}}>
+                                {t('Brand')}: <strong>{String(product.attributes?.brand ?? product.categories![0])}</strong>
+                            </Typography.Text>
+                        )}
+                        {/* Categories as filterable chips. Each links to
+                         *  /products/category/<slug> so visitors can pivot
+                         *  to the rest of the catalogue under the same tag. */}
+                        {(product.categories ?? []).length > 0 && (
+                            <Space size={4} wrap style={{marginBottom: 8}}>
+                                {(product.categories ?? []).map(cat => (
+                                    <Link key={cat} href={`/products/category/${encodeURIComponent(cat)}`} data-testid={`storefront-product-category-${cat}`}>
+                                        <Tag style={{cursor: 'pointer'}}>{cat}</Tag>
+                                    </Link>
+                                ))}
+                            </Space>
+                        )}
+                        <Typography.Title data-testid="storefront-product-price" level={2} style={{marginTop: 8, marginBottom: 0, color: '#0f1111'}}>
                             {formatPrice(effectivePrice, product.currency)}
                         </Typography.Title>
+                        <Typography.Text type="secondary" style={{display: 'block', marginBottom: 12}}>
+                            {t('Prices include VAT.')}
+                        </Typography.Text>
                         {outOfStock
                             ? <Tag data-testid="storefront-out-of-stock-badge" color="red">{t('Out of stock')}</Tag>
                             : <Tag color="green">{t('In stock')}</Tag>}
-                        <div ref={ref} className="rich-text" style={{marginTop: 16}}/>
                         {variants.length > 0 && (
                             <div style={{marginTop: 16}}>
                                 <Typography.Text strong>{t('Variant')}</Typography.Text>
@@ -155,8 +177,12 @@ const ProductPage = ({product, themeTokens, footer, pages}: Props) => {
                                 />
                             </div>
                         )}
+                        {/* Structured spec table — `IProduct.attributes` is a
+                         *  flat key→value map maintained by the operator;
+                         *  these are the filterable / searchable fields. */}
                         {attributeRows.length > 0 && (
                             <Table
+                                data-testid="storefront-product-specs"
                                 style={{marginTop: 16}}
                                 size="small"
                                 pagination={false}
@@ -164,8 +190,8 @@ const ProductPage = ({product, themeTokens, footer, pages}: Props) => {
                                 rowKey="key"
                                 dataSource={attributeRows}
                                 columns={[
-                                    {dataIndex: 'key', key: 'k', render: (k: string) => <strong>{k}</strong>},
-                                    {dataIndex: 'value', key: 'v'},
+                                    {dataIndex: 'key', key: 'k', width: '40%', render: (k: string) => <strong>{k}</strong>},
+                                    {dataIndex: 'value', key: 'v', render: (v: unknown) => String(v ?? '')},
                                 ]}
                             />
                         )}
@@ -175,12 +201,22 @@ const ProductPage = ({product, themeTokens, footer, pages}: Props) => {
                             size="large"
                             disabled={outOfStock}
                             onClick={onAddToCart}
-                            style={{marginTop: 16}}
+                            style={{marginTop: 16, background: '#FFD814', borderColor: '#FCD200', color: '#0f1111', fontWeight: 500, borderRadius: 100, height: 40, paddingInline: 24}}
                         >
                             {outOfStock ? t('Out of stock') : t('Add to cart')}
                         </Button>
                     </div>
                 </div>
+                {/* "About this item" — bullet-friendly prose. Splits the
+                 *  product description on newlines or sentence boundaries
+                 *  so a short paragraph still reads as a feature list,
+                 *  matching the Amazon detail page convention. */}
+                {i18nDescription && (
+                    <section style={{marginTop: 40, padding: '24px', background: '#fff', borderRadius: 8, boxShadow: '0 1px 2px rgba(0,0,0,0.04)'}}>
+                        <Typography.Title level={3} style={{marginTop: 0}}>{t('About this item')}</Typography.Title>
+                        <div ref={ref} className="rich-text" data-testid="storefront-product-description"/>
+                    </section>
+                )}
             </div>
             <SiteFooter config={footer} pages={pages} hasPosts={false} t={t as any}/>
         </ConfigProvider>

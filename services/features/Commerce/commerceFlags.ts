@@ -42,6 +42,9 @@ export const COMMERCE_FLAG_PATHS: readonly FlagPath[] = [
     'commerce.checkout.providers.cashOnDelivery',
     'commerce.checkout.providers.paypal',
     'commerce.checkout.providers.klarna',
+    // Phase 1.D-e — products in main nav
+    'commerce.nav.productsEnabled',
+    'commerce.nav.productsCategoriesAsSubnav',
 ] as const;
 
 defineFlag<boolean>({
@@ -256,4 +259,37 @@ defineFlag<boolean>({
     typeGuard: isBoolean,
     audience: 'public-readable',
     description: 'Klarna provider flag — defined but NOT wired in this jump (off by default).',
+});
+
+/**
+ * Phase 1.D-e — products in main navigation.
+ *
+ *  `commerce.nav.productsEnabled` — When on, the public-site header
+ *  navigation surfaces a top-level "Products" link. Off by default for
+ *  content-only sites; flip on when the storefront should advertise
+ *  its catalogue.
+ *
+ *  `commerce.nav.productsCategoriesAsSubnav` — When on AND the parent
+ *  toggle is on, the "Products" link expands into a dropdown of
+ *  category sub-items (each `/products/category/<slug>`). Categories
+ *  are derived from the union of every published product's
+ *  `categories[]` field. Operators don't author the list directly;
+ *  it tracks the catalogue.
+ *
+ * Both audience `public-readable` — the storefront SSR needs them.
+ */
+defineFlag<boolean>({
+    path: 'commerce.nav.productsEnabled',
+    defaultValue: false,
+    typeGuard: isBoolean,
+    audience: 'public-readable',
+    description: 'When on, the public-site header surfaces a top-level "Products" link. Default off so content-only sites stay clean.',
+});
+
+defineFlag<boolean>({
+    path: 'commerce.nav.productsCategoriesAsSubnav',
+    defaultValue: false,
+    typeGuard: isBoolean,
+    audience: 'public-readable',
+    description: 'When on (and productsEnabled is on), the Products nav item expands into a dropdown of category sub-items. Categories are derived from the union of every published product\'s categories[] field.',
 });
