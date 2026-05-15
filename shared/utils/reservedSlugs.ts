@@ -28,6 +28,27 @@ export const RESERVED_PAGE_SLUGS: ReadonlyArray<string> = [
     'auth',      // pages/auth/signin.tsx
     'dev',       // pages/dev/modules-preview.tsx
 
+    // Commerce surface (Phase 1.B/D — system-page-backed routes). Each
+    // is rendered via `<SystemPageDispatch>` over the registered
+    // `cart` / `checkout-*` / `account-*` / `order-by-token` snapshots
+    // (see services/features/Checkout/CheckoutSystemPages.ts). An
+    // operator-authored page sharing one of these names would be
+    // unreachable — the file-system route wins.
+    'cart',         // pages/cart/index.tsx
+    'checkout',     // pages/checkout/index.tsx + /address /shipping /payment /confirmation
+    'account',      // pages/account/* (customer dashboard tree)
+    'orders',       // pages/orders/[token].tsx
+    'products',     // pages/products/index.tsx + pages/products/[slug].tsx
+
+    // Static marketing + legal pages.
+    'welcome',      // pages/welcome.tsx (marketing landing)
+    'privacy',      // pages/privacy.tsx
+    'terms',        // pages/terms.tsx
+    'docs',         // pages/docs/*
+
+    // Legacy car-module pages (still mounted, sunset path pending).
+    'cars',         // pages/cars/*
+
     // Next.js framework reserved paths — these are never serveable as
     // user pages and including them is purely defensive.
     'api',       // Next API routes
