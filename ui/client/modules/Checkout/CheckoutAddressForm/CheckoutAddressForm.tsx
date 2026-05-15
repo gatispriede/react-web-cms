@@ -43,14 +43,33 @@ const CheckoutAddressForm: React.FC<CheckoutAddressFormProps> = ({item}) => {
         try {
             const api = new OrderApi();
             let id = orderId;
-            if (!id) {
+            // Try the stored orderId first. If it points to an order
+            // that's no longer pending (paid, fulfilled, cancelled, …)
+            // the server rejects with `IMMUTABLE_ORDER`. Treat that as
+            // "the saved draft is stale" — clear it and create a fresh
+            // one. Same fallback if there's no orderId at all.
+            const attachWithId = async (orderId: string) => {
+                return api.attachOrderAddress({orderId, shipping});
+            };
+            const freshDraft = async (): Promise<string | null> => {
                 const draft = await api.createDraftOrder({currency: cart.currency ?? 'EUR'});
-                if ('error' in draft) { setError(draft.error); return; }
-                id = draft.id;
-                if (!id) { setError('Could not create order.'); return; }
-                setOrderId(id);
+                if ('error' in draft) { setError(draft.error); return null; }
+                if (!draft.id) { setError('Could not create order.'); return null; }
+                setOrderId(draft.id);
+                return draft.id;
+            };
+            if (!id) {
+                id = (await freshDraft()) ?? '';
+                if (!id) return;
             }
-            const res = await api.attachOrderAddress({orderId: id, shipping});
+            let res = await attachWithId(id);
+            if ('error' in res && /IMMUTABLE_ORDER/i.test(res.error)) {
+                // Stale draft — start over silently.
+                const next = await freshDraft();
+                if (!next) return;
+                id = next;
+                res = await attachWithId(id);
+            }
             if ('error' in res) { setError(res.error); return; }
             goTo('shipping');
         } finally {

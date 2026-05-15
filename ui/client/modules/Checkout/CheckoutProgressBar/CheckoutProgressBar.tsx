@@ -1,18 +1,13 @@
 /** CheckoutProgressBar — Phase 1.D. Locked address→shipping→payment indicator. */
 import React from 'react';
+import {useRouter} from 'next/router';
+import Link from 'next/link';
 import type {IItem} from '@interfaces/IItem';
-import {useCheckoutMachine, type CheckoutStep} from '@client/lib/checkout/useCheckoutMachine';
 import type {ICheckoutProgressBar} from './CheckoutProgressBar.types';
 
 type Step = 'address' | 'shipping' | 'payment' | 'confirmation';
 
 export interface CheckoutProgressBarProps { item: IItem; currentStep?: Step; }
-
-const machineToBarStep = (s: CheckoutStep): Step => {
-    if (s === 'cart' || s === 'address') return 'address';
-    if (s === 'review') return 'payment';
-    return s;
-};
 
 function parseContent(raw: string | object | undefined): ICheckoutProgressBar {
     if (!raw) return {} as ICheckoutProgressBar;
@@ -20,29 +15,67 @@ function parseContent(raw: string | object | undefined): ICheckoutProgressBar {
     return raw as ICheckoutProgressBar;
 }
 
-const STEPS: ReadonlyArray<{key: 'address'|'shipping'|'payment'|'confirmation'; label: string}> = [
-    {key: 'address', label: 'Address'},
-    {key: 'shipping', label: 'Shipping'},
-    {key: 'payment', label: 'Payment'},
-    {key: 'confirmation', label: 'Done'},
+const STEPS: ReadonlyArray<{key: Step; label: string; href: string}> = [
+    {key: 'address',      label: 'Address',  href: '/checkout/address'},
+    {key: 'shipping',     label: 'Shipping', href: '/checkout/shipping'},
+    {key: 'payment',      label: 'Payment',  href: '/checkout/payment'},
+    {key: 'confirmation', label: 'Done',     href: '/checkout/confirmation'},
 ];
+
+/**
+ * Step is derived from the URL path so SSR + client render identical
+ * markup. Earlier the component read `useCheckoutMachine().step` from
+ * localStorage — SSR defaulted to `cart`, client read whatever
+ * `payment`/`shipping` the previous flow had stored, and React threw
+ * a hydration mismatch on every checkout page.
+ */
+function stepFromPath(path: string): Step {
+    if (path.startsWith('/checkout/confirmation')) return 'confirmation';
+    if (path.startsWith('/checkout/payment')) return 'payment';
+    if (path.startsWith('/checkout/shipping')) return 'shipping';
+    return 'address';
+}
 
 const CheckoutProgressBar: React.FC<CheckoutProgressBarProps> = ({item, currentStep}) => {
     const c = parseContent(item.content);
     void c;
-    const {step} = useCheckoutMachine();
-    const resolved: Step = currentStep ?? machineToBarStep(step);
+    const router = useRouter();
+    const resolved: Step = currentStep ?? stepFromPath(router.pathname || '');
     const activeIdx = STEPS.findIndex(s => s.key === resolved);
+
     return (
         <ol className="checkout-progress-bar" data-testid="module-checkout-progress-bar">
-            {STEPS.map((s, i) => (
-                <li key={s.key}
-                    className={`checkout-progress-bar__step${i <= activeIdx ? ' is-done' : ''}${i === activeIdx ? ' is-active' : ''}`}
-                    data-testid={`checkout-progress-step-${s.key}`}>
-                    <span className="checkout-progress-bar__num">{i + 1}</span>
-                    <span className="checkout-progress-bar__label">{s.label}</span>
-                </li>
-            ))}
+            {STEPS.map((s, i) => {
+                const isActive = i === activeIdx;
+                const isDone = i <= activeIdx;
+                // Only past steps are navigable — operators can jump
+                // back to edit address/shipping, but jumping ahead to
+                // a step the order hasn't reached would skip required
+                // state (`createDraftOrder`, `attachOrderShipping`).
+                const clickable = i < activeIdx;
+                const cls = `checkout-progress-bar__step${isDone ? ' is-done' : ''}${isActive ? ' is-active' : ''}${clickable ? ' is-clickable' : ''}`;
+                const inner = (
+                    <>
+                        <span className="checkout-progress-bar__num">{i + 1}</span>
+                        <span className="checkout-progress-bar__label">{s.label}</span>
+                    </>
+                );
+                return (
+                    <li key={s.key} className={cls} data-testid={`checkout-progress-step-${s.key}`}>
+                        {clickable
+                            ? (
+                                <Link
+                                    href={s.href}
+                                    data-testid={`checkout-progress-step-${s.key}-link`}
+                                    style={{display: 'inline-flex', alignItems: 'center', gap: 6, color: 'inherit', textDecoration: 'none', cursor: 'pointer'}}
+                                >
+                                    {inner}
+                                </Link>
+                            )
+                            : inner}
+                    </li>
+                );
+            })}
         </ol>
     );
 };
