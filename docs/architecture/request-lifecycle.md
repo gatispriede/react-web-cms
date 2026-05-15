@@ -36,7 +36,7 @@ HTML + `<style data-theme-vars>` (active theme tokens injected in _document.tsx)
 JSON island via `window.preloadedData = ...` for the React app
 ```
 
-Routes by mode (see also [`PROJECT_ANALYSIS.md`](../../PROJECT_ANALYSIS.md#rendering-mode)):
+Routes by mode (see also [`PROJECT_ANALYSIS.md`](../PROJECT_ANALYSIS.md#rendering-mode)):
 
 | Route | Mode | Why |
 |---|---|---|
@@ -51,7 +51,7 @@ Routes by mode (see also [`PROJECT_ANALYSIS.md`](../../PROJECT_ANALYSIS.md#rende
 
 1. Pulls the **active theme** via `themeService.getActive()` and converts its tokens to a `:root { --theme-* … }` CSS rule injected as `<style data-theme-vars>`. **No FOUC** — the first paint already has the theme.
 2. Reads the same active theme's font family tokens, dedupes against a `BUNDLED_FAMILIES` allowlist (the seeded Paper / Studio / Industrial faces), and composes a single `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?…">` URL so theme switches don't FOUC their typography either. Composer in [`theme/googleFonts.ts`](../../src/frontend/theme/googleFonts.ts).
-3. Sets `<body data-theme-name={slug}>` so editorial themes' SCSS overrides (`[data-theme-name="paper"] …`) match in production. Preview cards do the same on a wrapper `<div>` — no `body` ancestor in any selector. See [`THEMING.md`](../../THEMING.md#theme-slug-scoping-contract-paper--studio--industrial).
+3. Sets `<body data-theme-name={slug}>` so editorial themes' SCSS overrides (`[data-theme-name="paper"] …`) match in production. Preview cards do the same on a wrapper `<div>` — no `body` ancestor in any selector. See [`THEMING.md`](../THEMING.md#theme-slug-scoping-contract-paper--studio--industrial).
 4. Preloads the navigation + sections graph (`global.preloadedData` + `window.preloadedData`) so the React shell hydrates without waiting on a second GraphQL round-trip.
 
 ## Admin mutation

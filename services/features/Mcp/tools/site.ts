@@ -4,6 +4,7 @@ import {McpTool} from '../types';
 import {getMongoConnection} from '@services/infra/mongoDBConnection';
 import {enforceModeForTool} from '../modeEnforcement';
 import {defineTool} from './_shared';
+import {listFlagDefinitions, parseFlagPath} from '@services/features/Seo/siteFlagDefinitions';
 
 /**
  * site.revalidate — fires a fire-and-forget POST to the /api/revalidate route
@@ -247,7 +248,19 @@ export const sitePublish: McpTool = defineTool({
 }, async (args, ctx) => {
     try {
         const raw = await getMongoConnection().publishSnapshot({note: args.note, _session: {email: ctx.actor}});
-        return JSON.parse(raw);
+        const result = JSON.parse(raw);
+        // W8h SEO polish — non-blocking pre-flight: run the SEO meta
+        // audit and attach its warnings to the publish result. The
+        // operator can dismiss; we never fail the publish on a soft
+        // warning. Any pre-flight error is swallowed silently — a
+        // missing pre-flight is far less harmful than a blocked
+        // publish on a broken audit.
+        try {
+            const {runSeoPreflight} = await import('./seo');
+            const preflight = await runSeoPreflight();
+            (result as any).seoPreflight = preflight;
+        } catch { /* tolerate — never block publish on preflight failure */ }
+        return result;
     } catch (err) {
         return {ok: false, error: String((err as Error).message || err)};
     }
@@ -275,7 +288,7 @@ export const siteGetPublishHistory: McpTool = defineTool({
 
 export const siteSetLayoutMode: McpTool = defineTool({
     name: 'site.setLayoutMode',
-    description: 'Switch between "tabs" (each page at its own URL — F1 sub-pages render here), "scroll" (all pages stacked on one scrolling page; nav uses #anchor links; SiteFooter rewrites page URLs to anchors), and "auto" (resolves to "tabs" — pick this when no preference). Call site.publish after.',
+    description: 'Set siteFlags.layoutMode — the site-mode toggle (F6). "tabs" (each page at its own URL — F1 sub-pages render here, N canonical URLs), "scroll" (all pages stacked on one scrolling page; nav uses #anchor links; SiteFooter rewrites page URLs to anchors; single canonical URL; deep page paths hard-redirect to /#anchor), "auto" (resolves to "tabs" — pick this when no preference). SEO impact: switching collapses or expands the indexed surface — after flipping, call site.publish then site.revalidate { scope: "all" } and regenerate the sitemap. See docs/runbooks/site-mode-switch.md.',
     scopes: ['write:site'],
     idempotent: true,
     gqlMutation: 'saveSiteFlags',
@@ -299,6 +312,48 @@ export const siteSetLayoutMode: McpTool = defineTool({
     }
 });
 
+/**
+ * site.flagDefinitions.list — introspection over the `defineFlag()`
+ * registry. Lets the admin settings UI render namespaced flags
+ * generically (no hardcoded form per flag) and lets MCP clients
+ * discover which flags exist + their defaults without scraping the
+ * source. Optional `byNamespace` groups the response by sub-record
+ * (commerce / auth / theme / seo) for a cleaner UI.
+ *
+ * Note: this surfaces only the new sub-record flags registered via
+ * `defineFlag()`. Legacy top-level flags (`blogEnabled`, `layoutMode`,
+ * …) are not exposed here — they remain readable through their
+ * existing read paths.
+ */
+export const siteFlagDefinitionsList: McpTool = defineTool({
+    // SAFE: not a GraphQL mutation — pure registry read
+    name: 'site.flagDefinitions.list',
+    description: 'List registered site-flag definitions (path, default, audience, description). Use byNamespace=true to group by commerce/auth/theme/seo. Powers generic admin flag UIs.',
+    scopes: ['read:site'],
+    inputSchema: {
+        type: 'object',
+        properties: {
+            byNamespace: {type: 'boolean', default: false},
+        },
+    },
+}, async (args, _ctx) => {
+    const defs = listFlagDefinitions().map(d => ({
+        path: d.path,
+        defaultValue: d.defaultValue,
+        audience: d.audience ?? 'admin-only',
+        description: d.description,
+    }));
+    if (!args.byNamespace) {
+        return {flags: defs};
+    }
+    const grouped: Record<string, typeof defs> = {commerce: [], auth: [], theme: [], seo: []};
+    for (const d of defs) {
+        const {ns} = parseFlagPath(d.path as any);
+        (grouped[ns] ||= []).push(d);
+    }
+    return {byNamespace: grouped};
+});
+
 export const SITE_TOOLS: McpTool[] = [
     siteRevalidate,
     siteRegenerateSchema,
@@ -309,4 +364,5 @@ export const SITE_TOOLS: McpTool[] = [
     sitePublish,
     siteGetPublishHistory,
     siteSetLayoutMode,
+    siteFlagDefinitionsList,
 ];

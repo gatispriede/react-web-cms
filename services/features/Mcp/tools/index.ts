@@ -22,6 +22,23 @@ import {DIAGNOSTICS_TOOLS} from './diagnostics';
 import {DISCOVERY_TOOLS} from './discovery';
 import {EMAIL_TOOLS} from './email';
 import {ANCHOR_TOOLS} from './anchors';
+import {RELEASE_TOOLS} from './releases';
+import {PRICING_TOOLS} from './pricing';
+import {NOTIFICATION_TOOLS} from './notifications';
+import {SEO_TOOLS} from './seo';
+import {BACKUP_TOOLS} from './backup';
+import {MARKETING_TOOLS} from './marketing';
+import {CARS_TOOLS} from './cars';
+import {COMPLIANCE_TOOLS} from './compliance';
+import {A11Y_TOOLS} from './a11y';
+import {SYSTEM_PAGES_TOOLS} from './systemPages';
+import {COMMERCE_TOOLS} from './commerce';
+import {AUTH_TOOLS} from './auth';
+import {WAREHOUSE_SYNC_TOOLS} from './warehouseSync';
+import {ACCOUNT_SETTINGS_TOOLS} from './accountSettings';
+import {PRODUCT_TEMPLATES_TOOLS} from './productTemplates';
+import {CHECKOUT_TOOLS} from './checkout';
+import {ABANDONED_CART_TOOLS} from './abandonedCart';
 
 /**
  * Out of scope (defer):
@@ -53,6 +70,23 @@ export const ALL_MCP_TOOLS: McpTool[] = [
     ...DISCOVERY_TOOLS,
     ...EMAIL_TOOLS,
     ...ANCHOR_TOOLS,
+    ...RELEASE_TOOLS,
+    ...PRICING_TOOLS,
+    ...NOTIFICATION_TOOLS,
+    ...SEO_TOOLS,
+    ...BACKUP_TOOLS,
+    ...MARKETING_TOOLS,
+    ...CARS_TOOLS,
+    ...COMPLIANCE_TOOLS,
+    ...A11Y_TOOLS,
+    ...SYSTEM_PAGES_TOOLS,
+    ...COMMERCE_TOOLS,
+    ...AUTH_TOOLS,
+    ...WAREHOUSE_SYNC_TOOLS,
+    ...ACCOUNT_SETTINGS_TOOLS,
+    ...PRODUCT_TEMPLATES_TOOLS,
+    ...CHECKOUT_TOOLS,
+    ...ABANDONED_CART_TOOLS,
 ];
 
 /**

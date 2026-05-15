@@ -1,4 +1,4 @@
-import {message} from 'antd';
+import {notifyError, notifySuccess} from '@admin/lib/notify';
 import SiteFlagsApi from '@services/api/client/SiteFlagsApi';
 import {ConflictError, isConflictError} from '@client/lib/conflict';
 import {observable} from '@client/lib/state/observable';
@@ -68,8 +68,8 @@ export class LayoutViewModel {
 
     private async performSave(patch: SaveablePatch, expectedVersion: number | undefined): Promise<boolean> {
         const result = await this.api.save(patch as any, expectedVersion);
-        if ((result as {error?: string}).error) { message.error((result as {error?: string}).error ?? ''); return false; }
-        message.success(this.t('Saved'));
+        if ((result as {error?: string}).error) { notifyError((result as {error?: string}).error ?? ''); return false; }
+        notifySuccess(this.t('Saved'));
         if (typeof (result as {version?: number}).version === 'number') {
             this.version = (result as {version?: number}).version;
         }
@@ -95,12 +95,12 @@ export class LayoutViewModel {
                         try {
                             await this.performSave(patch, err.currentVersion);
                             this.conflict = null;
-                        } catch (e) { message.error(String((e as Error)?.message ?? e)); this.conflict = null; }
+                        } catch (e) { notifyError(e); this.conflict = null; }
                     },
                 };
             } else {
                 applyLocal(prev);
-                message.error(String((err as Error)?.message ?? err));
+                notifyError(err);
             }
         }
     }
@@ -137,7 +137,7 @@ export class LayoutViewModel {
     async saveInquiryEmail(): Promise<void> {
         const candidate = this.inquiryEmail.trim();
         if (candidate && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(candidate)) {
-            message.error(this.t('Enter a valid email address (or leave empty to reset to default).'));
+            notifyError(this.t('Enter a valid email address (or leave empty to reset to default).'));
             return;
         }
         this.inquirySaving = true;
@@ -155,11 +155,11 @@ export class LayoutViewModel {
                             this.inquiryEmailDirty = false;
                             await this.refresh();
                             this.conflict = null;
-                        } catch (e) { message.error(String((e as Error)?.message ?? e)); this.conflict = null; }
+                        } catch (e) { notifyError(e); this.conflict = null; }
                     },
                 };
             } else {
-                message.error(String((err as Error)?.message ?? err));
+                notifyError(err);
             }
         } finally { this.inquirySaving = false; }
     }
@@ -172,7 +172,7 @@ export class LayoutViewModel {
             this.inquiryMaxDirty = false;
             await this.refresh();
         } catch (err) {
-            message.error(String((err as Error)?.message ?? err));
+            notifyError(err);
         } finally { this.inquirySaving = false; }
     }
 
@@ -183,7 +183,7 @@ export class LayoutViewModel {
             this.inquiryOriginsDirty = false;
             await this.refresh();
         } catch (err) {
-            message.error(String((err as Error)?.message ?? err));
+            notifyError(err);
         } finally { this.inquirySaving = false; }
     }
 

@@ -2,6 +2,12 @@ import {Collection, Db} from 'mongodb';
 import {auditStamp} from '@services/features/Audit/audit';
 import {nextVersion, requireVersion} from '@services/infra/conflict';
 import {encrypt as secretBoxEncrypt} from '@services/infra/secretBox';
+import {buildSubRecord, sanitizeSubRecord} from './siteFlagDefinitions';
+// Side-effect imports — boot-time registration of namespaced flags.
+// Each module calls `defineFlag()` for its sub-record entries.
+// Phase 1.A registers `auth.*`; Phase 1.B registers `commerce.*`. New
+// namespaces (e.g. `theme.*`, `seo.*`) plug in the same way.
+import '@services/features/Commerce/commerceFlags';
 
 export type SiteLayoutMode = 'tabs' | 'scroll' | 'auto';
 
@@ -19,6 +25,41 @@ export function resolveLayoutMode(mode: SiteLayoutMode | undefined | null): 'tab
     if (mode === 'tabs') return 'tabs';
     // `'auto'`, undefined, null, or any unknown value: default to 'tabs'.
     return 'tabs';
+}
+
+/**
+ * Sub-record namespaces — see `docs/architecture/site-flags.md`.
+ *
+ * Each sub-record is a typed bag of feature-scoped flags, registered
+ * via `defineFlag()` in the consuming feature. The legacy top-level
+ * fields (`blogEnabled`, `layoutMode`, …) stay where they are for
+ * back-compat. New flags MUST go in a sub-record.
+ *
+ * Reserved here, populated by upcoming roadmap items
+ * (auth-split-client-admin, product-module-and-checkout-customization,
+ * product-display-templates, etc.). Index signature keeps the type
+ * open for `defineFlag()` registrations without re-editing this file.
+ */
+
+/** Storefront commerce flags — checkout, product audiences, fulfilment. */
+export interface ICommerceFlags {
+    [key: string]: unknown;
+}
+
+/** Auth-system flags — split client/admin login, signup gates, etc. */
+export interface IAuthFlags {
+    [key: string]: unknown;
+}
+
+/** Theme-system flags — preset autoload, contrast policy, etc. */
+export interface IThemeFlags {
+    [key: string]: unknown;
+}
+
+/** SEO sub-record (separate from the redirect-table service which lives
+ *  in its own collection). Reserved for future SEO toggles. */
+export interface ISeoSubFlags {
+    [key: string]: unknown;
 }
 
 export interface ISiteFlags {
@@ -74,6 +115,22 @@ export interface ISiteFlags {
      *  pre-migration deployments keep working. Secrets are
      *  AES-GCM-wrapped via `secretBox` when SECRETBOX_KEY is set. */
     mail?: ISiteMailConfig;
+    /** Polish bundle (W8g) — operator-picked subset of `SUPPORTED_CURRENCIES`
+     *  the storefront actually offers. Empty/undefined → all supported. */
+    enabledCurrencies?: string[];
+    /** Polish bundle (W8g) — default display currency (must appear in
+     *  `enabledCurrencies` when that list is non-empty). Falls back to
+     *  'EUR' when unset. */
+    defaultCurrency?: string;
+    /** Polish bundle (W8g) — toggle Stripe Tax as the VAT provider.
+     *  Inert when `STRIPE_SECRET_KEY` env var is absent. */
+    stripeTaxEnabled?: boolean;
+    /** Sub-record namespaces — populated via `defineFlag()` in consuming
+     *  features. See `docs/architecture/site-flags.md`. */
+    commerce?: ICommerceFlags;
+    auth?: IAuthFlags;
+    theme?: IThemeFlags;
+    seo?: ISeoSubFlags;
     version?: number;
     editedBy?: string;
     editedAt?: string;
@@ -107,6 +164,9 @@ export const DEFAULT_SITE_FLAGS: ISiteFlags = {
     inquiryAllowedOrigins: '',
     allowGuestCheckout: true,
     defaultAdminUiMode: 'advanced',
+    enabledCurrencies: [],
+    defaultCurrency: 'EUR',
+    stripeTaxEnabled: false,
 };
 
 /** Light validation — keeps obviously-broken values from being saved.
@@ -203,6 +263,21 @@ export class SiteFlagsService {
                 ? value.defaultAdminUiMode
                 : DEFAULT_SITE_FLAGS.defaultAdminUiMode,
             mail: sanitizeMailConfig(value?.mail),
+            enabledCurrencies: Array.isArray(value?.enabledCurrencies)
+                ? value!.enabledCurrencies!.filter((c): c is string => typeof c === 'string')
+                : DEFAULT_SITE_FLAGS.enabledCurrencies,
+            defaultCurrency: typeof value?.defaultCurrency === 'string' && value.defaultCurrency.length === 3
+                ? value.defaultCurrency.toUpperCase()
+                : DEFAULT_SITE_FLAGS.defaultCurrency,
+            stripeTaxEnabled: typeof value?.stripeTaxEnabled === 'boolean'
+                ? value.stripeTaxEnabled
+                : DEFAULT_SITE_FLAGS.stripeTaxEnabled,
+            // Sub-records — walked from the defineFlag() registry so
+            // future flags don't require touching this file.
+            commerce: buildSubRecord<ICommerceFlags>('commerce', value?.commerce),
+            auth: buildSubRecord<IAuthFlags>('auth', value?.auth),
+            theme: buildSubRecord<IThemeFlags>('theme', value?.theme),
+            seo: buildSubRecord<ISeoSubFlags>('seo', value?.seo),
             version: (doc as any)?.version ?? 0,
             editedBy: (doc as any)?.editedBy,
             editedAt: (doc as any)?.editedAt,
@@ -253,6 +328,21 @@ export class SiteFlagsService {
                 ? flags.defaultAdminUiMode
                 : current.defaultAdminUiMode,
             mail: flags.mail !== undefined ? sanitizeMailConfig(flags.mail) : current.mail,
+            enabledCurrencies: Array.isArray(flags.enabledCurrencies)
+                ? flags.enabledCurrencies.filter((c): c is string => typeof c === 'string' && c.length === 3).map(c => c.toUpperCase())
+                : current.enabledCurrencies,
+            defaultCurrency: typeof flags.defaultCurrency === 'string' && flags.defaultCurrency.length === 3
+                ? flags.defaultCurrency.toUpperCase()
+                : current.defaultCurrency,
+            stripeTaxEnabled: typeof flags.stripeTaxEnabled === 'boolean'
+                ? flags.stripeTaxEnabled
+                : current.stripeTaxEnabled,
+            // Sub-record patches: each registered flag is whitelist-validated
+            // via its `typeGuard`; unknown keys are dropped.
+            commerce: sanitizeSubRecord<ICommerceFlags>('commerce', flags.commerce, current.commerce ?? {}),
+            auth: sanitizeSubRecord<IAuthFlags>('auth', flags.auth, current.auth ?? {}),
+            theme: sanitizeSubRecord<IThemeFlags>('theme', flags.theme, current.theme ?? {}),
+            seo: sanitizeSubRecord<ISeoSubFlags>('seo', flags.seo, current.seo ?? {}),
         };
         const version = nextVersion(existingVersion);
         await this.settings.updateOne(

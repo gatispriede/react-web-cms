@@ -1,9 +1,12 @@
 import React from 'react'
-import {ConfigProvider, Layout, Modal, Spin, message, theme as antdTheme} from 'antd';
+import {ConfigProvider, Layout, Modal, Spin} from 'antd';
+import AdminToaster from '@admin/lib/AdminToaster';
+import {notifyError, notifySuccess} from '@admin/lib/notify';
+import {buildAdminTheme} from '@admin/lib/adminTheme';
+import {getCachedDarkMode, subscribeAdminDarkMode} from '@admin/lib/adminDarkMode';
 import PublishApi from "@services/api/client/PublishApi";
 import AddNewDialogNavigation from "@admin/features/Navigation/AddNewDialogNavigation";
 import {IPage} from "@interfaces/IPage";
-import staticTheme from '@client/features/Themes/themeConfig';
 import {applyThemeCssVars} from '@client/features/Themes/applyThemeCssVars';
 import ThemeApi from '@services/api/client/ThemeApi';
 import MongoApi from '@services/api/client/MongoApi';
@@ -19,6 +22,7 @@ import AdminBuildHeader from "./AdminBuild/AdminBuildHeader";
 import AdminBuildSider from "./AdminBuild/AdminBuildSider";
 import {buildPageMenuItems} from "./AdminBuild/pageMenuBuilder";
 import {loadNavigationPages} from "./AdminBuild/loadNavigationPages";
+import InlineEditOverlay from "./InlineEdit/InlineEditOverlay";
 
 interface IHomeState {
     loading: boolean,
@@ -46,6 +50,11 @@ class AdminApp extends React.Component<{
     tApp: TFunction<string, undefined>
 }> {
     sections: any[] = []
+    /** Section lookup populated on every `initialize()`. The inline-edit
+     *  overlay reads this to dispatch a `data-edit-target` click through
+     *  to the right section row when persisting. Map identity is reused
+     *  so the overlay's useCallback memo isn't busted on every re-render. */
+    private sectionsById: Map<string, any> = new Map()
     role: UserRole = 'viewer'
     admin: boolean = false
     canEditNav: boolean = false
@@ -67,7 +76,7 @@ class AdminApp extends React.Component<{
         pages: [],
         tabProps: [],
         activeTab: '0',
-        darkMode: false,
+        darkMode: getCachedDarkMode(),
         siderCollapsed: typeof window !== 'undefined' && window.localStorage.getItem('admin.sider.collapsed') === '1',
         openKeys: [],
     }
@@ -92,16 +101,17 @@ class AdminApp extends React.Component<{
         try {
             const result = await this.PublishApi.publish();
             if (result.error) {
-                message.error(result.error);
+                notifyError(result.error);
                 return;
             }
-            message.success(`Published at ${result.publishedAt}`);
+            notifySuccess(`Published at ${result.publishedAt}`);
             this.setState({publishedAt: result.publishedAt});
         } finally {
             this.setState({publishing: false});
         }
     };
     private refreshUnsub?: () => void;
+    private darkModeUnsub?: () => void;
 
     componentDidMount() {
         // Q7 — first-run guard. If the install is fresh (no admin yet),
@@ -118,11 +128,15 @@ class AdminApp extends React.Component<{
         void this.initialize()
         void this.loadPublishedMeta()
         void this.loadThemeVars()
-        if (typeof window !== 'undefined') {
-            const saved = window.localStorage.getItem('admin.darkMode');
-            if (saved === '1') this.setState({darkMode: true});
-            document.documentElement.setAttribute('data-admin-theme', saved === '1' ? 'dark' : 'light');
-        }
+        // Dark mode is owned by the `adminDarkMode` store (localStorage
+        // `admin.darkMode` + `data-admin-theme` stamp + cross-tab sync).
+        // The top-bar `DarkModeSwitcher` is the writer; this subscription
+        // keeps the `ConfigProvider` algorithm in lockstep so the theme
+        // flips without a reload. The store also stamps the document
+        // attribute itself, so no manual `setAttribute` here.
+        this.darkModeUnsub = subscribeAdminDarkMode(() => {
+            this.setState({darkMode: getCachedDarkMode()});
+        });
         this.refreshUnsub = refreshBus.subscribe(() => this.refreshView());
     }
 
@@ -145,6 +159,7 @@ class AdminApp extends React.Component<{
 
     componentWillUnmount() {
         this.refreshUnsub?.();
+        this.darkModeUnsub?.();
     }
 
     /** Called by the RefreshBus on any content mutation. Re-fetches nav + theme. */
@@ -153,18 +168,6 @@ class AdminApp extends React.Component<{
         await this.loadThemeVars();
         await this.loadPublishedMeta();
     }
-
-    toggleDarkMode = (on: boolean) => {
-        this.setState({darkMode: on});
-        if (typeof window !== 'undefined') {
-            window.localStorage.setItem('admin.darkMode', on ? '1' : '0');
-            // Stamp the document so custom SCSS (sider chrome, header
-            // strip, drawer overlays — anything outside AntD's
-            // ConfigProvider scope) can flip via
-            // `[data-admin-theme="dark"]` selectors.
-            document.documentElement.setAttribute('data-admin-theme', on ? 'dark' : 'light');
-        }
-    };
 
     loadThemeVars = async () => {
         const active = await this.ThemeApi.getActive();
@@ -193,10 +196,20 @@ class AdminApp extends React.Component<{
         if (!this.canEditNav) return;
         const target = this.state.tabProps.find(t => t.key === key);
         if (!target) return;
+        // Optimistic splice — the spec asserts the row disappears either
+        // immediately or after a list refresh. Splicing before the await
+        // makes the e2e (and humans) get instant feedback.
         const newItems = this.state.tabProps.filter(t => t.key !== key);
-        await this.MongoApi.deleteNavigation(target.page, {idempotencyKey});
         const nextActive = newItems[0]?.key ?? '0';
         this.setState({tabProps: newItems, activeTab: nextActive, loading: false});
+        try {
+            await this.MongoApi.deleteNavigation(target.page, {idempotencyKey});
+            notifySuccess(this.props.t('Page deleted'));
+        } catch (err) {
+            // Roll back the optimistic splice by reloading from server.
+            notifyError(err);
+            await this.initialize();
+        }
     });
 
     deletePage = async (key: string) => {
@@ -252,6 +265,15 @@ class AdminApp extends React.Component<{
             setAnchors(pages.map((p: any) => ({page: p.page})), sectionsByPage);
         } catch (err) {
             console.warn('anchorRegistry refresh failed:', err);
+        }
+        // Refresh the inline-edit overlay's section lookup. Re-uses the
+        // same Map identity so the overlay's `useCallback` memoization
+        // does not regenerate the save handler on every initialize().
+        this.sectionsById.clear();
+        for (const list of Object.values(sectionsByPage)) {
+            for (const s of (list as any[])) {
+                if (s?.id) this.sectionsById.set(s.id, s);
+            }
         }
         this.setState(newState)
     }
@@ -332,10 +354,30 @@ class AdminApp extends React.Component<{
             onConfirmDelete: this.confirmDelete,
         });
         return (
-            <ConfigProvider theme={{
-                ...staticTheme,
-                algorithm: this.state.darkMode ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
-            }}>
+            // `buildAdminTheme` is the global-first dark-mode token set
+            // (`@admin/lib/adminTheme`). It sets `cssVar: {key: 'admin'}`
+            // so every AntD token is exposed as a `--ant-color-*` custom
+            // property — that's what lets `AdminDarkMode.scss` +
+            // `AppLoginWrapper.scss` consume one shared palette instead
+            // of drifting as a parallel SCSS system. The algorithm +
+            // token set swap on `darkMode`, which is driven by the
+            // `adminDarkMode` store (top-bar `DarkModeSwitcher`). See
+            // `docs/roadmap/admin/admin-dark-mode-audit.md`.
+            <ConfigProvider theme={buildAdminTheme(this.state.darkMode)}>
+                {/* Single admin toast container. `AdminToaster` is a
+                    function-component wrapper that feeds Sonner's `theme`
+                    prop from the `adminDarkMode` store so toasts flip
+                    light/dark with the rest of the chrome — `AdminApp` is
+                    a class component and can't subscribe directly. */}
+                <AdminToaster />
+                <InlineEditOverlay
+                    enabled={this.canEditNav}
+                    t={this.props.t}
+                    sectionsById={this.sectionsById}
+                />
+                {/* The kbar command palette provider is mounted once at the
+                    shell level (`UserStatusBar`) so it wraps the top-bar
+                    trigger + every pane — not just the build view. */}
                 <Spin spinning={this.state.loading}>
                     <AdminBuildHeader
                         admin={this.admin}

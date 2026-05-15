@@ -1,0 +1,34 @@
+{
+    "slug": "agency",
+    "name": "Agency",
+    "tagline": "Stark, expressive motion, oversized type — case-study-led storytelling for design studios.",
+    "audience": "Design / dev / brand / marketing studios; expensive-portfolio tier",
+    "mood": ["stark", "expressive", "confident", "brutalist-adjacent", "scroll-tied"],
+    "palette": {
+        "surface":      {"light": "#F5F5F5", "dark": "#0A0A0A"},
+        "ink":          {"light": "#000000", "dark": "#F5F5F5"},
+        "accent":       {"light": "#FF5C5C", "dark": "#FF5C5C"},
+        "accentInk":    {"light": "#FFFFFF", "dark": "#0A0A0A"},
+        "surfaceInset": {"light": "#EAEAEA", "dark": "#141414"},
+        "rule":         {"light": "#1A1A1A", "dark": "#E5E5E5"}
+    },
+    "typography": {
+        "display": "'Geist', 'Inter Tight', system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "body":    "'Geist', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "mono":    "'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace",
+        "baseSize": 16
+    },
+    "motion": "expressive-bold",
+    "headerBehavior": "hide-on-down-show-on-up",
+    "footerLayout": "brand-led-xxl",
+    "logoLockup": "wordmark",
+    "moduleStyleHints": {
+        "hero": "oversized-type",
+        "timeline": "horizontal-scroll",
+        "projectCaseStudy": "scroll-tied",
+        "metricsCallout": "big-number",
+        "beforeAfterSlider": "edge-to-edge",
+        "posts": "asymmetric"
+    },
+    "darkDefault": false
+}

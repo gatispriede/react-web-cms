@@ -26,6 +26,35 @@ const slugify = (s: string) =>
 
 const escapeRegex = (s: string) => (s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+/**
+ * Sanitise a `ProductPrices` map (W8g — multi-currency-and-tax). Drops
+ * non-numeric / non-finite values, uppercases the ISO-4217 keys, and
+ * returns `undefined` when nothing survives so we never persist an empty
+ * `{}` (which `normalize` would just re-synthesise from `price` anyway).
+ */
+const sanitizePrices = (raw: unknown): Record<string, number> | undefined => {
+    if (!raw || typeof raw !== 'object') return undefined;
+    const out: Record<string, number> = {};
+    for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+        if (typeof v === 'number' && Number.isFinite(v) && v >= 0 && /^[A-Za-z]{3}$/.test(k)) {
+            out[k.toUpperCase()] = Math.round(v);
+        }
+    }
+    return Object.keys(out).length > 0 ? out : undefined;
+};
+
+/** Sanitise the per-product `IProductTax` hint — see IProduct.ts. */
+const sanitizeTax = (raw: unknown): import('@interfaces/IProduct').IProductTax | undefined => {
+    if (!raw || typeof raw !== 'object') return undefined;
+    const t = raw as Record<string, unknown>;
+    const regimes = ['standard', 'margin', 'private-seller', 'zero-rated', 'exempt'];
+    const out: import('@interfaces/IProduct').IProductTax = {};
+    if (typeof t.regime === 'string' && regimes.includes(t.regime)) out.regime = t.regime as never;
+    if (typeof t.category === 'string' && t.category.trim()) out.category = t.category.trim();
+    if (typeof t.included === 'boolean') out.included = t.included;
+    return Object.keys(out).length > 0 ? out : undefined;
+};
+
 export class ProductService {
     private products: Collection;
     private indexesReady = false;
@@ -94,6 +123,60 @@ export class ProductService {
         return doc ? this.normalize(doc) : null;
     }
 
+    /**
+     * Phase 1.F follow-up — sibling-products fetch for `SubProductsGrid`.
+     *
+     * Resolution order:
+     *   1. If the source product has `bundleParentId`, return every other
+     *      product sharing the same parent (excluding self).
+     *   2. If the source product IS a bundle parent (other products
+     *      reference it via `bundleParentId === source.id`), return them.
+     *   3. Fall back to category siblings — same first category, excluding
+     *      self. Ordered by `publishedAt desc`.
+     *
+     * Drafts are always excluded. `limit` clamps to [1, 50].
+     */
+    async listSiblings(
+        productId: string,
+        opts: {limit?: number} = {},
+    ): Promise<IProduct[]> {
+        await this.ensureIndexes();
+        const cap = Math.max(1, Math.min(50, Math.floor(opts.limit ?? 8) || 8));
+        const src = await this.getById(productId);
+        if (!src) return [];
+
+        // (1) sibling-of-sibling: same explicit bundleParentId.
+        if (src.bundleParentId) {
+            const docs = await this.products
+                .find({
+                    bundleParentId: src.bundleParentId,
+                    id: {$ne: src.id},
+                    draft: {$ne: true},
+                } as any, {projection: {_id: 0}})
+                .limit(cap).toArray();
+            if (docs.length > 0) return docs.map(d => this.normalize(d));
+        }
+        // (2) children of this bundle parent.
+        const children = await this.products
+            .find({bundleParentId: src.id, draft: {$ne: true}} as any, {projection: {_id: 0}})
+            .limit(cap).toArray();
+        if (children.length > 0) return children.map(d => this.normalize(d));
+
+        // (3) category fallback — same first category.
+        const firstCategory = Array.isArray(src.categories) ? src.categories[0] : undefined;
+        if (!firstCategory) return [];
+        const cat = await this.products
+            .find({
+                categories: firstCategory,
+                id: {$ne: src.id},
+                draft: {$ne: true},
+            } as any, {projection: {_id: 0}})
+            .sort({publishedAt: -1, createdAt: -1})
+            .limit(cap)
+            .toArray();
+        return cat.map(d => this.normalize(d));
+    }
+
     async search(q: string, {limit = 50, includeDrafts = false}: {limit?: number; includeDrafts?: boolean} = {}): Promise<IProduct[]> {
         await this.ensureIndexes();
         const cap = Math.max(1, Math.min(500, Math.floor(limit) || 50));
@@ -157,6 +240,37 @@ export class ProductService {
                 updatedAt: now,
                 version,
             };
+            // Phase 1.F — templateId passthrough. Empty string / explicit
+            // `null` clears the assignment; undefined keeps the existing
+            // value so non-template-aware editors don't accidentally drop
+            // it on a generic save.
+            if (Object.prototype.hasOwnProperty.call(product, 'templateId')) {
+                const tid = (product as any).templateId;
+                (update as any).templateId = tid === null || tid === '' ? undefined : tid;
+            } else if ((existing as any).templateId !== undefined) {
+                (update as any).templateId = (existing as any).templateId;
+            }
+            // Multi-currency + tax (W8g). `prices` / `baseCurrency` / `tax`
+            // are optional: only $set them when the caller provided them so
+            // a non-pricing-aware save (e.g. a title-only edit) doesn't drop
+            // an operator's currency map. `prices` of `{}` clears the map
+            // back to legacy-single-currency behaviour.
+            if (Object.prototype.hasOwnProperty.call(product, 'prices')) {
+                update.prices = sanitizePrices(product.prices);
+            } else if ((existing as any).prices !== undefined) {
+                update.prices = (existing as any).prices;
+            }
+            if (Object.prototype.hasOwnProperty.call(product, 'baseCurrency')) {
+                const bc = (product.baseCurrency || '').trim().toUpperCase();
+                update.baseCurrency = bc || undefined;
+            } else if ((existing as any).baseCurrency !== undefined) {
+                update.baseCurrency = (existing as any).baseCurrency;
+            }
+            if (Object.prototype.hasOwnProperty.call(product, 'tax')) {
+                update.tax = sanitizeTax(product.tax);
+            } else if ((existing as any).tax !== undefined) {
+                update.tax = (existing as any).tax;
+            }
             if (editedBy) update.editedBy = editedBy;
             if (product.publishedAt !== undefined) update.publishedAt = product.publishedAt;
             if (update.draft === false && !(existing as any).publishedAt) update.publishedAt = now;
@@ -192,12 +306,21 @@ export class ProductService {
             // every manual product. Only stamp it when the caller set one.
             ...(product.externalId ? {externalId: product.externalId} : {}),
             manualOverrides: product.manualOverrides ?? [],
+            // Multi-currency + tax (W8g). All three are optional and only
+            // stamped when the caller supplied them — `normalize` synthesises
+            // `prices` from `price`+`currency` on read otherwise.
+            ...(sanitizePrices(product.prices) ? {prices: sanitizePrices(product.prices)} : {}),
+            ...(product.baseCurrency && product.baseCurrency.trim()
+                ? {baseCurrency: product.baseCurrency.trim().toUpperCase()} : {}),
+            ...(sanitizeTax(product.tax) ? {tax: sanitizeTax(product.tax)} : {}),
             publishedAt: product.publishedAt ?? (draft ? undefined : now),
             draft,
             createdAt: now,
             updatedAt: now,
             version: 1,
             ...(editedBy ? {editedBy} : {}),
+            // Phase 1.F — templateId passthrough for new products.
+            ...(product.templateId ? {templateId: product.templateId} : {}),
         };
         await this.products.insertOne(doc as any);
         return {id, version: 1, slug};
@@ -301,6 +424,31 @@ export class ProductService {
             description: d.description ?? '',
             price: typeof d.price === 'number' ? d.price : 0,
             currency: d.currency ?? '',
+            // Multi-currency map (W8g). Backwards-compat: if `prices` is
+            // missing or empty, synthesize from legacy single-currency
+            // `price` + `currency`. Reads never see undefined; writes that
+            // only set `price` keep working.
+            prices: (() => {
+                const stored = (d.prices && typeof d.prices === 'object') ? d.prices as Record<string, unknown> : null;
+                const out: Record<string, number> = {};
+                if (stored) {
+                    for (const [k, v] of Object.entries(stored)) {
+                        if (typeof v === 'number' && Number.isFinite(v)) out[k.toUpperCase()] = v;
+                    }
+                }
+                if (Object.keys(out).length === 0 && typeof d.price === 'number' && typeof d.currency === 'string' && d.currency.trim()) {
+                    out[d.currency.toUpperCase()] = d.price;
+                }
+                return out;
+            })(),
+            // Base currency for FX fallback (W8g). Defaults to the legacy
+            // single-currency `currency` when the operator didn't set one.
+            baseCurrency: (typeof d.baseCurrency === 'string' && d.baseCurrency.trim())
+                ? d.baseCurrency.toUpperCase()
+                : (typeof d.currency === 'string' && d.currency.trim() ? d.currency.toUpperCase() : undefined),
+            // Per-product tax hint (W8g) — passed through verbatim; the
+            // VatRegimeService / StripeTaxService consume it at checkout.
+            tax: sanitizeTax(d.tax),
             stock: typeof d.stock === 'number' ? d.stock : 0,
             images: Array.isArray(d.images) ? d.images : [],
             categories: Array.isArray(d.categories) ? d.categories : [],

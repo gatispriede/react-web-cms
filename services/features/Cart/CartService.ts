@@ -169,12 +169,31 @@ export class CartService {
     // ---------------- Public API ----------------
 
     async getCart(owner: CartOwner): Promise<Cart> {
-        if (owner.kind === 'guest') {
-            const cart = await this.loadGuest(owner.cartId);
-            return finalize(cart);
-        }
-        const {cart} = await this.loadCustomer(owner.customerId);
+        const cart = owner.kind === 'guest'
+            ? await this.loadGuest(owner.cartId)
+            : (await this.loadCustomer(owner.customerId)).cart;
+        await this.hydrateTitles(cart);
         return finalize(cart);
+    }
+
+    /** Back-fill `title` on legacy line items that pre-date the
+     *  snapshot. Lookups are batched into a single `getProductsByIds`
+     *  pass — for a 5-item cart this is one Mongo round-trip, not 5.
+     *  Items that already carry a title are skipped entirely. */
+    private async hydrateTitles(cart: Cart): Promise<void> {
+        const missing = cart.items.filter(it => !it.title);
+        if (missing.length === 0) return;
+        const ids = Array.from(new Set(missing.map(it => it.productId)));
+        const titleById = new Map<string, string>();
+        for (const id of ids) {
+            try {
+                const p = await this.products.getById(id);
+                if (p?.title) titleById.set(id, p.title);
+            } catch { /* product removed since add; leave title undefined */ }
+        }
+        for (const it of cart.items) {
+            if (!it.title) it.title = titleById.get(it.productId);
+        }
     }
 
     async addItem(owner: CartOwner, input: {productId: string; sku: string; qty: number}): Promise<Cart> {
@@ -205,6 +224,11 @@ export class CartService {
                     qty: finalQty,
                     priceSnapshot: price,
                     currency: product.currency,
+                    // Snapshot the title at add-time alongside the price.
+                    // Survives later title edits on the product, matches
+                    // the line-item philosophy: what was added is what
+                    // shows up in the cart.
+                    title: product.title,
                 });
             }
             if (!cart.currency) cart.currency = product.currency;

@@ -2,6 +2,7 @@ import type {IAdapterConfig} from '@interfaces/IInventory';
 import type {IWarehouseAdapter} from './IWarehouseAdapter';
 import {MockAdapter} from './MockAdapter';
 import {GenericFeedAdapter} from './GenericFeedAdapter';
+import {SsComCarsAdapter} from './SsComCarsAdapter';
 
 /**
  * Adapter factory. Switches on the discriminated `IAdapterConfig.kind`.
@@ -18,10 +19,12 @@ export function createAdapter(config: IAdapterConfig): IWarehouseAdapter {
             return new MockAdapter();
         case 'generic-feed':
             return new GenericFeedAdapter(config);
+        case 'ss-com-cars':
+            return new SsComCarsAdapter(config);
         default:
             throw new Error(`createAdapter: unknown adapter kind '${(config as {kind: string}).kind}'`);
     }
 }
 
-export {MockAdapter, GenericFeedAdapter};
+export {MockAdapter, GenericFeedAdapter, SsComCarsAdapter};
 export type {IWarehouseAdapter};

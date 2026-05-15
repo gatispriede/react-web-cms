@@ -266,6 +266,11 @@ class SectionContent extends React.Component<IPropsSectionContent> {
                 data-testid={section.id ? `section-row-${section.id}` : undefined}
                 data-mobile-behavior={mobileBehavior}
                 data-state={expanded ? 'open' : 'closed'}
+                /* Inline-edit overlay anchors here — the click handler walks
+                 * up from a `[data-edit-target]` to find the owning section's
+                 * id so the save dispatcher can rewrite the right row. Only
+                 * emitted in admin so the public site stays clean. */
+                data-edit-section={this.admin && section.id ? section.id : undefined}
             >
                 {
                     (section.content ?? []).map((item: IItem, id: number) => {

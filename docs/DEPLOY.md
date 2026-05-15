@@ -1,5 +1,19 @@
 # Deploy — funisimo.pro on DigitalOcean
 
+> **⚠️ Current deploy path (2026-05-08): Kamal v2 via GHCR + GitHub Actions.**
+> Funisimo.pro live deploys go through `kamal app boot` against a GHCR-built image. See **[runbooks/kamal-deploy.md](runbooks/kamal-deploy.md)** for the live operational truth.
+>
+> Skyclimber.pro stays on the legacy SSH+rsync path described below until its own DigitalOcean API token + Kamal cutover lands.
+>
+> **The rest of this document is preserved as:**
+> - The initial-bootstrap reference for new droplets (DNS / sshd hardening / firewall / Caddy install — all still accurate)
+> - The emergency-fallback path if Kamal needs backing out (`workflow_dispatch --target=funisimo.pro` in `.github/workflows/ci.yml`)
+> - The Skyclimber active path until its Kamal cutover
+>
+> For day-to-day deploys, ignore most of this file and read the Kamal runbook. For first-droplet provisioning, read sections 1-6 here.
+
+---
+
 This guide covers a single-droplet deploy for the CMS (admin + standalone GraphQL + MongoDB + SSG-served Next.js). Suitable for a personal portfolio with low traffic. For higher traffic, split `mongodb` onto its own droplet or use DO Managed MongoDB.
 
 ---

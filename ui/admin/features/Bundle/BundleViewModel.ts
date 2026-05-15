@@ -1,4 +1,4 @@
-import {message} from 'antd';
+import {notifyError, notifySuccess, notifyWarning} from '@admin/lib/notify';
 import {triggerRevalidate} from '@client/lib/triggerRevalidate';
 import {observable} from '@client/lib/state/observable';
 
@@ -36,9 +36,9 @@ export class BundleViewModel {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            message.success(this.t('Export downloaded'));
+            notifySuccess(this.t('Export downloaded'));
         } catch (err) {
-            message.error(this.t('Export failed') + ': ' + String(err));
+            notifyError(this.t('Export failed') + ': ' + String(err));
         } finally {
             this.exporting = false;
         }
@@ -51,7 +51,7 @@ export class BundleViewModel {
             if (!parsed?.manifest || !parsed?.site) throw new Error('Missing manifest or site');
             this.pendingBundle = parsed;
         } catch (err) {
-            message.error(this.t('Invalid bundle file') + ': ' + String(err));
+            notifyError(this.t('Invalid bundle file') + ': ' + String(err));
         }
     }
 
@@ -76,9 +76,9 @@ export class BundleViewModel {
             if (!res.ok || data.error) throw new Error(data.error || `Import failed: ${res.status}`);
             if (this.progressTimer) { clearInterval(this.progressTimer); this.progressTimer = null; }
             this.importProgress = 100;
-            message.success(`${this.t('Import complete')} — ${JSON.stringify(data.restored)}, assets: ${data.assets}`);
+            notifySuccess(`${this.t('Import complete')} — ${JSON.stringify(data.restored)}, assets: ${data.assets}`);
             if (Array.isArray(data.skippedAssets) && data.skippedAssets.length) {
-                message.warning(`${this.t('Skipped assets')}: ${data.skippedAssets.join(', ')}`);
+                notifyWarning(`${this.t('Skipped assets')}: ${data.skippedAssets.join(', ')}`);
             }
             triggerRevalidate({scope: 'all'});
             this.pendingBundle = null;
@@ -87,7 +87,7 @@ export class BundleViewModel {
         } catch (err) {
             if (this.progressTimer) { clearInterval(this.progressTimer); this.progressTimer = null; }
             this.importProgress = null;
-            message.error(this.t('Import failed') + ': ' + String(err));
+            notifyError(this.t('Import failed') + ': ' + String(err));
         } finally {
             this.importing = false;
         }

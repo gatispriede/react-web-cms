@@ -6,6 +6,7 @@ import {TFunction} from "i18next";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import RevealOnScroll from "@client/lib/RevealOnScroll";
 import {slugifyAnchor} from "@utils/stringFunctions";
+import {inlineEditAttr} from "@client/lib/inlineEditAttr";
 import type {IPipelineFlow} from "./PipelineFlow.types";
 export type {IPipelineFlow, IPipelineStep} from "./PipelineFlow.types";
 export {EPipelineFlowStyle} from "./PipelineFlow.types";
@@ -22,23 +23,25 @@ export class PipelineFlowContent extends ContentManager {
     setField<K extends keyof IPipelineFlow>(k: K, v: IPipelineFlow[K]) { this._parsedContent[k] = v; }
 }
 
-const PipelineFlow = ({item, tApp}: {
+const PipelineFlow = ({item, tApp, admin}: {
     item: IItem;
     t: TFunction<"translation", undefined>;
     tApp: TFunction<string, undefined>;
+    admin?: boolean;
 }) => {
     const c = new PipelineFlowContent(EItemType.PipelineFlow, item.content).data;
     const tr = (v: string) => <InlineTranslatable tApp={tApp as any} source={v}/>;
     const steps = c.steps ?? [];
     const sideNotes = c.sideNotes ?? [];
+    const editId = item.name || EItemType.PipelineFlow;
 
     return (
         <RevealOnScroll className={`pipeline-flow ${item.style ?? ''}`}>
             {(c.eyebrow || c.title || c.subtitle) && (
                 <header className="pipeline-flow__head">
-                    {c.eyebrow && <div className="pipeline-flow__eyebrow">{tr(c.eyebrow)}</div>}
-                    {c.title && <h2 id={slugifyAnchor(c.title)} className="pipeline-flow__title">{tr(c.title)}</h2>}
-                    {c.subtitle && <p className="pipeline-flow__subtitle">{tr(c.subtitle)}</p>}
+                    {c.eyebrow && <div className="pipeline-flow__eyebrow" {...inlineEditAttr(admin, editId, 'eyebrow')}>{tr(c.eyebrow)}</div>}
+                    {c.title && <h2 id={slugifyAnchor(c.title)} className="pipeline-flow__title" {...inlineEditAttr(admin, editId, 'title')}>{tr(c.title)}</h2>}
+                    {c.subtitle && <p className="pipeline-flow__subtitle" {...inlineEditAttr(admin, editId, 'subtitle')}>{tr(c.subtitle)}</p>}
                 </header>
             )}
             <div className={`pipeline-flow__body${sideNotes.length > 0 ? ' has-side' : ''}`}>
@@ -48,24 +51,24 @@ const PipelineFlow = ({item, tApp}: {
                             <div className="pipeline-flow__step-no">{String(i + 1).padStart(2, '0')}</div>
                             <div className="pipeline-flow__step-body">
                                 <div className="pipeline-flow__step-row">
-                                    <span className="pipeline-flow__step-label">{tr(s.label)}</span>
+                                    <span className="pipeline-flow__step-label" {...inlineEditAttr(admin, editId, `steps.${i}.label`)}>{tr(s.label)}</span>
                                     {s.status && (
                                         <span className={`pipeline-flow__status pipeline-flow__status--${(s.status ?? '').toLowerCase()}`}>
                                             {s.status}
                                         </span>
                                     )}
-                                    {s.meta && <span className="pipeline-flow__meta">{tr(s.meta)}</span>}
+                                    {s.meta && <span className="pipeline-flow__meta" {...inlineEditAttr(admin, editId, `steps.${i}.meta`)}>{tr(s.meta)}</span>}
                                 </div>
-                                {s.notes && <div className="pipeline-flow__step-notes">{tr(s.notes)}</div>}
+                                {s.notes && <div className="pipeline-flow__step-notes" {...inlineEditAttr(admin, editId, `steps.${i}.notes`)}>{tr(s.notes)}</div>}
                             </div>
                         </li>
                     ))}
                 </ol>
                 {sideNotes.length > 0 && (
                     <aside className="pipeline-flow__aside">
-                        {c.sideNotesLabel && <div className="pipeline-flow__sub">{tr(c.sideNotesLabel)}</div>}
+                        {c.sideNotesLabel && <div className="pipeline-flow__sub" {...inlineEditAttr(admin, editId, 'sideNotesLabel')}>{tr(c.sideNotesLabel)}</div>}
                         <ul>
-                            {sideNotes.map((n, i) => <li key={i}>{tr(n)}</li>)}
+                            {sideNotes.map((n, i) => <li key={i} {...inlineEditAttr(admin, editId, `sideNotes.${i}`)}>{tr(n)}</li>)}
                         </ul>
                     </aside>
                 )}

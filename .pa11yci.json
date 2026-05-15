@@ -1,0 +1,30 @@
+{
+  "//": "Wave 8a — Pa11y CI config. WCAG 2.2 AA standard; zero-violation gate. Routes are passed in by tools/scripts/pa11y-batch.mjs at runtime so the same config works locally + in CI without duplication.",
+  "defaults": {
+    "standard": "WCAG2AA",
+    "runners": ["axe", "htmlcs"],
+    "timeout": 60000,
+    "wait": 800,
+    "threshold": 0,
+    "ignore": [
+      "notice",
+      "warning"
+    ],
+    "chromeLaunchConfig": {
+      "args": [
+        "--no-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu"
+      ]
+    }
+  },
+  "urls": [
+    "http://localhost:3000/",
+    "http://localhost:3000/blog",
+    "http://localhost:3000/products",
+    "http://localhost:3000/cart",
+    "http://localhost:3000/checkout",
+    "http://localhost:3000/account",
+    "http://localhost:3000/privacy"
+  ]
+}

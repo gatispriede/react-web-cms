@@ -1,4 +1,5 @@
 import {useCallback, useEffect, useState} from 'react';
+import {useRouter} from 'next/router';
 
 /**
  * Tiny step-state hook for the checkout flow. Persists `orderId` plus
@@ -34,8 +35,20 @@ const writeState = (state: CheckoutState) => {
     try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch { /* quota / private mode */ }
 };
 
+/** Map each step to the file-system route that renders it. Drives
+ *  `goTo()`'s router push. Kept in sync with `ui/client/pages/checkout/*`. */
+const STEP_ROUTES: Record<CheckoutStep, string> = {
+    cart: '/cart',
+    address: '/checkout/address',
+    shipping: '/checkout/shipping',
+    payment: '/checkout/payment',
+    review: '/checkout/payment',          // no /review route today — payment is the review surface
+    confirmation: '/checkout/confirmation',
+};
+
 export function useCheckoutMachine() {
     const [state, setState] = useState<CheckoutState>(() => readState());
+    const router = useRouter();
 
     useEffect(() => { writeState(state); }, [state]);
 
@@ -45,7 +58,18 @@ export function useCheckoutMachine() {
 
     const goTo = useCallback((step: CheckoutStep) => {
         setState(s => ({...s, step}));
-    }, []);
+        // Each step is a separate Next.js file-system route — updating
+        // local state alone left the user staring at the same page. Push
+        // through the router so the next step actually mounts. Best-effort:
+        // SSR contexts (no `window`) skip the push; the LS-persisted state
+        // takes over on rehydrate.
+        if (typeof window !== 'undefined') {
+            const target = STEP_ROUTES[step];
+            if (target && router.asPath !== target) {
+                void router.push(target);
+            }
+        }
+    }, [router]);
 
     const reset = useCallback(() => {
         setState({step: 'cart'});

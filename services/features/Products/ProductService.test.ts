@@ -225,4 +225,52 @@ describe('ProductService', () => {
             expect(created.id).toBeTruthy();
         });
     });
+
+    // Multi-currency + tax (W8g — multi-currency-and-tax).
+    describe('multi-currency + tax', () => {
+        it('persists a prices map, baseCurrency and tax hint on create', async () => {
+            const res = await service.save(baseInput({
+                sku: 'MC-1',
+                prices: {eur: 199000, GBP: 169000, bad: -5} as any,
+                baseCurrency: 'eur',
+                tax: {regime: 'margin', category: 'txcd_99999999', included: true, junk: 1} as any,
+            }));
+            const doc = await service.getById(res.id);
+            // keys uppercased, negative / non-numeric dropped
+            expect(doc?.prices).toEqual({EUR: 199000, GBP: 169000});
+            expect(doc?.baseCurrency).toBe('EUR');
+            expect(doc?.tax).toEqual({regime: 'margin', category: 'txcd_99999999', included: true});
+        });
+
+        it('synthesizes prices + baseCurrency from legacy price/currency when no map stored', async () => {
+            const res = await service.save(baseInput({sku: 'MC-2', price: 5000, currency: 'EUR'}));
+            const doc = await service.getById(res.id);
+            expect(doc?.prices).toEqual({EUR: 5000});
+            expect(doc?.baseCurrency).toBe('EUR');
+            expect(doc?.tax).toBeUndefined();
+        });
+
+        it('keeps an existing prices map on a save that does not mention prices', async () => {
+            const created = await service.save(baseInput({sku: 'MC-3', prices: {EUR: 1000, USD: 1100}}));
+            await service.save({
+                ...baseInput({sku: 'MC-3', title: 'Sample Product'}),
+                id: created.id,
+                description: 'title-only edit',
+            }, 'editor@x', null);
+            const doc = await service.getById(created.id);
+            expect(doc?.prices).toEqual({EUR: 1000, USD: 1100});
+        });
+
+        it('clears the prices map back to legacy when an explicit {} is sent', async () => {
+            const created = await service.save(baseInput({sku: 'MC-4', prices: {EUR: 1000, USD: 1100}}));
+            await service.save({
+                ...baseInput({sku: 'MC-4', title: 'Sample Product'}),
+                id: created.id,
+                prices: {},
+            }, 'editor@x', null);
+            const doc = await service.getById(created.id);
+            // empty map cleared → normalize re-synthesises from price/currency
+            expect(doc?.prices).toEqual({EUR: 1000});
+        });
+    });
 });

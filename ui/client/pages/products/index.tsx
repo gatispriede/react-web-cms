@@ -1,10 +1,10 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useEffect, useMemo} from 'react';
 import {GetServerSideProps} from 'next';
 import {gqlFetch} from '@client/lib/gqlFetch';
 import {gatePath} from '@client/lib/loaders/applyPublicGates';
 import Link from 'next/link';
 import Head from 'next/head';
-import {ConfigProvider, Card, Col, Empty, Row, Select, Space, Tag, Typography} from 'antd';
+import {ConfigProvider, Card, Col, Empty, Row, Space, Tag, Typography} from 'antd';
 import {serverSideTranslations} from 'next-i18next/pages/serverSideTranslations';
 import {useTranslation} from 'next-i18next/pages';
 import staticTheme from '@client/features/Themes/themeConfig';
@@ -16,6 +16,16 @@ import CartIcon from '@client/features/Cart/CartIcon';
 import RevealOnScroll from '@client/lib/RevealOnScroll';
 import SiteFooter from '@client/features/Footer/SiteFooter';
 import {DEFAULT_FOOTER, IFooterConfig} from '@interfaces/IFooter';
+import {
+    PRODUCTS_LIST_CONFIG,
+    applyFilterState,
+    computeFacetCounts,
+    parseFilterUrl,
+    type FacetAccessors,
+    type IFacetOption,
+} from '@client/lib/facetedFilter';
+import {FacetedFilterPanel} from '@client/components/FacetedFilter';
+import {useRouter} from 'next/router';
 
 interface Props {
     products: IProduct[];
@@ -32,23 +42,52 @@ const formatPrice = (amount: number, currency: string) => {
     }
 };
 
+/**
+ * Facet value-accessors for `IProduct`. `price` is read in MAJOR units
+ * (cents / 100) to match the `€`-unit range facet config. `instock` is a
+ * boolean facet — true only when stock > 0.
+ */
+const PRODUCT_FACET_ACCESSORS: FacetAccessors<IProduct> = {
+    category: p => p.categories ?? [],
+    price: p => (p.price ?? 0) / 100,
+    instock: p => (p.stock ?? 0) > 0,
+};
+
 const ProductsIndex = ({products, themeTokens, footer, pages}: Props) => {
     const {t} = useTranslation('common');
+    const router = useRouter();
     useEffect(() => { if (themeTokens) applyThemeCssVars(themeTokens); }, [themeTokens]);
     const themeConfig = themeTokens ? buildThemeConfig(themeTokens) : staticTheme;
 
-    const [category, setCategory] = useState<string | undefined>(undefined);
+    const facets = PRODUCTS_LIST_CONFIG.facets;
 
-    const categories = useMemo(() => {
+    // Parse the URL once per query change — the FacetedFilterPanel owns
+    // mutation; the page just reads the resulting FilterState to filter
+    // the grid + derive option lists / live counts.
+    const filterState = useMemo(
+        () => parseFilterUrl(router.query as Record<string, string | string[] | undefined>, facets),
+        [router.query, facets],
+    );
+
+    // Live category options come from the product set (the config leaves
+    // `category.options` empty — it's a dynamic taxonomy facet).
+    const categoryOptions: IFacetOption[] = useMemo(() => {
         const set = new Set<string>();
         for (const p of products) for (const c of (p.categories ?? [])) set.add(c);
-        return [...set].sort();
+        return [...set].sort().map(c => ({value: c, label: c}));
     }, [products]);
 
-    const visible = useMemo(() => {
-        if (!category) return products;
-        return products.filter(p => (p.categories ?? []).includes(category));
-    }, [products, category]);
+    const optionsByFacet = useMemo(() => ({category: categoryOptions}), [categoryOptions]);
+
+    const countsByFacet = useMemo(
+        () => computeFacetCounts(products, filterState, facets, PRODUCT_FACET_ACCESSORS),
+        [products, filterState, facets],
+    );
+
+    const visible = useMemo(
+        () => applyFilterState(products, filterState, facets, PRODUCT_FACET_ACCESSORS),
+        [products, filterState, facets],
+    );
 
     return (
         <ConfigProvider theme={themeConfig}>
@@ -62,49 +101,55 @@ const ProductsIndex = ({products, themeTokens, footer, pages}: Props) => {
                 </div>
                 <Space style={{marginTop: 24, marginBottom: 16}} align="center" wrap>
                     <Typography.Title level={1} style={{margin: 0}}>{t('Products')}</Typography.Title>
-                    {categories.length > 0 && (
-                        <Select
-                            allowClear
-                            placeholder={t('Filter by category')}
-                            style={{minWidth: 200}}
-                            value={category}
-                            onChange={setCategory}
-                            options={categories.map(c => ({value: c, label: c}))}
-                        />
-                    )}
                 </Space>
-                {visible.length === 0 && <Empty description={t('No products available yet.')}/>}
-                <Row gutter={[16, 16]}>
-                    {visible.map((p, i) => (
-                        <Col xs={24} md={12} lg={8} key={p.id}>
-                            <RevealOnScroll delay={i * 60}>
-                                <Link href={`/products/${p.slug}`} style={{textDecoration: 'none'}} data-testid={`storefront-product-card-${p.slug}`}>
-                                    <Card
-                                        className="product-card"
-                                        hoverable
-                                        cover={p.images?.[0] ? (
-                                            <img src={p.images[0]} alt={p.title} style={{height: 220, objectFit: 'cover'}}/>
-                                        ) : undefined}
-                                    >
-                                        <Card.Meta
-                                            title={p.title}
-                                            description={
-                                                <Space orientation="vertical" size={6} style={{width: '100%'}}>
-                                                    <Typography.Text strong>{formatPrice(p.price, p.currency)}</Typography.Text>
-                                                    {p.stock === 0 && <Tag color="red">{t('Out of stock')}</Tag>}
-                                                    {(p.categories ?? []).length > 0 && (
-                                                        <Space size={4} wrap>
-                                                            {(p.categories ?? []).slice(0, 4).map(c => <Tag key={c}>{c}</Tag>)}
+                <Row gutter={[24, 16]}>
+                    <Col xs={24} md={7} lg={6}>
+                        <FacetedFilterPanel
+                            testId="products-filter"
+                            config={PRODUCTS_LIST_CONFIG}
+                            optionsByFacet={optionsByFacet}
+                            countsByFacet={countsByFacet}
+                            resultCount={visible.length}
+                        />
+                    </Col>
+                    <Col xs={24} md={17} lg={18}>
+                        <Typography.Text type="secondary" data-testid="products-result-count">
+                            {visible.length} {visible.length === 1 ? t('result') : t('results')}
+                        </Typography.Text>
+                        {visible.length === 0 && <Empty description={t('No products match your filters.')}/>}
+                        <Row gutter={[16, 16]} style={{marginTop: 12}}>
+                            {visible.map((p, i) => (
+                                <Col xs={24} sm={12} lg={8} key={p.id}>
+                                    <RevealOnScroll delay={i * 60}>
+                                        <Link href={`/products/${p.slug}`} style={{textDecoration: 'none'}} data-testid={`storefront-product-card-${p.slug}`}>
+                                            <Card
+                                                className="product-card"
+                                                hoverable
+                                                cover={p.images?.[0] ? (
+                                                    <img src={p.images[0]} alt={p.title} style={{height: 220, objectFit: 'cover'}}/>
+                                                ) : undefined}
+                                            >
+                                                <Card.Meta
+                                                    title={p.title}
+                                                    description={
+                                                        <Space orientation="vertical" size={6} style={{width: '100%'}}>
+                                                            <Typography.Text strong>{formatPrice(p.price, p.currency)}</Typography.Text>
+                                                            {p.stock === 0 && <Tag color="red">{t('Out of stock')}</Tag>}
+                                                            {(p.categories ?? []).length > 0 && (
+                                                                <Space size={4} wrap>
+                                                                    {(p.categories ?? []).slice(0, 4).map(c => <Tag key={c}>{c}</Tag>)}
+                                                                </Space>
+                                                            )}
                                                         </Space>
-                                                    )}
-                                                </Space>
-                                            }
-                                        />
-                                    </Card>
-                                </Link>
-                            </RevealOnScroll>
-                        </Col>
-                    ))}
+                                                    }
+                                                />
+                                            </Card>
+                                        </Link>
+                                    </RevealOnScroll>
+                                </Col>
+                            ))}
+                        </Row>
+                    </Col>
                 </Row>
             </div>
             <SiteFooter config={footer} pages={pages} hasPosts={false} t={t as any}/>

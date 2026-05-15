@@ -43,7 +43,7 @@ export interface ITheme {
     name: string;
     tokens: IThemeTokens;
     custom: boolean;
-    /** Optimistic-concurrency counter — see `src/Server/conflict.ts`. */
+    /** Optimistic-concurrency counter — see `services/infra/conflict.ts`. */
     version?: number;
     editedBy?: string;
     editedAt?: string;

@@ -1,4 +1,4 @@
-import {message} from 'antd';
+import {notifyError, notifySuccess, notifyWarning} from '@admin/lib/notify';
 import ProductApi from '@services/api/client/ProductApi';
 import {IProduct, InProduct} from '@interfaces/IProduct';
 import {ConflictError, isConflictError} from '@client/lib/conflict';
@@ -86,16 +86,15 @@ export class ProductsViewModel {
 
     private async performSave(payload: InProduct, expectedVersion: number | undefined): Promise<boolean> {
         const result = await this.api.save(payload, expectedVersion);
-        if (result.error) { message.error(result.error); return false; }
+        if (result.error) { notifyError(result.error); return false; }
         const requestedSlug = (payload.slug || '').trim();
         const finalSlug = (result.slug || '').trim();
         if (finalSlug && requestedSlug && finalSlug !== requestedSlug) {
-            message.warning(
+            notifyWarning(
                 this.t('Slug "{{requested}}" was already taken — saved as "{{final}}"', {requested: requestedSlug, final: finalSlug}),
-                6,
             );
         } else {
-            message.success(payload.id ? this.t('Product updated') : this.t('Product created'));
+            notifySuccess(payload.id ? this.t('Product updated') : this.t('Product created'));
         }
         this.close();
         await this.refresh();
@@ -122,7 +121,13 @@ export class ProductsViewModel {
             externalId: this.editing?.externalId,
             manualOverrides: this.editing?.manualOverrides,
             draft: values.draft ?? false,
-        };
+            // Phase 1.F polish — pipe through `templateId` from the
+            // constrained picker. Empty string ⇒ clear, falls back to
+            // `built-in:standard` at render time.
+            templateId: typeof values.templateId === 'string' && values.templateId
+                ? values.templateId
+                : undefined,
+        } as InProduct;
         this.saving = true;
         try {
             await this.performSave(payload, this.editingVersion);
@@ -139,7 +144,7 @@ export class ProductsViewModel {
                     },
                 };
             } else {
-                message.error(String((err as Error)?.message ?? err));
+                notifyError(err);
             }
         } finally {
             this.saving = false;
@@ -148,15 +153,16 @@ export class ProductsViewModel {
 
     async remove(product: IProduct): Promise<void> {
         const result = await this.api.remove(product.id);
-        if (result.error) { message.error(result.error); return; }
-        message.success(this.t('Product deleted'));
+        if (result.error) { notifyError(result.error); return; }
+        // TODO: wire Undo — product delete routes through trash but the remove() API does not return a trashGroup yet.
+        notifySuccess(this.t('Product deleted'));
         await this.refresh();
     }
 
     async togglePublish(product: IProduct): Promise<void> {
         const result = await this.api.setPublished(product.id, product.draft);
-        if (result.error) { message.error(result.error); return; }
-        message.success(result.draft ? this.t('Unpublished') : this.t('Published'));
+        if (result.error) { notifyError(result.error); return; }
+        notifySuccess(result.draft ? this.t('Unpublished') : this.t('Published'));
         await this.refresh();
     }
 

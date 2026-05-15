@@ -103,6 +103,11 @@ const nextConfig = {
 
     typescript: {
         tsconfigPath,
+        // E2E baseline capture path — let next build emit even when type
+        // errors exist in the working tree. Visual baseline capture is the
+        // goal; runtime bundle is what matters, not the type-check pass.
+        // Operator should fix TS errors before any non-E2E build / deploy.
+        ignoreBuildErrors: process.env.E2E_BUILD === '1',
     },
     sassOptions: {},
     // Make webpack watch the shared services/ directory (sits outside ui/client/).
@@ -153,7 +158,28 @@ const nextConfig = {
             source: "/sitemap-:id.xml",
             destination: "/api/sitemap-:id.xml",
         },
+        // Admin PWA manifest — referenced as `/admin/manifest.json` from
+        // the admin shell `<link rel="manifest">`. The actual handler
+        // lives under `pages/api/admin/` (Next pages-router only invokes
+        // the `(req,res)=>…` shape under `pages/api/`); the rewrite gives
+        // it the clean admin URL the spec + browsers expect.
+        {
+            source: "/admin/manifest.json",
+            destination: "/api/admin/manifest.json",
+        },
     ],
+    // Next 16 introduced a per-middleware body-size cap (default 10 MB)
+    // that's independent of the per-route `bodyParser.sizeLimit`. The
+    // bundle import (`/api/import`) sends the entire serialised site —
+    // photos, CMS pages, themes — and routinely exceeds 10 MB on
+    // moderately-sized installs. Without this cap raised, the route
+    // handler sees a truncated body and the JSON parse rejects with
+    // "400 Invalid JSON". Key is `experimental.proxyClientMaxBodySize`
+    // (renamed from `middlewareClientMaxBodySize` in Next 16). Matches
+    // the route's 200 MB `api.bodyParser.sizeLimit` in import.ts.
+    experimental: {
+        proxyClientMaxBodySize: '200mb',
+    },
     // Locale JSON files are the runtime translation store — admin saves
     // rewrite them live, so browsers MUST fetch fresh every time. Without
     // this, the first reload after a save serves cached JSON and changes

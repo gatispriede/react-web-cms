@@ -1,9 +1,20 @@
+/**
+ * `/blog` — system-page-backed blog index
+ * (all-pages-module-composed, Blog batch).
+ *
+ * The post grid is now module-composed: it renders via
+ * `<SystemPageDispatch>` over the registered `blog-index` system page,
+ * whose locked `BlogFeed` module self-fetches the post list. The page
+ * keeps its full SEO `<Head>` (Blog JSON-LD, canonical, og/twitter) +
+ * Logo + footer chrome — blog is an indexable surface, so the metadata
+ * stays in the route while the visible content becomes themeable
+ * modules.
+ */
 import React, {useEffect} from 'react';
 import {GetServerSideProps} from 'next';
 import {gqlFetch} from '@client/lib/gqlFetch';
-import Link from 'next/link';
 import Head from 'next/head';
-import {ConfigProvider, Card, Col, Empty, Row, Space, Tag, Typography} from 'antd';
+import {ConfigProvider, Typography} from 'antd';
 import {serverSideTranslations} from 'next-i18next/pages/serverSideTranslations';
 import {useTranslation} from 'next-i18next/pages';
 import staticTheme from '@client/features/Themes/themeConfig';
@@ -11,19 +22,23 @@ import {buildThemeConfig} from '@client/features/Themes/buildThemeConfig';
 import {applyThemeCssVars} from '@client/features/Themes/applyThemeCssVars';
 import {IPost} from '@interfaces/IPost';
 import Logo from '@client/features/Logo/Logo';
-import RevealOnScroll from '@client/lib/RevealOnScroll';
 import SiteFooter from '@client/features/Footer/SiteFooter';
 import {DEFAULT_FOOTER, IFooterConfig} from '@interfaces/IFooter';
+import {loadSystemPageSnapshot, type ISystemPageSnapshot} from '@client/lib/systemPage/loadSystemPage';
+import SystemPageDispatch from '@client/lib/systemPage/SystemPageDispatch';
 
 interface Props {
     posts: IPost[];
     themeTokens: any | null;
     footer: IFooterConfig;
     pages: {page: string}[];
+    systemPage: ISystemPageSnapshot | null;
 }
 
-const BlogIndex = ({posts, themeTokens, footer, pages}: Props) => {
+const BlogIndex = ({posts, themeTokens, footer, pages, systemPage}: Props) => {
     const {t} = useTranslation('common');
+    const {t: tDispatch} = useTranslation('translation');
+    const {t: tApp} = useTranslation('app');
     useEffect(() => { if (themeTokens) applyThemeCssVars(themeTokens); }, [themeTokens]);
     const themeConfig = themeTokens ? buildThemeConfig(themeTokens) : staticTheme;
 
@@ -70,40 +85,9 @@ const BlogIndex = ({posts, themeTokens, footer, pages}: Props) => {
             <div style={{maxWidth: 1100, margin: '0 auto', padding: 24}}>
                 <Logo t={t} admin={false}/>
                 <Typography.Title level={1} style={{marginTop: 24}}>{t('Writing')}</Typography.Title>
-                {posts.length === 0 && <Empty description={t('No posts published yet.')}/>}
-                <Row gutter={[16, 16]}>
-                    {posts.map((p, i) => (
-                        <Col xs={24} md={12} lg={8} key={p.id}>
-                            <RevealOnScroll delay={i * 60}>
-                                <Link href={`/blog/${p.slug}`} style={{textDecoration: 'none'}}>
-                                    <Card
-                                        className="blog-card"
-                                        hoverable
-                                        cover={p.coverImage ? <img src={p.coverImage} alt={p.title} style={{height: 180, objectFit: 'cover'}}/> : undefined}
-                                    >
-                                        <Card.Meta
-                                            title={p.title}
-                                            description={
-                                                <Space orientation="vertical" size={6} style={{width: '100%'}}>
-                                                    <span style={{fontSize: '.85em', opacity: .65}}>
-                                                        {p.publishedAt ? p.publishedAt.slice(0, 10) : ''}
-                                                        {p.author ? ` · ${p.author}` : ''}
-                                                    </span>
-                                                    {p.excerpt && <span>{p.excerpt}</span>}
-                                                    {p.tags.length > 0 && (
-                                                        <Space size={4} wrap>
-                                                            {p.tags.slice(0, 4).map(tag => <Tag key={tag}>{tag}</Tag>)}
-                                                        </Space>
-                                                    )}
-                                                </Space>
-                                            }
-                                        />
-                                    </Card>
-                                </Link>
-                            </RevealOnScroll>
-                        </Col>
-                    ))}
-                </Row>
+                {systemPage
+                    ? <SystemPageDispatch systemKey="blog-index" sections={systemPage.defaultSections} t={tDispatch} tApp={tApp}/>
+                    : null}
             </div>
             <SiteFooter config={footer} pages={pages} hasPosts={posts.length > 0} blogEnabled={true} t={t as any}/>
         </ConfigProvider>
@@ -142,7 +126,8 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({locale}) =>
             themeTokens,
             footer,
             pages,
-            ...(await serverSideTranslations(locale ?? 'en', ['common', 'app'])),
+            systemPage: loadSystemPageSnapshot('blog-index'),
+            ...(await serverSideTranslations(locale ?? 'en', ['common', 'app', 'translation'])),
         },
     };
 };

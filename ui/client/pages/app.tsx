@@ -29,6 +29,7 @@ import {PostsProvider} from "@client/lib/PostsContext";
 import {refreshBus} from "@client/lib/refreshBus";
 import ScrollNav from "@client/features/Navigation/ScrollNav";
 import MainMenu from "@client/features/Navigation/MainMenu";
+import CustomerAccountDropdown from "@client/components/Auth/CustomerAccountDropdown";
 import type {IMenuPage} from "@client/features/Navigation/menuItems";
 import MobileNav, {MobileNavLink} from "@client/features/MobileNav/MobileNav";
 
@@ -552,6 +553,63 @@ class App extends React.Component<IHomeProps> {
                     {seo && seo.locale &&
                         <meta property="og:locale" content={seo.locale} key="locale"/>
                     }
+                    {/* W8h SEO program — canonical + hreflang alternates +
+                        JSON-LD (Organization + WebSite). Origin resolution:
+                        SSR-safe via `seo.url` when set; otherwise window
+                        origin (client-only). hreflang alternates use the
+                        per-locale URL pattern `/<symbol><path>`. */}
+                    {(() => {
+                        const origin = (() => {
+                            if (typeof seo?.url === 'string' && seo.url) {
+                                try { return new URL(seo.url).origin; } catch { /* fallthrough */ }
+                            }
+                            if (typeof window !== 'undefined' && window.location?.origin) {
+                                return window.location.origin;
+                            }
+                            return '';
+                        })();
+                        if (!origin) return null;
+                        const path = currentUrl?.startsWith('/') ? currentUrl : `/${currentUrl ?? ''}`;
+                        // Strip leading `/{lang}` from path so we can re-prefix per locale.
+                        const stripped = (() => {
+                            const m = path.match(/^\/(\w{2,3})(\/.*)?$/);
+                            if (m && languageArray.some(l => l.symbol === m[1])) return m[2] || '/';
+                            return path;
+                        })();
+                        const canonical = `${origin}${stripped === '/' ? '' : stripped}`;
+                        const altLinks = languageArray.map(l => (
+                            <link
+                                key={`alt-${l.symbol}`}
+                                rel="alternate"
+                                hrefLang={l.symbol}
+                                href={`${origin}/${l.symbol}${stripped === '/' ? '' : stripped}`}
+                            />
+                        ));
+                        const orgLd = {
+                            '@context': 'https://schema.org',
+                            '@type': 'Organization',
+                            name: this.props.page || origin,
+                            url: origin,
+                        };
+                        const siteLd = {
+                            '@context': 'https://schema.org',
+                            '@type': 'WebSite',
+                            name: this.props.page || origin,
+                            url: origin,
+                        };
+                        return (
+                            <>
+                                <link rel="canonical" href={canonical} key="canonical"/>
+                                {altLinks}
+                                <script
+                                    type="application/ld+json"
+                                    key="jsonld-org-site"
+
+                                    dangerouslySetInnerHTML={{__html: JSON.stringify([orgLd, siteLd])}}
+                                />
+                            </>
+                        );
+                    })()}
                 </Head>
                 <ConfigProvider theme={this.state.themeConfig ?? staticTheme}>
                     <Spin spinning={this.state.loading}>
@@ -621,7 +679,7 @@ class App extends React.Component<IHomeProps> {
                                         </Dropdown>
                                     )}
                                 </header>
-                                <main style={{scrollBehavior: typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}}>
+                                <main id="main" tabIndex={-1} data-testid="main-landmark" style={{scrollBehavior: typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}}>
                                     {this.state.tabProps.map(tp => (
                                         <section
                                             key={tp.key}
@@ -716,6 +774,9 @@ class App extends React.Component<IHomeProps> {
                                                 />
                                             </div>
                                             <div style={{display: 'flex', alignItems: 'center', gap: 12}}>{/* Blog moved into the menu via `extraItems` (was a standalone Link). */}
+                                                {/* Phase 1.A — auth-split-client-admin: storefront customer account control.
+                                                 *   Renders null when `siteFlags.auth.clientLoginEnabled === false`. */}
+                                                <CustomerAccountDropdown/>
                                                 {items.length > 1 && (
                                                     <Dropdown className="language-dropdown" overlayClassName="lang-popup" menu={{items}}>
                                                         <Typography.Link>

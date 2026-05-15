@@ -1,0 +1,26 @@
+// Agency theme — per-template style overrides. Phase 1.F.
+// Minimal defaults — agency leans denser, more sales-deck feel.
+
+.template-built-in-premium {
+    --product-template-hero-gap: 2rem;
+    --product-template-gallery-max-cols: 4;
+}
+
+.template-built-in-standard {
+    --product-template-hero-gap: 1.25rem;
+}
+
+.template-built-in-quick-buy {
+    --product-template-hero-gap: 0.75rem;
+    --product-template-cta-emphasis: 1.25;
+}
+
+.template-built-in-bundle {
+    --product-template-hero-gap: 1.25rem;
+    --product-template-grid-min-card: 200px;
+}
+
+.template-built-in-b2b-spec-sheet {
+    --product-template-hero-gap: 1rem;
+    --product-template-spec-density: compact;
+}

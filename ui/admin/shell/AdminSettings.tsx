@@ -12,10 +12,10 @@ import {
     UserOutlined,
 } from "@client/lib/icons";
 import AdminSettingsUsers from "@admin/features/Users/Users";
-import AdminSettingsTheme from "@admin/features/Themes/Theme";
+import AdminSettingsTheme from "@admin/features/Themes/ThemeAdvancedView";
 import BundleSettings from "@admin/features/Bundle/Bundle";
 import AdminSettingsPublishing from "@admin/features/Publishing/Publishing";
-import AdminSettingsPosts from "@admin/features/Posts/Posts";
+import AdminSettingsPosts from "@admin/features/Posts/PostsAdvancedView";
 import AdminSettingsProducts from "@admin/features/Products/Products";
 import AdminSettingsInventory from "@admin/features/Inventory/Inventory";
 import McpTokensPanel from "@admin/features/Mcp/McpTokensPanel";

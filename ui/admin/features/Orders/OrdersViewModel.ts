@@ -1,4 +1,5 @@
-import {Modal, message} from 'antd';
+import {Modal} from 'antd';
+import {notifyError, notifySuccess} from '@admin/lib/notify';
 import OrderApi from '@services/api/client/OrderApi';
 import type {IOrder, OrderStatus} from '@interfaces/IOrder';
 import {observable} from '@client/lib/state/observable';
@@ -52,8 +53,8 @@ export class OrdersViewModel {
     async transition(next: OrderStatus): Promise<void> {
         if (!this.detail) return;
         const result = await this.api.adminTransitionOrder({orderId: this.detail.id, next});
-        if ((result as {error?: string}).error) { message.error((result as {error?: string}).error ?? ''); return; }
-        message.success(`Marked ${next}`);
+        if ((result as {error?: string}).error) { notifyError((result as {error?: string}).error ?? ''); return; }
+        notifySuccess(`Marked ${next}`);
         this.detail = result as IOrder;
         await this.refresh();
     }
@@ -68,8 +69,8 @@ export class OrdersViewModel {
             okButtonProps: {danger: true},
             onOk: async () => {
                 const result = await this.api.adminRefundOrder({orderId: order.id});
-                if ((result as {error?: string}).error) { message.error((result as {error?: string}).error ?? ''); return; }
-                message.success('Refunded');
+                if ((result as {error?: string}).error) { notifyError((result as {error?: string}).error ?? ''); return; }
+                notifySuccess('Refunded');
                 this.detail = result as IOrder;
                 await this.refresh();
             },

@@ -41,12 +41,22 @@ export interface IMainMenuProps {
 
 const toAntdItems = (nodes: IMenuNode[]): NonNullable<MenuProps['items']> =>
     nodes.map((n) => {
-        const labelEl = n.children?.length
-            // SubMenu trigger: clicking the parent's name should also navigate
-            // to the parent page, so wrap in a Link. AntD's hover/click open
-            // logic still fires on the parent label.
-            ? <Link href={n.href} className="navigation-item">{n.label}</Link>
-            : <Link href={n.href} className="navigation-item">{n.label}</Link>;
+        // SubMenu trigger and leaf both wrap the label in a Link so clicking
+        // the parent's name navigates to the parent page (AntD's hover/click
+        // open logic still fires). The `data-testid` rides on the Link, not
+        // the AntD `items` entry — AntD doesn't forward arbitrary attributes
+        // on menu items, but it renders the label node verbatim. Per-mode
+        // href assertion (`/${slug}` in tabs mode vs `#${anchor}` in scroll
+        // mode) targets `main-menu-link-{key}`. F6 site-mode-toggle.
+        const labelEl = (
+            <Link
+                href={n.href}
+                className="navigation-item"
+                data-testid={`main-menu-link-${n.key}`}
+            >
+                {n.label}
+            </Link>
+        );
         return {
             key: n.key,
             label: labelEl,

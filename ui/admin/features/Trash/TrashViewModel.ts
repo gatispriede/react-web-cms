@@ -1,4 +1,4 @@
-import {message} from 'antd';
+import {notifyError, notifySuccess} from '@admin/lib/notify';
 import TrashApi, {type TrashGroupSummary} from '@services/api/client/TrashApi';
 import {observable} from '@client/lib/state/observable';
 
@@ -17,7 +17,7 @@ export class TrashViewModel {
         try {
             this.groups = await this.api.list();
         } catch (err) {
-            message.error(String((err as Error)?.message ?? err));
+            notifyError(err);
         } finally {
             this.loading = false;
         }
@@ -28,11 +28,11 @@ export class TrashViewModel {
         try {
             const res = await this.api.restore(trashGroup);
             if (res?.error) {
-                message.error(res.error);
+                notifyError(res.error);
                 return;
             }
             const total = Object.values(res?.counts ?? {}).reduce((a, b) => a + (b ?? 0), 0);
-            message.success(`Restored ${total} row${total === 1 ? '' : 's'}`);
+            notifySuccess(`Restored ${total} row${total === 1 ? '' : 's'}`);
             await this.refresh();
         } finally {
             const next = {...this.restoring};

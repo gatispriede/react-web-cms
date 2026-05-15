@@ -6,6 +6,7 @@ import {TFunction} from "i18next";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import RevealOnScroll from "@client/lib/RevealOnScroll";
 import {GithubOutlined, LinkedinOutlined, MailOutlined, PhoneOutlined, TwitterOutlined, GlobalOutlined, YoutubeOutlined} from "@client/lib/icons";
+import {inlineEditAttr} from "@client/lib/inlineEditAttr";
 import type {ISocialLink, ISocialLinks, SocialPlatform} from "./SocialLinks.types";
 export type {ISocialLink, ISocialLinks, SocialPlatform} from "./SocialLinks.types";
 export {ESocialLinksStyle} from "./SocialLinks.types";
@@ -41,13 +42,15 @@ const hrefFor = (link: ISocialLink): string => {
     return url;
 };
 
-const SocialLinks = ({item, tApp}: {
+const SocialLinks = ({item, tApp, admin}: {
     item: IItem;
     t: TFunction<"translation", undefined>;
     tApp: TFunction<string, undefined>;
+    admin?: boolean;
 }) => {
     const c = new SocialLinksContent(EItemType.SocialLinks, item.content).data;
     const tr = (v: string) => <InlineTranslatable tApp={tApp as any} source={v}/>;
+    const editId = item.name || EItemType.SocialLinks;
     return (
         <RevealOnScroll className={`social-links ${item.style ?? ''}`}>
             {c.links.map((link, i) => {
@@ -59,7 +62,7 @@ const SocialLinks = ({item, tApp}: {
                         {...(isExternal ? {target: '_blank', rel: 'noopener noreferrer'} : {})}
                     >
                         {PLATFORM_ICONS[link.platform] ?? PLATFORM_ICONS.other}
-                        <span>{tr(link.label || link.platform)}</span>
+                        <span {...inlineEditAttr(admin, editId, `links.${i}.label`)}>{tr(link.label || link.platform)}</span>
                     </a>
                 );
             })}

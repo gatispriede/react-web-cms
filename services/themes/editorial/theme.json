@@ -1,0 +1,33 @@
+{
+    "slug": "editorial",
+    "name": "Editorial",
+    "tagline": "Warm cream paper, serif display, slow deliberate motion — for writers, photographers, considered portfolios.",
+    "audience": "Writers, photographers, single-author journalism, considered portfolios",
+    "mood": ["quiet", "literary", "spacious", "deliberate", "warm"],
+    "palette": {
+        "surface":      {"light": "#FAF7F2", "dark": "#161412"},
+        "ink":          {"light": "#1A1814", "dark": "#EDE9DE"},
+        "accent":       {"light": "#B85C38", "dark": "#D87A52"},
+        "accentInk":    {"light": "#FAF7F2", "dark": "#16140F"},
+        "surfaceInset": {"light": "#F2EEE3", "dark": "#1F1B16"},
+        "rule":         {"light": "#D8D1BF", "dark": "#3A332C"}
+    },
+    "typography": {
+        "display": "'Source Serif Pro', ui-serif, Georgia, 'Times New Roman', serif",
+        "body":    "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "mono":    "ui-monospace, 'SF Mono', Menlo, monospace",
+        "baseSize": 17
+    },
+    "motion": "gentle-slow",
+    "headerBehavior": "centered-hero-integrated",
+    "footerLayout": "minimal-1row",
+    "logoLockup": "wordmark",
+    "moduleStyleHints": {
+        "hero": "full-bleed-overlay-nav",
+        "timeline": "broken-grid",
+        "posts": "editorial",
+        "gallery": "magazine-spread",
+        "project-grid": "asymmetric"
+    },
+    "darkDefault": false
+}

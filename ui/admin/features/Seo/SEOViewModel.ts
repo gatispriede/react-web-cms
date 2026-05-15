@@ -1,4 +1,4 @@
-import {message} from 'antd';
+import {notifyError, notifySuccess} from '@admin/lib/notify';
 import SiteSeoApi from '@services/api/client/SiteSeoApi';
 import {DEFAULT_SITE_SEO, ISiteSeoDefaults} from '@interfaces/ISiteSeo';
 import {ConflictError, isConflictError} from '@client/lib/conflict';
@@ -40,8 +40,8 @@ export class SEOViewModel {
     private async performSave(payload: ISiteSeoDefaults, expectedVersion: number | undefined): Promise<boolean> {
         const result = await this.seoApi.save(payload, expectedVersion);
         const errMsg = (result as {error?: string}).error;
-        if (errMsg) { void message.error(errMsg); return false; }
-        void message.success(this.t('SEO defaults saved'));
+        if (errMsg) { notifyError(errMsg); return false; }
+        notifySuccess(this.t('SEO defaults saved'));
         const v = (result as {version?: number}).version;
         if (typeof v === 'number') this.seo = {...this.seo, version: v};
         return true;
@@ -64,7 +64,7 @@ export class SEOViewModel {
                     },
                 };
             } else {
-                void message.error(String((err as Error)?.message ?? err));
+                notifyError(err);
             }
         } finally { this.saving = false; }
     }

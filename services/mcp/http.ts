@@ -46,7 +46,7 @@ import {sessionFromReq, type GraphqlSession} from '@services/features/Auth/authz
 // authOptions lives in the Next pages tree (next to the NextAuth route
 // it configures). Pulled in here to validate the session cookie on the
 // MCP HTTP transport — same module the GraphQL route uses.
-import {authOptions} from '@client/pages/api/auth/authOptions';
+import {adminAuthOptions as authOptions} from '@client/pages/api/auth/authOptions';
 
 const enabled = process.env.MCP_HTTP_ENABLED === 'true';
 if (!enabled) {
@@ -172,7 +172,7 @@ async function buildServerForToken(
             })),
     }));
 
-    server.setRequestHandler(CallToolRequestSchema, async (req, extra) => {
+    server.setRequestHandler(CallToolRequestSchema, (async (req: any, extra: any) => {
         // MCP `notifications/progress` — wired only when the client
         // included `_meta.progressToken` on its `tools/call`. The SDK
         // hands us `extra.sendNotification` scoped to this request; we
@@ -206,7 +206,7 @@ async function buildServerForToken(
             };
         }
         return outcome.result!;
-    });
+    }) as any);
 
     const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: () => randomUUID(),

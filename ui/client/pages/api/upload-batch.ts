@@ -31,7 +31,8 @@ import {InImage} from "@interfaces/IImage";
 import {getMongoConnection} from "@services/infra/mongoDBConnection";
 import {ROLE_RANK, sessionFromReq} from "@services/features/Auth/authz";
 import {optimizeImageFile, type RatioLock} from "@services/features/Assets/imageOptimize";
-import {authOptions} from "./auth/authOptions";
+import {buildImageRecord} from "@services/infra/imageMetadata";
+import {adminAuthOptions as authOptions} from "./auth/authOptions";
 
 export const config = {
     api: {
@@ -148,18 +149,28 @@ const handler = async (req: any, res: any) => {
             // EXIF strip. Falls back to the original bytes if the optimised
             // output would be larger (already-compressed re-uploads).
             const result = await optimizeImageFile(file.filepath, destPath, {ratio});
+            if (!result.readable) {
+                // Corrupt / undecodable — don't leave the file or a DB row.
+                try { fs.unlinkSync(destPath); } catch { /* best-effort */ }
+                results.push({ok: false, error: 'unrecognised or corrupt image file', originalName});
+                continue;
+            }
 
-            // Width/height on InImage still deferred to a separate schema
-            // migration — the shape of IImage/InImage is GraphQL-generated.
-            const image: InImage = {
-                created: new Date().toDateString(),
+            // Build the persisted record via the shared helper so the batch
+            // endpoint writes the SAME shape as single-file `/api/upload` —
+            // width/height/sizeBytes/originalName/uploadedBy/uploadedAt/
+            // optimised/format all ride through to Mongo (write-through; the
+            // GraphQL SDL exposure of them is a separate read-side migration).
+            const image: InImage = buildImageRecord(result, {
                 id: guid(),
+                storedName: targetName,
                 location: `${PUBLIC_IMAGE_PATH}${targetName}`,
-                name: targetName,
-                size: result.size ?? file.size ?? 0,
                 type: file.mimetype ?? 'image/*',
                 tags: withAll,
-            };
+                originalName,
+                uploadedBy: session?.email,
+                fallbackSize: file.size,
+            });
             await mongo.assetService.saveImage(image);
             results.push({ok: true, image, originalName});
         } catch (e: any) {
@@ -221,16 +232,24 @@ const handler = async (req: any, res: any) => {
             const targetName = resolveUniqueName(imagesDir, originalName);
             const destPath = path.join(imagesDir, targetName);
             const result = await optimizeImageFile(tempPath, destPath, {ratio});
+            if (!result.readable) {
+                try { fs.unlinkSync(destPath); } catch { /* best-effort */ }
+                results.push({ok: false, error: 'unrecognised or corrupt image file', originalName: url});
+                continue;
+            }
 
-            const image: InImage = {
-                created: new Date().toDateString(),
+            // Same shared record shape as the file path above — the URL the
+            // operator pasted is the `originalName` here.
+            const image: InImage = buildImageRecord(result, {
                 id: guid(),
+                storedName: targetName,
                 location: `${PUBLIC_IMAGE_PATH}${targetName}`,
-                name: targetName,
-                size: result.size ?? buf.byteLength,
                 type: ct.split(';')[0] || 'image/*',
                 tags: withAll,
-            };
+                originalName: url,
+                uploadedBy: session?.email,
+                fallbackSize: buf.byteLength,
+            });
             await mongo.assetService.saveImage(image);
             results.push({ok: true, image, originalName: url});
         } catch (e: any) {

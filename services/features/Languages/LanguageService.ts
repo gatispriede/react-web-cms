@@ -10,7 +10,7 @@ import {log} from "@services/infra/logger";
  * Translations live in two places that must stay in sync:
  *  - Mongo — the authoritative store, read by `getLanguages` and the bundle
  *    export/import flow.
- *  - `src/frontend/public/locales/<symbol>/app.json` — what next-i18next's
+ *  - `ui/client/public/locales/<symbol>/app.json` — what next-i18next's
  *    HTTP backend fetches at runtime. i18next does not know about Mongo, so
  *    every save/delete here must also rewrite the matching JSON file, or the
  *    admin's edits never reach the rendered site.

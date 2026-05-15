@@ -1,0 +1,96 @@
+.empty-state-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 48px 24px;
+    min-height: 240px;
+    text-align: center;
+    color: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+    background: var(--theme-colorBgContainer, transparent);
+    border-radius: var(--theme-borderRadius, 8px);
+
+    &__icon {
+        font-size: 48px;
+        line-height: 1;
+        opacity: 0;
+        animation: empty-state-block-fade calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-entrance) forwards;
+        color: var(--accent, var(--theme-colorPrimary, #1677ff));
+    }
+
+    &__title {
+        font-family: var(--font-display, inherit);
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    &__description {
+        max-width: 60ch;
+        margin: 0;
+        color: var(--ink-2, color-mix(in srgb, currentColor 70%, transparent));
+        font-size: 0.9375rem;
+        line-height: 1.5;
+    }
+
+    &__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 0.5rem;
+        align-items: center;
+        justify-content: center;
+    }
+
+    &__action {
+        // WCAG 2.2 AA: 44px minimum touch target on all interactive elements.
+        min-height: 44px;
+        min-width: 44px;
+        padding: 0.625rem 1.25rem;
+        border-radius: var(--theme-borderRadius, 8px);
+        font-size: 0.9375rem;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid transparent;
+        transition: background calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                    color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                    border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &--primary {
+            background: var(--accent, var(--theme-colorPrimary, #1677ff));
+            color: var(--theme-colorTextLightSolid, #fff);
+            border-color: var(--accent, var(--theme-colorPrimary, #1677ff));
+
+            &:hover:not(:disabled):not([aria-disabled="true"]) {
+                background: var(--accent-hover, color-mix(in srgb, var(--accent, var(--theme-colorPrimary, #1677ff)) 88%, #000));
+                border-color: var(--accent-hover, color-mix(in srgb, var(--accent, var(--theme-colorPrimary, #1677ff)) 88%, #000));
+            }
+        }
+
+        &--secondary {
+            background: transparent;
+            color: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+            border-color: var(--ink-2, color-mix(in srgb, currentColor 30%, transparent));
+
+            &:hover:not(:disabled):not([aria-disabled="true"]) {
+                background: var(--theme-colorBgInset, color-mix(in srgb, currentColor 6%, transparent));
+            }
+        }
+
+        &:disabled,
+        &[aria-disabled="true"] {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    }
+}
+
+@keyframes empty-state-block-fade {
+    from { opacity: 0; transform: translateY(var(--motion-distance-sm, 8px)); }
+    to   { opacity: 1; transform: translateY(0); }
+}

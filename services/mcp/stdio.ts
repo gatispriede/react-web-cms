@@ -122,7 +122,7 @@ async function main() {
         })),
     }));
 
-    server.setRequestHandler(CallToolRequestSchema, async (req, extra) => {
+    server.setRequestHandler(CallToolRequestSchema, (async (req: any, extra: any) => {
         // MCP `notifications/progress` — wired only when the client
         // included `_meta.progressToken` on its `tools/call`. Errors
         // are swallowed so a failed notification never aborts the tool.
@@ -157,7 +157,7 @@ async function main() {
             };
         }
         return outcome.result!;
-    });
+    }) as any);
 
     const transport = new StdioServerTransport();
     await server.connect(transport);

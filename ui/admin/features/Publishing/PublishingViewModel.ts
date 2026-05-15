@@ -1,4 +1,4 @@
-import {message} from 'antd';
+import {notifyError, notifySuccess} from '@admin/lib/notify';
 import PublishApi from '@services/api/client/PublishApi';
 import type {SnapshotMeta} from '@services/features/Publishing/PublishService';
 import {observable} from '@client/lib/state/observable';
@@ -26,8 +26,8 @@ export class PublishingViewModel {
         this.rollingBack = id;
         try {
             const result = await this.api.rollback(id);
-            if (result.error) { message.error(result.error); return; }
-            message.success(this.t('Rolled back — new snapshot created.'));
+            if (result.error) { notifyError(result.error); return; }
+            notifySuccess(this.t('Rolled back — new snapshot created.'));
             await this.refresh();
         } finally {
             this.rollingBack = null;

@@ -1,137 +1,27 @@
-import fs from 'node:fs';
-import path from 'node:path';
 import {Collection, Db} from 'mongodb';
 import guid from '@utils/guid';
 import {ITheme, IThemeTokens, InTheme} from '@interfaces/ITheme';
 import {auditStamp} from '@services/features/Audit/audit';
 import {nextVersion, requireVersion} from '@services/infra/conflict';
 import {log} from '@services/infra/logger';
+import {loadFirstClassPresetRows, firstClassThemeNames, loadThemeManifests} from './ThemeRegistry';
+import {manifestToTokens} from '@interfaces/Theme/IThemeManifest';
 
 /**
- * Editorial presets live as source-controlled JSON in `ui/client/themes/`
- * (one file per preset). Loaded at module init so `PRESETS` stays a plain
- * in-memory array; the four JSON-backed entries are the canonical designs
- * and are diffable on disk. The remaining hardcoded presets below are the
- * colour-only basics kept for continuity — they don't need a SCSS pair.
+ * First-class themes are the ONLY presets — each lives under
+ * `services/themes/<slug>/` with a manifest (`theme.json`), per-theme
+ * SCSS overrides (`theme.scss` + `module-styles.scss`), and a design
+ * doc README. The legacy color-only presets (Industrial / Studio /
+ * Paper / HighContrast + the inline Classic / Ocean / Brandappart /
+ * Forest / Midnight blocks) were dropped 2026-05-13 because they only
+ * varied colour + radius — no module-level structural differences. A
+ * theme that doesn't differentiate the page isn't a theme worth picking.
  */
-const THEMES_DIR = path.join(process.cwd(), 'ui/client/themes');
-const JSON_PRESET_SLUGS = ['industrial', 'studio', 'paper', 'high-contrast'] as const;
-type JsonPresetSlug = typeof JSON_PRESET_SLUGS[number];
 
-function readJsonPreset(slug: JsonPresetSlug): Omit<ITheme, 'id'> {
-    const file = path.join(THEMES_DIR, `${slug}.json`);
-    const raw = fs.readFileSync(file, 'utf-8');
-    const parsed = JSON.parse(raw) as Omit<ITheme, 'id'>;
-    return {name: parsed.name, custom: false, tokens: parsed.tokens};
-}
+/** Names of presets eligible for "Reset to preset" — backed by an on-disk manifest. */
+export const JSON_PRESET_NAMES: Set<string> = firstClassThemeNames();
 
-function loadJsonPresets(): Omit<ITheme, 'id'>[] {
-    return JSON_PRESET_SLUGS.map(readJsonPreset);
-}
-
-/** Names of presets backed by on-disk JSON — eligible for "Reset to preset". */
-export const JSON_PRESET_NAMES: Set<string> = new Set(
-    loadJsonPresets().map(p => p.name),
-);
-
-export const PRESETS: Omit<ITheme, 'id'>[] = [
-    ...loadJsonPresets(),
-    {
-        name: 'Classic',
-        custom: false,
-        tokens: {
-            colorPrimary: '#3b3939',
-            colorBgBase: '#ffffff',
-            colorTextBase: '#1f1f1f',
-            colorSuccess: '#52c41a',
-            colorWarning: '#faad14',
-            colorError: '#ff4d4f',
-            colorInfo: '#1677ff',
-            borderRadius: 6,
-            fontSize: 16,
-            contentPadding: 24,
-        },
-    },
-    {
-        name: 'Ocean',
-        custom: false,
-        tokens: {
-            colorPrimary: '#1677ff',
-            colorBgBase: '#f0f5ff',
-            colorTextBase: '#001529',
-            colorSuccess: '#13c2c2',
-            colorWarning: '#fa8c16',
-            colorError: '#ff4d4f',
-            colorInfo: '#1677ff',
-            borderRadius: 8,
-            fontSize: 16,
-            contentPadding: 24,
-        },
-    },
-    {
-        name: 'Brandappart',
-        custom: false,
-        tokens: {
-            // design-v6 Brandappart — parchment palette + sea accent +
-            // Instrument Serif display. Rounded 18px cards distinguish it
-            // visually from Studio (same palette, sharp corners).
-            colorPrimary: '#1E5A6B',
-            colorBgBase: '#E8E3D3',
-            colorTextBase: '#13201A',
-            colorSuccess: '#52c41a',
-            colorWarning: '#faad14',
-            colorError: '#ff4d4f',
-            colorInfo: '#C24B1E',
-            colorBgInset: '#DDD7C2',
-            colorInkSecondary: '#2C3A30',
-            colorInkTertiary: '#6B7C75',
-            colorRule: '#B5B49B',
-            colorRuleStrong: '#8A8A73',
-            colorAccent: '#1E5A6B',
-            colorAccentInk: '#F4F1EA',
-            colorMark: 'rgba(30, 90, 107, 0.12)',
-            fontDisplay: `'Instrument Serif', 'Times New Roman', serif`,
-            fontMono: `'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace`,
-            fontSans: `'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif`,
-            borderRadius: 18,
-            fontSize: 16,
-            contentPadding: 32,
-            themeSlug: 'studio',
-        },
-    },
-    {
-        name: 'Forest',
-        custom: false,
-        tokens: {
-            colorPrimary: '#389e0d',
-            colorBgBase: '#fcffe6',
-            colorTextBase: '#135200',
-            colorSuccess: '#52c41a',
-            colorWarning: '#d4b106',
-            colorError: '#cf1322',
-            colorInfo: '#389e0d',
-            borderRadius: 4,
-            fontSize: 16,
-            contentPadding: 24,
-        },
-    },
-    {
-        name: 'Midnight',
-        custom: false,
-        tokens: {
-            colorPrimary: '#9254de',
-            colorBgBase: '#141414',
-            colorTextBase: '#f0f0f0',
-            colorSuccess: '#49aa19',
-            colorWarning: '#d89614',
-            colorError: '#dc4446',
-            colorInfo: '#177ddc',
-            borderRadius: 8,
-            fontSize: 16,
-            contentPadding: 28,
-        },
-    },
-];
+export const PRESETS: Omit<ITheme, 'id'>[] = loadFirstClassPresetRows();
 
 const ACTIVE_KEY = 'activeThemeId';
 
@@ -251,10 +141,10 @@ export class ThemeService {
     }
 
     /**
-     * Re-reads the JSON preset matching the target row's `name` and overwrites
-     * the DB doc's tokens with file values — the "Reset to preset" path for
-     * admins. Only works on JSON-backed presets; in-code presets (Classic /
-     * Ocean / Midnight / Forest) have nothing to reset against on disk.
+     * Re-reads the first-class theme manifest matching the target row's
+     * `name` and overwrites the DB doc's tokens with manifest values — the
+     * "Reset to preset" path for admins. Only first-class themes are
+     * resettable; custom themes have nothing on disk to reset against.
      *
      * The doc stays in place (same id) so any `activeThemeId` pointer keeps
      * working; `custom` is forced back to `false` and version bumps so concurrent
@@ -265,21 +155,20 @@ export class ThemeService {
         if (!existing) throw new Error('theme not found');
         const name = (existing as any).name as string;
         if (!JSON_PRESET_NAMES.has(name)) {
-            throw new Error(`no JSON preset on disk for "${name}"`);
+            throw new Error(`no preset on disk for "${name}"`);
         }
-        // Re-read from disk each call so an admin can `git pull` fresh preset
-        // values and hit "Reset" without a server restart.
-        const slug = JSON_PRESET_SLUGS.find(s => {
-            try { return readJsonPreset(s).name === name; } catch { return false; }
-        });
-        if (!slug) throw new Error(`no JSON preset on disk for "${name}"`);
-        const jsonPreset = readJsonPreset(slug);
+        // Look the manifest back up by name — `ThemeRegistry` caches its
+        // disk read for the process lifetime, so admins `git pull` + restart
+        // the server to refresh per the existing first-class-themes contract.
+        const manifest = loadThemeManifests().find(m => m.name === name);
+        if (!manifest) throw new Error(`no manifest on disk for "${name}"`);
+        const tokens = manifestToTokens(manifest);
         const existingVersion = (existing as any).version as number | undefined;
         const version = nextVersion(existingVersion);
         const audit = auditStamp(editedBy);
         await this.themes.updateOne(
             {id},
-            {$set: {name: jsonPreset.name, tokens: jsonPreset.tokens, custom: false, version, ...audit}},
+            {$set: {name: manifest.name, tokens, custom: false, version, ...audit}},
         );
         return {id, version};
     }

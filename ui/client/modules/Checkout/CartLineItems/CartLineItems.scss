@@ -1,0 +1,6 @@
+.cart-line-items {
+    padding: 1rem 0;
+    &__title { font-size: 1rem; font-weight: 600; margin: 0 0 0.5rem; color: var(--theme-colorTextBase, inherit); }
+    &__body { margin: 0; color: var(--theme-colorTextSecondary, #555); font-size: 0.9rem; }
+    &__slot { min-height: 2rem; }
+}

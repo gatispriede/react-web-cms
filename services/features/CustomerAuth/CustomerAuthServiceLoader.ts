@@ -29,10 +29,18 @@ export class CustomerAuthServiceLoader extends ServiceLoader {
 
     buildServices(ctx: FeatureContext): Record<string, unknown> {
         const hashSaltRounds = Number(process.env.BCRYPT_ROUNDS) || 10;
+        // W6c — magic-link token store. Sibling collection so a stray
+        // `Users` query never trips over a token row.
+        const magicTokensDB = ctx.db.collection('CustomerMagicTokens');
+        // Best-effort TTL — Mongo will sweep consumed/expired rows.
+        void magicTokensDB.createIndex({expiresAt: 1}, {expireAfterSeconds: 0}).catch(() => {});
+        void magicTokensDB.createIndex({tokenHash: 1}, {unique: true}).catch(() => {});
+        void magicTokensDB.createIndex({email: 1, createdAt: -1}).catch(() => {});
         return {
             customerAuth: new CustomerAuthService(
                 ctx.db.collection('Users'),
                 hashSaltRounds,
+                magicTokensDB,
             ),
         };
     }

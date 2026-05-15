@@ -19,7 +19,7 @@ Authentication uses **NextAuth** with a `CredentialsProvider` and **JWT strategy
 | `editor` | Content edits, no publish |
 | `admin` | Full access |
 
-The `authz` Proxy wraps `MongoDBConnection` and gates every mutation by role, injecting the session for audit stamping (`editedBy`). See [`../architecture/auth-roles.md`](../architecture/auth-roles.md) for the full model.
+The `authz` Proxy wraps `MongoDBConnection` and gates every mutation by role, injecting the session for audit stamping (`editedBy`). See [`../architecture/auth-roles.md`](../../architecture/auth-roles.md) for the full model.
 
 ## First-boot admin password
 

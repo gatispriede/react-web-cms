@@ -38,6 +38,15 @@ export class MockAdapter implements IWarehouseAdapter {
         this.rows = rows;
     }
 
+    /**
+     * Phase 1.C — mock adapter declares a simple `category → subcategory`
+     * hierarchy so unit tests of `WarehousePageSyncWorker` have a real
+     * shape to bucket against without depending on the ss.com normaliser.
+     */
+    getCategoryHierarchy(): readonly string[] {
+        return ['category', 'subcategory'];
+    }
+
     setFailHealthCheck(fail: boolean): void {
         this.failHealthCheck = fail;
     }

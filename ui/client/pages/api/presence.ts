@@ -1,6 +1,6 @@
 import type {NextApiRequest, NextApiResponse} from 'next';
 import {getServerSession} from 'next-auth/next';
-import {authOptions} from './auth/[...nextauth]';
+import {adminAuthOptions as authOptions} from './auth/authOptions';
 import {requireSameOrigin} from './_origin';
 import {getMongoConnection} from '@services/infra/mongoDBConnection';
 import {clientIp, rateLimit} from './_rateLimit';

@@ -48,7 +48,8 @@ export interface HealthResult {
  */
 export type IAdapterConfig =
     | {kind: 'mock'}
-    | ({kind: 'generic-feed'} & GenericFeedConfig);
+    | ({kind: 'generic-feed'} & GenericFeedConfig)
+    | {kind: 'ss-com-cars'; forceFixture?: boolean};
 
 export interface GenericFeedConfig {
     url: string;

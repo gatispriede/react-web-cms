@@ -30,5 +30,38 @@ export interface IPage {
      */
     slug?: string | Record<string, string>,
     seo: ISeo,
-    sections: string[]
+    sections: string[],
+    /**
+     * Phase 0b discriminator: which "kind" of page this row is.
+     *   - `'manual'` — legacy operator-authored page (default when unset).
+     *   - `'product'` — warehouse-derived leaf product page from the
+     *     products-as-composable-page item; the renderer resolves the
+     *     bound `productId` and applies the chosen `IProductTemplate`.
+     *   - `'system-page'` — framework-required page seeded by
+     *     `SystemPageRegistry` (cart, checkout-*, order-confirmation,
+     *     account-settings, magic-link-verify, …). Operators can still
+     *     edit sections; the bootstrap loop preserves their edits.
+     *
+     * Unset (or any unknown value) is treated as `'manual'` so legacy rows
+     * keep working without a backfill migration.
+     */
+    source?: 'manual' | 'product' | 'system-page',
+    /**
+     * When `source === 'system-page'`, the well-known key identifying which
+     * system page this is. Used by
+     * `SystemPageRegistry.ensureSystemPage(systemKey)` to look up the
+     * canonical defaults + locked sections list.
+     *
+     * Examples: `'cart'`, `'checkout-address'`, `'checkout-shipping'`,
+     * `'checkout-payment'`, `'checkout-confirmation'`, `'account-settings'`,
+     * `'order-by-token'`, `'magic-link-verify'`.
+     */
+    systemKey?: string,
+    /**
+     * When `source === 'product'`, the productId this page renders. Used by
+     * the leaf-product page renderer in products-as-composable-page to
+     * resolve the product + apply `IProductTemplate` (when set) for
+     * product-display-templates.
+     */
+    productId?: string,
 }

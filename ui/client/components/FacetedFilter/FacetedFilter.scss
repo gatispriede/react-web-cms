@@ -1,0 +1,137 @@
+/**
+ * Faceted-filter system styles — chip bar, facet sidebar, facet
+ * controls. Theme-token driven (var(--theme-*) with safe fallbacks) so
+ * the surface tracks the active first-class theme.
+ */
+.faceted-filter-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    &__saved-note {
+        margin: 0;
+        font-size: 0.875rem;
+        color: var(--theme-colorTextSecondary, #595959);
+    }
+}
+
+.faceted-filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+
+    &__chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        min-height: 32px;
+        padding: 0.25rem 0.625rem;
+        border: 1px solid var(--theme-colorPrimary, #1677ff);
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--theme-colorPrimary, #1677ff) 8%, transparent);
+        color: var(--theme-colorText, #1f1f1f);
+        font-size: 0.8125rem;
+        cursor: pointer;
+        transition: background 0.15s ease;
+
+        &:hover {
+            background: color-mix(in srgb, var(--theme-colorPrimary, #1677ff) 16%, transparent);
+        }
+    }
+
+    &__chip-x {
+        font-size: 1rem;
+        line-height: 1;
+    }
+
+    &__clear {
+        min-height: 32px;
+        padding: 0.25rem 0.5rem;
+        border: 0;
+        background: transparent;
+        color: var(--theme-colorPrimary, #1677ff);
+        font-size: 0.8125rem;
+        text-decoration: underline;
+        cursor: pointer;
+    }
+}
+
+.faceted-filter-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.faceted-facet {
+    margin: 0;
+    padding: 0;
+    border: 0;
+
+    &__legend {
+        padding: 0;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--theme-colorText, #1f1f1f);
+    }
+
+    &__option {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-height: 32px;
+        font-size: 0.875rem;
+        color: var(--theme-colorText, #1f1f1f);
+        cursor: pointer;
+
+        &--zero {
+            color: var(--theme-colorTextDisabled, #bfbfbf);
+            cursor: not-allowed;
+        }
+    }
+
+    &__option-count {
+        color: var(--theme-colorTextSecondary, #8c8c8c);
+        font-size: 0.8125rem;
+    }
+
+    &__empty {
+        margin: 0;
+        font-size: 0.8125rem;
+        color: var(--theme-colorTextSecondary, #8c8c8c);
+    }
+
+    &__range-row {
+        display: flex;
+        align-items: flex-end;
+        gap: 0.5rem;
+    }
+
+    &__range-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        flex: 1;
+    }
+
+    &__range-label {
+        font-size: 0.75rem;
+        color: var(--theme-colorTextSecondary, #8c8c8c);
+    }
+
+    &__range-input {
+        min-height: 32px;
+        padding: 0.25rem 0.5rem;
+        border: 1px solid var(--theme-colorBorder, #d9d9d9);
+        border-radius: 6px;
+        background: var(--theme-colorBgContainer, #fff);
+        color: var(--theme-colorText, #1f1f1f);
+        font-size: 0.875rem;
+    }
+
+    &__range-sep {
+        padding-bottom: 0.5rem;
+        color: var(--theme-colorTextSecondary, #8c8c8c);
+    }
+}

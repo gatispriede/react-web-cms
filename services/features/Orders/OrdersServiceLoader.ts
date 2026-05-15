@@ -84,17 +84,40 @@ export class OrdersServiceLoader extends ServiceLoader {
             if (typeof process !== 'undefined' && process.env && (process.env.SMTP_HOST || process.env.SMTP_HOST_FILE)) {
                 return {
                     sendOrderConfirmation: async (order, to) => {
+                        // W6a — render through the receipt template
+                        // registry so the operator's progress timeline +
+                        // VAT line + theme tokens drive the email body.
                         try {
-                            const mod: any = await import('@client/pages/api/_inquiryMailer').catch(() => null);
-                            if (!mod || typeof mod.sendInquiryEmail !== 'function') {
+                            const [{renderTemplate}, {resolveEmailTheme}, mod] = await Promise.all([
+                                import('@services/features/Email/templates/registry'),
+                                import('@services/features/Email/templates/_shared/theme'),
+                                import('@client/pages/api/_inquiryMailer').catch(() => null),
+                            ]);
+                            if (!mod || typeof (mod as any).sendInquiryEmail !== 'function') {
                                 log.warn({scope: 'orders.mailer'}, 'mailer unreachable; SMTP env set but `_inquiryMailer` not loadable');
                                 return;
                             }
-                            const subject = `Order confirmation ${order.orderNumber}`;
-                            const total = (order.total / 100).toFixed(2);
-                            const text = `Thanks for your order!\n\nOrder ${order.orderNumber}\nTotal: ${total} ${order.currency}\n`;
-                            const html = `<h1>Thanks for your order!</h1><p>Order <strong>${order.orderNumber}</strong></p><p>Total: ${total} ${order.currency}</p>`;
-                            await mod.sendInquiryEmail({to, subject, text, html});
+                            const siteUrl = (process.env.SITE_URL ?? '').replace(/\/$/, '');
+                            const theme = resolveEmailTheme({
+                                siteName: process.env.SITE_NAME || 'Funisimo',
+                                siteUrl,
+                            });
+                            const orderViewUrl = order.customerId
+                                ? `${siteUrl}/account/orders/${order.id}`
+                                : `${siteUrl}/orders/by-token/${order.orderToken ?? ''}`;
+                            const rendered = renderTemplate('receipt', {
+                                order,
+                                customerName: order.shippingAddress?.name?.split(' ')[0] ?? 'there',
+                                orderViewUrl,
+                                vatLabel: order.vatRegime?.note,
+                                nextStepDate: 'Within 24 hours',
+                            }, theme);
+                            await (mod as any).sendInquiryEmail({
+                                to,
+                                subject: rendered.subject,
+                                text: rendered.text,
+                                html: rendered.html,
+                            });
                         } catch (err) {
                             log.error({scope: 'orders.sendConfirmation', err, orderId: order.id}, 'sendOrderConfirmation failed');
                         }

@@ -6,6 +6,6 @@ The product is a **content-composable portfolio / marketing site**: admins build
 
 The admin is a single-page React surface inside Next; the public site is statically generated for the index + slug routes and SSR'd for the blog. AntD provides the admin chrome; module SCSS targets a CSS-variable pipeline (`--theme-*`) populated from the active theme's tokens server-side in `_document.tsx` so first paint already has the right palette.
 
-For full detail see [`../../PROJECT_ANALYSIS.md`](../../PROJECT_ANALYSIS.md). The other docs in this folder zoom into specific subsystems.
+For full detail see [`../../PROJECT_ANALYSIS.md`](../PROJECT_ANALYSIS.md). The other docs in this folder zoom into specific subsystems.
 
 Last reviewed: 2026-04-19.

@@ -1,0 +1,93 @@
+.product-screenshot-hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+    align-items: center;
+    padding: 2.5rem 1.5rem;
+    color: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+
+    @media (max-width: 900px) {
+        grid-template-columns: 1fr;
+    }
+
+    &__copy {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    &__headline {
+        margin: 0;
+        font-size: clamp(1.75rem, 4vw, 3rem);
+        line-height: 1.1;
+    }
+
+    &__sub {
+        margin: 0;
+        font-size: 1.0625rem;
+        line-height: 1.5;
+        color: var(--ink-2, color-mix(in srgb, currentColor 70%, transparent));
+    }
+
+    &__ctas {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    &__cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 0 1.25rem;
+        border-radius: var(--theme-borderRadius, 8px);
+        font-weight: 600;
+        text-decoration: none;
+        transition: transform calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &--primary {
+            background: var(--accent, var(--theme-colorPrimary, #1677ff));
+            color: var(--theme-colorBgContainer, #fff);
+        }
+
+        &--secondary {
+            background: var(--theme-colorBgInset, color-mix(in srgb, currentColor 6%, transparent));
+            color: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+        }
+
+        &:hover,
+        &:focus-visible {
+            transform: translateY(-1px);
+        }
+    }
+
+    &__media {
+        overflow: hidden;
+        border-radius: var(--theme-borderRadius, 8px);
+        background: var(--theme-colorBgInset, color-mix(in srgb, currentColor 6%, transparent));
+    }
+
+    &__screenshot {
+        display: block;
+        width: 100%;
+        height: auto;
+        animation: product-screenshot-hero-parallax linear both;
+        animation-timeline: scroll();
+    }
+
+    &--reduced &__screenshot {
+        animation: none;
+        transform: none;
+    }
+}
+
+@keyframes product-screenshot-hero-parallax {
+    from {
+        transform: translateY(2%);
+    }
+
+    to {
+        transform: translateY(-2%);
+    }
+}

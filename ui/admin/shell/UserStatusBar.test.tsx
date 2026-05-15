@@ -116,11 +116,13 @@ vi.mock('@client/lib/reportError', () => ({
     installErrorReporter: () => {},
 }));
 
-// CommandPalette — render-free placeholder + a no-op hotkey hook.
-vi.mock('@admin/shell/CommandPalette', () => ({
+// CommandPalette — render-through provider placeholder + trigger stub.
+// The kbar palette is mounted at the shell level; the test only needs
+// it to render its children without pulling kbar into the test bundle.
+vi.mock('@admin/shell/CommandPalette/CommandPalette', () => ({
     __esModule: true,
-    default: () => <div data-testid="command-palette"/>,
-    useCommandPaletteHotkey: () => {},
+    default: ({children}: {children?: React.ReactNode}) => <div data-testid="command-palette">{children}</div>,
+    CommandPaletteTrigger: ({label}: {label: string}) => <button data-testid="cmdk-trigger">{label}</button>,
 }));
 
 // Chrome placeholders.
@@ -141,10 +143,10 @@ vi.mock('./AdminApp', () => ({__esModule: true, default: () => <div/>}));
 vi.mock('./AdminSettings', () => ({__esModule: true, default: () => <div/>}));
 vi.mock('./TranslationManager', () => ({__esModule: true, default: class {}}));
 vi.mock('@admin/features/Languages/Languages', () => ({__esModule: true, default: () => <div/>}));
-vi.mock('@admin/features/Themes/Theme', () => ({__esModule: true, default: () => <div/>}));
+vi.mock('@admin/features/Themes/ThemeAdvancedView', () => ({__esModule: true, default: () => <div/>}));
 vi.mock('@admin/features/Logo/LogoSettings', () => ({__esModule: true, default: () => <div/>}));
 vi.mock('@admin/features/Navigation/Layout', () => ({__esModule: true, default: () => <div/>}));
-vi.mock('@admin/features/Posts/Posts', () => ({__esModule: true, default: () => <div/>}));
+vi.mock('@admin/features/Posts/PostsAdvancedView', () => ({__esModule: true, default: () => <div/>}));
 vi.mock('@admin/features/Footer/Footer', () => ({__esModule: true, default: () => <div/>}));
 vi.mock('@admin/features/Products/Products', () => ({__esModule: true, default: () => <div/>}));
 vi.mock('@admin/features/Inventory/Inventory', () => ({__esModule: true, default: () => <div/>}));

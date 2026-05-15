@@ -1,0 +1,4 @@
+.shipping-calculator { display: flex; gap: 0.5rem; align-items: center; padding: 1rem 0;
+    input { padding: 0.5rem; border: 1px solid var(--theme-colorBorder, #ddd); border-radius: 4px; }
+    button { background: var(--theme-colorPrimary, #1677ff); color: #fff; border: 0; border-radius: 4px; padding: 0.5rem 1rem; cursor: pointer; }
+}

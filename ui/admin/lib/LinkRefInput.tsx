@@ -13,20 +13,25 @@ interface Props {
     /** When true, hide the label row — useful for Gallery tile `href` where
      *  the image itself is the affordance. */
     hideLabel?: boolean;
+    /** Forwarded to `<LinkTargetPicker>` — drives testid namespace so
+     *  e2e specs can target picker children unambiguously. */
+    hostId?: string;
 }
 
-const LinkRefInput: React.FC<Props> = ({value, onChange, t, placeholder, label, hideLabel}) => {
+const LinkRefInput: React.FC<Props> = ({value, onChange, t, placeholder, label, hideLabel, hostId}) => {
     const patch = (p: Partial<ILinkRef>) => onChange({...value, ...p});
     return (
-        <div>
+        <div data-testid={hostId ? `link-ref-input-${hostId}` : undefined}>
             {label && <label>{label}</label>}
             <LinkTargetPicker
                 value={value.url}
                 onChange={(url) => patch({url})}
                 placeholder={placeholder}
+                hostId={hostId}
             />
             {!hideLabel && (
                 <Input
+                    data-testid={hostId ? `link-ref-input-${hostId}-label` : undefined}
                     style={{marginTop: 4}}
                     placeholder={t('Label')}
                     value={value.label ?? ''}

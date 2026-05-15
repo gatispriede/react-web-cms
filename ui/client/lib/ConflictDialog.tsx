@@ -3,7 +3,7 @@ import {Alert, Modal, Space, Typography} from 'antd';
 
 /**
  * Reusable optimistic-concurrency conflict dialog. Each editor surface that
- * makes versioned writes catches `ConflictError` from `src/frontend/lib/conflict.ts`
+ * makes versioned writes catches `ConflictError` from `services/infra/conflict.ts`
  * and renders one of these — passing handlers for the two recoverable choices:
  *
  *   • "Take theirs" — discard the local draft, reload from the server and

@@ -2,7 +2,7 @@ import type {NextApiRequest, NextApiResponse} from 'next';
 import {gqlFetch} from '@client/lib/gqlFetch';
 import {pageNameToPath, isHomePage} from '@utils/pagePath';
 import {ROLE_RANK, sessionFromReq} from '@services/features/Auth/authz';
-import {authOptions} from './auth/authOptions';
+import {adminAuthOptions as authOptions} from './auth/authOptions';
 
 /**
  * On-demand ISR endpoint. Admin mutations (theme save, section save, nav

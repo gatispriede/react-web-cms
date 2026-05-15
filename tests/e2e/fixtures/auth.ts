@@ -133,6 +133,24 @@ export {expect} from '@playwright/test';
  * worth surfacing in the unit suite, not the e2e one.
  */
 function attachHydrationFilter(page: Page): void {
+    // Pre-seed the cookie-consent record so the public banner never mounts
+    // during e2e. Without this, the banner intercepts pointer events on
+    // the first navigation of every fresh context (admin or anonymous),
+    // and every click in the underlying page retries until timeout.
+    // Mirrors the schema in ui/client/components/CookieConsent/consentStore.ts.
+    void page.addInitScript(() => {
+        try {
+            const STORAGE_KEY = 'cms.privacy.consent.v1';
+            const record = {
+                version: 1,
+                categories: {necessary: true, functional: false, analytics: false, marketing: false},
+                source: 'user',
+                recordedAt: new Date().toISOString(),
+            };
+            window.localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
+        } catch {/* localStorage not available — banner will fall back to its default */}
+    });
+
     const HYDRATION_PATTERNS = [
         /Hydration failed/i,
         /Text content does not match/i,
@@ -183,11 +201,15 @@ function attachHydrationFilter(page: Page): void {
 }
 
 async function signInThroughForm(page: Page, email: string, password: string): Promise<void> {
-    await page.goto('/auth/signin');
-    await page.getByLabel(/email/i).fill(email);
-    await page.getByLabel(/password/i).fill(password);
-    await page.getByRole('button', {name: /sign in|log in|submit/i}).click();
+    // Phase 1.A auth-split: admin auth has its own NextAuth instance under
+    // `/api/admin/auth/*` + signin page at `/admin/signin`. The legacy
+    // `/auth/signin` route serves the CUSTOMER instance now; admin
+    // credentials are rejected there.
+    await page.goto('/admin/signin');
+    await page.getByTestId('admin-signin-email-input').fill(email);
+    await page.getByTestId('admin-signin-password-input').fill(password);
+    await page.getByTestId('admin-signin-submit-btn').click();
     // The admin shell lives under `/admin`. Wait for any non-signin URL —
     // the post-login redirect target may evolve.
-    await expect(page).not.toHaveURL(/\/auth\/signin/, {timeout: 30_000});
+    await expect(page).not.toHaveURL(/\/admin\/signin/, {timeout: 30_000});
 }

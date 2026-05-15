@@ -15,7 +15,8 @@
   &__entry {
     position: relative;
     padding: 0 0 32px 20px;
-    transition: background-color 180ms ease;
+    // Motion tokens — see docs/roadmap/admin/motion-token-system.md.
+    transition: background-color calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
 
     &::before {
       content: "";

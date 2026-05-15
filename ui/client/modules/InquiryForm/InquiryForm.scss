@@ -62,7 +62,7 @@
     background: transparent;
     color: var(--if-ink-2);
     cursor: pointer;
-    transition: 140ms ease;
+    transition: calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
 
     &:hover { color: var(--if-ink); border-color: var(--if-ink); }
     &.is-active {
@@ -100,7 +100,7 @@
     font: inherit;
     font-size: 15px;
     padding: 10px 0;
-    transition: border-color 140ms ease;
+    transition: border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
     &:focus { outline: none; border-bottom-color: var(--if-accent); }
   }
   textarea { resize: vertical; min-height: 100px; }
@@ -132,7 +132,7 @@
     color: var(--theme-colorBgBase, #fff);
     border: 1px solid var(--if-ink);
     cursor: pointer;
-    transition: 140ms ease;
+    transition: calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
     &:hover:not(:disabled) { background: var(--if-accent); border-color: var(--if-accent); }
     &:disabled { opacity: 0.7; cursor: default; }
   }

@@ -44,11 +44,11 @@ Each item carries `{type, style, content (JSON), action?, actionType?, actionCon
 
 The `style` field selects a layout variant per module (e.g. `services.numbered`, `services.grid`, `services.cards`, `testimonials.cards`, `projectGrid.studio`, `statsCard.panel`, `hero.editorial`). Variants are base-theme CSS rules in `scss/Components/*.scss`; themes can override them at higher specificity via `[data-theme-name="…"]`.
 
-Full content JSON shapes per type: see [`../architecture/module-interfaces.md`](../architecture/module-interfaces.md).
+Full content JSON shapes per type: see [`../architecture/module-interfaces.md`](../../architecture/module-interfaces.md).
 
 ## Drag-and-drop reordering
 
-Two independent DnD mechanisms — see [`../architecture/admin-systems.md`](../architecture/admin-systems.md) for the technical split.
+Two independent DnD mechanisms — see [`../architecture/admin-systems.md`](../../architecture/admin-systems.md) for the technical split.
 
 - **Section reorder** — drag the section handle to reorder rows on the page.
 - **Intra-section item reorder** — drag items within a section's column slots.

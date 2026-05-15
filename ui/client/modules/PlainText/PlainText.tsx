@@ -4,6 +4,7 @@ import {IItem} from "@interfaces/IItem";
 import ContentManager from "@client/lib/ContentManager";
 import {TFunction} from "i18next";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
+import {inlineEditAttr} from "@client/lib/inlineEditAttr";
 import type {IPlainTextContent} from "./PlainText.types";
 export type {IPlainTextContent} from "./PlainText.types";
 export {EPlainTextStyle} from "./PlainText.types";
@@ -26,15 +27,17 @@ export class PlainTextContent extends ContentManager {
 
 }
 
-const PlainText = ({item, t, tApp}: {
+const PlainText = ({item, t, tApp, admin}: {
     item: IItem,
     t: TFunction<"translation", undefined>,
-    tApp: TFunction<string, undefined>
+    tApp: TFunction<string, undefined>,
+    admin?: boolean,
 }) => {
     const plainTextContent = new PlainTextContent(EItemType.Text, item.content);
+    const editId = item.name || EItemType.Text;
     return (
         <div className={`plain-text ${item.style}`}>
-            <p><InlineTranslatable tApp={tApp as any} source={plainTextContent.data.value}/></p>
+            <p {...inlineEditAttr(admin, editId, 'value')}><InlineTranslatable tApp={tApp as any} source={plainTextContent.data.value}/></p>
         </div>
     )
 }

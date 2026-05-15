@@ -7,6 +7,7 @@ import {translateOrKeep} from "@utils/translateOrKeep";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import RevealOnScroll from "@client/lib/RevealOnScroll";
 import {slugifyAnchor} from "@utils/stringFunctions";
+import {inlineEditAttr} from "@client/lib/inlineEditAttr";
 import type {ITimeline} from "./Timeline.types";
 export type {ITimeline, ITimelineEntry} from "./Timeline.types";
 export {ETimelineStyle} from "./Timeline.types";
@@ -23,14 +24,16 @@ export class TimelineContent extends ContentManager {
     setField<K extends keyof ITimeline>(k: K, v: ITimeline[K]) { this._parsedContent[k] = v; }
 }
 
-const Timeline = ({item, tApp}: {
+const Timeline = ({item, tApp, admin}: {
     item: IItem;
     t: TFunction<"translation", undefined>;
     tApp: TFunction<string, undefined>;
+    admin?: boolean;
 }) => {
     const c = new TimelineContent(EItemType.Timeline, item.content).data;
     const tr = (v: string) => <InlineTranslatable tApp={tApp as any} source={v}/>;
     const trStr = (v: string) => translateOrKeep(tApp, v);
+    const editId = item.name || EItemType.Timeline;
 
     return (
         <div className={`timeline ${item.style ?? ''}`}>
@@ -53,11 +56,11 @@ const Timeline = ({item, tApp}: {
                             {e.location && <span className="timeline__location">{tr(e.location)}</span>}
                         </div>
                         <div className="timeline__body">
-                            <h3 className="timeline__who" id={anchor}>
+                            <h3 className="timeline__who" id={anchor} {...inlineEditAttr(admin, editId, `entries.${i}.company`)}>
                                 {tr(e.company)}
                                 {e.domain && <> <span className="timeline__domain">{e.domain}</span></>}
                             </h3>
-                            <div className="timeline__role">
+                            <div className="timeline__role" {...inlineEditAttr(admin, editId, `entries.${i}.role`)}>
                                 <b>{tr(e.role)}</b>
                                 {e.contractType && <> · {tr(e.contractType)}</>}
                             </div>

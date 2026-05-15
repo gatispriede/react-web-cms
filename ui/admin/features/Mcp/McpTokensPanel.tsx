@@ -1,12 +1,26 @@
+/**
+ * admin-module-composed — MCP tokens bridge.
+ *
+ * Was a bespoke hand-coded pane; now the `AdminLoader` *bridge* for
+ * `system/mcp`. `McpTokensViewModel` is unchanged ("admin stays mostly
+ * same"); this maps it onto a single `AdminCrudList` view-module slot
+ * and keeps the bespoke issue + reveal Modals rendered alongside the
+ * module. VM3 — no `useState`.
+ *
+ * Registered with the `AdminPageRegistry` by `McpAdminLoader`; the
+ * shell reaches it via `AdminPageDispatch` (see `McpAdminUILoader`).
+ */
 import React, {useEffect, useMemo} from "react";
-import {Alert, Button, Checkbox, Form, Input, Modal, Popconfirm, Select, Space, Table, Tag, Typography} from "antd";
+import {Alert, Button, Checkbox, Form, Input, Modal, Popconfirm, Select, Space, Tag, Typography} from "antd";
+import type {ColumnsType} from "antd/es/table";
 import {useTranslation} from "react-i18next";
 import {ALL_MCP_SCOPES, IMcpTokenSummary, McpScope} from "@interfaces/IMcp";
 import {useViewModel} from "@client/lib/state/observable";
+import AdminCrudListModule from "@admin/modules/shapes/AdminCrudListModule";
 import {McpTokensViewModel} from "./McpTokensViewModel";
 
 /**
- * Render-only MCP tokens panel — VM3 (2026-05-02). State + actions on
+ * MCP tokens bridge — VM3 (2026-05-02). State + actions on
  * `McpTokensViewModel`. Secret-shown-once UX matches GitHub PATs:
  * issuance modal → reveal modal with copy button → close = unrecoverable.
  */
@@ -39,20 +53,30 @@ const McpTokensPanel: React.FC = () => {
     ], [vm]);
 
     return (
-        <div>
-            <Space style={{marginBottom: 16}}>
-                <Button data-testid="mcp-issue-btn" type="primary" onClick={vm.openIssueDialog}>{t('Issue token')}</Button>
-                <Button data-testid="mcp-refresh-button" onClick={vm.refresh} loading={vm.loading}>{t('Refresh')}</Button>
-            </Space>
-
-            <Table<IMcpTokenSummary>
+        <>
+            <AdminCrudListModule
+                testId="admin-mcp-tokens"
+                columns={columns as unknown as ColumnsType<Record<string, unknown>>}
+                rows={vm.tokens as unknown as Record<string, unknown>[]}
                 rowKey="id"
                 loading={vm.loading}
-                dataSource={vm.tokens}
-                columns={columns as any}
-                size="small"
-                pagination={false}
-                onRow={(r: IMcpTokenSummary) => ({'data-testid': `mcp-row-${r.id}`} as any)}
+                onAdd={vm.openIssueDialog}
+                addLabel={t('Issue token')}
+                addTestId="mcp-issue-btn"
+                onRefresh={vm.refresh}
+                refreshTestId="mcp-refresh-button"
+                rowTestId={(r) => `mcp-row-${(r as unknown as IMcpTokenSummary).id}`}
+                emptyState={{
+                    testId: 'mcp-tokens-empty-state',
+                    title: t('empty.mcpTokens.title'),
+                    description: t('empty.mcpTokens.description'),
+                    art: 'mcp',
+                    primary: {
+                        label: t('empty.mcpTokens.primary'),
+                        onClick: vm.openIssueDialog,
+                        testId: 'mcp-tokens-empty-state-primary',
+                    },
+                }}
             />
 
             <Modal
@@ -125,7 +149,7 @@ const McpTokensPanel: React.FC = () => {
                     Scopes: {(vm.issuedSecret?.scopes ?? []).join(', ') || '—'}
                 </Typography.Text>
             </Modal>
-        </div>
+        </>
     );
 };
 

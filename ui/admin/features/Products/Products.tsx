@@ -1,13 +1,30 @@
+/**
+ * admin-module-composed (Batch 2) — Products bridge.
+ *
+ * The `AdminLoader` bridge for `content/products`. `ProductsViewModel`
+ * is unchanged ("admin stays mostly same"); the hand-coded list chrome
+ * (toolbar + Table + EmptyState) is replaced by `AdminCrudListModule`,
+ * and the bespoke edit Drawer + the conflict dialog (now via
+ * `AdminConflictModule`) are kept rendered alongside the module.
+ *
+ * Registered with the `AdminPageRegistry` by `ProductsAdminLoader`; the
+ * shell reaches it via `AdminPageDispatch` (see `ProductsAdminUILoader`).
+ */
 import React, {useEffect, useMemo} from "react";
-import {Button, Drawer, Form, Input, InputNumber, Popconfirm, Select, Space, Switch, Table, Tag, Tooltip, Typography, message} from "antd";
-import {DeleteOutlined, EditOutlined, EyeOutlined, LinkOutlined, PlusOutlined} from "@client/lib/icons";
+import {Button, Drawer, Form, Input, InputNumber, Popconfirm, Select, Space, Switch, Tag, Tooltip, Typography} from "antd";
+import {notifyError} from '@admin/lib/notify';
+import type {ColumnsType} from "antd/es/table";
+import {DeleteOutlined, EditOutlined, EyeOutlined, LinkOutlined} from "@client/lib/icons";
 import {useTranslation} from "react-i18next";
 import {IProduct, InProduct} from "@interfaces/IProduct";
 import AuditBadge from "@admin/shell/AuditBadge";
 import {useRefreshView} from "@client/lib/refreshBus";
-import ConflictDialog from "@client/lib/ConflictDialog";
 import {useViewModel} from "@client/lib/state/observable";
+import AdminCrudListModule from "@admin/modules/shapes/AdminCrudListModule";
+import AdminConflictModule from "@admin/modules/shapes/AdminConflictModule";
+import {onboardingCta} from "@admin/lib/EmptyState";
 import {ProductsViewModel} from "./ProductsViewModel";
+import TemplatePickerControl from "./TemplatePickerControl";
 
 /** Render-only Products pane — VM3 (2026-05-02). */
 
@@ -36,9 +53,10 @@ const AdminSettingsProducts: React.FC = () => {
                 categories: vm.editing.categories ?? [],
                 images: (vm.editing.images ?? []).join('\n'),
                 draft: vm.editing.draft ?? false,
+                templateId: (vm.editing as {templateId?: string}).templateId ?? '',
             });
         } else {
-            form.setFieldsValue({draft: true, currency: 'EUR', price: 0, stock: 0, categories: [], images: ''});
+            form.setFieldsValue({draft: true, currency: 'EUR', price: 0, stock: 0, categories: [], images: '', templateId: ''});
         }
     }, [vm.editing, form]);
 
@@ -108,27 +126,48 @@ const AdminSettingsProducts: React.FC = () => {
             )},
     ], [t, warehouseTooltip, vm]);
 
+    const toolbar = (
+        <Input.Search
+            placeholder={t('Search title or SKU')}
+            value={vm.search}
+            onChange={(e) => vm.setSearch(e.target.value)}
+            style={{width: 240}}
+        />
+    );
+
+    const peer = vm.conflict
+        ? (vm.conflict.error.currentDoc as {editedBy?: string; editedAt?: string; title?: string} | null)
+        : null;
+
     return (
-        <div style={{padding: 16}}>
-            <Space style={{marginBottom: 16}} align="center" wrap>
-                <Button data-testid="admin-products-create-btn" type="primary" icon={<PlusOutlined/>} onClick={vm.openCreate}>{t('New product')}</Button>
-                <Button onClick={vm.refresh} loading={vm.loading}>{t('Refresh')}</Button>
-                <Input.Search
-                    placeholder={t('Search title or SKU')}
-                    value={vm.search}
-                    onChange={(e) => vm.setSearch(e.target.value)}
-                    style={{width: 240}}
-                />
-                <AuditBadge editedBy={vm.latestAudit.editedBy} editedAt={vm.latestAudit.editedAt}/>
-            </Space>
-            <Table
+        <>
+            <AdminCrudListModule
+                testId="admin-products"
+                columns={columns as unknown as ColumnsType<Record<string, unknown>>}
+                rows={vm.filtered as unknown as ReadonlyArray<Record<string, unknown>>}
                 rowKey="id"
                 loading={vm.loading}
-                dataSource={vm.filtered}
-                columns={columns}
-                pagination={{pageSize: 20}}
-                size="middle"
-                onRow={(p: IProduct) => ({'data-testid': `admin-products-row-${p.slug}`} as any)}
+                pageSize={20}
+                onAdd={vm.openCreate}
+                addLabel={t('New product')}
+                addTestId="admin-products-create-btn"
+                onRefresh={vm.refresh}
+                toolbar={toolbar}
+                headerExtra={<AuditBadge editedBy={vm.latestAudit.editedBy} editedAt={vm.latestAudit.editedAt}/>}
+                rowTestId={(row) => `admin-products-row-${(row as unknown as IProduct).slug}`}
+                showEmptyState={!vm.loading && vm.filtered.length === 0 && !vm.search}
+                emptyState={{
+                    testId: 'products-empty-state',
+                    title: t('empty.products.title'),
+                    description: t('empty.products.description'),
+                    art: 'products',
+                    primary: {
+                        label: t('empty.products.primary'),
+                        onClick: vm.openCreate,
+                        testId: 'products-empty-primary-btn',
+                    },
+                    secondary: onboardingCta(t('empty.cta.guidedSetup'), 'products-empty-secondary-btn'),
+                }}
             />
             <Drawer
                 open={vm.editing !== null}
@@ -177,30 +216,39 @@ const AdminSettingsProducts: React.FC = () => {
                     >
                         <Input.TextArea data-testid="admin-products-image-input" rows={4} disabled={vm.fieldDisabled('images' as keyof InProduct)} placeholder="https://…"/>
                     </Form.Item>
+                    {/* Phase 1.F polish — constrained `<Select>` driven by
+                       `productTemplate.list` filtered by category + source +
+                       `commerce.defaultProductAudience`. See
+                       `TemplatePickerControl.tsx`. */}
+                    <Form.Item
+                        name="templateId"
+                        label={t('Display template')}
+                        tooltip={t('Leave blank to use the default (built-in:standard). See Content → Product templates.')}
+                    >
+                        <TemplatePickerControl
+                            category={(vm.editing?.categories ?? [])[0]}
+                            source={vm.editing?.source as 'manual' | 'warehouse' | undefined}
+                        />
+                    </Form.Item>
                     <Form.Item name="draft" label={t('Draft')} valuePropName="checked">
                         <Switch/>
                     </Form.Item>
                 </Form>
             </Drawer>
-            {vm.conflict && (() => {
-                const peer = vm.conflict.error.currentDoc as {editedBy?: string; editedAt?: string; title?: string} | null;
-                return (
-                    <ConflictDialog
-                        open
-                        docKind={t('Product')}
-                        peerVersion={vm.conflict.error.currentVersion}
-                        peerEditedBy={peer?.editedBy}
-                        peerEditedAt={peer?.editedAt}
-                        onCancel={vm.dismissConflict}
-                        onTakeTheirs={vm.takeTheirs}
-                        onKeepMine={async () => {
-                            try { await vm.conflict?.retry(); }
-                            catch (err) { message.error(String((err as Error)?.message ?? err)); vm.dismissConflict(); }
-                        }}
-                    />
-                );
-            })()}
-        </div>
+            <AdminConflictModule
+                open={!!vm.conflict}
+                docKind={t('Product')}
+                peerVersion={vm.conflict?.error.currentVersion ?? 0}
+                peerEditedBy={peer?.editedBy}
+                peerEditedAt={peer?.editedAt}
+                onCancel={vm.dismissConflict}
+                onTakeTheirs={vm.takeTheirs}
+                onKeepMine={async () => {
+                    try { await vm.conflict?.retry(); }
+                    catch (err) { notifyError(err); vm.dismissConflict(); }
+                }}
+            />
+        </>
     );
 };
 

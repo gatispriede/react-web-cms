@@ -1,4 +1,4 @@
-import {message} from 'antd';
+import {notifyError} from '@admin/lib/notify';
 import TranslationManager from '@admin/shell/TranslationManager';
 import TranslationMetaApi from '@services/api/client/TranslationMetaApi';
 import {ITranslationMetaEntry, ITranslationMetaMap} from '@services/features/Languages/TranslationMetaService';
@@ -92,7 +92,7 @@ export class ContentLoaderCompareViewModel {
     private async performMetaSave(patch: ITranslationMetaMap, expectedVersion: number | undefined): Promise<boolean> {
         const result = await this.metaApi.save(patch, expectedVersion);
         const errMsg = (result as {error?: string})?.error;
-        if (errMsg) { void message.error(String(errMsg)); await this.reloadMeta(); return false; }
+        if (errMsg) { notifyError(String(errMsg)); await this.reloadMeta(); return false; }
         const v = (result as {version?: number}).version;
         if (typeof v === 'number') this.metaVersion = v;
         const value = (result as {value?: ITranslationMetaMap}).value;
@@ -124,13 +124,13 @@ export class ContentLoaderCompareViewModel {
                             await this.performMetaSave(patch, err.currentVersion);
                             this.conflict = null;
                         } catch (e) {
-                            void message.error(String((e as Error)?.message ?? e));
+                            notifyError(e);
                             this.conflict = null;
                         }
                     },
                 };
             } else {
-                void message.error(String((err as Error)?.message ?? err));
+                notifyError(err);
                 await this.reloadMeta();
             }
         }

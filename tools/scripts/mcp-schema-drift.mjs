@@ -218,7 +218,15 @@ function compareTool(tool, mut) {
     // The well-known cross-cutting hardening args don't have GraphQL
     // counterparts; they're handled by the MCP wrappers, not the
     // resolvers, so they should NEVER count as drift.
-    const HARNESS_ARGS = new Set(['idempotencyKey', 'expectedVersion', '_session']);
+    // Bulk-extension wrappers (`ids`, `items`, `groups`) are aggregated
+    // server-side by `runBatch` — each per-item payload is dispatched
+    // through the single-item mutation. Treat them as harness args so
+    // bulk-extension tools stay drift-clean. Reference: F8 bulk sweep
+    // (2026-05-12), see docs/roadmap/platform/mcp-bulk-and-introspection.md.
+    const HARNESS_ARGS = new Set([
+        'idempotencyKey', 'expectedVersion', '_session',
+        'ids', 'items', 'groups',
+    ]);
     // When the mutation's arg list is dominated by an Input* wrapper or
     // a JSON blob, the MCP tool flattens those inner fields; the static
     // comparator can't cross that boundary without parsing the Input

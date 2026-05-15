@@ -1,0 +1,7 @@
+ui/client/modules/*/i18n/**
+ui/admin/features/Debug/**
+**/*.test.tsx
+**/*.stories.tsx
+**/_archived/**
+**/__fixtures__/**
+tools/scripts/__fixtures__/**

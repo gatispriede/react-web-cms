@@ -95,8 +95,35 @@ export async function orderByToken(token: string) {
 
 export const formatMoney = (amount: number | undefined, currency: string | null | undefined) => {
     try {
-        return new Intl.NumberFormat(undefined, {style: 'currency', currency: currency || 'USD'}).format((amount ?? 0) / 100);
+        // Pin to `en-US` rather than the runtime default. `Intl.NumberFormat`
+        // with `undefined` falls back to the OS locale — Node's SSR uses
+        // en-US, the browser uses whatever the user's system reports. A
+        // Latvian-system browser renders "0.00 US$" while SSR rendered
+        // "$0.00", which trips a React hydration mismatch on every cart
+        // page. Pinning kills the mismatch; locale-aware money formatting
+        // can opt in via a future `useLocale()` hook if the storefront
+        // ever needs it.
+        return new Intl.NumberFormat('en-US', {style: 'currency', currency: currency || 'USD'}).format((amount ?? 0) / 100);
     } catch {
         return `${(amount ?? 0) / 100} ${currency ?? ''}`;
     }
+};
+
+/**
+ * Display-currency-aware money formatter (W8g — multi-currency-and-tax).
+ *
+ * Wraps `formatMoney` but prefixes a `≈` when the amount is an
+ * FX-converted approximation rather than an operator-published native
+ * price (per the spec's "≈ €1,990 (converted)" pattern). Checkout / cart
+ * totals stay on the plain `formatMoney` — those are always in the locked
+ * transaction currency, never converted. Storefront catalogue price call
+ * sites (Product module, cars cards) use this one.
+ */
+export const formatDisplayMoney = (
+    amount: number | undefined,
+    currency: string | null | undefined,
+    opts: {approx?: boolean} = {},
+) => {
+    const formatted = formatMoney(amount, currency);
+    return opts.approx ? `≈ ${formatted}` : formatted;
 };

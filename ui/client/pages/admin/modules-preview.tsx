@@ -4,8 +4,9 @@ import {SessionProvider} from 'next-auth/react';
 import {Session} from 'next-auth';
 import {GetServerSideProps} from 'next';
 import {getServerSession} from 'next-auth/next';
-import {authOptions} from '../api/auth/[...nextauth]';
+import {adminAuthOptions as authOptions} from '../api/auth/authOptions';
 import {serverSideTranslations} from 'next-i18next/pages/serverSideTranslations';
+import SeoHead from '@client/lib/seo/SeoHead';
 
 /**
  * Admin modules-preview page (C10).
@@ -17,6 +18,8 @@ import {serverSideTranslations} from 'next-i18next/pages/serverSideTranslations'
  */
 const AdminModulesPreview = ({session}: {session: Session}) => (
     <SessionProvider session={session}>
+        {/* W8h SEO polish — preview route, never indexable. */}
+        <SeoHead indexable={false} title="Admin · Modules preview"/>
         <LoginBtn view="modules-preview"/>
     </SessionProvider>
 );

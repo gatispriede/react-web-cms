@@ -1,5 +1,7 @@
 import React, {useEffect, useRef} from 'react';
-import {Alert, Button, Modal, Space, Typography, message} from 'antd';
+import {Alert, Button, Modal, Space, Typography} from 'antd';
+import {toast} from 'sonner';
+import {notifyError} from '@admin/lib/notify';
 import {useTranslation} from 'react-i18next';
 import {useViewModel} from '@client/lib/state/observable';
 import {RestartRequiredBannerViewModel, postRestart, waitForRestart} from './RestartRequiredBannerViewModel';
@@ -55,18 +57,18 @@ const RestartRequiredBanner: React.FC = () => {
                 vm.setRestarting(true);
                 const result = await postRestart();
                 if (!result.ok || !result.bootId) {
-                    message.error(result.error ?? t('Restart failed'));
+                    notifyError(result.error ?? t('Restart failed'));
                     vm.setRestarting(false);
                     return;
                 }
                 const oldBootId = result.bootId;
-                message.loading({content: t('Restarting…'), key: 'restart', duration: 0});
+                const toastId = toast.loading(t('Restarting…'));
                 const back = await waitForRestart(oldBootId);
                 if (back) {
-                    message.success({content: t('Server restarted — reloading'), key: 'restart', duration: 2});
+                    toast.success(t('Server restarted — reloading'), {id: toastId, duration: 2000});
                     setTimeout(() => window.location.reload(), 800);
                 } else {
-                    message.error({content: t('Server did not return within 60 seconds — check the server logs'), key: 'restart', duration: 6});
+                    toast.error(t('Server did not return within 60 seconds — check the server logs'), {id: toastId, duration: 6000});
                     vm.setRestarting(false);
                 }
             },

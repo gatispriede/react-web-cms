@@ -1,0 +1,6 @@
+.account-welcome { padding: 1.5rem 0;
+    h1 { margin: 0 0 1rem; }
+    &__nav { display: flex; gap: 1rem;
+        a { padding: 0.5rem 1rem; border: 1px solid var(--theme-colorBorder, #ddd); border-radius: 4px; text-decoration: none; }
+    }
+}

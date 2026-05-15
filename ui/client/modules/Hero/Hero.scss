@@ -214,7 +214,9 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    transition: background 150ms ease, color 150ms ease;
+    transition:
+      background calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+      color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
 
     &:hover {
       background: var(--ink, var(--theme-colorTextBase, #000));

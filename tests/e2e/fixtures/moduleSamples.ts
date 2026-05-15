@@ -229,6 +229,13 @@ export function buildSamples(runId: string): ModuleSample[] {
 
 // `EItemType` values that the registry intentionally omits. Update if a
 // sample is added later. The completeness check below excludes these.
+//
+// This registry feeds the generic "add every module to a blank page and
+// assert it renders" chain spec. Modules that need a surrounding context
+// (product / cart / customer-session / a `[slug]` or `[id]` route param)
+// or that are auto-injected / locked onto a system page can't render
+// standalone on an arbitrary page — they're exercised by their own
+// dedicated specs instead and are listed here with that reason.
 const REGISTRY_OMISSIONS: ReadonlySet<EItemType> = new Set([
     EItemType.Empty,                   // synthetic placeholder, not user-addable
     EItemType.InquiryForm,             // form integration, separate spec needed
@@ -238,6 +245,61 @@ const REGISTRY_OMISSIONS: ReadonlySet<EItemType> = new Set([
     EItemType.RepoTree,                // dev-portfolio specific
     EItemType.ArchitectureTiers,       // dev-portfolio specific
     EItemType.StatsStrip,              // dev-portfolio specific
+    // Phase 1.B–1.F product modules — auto-injected by Category /
+    // ProductDetail templates or bound to `ProductContext`; no standalone
+    // render on a blank page.
+    EItemType.Product,
+    EItemType.ProductDetailHero,
+    EItemType.ProductSpecTable,
+    EItemType.ProductDescription,
+    EItemType.Pagination,
+    EItemType.Breadcrumb,
+    EItemType.LargeGallery,
+    EItemType.SubProductsGrid,
+    EItemType.DownloadablePdf,
+    EItemType.WarrantyInfo,
+    // Phase 1.D checkout family — locked transactional modules; need a
+    // live cart / checkout machine. Covered by the checkout flow specs.
+    EItemType.CartLineItems,
+    EItemType.CartSummary,
+    EItemType.CartActions,
+    EItemType.CheckoutProgressBar,
+    EItemType.CheckoutAddressForm,
+    EItemType.CheckoutShippingMethod,
+    EItemType.CheckoutPaymentForm,
+    EItemType.CheckoutCartSummary,
+    EItemType.PlaceOrderButton,
+    EItemType.OrderSummary,
+    EItemType.MagicLinkAccountUpgrade,
+    EItemType.AccountWelcome,
+    EItemType.TrustBadges,
+    EItemType.MoneyBackGuarantee,
+    EItemType.ShippingCalculator,
+    EItemType.DownloadInvoiceButton,
+    EItemType.ReferAFriendCta,
+    EItemType.SocialShareButtons,
+    // Phase 1.E — locked structural modules on the /account/settings
+    // system page.
+    EItemType.AccountSettingsHero,
+    EItemType.AccountSettingsNav,
+    EItemType.AccountSettingsForm,
+    // all-pages-module-composed — system-page smart wrappers: customer-
+    // session / route-param / storefront-feed bound. Covered by the
+    // /account, /blog, /welcome and /cars system-page specs.
+    EItemType.OrdersList,
+    EItemType.OrderDetail,
+    EItemType.AddressList,
+    EItemType.NotificationInbox,
+    EItemType.SigninForm,
+    EItemType.SignupForm,
+    EItemType.MagicLinkRequestForm,
+    EItemType.BlogPost,
+    EItemType.FeatureGrid,
+    EItemType.LogoCloud,
+    EItemType.PricingTable,
+    EItemType.TestimonialWall,
+    EItemType.CarsList,
+    EItemType.CarDetail,
 ]);
 
 /**

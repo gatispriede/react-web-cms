@@ -1,0 +1,41 @@
+.oauth-button-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.oauth-button {
+    // WCAG 2.2 AA: 44 px minimum touch target.
+    min-height: 44px;
+    padding: 0.625rem 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    border-radius: var(--theme-borderRadius, 8px);
+    border: 1px solid var(--ink-2, color-mix(in srgb, currentColor 30%, transparent));
+    background: var(--theme-colorBgContainer, #fff);
+    color: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+    font-size: 0.9375rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+    &__icon {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        flex: 0 0 auto;
+    }
+
+    &:hover:not(:disabled) {
+        background: var(--theme-colorBgInset, color-mix(in srgb, currentColor 6%, transparent));
+    }
+
+    // Brand color placeholders — design pass replaces with real glyphs.
+    &--google .oauth-button__icon { background: #4285F4; }
+    &--apple .oauth-button__icon { background: #000; }
+    &--facebook .oauth-button__icon { background: #1877F2; }
+}

@@ -1,6 +1,6 @@
 import type {NextApiRequest, NextApiResponse} from 'next';
 import {getServerSession} from 'next-auth/next';
-import {authOptions} from './auth/[...nextauth]';
+import {adminAuthOptions as authOptions} from './auth/authOptions';
 import {UserRole} from '@interfaces/IUser';
 
 const ROLE_RANK: Record<UserRole, number> = {viewer: 0, editor: 1, admin: 2};

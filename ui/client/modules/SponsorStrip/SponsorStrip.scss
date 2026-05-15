@@ -1,0 +1,64 @@
+.sponsor-strip {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    color: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+
+    &__tier {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    &__tier-label {
+        margin: 0;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--ink-2, color-mix(in srgb, currentColor 65%, transparent));
+    }
+
+    &__list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        align-items: center;
+        justify-content: center;
+    }
+
+    &__item {
+        display: flex;
+    }
+
+    &__link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    &__logo {
+        display: block;
+        object-fit: contain;
+        filter: grayscale(1);
+        opacity: 0.85;
+        transition: filter calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                    opacity calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &:hover {
+            filter: grayscale(0);
+            opacity: 1;
+        }
+    }
+
+    &__tier--platinum &__logo { height: 80px; max-width: 220px; }
+    &__tier--gold &__logo { height: 64px; max-width: 180px; }
+    &__tier--silver &__logo { height: 48px; max-width: 140px; }
+    &__tier--bronze &__logo { height: 40px; max-width: 120px; }
+}

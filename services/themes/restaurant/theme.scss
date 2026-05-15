@@ -1,0 +1,73 @@
+/* ==========================================================================
+   Restaurant — first-class theme.
+
+   Warm khaki paper + deep burgundy ink + accent, Fraunces (variable serif
+   with optical sizes) display + Manrope body. Considered motion with
+   overshoot eases. Scoped under `[data-theme-name="restaurant"]`.
+
+   Mixed radii — 0px on menu items (printed-menu feel), 4px on buttons.
+   Different from every other theme's radius treatment.
+
+   Bespoke visuals live in `module-styles.scss` alongside.
+   ========================================================================== */
+
+[data-theme-name="restaurant"] {
+    --color-surface:       light-dark(#F4EFE6, #1C1814);
+    --color-ink:           light-dark(#2A1F1A, #F0E8DC);
+    --color-accent:        light-dark(#7A1F2B, #C44A5B);
+    --color-accent-ink:    light-dark(#F4EFE6, #1C1310);
+    --color-surface-inset: light-dark(#EAE2D2, #26201A);
+    --color-rule:          light-dark(#C9BEA8, #3D362D);
+
+    --background: var(--color-surface);
+    --ink:    var(--color-ink);
+    --ink-2:  color-mix(in srgb, var(--color-ink) 65%, transparent);
+    --accent: var(--color-accent);
+    --accent-hover: color-mix(in srgb, var(--color-accent) 85%, #000);
+
+    --font-display: 'Fraunces', ui-serif, Georgia, 'Times New Roman', serif;
+    --font-body:    'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono:    ui-monospace, 'SF Mono', Menlo, monospace;
+
+    --theme-headingFont: var(--font-display);
+    --theme-bodyFont:    var(--font-body);
+
+    /* gentle-slow + considered eases (Fraunces feels like it wants
+       overshoot). Different from Editorial's gentle-slow (which has
+       a much slower deliberate scale). */
+    --motion-duration-fast:       180ms;
+    --motion-duration-base:       300ms;
+    --motion-duration-slow:       500ms;
+    --motion-duration-deliberate: 800ms;
+    --motion-ease-standard:       cubic-bezier(0.16, 1, 0.3, 1);
+    --motion-ease-entrance:       cubic-bezier(0.16, 1, 0.3, 1);
+    --motion-ease-exit:           cubic-bezier(0.4, 0, 0.84, 0);
+    --motion-ease-emphasized:     cubic-bezier(0.22, 1, 0.36, 1);
+
+    --motion-distance-sm: 10px;
+    --motion-distance-md: 28px;
+    --motion-distance-lg: 80px;
+
+    /* Mixed radius defaults — 4px on buttons + cards;
+       menu items render flat via per-rule overrides below. */
+    --theme-borderRadius: 4px;
+
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+
+    /* Fraunces optical sizes — use `font-variation-settings: "opsz"` on
+       larger headings for the editorial-style serif feel. */
+    h1, h2, h3,
+    .heading,
+    .heading--display {
+        font-family: var(--font-display);
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        font-variation-settings: 'opsz' 60, 'SOFT' 50;
+    }
+
+    h1, .heading--xl {
+        font-variation-settings: 'opsz' 144, 'SOFT' 100;
+    }
+}

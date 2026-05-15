@@ -70,11 +70,34 @@ export interface IOrderIdempotencyKeys {
     finalize?: string;
 }
 
+/**
+ * VAT regime snapshot, persisted on the order at finalize time. See
+ * `services/features/Pricing/VatRegimeService.ts` for the resolver.
+ * Captured on the order so admins can audit which regime applied for
+ * which sale (especially relevant for B2B reverse-charge audits).
+ */
+export interface IOrderVatRegime {
+    kind: 'b2c-eu' | 'b2c-eu-cross' | 'b2b-eu-reverse-charge' | 'b2c-non-eu' | 'b2b-non-eu';
+    vatRate: number;
+    buyerCountry: string;
+    sellerCountry: string;
+    vatNumber?: string;
+    viesVerified?: boolean;
+    note?: string;
+    provider?: 'internal' | 'stripe-tax';
+}
+
 export interface IOrder {
     id: string;
     orderNumber: string;
     customerId?: string;
     guestEmail?: string;
+    /** Buyer-supplied EU VAT-ID for B2B (W8g). */
+    customerVatId?: string;
+    /** When true, customer self-identified as buying for a business. */
+    businessBuyer?: boolean;
+    /** Snapshot of the resolved VAT regime at finalize time (W8g). */
+    vatRegime?: IOrderVatRegime;
     /** Opaque token bound to the `order_token` cookie for guest confirmation reads. */
     orderToken?: string;
 

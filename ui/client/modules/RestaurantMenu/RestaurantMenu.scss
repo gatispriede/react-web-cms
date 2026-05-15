@@ -1,0 +1,116 @@
+.restaurant-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+
+    &__section {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    &__title {
+        margin: 0;
+        font-size: 1.25rem;
+        color: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+    }
+
+    &__details {
+        border-radius: var(--theme-borderRadius, 8px);
+    }
+
+    &__summary {
+        // WCAG 2.2 AA: 44 px minimum touch target.
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        list-style: none;
+        padding: 0.25rem 0;
+
+        &::-webkit-details-marker { display: none; }
+    }
+
+    &__items {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    &__item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--theme-colorBgInset, color-mix(in srgb, currentColor 8%, transparent));
+    }
+
+    &__item-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    &__item-name-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    &__item-name {
+        font-weight: 500;
+        color: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+    }
+
+    &__price {
+        margin-left: auto;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+        font-weight: 500;
+        color: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+    }
+
+    &__badges {
+        display: inline-flex;
+        gap: 0.25rem;
+        flex-wrap: wrap;
+    }
+
+    &__badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.125rem 0.5rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        background: var(--theme-colorBgInset, color-mix(in srgb, currentColor 6%, transparent));
+        color: var(--ink-2, color-mix(in srgb, currentColor 70%, transparent));
+
+        &--vegan { background: color-mix(in srgb, #2e7d32 14%, transparent); color: #2e7d32; }
+        &--vegetarian { background: color-mix(in srgb, #558b2f 14%, transparent); color: #558b2f; }
+        &--gluten-free { background: color-mix(in srgb, #8e24aa 14%, transparent); color: #8e24aa; }
+        &--spicy { background: color-mix(in srgb, #d4380d 14%, transparent); color: #d4380d; }
+        &--contains-alcohol { background: color-mix(in srgb, #6d4c41 14%, transparent); color: #6d4c41; }
+    }
+
+    &__item-desc {
+        margin: 0;
+        color: var(--ink-2, color-mix(in srgb, currentColor 70%, transparent));
+        font-size: 0.875rem;
+    }
+
+    &__item-photo {
+        display: block;
+        margin-top: 0.25rem;
+        max-width: 160px;
+        width: 100%;
+        height: auto;
+        border-radius: var(--theme-borderRadius, 8px);
+        object-fit: cover;
+    }
+}

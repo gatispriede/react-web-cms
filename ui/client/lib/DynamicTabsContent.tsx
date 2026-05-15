@@ -385,6 +385,9 @@ class DynamicTabsContent extends React.Component<IDynamicTabsContent> {
                         t={this.props.t}
                         admin={this.admin}
                         label={this.props.t('Section {{n}}', {n: index + 1}) as string}
+                        locked={section.locked === true}
+                        lockReason={section.lockReason}
+                        sectionId={section.id}
                         moveUp={() => {
                             // Translate flat index → grouped index so the move
                             // operates in the same space as drag-reorder.

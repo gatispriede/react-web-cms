@@ -6,6 +6,7 @@ import {TFunction} from "i18next";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import RevealOnScroll from "@client/lib/RevealOnScroll";
 import {slugifyAnchor} from "@utils/stringFunctions";
+import {inlineEditAttr} from "@client/lib/inlineEditAttr";
 import type {IList} from "./List.types";
 import {EListStyle} from "./List.types";
 export type {IList, IListItem} from "./List.types";
@@ -23,21 +24,23 @@ export class ListContent extends ContentManager {
     setField<K extends keyof IList>(k: K, v: IList[K]) { this._parsedContent[k] = v; }
 }
 
-const List = ({item, tApp}: {
+const List = ({item, tApp, admin}: {
     item: IItem;
     t: TFunction<"translation", undefined>;
     tApp: TFunction<string, undefined>;
+    admin?: boolean;
 }) => {
     const c = new ListContent(EItemType.List, item.content).data;
     const tr = (v: string) => <InlineTranslatable tApp={tApp as any} source={v}/>;
     const style = item.style || EListStyle.Default;
+    const editId = item.name || EItemType.List;
     const isFacts = style === EListStyle.Facts;
     const isCases = style === EListStyle.Cases;
     const isPaperGrid = style === EListStyle.PaperGrid;
 
     return (
         <RevealOnScroll className={`list-module ${style}`}>
-            {c.title && <div id={slugifyAnchor(c.title)} className="list-module__title">{tr(c.title)}</div>}
+            {c.title && <div id={slugifyAnchor(c.title)} className="list-module__title" {...inlineEditAttr(admin, editId, 'title')}>{tr(c.title)}</div>}
             {isPaperGrid ? (
                 <div className="list-module__paper-grid">
                     {c.items.map((it, i) => {
@@ -110,7 +113,7 @@ const List = ({item, tApp}: {
                 <ul className="list-module__items">
                     {c.items.map((it, i) => (
                         <li key={i}>
-                            <span className="list-module__label">{tr(it.label)}</span>
+                            <span className="list-module__label" {...inlineEditAttr(admin, editId, `items.${i}.label`)}>{tr(it.label)}</span>
                             {it.value && (
                                 <span className="list-module__value">
                                     {it.href

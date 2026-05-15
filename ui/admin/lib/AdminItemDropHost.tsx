@@ -1,5 +1,5 @@
 import React, {useCallback, useMemo} from "react";
-import {message} from "antd";
+import {notifyError, notifySuccess} from '@admin/lib/notify';
 import {TFunction} from "i18next";
 import {IItem} from "@interfaces/IItem";
 import {EItemType} from "@enums/EItemType";
@@ -142,9 +142,9 @@ const AdminItemDropHost: React.FC<Props> = ({sectionId, item, index, admin, addR
                 actionContent: item.actionContent,
                 animation: item.animation,
             });
-            if (toast) void message.success(toast);
+            if (toast) notifySuccess(toast);
         } catch (err) {
-            void message.error(String((err as Error)?.message ?? err));
+            notifyError(err);
         }
     }, [bearing, sectionId, item, index, addRemoveSectionItem, t]);
 

@@ -1,0 +1,178 @@
+/* ==========================================================================
+   Product module — base styles (theme-agnostic, token-driven).
+   Per-theme overrides land in services/themes/*\/module-styles.scss.
+   ========================================================================== */
+
+.product {
+  color: var(--ink, var(--theme-colorTextBase, inherit));
+  padding: 12px 0;
+
+  &__title {
+    font-family: var(--font-display, var(--font-sans, system-ui, sans-serif));
+    font-size: clamp(20px, 2vw, 28px);
+    margin: 0 0 8px;
+  }
+  &__desc {
+    color: var(--ink-2, #555);
+    margin: 0 0 12px;
+  }
+  &__price {
+    font-weight: 600;
+    font-size: 18px;
+    margin: 8px 0;
+  }
+  &__heading {
+    font-size: 22px;
+    margin: 0 0 16px;
+  }
+  &__bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    z-index: 0;
+    opacity: 0.35;
+  }
+
+  /* ---- Featured ---- */
+  &--featured {
+    display: grid;
+    gap: 24px;
+    align-items: center;
+
+    &-left { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    &-right {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      .product__media { order: 2; }
+    }
+    &-top { grid-template-columns: 1fr; }
+    &-background {
+      position: relative;
+      min-height: 320px;
+    }
+
+    .product__media img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    @media (max-width: 640px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* ---- Grid ---- */
+  &--grid {
+    display: grid;
+    grid-template-columns: repeat(var(--product-grid-cols, 3), minmax(0, 1fr));
+    gap: 20px;
+
+    @media (max-width: 640px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  /* ---- Carousel ---- */
+  &--carousel {
+    overflow: hidden;
+    .product__track {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: calc(100% / var(--product-carousel-slides, 3) - 16px);
+      gap: 16px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      padding-bottom: 8px;
+    }
+    .product__slide {
+      scroll-snap-align: start;
+    }
+    @media (max-width: 640px) {
+      .product__track { grid-auto-columns: 90%; }
+    }
+  }
+
+  /* ---- Comparison ---- */
+  &--comparison {
+    overflow-x: auto;
+    .product__compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      th, td {
+        border-bottom: 1px solid var(--border, #eee);
+        padding: 10px 12px;
+        text-align: left;
+      }
+      th[scope="row"] {
+        background: var(--bg-inset, #f7f7f7);
+      }
+    }
+    .product__compare-row--diff td {
+      background: var(--accent-tint, rgba(255, 200, 0, 0.08));
+    }
+  }
+
+  /* ---- Empty state ---- */
+  &--empty {
+    padding: 32px;
+    text-align: center;
+    color: var(--ink-2, #888);
+    border: 1px dashed var(--border, #ddd);
+    border-radius: 8px;
+  }
+}
+
+/* ==========================================================================
+   Product card — shared primitive
+   ========================================================================== */
+
+.product-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-card, #fff);
+  border: 1px solid var(--border, #eee);
+  transition: transform 160ms var(--motion-easing, ease), box-shadow 160ms;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+  }
+
+  &__media {
+    display: block;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: var(--bg-inset, #f3f3f3);
+    img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  }
+  &__placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--bg-inset, #eee), var(--bg-card, #fff));
+  }
+  &__body {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  &__title {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    a { color: inherit; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  }
+  &__price {
+    font-size: 15px;
+    font-weight: 500;
+    margin: 0;
+    color: var(--accent, var(--theme-colorPrimary, #1677ff));
+  }
+
+  &--compact &__body { padding: 8px; }
+  &--spacious &__body { padding: 16px; }
+}

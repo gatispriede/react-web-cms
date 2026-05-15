@@ -1,0 +1,27 @@
+// Editorial theme — per-template style overrides for the 5 built-in
+// product display templates. Phase 1.F (product-display-templates).
+// Minimal defaults — full polish lands per-theme jump.
+
+.template-built-in-premium {
+    --product-template-hero-gap: 2.5rem;
+    --product-template-gallery-max-cols: 3;
+}
+
+.template-built-in-standard {
+    --product-template-hero-gap: 1.5rem;
+}
+
+.template-built-in-quick-buy {
+    --product-template-hero-gap: 1rem;
+    --product-template-cta-emphasis: 1.15;
+}
+
+.template-built-in-bundle {
+    --product-template-hero-gap: 1.5rem;
+    --product-template-grid-min-card: 220px;
+}
+
+.template-built-in-b2b-spec-sheet {
+    --product-template-hero-gap: 1.25rem;
+    --product-template-spec-density: compact;
+}

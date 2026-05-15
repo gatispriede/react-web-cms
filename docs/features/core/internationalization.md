@@ -38,4 +38,4 @@ Any translated string wrapped in `<InlineTranslatable>` can be edited directly o
 - Feature flag: `siteFlags.inlineTranslationEdit` — toggled in admin → Layout tab.
 - Long strings (> 200 chars) expand to a 4-row textarea; Ctrl+Enter to save.
 
-See [`../architecture/admin-systems.md`](../architecture/admin-systems.md) for implementation details.
+See [`../architecture/admin-systems.md`](../../architecture/admin-systems.md) for implementation details.

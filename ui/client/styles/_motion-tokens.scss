@@ -1,0 +1,49 @@
+// Motion token system — project-wide animation primitives.
+//
+// Spec: docs/roadmap/admin/motion-token-system.md (item 0b).
+//
+// Centralises duration + easing + distance into CSS custom properties on a
+// known scale (Carbon / Material 3 shape). Every animation in client + admin
+// reads from these tokens; ban hardcoded `ms` values and inline
+// `cubic-bezier(...)` in new code.
+//
+// `prefers-reduced-motion: reduce` flips `--motion-scalar` to 0 — multiplying
+// every duration by the scalar collapses animations to instant.
+//
+// Imported once via `ui/client/styles/globals/global.scss`, which is the
+// single SCSS entry point loaded by `_app.tsx` (the client + admin chrome
+// share the same global stylesheet — admin styles are `@use`d under
+// `global.scss`, so this file covers both surfaces).
+
+:root {
+    // Duration scale — Carbon / Material 3 ratio.
+    --motion-duration-fast: 150ms;        // hover / focus / press / small UI feedback
+    --motion-duration-base: 250ms;        // card lift, modal open, dropdown
+    --motion-duration-slow: 400ms;        // page section enter, accordion expand
+    --motion-duration-deliberate: 700ms;  // hero reveal, route transition, theme switch
+
+    // Easing curves.
+    --motion-ease-standard:    cubic-bezier(0.4, 0, 0.2, 1);
+    --motion-ease-entrance:    cubic-bezier(0,   0, 0.2, 1);   // deceleration in
+    --motion-ease-exit:        cubic-bezier(0.4, 0, 1,   1);   // acceleration out
+    --motion-ease-emphasized:  cubic-bezier(0.2, 0, 0,   1);   // large, attention-pulling
+
+    // Distance scale — translateY / translateX defaults.
+    --motion-distance-sm:  8px;
+    --motion-distance-md: 24px;
+    --motion-distance-lg: 64px;
+
+    // Stagger unit for list-item entrance.
+    --motion-stagger: 60ms;
+
+    // Reduced-motion master switch — multiplied into every duration so the
+    // OS-level `prefers-reduced-motion: reduce` setting zeroes the whole
+    // animation system without per-rule overrides.
+    --motion-scalar: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --motion-scalar: 0;
+    }
+}
