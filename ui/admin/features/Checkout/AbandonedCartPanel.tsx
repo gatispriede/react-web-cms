@@ -1,22 +1,25 @@
 /**
- * Phase 1.B-d — abandoned-cart recovery admin pane.
+ * admin-module-composed — Abandoned-cart recovery bridge.
  *
- * Sections:
- *   1. Master switch — `commerce.abandonedCartEnabled`
- *   2. Delay-minutes Select (predefined: 30 / 60 / 120 / 240 / 1440)
- *   3. Discount-code input — operator-supplied promo
- *   4. Recovery-rate stats card
- *   5. Recent abandonments table (read-only)
+ * Was a bespoke hand-coded pane; now the `AdminLoader` *bridge* for
+ * `client-config/abandoned-cart`. `AbandonedCartViewModel` + the
+ * bespoke settings / stats / recent-abandonments cards stay 100%
+ * unchanged ("admin stays mostly same"); only the outer `<div>` +
+ * header chrome moves into the generic `AdminFormModule` shape — the
+ * Refresh button becomes `headerExtra`. Settings auto-save via the VM,
+ * so the module renders without an `onSave` save bar.
  *
- * VM4 — no `useState`. Sonner notifyPromise via the VM. testids on every
- * interactive so e2e specs can drive the surface.
+ * Registered with the `AdminPageRegistry` by `AbandonedCartAdminLoader`;
+ * the shell reaches it via `AdminPageDispatch` (see
+ * `AbandonedCartAdminUILoader`).
  */
 import React, {useEffect} from 'react';
-import {Alert, Card, Input, Select, Skeleton, Space, Statistic, Switch, Table, Tag, Typography} from 'antd';
+import {Card, Input, Select, Skeleton, Space, Statistic, Switch, Table, Tag, Typography} from 'antd';
 import {ReloadOutlined} from '@client/lib/icons';
 import {Button} from 'antd';
 import {useTranslation} from 'react-i18next';
 import {useViewModel} from '@client/lib/state/observable';
+import AdminFormModule from '@admin/modules/shapes/AdminFormModule';
 import {AbandonedCartViewModel, type AbandonedCartRow} from './AbandonedCartViewModel';
 
 const DELAY_OPTIONS: Array<{value: number; label: string}> = [
@@ -55,11 +58,11 @@ const AbandonedCartPanel: React.FC = () => {
     }
 
     return (
-        <div data-testid="abandoned-cart-admin-panel" style={{padding: 16, overflowY: 'auto'}}>
-            <Space style={{marginBottom: 12, width: '100%', justifyContent: 'space-between'}}>
-                <Typography.Title level={4} style={{margin: 0}}>
-                    {t('abandonedCart.title', {defaultValue: 'Abandoned cart recovery'}) as string}
-                </Typography.Title>
+        <AdminFormModule
+            testId="abandoned-cart-admin-panel"
+            title={t('abandonedCart.title', {defaultValue: 'Abandoned cart recovery'}) as string}
+            error={vm.error}
+            headerExtra={
                 <Button
                     data-testid="abandoned-cart-refresh-button"
                     icon={<ReloadOutlined/>}
@@ -68,10 +71,8 @@ const AbandonedCartPanel: React.FC = () => {
                 >
                     {t('Refresh', {defaultValue: 'Refresh'}) as string}
                 </Button>
-            </Space>
-
-            {vm.error ? <Alert type="warning" message={vm.error} style={{marginBottom: 12}}/> : null}
-
+            }
+        >
             <Space direction="vertical" size={16} style={{width: '100%'}}>
 
                 <Card
@@ -200,7 +201,7 @@ const AbandonedCartPanel: React.FC = () => {
                     />
                 </Card>
             </Space>
-        </div>
+        </AdminFormModule>
     );
 };
 

@@ -1,11 +1,13 @@
-import React, {useCallback} from 'react';
+import React, {useCallback, useEffect} from 'react';
 import {TFunction} from 'i18next';
-import {notifyError} from '@admin/lib/notify';
+import {notifyError, notifyInfo} from '@admin/lib/notify';
 import SectionApi from '@services/api/client/SectionApi';
 import {refreshBus} from '@client/lib/refreshBus';
 import {InlineEditHighlight} from './InlineEditHighlight';
 import {InlineEditDrawer} from './InlineEditDrawer';
 import {useInlineEdit, type InlineEditHoverState} from './useInlineEdit';
+import {resolveEditTarget, dispatchLabel} from './editTargetRoute';
+import {navigateToEditTarget, navigateToFullEditor} from './editTargetNavigate';
 
 /**
  * Top-level shell component for the click-to-edit overlay.
@@ -78,6 +80,47 @@ function applyFieldPath(root: any, path: string, value: string): any {
 export const InlineEditOverlay: React.FC<InlineEditOverlayProps> = ({enabled, t, sectionsById}) => {
     const {hovered, active, clearActive} = useInlineEdit({enabled});
 
+    /**
+     * Click dispatch — the parent half of the `data-edit-target` round-trip.
+     *
+     * `useInlineEdit` sets `active` on *every* intercepted click, whatever
+     * the collection. Here we resolve where that click should land:
+     *
+     *   - `modules` / `sections` → `resolveEditTarget` returns `kind:'drawer'`,
+     *     so we leave `active` set and the `<InlineEditDrawer/>` below opens
+     *     in-place — the fast "fix a typo" path.
+     *   - `pages` / `posts` / `products` → `kind:'route'`. There's no
+     *     in-place drawer for these; `navigateToEditTarget` deep-links to
+     *     the dedicated editor pane with `?focus=<field>` (+ `?editId=` for
+     *     the list-style panes) threaded through, and we immediately
+     *     `clearActive()` so the drawer never flashes open mid-navigation.
+     *
+     * Running this in an effect (rather than inside the hook's click
+     * handler) keeps `useInlineEdit` a pure state bag and keeps the
+     * resolve→navigate decision colocated with the rest of the dispatch
+     * wiring in this file.
+     */
+    useEffect(() => {
+        if (!active) return;
+        const dispatch = resolveEditTarget(active.target);
+        if (dispatch.kind === 'route') {
+            notifyInfo(t('Opening {{label}}…', {label: dispatchLabel(active.target)}));
+            navigateToEditTarget(active.target);
+            clearActive();
+        }
+    }, [active, clearActive, t]);
+
+    /**
+     * Drawer escape hatch — "Open full editor". The lightweight drawer
+     * handles plain text/textarea fields; compound fields (image / link
+     * pickers, list reordering) need the full editor pane. This deep-links
+     * the build view to the clicked module's id + field.
+     */
+    const handleOpenFullEditor = useCallback((hit: InlineEditHoverState): void => {
+        navigateToFullEditor(hit.target);
+        clearActive();
+    }, [clearActive]);
+
     const handleSave = useCallback(async (hit: InlineEditHoverState, value: string): Promise<void> => {
         const {target, sectionId} = hit;
         if (target.collection !== 'modules' || !sectionId) {
@@ -134,7 +177,14 @@ export const InlineEditOverlay: React.FC<InlineEditOverlayProps> = ({enabled, t,
     return (
         <div className="inline-edit-overlay" data-testid="inline-edit-overlay">
             <InlineEditHighlight hovered={hovered}/>
-            <InlineEditDrawer active={active} onClose={clearActive} onSave={handleSave} t={t}/>
+            <InlineEditDrawer
+                active={active}
+                onClose={clearActive}
+                onSave={handleSave}
+                onOpenFullEditor={handleOpenFullEditor}
+                t={t}
+                data-testid="inline-edit-drawer"
+            />
         </div>
     );
 };

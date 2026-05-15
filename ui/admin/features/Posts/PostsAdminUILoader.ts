@@ -1,5 +1,7 @@
 import React from 'react';
 import {AdminUILoader, AdminPaneDescriptor} from '@admin/lib/loaders/AdminUILoader';
+import {AdminPageDispatch} from '@admin/lib/adminPages/AdminPageDispatch';
+import './PostsAdminLoader';
 
 /**
  * Posts admin pane.
@@ -9,12 +11,15 @@ import {AdminUILoader, AdminPaneDescriptor} from '@admin/lib/loaders/AdminUILoad
  * every save publishes. Advanced composes the simplified base (per
  * `aui-mode-hierarchy.md` 2026-05-07) and adds the full surface.
  *
- * Both variants are `React.lazy`-imported so simplified-mode users
- * never download the advanced bundle (and vice versa). The shell
- * dispatcher wraps the active pane in `<Suspense>`.
+ * admin-module-composed: the pane is now module-composed — BOTH modes
+ * dispatch through the `AdminPageRegistry` via `AdminPageDispatch`. The
+ * registered `PostsAdminLoader` bridge reads `useAdminMode()` and picks
+ * the simplified vs advanced view internally, so both slots point at the
+ * same dispatch component. `./PostsAdminLoader` is side-imported so the
+ * `content/posts` bridge registers at load.
  */
-const PostsAdvanced = React.lazy(() => import('./PostsAdvancedView'));
-const PostsSimplified = React.lazy(() => import('./PostsSimplifiedView'));
+const PostsPaneDispatch: React.FC = () =>
+    React.createElement(AdminPageDispatch, {paneId: 'content/posts'});
 
 export class PostsAdminUILoader extends AdminUILoader {
     readonly id = 'posts';
@@ -25,8 +30,8 @@ export class PostsAdminUILoader extends AdminUILoader {
         title: 'Posts',
         route: '/admin/content/posts',
         modes: {
-            advanced: PostsAdvanced,
-            simplified: PostsSimplified,
+            advanced: PostsPaneDispatch,
+            simplified: PostsPaneDispatch,
         },
     };
 }

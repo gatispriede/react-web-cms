@@ -92,6 +92,33 @@ describe('NavigationService audit stamps', () => {
         expect(new Date(updated.editedAt).getTime()).toBeGreaterThanOrEqual(new Date(inserted.editedAt).getTime());
     });
 
+    it('addUpdateSectionItem upserts an unknown id when pageName is given (mcp-rollout-aftermath #1)', async () => {
+        // MCP callers want semantic ids ("cv-sec-mcp-hero") rather than
+        // a random uuid. A chosen-but-unknown id + pageName must create
+        // the section with that id AND attach it to the page.
+        await navigation.insertOne({type: 'navigation', id: 'n3', page: 'About', sections: [], seo: {}});
+        const raw = await service.addUpdateSectionItem({
+            section: {id: 'cv-sec-mcp-hero', type: 1, page: 'About', content: []} as any,
+            pageName: 'About',
+            editedBy: 'dave@example.com',
+        });
+        const parsed = JSON.parse(raw);
+        expect(parsed.createSection).toEqual({id: 'cv-sec-mcp-hero', version: 1, upserted: true});
+        const inserted = await sections.findOne({id: 'cv-sec-mcp-hero'}) as any;
+        expect(inserted).toBeTruthy();
+        expect(inserted.editedBy).toBe('dave@example.com');
+        const nav = await navigation.findOne({type: 'navigation', page: 'About'}) as any;
+        expect(nav.sections).toContain('cv-sec-mcp-hero');
+    });
+
+    it('addUpdateSectionItem rejects an unknown id when no pageName is given (would orphan the section)', async () => {
+        const raw = await service.addUpdateSectionItem({
+            section: {id: 'cv-sec-orphan', type: 1, page: 'Nowhere', content: []} as any,
+        });
+        expect(JSON.parse(raw).error).toMatch(/not found/i);
+        expect(await sections.findOne({id: 'cv-sec-orphan'})).toBeNull();
+    });
+
     it('omits editedBy when the caller did not supply one (standalone / anonymous path)', async () => {
         await navigation.insertOne({type: 'navigation', id: 'n2', page: 'Anon', sections: [], seo: {}});
         await service.updateNavigation('Anon', ['x']);

@@ -3,6 +3,7 @@ import {Drawer, Button, Input, Space, Typography} from 'antd';
 import {TFunction} from 'i18next';
 import {notifyPromise} from '@admin/lib/notify';
 import type {InlineEditHoverState} from './useInlineEdit';
+import {resolveEditTarget} from './editTargetRoute';
 
 /**
  * Slide-out drawer that opens when an operator clicks a `data-edit-target`
@@ -30,7 +31,14 @@ export interface InlineEditDrawerProps {
     /** Persistence callback. Returns a Promise so the drawer can wrap the
      *  call in `notifyPromise` and the toast updates in lockstep. */
     onSave: (active: InlineEditHoverState, value: string) => Promise<void>;
+    /** Escape hatch — navigate to the collection's full editor pane for
+     *  compound fields (image / link pickers, list reordering) the
+     *  lightweight textarea can't handle. Only rendered when the resolved
+     *  dispatch carries a `fullEditorHref`. */
+    onOpenFullEditor: (active: InlineEditHoverState) => void;
     t: TFunction<'translation', undefined>;
+    /** e2e hook for the drawer root. Defaults to `inline-edit-drawer`. */
+    'data-testid'?: string;
 }
 
 const readSeedValue = (el: HTMLElement | undefined): string => {
@@ -44,12 +52,22 @@ const readSeedValue = (el: HTMLElement | undefined): string => {
     return clone.textContent?.trim() ?? '';
 };
 
-export const InlineEditDrawer: React.FC<InlineEditDrawerProps> = ({active, onClose, onSave, t}) => {
+export const InlineEditDrawer: React.FC<InlineEditDrawerProps> = ({
+    active, onClose, onSave, onOpenFullEditor, t, 'data-testid': testId = 'inline-edit-drawer',
+}) => {
     const [value, setValue] = useState('');
     const [saving, setSaving] = useState(false);
     const inputRef = useRef<any>(null);
 
     const seed = useMemo(() => readSeedValue(active?.element), [active]);
+
+    // Whether the resolved dispatch offers a "full editor" deep-link for
+    // this target — drives the optional escape-hatch button in the footer.
+    const fullEditorHref = useMemo(() => {
+        if (!active) return undefined;
+        const dispatch = resolveEditTarget(active.target);
+        return dispatch.kind === 'drawer' ? dispatch.fullEditorHref : undefined;
+    }, [active]);
 
     useEffect(() => {
         if (!active) return undefined;
@@ -92,21 +110,34 @@ export const InlineEditDrawer: React.FC<InlineEditDrawerProps> = ({active, onClo
             title={t('Edit field')}
             placement="right"
             width={420}
-            data-testid="inline-edit-drawer"
+            data-testid={testId}
             destroyOnHidden
             footer={
-                <Space style={{width: '100%', justifyContent: 'flex-end'}}>
-                    <Button onClick={onClose} data-testid="inline-edit-drawer-cancel-button">
-                        {t('Cancel')}
-                    </Button>
-                    <Button
-                        type="primary"
-                        loading={saving}
-                        onClick={handleSave}
-                        data-testid="inline-edit-drawer-save-button"
-                    >
-                        {t('Save')}
-                    </Button>
+                <Space style={{width: '100%', justifyContent: 'space-between'}}>
+                    {/* Escape hatch — only shown when the resolved dispatch
+                        offers a fuller editing surface than this textarea. */}
+                    {fullEditorHref && active ? (
+                        <Button
+                            type="link"
+                            onClick={() => onOpenFullEditor(active)}
+                            data-testid="inline-edit-drawer-open-full-editor-button"
+                        >
+                            {t('Open full editor')}
+                        </Button>
+                    ) : <span/>}
+                    <Space>
+                        <Button onClick={onClose} data-testid="inline-edit-drawer-cancel-button">
+                            {t('Cancel')}
+                        </Button>
+                        <Button
+                            type="primary"
+                            loading={saving}
+                            onClick={handleSave}
+                            data-testid="inline-edit-drawer-save-button"
+                        >
+                            {t('Save')}
+                        </Button>
+                    </Space>
                 </Space>
             }
         >

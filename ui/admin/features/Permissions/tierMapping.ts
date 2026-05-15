@@ -96,6 +96,45 @@ export function inferTierFromGrants(
     return canPublishProduction ? 'Full' : 'Edit';
 }
 
+// ──────────────────────────────────────────────────────────────────────
+// Grant-grid editor — feature / page / locale dimension grants.
+//
+// Per `docs/roadmap/admin/admin-permissions-ux.md` the grant-grid is the
+// richer UX for the Q10 three-dimension `Grant` union
+// (`shared/types/IPermission.ts`). The engine `Permissions` collection
+// keys rows on `(userId, scope, resourceId)` and the GraphQL
+// `grantPermission` mutation accepts an arbitrary `scope` string — so the
+// three grant dimensions persist as engine rows under reserved scope
+// names. This block is the operator-readable source of truth for that
+// encoding: a `feature` grant on `Posts` is the engine row
+// `(scope:'feature', resourceId:'Posts')`, and so on.
+// ──────────────────────────────────────────────────────────────────────
+
+/** The three Q10 grant dimensions, in display order. */
+export type GrantDimension = 'feature' | 'page' | 'locale';
+
+export const GRANT_DIMENSIONS: readonly GrantDimension[] = ['feature', 'page', 'locale'];
+
+/**
+ * Engine `scope` string a grant dimension persists under. Reserved
+ * scope names (`feature` / `page` / `locale`) sit alongside the
+ * `page | module | element` resource scopes — the resolver keys on the
+ * string exactly, so the namespaces don't collide as long as the grid
+ * always writes the reserved names.
+ */
+export function grantScopeFor(dimension: GrantDimension): string {
+    // The dimension name *is* the engine scope string — kept as a
+    // function so callers don't hard-code the convention.
+    return dimension;
+}
+
+/** Inverse of `grantScopeFor` — `undefined` for non-grant-grid scopes. */
+export function dimensionFromScope(scope: string): GrantDimension | undefined {
+    return (GRANT_DIMENSIONS as readonly string[]).includes(scope)
+        ? (scope as GrantDimension)
+        : undefined;
+}
+
 /**
  * Map UX scope (Pages, Posts, …) → engine `PermissionScope`. Today the
  * engine only splits on `page | module | element`; UX-level scopes are

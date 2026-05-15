@@ -6,6 +6,23 @@ research: see research-findings-2026-05-12.md §3 Filter UX patterns specific to
 
 # Faceted filter system for product lists
 
+> **Shipped 2026-05-14 (filter-state lib + chip UI + `/products` wiring chunk).**
+> The reusable faceted-filter system landed: the URL ↔ state codec
+> (`ui/client/lib/facetedFilter/`), the chip + facet-control UI
+> (`ui/client/components/FacetedFilter/`), per-route facet configs
+> (`PRODUCTS_LIST_CONFIG` / `CARS_LIST_CONFIG`), and the saved-search
+> integration hook (localStorage-backed `savedSearches` store wired into
+> the existing `SaveSearchPrompt`). The `/products` route is the fully
+> wired reference consumer — facet sidebar + pinned chip bar + live
+> per-option counts + shareable/back-button-safe URL state.
+> Deferred (noted inline in `pages/cars/index.tsx`): swapping
+> `CarsListHost`'s component-state filters for `useFilterState` — a
+> one-file follow-up in the Cars-batch-owned `_CarsPageModules` module
+> dir. Server-side `$facet` aggregation, the saved-search server
+> backend + alert worker + `savedSearch.ts` MCP tool, and the mobile
+> drawer remain as their own follow-up items (the chunk ships the
+> generic surface; large-catalogue + auth-gated alerting build on it).
+
 ## Goal
 
 Ship a generic, reusable **faceted filter system** for product list views on the public site. First consumer is [ss.com-cars-integration](ss-com-cars-integration.md); the same component powers the existing `/products` route + future Inventory list views.

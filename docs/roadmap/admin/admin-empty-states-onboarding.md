@@ -6,6 +6,26 @@ research: see research-findings-2026-05-12.md §1 Empty states + onboarding
 
 # Admin empty states + first-run onboarding
 
+> **Status: SHIPPED 2026-05-14.** The first-run wizard + seeded sample bundle
+> shipped earlier as Q7 (`/admin/onboarding`, server-side fresh-install gate).
+> This jump landed the **operator-grade empty-state** half: the shared
+> `ui/admin/lib/EmptyState.tsx` now takes an `art?: EmptyStateArtKey` prop
+> resolved from a 15-key inline-SVG illustration set (`ui/admin/lib/emptyStateArt/index.tsx`,
+> keyed per surface, `currentColor`-stroked so it tracks light/dark mode), plus
+> an `onboardingCta(label, testId)` helper that builds a `secondary` action
+> deep-linking into the wizard (`/admin/onboarding?force=1`). `AdminCrudListModule`'s
+> `emptyState` config gained `art` + `secondary` pass-through. Wired across 16
+> admin empty-state surfaces (Posts / Products / Users / Orders / Inquiries /
+> Trash / Mcp tokens / Redirects / Permissions / Publishing / Inventory runs /
+> Themes / Audit / Error log / Notifications / SEO overview / Backups);
+> `onboardingCta` secondary on the three content-creation panes.
+> **Deferred:** the 14 hand-drawn Stitch illustrations (out of AI budget — the
+> inline-SVG set is the stand-in); the Languages + Inventory-products panes
+> still don't render an `EmptyState` (their i18n keys pre-exist unused);
+> the `/admin/setup` route name (shipped as `/admin/onboarding`) and the SSR
+> relaxation of the `isFreshInstall()` gate for `?force=1` re-triggers.
+> See [shipped.md](../shipped.md).
+
 ## Goal
 
 Every admin list view ships a **designed empty state** (illustration + one primary CTA + one "import sample data" link) rather than a blank table. First admin login seeds a sample page + sample post + sample product + applies the default theme so the operator immediately has *something* to click into.

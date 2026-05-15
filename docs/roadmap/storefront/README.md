@@ -1,28 +1,32 @@
-# Storefront — Waves 5-8
+# Storefront — active items
 
-Public-facing program: design system overhaul, customer accounts, third-party inventory ingest, accessibility gating.
+Public-facing program: theme design pass, PC-parts dropshipping integration, pre-public-deploy gates.
+
+## Active items
 
 | Item | Wave | Size | Status |
 |---|---|---|---|
-| [first-class-themes.md](first-class-themes.md) | 5 | XL | Active — 8 first-class themes (editorial / agency / commerce / local-business / restaurant / saas-landing / event / portfolio) |
-| [storefront-receipt-emails.md](storefront-receipt-emails.md) | 6a | M | Active — receipt + transactional emails as a product surface |
-| [storefront-faceted-filter-system.md](storefront-faceted-filter-system.md) | 6b | L | Active — reusable faceted filter for `/cars` + `/products` |
-| [client-signup-and-anonymous-checkout.md](client-signup-and-anonymous-checkout.md) | 6c | M-L | Active — delayed account creation, magic-link primary, Mixpanel attribution |
-| [ss-com-cars-integration.md](ss-com-cars-integration.md) | 7 | L | Active — ss.com cars as `IWarehouseAdapter`; reservation, not D2C checkout |
-| [product-module-and-checkout-customization.md](product-module-and-checkout-customization.md) | 7 (commerce) | XL | Active — `Product` content module (featured/grid/carousel/comparison/related) + `siteFlags.checkoutEnabled` master switch + per-field/payment-provider/shipping-method customization + abandoned-cart recovery. Mirrors auth-split pattern: when checkout disabled, zero commerce surface |
-| [products-as-composable-page.md](products-as-composable-page.md) | 7 (commerce) | XL | Active — `/products`, `/products/[category]/[subcategory]/...` become first-class `IPage` framework pages. Warehouse-derived products auto-build the page tree (W7b adapter shape). Removes the 3-layer sub-page depth cap (real product taxonomies routinely 4-6 levels deep). Operators get full section composability + auto-injected defaults (Hero, FilterBar, ProductGrid, Pagination). Per-page operator override preserved across worker re-runs |
-| [checkout-as-composable-page.md](checkout-as-composable-page.md) | 7 (commerce) | L | Active — refactor `/cart`, `/checkout/{address,shipping,payment,confirmation}`, `/account*`, `/orders/[token]` onto `IPage.source = 'system-page'`. Each step gets a default layout + required locked transactional sections + operator-composable surrounding sections (TrustBadges, MoneyBackGuarantee, ReferAFriendCta, etc.). Reset-to-default action. Sitemap excludes; SEO emits noindex. Depends on products-as-composable-page (introduces source discriminator) and product-module-and-checkout-customization (drives single-vs-multi-step layout) |
-| [client-account-settings-page.md](client-account-settings-page.md) | 7 (commerce) | L | Active — unified `/account/settings` page with tabs (Profile / Security / Addresses / Payment / Notifications / Privacy / Language). Composable system-page (operator can add TrustBadges, support contact, referral CTA around the locked settings forms). **Dual account type:** `IUser.customerType: 'client' \| 'company'` — client = individual; company = legal name + entity type + VAT (W8g VIES auto-verified) + billing address ≠ shipping. Type switcher with confirmation modal. Signup gains optional B2B toggle. Checkout pre-fills VAT + billing from company profile. Per-tab toggles for operators to hide tabs (e.g., Payment when checkout off). Mirror-symmetric to admin settings but on customer auth stack |
-| [product-display-templates.md](product-display-templates.md) | 7 (commerce) | L | Active — `IProductTemplate` library: operator-defined named section compositions (Premium / Standard / Quick-buy / Bundle / B2B-spec-sheet) that products reference via `IProduct.templateId`. 5 built-in templates ship; operators duplicate + customize. Admin pane with section editor + preview-against-fixture + duplicate + delete (cascade resets products to default). 4 new modules (LargeGallery / SubProductsGrid / DownloadablePdf / WarrantyInfo). Per-theme template styling. Pairs with products-as-composable-page (per-product override beats template) and product-module-and-checkout-customization (consumes `Product mode=related`) |
-| [seo-program.md](seo-program.md) | 6 (cross-cut) | L | Active — site-wide SEO discipline: robots.txt, dynamic sitemap, OG images, canonical + hreflang, schema.org injection, redirects, indexability gating |
-| [customer-notification-preferences.md](customer-notification-preferences.md) | 6 (post-signup) | L | Active — per-category opt-in/out, in-app inbox, quiet hours, digest cadence, RFC 8058 one-click unsubscribe |
-| [multi-currency-and-tax.md](multi-currency-and-tax.md) | 6-7 | L | Active — multi-currency pricing, daily ECB FX, VAT regime resolver, Stripe Tax + VIES B2B validation |
-| [accessibility-wcag22-audit.md](accessibility-wcag22-audit.md) | 8a | L | Pre-public-deploy blocker — WCAG 2.2 AA across all public surfaces |
-| [gdpr-privacy-consent.md](gdpr-privacy-consent.md) | 8b | XL | Pre-public-deploy blocker — consent banner, DNT/GPC, data export, delete-account cascade, PII redaction, retention TTLs, privacy policy |
-| [email-deliverability-hardening.md](email-deliverability-hardening.md) | 8c | L | Pre-public-deploy blocker — SPF/DKIM/DMARC, Resend domain verify, bounce/complaint webhook, suppression list, send-rate warmup, deliverability dashboard |
+| [first-class-themes.md](first-class-themes.md) | 5 | XL (multi-week) | 3 of 8 themes shipped (`editorial`, `restaurant`, `event`). **Remaining: `local-business`, `saas-landing`, `portfolio`, `agency`, `commerce`.** Each needs Stitch frames + per-module SCSS pass. |
+| [pc-parts-dropshipping-integration.md](pc-parts-dropshipping-integration.md) | 7 | XL (~5-7 days AI) | Replaces deleted ss-com-cars spec. EU/UK distributor adapter (TD SYNNEX first; Ingram Micro / Asbis as alternates). No inventory — every order forwards to distributor. Operator partner-account onboarding ≈ 1-2 weeks wall-clock. |
+| [accessibility-wcag22-audit.md](accessibility-wcag22-audit.md) | 8a | L (manual passes) | Automated parts shipped (axe-core / Pa11y / Lighthouse a11y gate). **Remaining: operator manual screen-reader passes (NVDA + VoiceOver + JAWS) × every theme × both modes.** Pre-public-deploy blocker. |
+| [gdpr-privacy-consent.md](gdpr-privacy-consent.md) | 8b | M (remaining slice) | Consent banner + DNT/GPC + data export + delete-account cascade shipped. **Remaining: operator legal review on `/privacy` + `/terms`, server-side Mongo retention TTL indexes, themed `/privacy/cookies` + `/privacy/preferences` editor surfaces, cookie-coverage CI script.** |
+| [email-deliverability-hardening.md](email-deliverability-hardening.md) | 8c | S (operator-action) | Code shipped. **Operator: DNS records (SPF + DKIM + DMARC) + Resend domain verification.** Runbook `docs/runbooks/email-deliverability-setup.md`. |
+
+## Shipped — see [../shipped.md](../shipped.md)
+
+Recent storefront ships:
+- W6a receipt + transactional emails (9 templates)
+- W6b faceted filter system
+- W6c client signup + magic-link + marketing attribution + anonymous checkout
+- W8b GDPR consent / cookie / DNT-GPC slice + data-rights API + `/account/settings?tab=privacy`
+- W8g multi-currency + tax + ECB FX + VIES + Stripe Tax
+- W8f customer notification preferences + RFC 8058 unsubscribe
+- W8h SEO program (robots / sitemap / canonical / hreflang / JSON-LD / redirects / preflight / OG)
+- W7a cars-vertical modules (now obsolete pending pc-parts-dropshipping cleanup)
+- Commerce + auth track: auth-split, Product module + checkoutEnabled, products-as-composable-page, checkout-as-composable-page, client-account-settings + customerType, product-display-templates + 5 built-ins
 
 Cross-references:
 - Standards: [../_meta/project-standards-additions-2026-05-12.md](../_meta/project-standards-additions-2026-05-12.md)
-- Modules needed: [../_meta/new-modules-catalogue.md](../_meta/new-modules-catalogue.md)
+- Modules catalogue: [../_meta/new-modules-catalogue.md](../_meta/new-modules-catalogue.md)
 - MCP coverage: [../_meta/mcp-coverage-storefront-program.md](../_meta/mcp-coverage-storefront-program.md)
 - Research: [../_meta/research-findings-2026-05-12.md](../_meta/research-findings-2026-05-12.md)

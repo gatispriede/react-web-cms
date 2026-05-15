@@ -80,6 +80,7 @@ const AdminNotificationsPanel: React.FC = () => {
                         testId="notif-stats-empty"
                         title={t('notifications.stats.empty.title')}
                         description={t('notifications.stats.empty.description')}
+                        art="customers"
                     />
                 )}
             </Card>

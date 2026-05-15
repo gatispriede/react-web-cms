@@ -62,6 +62,22 @@ export interface OptimizeResult {
     /** True when the optimised path was smaller than the original, so we used it.
      *  False means the original was kept verbatim (size guard tripped). */
     optimised: boolean;
+    /**
+     * Whether sharp could decode the input at all. `false` only for corrupt
+     * bytes / non-image payloads — SVG/GIF/unknown-but-readable formats are
+     * `true` (they're valid images, just not transcoded). Upload handlers use
+     * this to tell "reject with 400" (corrupt) apart from "accept as-is"
+     * (SVG/GIF) — the two distinct failure modes the spec calls for.
+     */
+    readable: boolean;
+}
+
+/** Output of {@link readImageMetadata} — dimensions for a file already on disk. */
+export interface ImageMetadata {
+    width?: number;
+    height?: number;
+    /** sharp's detected format, or `null` when the file isn't a decodable raster. */
+    format?: string | null;
 }
 
 /**
@@ -77,7 +93,7 @@ export async function optimizeImageBuffer(input: Buffer, opts: OptimizeOptions =
     catch { /* unreadable by sharp — pass through */ }
 
     if (!meta || !meta.format) {
-        return {buffer: input, size: input.byteLength, optimised: false, format: null};
+        return {buffer: input, size: input.byteLength, optimised: false, format: null, readable: false};
     }
 
     // Formats we don't try to transcode — animation / vector. Just report
@@ -90,6 +106,7 @@ export async function optimizeImageBuffer(input: Buffer, opts: OptimizeOptions =
             height: meta.height,
             format: meta.format,
             optimised: false,
+            readable: true,
         };
     }
 
@@ -134,6 +151,7 @@ export async function optimizeImageBuffer(input: Buffer, opts: OptimizeOptions =
                 height: meta.height,
                 format: meta.format,
                 optimised: false,
+                readable: true,
             };
     }
 
@@ -149,6 +167,7 @@ export async function optimizeImageBuffer(input: Buffer, opts: OptimizeOptions =
             height: meta.height,
             format: meta.format,
             optimised: false,
+            readable: true,
         };
     }
 
@@ -159,7 +178,33 @@ export async function optimizeImageBuffer(input: Buffer, opts: OptimizeOptions =
         height: info.height,
         format: meta.format,
         optimised: true,
+        readable: true,
     };
+}
+
+/**
+ * Read dimensions + format for a file already on disk without re-encoding it.
+ *
+ * Used by the disk rescan path (`AssetService.rescanDiskImages`): files that
+ * survived a bundle import but lost their Mongo row are already optimised on
+ * disk — re-running the full pipeline would be wasteful and the size guard
+ * would no-op anyway. All we want back is `width`/`height` so the rescanned
+ * record carries the same dimension metadata a fresh upload would (the spec:
+ * "still persist dimensions for raster paths").
+ *
+ * Returns empty `{}` for unreadable / vector formats — the caller persists the
+ * record either way; dimensions are best-effort.
+ */
+export async function readImageMetadata(srcPath: string): Promise<ImageMetadata> {
+    try {
+        const meta = await sharp(srcPath).metadata();
+        if (!meta || !meta.format) return {format: null};
+        return {width: meta.width, height: meta.height, format: meta.format};
+    } catch {
+        // Corrupt file, SVG (sharp needs the buffer for some SVGs), or an
+        // unsupported codec — no dimensions, but not fatal for a rescan.
+        return {format: null};
+    }
 }
 
 /**

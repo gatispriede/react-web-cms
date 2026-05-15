@@ -4,7 +4,7 @@ import {SessionProvider} from 'next-auth/react';
 import {Session} from 'next-auth';
 import {GetServerSideProps} from 'next';
 import {getServerSession} from 'next-auth/next';
-import {authOptions} from '../api/auth/[...nextauth]';
+import {adminAuthOptions as authOptions} from '../api/auth/authOptions';
 import {serverSideTranslations} from 'next-i18next/pages/serverSideTranslations';
 import SeoHead from '@client/lib/seo/SeoHead';
 

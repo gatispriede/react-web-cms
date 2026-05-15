@@ -49,17 +49,13 @@
 
     color-scheme: dark;
 
-    /* Top-top admin nav (UserStatusBar.app-login-wrapper) — visible on
-       every admin route. */
-    .app-login-wrapper {
-        background: var(--admin-elevated) !important;
-        color: var(--admin-fg);
-        border-bottom: 1px solid var(--admin-border);
-    }
-    .app-login-wrapper p,
-    .app-login-wrapper .container p {
-        color: var(--admin-fg);
-    }
+    /* Top-top admin nav (`.app-login-wrapper`) is NOT re-themed here:
+       `AppLoginWrapper.scss` consumes the `--admin-*` tokens directly,
+       and those tokens flip to dark values via the `[data-admin-theme="dark"]`
+       block above. One palette, no parallel override — see the
+       admin-dark-mode-audit spec. Only the link buttons inside it need a
+       nudge since AntD's `.ant-btn-link` colour is owned by the
+       ConfigProvider, not the SCSS token. */
     .app-login-wrapper .ant-btn-link {
         color: var(--admin-fg);
     }

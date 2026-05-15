@@ -15,9 +15,15 @@ import {receiptTemplate} from './receipt';
 import {orderConfirmationTemplate} from './order-confirmation';
 import {shippedTemplate} from './shipped';
 import {magicLinkTemplate} from './magic-link';
+import {verifyEmailTemplate} from './verify-email';
 import {passwordResetTemplate} from './password-reset';
 import {accountWelcomeTemplate} from './account-welcome';
 import {abandonedCartTemplate} from './abandoned-cart';
+import {carReservationConfirmationTemplate} from './car-reservation-confirmation';
+import {inquiryAcknowledgementTemplate} from './inquiry-acknowledgement';
+import {scheduledPublishFailedTemplate} from './scheduled-publish-failed';
+import {lowStockAlertTemplate} from './low-stock-alert';
+import {savedSearchAlertTemplate} from './saved-search-alert';
 
 export interface EmailTemplate<TInput = unknown> {
     id: string;
@@ -35,9 +41,15 @@ const ALL: ReadonlyArray<EmailTemplate<any>> = [
     orderConfirmationTemplate as EmailTemplate<any>,
     shippedTemplate as EmailTemplate<any>,
     magicLinkTemplate as EmailTemplate<any>,
+    verifyEmailTemplate as EmailTemplate<any>,
     passwordResetTemplate as EmailTemplate<any>,
     accountWelcomeTemplate as EmailTemplate<any>,
     abandonedCartTemplate as EmailTemplate<any>,
+    carReservationConfirmationTemplate as EmailTemplate<any>,
+    inquiryAcknowledgementTemplate as EmailTemplate<any>,
+    scheduledPublishFailedTemplate as EmailTemplate<any>,
+    lowStockAlertTemplate as EmailTemplate<any>,
+    savedSearchAlertTemplate as EmailTemplate<any>,
 ];
 
 const BY_ID = new Map<string, EmailTemplate<any>>(ALL.map(t => [t.id, t]));

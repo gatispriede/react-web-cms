@@ -1,4 +1,5 @@
 import type {IAnalyticsEvent} from '@interfaces/IAnalytics';
+import {hasConsent} from '@client/lib/consent';
 
 /**
  * Client-side analytics — `track()` API + automatic pageview hook.
@@ -6,6 +7,9 @@ import type {IAnalyticsEvent} from '@interfaces/IAnalytics';
  *
  *   - Honours `Sec-GPC` and `navigator.doNotTrack`. When set, `track()`
  *     captures locally but never flushes (a privacy default, not a knob).
+ *   - W8b — also honours the cookie-consent record: events are never sent
+ *     unless the `analytics` category is consented. `hasConsent('analytics')`
+ *     itself folds DNT / GPC back in, so it is the single privacy gate.
  *   - First-party `anonId` cookie (`a_id`, Lax, 365d). Created on first
  *     event if missing. Cleared on browser data clear; never re-created.
  *   - `sessionId` in sessionStorage; resets after 30 min of
@@ -70,10 +74,10 @@ function getSessionId(): string {
 
 function privacyOptOut(): boolean {
     if (typeof navigator === 'undefined') return false;
-    // GPC and DNT — honour both.
-    const gpc = (navigator as unknown as {globalPrivacyControl?: boolean}).globalPrivacyControl === true;
-    const dnt = navigator.doNotTrack === '1' || navigator.doNotTrack === 'yes';
-    return gpc || dnt;
+    // W8b — single gate: `hasConsent('analytics')` returns false when the
+    // visitor hasn't consented to analytics AND when a DNT / GPC signal is
+    // active (the lib folds the signals in). No record yet => not consented.
+    return !hasConsent('analytics');
 }
 
 function buildEvent(

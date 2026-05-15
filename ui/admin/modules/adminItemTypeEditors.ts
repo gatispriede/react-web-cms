@@ -100,6 +100,27 @@ import {
     ReferAFriendCtaEditor,
     SocialShareButtonsEditor,
 } from '@admin/modules/_CheckoutPageModules/editors';
+// all-pages-module-composed — Account + Auth batch copy editors.
+import {
+    OrdersListEditor,
+    OrderDetailEditor,
+    AddressListEditor,
+    NotificationInboxEditor,
+    SigninFormEditor,
+    SignupFormEditor,
+    MagicLinkRequestFormEditor,
+} from '@admin/modules/_AccountPageModules/editors';
+// all-pages-module-composed — Blog batch editor.
+import {BlogPostEditor} from '@admin/modules/_BlogPageModules/editors';
+// all-pages-module-composed — Marketing batch editors.
+import {
+    FeatureGridEditor,
+    LogoCloudEditor,
+    PricingTableEditor,
+    TestimonialWallEditor,
+} from '@admin/modules/_MarketingPageModules/editors';
+// all-pages-module-composed — Cars batch editors.
+import {CarsListEditor, CarDetailEditor} from '@admin/modules/_CarsPageModules/editors';
 
 /**
  * Admin-side per-module metadata. `category` + label/description live
@@ -117,7 +138,7 @@ export const ADMIN_ITEM_TYPE_EDITORS: readonly AdminItemTypeEntry[] = [
     {key: EItemType.Text,            Editor: PlainTextEditor,        styleEnum: asEnum(EPlainTextStyle),       defaultContent: '{"value":""}',                                                                                                                                                              labelKey: 'Simple Text',          descriptionKey: 'Plain paragraph with inline style only.',                            category: 'content'},
     {key: EItemType.RichText,        Editor: RichTextEditor,         styleEnum: asEnum(ERichTextStyle),        defaultContent: '{"value":""}',                                                                                                                                                              labelKey: 'Rich text',            descriptionKey: 'HTML body with italic-accent runs and headings.',                    category: 'content'},
     {key: EItemType.Image,           Editor: PlainImageEditor,       styleEnum: asEnum(EImageStyle),           defaultContent: '{"src":"","useAsBackground":false}',                                                                                                                                        labelKey: 'Image',                descriptionKey: 'Single image with optional caption.',                                category: 'media'},
-    {key: EItemType.Gallery,         Editor: GalleryEditor,          styleEnum: asEnum(EGalleryStyle),         defaultContent: '{"items":[]}',                                                                                                                                                              labelKey: 'Gallery',              descriptionKey: 'Image grid with optional text-only tiles.',                          category: 'media'},
+    {key: EItemType.Gallery,         Editor: GalleryEditor,          styleEnum: asEnum(EGalleryStyle),         defaultContent: '{"items":[],"showCaptions":true}',                                                                                                                                           labelKey: 'Gallery',              descriptionKey: 'Image grid with optional text-only tiles.',                          category: 'media'},
     {key: EItemType.Carousel,        Editor: CarouselEditor,         styleEnum: asEnum(ECarouselStyle),        defaultContent: '{"items":[]}',                                                                                                                                                              labelKey: 'Carousel',             descriptionKey: 'Horizontally scrollable image strip.',                               category: 'media'},
     {key: EItemType.Hero,            Editor: HeroEditor,             styleEnum: asEnum(EHeroStyle),            defaultContent: '{"headline":"","subtitle":"","tagline":"","bgImage":"","accent":""}',                                                                                                       labelKey: 'Hero',                 descriptionKey: 'Full-bleed header with headline, subtitle, CTA.',                    category: 'hero'},
     {key: EItemType.ProjectCard,     Editor: ProjectCardEditor,      styleEnum: asEnum(EProjectCardStyle),     defaultContent: '{"title":"","description":"","image":"","tags":[]}',                                                                                                                        labelKey: 'Project card',         descriptionKey: 'Single featured project with cover and tags.',                       category: 'content'},
@@ -173,4 +194,23 @@ export const ADMIN_ITEM_TYPE_EDITORS: readonly AdminItemTypeEntry[] = [
     {key: EItemType.MoneyBackGuarantee,       Editor: MoneyBackGuaranteeEditor,       styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Money-back guarantee',   descriptionKey: 'Composable — refund policy callout.',                                          category: 'content'},
     {key: EItemType.ReferAFriendCta,          Editor: ReferAFriendCtaEditor,          styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Refer a friend',         descriptionKey: 'Composable — invite block on confirmation.',                                   category: 'cta'},
     {key: EItemType.SocialShareButtons,       Editor: SocialShareButtonsEditor,       styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Social share buttons',   descriptionKey: 'Composable — share-this-order links.',                                         category: 'cta'},
+    // all-pages-module-composed — Account batch (smart wrappers; copy-only editors).
+    {key: EItemType.OrdersList,               Editor: OrdersListEditor,               styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Orders list',            descriptionKey: 'Locked — customer order history with status filter chips.',                    category: 'content'},
+    {key: EItemType.OrderDetail,              Editor: OrderDetailEditor,              styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Order detail',           descriptionKey: 'Locked — single order: progress, line items, payment, history.',              category: 'content'},
+    {key: EItemType.AddressList,              Editor: AddressListEditor,              styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Address book',           descriptionKey: 'Locked — saved shipping addresses with add / edit / delete.',                  category: 'content'},
+    {key: EItemType.NotificationInbox,        Editor: NotificationInboxEditor,        styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Notification inbox',      descriptionKey: 'Locked — in-app notifications with mark-read + dismiss.',                      category: 'content'},
+    // all-pages-module-composed — Auth batch (smart wrappers; copy-only editors).
+    {key: EItemType.SigninForm,               Editor: SigninFormEditor,               styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Sign-in form',           descriptionKey: 'Locked — customer sign-in: password / magic-link / OAuth per site flags.',    category: 'cta'},
+    {key: EItemType.SignupForm,               Editor: SignupFormEditor,               styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Sign-up form',           descriptionKey: 'Locked — customer sign-up with optional B2B (company + VAT) capture.',         category: 'cta'},
+    {key: EItemType.MagicLinkRequestForm,     Editor: MagicLinkRequestFormEditor,     styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Magic-link request',     descriptionKey: 'Locked — passwordless sign-in: emails a one-click link.',                     category: 'cta'},
+    // all-pages-module-composed — Blog batch.
+    {key: EItemType.BlogPost,                 Editor: BlogPostEditor,                 styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Blog post',              descriptionKey: 'Locked — single post body: title, cover, sanitised HTML, author, date, tags.', category: 'content'},
+    // all-pages-module-composed — Marketing batch.
+    {key: EItemType.FeatureGrid,              Editor: FeatureGridEditor,              styleEnum: asEnum({Default: 'default'}), defaultContent: '{"features":[]}',       labelKey: 'Feature grid',          descriptionKey: 'Marketing — 2/3-column feature cards (title + description).',                 category: 'content'},
+    {key: EItemType.LogoCloud,                Editor: LogoCloudEditor,                styleEnum: asEnum({Default: 'default'}), defaultContent: '{"logos":[]}',          labelKey: 'Logo cloud',            descriptionKey: 'Marketing — "trusted by" row of customer logos.',                            category: 'media'},
+    {key: EItemType.PricingTable,             Editor: PricingTableEditor,             styleEnum: asEnum({Default: 'default'}), defaultContent: '{"tiers":[],"features":[]}', labelKey: 'Pricing table',     descriptionKey: 'Marketing — tier columns + feature matrix with monthly/annual toggle.',       category: 'content'},
+    {key: EItemType.TestimonialWall,          Editor: TestimonialWallEditor,          styleEnum: asEnum({Default: 'default'}), defaultContent: '{"items":[]}',          labelKey: 'Testimonial wall',      descriptionKey: 'Marketing — multi-column quote cards with author + company.',                 category: 'content'},
+    // all-pages-module-composed — Cars batch.
+    {key: EItemType.CarsList,                 Editor: CarsListEditor,                 styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Cars list',              descriptionKey: 'Locked — faceted car listing (make / model / fuel / gearbox / year / price).',category: 'content'},
+    {key: EItemType.CarDetail,                Editor: CarDetailEditor,                styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Car detail',             descriptionKey: 'Locked — single car: gallery, spec table, VAT badge, reservation CTA.',       category: 'content'},
 ];

@@ -1,5 +1,13 @@
 # App Router migration
 
+> **STATUS: Batch 1 of N shipped — 2026-05-14.** Foundation + static leaf
+> pages are live on the App Router; the rest of `pages/` is untouched and
+> still served by the Pages Router (Next runs both concurrently). This is
+> an XL item being delivered in batches — see
+> [Batch 1 shipped](#batch-1-shipped-2026-05-14) and
+> [Remaining batches](#remaining-batches) below. NOT struck from
+> `README.md` — the item is not fully done.
+
 Migrate `ui/client/pages/` → `ui/client/app/`. Pages router → App router.
 
 API routes (`ui/client/pages/api/*`) **stay where they are** — Next supports
@@ -10,6 +18,147 @@ us keep `next-auth@4` instead of jumping to v5.
 the `next-i18next/pages` and `next-i18next/pages/serverSideTranslations`
 subpath imports and works. v16 also exposes `next-i18next/server` and
 `next-i18next/client` for the new app-router surface.
+
+## Batch 1 shipped (2026-05-14)
+
+Established the App-Router foundation **without** migrating any risky
+dynamic / auth / data-loading pages. Next serves the new `app/*` routes
+and the remaining `pages/*` routes concurrently — verified no route
+collisions (the migrated Pages-Router files were deleted in the same
+change, since `app/privacy` + `pages/privacy` both existing is a hard
+Next error).
+
+**Created — `ui/client/app/`:**
+- `app/layout.tsx` — root layout (Server Component). The App-Router
+  equivalent of `_app.tsx` + `_document.tsx` merged:
+  - Hoists ALL global SCSS imports (`global.scss`,
+    `Marketing/landing.scss`, admin dark-mode, inline-edit overlay,
+    command palette, + the full per-module SCSS list) — App Router only
+    allows global CSS from the root layout. `pages/_app.tsx` keeps its
+    own copy for the still-Pages-Router pages.
+  - `resolveRequestLocale()` — ports `_app.tsx`'s `universalLanguageDetect`
+    chain via `cookies()` (`i18next` cookie) → `headers()`
+    (`Accept-Language`) → `FALLBACK_LNG`.
+  - Resolves active theme tokens + `selfHostFonts` flag via
+    `getMongoConnection()`, builds the DB-driven Google Fonts URL
+    (`buildGoogleFontsUrl`), renders `<html lang>`, `<body data-theme-name>`,
+    `<style data-theme-vars>`, favicon + fonts `<link>`s — direct port of
+    `_document.tsx` `getInitialProps`.
+  - `export const dynamic = 'force-dynamic'` — safe Batch-1 default for
+    the DB-driven fonts URL (risk-map #3); `revalidate` + `revalidateTag('theme')`
+    tuning deferred to the dynamic-pages batch.
+  - Server-resolves the NextAuth session (`getServerSession(authOptions)`)
+    and hands it to `<Providers>` so `useSession()` doesn't flicker
+    (risk-map #9).
+  - Drops the dead `global.preloadedData` inline `<script>` (risk-map #14).
+- `app/providers.tsx` (`'use client'`) — provider stack ported from
+  `_app.tsx` `render()`: `<AntdRegistry>` (replaces `_document.tsx`
+  cssinjs `StyleProvider`/`extractStyle` — risk-map #1) → `<SessionProvider>`
+  (seeded) → `<I18nProvider>` (replaces `appWithTranslation`) →
+  `<ConfigProvider>` (antd static theme). Side-effect hosts
+  (`InlineTranslationHost`, `HighContrastAutoPick`, `PresenceHost`,
+  `AnalyticsHost`, `SignupBanner`, `CookieConsent`, `CartDrawer`,
+  `SkipLink`) mounted as `children` siblings.
+- `app/ClientRuntimeHost.tsx` (`'use client'`) — ports `_app.tsx`'s
+  `componentDidMount` (service-worker unregister, error reporter, perf
+  beacon, marketing capture).
+- `app/i18n.ts` — owns the single `initServerI18next()` call; runs in
+  **no-locale-path mode** (`localeInPath: false`) so the migrated routes
+  aren't locale-prefixed and share the `i18next` cookie with the
+  Pages-Router pages.
+- `app/not-found.tsx` ← `pages/404.tsx`. Server Component; `getT` from
+  `next-i18next/server`.
+- `app/error.tsx` (`'use client'`) ← runtime-error half of `pages/_error.tsx`.
+  Route-level error boundary; `useT` from `next-i18next/client`; reports
+  to the server error pipe.
+- `app/global-error.tsx` (`'use client'`) ← hard-SSR-500 half of
+  `pages/500.tsx` / `_error.tsx`. Renders its own `<html>`/`<body>`
+  (sits above the root layout); static English copy (no provider in
+  scope).
+- `app/privacy/page.tsx` ← `pages/privacy.tsx` (no data deps; mechanical).
+- `app/terms/page.tsx` ← `pages/terms.tsx` (no data deps; mechanical).
+
+**Deleted — Pages Router (only the migrated files):**
+`pages/privacy.tsx`, `pages/terms.tsx`, `pages/404.tsx`, `pages/500.tsx`,
+`pages/_error.tsx`.
+
+**Deliberately NOT touched:** `pages/_app.tsx`, `pages/_document.tsx`
+(the remaining Pages-Router pages still need them), every other
+`pages/*` route, all of `pages/api/*`, `ui/admin/*`,
+`ui/client/modules/*`, `services/*`.
+
+**Verification:** `npx tsc -p ui/client/tsconfig.json --noEmit` — all
+`app/*` files typecheck-clean. The only remaining errors are pre-existing
+in `ui/client/modules/clientItemTypes.ts` (out of Batch-1 scope). A full
+`next build` was not run as part of this batch (per the integration
+directive — batch is typecheck-clean + structurally correct).
+
+### Risk items addressed in Batch 1
+
+- **#1 antd cssinjs SSR registry** — `<AntdRegistry>` in `providers.tsx`.
+- **#2 `<body data-theme-name>`** — applied in `layout.tsx`.
+- **#3 DB-driven Google Fonts URL** — `force-dynamic` chosen for Batch 1;
+  `revalidateTag('theme')` optimisation documented as deferred.
+- **#7 `_app.tsx` initial-props chain** — replaced by `cookies()` /
+  `headers()` reads in `layout.tsx`.
+- **#9 `SessionProvider` initial session** — server-resolved + seeded.
+- **#10 `serverSideTranslations`** — replaced by v16 `getT` / `getResources`
+  (server) + `<I18nProvider>` (client).
+- **#14 dead `preloadedData`** — dropped, not ported.
+
+### Still-open risks (later batches)
+
+- **#4 `pages/api/revalidate.ts` `res.revalidate`** — still a no-op risk
+  for App-Router routes; not yet touched (no App-Router page is
+  revalidate-driven yet).
+- **#5 `InlineTranslationEditor` global `reloadResources()`** — needs a
+  cross-surface verification once an inline-editor consumer moves to
+  App Router.
+- **#6 `mongoDBConnection.seedIfEmpty()` static flag** — `adminSeeded`
+  boolean NOT yet replaced with the `seedingPromise` singleton. The
+  layout calls `getMongoConnection()` server-side; under App Router's
+  parallel server-component model this is a live double-seed risk —
+  **do this early in Batch 2.**
+
+## Remaining batches
+
+Tracked as a checklist; each batch lands as its own PR. Sizes are rough.
+
+- [ ] **Batch 2 — mongo re-entry guard + revalidate fix (S).** Replace
+  `MongoDBConnection.adminSeeded` with a `seedingPromise` singleton
+  (risk #6) and `res.revalidate` → `revalidatePath` in
+  `pages/api/revalidate.ts` (risk #4). Mechanical, unblocks safe
+  concurrent server-component DB reads.
+- [ ] **Batch 3 — public shell + `index` (L).** `pages/app.tsx` (519-line
+  client class) → `ui/client/lib/SiteShell.tsx` (`'use client'`, calls
+  `useTranslation` itself, drops `t`/`i18n` props). `app/page.tsx` ←
+  `pages/index.tsx` (SSG, `revalidate = 3600`). `app/robots.ts` ←
+  `pages/robots.ts` (trivial). Verify scroll-mode redirect still fires.
+- [ ] **Batch 4 — dynamic public routes (L).** `app/[...slug]/page.tsx`
+  ← `pages/[...slug].tsx` (with `generateStaticParams` from nav GraphQL).
+  `app/blog/page.tsx` + `app/blog/[slug]/page.tsx` ← `pages/blog/*` (with
+  `generateStaticParams` + `generateMetadata`). Per-route
+  `getStaticProps`/`getServerSideProps` → server-component data loading.
+- [ ] **Batch 5 — commerce + account routes (XL).** `cars/*`,
+  `products/*`, `cart/*`, `checkout/*`, `account/*`, `orders/*` — each
+  with its own data-loading conversion. Largest batch; may split
+  further per-route-group.
+- [ ] **Batch 6 — auth + admin pages (M).** `app/admin/page.tsx` +
+  `app/admin/{settings,languages,modules-preview}/page.tsx` ←
+  `pages/admin*`. `getServerSession(req,res,authOptions)` →
+  `getServerSession(authOptions)` + `next/navigation` `redirect()`
+  (risk #8). `auth/*`, `welcome.tsx`, `dev/*`, `docs/*` pages.
+- [ ] **Batch 7 — cleanup + cutover (S).** Delete `pages/_app.tsx` +
+  `pages/_document.tsx` once no Pages-Router page remains. Audit
+  `next-i18next.config.js` v16 shape. Verify `next-sitemap` post-build.
+  Verify inline-translation-editor `reloadResources()` (risk #5). Full
+  `npm run build` + Docker build + smoke checklist (see Phase 5 below).
+  Strike the item from `README.md` + final `shipped.md` entry.
+
+> The "Phased plan" / "Risk map" / "Phase 5 smoke checklist" sections
+> below predate the batch split and remain the authoritative detail
+> reference — the batches above are the delivery slices, the phases are
+> the technical content.
 
 ## Current footprint (17 files)
 

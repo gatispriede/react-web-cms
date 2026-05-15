@@ -2,7 +2,6 @@
 import React from 'react';
 import type {IItem} from '@interfaces/IItem';
 import type {ISocialShareButtons} from './SocialShareButtons.types';
-
 export interface SocialShareButtonsProps { item: IItem; url?: string; }
 function parseContent(raw: string|object|undefined): ISocialShareButtons {
     if (!raw) return {} as ISocialShareButtons;

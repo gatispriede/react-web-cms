@@ -1,0 +1,97 @@
+.before-after-slider {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    border-radius: var(--theme-borderRadius, 8px);
+    background: var(--theme-colorBgInset, color-mix(in srgb, currentColor 6%, transparent));
+    user-select: none;
+    touch-action: none;
+
+    &__img {
+        display: block;
+        width: 100%;
+        height: auto;
+
+        &--before {
+            position: relative;
+        }
+
+        &--after {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            clip-path: inset(0 calc(100% - var(--percent, 50%)) 0 0);
+        }
+    }
+
+    &__handle {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: var(--percent, 50%);
+        width: 44px;
+        margin-left: -22px;
+        padding: 0;
+        background: transparent;
+        border: 0;
+        cursor: ew-resize;
+        z-index: 2;
+
+        &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 2px;
+            margin-left: -1px;
+            background: var(--theme-colorBgContainer, #fff);
+        }
+
+        &::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 32px;
+            height: 32px;
+            margin: -16px 0 0 -16px;
+            border-radius: 999px;
+            background: var(--accent, var(--theme-colorPrimary, #1677ff));
+            box-shadow: 0 2px 8px color-mix(in srgb, currentColor 30%, transparent);
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--accent, var(--theme-colorPrimary, #1677ff));
+            outline-offset: 4px;
+        }
+    }
+
+    &__label {
+        position: absolute;
+        top: 1rem;
+        padding: 0.25rem 0.75rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        background: color-mix(in srgb, currentColor 55%, transparent);
+        color: var(--theme-colorBgContainer, #fff);
+        border-radius: var(--theme-borderRadius, 8px);
+        z-index: 1;
+
+        &--before {
+            left: 1rem;
+        }
+
+        &--after {
+            right: 1rem;
+        }
+    }
+
+    &__percent {
+        display: none;
+    }
+}

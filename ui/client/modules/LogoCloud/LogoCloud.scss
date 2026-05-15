@@ -1,0 +1,56 @@
+.logo-cloud {
+    color: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+    text-align: center;
+
+    &__headline {
+        margin: 0 0 1rem;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--ink-2, color-mix(in srgb, currentColor 65%, transparent));
+    }
+
+    &__list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 1.5rem 2rem;
+    }
+
+    &__item {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+    }
+
+    &__link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        min-height: 44px;
+        padding: 0.25rem;
+        border-radius: var(--theme-borderRadius, 8px);
+    }
+
+    &__img {
+        max-height: 2rem;
+        width: auto;
+        filter: grayscale(100%);
+        opacity: 0.75;
+        transition:
+            filter calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+            opacity calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &:hover,
+        &:focus-visible {
+            filter: grayscale(0%);
+            opacity: 1;
+        }
+    }
+}

@@ -1,10 +1,16 @@
 import React, {useState} from 'react';
 import {GetServerSideProps} from 'next';
-/** Phase 1.A auth-split: admin lives at /api/admin/auth/*.
- *  `signIn()` from `next-auth/react` defaults to /api/auth/* (customer
- *  instance) which doesn't have `admin-credentials`. Direct manual
- *  POST against the admin instance bypasses the helper entirely. */
+import {Alert, Button, Divider, Form, Input} from 'antd';
+import {GoogleOutlined} from '@ant-design/icons';
+
+/** Admin NextAuth instance lives at `/api/admin/auth/*` (auth-split Phase 1.A).
+ *  next-auth/react's `signIn()` targets the default `/api/auth/*` base path
+ *  (customer instance) — which doesn't have the `admin-credentials` provider.
+ *  This helper does the credentials handshake against the admin instance
+ *  manually: CSRF fetch → form POST → JSON `{url}` response. Mirrors what
+ *  next-auth/react does internally with `json=true` + `redirect=false`. */
 const ADMIN_AUTH_BASE = '/api/admin/auth';
+
 async function signInAdminCredentials(email: string, password: string, callbackUrl: string): Promise<{ok: boolean; url?: string; error?: string}> {
     const csrfRes = await fetch(`${ADMIN_AUTH_BASE}/csrf`, {credentials: 'include'});
     if (!csrfRes.ok) return {ok: false, error: 'csrf-fetch-failed'};
@@ -24,17 +30,17 @@ async function signInAdminCredentials(email: string, password: string, callbackU
     }
     const data = await res.json().catch(() => ({}));
     const url = typeof data?.url === 'string' ? data.url : callbackUrl;
+    // NextAuth signals failure by redirecting back to /api/admin/auth/signin?error=...
     if (url.includes('/api/admin/auth/signin') || url.includes('error=')) {
         const m = url.match(/error=([^&]+)/);
         return {ok: false, error: m ? decodeURIComponent(m[1]) : 'credentials-rejected'};
     }
     return {ok: true, url};
 }
+
 function adminGoogleHref(callbackUrl: string): string {
     return `${ADMIN_AUTH_BASE}/signin/admin-google?callbackUrl=${encodeURIComponent(callbackUrl)}`;
 }
-import {Alert, Button, Divider, Form, Input} from 'antd';
-import {GoogleOutlined} from '@ant-design/icons';
 
 /**
  * Admin sign-in page — auth-split-client-admin (Phase 1.A).

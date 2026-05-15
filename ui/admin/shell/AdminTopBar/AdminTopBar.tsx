@@ -34,7 +34,7 @@ import {useTranslation as useReactTranslation} from "react-i18next";
 import {ADMIN_LOCALES, AdminLocale, setAdminLocale} from "@admin/i18n/adminI18n";
 import UserApi from "@services/api/client/UserApi";
 import {useIsMobile} from "@admin/lib/useIsMobile";
-import CommandPalette from "../CommandPalette";
+import {CommandPaletteTrigger} from "../CommandPalette/CommandPalette";
 import AdminModeSwitcher from "../AdminModeSwitcher";
 import DarkModeSwitcher from "../DarkModeSwitcher";
 import AdminAreaButtons from "./AdminAreaButtons";
@@ -59,16 +59,12 @@ const AdminTopBar = ({
     simplified,
     tAdmin,
     lang,
-    paletteOpen,
-    setPaletteOpen,
 }: {
     view: AdminView,
     session: Session,
     simplified: boolean,
     tAdmin: TFunction<"translation", undefined>,
     lang: string,
-    paletteOpen: boolean,
-    setPaletteOpen: (open: boolean) => void,
 }) => {
     const {i18n: adminI} = useReactTranslation();
     const currentAdminLocale = (adminI.language as AdminLocale) || 'en';
@@ -116,16 +112,19 @@ const AdminTopBar = ({
             dismiss();
         }}>{tAdmin("Preview")}</Button>
     );
+    // kbar owns the palette open/close state — the trigger calls
+    // `query.toggle()` via `useKBar` (see `CommandPaletteTrigger`). Styled
+    // as an AntD link button so it sits flush with the rest of the nav row.
     const commandButton = (
-        <Button type={"link"} icon={<ThunderboltOutlined/>} onClick={() => { setPaletteOpen(true); dismiss(); }} title="Ctrl+K / ⌘K">
-            {tAdmin("Command")}
-        </Button>
+        <span onClick={dismiss} className="admin-topbar-command-trigger">
+            <ThunderboltOutlined/>
+            <CommandPaletteTrigger className="admin-topbar-command-trigger__btn" label={tAdmin("Command")}/>
+        </span>
     );
 
     return (
         <>
             <a href="#admin-main" className="skip-to-content" suppressHydrationWarning>{tAdmin("Skip to content")}</a>
-            <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)}/>
             <nav aria-label={tAdmin("Admin")} className={'app-login-wrapper'}>
                 <div className={'container'}>
                     <p>{`${tAdmin("User")}: ${session?.user?.name} `}</p>

@@ -1,12 +1,26 @@
+/**
+ * admin-module-composed (Batch 2) — Inquiries bridge.
+ *
+ * The `AdminLoader` bridge for `system/inquiries`. `InquiriesViewModel`
+ * is unchanged ("admin stays mostly same"); the hand-coded list chrome
+ * (toolbar + Table + EmptyState) is replaced by `AdminCrudListModule`,
+ * and the bespoke detail Modal + the pull-to-refresh wrapper are kept
+ * rendered alongside the module.
+ *
+ * Registered with the `AdminPageRegistry` by `InquiriesAdminLoader`;
+ * the shell reaches it via `AdminPageDispatch` (see
+ * `InquiriesAdminUILoader`).
+ */
 import React, {useEffect, useMemo} from "react";
-import {Alert, Badge, Button, Card, Modal, Popconfirm, Space, Spin, Table, Tag, Typography} from "antd";
-import EmptyState from "@admin/lib/EmptyState";
-import {DeleteOutlined, MailOutlined, ReloadOutlined} from "@client/lib/icons";
+import {Alert, Badge, Button, Card, Modal, Popconfirm, Space, Spin, Tag, Typography} from "antd";
+import type {ColumnsType} from "antd/es/table";
+import {DeleteOutlined, MailOutlined} from "@client/lib/icons";
 import {useTranslation} from "react-i18next";
 import {useRefreshView} from "@client/lib/refreshBus";
 import {useViewModel} from "@client/lib/state/observable";
 import {usePullToRefresh, PULL_THRESHOLD_PX} from "@admin/lib/usePullToRefresh";
 import {useIsMobile} from "@admin/lib/useIsMobile";
+import AdminCrudListModule from "@admin/modules/shapes/AdminCrudListModule";
 import {InquiriesViewModel, InquirySummary} from "./InquiriesViewModel";
 
 /** Render-only Inquiries pane — VM3 (2026-05-02). */
@@ -65,12 +79,32 @@ const AdminSettingsInquiries: React.FC = () => {
     const {ref: pullRef, pulling, distance} = usePullToRefresh(vm.refresh);
     const pullProgress = Math.min(distance / PULL_THRESHOLD_PX, 1);
 
+    const toolbar = (
+        <Space>
+            <Typography.Title level={4} style={{margin: 0}}>{t('Inquiries')}</Typography.Title>
+            <Badge count={vm.rows.length} showZero color="#5e554b"/>
+        </Space>
+    );
+
+    const headerExtra = (
+        <Popconfirm
+            title={t('Delete ALL inquiries?')}
+            description={t('Permanently removes every audit row. This cannot be undone.')}
+            okText={t('Delete all')}
+            okButtonProps={{danger: true}}
+            cancelText={t('Cancel')}
+            disabled={vm.rows.length === 0}
+            onConfirm={vm.removeAll}
+        >
+            <Button data-testid="inquiries-delete-all-button" danger icon={<DeleteOutlined/>} disabled={vm.rows.length === 0}>{t('Delete all')}</Button>
+        </Popconfirm>
+    );
+
     return (
         <div
             ref={isMobile ? pullRef : undefined}
             data-testid="inquiries-list-pull-refresh"
             style={{
-                padding: 16,
                 overflowY: 'auto',
                 maxHeight: isMobile ? '100vh' : undefined,
                 transform: pulling ? `translateY(${distance}px)` : undefined,
@@ -92,56 +126,36 @@ const AdminSettingsInquiries: React.FC = () => {
                     <Spin size="small"/>
                 </div>
             )}
-            <Space style={{marginBottom: 12, width: '100%', justifyContent: 'space-between'}}>
-                <Space>
-                    <Typography.Title level={4} style={{margin: 0}}>{t('Inquiries')}</Typography.Title>
-                    <Badge count={vm.rows.length} showZero color="#5e554b"/>
-                </Space>
-                <Space>
-                    <Button data-testid="inquiries-refresh-button" icon={<ReloadOutlined/>} loading={vm.loading} onClick={vm.refresh}>{t('Refresh')}</Button>
-                    <Popconfirm
-                        title={t('Delete ALL inquiries?')}
-                        description={t('Permanently removes every audit row. This cannot be undone.')}
-                        okText={t('Delete all')}
-                        okButtonProps={{danger: true}}
-                        cancelText={t('Cancel')}
-                        disabled={vm.rows.length === 0}
-                        onConfirm={vm.removeAll}
-                    >
-                        <Button data-testid="inquiries-delete-all-button" danger icon={<DeleteOutlined/>} disabled={vm.rows.length === 0}>{t('Delete all')}</Button>
-                    </Popconfirm>
-                </Space>
-            </Space>
 
             {vm.failedCount > 0 && (
                 <Alert
                     type="warning"
                     showIcon
-                    style={{marginBottom: 12}}
+                    style={{margin: '16px 16px 0'}}
                     message={t('{{n}} inquiry/inquiries failed to deliver via SMTP', {n: vm.failedCount})}
                     description={t('Check SMTP_HOST / SMTP_PASS env or the secret files. Messages are still in this list — open a row to read.')}
                 />
             )}
 
-            {vm.rows.length === 0 && !vm.loading ? (
-                <Card>
-                    <EmptyState
-                        testId="inquiries-empty-state"
-                        title={t('empty.inquiries.title')}
-                        description={t('empty.inquiries.description')}
-                    />
-                </Card>
-            ) : (
-                <Table
-                    rowKey="id"
-                    loading={vm.loading}
-                    dataSource={vm.rows}
-                    columns={columns}
-                    pagination={{pageSize: 25}}
-                    size="middle"
-                    onRow={(r: InquirySummary) => ({'data-testid': `inquiries-row-${r.id}`} as any)}
-                />
-            )}
+            <AdminCrudListModule
+                testId="admin-inquiries"
+                columns={columns as unknown as ColumnsType<Record<string, unknown>>}
+                rows={vm.rows as unknown as ReadonlyArray<Record<string, unknown>>}
+                rowKey="id"
+                loading={vm.loading}
+                pageSize={25}
+                toolbar={toolbar}
+                onRefresh={vm.refresh}
+                refreshTestId="inquiries-refresh-button"
+                headerExtra={headerExtra}
+                rowTestId={(row) => `inquiries-row-${(row as unknown as InquirySummary).id}`}
+                emptyState={{
+                    testId: 'inquiries-empty-state',
+                    title: t('empty.inquiries.title'),
+                    description: t('empty.inquiries.description'),
+                    art: 'inquiries',
+                }}
+            />
 
             <Modal
                 data-testid="inquiries-detail-modal"

@@ -1,5 +1,4 @@
 import React from 'react';
-import './ComparisonTable.scss';
 import type {ComparisonColumn, ComparisonRow, ComparisonTableProps, ComparisonValue} from './ComparisonTable.types';
 
 const EM_DASH = '—';

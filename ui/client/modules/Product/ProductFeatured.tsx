@@ -1,6 +1,7 @@
 import React from 'react';
 import type {IProductModule, IProductRenderable} from './Product.types';
 import BuyCta from '@client/components/Commerce/BuyCta';
+import ProductPrice from './ProductPrice';
 
 /**
  * Featured variant — single product hero layout. Image position is
@@ -31,9 +32,15 @@ const ProductFeatured: React.FC<{config: IProductModule; products: IProductRende
             <div className="product__body">
                 <h2 className="product__title">{product.title}</h2>
                 {product.description && <p className="product__desc">{product.description}</p>}
-                {config.showPrice !== false && typeof product.price === 'number' && (
-                    <p className="product__price" data-testid="product-featured-price">
-                        {(product.price / 100).toFixed(2)} {product.currency ?? 'EUR'}
+                {config.showPrice !== false && (typeof product.price === 'number' || product.prices) && (
+                    <p className="product__price">
+                        <ProductPrice
+                            prices={product.prices}
+                            price={product.price}
+                            currency={product.currency}
+                            baseCurrency={product.baseCurrency}
+                            testId="product-featured-price"
+                        />
                     </p>
                 )}
                 {config.showBuyCta !== false && (

@@ -1,6 +1,11 @@
 import type {GetServerSideProps, GetServerSidePropsContext} from 'next';
 import {getServerSession} from 'next-auth/next';
 import {serverSideTranslations} from 'next-i18next/pages/serverSideTranslations';
+// Use the ADMIN NextAuth options — admin pages have admin-session cookies
+// (Path=/admin), and getServerSession() needs the matching options to
+// recognise them. Importing the customer-default `authOptions` from
+// `pages/api/auth/[...nextauth]` would silently read null sessions on
+// every admin page and force a re-login loop.
 import {adminAuthOptions as authOptions} from '../pages/api/auth/authOptions';
 
 /**

@@ -185,7 +185,7 @@ type ISection {
     transparent: Boolean
     """Section opacity 0..100 (%). See InSection.transparentOpacity."""
     transparentOpacity: Int
-    """Optimistic-concurrency counter — see src/Server/conflict.ts."""
+    """Optimistic-concurrency counter — see services/infra/conflict.ts."""
     version: Int
     editedBy: String
     editedAt: String

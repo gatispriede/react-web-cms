@@ -1,5 +1,26 @@
 # F6 — site-mode toggle: scroll vs multipage
 
+> **SHIPPED 2026-05-14.** Implemented as `siteFlags.layoutMode: 'tabs' | 'scroll' | 'auto'`
+> (the spec's working name `siteMode` / `'multipage'` was superseded — `'tabs'` is
+> the spec's `'multipage'`). Full chunk landed: flag definition + default +
+> read path (`SiteFlagsService` + `resolveLayoutMode()`), public-site render
+> branch (`app.tsx` scroll vs tabs), nav/footer mode-aware rendering
+> (`MainMenu`, `SiteFooter`, `ScrollNav`), anchor registry (`AnchorRegistry`),
+> admin control (`ui/admin/features/Navigation/Layout.tsx` +
+> `LayoutViewModel`), MCP coverage (`site.setLayoutMode`), runbook
+> (`docs/runbooks/site-mode-switch.md`), and architecture doc
+> (`docs/architecture/site-flags.md`). The four "Open questions" below were
+> all resolved as the doc recommended: default `auto` → `tabs`, no
+> auto-detection heuristic, sub-pages flatten in scroll mode.
+>
+> Naming note: the spec proposed a net-new `siteMode` field; the codebase
+> already had `layoutMode` carrying the exact same semantics, so the
+> implementation extended `layoutMode` rather than introducing a duplicate
+> flag. `'tabs'` ≡ spec `'multipage'`; `'scroll'` and `'auto'` match the spec.
+> MCP note amended: a dedicated `site.setLayoutMode` tool ships instead of
+> overloading `site.setFeatureFlag` (which targets boot-time feature
+> manifests, a different surface).
+
 ## Goal
 
 Per-site `siteFlags.siteMode: 'scroll' | 'multipage'` (or `'auto'` — derive from page count). When `scroll`, every page's sections render on `/` as a single long page; nav + footer use `#anchor` links to scroll. When `multipage`, F1 routing applies — each page is its own URL.

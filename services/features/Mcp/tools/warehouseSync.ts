@@ -48,7 +48,7 @@ let depthWarningAt = 8;
 export const pagesWarehouseSyncRun: McpTool = defineTool({
     name: 'pages.warehouseSync.run',
     description: 'Manually fires the `WarehousePageSyncWorker` for one or all registered warehouse adapters. Use BEFORE expecting freshly-imported products to surface in the page tree (the cron interval is 5 min — this skips the wait). Optional `adapterId` narrows the run to one adapter.',
-    scopes: ['write:settings'],
+    scopes: ['write:site'],
     idempotent: true,
     inputSchema: {
         type: 'object',
@@ -83,7 +83,7 @@ export const pagesWarehouseSyncPreview: McpTool = defineTool({
         type: 'object',
         properties: {
             adapterId: {type: 'string', description: 'Restrict to one adapter id. Omit to preview everything.'},
-            dryRun: {type: 'boolean', enum: [true], description: 'Always true — parameter retained for API symmetry with `.run`.'},
+            dryRun: {type: 'boolean', description: 'Always true — parameter retained for API symmetry with `.run`.'},
         },
     },
 }, async (args) => {
@@ -102,7 +102,7 @@ export const pagesWarehouseSyncDepthGet: McpTool = defineTool({
 export const pagesWarehouseSyncDepthSet: McpTool = defineTool({
     name: 'pages.warehouseSync.depth.set',
     description: 'Adjust the soft-warning threshold for page-tree depth (default 8). Values < 1 reject. The threshold lives in process memory — set on each boot if you want a non-default value persisted across restarts.',
-    scopes: ['write:settings'],
+    scopes: ['write:site'],
     idempotent: true,
     inputSchema: {
         type: 'object',

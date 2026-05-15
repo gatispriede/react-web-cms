@@ -53,18 +53,27 @@ const rewriteForScrollMode = (
     return `#${slugifyAnchor(known.page)}`;
 };
 
+/** Stable per-entry identity for `data-testid`. Footer entries have no
+ *  persisted id (see `IFooterEntry`), so derive one from the label —
+ *  slugified the same way section anchors are. Stable across renders and
+ *  across a tabs↔scroll mode flip, which is what the e2e per-mode href
+ *  assertion (`site-footer-link-{entryId}`) needs. F6 site-mode-toggle. */
+const entryTestId = (entry: {label: string}): string =>
+    `site-footer-link-${slugifyAnchor(entry.label) || 'entry'}`;
+
 const renderEntry = (entry: {label: string; url?: string}, key: string | number) => {
-    if (!entry.url) return <li key={key}><span>{entry.label}</span></li>;
+    const testId = entryTestId(entry);
+    if (!entry.url) return <li key={key}><span data-testid={testId}>{entry.label}</span></li>;
     if (isExternal(entry.url)) {
-        return <li key={key}><a href={entry.url} target="_blank" rel="noopener noreferrer">{entry.label}</a></li>;
+        return <li key={key}><a data-testid={testId} href={entry.url} target="_blank" rel="noopener noreferrer">{entry.label}</a></li>;
     }
     // Hash anchors stay as plain anchors so the browser's native
     // scroll-into-view fires; Next's <Link> would treat `#contact` as a
     // route and try to push it through the router instead.
     if (entry.url.startsWith('#')) {
-        return <li key={key}><a href={entry.url}>{entry.label}</a></li>;
+        return <li key={key}><a data-testid={testId} href={entry.url}>{entry.label}</a></li>;
     }
-    return <li key={key}><Link href={entry.url}>{entry.label}</Link></li>;
+    return <li key={key}><Link data-testid={testId} href={entry.url}>{entry.label}</Link></li>;
 };
 
 const SiteFooter: React.FC<Props> = ({config, pages, hasPosts, blogEnabled, t, layoutMode}) => {

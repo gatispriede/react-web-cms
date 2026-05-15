@@ -75,7 +75,7 @@ function makeSimplePublisher(
                 await col().deleteOne({id}, opts);
                 return;
             }
-            const clone = {...snapshot, id};
+            const clone = {...(snapshot as any), id} as Record<string, unknown>;
             delete clone._id;
             await col().replaceOne({id}, clone as any, {upsert: true, ...(opts ?? {})});
         },

@@ -1,6 +1,5 @@
 import React from 'react';
 import type {CookieConsentBannerProps} from './CookieConsentBanner.types';
-import './CookieConsentBanner.scss';
 
 // Forward-stub for Wave 8b — prop contract is locked so call sites can compile today; real consent flow lands later.
 

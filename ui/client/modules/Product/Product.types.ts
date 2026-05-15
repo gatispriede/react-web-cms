@@ -104,6 +104,15 @@ export interface IProductRenderable {
     description?: string;
     price?: number;
     currency?: string;
+    /**
+     * Multi-currency price map (W8g) — minor units keyed by ISO-4217. When
+     * present the renderer picks the visitor's display currency from this
+     * map and falls back to `price`/`currency` (with a `≈` FX hint) when
+     * there's no native entry. See `@utils/displayCurrency`.
+     */
+    prices?: Record<string, number>;
+    /** FX-fallback pivot currency. Defaults to `currency` when omitted. */
+    baseCurrency?: string;
     image?: string;
     attributes?: Record<string, string>;
     stockStatus?: 'in-stock' | 'out-of-stock' | 'preorder';

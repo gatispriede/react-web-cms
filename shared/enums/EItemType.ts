@@ -91,6 +91,42 @@ export enum EItemType {
     DownloadInvoiceButton = "DOWNLOAD_INVOICE_BUTTON",
     ReferAFriendCta = "REFER_A_FRIEND_CTA",
     SocialShareButtons = "SOCIAL_SHARE_BUTTONS",
+    // all-pages-module-composed — Account batch. Smart-wrapper modules
+    // (`ui/client/modules/_AccountPageModules/`) bind the pure
+    // presentational OrdersList / OrderDetailModule / AddressList /
+    // NotificationInbox modules to the customer GraphQL surface so the
+    // `/account/*` routes render through SystemPageDispatch.
+    OrdersList = "ORDERS_LIST",
+    OrderDetail = "ORDER_DETAIL",
+    AddressList = "ADDRESS_LIST",
+    NotificationInbox = "NOTIFICATION_INBOX",
+    // all-pages-module-composed — Auth batch. Smart-wrapper modules for
+    // the `/account/signin` `/account/signup` `/account/magic-link`
+    // routes — bind the pure SigninForm / SignupForm /
+    // MagicLinkRequestForm modules to NextAuth + the customer GraphQL
+    // surface, reading provider config from `/api/site/auth-flags`.
+    SigninForm = "SIGNIN_FORM",
+    SignupForm = "SIGNUP_FORM",
+    MagicLinkRequestForm = "MAGIC_LINK_REQUEST_FORM",
+    // all-pages-module-composed — Blog batch. `BlogPost` is the
+    // single-post body module (title + cover + sanitised HTML + meta);
+    // its smart wrapper reads the `[slug]` route param and fetches via
+    // `PostApi.getBySlug`. `/blog` reuses the existing `BlogFeed` module.
+    BlogPost = "BLOG_POST",
+    // all-pages-module-composed — Marketing batch. Four pure
+    // presentational modules wired for the `/welcome` landing page;
+    // their content-parser wrappers in `_MarketingPageModules/` read
+    // the operator-authored arrays straight out of `item.content`.
+    FeatureGrid = "FEATURE_GRID",
+    LogoCloud = "LOGO_CLOUD",
+    PricingTable = "PRICING_TABLE",
+    TestimonialWall = "TESTIMONIAL_WALL",
+    // all-pages-module-composed — Cars batch. `CarsList` is the new
+    // faceted listing module; `CarDetail` wraps the existing
+    // `Cars/CarVehicleDetailPage` composite. Both smart wrappers in
+    // `_CarsPageModules/` bind to the `/api/cars` storefront endpoint.
+    CarsList = "CARS_LIST",
+    CarDetail = "CAR_DETAIL",
     Empty = 'EMPTY',
 }
 export default EItemType

@@ -6,23 +6,25 @@
  * The auto-injected template emits the `load-more` variant by default.
  */
 import React from 'react';
+import type {IItem} from '@interfaces/IItem';
 import type {IPagination} from './Pagination.types';
 
 export interface PaginationProps {
-    content: IPagination | string;
+    item: IItem;
     onLoadMore?: () => void;
     hasMore?: boolean;
 }
 
-function parseContent(raw: string | IPagination): IPagination {
+function parseContent(raw: string | IPagination | undefined): IPagination {
+    if (!raw) return {variant: 'load-more'};
     if (typeof raw === 'string') {
         try { return JSON.parse(raw) as IPagination; } catch { return {variant: 'load-more'}; }
     }
     return raw;
 }
 
-const Pagination: React.FC<PaginationProps> = ({content, onLoadMore, hasMore = true}) => {
-    const c = parseContent(content);
+const Pagination: React.FC<PaginationProps> = ({item, onLoadMore, hasMore = true}) => {
+    const c = parseContent(item.content as string | IPagination | undefined);
     if (!hasMore) return null;
     if (c.variant === 'infinite-scroll') {
         // The IntersectionObserver wiring lives in the page-level

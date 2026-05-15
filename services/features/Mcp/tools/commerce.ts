@@ -56,7 +56,7 @@ export const commerceConfigSet: McpTool = defineTool({
         required: ['path', 'value'],
         properties: {
             path: {type: 'string', description: 'Dotted flag path, e.g. commerce.checkoutEnabled.'},
-            value: {description: 'New value; type-guarded against the registered flag definition.'},
+            value: {type: 'string', description: 'New value; type-guarded against the registered flag definition. JSON-stringify non-scalar values.'},
             idempotencyKey: {type: 'string'},
         },
     },

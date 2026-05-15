@@ -4,6 +4,9 @@ import type {FunctionalRoleDescriptor} from '@interfaces/IPermission';
 import {BatchLoader} from '@services/infra/BatchLoader';
 import {PostService} from './PostService';
 import type {IPost} from '@interfaces/IPost';
+// all-pages-module-composed — registers blog-index / blog-post system
+// pages on the SystemPageRegistry at module load.
+import './PostsSystemPages';
 
 /**
  * Posts Loader — Class Loader L3 migration of `postsFeature`.

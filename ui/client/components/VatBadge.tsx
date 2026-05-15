@@ -1,5 +1,4 @@
 import React from 'react';
-import './VatBadge.scss';
 
 export type VatRegime = 'private-no-vat' | 'standard-21' | 'margin-scheme';
 

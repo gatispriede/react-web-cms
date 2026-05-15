@@ -247,6 +247,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         replyTo: email,
     }, flags.mail);
 
+    // W6a — send the visitor a branded acknowledgement (closes the loop +
+    // sets a response expectation). Best-effort: a failure here never
+    // affects the operator-notification result above or the API response.
+    try {
+        const [{renderTemplate}, {resolveEmailTheme}] = await Promise.all([
+            import('@services/features/Email/templates/registry'),
+            import('@services/features/Email/templates/_shared/theme'),
+        ]);
+        const siteUrl = (process.env.SITE_URL ?? '').replace(/\/$/, '');
+        const ackTheme = resolveEmailTheme({
+            siteName: process.env.SITE_NAME || (flags as {siteName?: string}).siteName || 'Funisimo',
+            siteUrl,
+        });
+        const ack = renderTemplate('inquiry-acknowledgement', {
+            customerName: safeName,
+            topic: safeTopic || undefined,
+            message,
+            siteUrl: siteUrl || undefined,
+        }, ackTheme);
+        await sendInquiryEmail({to: email, subject: ack.subject, text: ack.text, html: ack.html}, flags.mail);
+    } catch (err) {
+        console.error('[api/inquiry] acknowledgement send failed:', err);
+    }
+
     // Audit insert is best-effort. We log even on success so the operator
     // has a backup of the email content in Mongo, and we log on failure
     // so the operator can recover the missed message manually. Failures

@@ -24,8 +24,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         res.status(405).json({error: 'Method not allowed'});
         return;
     }
-    const raw = await getServerSession(req, res, authOptions as never);
-    const user = (raw?.user as {kind?: string; id?: string; email?: string} | undefined) ?? null;
+    const raw = (await getServerSession(req, res, authOptions as never)) as
+        | {user?: {kind?: string; id?: string; email?: string}}
+        | null;
+    const user = raw?.user ?? null;
     if (!user || user.kind !== 'customer' || !user.id) {
         res.status(401).json({error: 'unauthorized'});
         return;

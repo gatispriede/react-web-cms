@@ -1,20 +1,37 @@
-import React, {useEffect, useRef} from 'react';
-import {GetStaticPaths, GetStaticProps} from 'next';
+/**
+ * `/blog/[slug]` — system-page-backed single post
+ * (all-pages-module-composed, Blog batch).
+ *
+ * The post body is now module-composed: it renders via
+ * `<SystemPageDispatch>` over the registered `blog-post` system page,
+ * whose locked `BlogPost` module reads the `[slug]` route param and
+ * fetches the post (sanitising the stored HTML). The page keeps its
+ * full SEO `<Head>` (Article JSON-LD, canonical, og/twitter/article:*)
+ * + Logo + footer chrome.
+ *
+ * Converted `getStaticProps` → `getServerSideProps` — the system-page
+ * registry is populated at server boot, not at static-build time, so
+ * the snapshot must resolve per-request. Same migration the blog index
+ * already made (see `blog/index.tsx` header).
+ */
+import React, {useEffect} from 'react';
+import {GetServerSideProps} from 'next';
 import {gqlFetch} from '@client/lib/gqlFetch';
 import Link from 'next/link';
 import Head from 'next/head';
 import {ArrowLeftOutlined} from '@client/lib/icons';
-import {Button, ConfigProvider, Space, Tag, Typography} from 'antd';
+import {Button, ConfigProvider, Typography} from 'antd';
 import {serverSideTranslations} from 'next-i18next/pages/serverSideTranslations';
 import {useTranslation} from 'next-i18next/pages';
 import staticTheme from '@client/features/Themes/themeConfig';
 import {buildThemeConfig} from '@client/features/Themes/buildThemeConfig';
 import {applyThemeCssVars} from '@client/features/Themes/applyThemeCssVars';
-import {sanitizeHtml} from '@utils/sanitize';
 import {IPost} from '@interfaces/IPost';
 import Logo from '@client/features/Logo/Logo';
 import SiteFooter from '@client/features/Footer/SiteFooter';
 import {DEFAULT_FOOTER, IFooterConfig} from '@interfaces/IFooter';
+import {loadSystemPageSnapshot, type ISystemPageSnapshot} from '@client/lib/systemPage/loadSystemPage';
+import SystemPageDispatch from '@client/lib/systemPage/SystemPageDispatch';
 
 interface Props {
     post: IPost | null;
@@ -22,17 +39,15 @@ interface Props {
     footer: IFooterConfig;
     pages: {page: string}[];
     hasPosts: boolean;
+    systemPage: ISystemPageSnapshot | null;
 }
 
-const BlogPost = ({post, themeTokens, footer, pages, hasPosts}: Props) => {
+const BlogPostPage = ({post, themeTokens, footer, pages, hasPosts, systemPage}: Props) => {
     const {t} = useTranslation('common');
-    const ref = useRef<HTMLDivElement | null>(null);
+    const {t: tDispatch} = useTranslation('translation');
+    const {t: tApp} = useTranslation('app');
     useEffect(() => { if (themeTokens) applyThemeCssVars(themeTokens); }, [themeTokens]);
     const themeConfig = themeTokens ? buildThemeConfig(themeTokens) : staticTheme;
-
-    useEffect(() => {
-        if (ref.current && post?.body) ref.current.innerHTML = sanitizeHtml(post.body);
-    }, [post?.body]);
 
     if (!post) {
         return (
@@ -49,12 +64,9 @@ const BlogPost = ({post, themeTokens, footer, pages, hasPosts}: Props) => {
 
     // ---- SEO helpers ------------------------------------------------------
     // Canonical URL + og:url need an absolute URL — Google penalises the
-    // page if canonical resolves to a relative path. Falls back to
-    // location.origin when NEXT_PUBLIC_SITE_URL isn't set (dev / first
-    // deploy on a fresh droplet).
-    // Prefer NEXT_PUBLIC_SITE_URL (intentional, public-facing) but fall
-    // back to NEXTAUTH_URL because every prod droplet already has that
-    // set — saves having to add a new env var on existing deploys.
+    // page if canonical resolves to a relative path. Prefer
+    // NEXT_PUBLIC_SITE_URL but fall back to NEXTAUTH_URL because every
+    // prod droplet already has that set.
     const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || '').replace(/\/+$/, '');
     const postUrl = `${siteUrl}/blog/${post.slug}`;
     const absUrl = (path: string) =>
@@ -64,9 +76,6 @@ const BlogPost = ({post, themeTokens, footer, pages, hasPosts}: Props) => {
     const coverAbs = post.coverImage ? absUrl(post.coverImage) : undefined;
     const tagsCsv = (post.tags ?? []).join(', ');
     // JSON-LD Article schema — drives Google rich-result eligibility.
-    // Required fields: @type, headline, image, datePublished, author.
-    // We add description, publisher, mainEntityOfPage as a courtesy; they
-    // don't unlock anything specific but score well on Lighthouse.
     const jsonLd = {
         '@context': 'https://schema.org',
         '@type': 'Article',
@@ -88,16 +97,12 @@ const BlogPost = ({post, themeTokens, footer, pages, hasPosts}: Props) => {
                 {post.excerpt && <meta name="description" content={post.excerpt}/>}
                 <meta name="robots" content="index, follow, max-image-preview:large"/>
                 {tagsCsv && <meta name="keywords" content={tagsCsv}/>}
-                {/* Canonical anchors the post against duplicate-content penalties. */}
                 {siteUrl && <link rel="canonical" href={postUrl}/>}
                 <meta property="og:type" content="article"/>
                 <meta property="og:title" content={post.title}/>
                 {post.excerpt && <meta property="og:description" content={post.excerpt}/>}
                 {siteUrl && <meta property="og:url" content={postUrl}/>}
                 {coverAbs && <meta property="og:image" content={coverAbs}/>}
-                {/* article:* are part of the Open Graph article namespace —
-                    LinkedIn, Facebook and various scrapers use them; Google
-                    reads them as additional structured-data signals. */}
                 {post.publishedAt && <meta property="article:published_time" content={post.publishedAt}/>}
                 {post.editedAt && <meta property="article:modified_time" content={post.editedAt}/>}
                 {post.author && <meta property="article:author" content={post.author}/>}
@@ -108,7 +113,6 @@ const BlogPost = ({post, themeTokens, footer, pages, hasPosts}: Props) => {
                 <meta name="twitter:title" content={post.title}/>
                 {post.excerpt && <meta name="twitter:description" content={post.excerpt}/>}
                 {coverAbs && <meta name="twitter:image" content={coverAbs}/>}
-                {/* JSON-LD Article schema — required for Google rich results. */}
                 <script
                     type="application/ld+json"
                     dangerouslySetInnerHTML={{__html: JSON.stringify(jsonLd, (_k, v) => v === undefined ? undefined : v)}}
@@ -119,53 +123,16 @@ const BlogPost = ({post, themeTokens, footer, pages, hasPosts}: Props) => {
                 <div style={{marginTop: 16}}>
                     <Link href="/blog"><Button type="link" icon={<ArrowLeftOutlined/>}>{t('All posts')}</Button></Link>
                 </div>
-                {post.coverImage && (
-                    // Force a leading slash so the browser doesn't resolve
-                    // relative cover paths (e.g. `api/cover.jpg`) against
-                    // the current URL — on `/blog/cms` that would 404 as
-                    // `/blog/api/cover.jpg`. Absolute URLs (http(s)://, //)
-                    // and root-relative paths pass through unchanged.
-                    <img
-                        src={/^([a-z]+:|\/\/|\/)/i.test(post.coverImage) ? post.coverImage : `/${post.coverImage}`}
-                        alt={post.title}
-                        style={{width: '100%', maxHeight: 360, objectFit: 'cover', borderRadius: 'var(--theme-borderRadius, 8px)', marginTop: 16}}
-                    />
-                )}
-                <Typography.Title level={1} style={{marginTop: 20}}>{post.title}</Typography.Title>
-                <Space size={12} style={{marginBottom: 16}}>
-                    <Typography.Text type="secondary">
-                        {post.publishedAt ? post.publishedAt.slice(0, 10) : ''}
-                        {post.author ? ` · ${post.author}` : ''}
-                    </Typography.Text>
-                    {post.tags.length > 0 && (
-                        <Space size={4} wrap>
-                            {post.tags.map(tag => <Tag key={tag}>{tag}</Tag>)}
-                        </Space>
-                    )}
-                </Space>
-                <div ref={ref} className="rich-text"/>
+                {systemPage
+                    ? <SystemPageDispatch systemKey="blog-post" sections={systemPage.defaultSections} t={tDispatch} tApp={tApp}/>
+                    : null}
             </div>
             <SiteFooter config={footer} pages={pages} hasPosts={hasPosts} t={t as any}/>
         </ConfigProvider>
     );
 };
 
-export const getStaticPaths: GetStaticPaths = async () => {
-    const data = await gqlFetch<{mongo: {getPosts: string; getSiteFlags: string}}>(
-        `{ mongo { getPosts(limit: 200) getSiteFlags } }`,
-    );
-    const blogEnabled = data?.mongo?.getSiteFlags
-        ? JSON.parse(data.mongo.getSiteFlags).blogEnabled !== false
-        : true;
-    if (!blogEnabled) return {paths: [], fallback: false};
-    const posts: {slug: string}[] = data?.mongo?.getPosts ? JSON.parse(data.mongo.getPosts) : [];
-    return {
-        paths: posts.map(p => ({params: {slug: p.slug}})),
-        fallback: 'blocking',
-    };
-};
-
-export const getStaticProps: GetStaticProps<Props> = async ({params, locale}) => {
+export const getServerSideProps: GetServerSideProps<Props> = async ({params, locale}) => {
     const slug = Array.isArray(params?.slug) ? params.slug[0] : params?.slug;
     let post: IPost | null = null;
     let themeTokens: any | null = null;
@@ -196,8 +163,8 @@ export const getStaticProps: GetStaticProps<Props> = async ({params, locale}) =>
     } catch (err) {
         console.error('[blog/[slug]] parse error:', err);
     }
-    if (!blogEnabled) return {notFound: true, revalidate: 3600};
-    if (!post) return {notFound: true, revalidate: 3600};
+    if (!blogEnabled) return {notFound: true};
+    if (!post) return {notFound: true};
     return {
         props: {
             post,
@@ -205,10 +172,10 @@ export const getStaticProps: GetStaticProps<Props> = async ({params, locale}) =>
             footer,
             pages,
             hasPosts,
-            ...(await serverSideTranslations(locale ?? 'en', ['common', 'app'])),
+            systemPage: loadSystemPageSnapshot('blog-post'),
+            ...(await serverSideTranslations(locale ?? 'en', ['common', 'app', 'translation'])),
         },
-        revalidate: 3600,
     };
 };
 
-export default BlogPost;
+export default BlogPostPage;

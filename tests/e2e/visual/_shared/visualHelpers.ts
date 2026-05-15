@@ -54,12 +54,18 @@ export function visualSlotUrl(opts: {
     style?: string;
     sample?: number;
     lang?: string;
+    /** First-class theme slug — applies `[data-theme-name="<slug>"]` to the
+     *  slot wrapper so the per-theme SCSS layer (editorial, agency,
+     *  commerce) cascades over the module. Used by
+     *  `tests/e2e/visual/themes/<slug>.spec.ts`. */
+    theme?: string;
 }): string {
     const params = new URLSearchParams();
     params.set('type', opts.type);
     if (opts.editor) params.set('editor', '1');
     if (opts.style) params.set('style', opts.style);
     if (typeof opts.sample === 'number') params.set('sample', String(opts.sample));
+    if (opts.theme) params.set('theme', opts.theme);
     // `/dev/visual` lives at the i18n default locale (en) without the prefix;
     // pass `lang` if you need a non-default locale to drive a translated
     // copy variant. Most module Display components are locale-neutral so the

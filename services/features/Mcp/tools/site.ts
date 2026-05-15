@@ -288,7 +288,7 @@ export const siteGetPublishHistory: McpTool = defineTool({
 
 export const siteSetLayoutMode: McpTool = defineTool({
     name: 'site.setLayoutMode',
-    description: 'Switch between "tabs" (each page at its own URL — F1 sub-pages render here), "scroll" (all pages stacked on one scrolling page; nav uses #anchor links; SiteFooter rewrites page URLs to anchors), and "auto" (resolves to "tabs" — pick this when no preference). Call site.publish after.',
+    description: 'Set siteFlags.layoutMode — the site-mode toggle (F6). "tabs" (each page at its own URL — F1 sub-pages render here, N canonical URLs), "scroll" (all pages stacked on one scrolling page; nav uses #anchor links; SiteFooter rewrites page URLs to anchors; single canonical URL; deep page paths hard-redirect to /#anchor), "auto" (resolves to "tabs" — pick this when no preference). SEO impact: switching collapses or expands the indexed surface — after flipping, call site.publish then site.revalidate { scope: "all" } and regenerate the sitemap. See docs/runbooks/site-mode-switch.md.',
     scopes: ['write:site'],
     idempotent: true,
     gqlMutation: 'saveSiteFlags',

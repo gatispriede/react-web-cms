@@ -6,6 +6,17 @@ research: see research-findings-2026-05-12.md §1 Command palette
 
 # Admin command palette + shortcut conventions
 
+> **Status: SHIPPED 2026-05-14.** kbar ⌘K palette live in the admin shell —
+> auto-populated from `adminUILoaderRegistry.listAdminPanes()` + `Preview
+> site` / `Open blog` utility actions, `KBarProvider` mounted shell-wide in
+> `UserStatusBar.tsx` (so ⌘K works from any route), top-bar
+> `CommandPaletteTrigger` button, `?` cheatsheet auto-rendered off
+> `shortcuts.ts`, `g h`/`g p`/`g t` chords, mobile FAB. The legacy AntD-modal
+> `CommandPalette.tsx` was deleted. **Deferred to per-pane fast-follow:** the
+> per-feature `useRegisterActions` calls for ⌘S / ⌘↵ / ⌘⇧P / `/` (catalogue
+> + cheatsheet already list them; closures land with each editor pane) and
+> the e2e smoke spec. See [shipped.md](../shipped.md).
+
 ## Goal
 
 Ship a Linear/Sanity-grade command palette that opens with `⌘K` and surfaces every admin action: navigate, create, edit, publish, delete, switch language, switch theme, run MCP tool, jump to documentation.

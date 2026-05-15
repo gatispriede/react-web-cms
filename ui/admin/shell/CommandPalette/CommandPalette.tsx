@@ -12,9 +12,10 @@ import {
     type Action,
 } from 'kbar';
 import {useTranslation} from 'react-i18next';
-import {buildNavigateActions} from './actions';
+import {buildNavigateActions, buildUtilityActions} from './actions';
 import {CHORD_NAV_TARGETS, SHORTCUTS} from './shortcuts';
 import Cheatsheet from './Cheatsheet';
+import './CommandPalette.scss';
 
 /**
  * Admin command palette — ⌘K / Ctrl+K from anywhere inside the admin
@@ -26,14 +27,24 @@ import Cheatsheet from './Cheatsheet';
  * Pairs with Sonner (`@admin/lib/notify`) — async actions wrap the
  * promise in `notifyPromise` so the operator gets toast feedback. The
  * palette itself stays lean and doesn't render toasts directly.
+ *
+ * `KBarProvider` binds `$mod+k` (⌘K / Ctrl+K) globally on its own — no
+ * separate hotkey hook needed. The provider must wrap the admin tree so
+ * `useKBar` / `useRegisterActions` are in scope for the trigger button
+ * and per-feature panes; `AdminApp` mounts it once around the shell.
  */
 export interface CommandPaletteProps {
     children: React.ReactNode;
+    /** Operator's resolved public-site locale — drives the preview / blog actions. */
+    lang: string;
 }
 
-const CommandPalette: React.FC<CommandPaletteProps> = ({children}) => {
+const CommandPalette: React.FC<CommandPaletteProps> = ({children, lang}) => {
     const {t} = useTranslation();
-    const initialActions = React.useMemo<Action[]>(() => buildNavigateActions(t), [t]);
+    const initialActions = React.useMemo<Action[]>(
+        () => [...buildNavigateActions(t), ...buildUtilityActions(t, lang)],
+        [t, lang],
+    );
 
     return (
         <KBarProvider actions={initialActions} options={{enableHistory: false}}>
@@ -53,6 +64,26 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({children}) => {
             <MobileFab/>
             {children}
         </KBarProvider>
+    );
+};
+
+/**
+ * Top-bar trigger button — opens the palette by mouse for operators who
+ * don't reach for ⌘K. Must render inside `KBarProvider` so `useKBar`
+ * resolves; `AdminTopBar` places it in the nav row.
+ */
+export const CommandPaletteTrigger: React.FC<{className?: string; label: string}> = ({className, label}) => {
+    const {query} = useKBar();
+    return (
+        <button
+            type="button"
+            className={className}
+            data-testid="cmdk-trigger"
+            title="Ctrl+K / ⌘K"
+            onClick={() => query.toggle()}
+        >
+            {label}
+        </button>
     );
 };
 

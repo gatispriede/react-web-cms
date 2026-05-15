@@ -115,7 +115,7 @@ export class RedirectsService {
             if (sibling) throw new Error(`redirect already exists for ${next.from}`);
         }
         await this.redirects.updateOne({_id: oid}, {$set: next});
-        return this.serialize({_id: oid, ...existing, ...next});
+        return this.serialize({...existing, ...next, _id: oid});
     }
 
     async delete(id: string): Promise<{deleted: boolean}> {

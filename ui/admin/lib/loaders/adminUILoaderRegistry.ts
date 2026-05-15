@@ -60,6 +60,8 @@ import {CustomerAccountSettingsAdminUILoader} from '@admin/features/CustomerAcco
 import {ProductTemplatesAdminUILoader} from '@admin/features/ProductTemplates/ProductTemplatesAdminUILoader';
 import {CheckoutCustomizationAdminUILoader} from '@admin/features/Checkout/CheckoutCustomizationAdminUILoader';
 import {AbandonedCartAdminUILoader} from '@admin/features/Checkout/AbandonedCartAdminUILoader';
+import {ModulesPreviewAdminUILoader} from '@admin/features/ModulesPreview/ModulesPreviewAdminUILoader';
+import {SeoAdminUILoader} from '@admin/features/Seo/SeoAdminUILoader';
 
 const REGISTERED: AdminUILoader[] = [
     new PostsAdminUILoader(),
@@ -104,6 +106,8 @@ const REGISTERED: AdminUILoader[] = [
     new ProductTemplatesAdminUILoader(),
     new CheckoutCustomizationAdminUILoader(),
     new AbandonedCartAdminUILoader(),
+    new ModulesPreviewAdminUILoader(),
+    new SeoAdminUILoader(),
 ];
 
 /**

@@ -65,7 +65,7 @@ export const ProductPickerControl: React.FC<{
                 loading={loading}
                 filterOption={false}
                 onSearch={setQuery}
-                onChange={(id) => add(id as string)}
+                onChange={(id) => add(id as unknown as string)}
             />
             <Space wrap style={{marginTop: 8}}>
                 {ids.map(id => {

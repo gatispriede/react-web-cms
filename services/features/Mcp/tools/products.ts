@@ -42,8 +42,31 @@ const productInputProps = {
     title: {type: 'string' as const, minLength: 1},
     sku: {type: 'string' as const, minLength: 1},
     description: {type: 'string' as const},
-    price: {type: 'integer' as const, minimum: 0, description: 'Minor units (cents).'},
+    price: {type: 'integer' as const, minimum: 0, description: 'Minor units (cents). Legacy single-currency / transaction-currency fallback.'},
     currency: {type: 'string' as const, minLength: 3, maxLength: 3},
+    // Multi-currency + tax (W8g — multi-currency-and-tax). Operator-editable
+    // pricing config gets MCP parity here so AI authoring can publish native
+    // per-market prices, set the FX-fallback pivot, and tag the VAT regime.
+    prices: {
+        // Free-form ISO-4217 → minor-units map. The validator only checks
+        // `type: object`; key/value sanitisation is `ProductService.save`'s
+        // job (`sanitizePrices`). `JSONSchemaProp` has no `additionalProperties`.
+        type: 'object' as const,
+        description: 'Multi-currency price map — minor units keyed by uppercase ISO-4217 (e.g. {"EUR":199000,"GBP":169000}). Sparse; EcbFxService fills the gaps at display time. Pass {} to clear back to legacy single-currency.',
+    },
+    baseCurrency: {
+        type: 'string' as const, minLength: 3, maxLength: 3,
+        description: 'FX-fallback pivot currency. Defaults to `currency` when omitted.',
+    },
+    tax: {
+        type: 'object' as const,
+        description: 'Per-product VAT handling hint.',
+        properties: {
+            regime: {type: 'string' as const, enum: ['standard', 'margin', 'private-seller', 'zero-rated', 'exempt']},
+            category: {type: 'string' as const, description: 'Stripe Tax product tax code, e.g. txcd_99999999.'},
+            included: {type: 'boolean' as const, description: 'Is the listed price tax-inclusive? EU default: true.'},
+        },
+    },
     stock: {type: 'integer' as const, minimum: 0},
     categories: {type: 'array' as const, items: {type: 'string' as const}},
     draft: {type: 'boolean' as const, default: true},

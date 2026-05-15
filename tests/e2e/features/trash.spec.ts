@@ -52,11 +52,42 @@ test.describe('feature — trash pane', () => {
         await expect(anyGroup).toBeVisible({timeout: 5_000});
     });
 
-    test.skip('restore brings the page back to the admin list and public route', async ({adminPage, anonPage}) => {
-        // Restore button is wrapped in AntD Popconfirm without a stable testid
-        // on the inner button. Out of scope for this pass (would need a row
-        // testid drilldown + Popconfirm-OK selector).
-        const _ = {adminPage, anonPage};
+    test('restore brings the page back to the admin list and public route', async ({adminPage, anonPage}) => {
+        const stamp = Date.now().toString(36);
+        const slug = `trash-restore-${stamp}`;
+
+        // 1. Author a page so we have something to delete + restore.
+        await adminPage.goto('/admin/build');
+        await byTid(adminPage, tid('nav', 'add', 'page', 'btn')).click();
+        await byTid(adminPage, tid('nav', 'page', 'name', 'input')).fill(slug);
+        await byTid(adminPage, tid('nav', 'page', 'save', 'btn')).click();
+        const row = byTid(adminPage, tid('nav', 'page', 'row', slug));
+        await expect(row).toBeVisible({timeout: 15_000});
+
+        // 2. Delete the page → it lands in trash.
+        await row.click();
+        await row.getByTestId('nav-page-delete-btn').click();
+        await adminPage.getByTestId('nav-page-delete-confirm-btn').click();
+        await expect(row).toHaveCount(0, {timeout: 15_000});
+
+        // 3. Hit the trash pane + capture the trashGroup id from the row testid.
+        await adminPage.goto('/admin/release/trash');
+        const trashRow = adminPage.locator('[data-testid^="trash-group-"]').first();
+        await expect(trashRow).toBeVisible({timeout: 5_000});
+        const tidAttr = await trashRow.getAttribute('data-testid');
+        const trashGroup = tidAttr?.replace(/^trash-group-/, '') ?? '';
+        expect(trashGroup).not.toBe('');
+
+        // 4. Click Restore → confirm in Popconfirm → page reappears in admin list.
+        await byTid(adminPage, `trash-restore-${trashGroup}`).click();
+        await byTid(adminPage, `trash-restore-confirm-${trashGroup}`).click();
+
+        await adminPage.goto('/admin/build');
+        await expect(byTid(adminPage, tid('nav', 'page', 'row', slug))).toBeVisible({timeout: 15_000});
+
+        // 5. Public route resolves again (anon visitor sees the restored page).
+        await anonPage.goto(`/${slug}`);
+        await expect(anonPage).not.toHaveURL(/\/404/);
     });
 
     test.skip('delete-with-children-cascade groups all rows under one trashGroup', async ({adminPage}) => {

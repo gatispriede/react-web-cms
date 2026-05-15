@@ -17,7 +17,7 @@ import {waitForVisualReady, maskVolatile} from './_shared/visualHelpers';
  *   2. /[lang]/[slug]              — public page
  *   3. /admin                      — admin shell entry
  *   4. /admin/build                — page editor surface
- *   5. /auth/signin                — sign-in form
+ *   5. /admin/signin               — sign-in form (Phase 1.A auth-split)
  *   6. /checkout                   — checkout root
  *   7. /[lang]/blog                — blog index
  *   8. /[lang]/blog/[slug]         — blog post detail
@@ -25,7 +25,22 @@ import {waitForVisualReady, maskVolatile} from './_shared/visualHelpers';
  *  10. <Footer> standalone         — via /dev/visual?type=footer
  */
 
+/** Like `page.waitForLoadState('networkidle')` but tolerant of the
+ *  persistent connections shipped in this codebase (perf RUM beacons,
+ *  marketing UTM capture, presence WebSocket, analytics host). Falls back
+ *  to `domcontentloaded` + a brief rAF settle when networkidle never
+ *  arrives within `softTimeoutMs`. */
+async function waitForSurfaceReady(page: Page, softTimeoutMs = 5000): Promise<void> {
+    await page.waitForLoadState('domcontentloaded');
+    try {
+        await page.waitForLoadState('networkidle', {timeout: softTimeoutMs});
+    } catch {
+        // Continue — page is interactive even if networkidle never fires.
+    }
+}
+
 async function snap(page: Page, name: string): Promise<void> {
+    await waitForSurfaceReady(page);
     await waitForVisualReady(page);
     await expect(page).toHaveScreenshot(name, {
         fullPage: true,
@@ -36,12 +51,7 @@ async function snap(page: Page, name: string): Promise<void> {
 authTest.describe('visual — public surfaces', () => {
     authTest('homepage · /en', async ({anonPage: page}) => {
         await page.goto('/en');
-        // `networkidle` was flaky here — the presence/HMR sockets keep
-        // long-lived connections open in dev, so the load state never
-        // resolves and the test times out. `domcontentloaded` plus
-        // `waitForVisualReady` (inside `snap`) is what every other
-        // visual spec uses.
-        await page.waitForLoadState('domcontentloaded');
+        await waitForSurfaceReady(page);
         await snap(page, 'surface-homepage.png');
     });
 
@@ -50,68 +60,42 @@ authTest.describe('visual — public surfaces', () => {
         // hasn't been imported in this worker the page 404s; the runbook
         // documents how to wire it in.
         await page.goto('/en/about');
-        // `networkidle` was flaky here — the presence/HMR sockets keep
-        // long-lived connections open in dev, so the load state never
-        // resolves and the test times out. `domcontentloaded` plus
-        // `waitForVisualReady` (inside `snap`) is what every other
-        // visual spec uses.
-        await page.waitForLoadState('domcontentloaded');
+        await waitForSurfaceReady(page);
         await snap(page, 'surface-public-page.png');
     });
 
     authTest('blog index · /en/blog', async ({anonPage: page}) => {
         await page.goto('/en/blog');
-        // `networkidle` was flaky here — the presence/HMR sockets keep
-        // long-lived connections open in dev, so the load state never
-        // resolves and the test times out. `domcontentloaded` plus
-        // `waitForVisualReady` (inside `snap`) is what every other
-        // visual spec uses.
-        await page.waitForLoadState('domcontentloaded');
+        await waitForSurfaceReady(page);
         await snap(page, 'surface-blog-index.png');
     });
 
     authTest('blog post · /en/blog/<slug>', async ({anonPage: page}) => {
         await page.goto('/en/blog/hello');
-        // `networkidle` was flaky here — the presence/HMR sockets keep
-        // long-lived connections open in dev, so the load state never
-        // resolves and the test times out. `domcontentloaded` plus
-        // `waitForVisualReady` (inside `snap`) is what every other
-        // visual spec uses.
-        await page.waitForLoadState('domcontentloaded');
+        await waitForSurfaceReady(page);
         await snap(page, 'surface-blog-post.png');
     });
 
     authTest('signin · /admin/signin', async ({anonPage: page}) => {
-        // Phase 1.A auth-split: `/auth/signin` was the pre-split
-        // legacy route. Customer + admin signin pages are now
-        // disjoint at `/account/signin` (flag-gated) and
-        // `/admin/signin` (always-on). Capture the admin form since
-        // it's the one that ships in every dev install regardless
-        // of `auth.clientLoginEnabled`.
+        // Phase 1.A auth-split: `/auth/signin` was the pre-split legacy
+        // route. Customer + admin signin pages are now disjoint at
+        // `/account/signin` (flag-gated) and `/admin/signin` (always-on).
+        // Capture the admin form since it's the one that ships in every
+        // dev install regardless of `auth.clientLoginEnabled`.
         await page.goto('/admin/signin');
-        await page.waitForLoadState('domcontentloaded');
+        await waitForSurfaceReady(page);
         await snap(page, 'surface-signin.png');
     });
 
     authTest('checkout · /checkout', async ({anonPage: page}) => {
         await page.goto('/checkout');
-        // `networkidle` was flaky here — the presence/HMR sockets keep
-        // long-lived connections open in dev, so the load state never
-        // resolves and the test times out. `domcontentloaded` plus
-        // `waitForVisualReady` (inside `snap`) is what every other
-        // visual spec uses.
-        await page.waitForLoadState('domcontentloaded');
+        await waitForSurfaceReady(page);
         await snap(page, 'surface-checkout.png');
     });
 
     authTest('marketing landing · /welcome', async ({anonPage: page}) => {
         await page.goto('/welcome');
-        // `networkidle` was flaky here — the presence/HMR sockets keep
-        // long-lived connections open in dev, so the load state never
-        // resolves and the test times out. `domcontentloaded` plus
-        // `waitForVisualReady` (inside `snap`) is what every other
-        // visual spec uses.
-        await page.waitForLoadState('domcontentloaded');
+        await waitForSurfaceReady(page);
         await snap(page, 'surface-marketing-landing.png');
     });
 });
@@ -119,34 +103,19 @@ authTest.describe('visual — public surfaces', () => {
 authTest.describe('visual — admin surfaces', () => {
     authTest('admin shell · /admin', async ({adminPage: page}) => {
         await page.goto('/admin');
-        // `networkidle` was flaky here — the presence/HMR sockets keep
-        // long-lived connections open in dev, so the load state never
-        // resolves and the test times out. `domcontentloaded` plus
-        // `waitForVisualReady` (inside `snap`) is what every other
-        // visual spec uses.
-        await page.waitForLoadState('domcontentloaded');
+        await waitForSurfaceReady(page);
         await snap(page, 'surface-admin.png');
     });
 
     authTest('admin build · /admin/build', async ({adminPage: page}) => {
         await page.goto('/admin/build');
-        // `networkidle` was flaky here — the presence/HMR sockets keep
-        // long-lived connections open in dev, so the load state never
-        // resolves and the test times out. `domcontentloaded` plus
-        // `waitForVisualReady` (inside `snap`) is what every other
-        // visual spec uses.
-        await page.waitForLoadState('domcontentloaded');
+        await waitForSurfaceReady(page);
         await snap(page, 'surface-admin-build.png');
     });
 
     authTest('admin bundle · /admin/release/bundle', async ({adminPage: page}) => {
         await page.goto('/admin/release/bundle');
-        // `networkidle` was flaky here — the presence/HMR sockets keep
-        // long-lived connections open in dev, so the load state never
-        // resolves and the test times out. `domcontentloaded` plus
-        // `waitForVisualReady` (inside `snap`) is what every other
-        // visual spec uses.
-        await page.waitForLoadState('domcontentloaded');
+        await waitForSurfaceReady(page);
         await snap(page, 'surface-admin-bundle.png');
     });
 });

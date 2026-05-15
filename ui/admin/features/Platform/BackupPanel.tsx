@@ -1,22 +1,29 @@
+/**
+ * admin-module-composed — Backup + DR bridge.
+ *
+ * Was a bespoke hand-coded pane; now the `AdminLoader` *bridge* for
+ * `system/backups`. `BackupPanelViewModel` + the bespoke summary card
+ * (manual "Backup now" / "Verify" actions) and snapshot table stay
+ * 100% unchanged ("admin stays mostly same"); only the outer `<div>` +
+ * header chrome moves into the generic `AdminInfo` view-module shape.
+ * This pane is a read-only dashboard with imperative actions — not a
+ * single-doc form — so it composes `AdminInfoModule`, with the
+ * disabled banner / summary card / snapshot card carried as bespoke
+ * `node` blocks and the Refresh button as `headerExtra`.
+ *
+ * Registered with the `AdminPageRegistry` by `BackupAdminLoader`; the
+ * shell reaches it via `AdminPageDispatch` (see `BackupAdminUILoader`).
+ */
 import React, {useEffect, useMemo} from 'react';
 import {Alert, Badge, Button, Card, Popconfirm, Space, Table, Tag, Tooltip, Typography} from 'antd';
 import {ReloadOutlined} from '@client/lib/icons';
 import {useTranslation} from 'react-i18next';
 import {useViewModel} from '@client/lib/state/observable';
 import EmptyState from '@admin/lib/EmptyState';
+import AdminInfoModule from '@admin/modules/shapes/AdminInfoModule';
+import type {AdminInfoBlock} from '@admin/modules/shapes/AdminInfoModule.types';
 import {BackupPanelViewModel} from './BackupPanelViewModel';
 import type {BackupSnapshotRow} from '@services/api/client/BackupApi';
-
-/**
- * W8e — Backup + disaster recovery pane.
- *
- * Routed at `/admin/system/backups`. Shows last backup, snapshot list,
- * weekly drill result, plus manual "Backup now" + per-snapshot "Verify"
- * / "Restore to staging" actions. The pane always renders — when the
- * underlying service is gated off (creds unset, `BACKUP_ENABLED=false`)
- * we surface a yellow banner pointing at the runbook so the operator
- * knows what to do next.
- */
 
 function fmtBytes(b?: number | null): string {
     if (typeof b !== 'number') return '—';
@@ -86,30 +93,29 @@ const BackupPanel: React.FC = () => {
             )},
     ], [t, vm]);
 
-    return (
-        <div style={{padding: 16}} data-testid="backup-panel">
-            <Space style={{marginBottom: 16}} wrap>
-                <Typography.Title level={4} style={{margin: 0}}>{t('backup.title')}</Typography.Title>
-                <Button
-                    icon={<ReloadOutlined/>}
-                    data-testid="backup-refresh-button"
-                    loading={vm.loading}
-                    onClick={() => void vm.refresh()}
-                >{t('backup.refresh')}</Button>
-            </Space>
+    const blocks: AdminInfoBlock[] = [];
 
-            {vm.disabled && (
+    if (vm.disabled) {
+        blocks.push({
+            kind: 'node',
+            testId: 'backup-disabled-block',
+            node: (
                 <Alert
                     type="warning"
-                    style={{marginBottom: 16}}
                     showIcon
                     data-testid="backup-disabled-banner"
                     message={t('backup.disabled.title')}
                     description={t('backup.disabled.body')}
                 />
-            )}
+            ),
+        });
+    }
 
-            <Card title={t('backup.summary.title')} style={{marginBottom: 16}} data-testid="backup-summary-card">
+    blocks.push({
+        kind: 'node',
+        testId: 'backup-summary-block',
+        node: (
+            <Card title={t('backup.summary.title')} data-testid="backup-summary-card">
                 <Space size="large" wrap>
                     <div>
                         <Typography.Text type="secondary">{t('backup.summary.lastBackup')}</Typography.Text>
@@ -164,7 +170,13 @@ const BackupPanel: React.FC = () => {
                     </Space>
                 </div>
             </Card>
+        ),
+    });
 
+    blocks.push({
+        kind: 'node',
+        testId: 'backup-snapshots-block',
+        node: (
             <Card title={t('backup.snapshots.title')} data-testid="backup-snapshots-card"
                 extra={<Button size="small" icon={<ReloadOutlined/>} data-testid="backup-snapshots-refresh"
                     loading={vm.listing} onClick={() => void vm.refreshSnapshots()}>{t('backup.refresh')}</Button>}>
@@ -182,12 +194,29 @@ const BackupPanel: React.FC = () => {
                                 testId="backup-snapshots-empty"
                                 title={t('backup.empty.title')}
                                 description={t('backup.empty.description')}
+                                art="generic"
                             />
                         ),
                     }}
                 />
             </Card>
-        </div>
+        ),
+    });
+
+    return (
+        <AdminInfoModule
+            testId="backup-panel"
+            title={t('backup.title')}
+            headerExtra={
+                <Button
+                    icon={<ReloadOutlined/>}
+                    data-testid="backup-refresh-button"
+                    loading={vm.loading}
+                    onClick={() => void vm.refresh()}
+                >{t('backup.refresh')}</Button>
+            }
+            blocks={blocks}
+        />
     );
 };
 

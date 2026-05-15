@@ -1,0 +1,162 @@
+.payment-method-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    color: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+
+    &__head {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    &__add {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        background: var(--accent, var(--theme-colorPrimary, #1677ff));
+        border: 1px solid var(--accent, var(--theme-colorPrimary, #1677ff));
+        border-radius: var(--theme-borderRadius, 8px);
+        color: var(--theme-colorBgContainer, #fff);
+        transition: opacity calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &:hover {
+            opacity: 0.9;
+        }
+    }
+
+    &__rows {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0;
+        margin: 0;
+        list-style: none;
+    }
+
+    &__row {
+        display: grid;
+        grid-template-columns: auto 1fr auto auto;
+        gap: 0.75rem;
+        align-items: center;
+        min-height: 44px;
+        padding: 0.75rem;
+        background: var(--theme-colorBgContainer, transparent);
+        border: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+        border-radius: var(--theme-borderRadius, 8px);
+        transition: border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &:hover {
+            border-color: color-mix(in srgb, currentColor 20%, transparent);
+        }
+    }
+
+    &__badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 3.5rem;
+        padding: 0.375rem 0.625rem;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        border-radius: var(--theme-borderRadius, 8px);
+        color: var(--theme-colorBgContainer, #fff);
+
+        &--card {
+            background: var(--info, #1668dc);
+        }
+
+        &--bank {
+            background: var(--ink-2, color-mix(in srgb, currentColor 55%, transparent));
+        }
+
+        &--paypal {
+            background: color-mix(in srgb, #4b0082 70%, var(--accent, var(--theme-colorPrimary, #1677ff)) 30%);
+        }
+    }
+
+    &__body {
+        display: flex;
+        flex-direction: column;
+        gap: 0.125rem;
+        min-width: 0;
+    }
+
+    &__label {
+        font-size: 0.9375rem;
+        font-weight: 600;
+    }
+
+    &__expiry {
+        font-size: 0.75rem;
+        color: var(--ink-2, color-mix(in srgb, currentColor 65%, transparent));
+    }
+
+    &__default {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.125rem 0.5rem;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--accent, var(--theme-colorPrimary, #1677ff)) 18%, transparent);
+        color: var(--accent, var(--theme-colorPrimary, #1677ff));
+    }
+
+    &__actions {
+        display: flex;
+        gap: 0.375rem;
+    }
+
+    &__set-default,
+    &__delete {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        cursor: pointer;
+        background: transparent;
+        border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+        border-radius: var(--theme-borderRadius, 8px);
+        color: inherit;
+        transition: background calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                    border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                    color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &:hover {
+            background: var(--theme-colorBgInset, color-mix(in srgb, currentColor 6%, transparent));
+        }
+    }
+
+    &__delete:hover {
+        border-color: var(--danger, #ff4d4f);
+        color: var(--danger, #ff4d4f);
+    }
+
+    &__set-default:hover {
+        border-color: var(--accent, var(--theme-colorPrimary, #1677ff));
+        color: var(--accent, var(--theme-colorPrimary, #1677ff));
+    }
+
+    @media (max-width: 540px) {
+        &__row {
+            grid-template-columns: auto 1fr;
+            grid-template-areas:
+                "badge body"
+                "default default"
+                "actions actions";
+        }
+
+        &__badge { grid-area: badge; }
+        &__body { grid-area: body; }
+        &__default { grid-area: default; justify-self: start; }
+        &__actions { grid-area: actions; }
+    }
+}

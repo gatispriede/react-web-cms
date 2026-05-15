@@ -74,7 +74,7 @@ export interface ISection {
     /** Optimistic-concurrency counter — bumped server-side on each save.
      *  Frontend stashes this at read-time and sends it back as
      *  `expectedVersion` on save; server rejects with a `ConflictError`
-     *  if a peer has bumped past us. See `src/Server/conflict.ts`. */
+     *  if a peer has bumped past us. See `services/infra/conflict.ts`. */
     version?: number
     editedBy?: string
     editedAt?: string

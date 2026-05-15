@@ -201,13 +201,15 @@ function attachHydrationFilter(page: Page): void {
 }
 
 async function signInThroughForm(page: Page, email: string, password: string): Promise<void> {
-    // Phase 1.A auth-split: admin signin lives at `/admin/signin` and
-    // posts to `/api/admin/auth/callback/admin-credentials`. The legacy
-    // `/auth/signin` route was removed when the admin/customer NextAuth
-    // instances were split.
-    await page.goto('/admin/signin?callbackUrl=%2Fadmin');
+    // Phase 1.A auth-split: admin auth has its own NextAuth instance under
+    // `/api/admin/auth/*` + signin page at `/admin/signin`. The legacy
+    // `/auth/signin` route serves the CUSTOMER instance now; admin
+    // credentials are rejected there.
+    await page.goto('/admin/signin');
     await page.getByTestId('admin-signin-email-input').fill(email);
     await page.getByTestId('admin-signin-password-input').fill(password);
     await page.getByTestId('admin-signin-submit-btn').click();
+    // The admin shell lives under `/admin`. Wait for any non-signin URL —
+    // the post-login redirect target may evolve.
     await expect(page).not.toHaveURL(/\/admin\/signin/, {timeout: 30_000});
 }

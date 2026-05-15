@@ -1,13 +1,15 @@
 import React, {ReactNode, useEffect} from 'react';
-import {Button, Modal, Radio, Select, Space, Table, Tag} from 'antd';
+import {Button, Modal, Radio, Select, Tag} from 'antd';
+import type {ColumnsType} from 'antd/es/table';
 import {EditOutlined} from '@client/lib/icons';
 import {useTranslation} from 'react-i18next';
 import {useViewModel} from '@client/lib/state/observable';
-import EmptyState from '@admin/lib/EmptyState';
+import AdminCrudListModule from '@admin/modules/shapes/AdminCrudListModule';
 import {IUser} from '@interfaces/IUser';
 import {PermissionsViewModel} from './PermissionsViewModel';
 import {ROLE_PRESETS} from './rolePresets';
 import {SCOPE_ORDER, TIER_ORDER, Tier, ScopeKey} from './tierMapping';
+import GrantGrid from './GrantGrid';
 
 /**
  * Simplified Permissions pane — tier grid + role preset picker.
@@ -23,6 +25,11 @@ import {SCOPE_ORDER, TIER_ORDER, Tier, ScopeKey} from './tierMapping';
  *   - Role presets (Admin / Designer / Editor / Reviewer / Viewer)
  *   - Per-resource override + Custom-grants disclosure live in
  *     PermissionsAdvancedView (advanced mode only)
+ *
+ * admin-module-composed: the bespoke user-list table + toolbar + empty
+ * state are now the generic `AdminCrudListModule` shape; the tier-grid
+ * editor Modal stays here as a bridge-owned bespoke surface. Reached via
+ * `AdminPageDispatch` — see `PermissionsAdminLoader` / `PermissionsAdminUILoader`.
  */
 
 interface Props {
@@ -92,38 +99,31 @@ const PermissionsSimplifiedView: React.FC<Props> = ({
     ];
 
     return (
-        <div style={{padding: 16}} data-testid={`permissions-${mode}-pane`}>
-            <Space style={{marginBottom: 16}}>
-                <Button
-                    data-testid="permissions-refresh-button"
-                    onClick={() => vm.refresh()}
-                    loading={vm.loading}
-                >{t('Refresh')}</Button>
-                {headerExtra}
-            </Space>
-            {vm.users.length === 0 && !vm.loading ? (
-                <EmptyState
-                    testId={`permissions-${mode}-empty-state`}
-                    title={t('empty.permissions.title')}
-                    description={t('empty.permissions.description')}
-                    primary={{
+        <div data-testid={`permissions-${mode}-pane`}>
+            <AdminCrudListModule
+                testId={`permissions-${mode}-list`}
+                columns={columns as unknown as ColumnsType<Record<string, unknown>>}
+                rows={vm.users as unknown as Record<string, unknown>[]}
+                rowKey="id"
+                loading={vm.loading}
+                pageSize={10}
+                onRefresh={() => vm.refresh()}
+                refreshTestId="permissions-refresh-button"
+                headerExtra={headerExtra}
+                rowTestId={(row) => `permissions-row-${(row as unknown as IUser).id}`}
+                emptyState={{
+                    testId: `permissions-${mode}-empty-state`,
+                    title: t('empty.permissions.title'),
+                    description: t('empty.permissions.description'),
+                    art: 'users',
+                    primary: {
                         label: t('empty.permissions.primary'),
                         onClick: () => vm.refresh(),
                         testId: `permissions-${mode}-empty-state-primary`,
-                        loading: vm.loading,
-                    }}
-                />
-            ) : (
-                <Table
-                    rowKey="id"
-                    loading={vm.loading}
-                    dataSource={vm.users}
-                    columns={columns}
-                    pagination={{pageSize: 10}}
-                    size="middle"
-                    onRow={(u: IUser) => ({'data-testid': `permissions-row-${u.id}`} as any)}
-                />
-            )}
+                    },
+                }}
+                showEmptyState={vm.users.length === 0 && !vm.loading}
+            />
             {vm.editing !== null && (
                 <Modal
                     data-testid="permissions-editor-modal"
@@ -184,6 +184,13 @@ const PermissionsSimplifiedView: React.FC<Props> = ({
                             ))}
                         </tbody>
                     </table>
+
+                    {/* Grant-grid — feature/page/locale dimension grants.
+                        The richer UX per `admin-permissions-ux.md`: a
+                        toggle grid + per-resource overlays, replacing the
+                        Users pane's three flat multi-selects. Persists
+                        per-cell-immediate (no separate save step). */}
+                    <GrantGrid vm={vm}/>
 
                     {renderEditorExtra?.(vm)}
                 </Modal>

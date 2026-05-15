@@ -1,12 +1,20 @@
+/**
+ * admin-module-composed (Batch 1) — Error log bridge.
+ *
+ * The `AdminLoader` bridge for `system/errors`. `ErrorLogViewModel` is
+ * unchanged ("admin stays mostly same"); this maps it onto a single
+ * `AdminInfo` table block + a filter toolbar. VM3 — no `useState`.
+ */
 import React, {useEffect, useMemo} from 'react';
-import {Button, Card, Select, Space, Table, Tag, Typography} from 'antd';
+import {Button, Select, Space, Tag, Typography} from 'antd';
+import type {ColumnsType} from 'antd/es/table';
 import {useTranslation} from 'react-i18next';
 import type {IErrorLog, ErrorSource, ErrorLevel} from '@interfaces/IErrorLog';
 import {useViewModel} from '@client/lib/state/observable';
 import EmptyState from '@admin/lib/EmptyState';
+import AdminInfoModule from '@admin/modules/shapes/AdminInfoModule';
+import type {AdminInfoBlock} from '@admin/modules/shapes/AdminInfoModule.types';
 import {ErrorLogViewModel} from './ErrorLogViewModel';
-
-/** Render-only ErrorLog pane — VM3 (2026-05-02). */
 
 const SOURCE_COLOUR: Record<ErrorSource, string> = {
     client: 'blue',
@@ -48,68 +56,77 @@ const AdminErrorLog: React.FC = () => {
             render: (uid?: string, row?: IErrorLog) => uid ? `${uid} (${row?.userKind ?? '?'})` : '—'},
         {title: t('Build'), dataIndex: 'buildId', key: 'buildId', width: 100,
             render: (b?: string) => b ? <Typography.Text code style={{fontSize: 11}}>{b.slice(0, 8)}</Typography.Text> : '—'},
-    ], [t]);
+    ] as unknown as ColumnsType<Record<string, unknown>>, [t]);
+
+    const toolbar = (
+        <Space wrap>
+            <Select
+                allowClear
+                placeholder={t('Source')}
+                style={{width: 140}}
+                value={vm.filters.source}
+                onChange={(v) => vm.setFilter('source', v)}
+                options={[
+                    {value: 'client', label: 'client'},
+                    {value: 'admin', label: 'admin'},
+                    {value: 'server', label: 'server'},
+                    {value: 'mcp', label: 'mcp'},
+                ]}
+            />
+            <Select
+                allowClear
+                placeholder={t('Level')}
+                style={{width: 120}}
+                value={vm.filters.level}
+                onChange={(v) => vm.setFilter('level', v)}
+                options={[
+                    {value: 'error', label: 'error'},
+                    {value: 'warn', label: 'warn'},
+                ]}
+            />
+            <Select
+                placeholder={t('Limit')}
+                style={{width: 100}}
+                value={vm.filters.limit}
+                onChange={(v) => vm.setFilter('limit', v)}
+                options={[
+                    {value: 50, label: '50'},
+                    {value: 100, label: '100'},
+                    {value: 250, label: '250'},
+                    {value: 500, label: '500'},
+                ]}
+            />
+        </Space>
+    );
+
+    const blocks: AdminInfoBlock[] = [
+        {
+            kind: 'table',
+            testId: 'errors-table',
+            columns,
+            rows: vm.rows as unknown as Record<string, unknown>[],
+            rowKey: 'id',
+            loading: vm.loading,
+            pageSize: 25,
+            emptyText: (
+                <EmptyState
+                    testId="errors-empty-state"
+                    title={t('empty.errors.title')}
+                    description={t('empty.errors.description')}
+                    art="errors"
+                />
+            ),
+        },
+    ];
 
     return (
-        <div style={{padding: 16}}>
-            <Card title={t('Error log')} extra={<Button onClick={vm.refresh} loading={vm.loading}>{t('Refresh')}</Button>}>
-                <Space wrap style={{marginBottom: 12}}>
-                    <Select
-                        allowClear
-                        placeholder={t('Source')}
-                        style={{width: 140}}
-                        value={vm.filters.source}
-                        onChange={(v) => vm.setFilter('source', v)}
-                        options={[
-                            {value: 'client', label: 'client'},
-                            {value: 'admin', label: 'admin'},
-                            {value: 'server', label: 'server'},
-                            {value: 'mcp', label: 'mcp'},
-                        ]}
-                    />
-                    <Select
-                        allowClear
-                        placeholder={t('Level')}
-                        style={{width: 120}}
-                        value={vm.filters.level}
-                        onChange={(v) => vm.setFilter('level', v)}
-                        options={[
-                            {value: 'error', label: 'error'},
-                            {value: 'warn', label: 'warn'},
-                        ]}
-                    />
-                    <Select
-                        placeholder={t('Limit')}
-                        style={{width: 100}}
-                        value={vm.filters.limit}
-                        onChange={(v) => vm.setFilter('limit', v)}
-                        options={[
-                            {value: 50, label: '50'},
-                            {value: 100, label: '100'},
-                            {value: 250, label: '250'},
-                            {value: 500, label: '500'},
-                        ]}
-                    />
-                </Space>
-                <Table<IErrorLog>
-                    rowKey="id"
-                    size="small"
-                    loading={vm.loading}
-                    dataSource={vm.rows}
-                    columns={columns as any}
-                    pagination={{pageSize: 25}}
-                    locale={{
-                        emptyText: (
-                            <EmptyState
-                                testId="errors-empty-state"
-                                title={t('empty.errors.title')}
-                                description={t('empty.errors.description')}
-                            />
-                        ),
-                    }}
-                />
-            </Card>
-        </div>
+        <AdminInfoModule
+            testId="admin-error-log"
+            title={t('Error log')}
+            headerExtra={<Button onClick={vm.refresh} loading={vm.loading}>{t('Refresh')}</Button>}
+            toolbar={toolbar}
+            blocks={blocks}
+        />
     );
 };
 

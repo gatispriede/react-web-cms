@@ -80,7 +80,7 @@ export const checkoutConfigSet: McpTool = defineTool({
         required: ['path', 'value'],
         properties: {
             path: {type: 'string'},
-            value: {},
+            value: {type: 'string', description: 'JSON-encoded value. Pass primitive strings directly; complex shapes JSON-stringified.'},
             idempotencyKey: idemKeyProp,
         },
     },
@@ -203,7 +203,7 @@ export const checkoutShippingReorder: McpTool = defineTool({
         type: 'object',
         required: ['orderedIds'],
         properties: {
-            orderedIds: {type: 'array', items: idProp, minItems: 1},
+            orderedIds: {type: 'array', items: idProp},
             idempotencyKey: idemKeyProp,
         },
     },

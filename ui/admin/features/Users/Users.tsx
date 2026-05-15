@@ -1,12 +1,25 @@
+/**
+ * admin-module-composed (Batch 2) — Users bridge.
+ *
+ * The `AdminLoader` bridge for `system/users`. `UsersViewModel` is
+ * unchanged ("admin stays mostly same"); the hand-coded list chrome
+ * (toolbar + Table + EmptyState) is replaced by `AdminCrudListModule`,
+ * and the bespoke edit Modal is kept rendered alongside the module.
+ *
+ * Registered with the `AdminPageRegistry` by `UsersAdminLoader`; the
+ * shell reaches it via `AdminPageDispatch` (see `UsersAdminUILoader`).
+ */
 import React, {useEffect, useMemo} from "react";
-import {Button, Form, Input, Modal, Popconfirm, Select, Space, Switch, Table, Tag} from "antd";
-import {DeleteOutlined, EditOutlined, PlusOutlined} from "@client/lib/icons";
+import {Button, Form, Input, Modal, Popconfirm, Select, Space, Switch, Tag} from "antd";
+import {DeleteOutlined, EditOutlined} from "@client/lib/icons";
+import type {ColumnsType} from "antd/es/table";
 import {useTranslation} from "react-i18next";
 import {useSession} from "next-auth/react";
 import {IUser, UserRole} from "@interfaces/IUser";
-import {Grant, FeatureGrant, PageGrant, LocaleGrant} from "@interfaces/IPermission";
+import {FeatureGrant, PageGrant, LocaleGrant} from "@interfaces/IPermission";
 import {useViewModel} from "@client/lib/state/observable";
-import EmptyState from "@admin/lib/EmptyState";
+import AdminCrudListModule from "@admin/modules/shapes/AdminCrudListModule";
+import {onboardingCta} from "@admin/lib/EmptyState";
 import {UsersViewModel} from "./UsersViewModel";
 
 /** Render-only Users pane — VM3 (2026-05-02). */
@@ -90,33 +103,33 @@ const AdminSettingsUsers = () => {
     ], [t, currentEmail, vm]);
 
     return (
-        <div style={{padding: 16}}>
-            <Space style={{marginBottom: 16}}>
-                <Button data-testid="users-create-button" type="primary" icon={<PlusOutlined/>} onClick={vm.openCreate}>{t('Add user')}</Button>
-                <Button data-testid="users-refresh-button" onClick={vm.refresh} loading={vm.loading}>{t('Refresh')}</Button>
-            </Space>
-            {!vm.loading && vm.users.length === 0 ? (
-                <EmptyState
-                    testId="users-empty-state"
-                    title={t('empty.users.title')}
-                    description={t('empty.users.description')}
-                    primary={{
+        <>
+            <AdminCrudListModule
+                testId="admin-users"
+                columns={columns as unknown as ColumnsType<Record<string, unknown>>}
+                rows={vm.users as unknown as ReadonlyArray<Record<string, unknown>>}
+                rowKey="id"
+                loading={vm.loading}
+                pageSize={10}
+                onAdd={vm.openCreate}
+                addLabel={t('Add user')}
+                addTestId="users-create-button"
+                onRefresh={vm.refresh}
+                refreshTestId="users-refresh-button"
+                rowTestId={(row) => `users-row-${(row as unknown as IUser).id}`}
+                emptyState={{
+                    testId: 'users-empty-state',
+                    title: t('empty.users.title'),
+                    description: t('empty.users.description'),
+                    art: 'users',
+                    primary: {
                         label: t('empty.users.primary'),
                         onClick: vm.openCreate,
                         testId: 'users-empty-primary-btn',
-                    }}
-                />
-            ) : (
-                <Table
-                    rowKey="id"
-                    loading={vm.loading}
-                    dataSource={vm.users}
-                    columns={columns}
-                    pagination={{pageSize: 10}}
-                    size="middle"
-                    onRow={(u: IUser) => ({'data-testid': `users-row-${u.id}`} as any)}
-                />
-            )}
+                    },
+                    secondary: onboardingCta(t('empty.cta.guidedSetup'), 'users-empty-secondary-btn'),
+                }}
+            />
             {vm.editing !== null && (
                 <Modal
                     data-testid="users-editor-modal"
@@ -232,7 +245,7 @@ const AdminSettingsUsers = () => {
                     </Form>
                 </Modal>
             )}
-        </div>
+        </>
     );
 };
 

@@ -73,6 +73,30 @@ import TrustBadges from '@client/modules/Trust/TrustBadges';
 import MoneyBackGuarantee from '@client/modules/Trust/MoneyBackGuarantee';
 import ReferAFriendCta from '@client/modules/Marketing/ReferAFriendCta';
 import SocialShareButtons from '@client/modules/Marketing/SocialShareButtons';
+// all-pages-module-composed — Account batch smart wrappers.
+import {
+    OrdersListHost,
+    OrderDetailHost,
+    AddressListHost,
+    NotificationInboxHost,
+} from '@client/modules/_AccountPageModules/wrappers';
+// all-pages-module-composed — Auth batch smart wrappers.
+import {
+    SigninFormHost,
+    SignupFormHost,
+    MagicLinkRequestFormHost,
+} from '@client/modules/_AccountPageModules/authWrappers';
+// all-pages-module-composed — Blog batch smart wrapper.
+import {BlogPostHost} from '@client/modules/_BlogPageModules/wrappers';
+// all-pages-module-composed — Marketing batch content-parser wrappers.
+import {
+    FeatureGridHost,
+    LogoCloudHost,
+    PricingTableHost,
+    TestimonialWallHost,
+} from '@client/modules/_MarketingPageModules/wrappers';
+// all-pages-module-composed — Cars batch smart wrappers.
+import {CarsListHost, CarDetailHost} from '@client/modules/_CarsPageModules/wrappers';
 
 export const CLIENT_ITEM_TYPES: readonly ClientItemType[] = [
     {key: EItemType.Text, Display: PlainText},
@@ -132,4 +156,23 @@ export const CLIENT_ITEM_TYPES: readonly ClientItemType[] = [
     {key: EItemType.MoneyBackGuarantee, Display: MoneyBackGuarantee as never},
     {key: EItemType.ReferAFriendCta, Display: ReferAFriendCta as never},
     {key: EItemType.SocialShareButtons, Display: SocialShareButtons as never},
+    // all-pages-module-composed — Account batch.
+    {key: EItemType.OrdersList, Display: OrdersListHost as never},
+    {key: EItemType.OrderDetail, Display: OrderDetailHost as never},
+    {key: EItemType.AddressList, Display: AddressListHost as never},
+    {key: EItemType.NotificationInbox, Display: NotificationInboxHost as never},
+    // all-pages-module-composed — Auth batch.
+    {key: EItemType.SigninForm, Display: SigninFormHost as never},
+    {key: EItemType.SignupForm, Display: SignupFormHost as never},
+    {key: EItemType.MagicLinkRequestForm, Display: MagicLinkRequestFormHost as never},
+    // all-pages-module-composed — Blog batch.
+    {key: EItemType.BlogPost, Display: BlogPostHost as never},
+    // all-pages-module-composed — Marketing batch.
+    {key: EItemType.FeatureGrid, Display: FeatureGridHost as never},
+    {key: EItemType.LogoCloud, Display: LogoCloudHost as never},
+    {key: EItemType.PricingTable, Display: PricingTableHost as never},
+    {key: EItemType.TestimonialWall, Display: TestimonialWallHost as never},
+    // all-pages-module-composed — Cars batch.
+    {key: EItemType.CarsList, Display: CarsListHost as never},
+    {key: EItemType.CarDetail, Display: CarDetailHost as never},
 ];

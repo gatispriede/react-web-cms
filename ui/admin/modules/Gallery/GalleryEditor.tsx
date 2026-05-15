@@ -1,4 +1,4 @@
-import {Button, Input, Select, Space, Typography} from "antd";
+import {Button, Input, Select, Space, Switch, Tooltip, Typography} from "antd";
 import {CloudUploadOutlined, DeleteOutlined, DownOutlined, UpOutlined} from "@client/lib/icons";
 import React, {useState} from "react";
 import {IInputContent} from "@interfaces/IInputContent";
@@ -134,6 +134,7 @@ const GalleryEditor = ({content, setContent, t}: IInputContent) => {
             <Space style={{margin: '0 16px 12px 16px', flexWrap: 'wrap'}} align="center">
                 <Typography.Text strong>{t('Aspect ratio')}</Typography.Text>
                 <Select<GalleryAspectRatio>
+                    data-testid="gallery-editor-aspect-ratio-select"
                     value={(data.aspectRatio ?? 'free')}
                     style={{minWidth: 120}}
                     onChange={(v) => {
@@ -142,9 +143,27 @@ const GalleryEditor = ({content, setContent, t}: IInputContent) => {
                     }}
                     options={GALLERY_ASPECT_RATIOS.map((r) => ({value: r, label: r}))}
                 />
-                <Button icon={<CloudUploadOutlined/>} onClick={() => setBulkOpen(true)}>
+                <Button
+                    data-testid="gallery-editor-bulk-upload-button"
+                    icon={<CloudUploadOutlined/>}
+                    onClick={() => setBulkOpen(true)}
+                >
                     {t('Bulk upload')}
                 </Button>
+                <Tooltip title={t('Show each image’s alt text as a caption, with the description as a secondary line')}>
+                    <Space size={6}>
+                        <Switch
+                            data-testid="gallery-editor-show-captions-switch"
+                            size="small"
+                            checked={data.showCaptions !== false}
+                            onChange={(checked) => {
+                                galleryContent.setShowCaptions(checked);
+                                setContent(galleryContent.stringData);
+                            }}
+                        />
+                        <Typography.Text>{t('Captions')}</Typography.Text>
+                    </Space>
+                </Tooltip>
             </Space>
             <BulkImageUploadModal
                 open={bulkOpen}

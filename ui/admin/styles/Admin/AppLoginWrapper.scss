@@ -3,6 +3,13 @@
 // dropdown, mode/theme toggles, and sign-out. Lived previously inside
 // `Login.scss` as a second top-level root; split out per the F4 SCSS scoping
 // sweep (docs/roadmap/scss-audit-2026-05-03.md, Pattern 2).
+//
+// DARK-MODE AUDIT (admin-dark-mode-audit): the bar previously hardcoded
+// `#fff` / `rgba(0,0,0,…)` / `#555`, which meant dark mode had to fight
+// it back with a `[data-admin-theme="dark"]` override block. Now it
+// consumes the `--admin-*` tokens from `AdminDarkMode.scss` (themselves
+// bound to AntD's `cssVar` `--ant-color-*` properties), so light + dark
+// both flow from one palette and no `!important` override is needed.
 .app-login-wrapper {
   position: sticky;
   top: 0;
@@ -13,8 +20,9 @@
   align-items: center;
   gap: 2px;
   padding: 4px 12px;
-  background: #fff;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  background: var(--admin-elevated, #fff);
+  color: var(--admin-fg, inherit);
+  border-bottom: 1px solid var(--admin-border, rgba(0, 0, 0, 0.08));
 
   // "User: Name" label
   .container {
@@ -25,7 +33,7 @@
       padding: 0;
       margin: 0;
       white-space: nowrap;
-      color: #555;
+      color: var(--admin-muted, #555);
     }
   }
 

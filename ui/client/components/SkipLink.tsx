@@ -10,9 +10,10 @@
  * i18n: label flows through `next-i18next` (`a11y.skip.toMain`). SSR-safe —
  * no hooks beyond `useTranslation`.
  */
+import React from 'react';
 import {useTranslation} from 'next-i18next/pages';
 
-export default function SkipLink(): JSX.Element {
+export default function SkipLink(): React.ReactElement {
     const {t} = useTranslation('common');
     return (
         <a

@@ -1,13 +1,15 @@
 import React, {useEffect, useMemo, ReactNode} from "react";
-import {Button, Drawer, Form, Input, Popconfirm, Space, Table, Typography} from "antd";
-import {DeleteOutlined, EditOutlined, PlusOutlined} from "@client/lib/icons";
+import {Button, Drawer, Form, Input, Popconfirm, Space, Typography} from "antd";
+import type {ColumnsType} from "antd/es/table";
+import {DeleteOutlined, EditOutlined} from "@client/lib/icons";
 import {useTranslation} from "react-i18next";
 import ImageUrlInput from "@client/lib/ImageUrlInput";
 import {IPost} from "@interfaces/IPost";
 import {useRefreshView} from "@client/lib/refreshBus";
 import ConflictDialog from "@client/lib/ConflictDialog";
 import {useViewModel} from "@client/lib/state/observable";
-import EmptyState from "@admin/lib/EmptyState";
+import AdminCrudListModule from "@admin/modules/shapes/AdminCrudListModule";
+import {onboardingCta} from "@admin/lib/EmptyState";
 import {PostsViewModel} from "./PostsViewModel";
 
 interface Props {
@@ -51,6 +53,11 @@ interface Props {
  * component**: the advanced view composes it via the slot props
  * (`headerExtra`, `extraColumns`, `renderRowExtras`, `renderDrawer`)
  * + a shared `vm`.
+ *
+ * admin-module-composed: the bespoke table + toolbar + empty state are
+ * now the generic `AdminCrudListModule` shape; the edit Drawer + form +
+ * ConflictDialog stay here as bridge-owned bespoke surfaces. Reached
+ * via `AdminPageDispatch` — see `PostsAdminLoader` / `PostsAdminUILoader`.
  */
 const PostsSimplifiedView: React.FC<Props> = ({headerExtra, extraColumns, renderRowExtras, vm: vmProp, renderDrawer, mode = 'simplified', children}) => {
     const {t} = useTranslation();
@@ -127,34 +134,33 @@ const PostsSimplifiedView: React.FC<Props> = ({headerExtra, extraColumns, render
 
     return (
         <div style={{padding: 16}}>
-            <Space style={{marginBottom: 16}} align="center" wrap>
-                <Button data-testid="posts-new-btn" type="primary" icon={<PlusOutlined/>} onClick={vm.openCreate}>{t('New post')}</Button>
-                <Button data-testid="posts-refresh-button" onClick={vm.refresh} loading={vm.loading}>{t('Refresh')}</Button>
-                {headerExtra}
-            </Space>
-            {!vm.loading && vm.posts.length === 0 ? (
-                <EmptyState
-                    testId={`posts-${mode}-empty-state`}
-                    icon={<EditOutlined style={{fontSize: 48, opacity: 0.4}}/>}
-                    title={t('empty.posts.title')}
-                    description={t('empty.posts.description')}
-                    primary={{
+            <AdminCrudListModule
+                testId={`posts-${mode}-list`}
+                columns={columns as unknown as ColumnsType<Record<string, unknown>>}
+                rows={vm.posts as unknown as Record<string, unknown>[]}
+                rowKey="id"
+                loading={vm.loading}
+                pageSize={20}
+                onAdd={vm.openCreate}
+                addLabel={t('New post')}
+                addTestId="posts-new-btn"
+                onRefresh={vm.refresh}
+                refreshTestId="posts-refresh-button"
+                headerExtra={headerExtra}
+                rowTestId={(row) => `posts-${mode}-row-${(row as unknown as IPost).id}`}
+                emptyState={{
+                    testId: `posts-${mode}-empty-state`,
+                    title: t('empty.posts.title'),
+                    description: t('empty.posts.description'),
+                    art: 'posts',
+                    primary: {
                         label: t('empty.posts.primary'),
                         onClick: () => vm.openCreate(),
                         testId: 'posts-empty-primary-btn',
-                    }}
-                />
-            ) : (
-                <Table
-                    rowKey="id"
-                    loading={vm.loading}
-                    dataSource={vm.posts}
-                    columns={columns}
-                    pagination={{pageSize: 20}}
-                    size="middle"
-                    onRow={(p: IPost) => ({'data-testid': `posts-${mode}-row-${p.id}`, 'data-legacy-testid': `posts-row-${p.id}`} as any)}
-                />
-            )}
+                    },
+                    secondary: onboardingCta(t('empty.posts.secondary'), 'posts-empty-secondary-btn'),
+                }}
+            />
             {renderDrawer ? renderDrawer(vm) : (
                 <Drawer
                     open={vm.editing !== null}

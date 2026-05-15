@@ -1,5 +1,6 @@
 import React from 'react';
 import type {IProductModule, IProductRenderable} from './Product.types';
+import ProductPrice from './ProductPrice';
 
 /**
  * Comparison variant — side-by-side spec table. Column per product, row
@@ -42,8 +43,16 @@ const ProductComparison: React.FC<{config: IProductModule; products: IProductRen
                             <th scope="row">Price</th>
                             {products.map(p => (
                                 <td key={p.id}>
-                                    {typeof p.price === 'number'
-                                        ? `${(p.price / 100).toFixed(2)} ${p.currency ?? 'EUR'}`
+                                    {(typeof p.price === 'number' || p.prices)
+                                        ? (
+                                            <ProductPrice
+                                                prices={p.prices}
+                                                price={p.price}
+                                                currency={p.currency}
+                                                baseCurrency={p.baseCurrency}
+                                                testId={`product-comparison-price-${p.slug}`}
+                                            />
+                                        )
                                         : '—'}
                                 </td>
                             ))}

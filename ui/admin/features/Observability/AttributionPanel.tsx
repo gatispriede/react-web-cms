@@ -1,10 +1,13 @@
-import React, {useEffect, useMemo} from 'react';
-import {Button, Card, Select, Space, Statistic, Table, Typography} from 'antd';
-import {useTranslation} from 'react-i18next';
-import {useViewModel} from '@client/lib/state/observable';
-import {AttributionViewModel, type AttributionRow} from './AttributionViewModel';
-
 /**
+ * admin-module-composed — Marketing attribution bridge.
+ *
+ * The `AdminLoader` bridge for `marketing/attribution`.
+ * `AttributionViewModel` is unchanged ("admin stays mostly same"); the
+ * hand-coded card chrome is replaced by a single `AdminInfo` surface.
+ * The group-by / range selectors ride in the toolbar slot, the
+ * total-hits / tracked-keys stats in a bespoke `node` block, and the
+ * aggregated report in a `table` block (or a disabled-feature node).
+ *
  * W6c — admin marketing attribution pane.
  *
  * Read-only aggregated report over the `MarketingReferrer` collection.
@@ -16,6 +19,14 @@ import {AttributionViewModel, type AttributionRow} from './AttributionViewModel'
  * `useState` is banned in admin features per VM4 — all knobs live on
  * `AttributionViewModel`.
  */
+import React, {useEffect, useMemo} from 'react';
+import {Button, Select, Space, Statistic, Typography} from 'antd';
+import type {ColumnsType} from 'antd/es/table';
+import {useTranslation} from 'react-i18next';
+import {useViewModel} from '@client/lib/state/observable';
+import AdminInfoModule from '@admin/modules/shapes/AdminInfoModule';
+import type {AdminInfoBlock} from '@admin/modules/shapes/AdminInfoModule.types';
+import {AttributionViewModel, type AttributionRow} from './AttributionViewModel';
 
 const GROUP_OPTIONS = [
     {value: 'source', label: 'UTM source'},
@@ -44,62 +55,74 @@ const AttributionPanel: React.FC = () => {
         {title: t('Orders'), dataIndex: 'orders', key: 'orders', width: 100},
         {title: t('Last seen'), dataIndex: 'lastSeen', key: 'lastSeen', width: 200,
             render: (v?: string) => v ? new Date(v).toLocaleString() : '—'},
-    ], [t]);
+    ] as unknown as ColumnsType<Record<string, unknown>>, [t]);
 
-    return (
-        <div style={{padding: 16}}>
-            <Card
-                title={t('Marketing attribution')}
-                extra={
-                    <Button
-                        data-testid="attribution-refresh"
-                        onClick={() => { void vm.refresh(); }}
-                        loading={vm.loading}
-                    >
-                        {t('Refresh')}
-                    </Button>
-                }
-            >
-                <Space wrap style={{marginBottom: 16}}>
-                    <Select
-                        data-testid="attribution-group-by"
-                        value={vm.groupBy}
-                        onChange={(v) => vm.setGroupBy(v as any)}
-                        style={{width: 220}}
-                        options={GROUP_OPTIONS}
-                    />
-                    <Select
-                        data-testid="attribution-range"
-                        value={vm.range}
-                        onChange={(v) => vm.setRange(v as any)}
-                        style={{width: 180}}
-                        options={RANGE_OPTIONS}
-                    />
-                </Space>
+    const toolbar = (
+        <Space wrap>
+            <Select
+                data-testid="attribution-group-by"
+                value={vm.groupBy}
+                onChange={(v) => vm.setGroupBy(v as any)}
+                style={{width: 220}}
+                options={GROUP_OPTIONS}
+            />
+            <Select
+                data-testid="attribution-range"
+                value={vm.range}
+                onChange={(v) => vm.setRange(v as any)}
+                style={{width: 180}}
+                options={RANGE_OPTIONS}
+            />
+        </Space>
+    );
 
-                <Space wrap size="large" style={{marginBottom: 16}}>
+    const blocks: AdminInfoBlock[] = [
+        {
+            kind: 'node',
+            testId: 'attribution-stats',
+            node: (
+                <Space wrap size="large">
                     <Statistic title={t('Total hits')} value={vm.total} valueStyle={{fontSize: 18}}/>
                     <Statistic title={t('Tracked keys')} value={vm.rows.length} valueStyle={{fontSize: 18}}/>
                 </Space>
+            ),
+        },
+        vm.disabled ? {
+            kind: 'node',
+            testId: 'attribution-disabled-block',
+            node: (
+                <Typography.Text type="secondary" data-testid="attribution-disabled">
+                    {t('Marketing feature is disabled — enable in System → Features to capture attribution.')}
+                </Typography.Text>
+            ),
+        } : {
+            kind: 'table',
+            testId: 'attribution-table',
+            columns,
+            rows: vm.rows as unknown as Record<string, unknown>[],
+            rowKey: 'key',
+            loading: vm.loading,
+            pageSize: 25,
+            emptyText: t('No attribution hits captured yet — UTM-tagged visits will appear here.'),
+        },
+    ];
 
-                {vm.disabled ? (
-                    <Typography.Text type="secondary" data-testid="attribution-disabled">
-                        {t('Marketing feature is disabled — enable in System → Features to capture attribution.')}
-                    </Typography.Text>
-                ) : (
-                    <Table<AttributionRow>
-                        data-testid="attribution-table"
-                        rowKey={(r) => r.key}
-                        size="small"
-                        loading={vm.loading}
-                        dataSource={vm.rows}
-                        columns={columns as any}
-                        pagination={{pageSize: 25}}
-                        locale={{emptyText: t('No attribution hits captured yet — UTM-tagged visits will appear here.')}}
-                    />
-                )}
-            </Card>
-        </div>
+    return (
+        <AdminInfoModule
+            testId="admin-attribution"
+            title={t('Marketing attribution')}
+            headerExtra={
+                <Button
+                    data-testid="attribution-refresh"
+                    onClick={() => { void vm.refresh(); }}
+                    loading={vm.loading}
+                >
+                    {t('Refresh')}
+                </Button>
+            }
+            toolbar={toolbar}
+            blocks={blocks}
+        />
     );
 };
 

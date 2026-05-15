@@ -64,6 +64,7 @@ const ThemeSimplifiedView: React.FC<Props> = ({headerExtra, renderCardActions, v
                     testId={`themes-${mode}-empty-state`}
                     title={t('empty.themes.title')}
                     description={t('empty.themes.description')}
+                    art="themes"
                     primary={{
                         label: t('empty.themes.primary'),
                         onClick: () => void vm.refresh(),

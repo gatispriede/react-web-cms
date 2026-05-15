@@ -5,6 +5,20 @@ description: Implement the missing `tools/scripts/testid-coverage.mjs` CI script
 
 # `data-testid` coverage CI
 
+> **Shipped 2026-05-14.** `tools/scripts/testid-coverage.mjs` (AST-walk via
+> `@typescript-eslint/parser`), `testid-coverage.test.mjs` (10 passing unit
+> tests), `.testid-coverage-allow`, the `testid-coverage` + `testid-coverage:test`
+> npm scripts, and the PR-only `data-testid coverage (changed files)` step in
+> `.github/workflows/ci.yml` are all in place. **Hard gate** — the CI step runs
+> `npm run testid-coverage` (diff mode), which exits non-zero on any
+> missing-`data-testid` violation in changed `.tsx` files. Naming-convention
+> mismatches are warn-only, as specced. Current tree: ~856 full-tree violations
+> / ~526 in diff-mode against `origin/master` — these are the legacy backlog the
+> diff-mode gate deliberately *doesn't* sweep; only new/modified files are gated.
+> The optional `data-edit-target` second gate is **not** implemented — deferred
+> to land with [admin-inline-editing.md](../admin/admin-inline-editing.md), which
+> introduces the attribute. See [shipped.md](../shipped.md).
+
 ## Goal
 
 Universal requirement #4 in [README.md](../README.md) mandates `data-testid` on every interactive surface — buttons, inputs, options, list items with identity, modals, drawer toggles, status indicators. Today this is review-checked.

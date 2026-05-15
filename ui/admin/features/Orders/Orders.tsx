@@ -1,10 +1,21 @@
-import React, {useEffect} from 'react';
-import {Button, Card, DatePicker, Drawer, Select, Space, Table, Tag, Typography} from 'antd';
-import {ReloadOutlined} from '@client/lib/icons';
+/**
+ * admin-module-composed (Batch 2) — Orders bridge.
+ *
+ * The `AdminLoader` bridge for `content/orders`. `OrdersViewModel` is
+ * unchanged ("admin stays mostly same"); the hand-coded list chrome
+ * (toolbar + Table + EmptyState) is replaced by `AdminCrudListModule`,
+ * and the bespoke detail Drawer is kept rendered alongside the module.
+ *
+ * Registered with the `AdminPageRegistry` by `OrdersAdminLoader`; the
+ * shell reaches it via `AdminPageDispatch` (see `OrdersAdminUILoader`).
+ */
+import React, {useEffect, useMemo} from 'react';
+import {Button, Card, DatePicker, Drawer, Select, Space, Tag, Typography} from 'antd';
+import type {ColumnsType} from 'antd/es/table';
 import {useTranslation} from 'react-i18next';
 import type {IOrder, OrderStatus} from '@interfaces/IOrder';
 import {useViewModel} from '@client/lib/state/observable';
-import EmptyState from '@admin/lib/EmptyState';
+import AdminCrudListModule from '@admin/modules/shapes/AdminCrudListModule';
 import {OrdersViewModel} from './OrdersViewModel';
 
 /** Render-only Orders pane — VM3 (2026-05-02). */
@@ -44,37 +55,44 @@ const AdminOrders: React.FC = () => {
 
     useEffect(() => { void vm.refresh(); }, [vm]);
 
+    const columns = useMemo(() => [
+        {title: 'Order #', dataIndex: 'orderNumber', render: (n: string, r: IOrder) => <a data-testid={`admin-orders-row-link-${r.id}`} onClick={() => vm.selectDetail(r)}>{n || r.id.slice(0, 8)}</a>},
+        {title: 'Customer', dataIndex: 'customerId', render: (v: string, r: IOrder) => v ? v.slice(0, 8) : (r.guestEmail ?? 'guest')},
+        {title: 'Total', dataIndex: 'total', render: (v: number, r: IOrder) => formatMoney(v, r.currency)},
+        {title: 'Status', dataIndex: 'status', render: (v: OrderStatus) => <Tag color={statusColor(v)}>{v}</Tag>},
+        {title: 'Created', dataIndex: 'createdAt', render: (v: string) => new Date(v).toLocaleString()},
+    ], [vm]);
+
+    const toolbar = (
+        <>
+            <Select
+                style={{width: 160}}
+                value={vm.statusFilter}
+                onChange={vm.setStatusFilter}
+                options={STATUS_FILTERS.map(f => ({value: f.value, label: f.label}))}
+            />
+            <DatePicker.RangePicker onChange={(v) => vm.setDateRange(v as any)}/>
+        </>
+    );
+
     return (
-        <div>
-            <Space style={{marginBottom: 16}}>
-                <Select
-                    style={{width: 160}}
-                    value={vm.statusFilter}
-                    onChange={vm.setStatusFilter}
-                    options={STATUS_FILTERS.map(f => ({value: f.value, label: f.label}))}
-                />
-                <DatePicker.RangePicker onChange={(v) => vm.setDateRange(v as any)}/>
-                <Button icon={<ReloadOutlined/>} onClick={vm.refresh} loading={vm.loading}>Refresh</Button>
-            </Space>
-            {!vm.loading && vm.filtered.length === 0 && vm.statusFilter === 'all' ? (
-                <EmptyState
-                    testId="orders-empty-state"
-                    title={t('empty.orders.title')}
-                    description={t('empty.orders.description')}
-                />
-            ) : null}
-            <Table<IOrder>
+        <>
+            <AdminCrudListModule
+                testId="admin-orders"
+                columns={columns as unknown as ColumnsType<Record<string, unknown>>}
+                rows={vm.filtered as unknown as ReadonlyArray<Record<string, unknown>>}
                 rowKey="id"
-                dataSource={vm.filtered}
                 loading={vm.loading}
-                pagination={{pageSize: 25}}
-                columns={[
-                    {title: 'Order #', dataIndex: 'orderNumber', render: (n, r) => <a data-testid={`admin-orders-row-link-${r.id}`} onClick={() => vm.selectDetail(r)}>{n || r.id.slice(0, 8)}</a>},
-                    {title: 'Customer', dataIndex: 'customerId', render: (v, r) => v ? v.slice(0, 8) : (r.guestEmail ?? 'guest')},
-                    {title: 'Total', dataIndex: 'total', render: (v, r) => formatMoney(v, r.currency)},
-                    {title: 'Status', dataIndex: 'status', render: v => <Tag color={statusColor(v as OrderStatus)}>{v}</Tag>},
-                    {title: 'Created', dataIndex: 'createdAt', render: v => new Date(v).toLocaleString()},
-                ]}
+                pageSize={25}
+                onRefresh={vm.refresh}
+                toolbar={toolbar}
+                showEmptyState={!vm.loading && vm.filtered.length === 0 && vm.statusFilter === 'all'}
+                emptyState={{
+                    testId: 'orders-empty-state',
+                    title: t('empty.orders.title'),
+                    description: t('empty.orders.description'),
+                    art: 'orders',
+                }}
             />
             <Drawer
                 title={vm.detail ? `Order ${vm.detail.orderNumber}` : ''}
@@ -150,10 +168,10 @@ const AdminOrders: React.FC = () => {
                     </>
                 )}
             </Drawer>
-            <Typography.Paragraph type="secondary" style={{marginTop: 24}}>
+            <Typography.Paragraph type="secondary" style={{marginTop: 24, paddingLeft: 16}}>
                 Showing {vm.filtered.length} order{vm.filtered.length === 1 ? '' : 's'}.
             </Typography.Paragraph>
-        </div>
+        </>
     );
 };
 

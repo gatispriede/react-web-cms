@@ -25,7 +25,7 @@
  * Manual SR / keyboard passes still happen wall-clock. This panel is the
  * fast-feedback loop in between, not a substitute.
  */
-import {useCallback, useEffect, useMemo, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {useTranslation} from 'next-i18next/pages';
 
 type Impact = 'critical' | 'serious' | 'moderate' | 'minor' | null | undefined;
@@ -77,7 +77,7 @@ function panelStyle(open: boolean): React.CSSProperties {
     };
 }
 
-export default function AxeDevPanel(): JSX.Element | null {
+export default function AxeDevPanel(): React.ReactElement | null {
     const {t} = useTranslation('common');
     const [open, setOpen] = useState(false);
     const [busy, setBusy] = useState(false);

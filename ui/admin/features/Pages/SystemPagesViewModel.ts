@@ -6,7 +6,7 @@
  * surface success + failure consistently.
  */
 import {observable} from '@client/lib/state/observable';
-import {notifyError, notifyPromise, notifyDestructive} from '@admin/lib/notify';
+import {notifyError, notifyPromise} from '@admin/lib/notify';
 
 export interface SystemPageRow {
     systemKey: string;
@@ -30,29 +30,27 @@ export class SystemPagesViewModel {
             const res = await callMcp('systemPages.list', {});
             this.rows = Array.isArray(res?.data) ? res.data as SystemPageRow[] : (Array.isArray(res) ? res as SystemPageRow[] : []);
         } catch (err) {
-            notifyError('Could not load system pages', err);
+            notifyError(err);
         }
         this.loading = false;
     }
 
     async reset(systemKey: string): Promise<void> {
-        const ok = await notifyDestructive({
-            title: `Reset ${systemKey} to defaults?`,
-            description: 'Operator-added composable sections will be discarded. Locked sections remain.',
-            confirmLabel: 'Reset',
-        });
-        if (!ok) return;
+        if (!window.confirm(`Reset ${systemKey} to defaults? Operator-added sections will be discarded. Locked sections remain.`)) return;
         this.resettingKey = systemKey;
-        await notifyPromise(
-            callMcp('systemPages.reset', {systemKey}),
-            {
-                loading: `Resetting ${systemKey}…`,
-                success: () => `Reset ${systemKey}`,
-                error: 'Reset failed',
-            },
-        );
-        this.resettingKey = null;
-        await this.refresh();
+        try {
+            await notifyPromise(
+                callMcp('systemPages.reset', {systemKey}),
+                {
+                    loading: `Resetting ${systemKey}…`,
+                    success: () => `Reset ${systemKey}`,
+                    error: 'Reset failed',
+                },
+            );
+        } finally {
+            this.resettingKey = null;
+            await this.refresh();
+        }
     }
 }
 

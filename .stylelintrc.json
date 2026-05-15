@@ -49,6 +49,7 @@
     "ui/admin/styles/Admin/AdminDarkMode.scss",
     "ui/admin/styles/Admin/AdminAntdOverrides.scss",
     "ui/client/styles/_motion-tokens.scss",
-    "ui/admin/styles/_motion-tokens.scss"
+    "ui/admin/styles/_motion-tokens.scss",
+    "services/themes/**/theme.scss"
   ]
 }

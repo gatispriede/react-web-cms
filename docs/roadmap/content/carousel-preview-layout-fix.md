@@ -2,6 +2,12 @@
 
 _Session: 2026-04-24_
 
+> **✅ SHIPPED.** All fixes verified in `Carousel.scss` (`display: flex
+> !important` on `.slick-initialized .container`, `max-height` clip band,
+> caption `z-index: 3` + gradient) and `ModulesPreview.tsx` (`minWidth: 0`
+> on the `<figure>` grid item + preview frame, with the 2^25 px-trap
+> comment for the next operator). This doc is the postmortem record.
+
 ## Symptom
 
 In `/admin/modules-preview`, every Carousel variant rendered as solid black

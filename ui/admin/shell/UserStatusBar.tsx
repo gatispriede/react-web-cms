@@ -11,7 +11,7 @@ import Backend from "i18next-http-backend";
 import {TFunction} from "i18next";
 import {i18n} from "next-i18next/pages";
 import SiteFlagsApi from "@services/api/client/SiteFlagsApi";
-import {useCommandPaletteHotkey} from "./CommandPalette";
+import CommandPalette from "./CommandPalette/CommandPalette";
 import {I18nextProvider, useTranslation as useReactTranslation} from "react-i18next";
 import adminI18n, {AdminLocale, setAdminLocale, detectStoredOrNavigatorLocale} from "@admin/i18n/adminI18n";
 import ModulesPreview from "@client/lib/preview/ModulesPreview";
@@ -90,8 +90,6 @@ const UserStatusBarInner = ({session, view, tApp}: {
     let lang = i18n?.resolvedLanguage ?? (i18n?.language !== 'default' ? i18n?.language : null) ?? 'lv'
     const [, setBlogEnabled] = useState(true);
     const {mode: adminMode} = useAdminMode();
-    const [paletteOpen, setPaletteOpen] = useState(false);
-    useCommandPaletteHotkey(setPaletteOpen);
     const {t: tCommon, i18n: i18nCommon} = useTranslation('common');
     i18nCommon.use(Backend);
     useEffect(() => {
@@ -203,7 +201,12 @@ const UserStatusBarInner = ({session, view, tApp}: {
                 );
             case 'modules-preview':
             case 'build/modules-preview':
-                return <ModulesPreview t={tAdmin as TFunction<"translation", undefined>} tApp={tApp}/>;
+                // admin-module-composed: `ModulesPreview` is now the
+                // `AdminLoader` bridge — it resolves `t` / `tApp` itself and
+                // composes `AdminPreviewModule`. The registered
+                // `ModulesPreviewAdminUILoader` dispatches the same pane via
+                // `AdminPageDispatch`; this legacy case stays as a fallback.
+                return <ModulesPreview/>;
 
             // Area landings — render nothing in the pane; AreaNav covers it.
             case 'client-config':
@@ -224,7 +227,11 @@ const UserStatusBarInner = ({session, view, tApp}: {
     };
 
     return (
-        <>
+        // The kbar `<CommandPalette>` provider wraps the entire admin
+        // chrome — top-bar trigger + every dispatched pane — so ⌘K and the
+        // `CommandPaletteTrigger` button work from any admin route, not
+        // just the build view. (`AdminApp` no longer mounts its own.)
+        <CommandPalette lang={lang}>
             <Head>
                 {/* PWA install — admin pages get their own manifest. iOS Safari +
                     Android Chrome show "Add to Home Screen" → standalone mode.
@@ -245,8 +252,6 @@ const UserStatusBarInner = ({session, view, tApp}: {
                 simplified={simplified}
                 tAdmin={tAdmin as TFunction<"translation", undefined>}
                 lang={lang}
-                paletteOpen={paletteOpen}
-                setPaletteOpen={setPaletteOpen}
             />
             <main id="admin-main" aria-label={tAdmin("Admin workspace")} className="admin-main">
                 {activeArea ? (
@@ -269,7 +274,7 @@ const UserStatusBarInner = ({session, view, tApp}: {
                     renderPane()
                 )}
             </main>
-        </>
+        </CommandPalette>
     )
 }
 

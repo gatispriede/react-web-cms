@@ -1,10 +1,24 @@
+/**
+ * admin-module-composed (Batch 1) — Diagnostics bridge.
+ *
+ * Was a bespoke hand-coded pane; now the `AdminLoader` *bridge* for
+ * `system/info`. It keeps `DiagnosticsViewModel` unchanged ("admin
+ * stays mostly same") and just maps the VM snapshot onto the generic
+ * `AdminInfo` view module's blocks. VM3 — no `useState`.
+ *
+ * Registered with the `AdminPageRegistry` by `DiagnosticsAdminLoader`;
+ * the shell reaches it via `AdminPageDispatch` (see
+ * `DiagnosticsAdminUILoader`).
+ */
 import React, {useEffect, useMemo} from 'react';
-import {Button, Card, Space, Table, Tag, Typography} from 'antd';
+import {Button, Space, Tag, Typography} from 'antd';
+import type {ColumnsType} from 'antd/es/table';
 import {useTranslation} from 'react-i18next';
 import {useViewModel} from '@client/lib/state/observable';
-import {DiagnosticsViewModel, FeatureSummary, RouteProbe, TrashOverview} from './DiagnosticsViewModel';
+import AdminInfoModule from '@admin/modules/shapes/AdminInfoModule';
+import type {AdminInfoBlock} from '@admin/modules/shapes/AdminInfoModule.types';
+import {DiagnosticsViewModel, type FeatureSummary} from './DiagnosticsViewModel';
 
-/** F5 — admin Diagnostics pane. VM3 (no useState). Manual refresh only. */
 const DiagnosticsPane: React.FC = () => {
     const {t} = useTranslation();
     const vm = useViewModel(() => new DiagnosticsViewModel());
@@ -23,7 +37,7 @@ const DiagnosticsPane: React.FC = () => {
         {title: t('M'), dataIndex: 'mutationCount', key: 'mutationCount', width: 60},
         {title: t('Gated M'), dataIndex: 'gatedMutationCount', key: 'gatedMutationCount', width: 80},
         {title: t('Cascades'), dataIndex: 'cascadeRuleCount', key: 'cascadeRuleCount', width: 80},
-    ], [t]);
+    ] as unknown as ColumnsType<Record<string, unknown>>, [t]);
 
     const trashCols = useMemo(() => [
         {title: t('Collection'), dataIndex: 'collection', key: 'collection',
@@ -32,7 +46,7 @@ const DiagnosticsPane: React.FC = () => {
         {title: t('Oldest'), dataIndex: 'oldestDeletedAt', key: 'oldestDeletedAt', width: 200,
             render: (iso: string | null) => iso ? new Date(iso).toLocaleString() : '—'},
         {title: t('Groups'), dataIndex: 'distinctTrashGroups', key: 'distinctTrashGroups', width: 80},
-    ], [t]);
+    ] as unknown as ColumnsType<Record<string, unknown>>, [t]);
 
     const probeCols = useMemo(() => [
         {title: t('Path'), dataIndex: 'path', key: 'path',
@@ -43,156 +57,136 @@ const DiagnosticsPane: React.FC = () => {
                 : <Tag color={s < 400 ? 'green' : s < 500 ? 'orange' : 'red'}>{String(s)}</Tag>},
         {title: t('Time'), dataIndex: 'ms', key: 'ms', width: 80,
             render: (m: number) => `${m}ms`},
-    ], [t]);
+    ] as unknown as ColumnsType<Record<string, unknown>>, [t]);
 
     const d = vm.data;
-    return (
-        <div data-testid="admin-diagnostics" style={{padding: 16}}>
-            <Card
-                title={t('Diagnostics')}
-                extra={
-                    <Space>
-                        {vm.lastFetchedAt && <Typography.Text type="secondary" style={{fontSize: 12}}>
-                            {t('Updated')}: {vm.lastFetchedAt.toLocaleTimeString()}
-                        </Typography.Text>}
-                        <Button
-                            data-testid="diagnostics-refresh"
-                            type="primary"
-                            loading={vm.loading || vm.probesRunning}
-                            onClick={() => { void vm.refresh(); void vm.runRouteProbes(); }}
-                        >
-                            {t('Refresh')}
-                        </Button>
+    const blocks: AdminInfoBlock[] = [
+        {
+            kind: 'keyValue', heading: t('Build identity'), testId: 'section-build', loading: !d,
+            rows: d ? [
+                {label: t('Git SHA'), value: <Typography.Text code>{d.build.gitSha}</Typography.Text>},
+                {label: t('Built'), value: d.build.buildTimestamp ?? '—'},
+                {label: t('Active upstream'), value: <Typography.Text code>{d.build.activeUpstream}</Typography.Text>},
+                {label: t('Boot ID'), value: <Typography.Text code style={{fontSize: 11}}>{d.build.bootId}</Typography.Text>},
+                {label: t('Uptime'), value: `${Math.round(d.build.uptimeMs / 1000)}s`},
+                {label: t('Env'), value: `${d.build.nodeEnv} / ${d.build.deployTier}`},
+            ] : [],
+        },
+        {
+            kind: 'table', heading: t('Route registry'), testId: 'section-routes',
+            columns: probeCols, rows: vm.probes as unknown as Record<string, unknown>[],
+            rowKey: 'path', loading: vm.probesRunning,
+        },
+        {
+            kind: 'table', heading: t('Feature manifest'), testId: 'section-features',
+            columns: featureCols, rows: (d?.features ?? []) as unknown as Record<string, unknown>[],
+            rowKey: 'id', pageSize: 30,
+        },
+        {
+            kind: 'keyValue', heading: t('Storage health'), testId: 'section-storage', loading: !d,
+            rows: d ? [
+                {
+                    label: t('Mongo'),
+                    value: (
+                        <Space size={4} wrap>
+                            <Tag color={d.storage.mongo.connected ? 'green' : 'red'}>
+                                {d.storage.mongo.connected ? t('connected') : t('down')}
+                            </Tag>
+                            {d.storage.mongo.replicaSet && <Tag color="blue">{t('replica-set')}</Tag>}
+                            {d.storage.mongo.transactionsSupported && <Tag color="purple">{t('transactions')}</Tag>}
+                        </Space>
+                    ),
+                },
+                {
+                    label: t('Redis'),
+                    value: (
+                        <Tag color={d.storage.redis.available ? 'green' : 'orange'}>
+                            {d.storage.redis.available ? t('reachable') : t('unavailable')}
+                        </Tag>
+                    ),
+                },
+                {
+                    label: t('Cache versions'),
+                    value: Object.keys(d.storage.cacheVersions).length === 0 ? '—' : (
+                        <Space wrap size={4}>
+                            {Object.entries(d.storage.cacheVersions).map(([k, v]) => (
+                                <Tag key={k}><Typography.Text code style={{fontSize: 11}}>{k}={v}</Typography.Text></Tag>
+                            ))}
+                        </Space>
+                    ),
+                },
+            ] : [],
+        },
+        {
+            kind: 'table', heading: t('Trash overview'), testId: 'section-trash',
+            columns: trashCols, rows: (d?.trash ?? []) as unknown as Record<string, unknown>[],
+            rowKey: 'collection',
+            emptyText: t('No trash collections — fresh database or nothing deleted yet.'),
+        },
+        {
+            kind: 'keyValue', heading: t('Idempotency snapshot'), testId: 'section-idempotency', loading: !d,
+            rows: d ? [
+                {label: t('In-flight'), value: String(d.idempotency.inFlight)},
+                {label: t('TTL'), value: `${d.idempotency.ttlSeconds}s`},
+            ] : [],
+        },
+    ];
+
+    if (d?.mcpCoverage) {
+        blocks.push({
+            kind: 'keyValue', heading: t('MCP coverage'), testId: 'section-mcp-coverage',
+            rows: [
+                {label: t('Tools'), value: String(d.mcpCoverage.toolCount)},
+                {
+                    label: t('Categories'),
+                    value: (
+                        <Space wrap size={4}>
+                            {Object.entries(d.mcpCoverage.categories).sort((a, b) => a[0].localeCompare(b[0])).map(([k, v]) => (
+                                <Tag key={k}>{k}: {v}</Tag>
+                            ))}
+                        </Space>
+                    ),
+                },
+            ],
+        });
+    }
+
+    blocks.push({
+        kind: 'keyValue', heading: t('Authorization snapshot'), testId: 'section-authz', loading: !d,
+        rows: d ? [
+            {label: t('Total grants'), value: String(d.authorization.grantTotal)},
+            {
+                label: t('By scope'),
+                value: Object.keys(d.authorization.grantsByScope).length === 0 ? '—' : (
+                    <Space wrap size={4}>
+                        {Object.entries(d.authorization.grantsByScope).map(([k, v]) => (
+                            <Tag key={k}>{k}: {v}</Tag>
+                        ))}
                     </Space>
-                }
-            >
-                {vm.error && <Typography.Text type="danger">{vm.error}</Typography.Text>}
-                <Space direction="vertical" size={16} style={{width: '100%'}}>
-                    <Card data-testid="section-build" type="inner" title={t('Build identity')}>
-                        {d ? (
-                            <Space direction="vertical" size={4}>
-                                <div><b>{t('Git SHA')}:</b> <Typography.Text code>{d.build.gitSha}</Typography.Text></div>
-                                <div><b>{t('Built')}:</b> {d.build.buildTimestamp ?? '—'}</div>
-                                <div><b>{t('Active upstream')}:</b> <Typography.Text code>{d.build.activeUpstream}</Typography.Text></div>
-                                <div><b>{t('Boot ID')}:</b> <Typography.Text code style={{fontSize: 11}}>{d.build.bootId}</Typography.Text></div>
-                                <div><b>{t('Uptime')}:</b> {Math.round(d.build.uptimeMs / 1000)}s</div>
-                                <div><b>{t('Env')}:</b> {d.build.nodeEnv} / {d.build.deployTier}</div>
-                            </Space>
-                        ) : <Typography.Text type="secondary">{t('Loading…')}</Typography.Text>}
-                    </Card>
+                ),
+            },
+            {label: t('Functional roles registered'), value: String(d.authorization.functionalRolesRegistered)},
+        ] : [],
+    });
 
-                    <Card data-testid="section-routes" type="inner" title={t('Route registry')}>
-                        <Table<RouteProbe>
-                            rowKey="path"
-                            size="small"
-                            dataSource={vm.probes}
-                            columns={probeCols as any}
-                            pagination={false}
-                            loading={vm.probesRunning}
-                        />
-                    </Card>
-
-                    <Card data-testid="section-features" type="inner" title={t('Feature manifest')}>
-                        <Table<FeatureSummary>
-                            rowKey="id"
-                            size="small"
-                            dataSource={d?.features ?? []}
-                            columns={featureCols as any}
-                            pagination={{pageSize: 30}}
-                        />
-                    </Card>
-
-                    <Card data-testid="section-storage" type="inner" title={t('Storage health')}>
-                        {d ? (
-                            <Space direction="vertical">
-                                <div>
-                                    <b>{t('Mongo')}:</b>{' '}
-                                    <Tag color={d.storage.mongo.connected ? 'green' : 'red'}>
-                                        {d.storage.mongo.connected ? t('connected') : t('down')}
-                                    </Tag>
-                                    {d.storage.mongo.replicaSet && <Tag color="blue">{t('replica-set')}</Tag>}
-                                    {d.storage.mongo.transactionsSupported && <Tag color="purple">{t('transactions')}</Tag>}
-                                </div>
-                                <div>
-                                    <b>{t('Redis')}:</b>{' '}
-                                    <Tag color={d.storage.redis.available ? 'green' : 'orange'}>
-                                        {d.storage.redis.available ? t('reachable') : t('unavailable')}
-                                    </Tag>
-                                </div>
-                                <div>
-                                    <b>{t('Cache versions')}:</b>{' '}
-                                    {Object.keys(d.storage.cacheVersions).length === 0 ? '—' : (
-                                        <Space wrap>
-                                            {Object.entries(d.storage.cacheVersions).map(([k, v]) => (
-                                                <Tag key={k}><Typography.Text code style={{fontSize: 11}}>{k}={v}</Typography.Text></Tag>
-                                            ))}
-                                        </Space>
-                                    )}
-                                </div>
-                            </Space>
-                        ) : <Typography.Text type="secondary">{t('Loading…')}</Typography.Text>}
-                    </Card>
-
-                    <Card data-testid="section-trash" type="inner" title={t('Trash overview')}>
-                        <Table<TrashOverview>
-                            rowKey="collection"
-                            size="small"
-                            dataSource={d?.trash ?? []}
-                            columns={trashCols as any}
-                            pagination={false}
-                            locale={{emptyText: t('No trash collections — fresh database or nothing deleted yet.')}}
-                        />
-                    </Card>
-
-                    <Card data-testid="section-idempotency" type="inner" title={t('Idempotency snapshot')}>
-                        {d ? (
-                            <Space>
-                                <span><b>{t('In-flight')}:</b> {d.idempotency.inFlight}</span>
-                                <span><b>{t('TTL')}:</b> {d.idempotency.ttlSeconds}s</span>
-                            </Space>
-                        ) : <Typography.Text type="secondary">{t('Loading…')}</Typography.Text>}
-                    </Card>
-
-                    {d?.mcpCoverage && (
-                        <Card data-testid="section-mcp-coverage" type="inner" title={t('MCP coverage')}>
-                            <Space direction="vertical">
-                                <div><b>{t('Tools')}:</b> {d.mcpCoverage.toolCount}</div>
-                                <div>
-                                    <b>{t('Categories')}:</b>{' '}
-                                    <Space wrap>
-                                        {Object.entries(d.mcpCoverage.categories).sort((a, b) => a[0].localeCompare(b[0])).map(([k, v]) => (
-                                            <Tag key={k}>{k}: {v}</Tag>
-                                        ))}
-                                    </Space>
-                                </div>
-                            </Space>
-                        </Card>
-                    )}
-
-                    <Card data-testid="section-authz" type="inner" title={t('Authorization snapshot')}>
-                        {d ? (
-                            <Space direction="vertical">
-                                <div><b>{t('Total grants')}:</b> {d.authorization.grantTotal}</div>
-                                <div>
-                                    <b>{t('By scope')}:</b>{' '}
-                                    {Object.keys(d.authorization.grantsByScope).length === 0 ? '—' : (
-                                        <Space wrap>
-                                            {Object.entries(d.authorization.grantsByScope).map(([k, v]) => (
-                                                <Tag key={k}>{k}: {v}</Tag>
-                                            ))}
-                                        </Space>
-                                    )}
-                                </div>
-                                <div>
-                                    <b>{t('Functional roles registered')}:</b>{' '}
-                                    {d.authorization.functionalRolesRegistered}
-                                </div>
-                            </Space>
-                        ) : <Typography.Text type="secondary">{t('Loading…')}</Typography.Text>}
-                    </Card>
-                </Space>
-            </Card>
-        </div>
+    return (
+        <AdminInfoModule
+            testId="admin-diagnostics"
+            title={t('Diagnostics')}
+            error={vm.error}
+            lastUpdatedLabel={vm.lastFetchedAt ? `${t('Updated')}: ${vm.lastFetchedAt.toLocaleTimeString()}` : undefined}
+            headerExtra={
+                <Button
+                    data-testid="diagnostics-refresh"
+                    type="primary"
+                    loading={vm.loading || vm.probesRunning}
+                    onClick={() => { void vm.refresh(); void vm.runRouteProbes(); }}
+                >
+                    {t('Refresh')}
+                </Button>
+            }
+            blocks={blocks}
+        />
     );
 };
 

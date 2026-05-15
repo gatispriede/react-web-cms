@@ -63,7 +63,7 @@ export class WarehouseSyncViewModel {
             const res = await callMcp('pages.warehouseSync.status', {});
             if (res?.found && res.last) this.lastStatus = res.last as SyncResultLike;
         } catch (err) {
-            notifyError('Status read failed', err);
+            notifyError(err);
         }
     }
 
@@ -96,7 +96,7 @@ export class WarehouseSyncViewModel {
             const res = await callMcp('pages.warehouseSync.preview', {dryRun: true});
             this.previewResults = (res?.results ?? []) as SyncResultLike[];
         } catch (err) {
-            notifyError('Preview failed', err);
+            notifyError(err);
         }
         this.previewing = false;
     }

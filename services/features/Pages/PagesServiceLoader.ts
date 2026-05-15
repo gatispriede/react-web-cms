@@ -29,6 +29,13 @@ import type {NavigationService} from '@services/features/Navigation/NavigationSe
 import type {RedirectsService} from '@services/features/Seo/RedirectsService';
 import type {AuditService} from '@services/features/Audit/AuditService';
 import {cascadeDelete} from '@services/infra/cascadeDelete';
+// all-pages-module-composed — `marketing-landing` + `cars-*` are
+// framework always-on pages (`/welcome`, `/cars`, `/cars/[slug]`).
+// They register here, on the core-infrastructure Pages loader, rather
+// than on the gateable Marketing / cars-vertical loaders, so the
+// routes resolve even when those optional features are switched off.
+import '@services/features/Marketing/MarketingSystemPages';
+import '@services/features/Inventory/CarsSystemPages';
 
 export class PagesServiceLoader extends ServiceLoader {
     readonly id = 'pages';

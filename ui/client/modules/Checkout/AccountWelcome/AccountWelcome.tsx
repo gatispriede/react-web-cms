@@ -2,7 +2,6 @@
 import React from 'react';
 import type {IItem} from '@interfaces/IItem';
 import type {IAccountWelcome} from './AccountWelcome.types';
-
 export interface AccountWelcomeProps { item: IItem; name?: string; }
 function parseContent(raw: string|object|undefined): IAccountWelcome {
     if (!raw) return {} as IAccountWelcome;

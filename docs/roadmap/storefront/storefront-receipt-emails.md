@@ -6,6 +6,24 @@ research: see research-findings-2026-05-12.md §2 Receipt email UX
 
 # Receipt emails as a product surface
 
+> **Status — SHIPPED 2026-05-14.** All 9 spec templates exist, are registered
+> in `services/features/Email/templates/registry.ts`, are theme-token-driven,
+> and carry a visual progress timeline where the spec calls for one
+> (`orderConfirmation`/`receipt`, `carReservationConfirmation`). The
+> hand-rolled layout helpers, `EmailLogService` audit, `email.preview` MCP
+> tool, and admin preview pane shipped earlier under W6a.
+>
+> **Template ↔ trigger status:**
+> - `magicLink` → wired (`pages/api/auth/magic-request.ts`).
+> - `orderConfirmation`/`receipt` → wired (order-paid mailer closure in `OrdersServiceLoader.ts`).
+> - `inquiryAcknowledgement` → wired (`pages/api/inquiry.ts`, best-effort send to the submitter).
+> - `verifyEmail`, `passwordReset`, `carReservationConfirmation` → templates ready; consumed by W6c signup / W7b cars flows when those land.
+> - `scheduledPublishFailed` → **trigger pending.** `ReleaseService` has no `scheduledFor` worker yet and no mail-config/recipient access — needs the scheduler worker + operator-recipient resolution.
+> - `lowStockAlert` → **trigger pending.** `InventoryService` has per-row `stock` but no reorder-point / threshold concept.
+> - `savedSearchAlert` → **trigger pending.** No saved-search backend yet (only a UI type stub) — lands with W6b faceted-filter saved searches.
+>
+> Deferred per spec Open Questions: heavier template framework (stay hand-rolled), Litmus/Email-on-Acid cross-client tests (defer until real users), `tests/email-baselines/*.html` committed fixture renderings.
+
 ## Goal
 
 Build receipt + transactional email templates that treat email as a **product surface, not a transactional afterthought**. Per the Baymard / Klaviyo data:

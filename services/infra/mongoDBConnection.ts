@@ -69,7 +69,7 @@ import {
  * becomes `{conflict: true, currentVersion, currentDoc, message}`; other
  * errors become `{error: …}`. Frontend API wrappers detect the `.conflict`
  * key and surface a `ConflictError` to the caller via
- * `src/frontend/lib/conflict.ts`.
+ * `services/infra/conflict.ts`.
  */
 interface AuditTrace {
     collection: string;
@@ -714,6 +714,7 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
     }
     private async resolveUserIdFromSession(email?: string): Promise<string | null> {
         if (!email) return null;
+        if (!this.db) return null;
         const u = await this.db.collection('Users').findOne({email: email.trim().toLowerCase()}, {projection: {id: 1}}) as any;
         return u?.id ?? null;
     }

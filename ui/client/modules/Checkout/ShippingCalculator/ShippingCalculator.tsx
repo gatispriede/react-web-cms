@@ -2,7 +2,6 @@
 import React from 'react';
 import type {IItem} from '@interfaces/IItem';
 import type {IShippingCalculator} from './ShippingCalculator.types';
-
 export interface ShippingCalculatorProps { item: IItem; }
 function parseContent(raw: string|object|undefined): IShippingCalculator {
     if (!raw) return {} as IShippingCalculator;
