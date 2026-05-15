@@ -25,7 +25,7 @@ interface PageProps {
 }
 
 const PublicOrderByTokenPage: React.FC<PageProps> = ({systemPage, error}) => {
-    const {t} = useTranslation('translation');
+    const {t} = useTranslation('common');
     const {t: tApp} = useTranslation('app');
     if (error) {
         return (

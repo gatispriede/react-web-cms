@@ -14,7 +14,7 @@ import {loadSystemPageSnapshot, type ISystemPageSnapshot} from '@client/lib/syst
 import SystemPageDispatch from '@client/lib/systemPage/SystemPageDispatch';
 
 const AddressStep: React.FC<{systemPage: ISystemPageSnapshot | null}> = ({systemPage}) => {
-    const {t} = useTranslation('translation');
+    const {t} = useTranslation('common');
     const {t: tApp} = useTranslation('app');
     return (
         <ConfigProvider theme={staticTheme}>

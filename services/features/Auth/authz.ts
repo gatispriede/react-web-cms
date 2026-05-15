@@ -267,14 +267,38 @@ export function guardMethods<T extends object>(
             // ---------------------------------------------------------
             // Branch 3: admin session (or anonymous fall-through). Use
             // the admin `required` + `capabilities` tables exactly as
-            // before. Admin sessions calling customer-only endpoints
-            // are explicitly rejected — admins are not customers.
+            // before.
+            //
+            // Customer-only endpoints split two ways:
+            //   - Anon-open subset (createDraftOrder, cart mutations,
+            //     finalizeOrder, …) — an anonymous storefront visitor
+            //     can call these as a guest. Admins are at least as
+            //     privileged as anonymous; let the call through as
+            //     guest. Lets operators sanity-check the storefront
+            //     flow from their own admin tab without juggling a
+            //     second profile or incognito window.
+            //   - Authenticated-customer-only subset (customer profile
+            //     reads, address mutations, …) — these mutate a
+            //     specific customer's data and can't be impersonated.
+            //     Stays rejected; admins are not customers.
             // ---------------------------------------------------------
             if (kind === 'admin') {
-                if (CUSTOMER_MUTATION_REQUIREMENTS[key] === true || CUSTOMER_QUERY_REQUIREMENTS[key] === true) {
+                const isCustomerOnly = CUSTOMER_MUTATION_REQUIREMENTS[key] === true || CUSTOMER_QUERY_REQUIREMENTS[key] === true;
+                if (isCustomerOnly && !ANON_OPEN_MUTATIONS.has(key)) {
                     return () => {
                         throw new AuthzError(`Forbidden: customer-only endpoint (admin cannot call ${key})`);
                     };
+                }
+                if (isCustomerOnly && ANON_OPEN_MUTATIONS.has(key)) {
+                    // Treat as guest. Service-layer IDOR checks key off
+                    // `_session.kind`, so we hand them an anonymous
+                    // session rather than the admin one — admin
+                    // identity must not leak into the guest order doc.
+                    if (CUSTOMER_SESSION_INJECTED_METHODS.has(key)) {
+                        const bound = value.bind(obj);
+                        return (args: any = {}) => bound({...args, _session: {kind: 'anonymous'}});
+                    }
+                    return value.bind(obj);
                 }
             }
 
