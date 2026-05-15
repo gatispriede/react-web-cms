@@ -20,6 +20,13 @@ export interface CartLineItem {
     priceSnapshot: number;
     /** ISO-4217. Must match `Cart.currency`. */
     currency: string;
+    /** Title snapshot — populated at add-time and hydrated lazily on
+     *  read for legacy items written before this field existed. The
+     *  cart drawer + summary use this to show the product name; without
+     *  it they fall back to the raw productId. Not persisted on guest
+     *  carts (Redis); always present after the first read of a customer
+     *  cart since `getCart` rehydrates. */
+    title?: string;
 }
 
 export interface CartWarning {

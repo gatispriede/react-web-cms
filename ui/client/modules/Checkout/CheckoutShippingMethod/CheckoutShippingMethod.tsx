@@ -4,6 +4,7 @@ import type {IItem} from '@interfaces/IItem';
 import type {IOrderShippingMethod} from '@interfaces/IOrder';
 import {useCheckoutMachine} from '@client/lib/checkout/useCheckoutMachine';
 import {formatMoney} from '@client/lib/checkout/api';
+import {useCart} from '@client/features/Cart/useCart';
 import {OrderApi} from '@services/api/client/OrderApi';
 import type {ICheckoutShippingMethod} from './CheckoutShippingMethod.types';
 
@@ -18,6 +19,7 @@ function parseContent(raw: string | object | undefined): ICheckoutShippingMethod
 const CheckoutShippingMethod: React.FC<CheckoutShippingMethodProps> = ({item}) => {
     const c = parseContent(item.content);
     const {orderId, goTo} = useCheckoutMachine();
+    const {cart} = useCart();
     const [methods, setMethods] = useState<IOrderShippingMethod[]>([]);
     const [selected, setSelected] = useState<string>('');
     const [busy, setBusy] = useState(false);
@@ -63,7 +65,7 @@ const CheckoutShippingMethod: React.FC<CheckoutShippingMethodProps> = ({item}) =
                         checked={selected === m.code}
                         onChange={() => setSelected(m.code)}
                     />
-                    {' '}{m.label} ({m.etaDays}d) — {formatMoney(m.price, null)}
+                    {' '}{m.label} ({m.etaDays}d) — {formatMoney(m.price, cart.currency)}
                 </label>
             ))}
             {error && <p className="checkout-shipping-method__error" data-testid="shipping-error">{error}</p>}

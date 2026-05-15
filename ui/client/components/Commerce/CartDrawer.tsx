@@ -1,12 +1,21 @@
 import React, {useEffect, useState} from 'react';
+import {Button, Divider, Drawer, Empty, Space, Typography} from 'antd';
+import {DeleteOutlined, ShoppingCartOutlined} from '@ant-design/icons';
 import {useCommerceFlags} from './useCommerceFlags';
 import {useCart} from '@client/features/Cart/useCart';
+import {formatMoney} from '@client/lib/checkout/api';
 import {subscribeCartDrawer} from './cartDrawerBus';
 
 /**
  * Slide-out cart panel. Mounts at the top of `_app.tsx` so any page can
  * open it via the cart-drawer bus. Returns `null` when checkout is
  * disabled (no DOM, no JS subscription).
+ *
+ * Built on AntD `<Drawer>` — gets the slide animation, backdrop, focus
+ * trap and esc-to-close behaviour for free. The earlier hand-rolled
+ * `<aside class="cart-drawer">` had no SCSS file shipping with it, so
+ * the panel rendered as bare HTML in the page flow with the order
+ * summary above it.
  */
 const CartDrawer: React.FC = () => {
     const flags = useCommerceFlags();
@@ -19,43 +28,80 @@ const CartDrawer: React.FC = () => {
     }, [flags.checkoutEnabled]);
 
     if (!flags.checkoutEnabled) return null;
+
+    const itemCount = cart.items.reduce((n, it) => n + it.qty, 0);
+
     return (
-        <aside
-            className={`cart-drawer ${open ? 'cart-drawer--open' : ''}`}
+        <Drawer
+            title={
+                <Space>
+                    <ShoppingCartOutlined/>
+                    <span>Your cart</span>
+                    {itemCount > 0 && <Typography.Text type="secondary">({itemCount})</Typography.Text>}
+                </Space>
+            }
+            placement="right"
+            width={400}
+            open={open}
+            onClose={() => setOpen(false)}
             data-testid="cart-drawer"
-            aria-hidden={!open}
+            footer={
+                cart.items.length > 0 ? (
+                    <Space style={{width: '100%', justifyContent: 'space-between', alignItems: 'center'}}>
+                        <div>
+                            <Typography.Text type="secondary">Subtotal</Typography.Text>
+                            <div>
+                                <Typography.Text strong style={{fontSize: 18}}>
+                                    {formatMoney(cart.subtotal, cart.currency)}
+                                </Typography.Text>
+                            </div>
+                        </div>
+                        <Button
+                            type="primary"
+                            size="large"
+                            href="/checkout/address"
+                            data-testid="cart-drawer-checkout-link"
+                        >
+                            Checkout
+                        </Button>
+                    </Space>
+                ) : null
+            }
         >
-            <div className="cart-drawer__head">
-                <h2>Your cart</h2>
-                <button
-                    type="button"
-                    className="cart-drawer__close"
-                    data-testid="cart-drawer-close-btn"
-                    onClick={() => setOpen(false)}
-                    aria-label="Close cart"
-                >×</button>
-            </div>
-            <ul className="cart-drawer__items">
-                {cart.items.length === 0 ? (
-                    <li className="cart-drawer__empty">Your cart is empty.</li>
-                ) : cart.items.map(it => (
-                    <li key={`${it.productId}:${it.sku}`} className="cart-drawer__item">
-                        <span>{it.title ?? it.productId}</span>
-                        <span>× {it.qty}</span>
-                        <button
-                            type="button"
-                            data-testid={`cart-drawer-remove-${it.productId}`}
-                            onClick={() => void removeItem(it.productId, it.sku)}
-                        >Remove</button>
-                    </li>
-                ))}
-            </ul>
-            <div className="cart-drawer__foot">
-                <a className="cart-drawer__checkout" href="/checkout" data-testid="cart-drawer-checkout-link">
-                    Go to checkout
-                </a>
-            </div>
-        </aside>
+            {cart.items.length === 0 ? (
+                <Empty description="Your cart is empty"/>
+            ) : (
+                <Space direction="vertical" style={{width: '100%'}} size={0}>
+                    {cart.items.map((it, idx) => (
+                        <React.Fragment key={`${it.productId}:${it.sku}`}>
+                            {idx > 0 && <Divider style={{margin: '12px 0'}}/>}
+                            <div style={{display: 'flex', alignItems: 'flex-start', gap: 12}}>
+                                <div style={{flex: 1, minWidth: 0}}>
+                                    <Typography.Text strong style={{display: 'block'}}>
+                                        {it.title ?? it.productId}
+                                    </Typography.Text>
+                                    <Typography.Text type="secondary" style={{fontSize: 12}}>{it.sku}</Typography.Text>
+                                    <div style={{marginTop: 4}}>
+                                        <Typography.Text>
+                                            {it.qty} × {formatMoney(it.priceSnapshot, it.currency || cart.currency)}
+                                        </Typography.Text>
+                                    </div>
+                                </div>
+                                <Button
+                                    size="small"
+                                    type="text"
+                                    danger
+                                    icon={<DeleteOutlined/>}
+                                    data-testid={`cart-drawer-remove-${it.productId}`}
+                                    onClick={() => void removeItem(it.productId, it.sku)}
+                                    aria-label="Remove from cart"
+                                />
+                            </div>
+                        </React.Fragment>
+                    ))}
+                </Space>
+            )}
+        </Drawer>
     );
 };
 
