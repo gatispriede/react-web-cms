@@ -24,7 +24,11 @@ interface CartPageProps {
 }
 
 const CartPage: React.FC<CartPageProps> = ({systemPage}) => {
-    const {t} = useTranslation('translation');
+    // `translation` is i18next's stock default namespace but this bundle
+    // doesn't ship it — only `common` + `app`. Requesting `translation`
+    // surfaces as a 404 on /locales/en/translation.json in devtools. Use
+    // the namespaces that actually exist.
+    const {t} = useTranslation('common');
     const {t: tApp} = useTranslation('app');
     return (
         <ConfigProvider theme={staticTheme}>

@@ -95,7 +95,15 @@ export async function orderByToken(token: string) {
 
 export const formatMoney = (amount: number | undefined, currency: string | null | undefined) => {
     try {
-        return new Intl.NumberFormat(undefined, {style: 'currency', currency: currency || 'USD'}).format((amount ?? 0) / 100);
+        // Pin to `en-US` rather than the runtime default. `Intl.NumberFormat`
+        // with `undefined` falls back to the OS locale — Node's SSR uses
+        // en-US, the browser uses whatever the user's system reports. A
+        // Latvian-system browser renders "0.00 US$" while SSR rendered
+        // "$0.00", which trips a React hydration mismatch on every cart
+        // page. Pinning kills the mismatch; locale-aware money formatting
+        // can opt in via a future `useLocale()` hook if the storefront
+        // ever needs it.
+        return new Intl.NumberFormat('en-US', {style: 'currency', currency: currency || 'USD'}).format((amount ?? 0) / 100);
     } catch {
         return `${(amount ?? 0) / 100} ${currency ?? ''}`;
     }
