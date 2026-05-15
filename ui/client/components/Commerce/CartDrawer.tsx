@@ -41,7 +41,10 @@ const CartDrawer: React.FC = () => {
                 </Space>
             }
             placement="right"
-            width={400}
+            // AntD v5 deprecates Drawer `width` in favour of preset `size`.
+            // `default` is 378px, which matches the previous 400 within a
+            // rounding error.
+            size="default"
             open={open}
             onClose={() => setOpen(false)}
             data-testid="cart-drawer"
