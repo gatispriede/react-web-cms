@@ -1,39 +1,53 @@
-# Platform track — Waves 2-4
+# Platform — active items
 
-Infra, MCP, caching, migrations, tooling. Everything that's neither admin UX nor public-storefront.
+Infra, MCP, migrations, tooling.
 
 ## Active items
 
 | Item | Wave | Size | Status |
 |---|---|---|---|
-| [testid-coverage-ci.md](testid-coverage-ci.md) | 0d | S | Foundation — AST-walk CI script enforcing `data-testid` on interactive elements |
-| [site-mode-toggle.md](site-mode-toggle.md) | 2 (F6) | M | Active — scroll-vs-multipage per-site flag |
-| [mcp-bulk-and-introspection.md](mcp-bulk-and-introspection.md) | 2 (F8-bulk) | M | Active — bulk-write + introspection across ~22 MCP tools |
-| [mcp-real-world-ready.md](mcp-real-world-ready.md) | 2 | (F8 follow-ups) | Streaming transport + un-skip MCP e2e |
-| [mcp-rollout-aftermath.md](mcp-rollout-aftermath.md) | 3 | S | Quick-fix batch for mcp-rollout #1/#5/#9/#11/#12 |
-| [link-target-autosearch.md](link-target-autosearch.md) | 2 | M | Active — depends on F6 |
-| [mobile-column-behavior.md](mobile-column-behavior.md) | 3 | S | `mobileBehavior` enum + drawer accordion mixin |
-| [performance-budget-ci.md](performance-budget-ci.md) | 8 (pre-deploy) | M | Active — Lighthouse CI + Core Web Vitals gates + size-limit + RUM beacons + per-theme PERFORMANCE.md |
-| [backup-and-disaster-recovery.md](backup-and-disaster-recovery.md) | 8 (pre-deploy) | L | Active — Restic + B2 backups, weekly automated restore drill, runbook, RPO ≤6h / RTO ≤1h |
-| [auth-split-client-admin.md](auth-split-client-admin.md) | (new — post-W6c) | L | Active — split admin auth from customer auth into two NextAuth instances (disjoint cookies + providers + signin pages); add `siteFlags.clientLoginEnabled` master switch + per-provider sub-toggles; auto-mount storefront login surface UI (header dropdown, footer links, login CTA, signup banner) only when flag is on |
-| [terraform-kamal-migration.md](terraform-kamal-migration.md) | — | shipped 2026-05-08 (funisimo); Skyclimber pending |
+| [app-router-migration.md](app-router-migration.md) | 2 | XL (multi-batch) | Batch 1 shipped (App Router foundation + privacy/terms leaf pages). Remaining: B2 mongo re-entry guard + revalidate fix · B3 public shell + index + robots · B4 dynamic public routes · B5 commerce + account routes · B6 auth + admin · B7 cleanup + cutover. |
+| [mcp-real-world-ready.md](mcp-real-world-ready.md) | 2 | S | F8-stream shipped. **Remaining: un-skip MCP e2e suite** (test.skip blocks pending fixture wiring). |
+| [backup-and-disaster-recovery.md](backup-and-disaster-recovery.md) | 8 | S (operator-action) | Restic + B2 code shipped. **Operator: B2 bucket + append-only application key + restic passphrase + first `restic init` + GitHub Actions drill workflow.** Runbook `docs/runbooks/backup-and-restore.md`. |
+| [terraform-kamal-migration.md](terraform-kamal-migration.md) | — | M (operator-coordinated) | Funisimo cutover shipped 2026-05-08. **Remaining: Skyclimber droplet cutover.** |
 
-## Background / context
+## Shipped — see [../shipped.md](../shipped.md)
+
+Recent platform ships:
+- Phase 0 shared abstractions: `ISection.locked`, `IPage.source`+`systemKey`+depth-cap-lift+`SystemPageRegistry`, `ISiteFlags` sub-records + `defineFlag()`
+- F6 site-mode toggle
+- F8-bulk-introspection + F8-stream (`notifications/progress`)
+- mcp-rollout-aftermath (every in-scope issue closed)
+- link-target-autosearch + anchor registry
+- mobile-column-behavior
+- testid-coverage CI
+- W8d performance budget CI (Lighthouse / size-limit / RUM beacons)
+- auth-split-client-admin (two NextAuth instances + master flag)
+- TS error burn-down (107 → 0 across services + ui/client)
+
+## Background / context (reference only)
 
 | File | What it is |
 |---|---|
-| [data-integrity.md](data-integrity.md) | F2 idempotency + cascade engine — shipped, kept as reference |
-| [slug-source-of-truth.md](slug-source-of-truth.md) | F7 — shipped, kept as reference |
-| [sub-pages.md](sub-pages.md) | F1 sub-pages — shipped, kept as reference |
-| [themes-as-files.md](themes-as-files.md) | Shipped 2026-04-24 — kept as reference for first-class-themes |
+| [data-integrity.md](data-integrity.md) | F2 idempotency + cascade engine — reference |
+| [slug-source-of-truth.md](slug-source-of-truth.md) | F7 — reference |
+| [sub-pages.md](sub-pages.md) | F1 sub-pages — reference |
+| [themes-as-files.md](themes-as-files.md) | Shipped 2026-04-24 — reference for first-class-themes |
 | [v1-url-namespace.md](v1-url-namespace.md) | F3 cancelled — postmortem |
-| [production-caching.md](production-caching.md) | C9 caching design — shipped |
-| [production-caching-tier1-progress.md](production-caching-tier1-progress.md) | Shipped progress notes |
-| [scss-audit-2026-05-03.md](scss-audit-2026-05-03.md) | Shipped audit — kept as reference |
-| [scss-scoping.md](scss-scoping.md) | Shipped scoping rules — kept as reference |
+| [production-caching.md](production-caching.md) | C9 caching design — reference |
+| [production-caching-tier1-progress.md](production-caching-tier1-progress.md) | Progress notes |
+| [scss-audit-2026-05-03.md](scss-audit-2026-05-03.md) | Reference |
+| [scss-scoping.md](scss-scoping.md) | Reference |
 | [tests-remaining.md](tests-remaining.md) | Test backlog (mostly closed) |
 | [post-refactor-path-cleanup.md](post-refactor-path-cleanup.md) | Reorg follow-up |
-| [app-router-migration.md](app-router-migration.md) | Background reference for any future Next App-Router move |
+| [site-mode-toggle.md](site-mode-toggle.md) | F6 — shipped; reference |
+| [mcp-bulk-and-introspection.md](mcp-bulk-and-introspection.md) | F8-bulk — shipped; reference |
+| [mcp-rollout-aftermath.md](mcp-rollout-aftermath.md) | Shipped; reference |
+| [link-target-autosearch.md](link-target-autosearch.md) | Shipped; reference |
+| [mobile-column-behavior.md](mobile-column-behavior.md) | Shipped; reference |
+| [performance-budget-ci.md](performance-budget-ci.md) | W8d — shipped; reference |
+| [testid-coverage-ci.md](testid-coverage-ci.md) | Shipped; reference |
+| [auth-split-client-admin.md](auth-split-client-admin.md) | Phase 1.A — shipped; reference |
 
 Cross-references:
 - Runbooks: [../../runbooks/](../../runbooks/)

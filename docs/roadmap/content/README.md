@@ -1,17 +1,22 @@
-# Content + module + media track
+# Content + module + media — active items
 
-Items affecting content modules, images / galleries / carousels, logos. Module-design and media-pipeline polish lives here.
+Items affecting content modules, images / galleries / carousels, logos.
+
+## Active items
 
 | Item | Size | Status |
 |---|---|---|
-| ~~[bulk-image-upload-with-ratio.md](bulk-image-upload-with-ratio.md)~~ | S | **Shipped 2026-04-24, re-confirmed 2026-05-14** — `/api/upload-batch` (sharp cover-crop + EXIF strip + collision-safe) + `BulkImageUploadModal` + GalleryEditor "Bulk upload" button + `image.upload` MCP `ratio` parity. See [shipped.md](../shipped.md) |
-| [carousel-preview-layout-fix.md](carousel-preview-layout-fix.md) | S | Backlog — carousel preview misalignment |
-| [gallery-improvements.md](gallery-improvements.md) | M | Backlog — gallery module polish |
-| ~~[image-optimization-on-upload.md](image-optimization-on-upload.md)~~ | M | **Shipped 2026-05-14** — pipeline on all 4 ingest paths (upload / batch / MCP / rescan), corrupt-input reject, dimension persistence. See [shipped.md](../shipped.md) |
-| [image-width-height-respect.md](image-width-height-respect.md) | S | Backlog — honour intrinsic image dims on render |
-| [logo-style-options.md](logo-style-options.md) | S-M | Active — multi-variant logo (full / icon / mono) per theme; needed by [first-class-themes](../storefront/first-class-themes.md) |
-| [module-transparency-style.md](module-transparency-style.md) | S | Backlog — per-section transparency / overlay options |
+| [logo-style-options.md](logo-style-options.md) | S-M | Multi-variant logo (full / icon / mono) per theme. Gates [first-class-themes](../storefront/first-class-themes.md)'s 5 remaining themes. |
+| [carousel-preview-layout-fix.md](carousel-preview-layout-fix.md) | S | Carousel preview misalignment in admin editor. |
+| [image-width-height-respect.md](image-width-height-respect.md) | S | Honour intrinsic image dims on render (currently auto-fills container). |
+| [module-transparency-style.md](module-transparency-style.md) | S | Per-section transparency / overlay options exposed in section editor. |
+| [gallery-improvements.md](gallery-improvements.md) | M | Gallery module polish — partial ship in 2026-05-14 batch; verify what's remaining. |
+
+## Shipped — see [../shipped.md](../shipped.md)
+
+- bulk-image-upload-with-ratio (sharp cover-crop + EXIF strip + collision-safe + MCP parity)
+- image-optimization-on-upload (pipeline on all 4 ingest paths + dimension persistence)
 
 Cross-references:
-- New modules being introduced: [../_meta/new-modules-catalogue.md](../_meta/new-modules-catalogue.md) — the catalogue is the source of truth for which modules ship with the storefront program
+- New modules introduced: [../_meta/new-modules-catalogue.md](../_meta/new-modules-catalogue.md)
 - Module docs: [../../modules/](../../modules/)
