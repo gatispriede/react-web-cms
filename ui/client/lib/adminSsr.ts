@@ -1,7 +1,7 @@
 import type {GetServerSideProps, GetServerSidePropsContext} from 'next';
 import {getServerSession} from 'next-auth/next';
 import {serverSideTranslations} from 'next-i18next/pages/serverSideTranslations';
-import {authOptions} from '../pages/api/auth/[...nextauth]';
+import {adminAuthOptions as authOptions} from '../pages/api/auth/authOptions';
 
 /**
  * Shared SSR loader for admin pages (Phase 2 of admin segregation —

@@ -415,10 +415,14 @@ export const adminAuthOptions: NextAuthOptions = {
             options: {
                 httpOnly: true,
                 sameSite: 'lax',
-                // Scope the session cookie to /admin so storefront pages
-                // never transmit it. Browsers also send it on /api/admin/*
-                // because we route admin API under that prefix.
-                path: '/admin',
+                // Path must be `/` — the cookie has to ride along on
+                // `/api/admin/auth/session` (path `/api/...`, not `/admin/...`)
+                // for `useSession()` to read it. Cookie *paths* are prefix
+                // matches against the request URL path; `/admin` would NOT
+                // match `/api/admin/auth/*`. Storefront isolation is by
+                // cookie *name* (`cms.admin-session` vs `cms.customer-session`),
+                // not by path.
+                path: '/',
                 secure: isProd,
             },
         },
