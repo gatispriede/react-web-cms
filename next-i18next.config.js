@@ -248,15 +248,15 @@ module.exports = {
      * @link https://github.com/i18next/next-i18next#6-advanced-configuration
      *
      * Auto-collect missing keys by POSTing to `/locales/add/{lng}/{ns}`.
-     * Useful while authoring — every new `t('...')` call shows up in the
-     * locale JSON without a manual round-trip. NEVER enable this in
-     * production: there's no handler at that path on the live server, so
-     * every public visitor's browser fires off a flood of 405s for any
-     * key that isn't in the bundle (devtools console looks alarming, and
-     * it's just noise — the keys were already collected during
-     * development). Gate on NODE_ENV so prod builds ship with it off.
+     * Was intended to write new `t('...')` keys back to the locale
+     * JSON during authoring, but the `/locales/add/...` handler was
+     * never wired — every missing key just produces a noisy `405
+     * Method Not Allowed` in devtools. Disabling outright (was even
+     * gated on `NODE_ENV !== 'production'`, but the dev noise was
+     * dominant). Missing keys are still collected via the actual
+     * translation flow + the inline-translation host.
      */
-    saveMissing: process.env.NODE_ENV !== 'production',
+    saveMissing: false,
     // strictMode: true,
     serializeConfig: false,
     // react: { useSuspense: false }
