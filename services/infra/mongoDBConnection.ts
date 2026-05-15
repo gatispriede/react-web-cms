@@ -24,7 +24,7 @@ import {InventoryService} from '@services/features/Inventory/InventoryService';
 import {createAdapter, MockAdapter} from '@services/features/Inventory/adapters';
 import type {IWarehouseAdapter} from '@services/features/Inventory/adapters/IWarehouseAdapter';
 import type {IAdapterConfig} from '@interfaces/IInventory';
-import {RedisAdapter, type RedisLike} from '@services/infra/redis';
+import {RedisAdapter, FallbackRedis, InMemoryRedis, type RedisLike} from '@services/infra/redis';
 import type {FooterService} from '@services/features/Footer/FooterService';
 import {IFooterConfig} from '@interfaces/IFooter';
 import type {SiteFlagsService} from '@services/features/Seo/SiteFlagsService';
@@ -244,7 +244,14 @@ class MongoDBConnection implements IMongoDBConnection, IUserService {
     public get cartService(): CartService {
         return this.featureServices.cart as CartService;
     }
-    private cartRedis: RedisLike = new RedisAdapter();
+    /**
+     * `cartRedis` powers guest carts, idempotency cache, and presence.
+     * Wrapped in `FallbackRedis` so a dev machine without Redis running
+     * doesn't return `{"error":"redis unreachable"}` from every cart
+     * mutation — falls through to an in-process Map. Production
+     * deployments set `REDIS_URL` and never hit the fallback.
+     */
+    private cartRedis: RedisLike = new FallbackRedis(new RedisAdapter(), new InMemoryRedis());
     /**
      * Inventory is owned by `services/features/Inventory/feature.manifest.ts`
      * (Phase B of the platform refactor). The field stays as a getter so

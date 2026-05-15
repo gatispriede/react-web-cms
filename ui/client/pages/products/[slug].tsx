@@ -18,6 +18,7 @@ import CartIcon from '@client/features/Cart/CartIcon';
 import SiteFooter from '@client/features/Footer/SiteFooter';
 import {DEFAULT_FOOTER, IFooterConfig} from '@interfaces/IFooter';
 import {useCart} from '@client/features/Cart/useCart';
+import {productPrimaryImage} from '@client/lib/productImage';
 import {message} from 'antd';
 
 interface Props {
@@ -106,7 +107,7 @@ const ProductPage = ({product, themeTokens, footer, pages}: Props) => {
             <Head>
                 <title>{i18nTitle}</title>
                 {i18nDescription && <meta name="description" content={i18nDescription.slice(0, 200)}/>}
-                {product.images?.[0] && <meta property="og:image" content={product.images[0]}/>}
+                <meta property="og:image" content={productPrimaryImage(product)}/>
             </Head>
             <div style={{maxWidth: 960, margin: '0 auto', padding: '24px 20px 80px'}}>
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
@@ -118,22 +119,18 @@ const ProductPage = ({product, themeTokens, footer, pages}: Props) => {
                 </div>
                 <div style={{display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 32, marginTop: 16}}>
                     <div>
-                        {(product.images ?? []).length > 0 ? (
-                            <div>
-                                <img
-                                    src={product.images[0]}
-                                    alt={i18nTitle}
-                                    style={{width: '100%', maxHeight: 480, objectFit: 'cover', borderRadius: 'var(--theme-borderRadius, 8px)'}}
-                                />
-                                {product.images.length > 1 && (
-                                    <Space size={8} style={{marginTop: 8, flexWrap: 'wrap'}}>
-                                        {product.images.slice(1).map((src, i) => (
-                                            <img key={i} src={src} alt="" style={{width: 80, height: 80, objectFit: 'cover', borderRadius: 4}}/>
-                                        ))}
-                                    </Space>
-                                )}
-                            </div>
-                        ) : null}
+                        <img
+                            src={productPrimaryImage(product)}
+                            alt={i18nTitle}
+                            style={{width: '100%', maxHeight: 480, objectFit: 'cover', borderRadius: 'var(--theme-borderRadius, 8px)'}}
+                        />
+                        {(product.images ?? []).length > 1 && (
+                            <Space size={8} style={{marginTop: 8, flexWrap: 'wrap'}}>
+                                {product.images!.slice(1).map((src, i) => (
+                                    <img key={i} src={src} alt="" style={{width: 80, height: 80, objectFit: 'cover', borderRadius: 4}}/>
+                                ))}
+                            </Space>
+                        )}
                     </div>
                     <div>
                         <Typography.Title data-testid="storefront-product-title" level={1} style={{marginTop: 0}}>{i18nTitle}</Typography.Title>

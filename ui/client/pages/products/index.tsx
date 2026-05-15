@@ -16,6 +16,7 @@ import CartIcon from '@client/features/Cart/CartIcon';
 import RevealOnScroll from '@client/lib/RevealOnScroll';
 import SiteFooter from '@client/features/Footer/SiteFooter';
 import {DEFAULT_FOOTER, IFooterConfig} from '@interfaces/IFooter';
+import {productPrimaryImage} from '@client/lib/productImage';
 
 interface Props {
     products: IProduct[];
@@ -82,9 +83,13 @@ const ProductsIndex = ({products, themeTokens, footer, pages}: Props) => {
                                     <Card
                                         className="product-card"
                                         hoverable
-                                        cover={p.images?.[0] ? (
-                                            <img src={p.images[0]} alt={p.title} style={{height: 220, objectFit: 'cover'}}/>
-                                        ) : undefined}
+                                        cover={
+                                            <img
+                                                src={productPrimaryImage(p)}
+                                                alt={p.title}
+                                                style={{height: 220, objectFit: 'cover'}}
+                                            />
+                                        }
                                     >
                                         <Card.Meta
                                             title={p.title}

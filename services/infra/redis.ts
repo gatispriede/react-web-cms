@@ -112,6 +112,42 @@ export class RedisAdapter implements RedisLike {
     }
 }
 
+/**
+ * Composite `RedisLike` — tries `primary` first, falls back to
+ * `fallback` whenever the primary throws.
+ *
+ * Why: dev/POC machines rarely have a Redis server running. The cart
+ * service treats Redis as the source of truth for guest carts (the
+ * /admin/system Redis migration plan punts a Mongo-backed guest store
+ * to v2). Without a fallback, every guest "Add to cart" returns
+ * `{"error":"redis unreachable"}` and the UI silently no-ops.
+ *
+ * The fallback is process-local (in-memory) — guest cart state resets
+ * on every dev restart. That's acceptable for local development; prod
+ * deployments should run a real Redis and never hit this path.
+ *
+ * Sticky-fail: once the primary trips its own internal `failed` flag
+ * (see RedisAdapter), it short-circuits to the fallback on every call.
+ */
+export class FallbackRedis implements RedisLike {
+    constructor(private readonly primary: RedisLike, private readonly fallback: RedisLike) {}
+
+    async get(key: string): Promise<string | null> {
+        try { return await this.primary.get(key); }
+        catch { return this.fallback.get(key); }
+    }
+
+    async set(key: string, value: string, ttlSeconds: number): Promise<void> {
+        try { await this.primary.set(key, value, ttlSeconds); return; }
+        catch { await this.fallback.set(key, value, ttlSeconds); }
+    }
+
+    async del(key: string): Promise<void> {
+        try { await this.primary.del(key); return; }
+        catch { await this.fallback.del(key); }
+    }
+}
+
 /** In-memory `RedisLike` — used by tests and as a safe fallback. */
 export class InMemoryRedis implements RedisLike {
     private store = new Map<string, {value: string; expiresAt: number}>();

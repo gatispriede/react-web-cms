@@ -95,4 +95,36 @@ test.describe.serial('feature — products', () => {
         await anonPage.goto('/products');
         await expect(anonPage.locator('body')).toBeVisible({timeout: 15_000});
     });
+
+    test('image-less product falls back to a category placeholder', async ({adminPage, anonPage}) => {
+        // Seed a no-image, *published* product so the public storefront
+        // can render it. Categories steer the placeholder selection —
+        // 'cpu' here should pick `/images/product-placeholders/cpu.svg`.
+        const phSlug = `e2e-placeholder-${Date.now().toString(36)}`;
+        // Navigate first so subsequent relative-URL fetches resolve.
+        await adminPage.goto('/admin/content/products');
+        const seed = await adminPage.evaluate(async ({phSlug}) => {
+            const resp = await fetch('/api/graphql', {
+                method: 'POST', credentials: 'same-origin',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    query: `mutation S($product: JSON!) { mongo { saveProduct(product: $product) } }`,
+                    variables: {product: {
+                        title: 'E2E Placeholder Product', slug: phSlug, sku: `PH-${phSlug}`,
+                        price: 999, currency: 'EUR', stock: 1, draft: false,
+                        source: 'manual', categories: ['cpu'], images: [],
+                    }},
+                }),
+            });
+            return await resp.json();
+        }, {phSlug});
+        expect(seed?.errors, `saveProduct errored: ${JSON.stringify(seed)}`).toBeUndefined();
+
+        await anonPage.goto('/products');
+        const card = anonPage.getByTestId(`storefront-product-card-${phSlug}`);
+        await expect(card).toBeVisible({timeout: 15_000});
+        // The card's <img> src should be a placeholder, not a real CDN URL.
+        const imgSrc = await card.locator('img').first().getAttribute('src');
+        expect(imgSrc).toMatch(/\/images\/product-placeholders\/cpu\.svg$/);
+    });
 });
