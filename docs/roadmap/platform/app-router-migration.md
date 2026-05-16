@@ -259,11 +259,48 @@ Tracked as a checklist; each batch lands as its own PR. Sizes are rough.
   arity ×6) are unchanged. Full `next build` not run this batch (per
   the integration directive — typecheck-clean + structurally correct
   is the batch gate). Next up: **B6 — auth + admin pages**.
-- [ ] **Batch 6 — auth + admin pages (M).** `app/admin/page.tsx` +
-  `app/admin/{settings,languages,modules-preview}/page.tsx` ←
-  `pages/admin*`. `getServerSession(req,res,authOptions)` →
-  `getServerSession(authOptions)` + `next/navigation` `redirect()`
-  (risk #8). `auth/*`, `welcome.tsx`, `dev/*`, `docs/*` pages.
+- [x] **Batch 6 — auth + admin pages (M).** Shipped 2026-05-16. Auth
+  handshake routes `pages/account/{signin,signup,magic-link,verify}.tsx`
+  ported to App Router as Server-Component `page.tsx` + `'use client'`
+  `*View.tsx` pairs. `/account/signin` keeps its `siteFlags.auth.clientLoginEnabled`
+  hard 404 server-side; `/account/verify` keeps the click-to-confirm
+  contract (token consumed only on POST, never on GET/HEAD — defeats
+  cross-device email-client pre-fetch). Full admin shell ported:
+  `pages/admin.tsx`, `pages/admin/signin.tsx`, every leaf in
+  `pages/admin/{build,client-config,content,release,seo,system}/*`,
+  `pages/admin/{settings,languages,modules-preview,onboarding}.tsx`,
+  and `pages/admin/preview/template/[templateId].tsx`. New
+  `ui/client/lib/adminSsrAppRouter.ts` provides `resolveAdminSession({adminOnly?, redirectTo?})`
+  — App-Router twin of `buildAdminSsr`: throws `redirect()` (App-Router
+  idiom) for area-landing bounces and editor-vs-admin gating; resolves
+  the admin NextAuth session via `getServerSession(adminAuthOptions)`
+  (no `req`/`res` — App Router has no Pages-Router context, risk #8).
+  New `ui/client/app/admin/AdminShell.tsx` (`'use client'`) wraps every
+  admin leaf in `<SessionProvider session={…} basePath="/api/admin/auth">`
+  — mirroring the Pages-Router pattern that pinned `useSession()` /
+  `signIn()` to the admin instance instead of the customer default
+  (auth-split Phase 1.A). Misc routes ported: `pages/welcome.tsx`,
+  `pages/auth/signin.tsx` (legacy customer-instance signin — kept for
+  backward compatibility with the `pages.signIn` config), `pages/dev/{visual,modules-preview}.tsx`
+  (still 404 outside `NODE_ENV=development` / `E2E_BUILD_DIR`),
+  `pages/docs/{index,[slug]}.tsx` (the latter trades Pages-Router ISR
+  `revalidate: 3600` for `force-dynamic` per-request — same staleness
+  contract as B4's blog/[slug]). The `useRouter` from `next/router` in
+  `pages/admin/onboarding.tsx` and `pages/dev/visual.tsx` swapped to
+  `next/navigation`'s `useRouter` / `useSearchParams` — App-Router-native
+  AND Pages-Router-compatible since Next 13 (B4.5 unification rule).
+  Deleted (Pages Router): all of the above route files —
+  `app/foo` + `pages/foo` collisions are a hard Next error.
+  **NOT deleted (B7 cleanup scope):** `pages/_app.tsx` +
+  `pages/_document.tsx`. With no `pages/*.tsx` routes remaining, both
+  are unused but harmless; B7 deletes them in the final cutover so B6
+  stays atomic (a hypothetical revert doesn't have to restore the
+  foundational files). **Verification:** `npx tsc -p ui/client/tsconfig.json --noEmit`
+  + `npx tsc -p tsconfig.test.json --noEmit` — clean on every touched
+  file; the pre-existing pre-B5 errors (`services/agent/mcpAgentTools.ts:90`,
+  `services/features/Mcp/validate.ts:98`,
+  `services/features/Pages/WarehousePageSyncWorker.test.ts` callback
+  arity ×6) are unchanged. Next up: **B7 — cleanup + cutover**.
 - [ ] **Batch 7 — cleanup + cutover (S).** Delete `pages/_app.tsx` +
   `pages/_document.tsx` once no Pages-Router page remains. Audit
   `next-i18next.config.js` v16 shape. Verify `next-sitemap` post-build.
