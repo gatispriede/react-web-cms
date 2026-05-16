@@ -1,4 +1,3 @@
-const {i18n} = require('../../next-i18next.config.js')
 const {loadCustomBuildParams} = require('./next-utils.config')
 const {tsconfigPath} = loadCustomBuildParams()
 // E2E full-suite builds (`pnpm e2e:full:build`) write into a sibling
@@ -98,7 +97,14 @@ const nextConfig = {
         NEXT_PUBLIC_BASE_URL: 'http://localhost:80',
         NEXT_PUBLIC_BUILD_ID: resolvedBuildId,
     },
-    i18n: i18n,
+    // Pages-Router `i18n` block removed in B7 of the App Router migration —
+    // locale handling now lives in `app/layout.tsx` + `app/i18n.ts` (server
+    // cookie/Accept-Language read + `next-i18next/server` init). The
+    // `locale: false` flags on the admin redirects below are now no-ops
+    // (Next ignores unknown redirect props) but kept for documentation of
+    // intent: those rules must NEVER be locale-rewritten by any future
+    // re-introduction of the `i18n` block. See
+    // `docs/roadmap/platform/app-router-migration.md` (STATUS: SHIPPED).
     reactStrictMode: true,
 
     typescript: {

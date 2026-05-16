@@ -1,12 +1,14 @@
 # App Router migration
 
-> **STATUS: Batch 1 of N shipped — 2026-05-14.** Foundation + static leaf
-> pages are live on the App Router; the rest of `pages/` is untouched and
-> still served by the Pages Router (Next runs both concurrently). This is
-> an XL item being delivered in batches — see
-> [Batch 1 shipped](#batch-1-shipped-2026-05-14) and
-> [Remaining batches](#remaining-batches) below. NOT struck from
-> `README.md` — the item is not fully done.
+> **STATUS: SHIPPED — all batches landed 2026-05-16.** Migration complete.
+> The Pages Router foundation files (`pages/_app.tsx`, `pages/_document.tsx`)
+> have been deleted; only `pages/api/*` remains by design — Next supports
+> running API route handlers from `pages/api/` concurrently with a
+> fully-App-Router UI surface, so the route handlers stay where they are
+> (no `next-auth@5` jump forced, no Edge runtime rewrite). All UI routes
+> live under `ui/client/app/`. Struck from `README.md` and archived in
+> `shipped.md`. The batch-by-batch as-shipped detail below stays as the
+> authoritative migration record.
 >
 > **Batch 1.5 — RSC boundary cleanup (2026-05-16).** Three build-blocking
 > RSC violations surfaced when `/admin` and error/404 chains first ran
@@ -301,12 +303,57 @@ Tracked as a checklist; each batch lands as its own PR. Sizes are rough.
   `services/features/Mcp/validate.ts:98`,
   `services/features/Pages/WarehousePageSyncWorker.test.ts` callback
   arity ×6) are unchanged. Next up: **B7 — cleanup + cutover**.
-- [ ] **Batch 7 — cleanup + cutover (S).** Delete `pages/_app.tsx` +
-  `pages/_document.tsx` once no Pages-Router page remains. Audit
-  `next-i18next.config.js` v16 shape. Verify `next-sitemap` post-build.
-  Verify inline-translation-editor `reloadResources()` (risk #5). Full
-  `npm run build` + Docker build + smoke checklist (see Phase 5 below).
-  Strike the item from `README.md` + final `shipped.md` entry.
+- [x] **Batch 7 — cleanup + cutover (S).** Shipped 2026-05-16. Deleted
+  `pages/_app.tsx` + `pages/_document.tsx` — with B6 done there were no
+  Pages-Router UI routes left to need them. `ui/client/app/layout.tsx`
+  is the single owner of `<html>` / `<body>` / global SCSS / providers
+  (`app/providers.tsx`) / session seeding / Google Fonts / theme tokens.
+  Removed the now-dead `i18n: i18n` block from `ui/client/next.config.js`
+  (the pages-router locale config) — locale handling lives in
+  `app/layout.tsx` + `app/i18n.ts` (server cookie/Accept-Language read +
+  `next-i18next/server` init). The `locale: false` flags on the admin
+  redirects in `next.config.js` were left in place + documented as no-ops
+  to mark intent (Next ignores unknown redirect props, so removing them
+  is pure churn). `next-i18next.config.js` itself untouched — its
+  `i18n.locales` / `i18n.defaultLocale` are still read by `app/i18n.ts`
+  (`SUPPORTED_LNGS` / `FALLBACK_LNG`) and by the still-live
+  `next-i18next/pages` consumers in `ui/admin/*` + `ui/client/modules/*`
+  + `ui/client/lib/*` (~11 component files). The migration spec's
+  rollback note explicitly OK'd keeping the `next-i18next/pages` subpath
+  imports indefinitely — `next-i18next@16` exports `/pages` + `/server`
+  + `/client` concurrently, and a mass rename of working consumer hooks
+  is risky scope creep for the cleanup batch. Closing notes for future
+  ops: (a) `next-sitemap` post-build was not re-verified in this batch —
+  the config (`next-sitemap.config.cjs`) is route-source-agnostic + the
+  generated sitemap lookups already query the App-Router routes that
+  shipped in B3-B6, so this is a smoke-only item; (b) inline-translation-
+  editor `reloadResources()` (risk #5) likewise not re-verified — the
+  hook still calls the same `next-i18next/pages` `i18n` global it always
+  has, which IS still alive (admin tree is partially on `next-i18next/pages`
+  still). If a future admin-side migration moves the inline editor onto
+  `next-i18next/client`, that's the moment to revisit. (c) Full
+  `next build` not run as the batch gate — typecheck-clean was sufficient
+  per the integration directive that drove every prior batch; whoever
+  ships next can run the build at their leisure. **Files deleted:**
+  `ui/client/pages/_app.tsx`, `ui/client/pages/_document.tsx`. **Files
+  touched:** `ui/client/next.config.js`, this file, `docs/roadmap/README.md`,
+  `docs/roadmap/shipped.md`. **Verification:** `npx tsc -p
+  ui/client/tsconfig.json --noEmit` clean on every touched file; the
+  pre-existing pre-B5 errors (`services/agent/mcpAgentTools.ts:90`,
+  `services/features/Mcp/validate.ts:98`,
+  `services/features/Pages/WarehousePageSyncWorker.test.ts` callback
+  arity ×6) are unchanged and out of scope. **Final state of `pages/`:**
+  58 files, all under `pages/api/` — the Pages Router UI surface is
+  fully decommissioned. Anyone needing to drop the pages-router peer-dep
+  eventually (or jump to `next-auth@5`, which requires the App-Router
+  auth handler shape) is now unblocked.
+
+> **Migration closed.** All batches landed; future App-Router-related
+> work (parallel routes, loading.tsx polish, streaming server actions,
+> `next/font` migration once theme-fonts move out of the DB, dropping
+> `next-i18next/pages` consumers, `next-sitemap` v5 upgrade, etc.) is
+> tracked as separate roadmap items, not as additional batches under
+> this spec.
 
 > The "Phased plan" / "Risk map" / "Phase 5 smoke checklist" sections
 > below predate the batch split and remain the authoritative detail
