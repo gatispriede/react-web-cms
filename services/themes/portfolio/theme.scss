@@ -1,0 +1,81 @@
+/* ==========================================================================
+   Portfolio — first-class theme.
+
+   Warm minimalism for individual creative professionals. Cream surface,
+   warm dark ink, terracotta accent. Fraunces display (a variable serif
+   with optical sizing) + Inter body — the personal-brand counterpart to
+   the agency theme. Where agency = team / studio / brutalist confidence,
+   portfolio = one person / human / considered.
+
+   Scoped under `[data-theme-name="portfolio"]`. 8px radii — soft but not
+   rounded; the design feels hand-set, not pillowy. Gentle motion —
+   considered eases, longer durations, short reveal distances.
+
+   Bespoke visuals live in `module-styles.scss` alongside.
+   ========================================================================== */
+
+[data-theme-name="portfolio"] {
+    --color-surface:       light-dark(#FAF7F2, #161311);
+    --color-ink:           light-dark(#1F1A16, #F2EDE5);
+    --color-accent:        light-dark(#C2410C, #FB923C);
+    --color-accent-ink:    light-dark(#FFFFFF, #1F1A16);
+    --color-surface-inset: light-dark(#F2ECE2, #211C18);
+    --color-rule:          light-dark(#D9CFC1, #3A332C);
+
+    --background: var(--color-surface);
+    --ink:    var(--color-ink);
+    --ink-2:  color-mix(in srgb, var(--color-ink) 62%, transparent);
+    --ink-3:  color-mix(in srgb, var(--color-ink) 40%, transparent);
+    --accent: var(--color-accent);
+    --accent-hover: color-mix(in srgb, var(--color-accent) 85%, #000);
+
+    --font-display: 'Fraunces', 'Cormorant Garamond', 'Source Serif Pro', Georgia, serif;
+    --font-body:    'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+    --theme-headingFont: var(--font-display);
+    --theme-bodyFont:    var(--font-body);
+
+    /* gentle-considered motion — soft eases, generous durations, short
+       reveal distances. Nothing snaps; nothing overshoots. */
+    --motion-duration-fast:       240ms;
+    --motion-duration-base:       420ms;
+    --motion-duration-slow:       720ms;
+    --motion-duration-deliberate: 1100ms;
+    --motion-ease-standard:       cubic-bezier(0.32, 0.08, 0.24, 1);
+    --motion-ease-entrance:       cubic-bezier(0.16, 0.84, 0.44, 1);
+    --motion-ease-exit:           cubic-bezier(0.5, 0, 0.75, 0);
+    --motion-ease-emphasized:     cubic-bezier(0.22, 0.61, 0.36, 1);
+
+    --motion-distance-sm: 8px;
+    --motion-distance-md: 20px;
+    --motion-distance-lg: 48px;
+
+    --theme-borderRadius: 8px;
+
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.55;
+
+    h1, h2, h3,
+    .heading,
+    .heading--display {
+        font-family: var(--font-display);
+        font-weight: 500;
+        font-variation-settings: 'opsz' 144, 'SOFT' 50;
+        letter-spacing: -0.02em;
+        line-height: 1.05;
+        color: var(--color-ink);
+    }
+
+    .label--mono,
+    .meta--mono {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
+        text-transform: lowercase;
+        color: var(--ink-2);
+    }
+}

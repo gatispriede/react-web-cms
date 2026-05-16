@@ -1,0 +1,1721 @@
+/* ==========================================================================
+   Portfolio — per-module overrides.
+
+   Warm minimalism for individual creative professionals. The voice is
+   first-person ("I make things") not third-person ("we're a studio").
+   Where agency uses oversized sans + 0px corners + coral urgency, this
+   theme uses optical-sized serif display + 8px softness + terracotta
+   warmth. Generous whitespace; long line-heights; gentle motion.
+
+   Module priorities for a personal portfolio:
+   1. Hero — portrait + name + statement
+   2. ProjectGrid / ProjectCard
+   3. Gallery
+   4. Timeline (career spine)
+   5. SkillPills
+   6. Testimonials (clients / collaborators)
+   7. Manifesto (personal statement)
+   8. SocialLinks (prominent — the contact surface)
+   9. List variants (credits, awards, publications)
+   10. Footer (minimal)
+
+   Visual baselines under `tests/e2e/visual/__snapshots__/themes/portfolio/`.
+   ========================================================================== */
+
+[data-theme-name="portfolio"] {
+
+    /* ===================================================================
+       Header / nav — sticky-static, hairline ruled, generous padding.
+       The personal-portfolio header is restrained; the work has to
+       breathe below it. Wordmark left, links right, no chrome.
+       =================================================================== */
+    .main-nav {
+        background: color-mix(in srgb, var(--color-surface) 94%, transparent);
+        backdrop-filter: blur(10px);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        padding: 1.5rem 2.5rem;
+        border-bottom: 1px solid var(--color-rule);
+
+        a {
+            color: var(--color-ink);
+            font-family: var(--font-body);
+            font-weight: 500;
+            font-size: 0.9375rem;
+            letter-spacing: -0.005em;
+            transition: color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &:hover { color: var(--color-accent); }
+        }
+    }
+
+    /* ===================================================================
+       Hero — VARIANT: PORTRAIT-LED STATEMENT. The defining hero for a
+       personal portfolio: a square portrait on one side, a first-person
+       statement ("I design products at the intersection of…") on the
+       other, with a "currently —" status line below in mono.
+
+       Real DOM: `.hero > .hero__main` (+ optional `.hero__portrait`,
+       `.hero__meta`, `.hero__coords`).
+
+       Structural axis vs siblings:
+         editorial = photo-bleed (bottom-left caption)
+         commerce / saas = split (copy ⇆ product shot)
+         agency = centred overlay (portrait BEHIND copy)
+       portfolio = SPLIT WITH PORTRAIT BESIDE — the person, then the
+       statement; equal weight, hairline rule between.
+       =================================================================== */
+    .hero {
+        min-height: 86vh;
+        display: flex;
+        align-items: center;
+        padding: 5rem 2.5rem;
+        max-width: 1500px;
+        margin: 0 auto;
+        position: relative;
+        gap: 4rem;
+
+        &__main {
+            flex: 1 1 60%;
+            max-width: 32em;
+            order: 2;
+        }
+
+        h1,
+        &__headline {
+            font-family: var(--font-display);
+            font-weight: 400;
+            font-variation-settings: 'opsz' 144, 'SOFT' 80;
+            font-size: clamp(2.5rem, 7vw, 5.25rem);
+            line-height: 1.02;
+            letter-spacing: -0.025em;
+            color: var(--color-ink);
+            margin: 0 0 1.75rem;
+
+            // First-person italics — a personal statement should
+            // FEEL personal. Em-runs become a quiet stress.
+            em, .em-accent {
+                font-style: italic;
+                font-variation-settings: 'opsz' 144, 'SOFT' 100;
+                color: var(--color-accent);
+            }
+        }
+
+        &__subtitle,
+        &__tagline {
+            font-family: var(--font-body);
+            font-size: 1.1875rem;
+            line-height: 1.55;
+            color: var(--ink-2);
+            max-width: 42ch;
+            margin: 0 0 2rem;
+        }
+
+        &__cta-row { justify-content: flex-start; gap: 0.75rem; }
+
+        // "currently — building at X" / "based in Berlin" / status pills.
+        &__meta,
+        &__coords {
+            justify-content: flex-start;
+            margin-top: 2.5rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--color-rule);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.04em;
+            text-transform: lowercase;
+            color: var(--ink-2);
+            gap: 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        // Portrait — square, soft-radius, side-by-side with copy.
+        // Personal-portfolio defining gesture.
+        &--has-portrait {
+            .hero__portrait {
+                flex: 0 0 42%;
+                max-width: 480px;
+                aspect-ratio: 4 / 5;
+                position: relative;
+                border-radius: 8px;
+                overflow: hidden;
+                background: var(--color-surface-inset);
+                order: 1;
+                align-self: center;
+                box-shadow: 0 1px 0 var(--color-rule), 0 24px 60px -30px rgba(0, 0, 0, 0.18);
+
+                img, .ant-image-img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    border-radius: 8px;
+                }
+            }
+        }
+
+        // Reveal — short distance + gentle ease.
+        animation: portfolio-hero-enter calc(var(--motion-duration-deliberate) * var(--motion-scalar)) var(--motion-ease-entrance) backwards;
+
+        @media (max-width: 900px) {
+            flex-direction: column;
+            min-height: auto;
+            padding: 4rem 1.5rem;
+            gap: 2.5rem;
+
+            &__main { order: 2; max-width: 100%; }
+            &--has-portrait .hero__portrait {
+                flex: 0 0 auto;
+                width: 100%;
+                max-width: 360px;
+                order: 1;
+            }
+        }
+    }
+
+    @keyframes portfolio-hero-enter {
+        from { opacity: 0; transform: translateY(var(--motion-distance-md)); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===================================================================
+       ProjectGrid — portfolio's CORE module. Personal-scale grid:
+       1-up on mobile, 2-up on tablet, asymmetric 3-up on wide. Each
+       card reads like a magazine spread — large soft-radius cover,
+       serif title, mono year + role meta below.
+
+       Hover: cover lifts a half-step, title shifts to accent, "view"
+       affordance underline-slides in. No drop shadows beyond a quiet
+       paper-shadow on the cover.
+       =================================================================== */
+    .project-grid {
+        padding: 5rem 2.5rem;
+        max-width: 1400px;
+        margin: 0 auto;
+
+        &__head {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 1rem 2rem;
+            align-items: end;
+            margin-bottom: 4rem;
+            padding-bottom: 1.75rem;
+            border-bottom: 1px solid var(--color-rule);
+        }
+
+        &__num {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+            text-transform: lowercase;
+            color: var(--color-accent);
+            padding-top: 0.5rem;
+        }
+
+        &__title {
+            font-family: var(--font-display);
+            font-weight: 400;
+            font-variation-settings: 'opsz' 144, 'SOFT' 80;
+            font-size: clamp(2rem, 4.5vw, 3.5rem);
+            line-height: 1.05;
+            letter-spacing: -0.025em;
+            margin: 0;
+            color: var(--color-ink);
+        }
+
+        &__sub {
+            font-family: var(--font-body);
+            font-size: 1rem;
+            line-height: 1.5;
+            color: var(--ink-2);
+            grid-column: 2;
+            max-width: 56ch;
+        }
+
+        &__items {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 4rem 2rem;
+
+            @media (min-width: 720px) {
+                grid-template-columns: repeat(2, 1fr);
+                // Soft asymmetric rhythm — every 3rd item nudges down
+                // a quarter row. Less aggressive than agency's offset.
+                .project-grid__item-wrap:nth-child(even) { transform: translateY(2rem); }
+            }
+        }
+
+        &__item-wrap { display: block; }
+
+        &__item {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            position: relative;
+        }
+
+        &__cover {
+            display: block;
+            width: 100%;
+            aspect-ratio: 4 / 5;
+            background: var(--color-surface-inset);
+            overflow: hidden;
+            position: relative;
+            border-radius: 8px;
+            box-shadow: 0 1px 0 var(--color-rule), 0 18px 40px -28px rgba(31, 26, 22, 0.18);
+            transition: box-shadow calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+                        transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-emphasized);
+
+            img,
+            .ant-image,
+            .ant-image-img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                border-radius: 8px;
+                transition: transform calc(var(--motion-duration-slow) * var(--motion-scalar)) var(--motion-ease-emphasized);
+            }
+        }
+
+        &__item:hover {
+            .project-grid__cover {
+                transform: translateY(-4px);
+                box-shadow: 0 1px 0 var(--color-rule), 0 28px 60px -28px rgba(31, 26, 22, 0.28);
+            }
+            .project-grid__cover img,
+            .project-grid__cover .ant-image-img { transform: scale(1.025); }
+            .project-grid__card-title { color: var(--color-accent); }
+            .project-grid__more {
+                color: var(--color-accent);
+                &::after { transform: translateX(4px); }
+            }
+        }
+
+        // Year-badge — soft pill, top-right of cover.
+        &__year {
+            position: absolute;
+            top: 0.875rem;
+            right: 0.875rem;
+            z-index: 2;
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.06em;
+            text-transform: lowercase;
+            color: var(--color-ink);
+            background: color-mix(in srgb, var(--color-surface) 90%, transparent);
+            backdrop-filter: blur(8px);
+            padding: 0.3rem 0.625rem;
+            border-radius: 999px;
+            border: 1px solid var(--color-rule);
+        }
+
+        &__art {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-display);
+            font-style: italic;
+            font-size: clamp(3.5rem, 9vw, 7rem);
+            color: var(--ink-3);
+            pointer-events: none;
+        }
+
+        // Meta strip below the cover — title, role, mono year.
+        &__meta {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 0.5rem 1.25rem;
+            padding: 1.25rem 0.25rem 0;
+            margin-top: 0.25rem;
+        }
+
+        &__meta-main { display: flex; flex-direction: column; gap: 0.35rem; }
+
+        &__card-title {
+            font-family: var(--font-display);
+            font-weight: 500;
+            font-variation-settings: 'opsz' 96, 'SOFT' 60;
+            font-size: clamp(1.375rem, 2.4vw, 1.875rem);
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            color: var(--color-ink);
+            margin: 0;
+            transition: color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+        }
+
+        &__stack {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.06em;
+            text-transform: lowercase;
+            color: var(--ink-2);
+        }
+
+        &__kind {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.06em;
+            text-transform: lowercase;
+            color: var(--color-accent);
+            align-self: start;
+            padding-top: 0.35rem;
+        }
+
+        &__more {
+            grid-column: 1 / -1;
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            color: var(--ink-2);
+            margin-top: 0.5rem;
+            transition: color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &::after {
+                content: '  \2192';
+                display: inline-block;
+                transition: transform calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-emphasized);
+            }
+        }
+
+        @media (max-width: 720px) {
+            padding: 3rem 1.25rem;
+            &__head { grid-template-columns: 1fr; }
+            &__sub { grid-column: 1; }
+        }
+    }
+
+    // ProjectCard — single-card variant of the same vocabulary.
+    .project-card {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        margin: 3rem auto;
+        max-width: 1100px;
+        padding: 0 2rem;
+
+        .project-card__cover,
+        & > img {
+            width: 100%;
+            aspect-ratio: 16 / 10;
+            object-fit: cover;
+            background: var(--color-surface-inset);
+            border-radius: 12px;
+            box-shadow: 0 1px 0 var(--color-rule), 0 20px 50px -28px rgba(31, 26, 22, 0.2);
+            transition: transform calc(var(--motion-duration-slow) * var(--motion-scalar)) var(--motion-ease-emphasized);
+        }
+
+        .project-card__title,
+        & h3 {
+            font-family: var(--font-display);
+            font-weight: 500;
+            font-variation-settings: 'opsz' 144, 'SOFT' 80;
+            font-size: clamp(1.625rem, 3.5vw, 2.5rem);
+            letter-spacing: -0.025em;
+            line-height: 1.05;
+            margin: 1.5rem 0 0.5rem;
+            color: var(--color-ink);
+            transition: color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+        }
+
+        .project-card__meta {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.06em;
+            text-transform: lowercase;
+            color: var(--ink-2);
+        }
+
+        &:hover {
+            .project-card__title, & h3 { color: var(--color-accent); }
+            & > img, .project-card__cover { transform: translateY(-3px); }
+        }
+    }
+
+    /* ===================================================================
+       Gallery — VARIANT: MAGAZINE-SPREAD. Soft asymmetric grid for the
+       image-led work showcase. Real DOM:
+       `.gallery-wrapper.gallery-wrapper-app > .gallery-wrapper-images
+        > .container > (.image, .text)`.
+
+       Structural axis vs siblings:
+         editorial = broken grid (warm/serif)
+         agency = horizontal banner OR sharp masonry
+         commerce = tight uniform grid
+         saas = depth stack
+       portfolio = SOFT MAGAZINE SPREAD — same asymmetric idea as agency
+       but with 8px corners, paper-shadows, and slow image reveals.
+       =================================================================== */
+    .gallery-wrapper.gallery-wrapper-app {
+        &.default, &.Default, &.masonry, &.BorderedAlignedByThree {
+            padding: 3rem 2rem;
+            max-width: 1500px;
+            margin: 0 auto;
+
+            .gallery-wrapper-images {
+                display: grid;
+                grid-template-columns: repeat(6, 1fr);
+                grid-auto-rows: 11rem;
+                gap: 1.25rem;
+                width: auto;
+            }
+
+            .container {
+                grid-column: span 2;
+                grid-row: span 2;
+                width: auto;
+                height: auto;
+                margin: 0;
+                border-radius: 10px;
+                background: var(--color-surface-inset);
+                overflow: hidden;
+                position: relative;
+                box-shadow: 0 1px 0 var(--color-rule), 0 14px 30px -22px rgba(31, 26, 22, 0.18);
+
+                // Asymmetric span rhythm — hero tiles every 7 items.
+                &:nth-child(7n + 1) { grid-column: span 3; grid-row: span 3; }
+                &:nth-child(7n + 4) { grid-column: span 3; grid-row: span 2; }
+                &:nth-child(7n + 6) { grid-column: span 4; grid-row: span 2; }
+
+                .image {
+                    aspect-ratio: auto;
+                    width: 100%;
+                    height: 100%;
+                    .ant-image, img { width: 100%; height: 100%; }
+                    img {
+                        object-fit: cover;
+                        transition: transform calc(var(--motion-duration-slow) * var(--motion-scalar)) var(--motion-ease-emphasized);
+                    }
+                }
+
+                &:hover .image img { transform: scale(1.03); }
+
+                .text {
+                    position: absolute;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    padding: 1.25rem;
+                    background: linear-gradient(180deg, transparent, rgba(20, 16, 12, 0.7));
+                    p {
+                        margin: 0;
+                        font-family: var(--font-mono);
+                        font-size: 0.75rem;
+                        letter-spacing: 0.06em;
+                        text-transform: lowercase;
+                        color: var(--color-surface);
+                        border-top: 0;
+                    }
+                }
+            }
+
+            .gallery-tile--text {
+                background: var(--color-accent);
+                display: flex;
+                align-items: center;
+                .text {
+                    position: static;
+                    background: none;
+                    padding: 2rem;
+                    p {
+                        font-family: var(--font-display);
+                        font-style: italic;
+                        font-weight: 400;
+                        font-size: 1.625rem;
+                        line-height: 1.15;
+                        text-transform: none;
+                        letter-spacing: -0.02em;
+                        color: var(--color-accent-ink);
+                    }
+                }
+            }
+        }
+
+        @media (max-width: 900px) {
+            &.default, &.Default, &.masonry, &.BorderedAlignedByThree {
+                .gallery-wrapper-images { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 8rem; }
+                .container,
+                .container:nth-child(7n + 1),
+                .container:nth-child(7n + 4),
+                .container:nth-child(7n + 6) { grid-column: span 1; grid-row: span 2; }
+            }
+        }
+    }
+
+    /* ===================================================================
+       Timeline — VARIANT: VERTICAL SPINE. For a personal portfolio the
+       timeline tells a career story — chronological, intimate, reads
+       like a CV with breath. Centred spine on wide viewports;
+       left-anchored on mobile.
+
+       Structural axis vs siblings:
+         editorial = broken-grid alternation
+         commerce = compact vertical
+         restaurant = centred spine (similar)
+         agency / saas = horizontal track
+       portfolio = CENTRED SPINE with alternating side, but quieter
+       than restaurant — hairline rule, no decorations.
+       =================================================================== */
+    .timeline {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 4rem 1.5rem;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+
+        @media (min-width: 720px) {
+            // Centred spine rule.
+            &::before {
+                content: '';
+                position: absolute;
+                left: 50%;
+                top: 4rem;
+                bottom: 4rem;
+                width: 1px;
+                background: var(--color-rule);
+                transform: translateX(-0.5px);
+            }
+        }
+
+        &__entry {
+            position: relative;
+            padding: 1.75rem 0 1.75rem 2rem;
+            border-left: 1px solid var(--color-rule);
+
+            // Node — small terracotta dot on the rule.
+            &::before {
+                content: '';
+                position: absolute;
+                top: 2.1rem;
+                left: -5px;
+                width: 9px;
+                height: 9px;
+                background: var(--color-accent);
+                border-radius: 999px;
+                box-shadow: 0 0 0 4px var(--color-surface);
+            }
+
+            @media (min-width: 720px) {
+                border-left: 0;
+                padding: 1.75rem 0;
+                width: 50%;
+
+                // Alternating side rhythm — left / right of spine.
+                &:nth-child(odd) {
+                    padding-right: 3rem;
+                    text-align: right;
+                    &::before { left: auto; right: -5px; }
+                }
+                &:nth-child(even) {
+                    margin-left: 50%;
+                    padding-left: 3rem;
+                    &::before { left: -5px; }
+                }
+            }
+
+            .timeline__when {
+                font-family: var(--font-mono);
+                font-size: 0.75rem;
+                letter-spacing: 0.06em;
+                text-transform: lowercase;
+                color: var(--color-accent);
+                margin-bottom: 0.5rem;
+            }
+            .timeline__who {
+                font-family: var(--font-display);
+                font-weight: 500;
+                font-variation-settings: 'opsz' 96, 'SOFT' 60;
+                font-size: 1.25rem;
+                letter-spacing: -0.015em;
+                color: var(--color-ink);
+                margin-bottom: 0.25rem;
+            }
+            .timeline__what,
+            .timeline__body {
+                font-family: var(--font-body);
+                font-size: 0.9375rem;
+                line-height: 1.55;
+                color: var(--ink-2);
+            }
+        }
+    }
+
+    /* ===================================================================
+       SkillPills — lowercase pill set. Personal-portfolio reads
+       casually ("typography, motion, swift") not formally
+       ("TYPOGRAPHY · MOTION · SWIFT"). Soft rounded pills, hairline
+       border, accent on hover.
+       =================================================================== */
+    .skill-pills {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 2.5rem 2rem;
+
+        &__category {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+            text-transform: lowercase;
+            color: var(--ink-2);
+            margin: 0 0 1rem;
+            opacity: 1;
+            font-weight: 500;
+        }
+
+        &__list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+
+            .ant-tag {
+                font-family: var(--font-body);
+                font-size: 0.875rem;
+                font-weight: 500;
+                letter-spacing: -0.005em;
+                text-transform: lowercase;
+                background: transparent;
+                color: var(--color-ink);
+                border: 1px solid var(--color-rule);
+                border-radius: 999px;
+                padding: 0.4rem 0.875rem;
+                line-height: 1.2;
+                transition: border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                            color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                            background calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                            transform calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-emphasized);
+
+                &:hover {
+                    border-color: var(--color-accent);
+                    color: var(--color-accent);
+                    background: color-mix(in srgb, var(--color-accent) 7%, transparent);
+                    transform: translateY(-1px);
+                }
+            }
+        }
+
+        &__row {
+            padding: 0.625rem 0.75rem;
+            border-radius: 6px;
+            transition: background calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+            &:hover { background: var(--color-surface-inset); }
+        }
+    }
+
+    /* ===================================================================
+       Testimonials (testimonials-module) — hand-set pull-quote. The
+       portfolio version is intimate: client quote in serif italic,
+       opening glyph in accent, single column with generous gap.
+       =================================================================== */
+    .testimonials-module {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 5rem 2rem;
+
+        &__head {
+            margin-bottom: 4rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--color-rule);
+        }
+
+        &__title {
+            font-family: var(--font-display);
+            font-weight: 400;
+            font-variation-settings: 'opsz' 144, 'SOFT' 80;
+            font-size: clamp(1.875rem, 4vw, 3rem);
+            line-height: 1.05;
+            letter-spacing: -0.025em;
+            margin: 0 0 0.75rem;
+        }
+
+        &__sub {
+            font-family: var(--font-body);
+            font-size: 1rem;
+            color: var(--ink-2);
+            max-width: 56ch;
+        }
+
+        &__grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 4rem 3rem;
+
+            @media (min-width: 820px) {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        &__card {
+            position: relative;
+            padding: 2.75rem 0 0;
+
+            &::before {
+                content: '\201C';
+                position: absolute;
+                top: -1.25rem;
+                left: -0.25rem;
+                font-family: var(--font-display);
+                font-style: italic;
+                font-size: 5.5rem;
+                line-height: 0.6;
+                color: var(--color-accent);
+                font-weight: 400;
+            }
+        }
+
+        &__quote {
+            font-family: var(--font-display);
+            font-style: italic;
+            font-weight: 400;
+            font-variation-settings: 'opsz' 96, 'SOFT' 100;
+            font-size: clamp(1.25rem, 2vw, 1.625rem);
+            line-height: 1.35;
+            letter-spacing: -0.01em;
+            color: var(--color-ink);
+            margin: 0 0 1.75rem;
+            padding-bottom: 1.75rem;
+            border-bottom: 1px solid var(--color-rule);
+
+            quotes: none;
+            &::before, &::after { content: none; }
+        }
+
+        &__who {
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+        }
+
+        &__avatar {
+            width: 2.75rem;
+            height: 2.75rem;
+            border-radius: 999px;
+            background: var(--color-surface-inset);
+            border: 1px solid var(--color-rule);
+            flex-shrink: 0;
+            overflow: hidden;
+            img { width: 100%; height: 100%; object-fit: cover; }
+        }
+
+        &__name {
+            font-family: var(--font-display);
+            font-weight: 500;
+            font-size: 0.9375rem;
+            letter-spacing: -0.01em;
+            color: var(--color-ink);
+        }
+
+        &__role {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.06em;
+            text-transform: lowercase;
+            color: var(--ink-2);
+        }
+    }
+
+    .testimonial-wall {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 3.5rem 3rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 5rem 2rem;
+
+        @media (min-width: 820px) {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        &__card {
+            background: transparent;
+            border: 0;
+            border-radius: 0;
+            padding: 2.5rem 0 0;
+            position: relative;
+
+            &::before {
+                content: '\201C';
+                position: absolute;
+                top: -1rem;
+                left: -0.25rem;
+                font-family: var(--font-display);
+                font-style: italic;
+                font-size: 5.5rem;
+                line-height: 0.6;
+                color: var(--color-accent);
+                font-weight: 400;
+            }
+        }
+    }
+
+    /* ===================================================================
+       Manifesto — personal statement block. First-person display, em-
+       runs in accent italic. Where agency does the studio "we believe"
+       voice, portfolio does the human "I think" voice — quieter, more
+       considered, no oversized opening glyph.
+       =================================================================== */
+    .manifesto {
+        max-width: 980px;
+        margin: 6rem auto;
+        padding: 0 2rem;
+        position: relative;
+
+        &__body,
+        > p:first-of-type {
+            font-family: var(--font-display);
+            font-weight: 400;
+            font-variation-settings: 'opsz' 144, 'SOFT' 80;
+            font-size: clamp(1.625rem, 3.6vw, 2.75rem);
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+            color: var(--color-ink);
+            margin: 0;
+
+            // Em-runs become a quiet italic stress in accent.
+            .em-accent,
+            em {
+                font-style: italic;
+                font-variation-settings: 'opsz' 144, 'SOFT' 120;
+                color: var(--color-accent);
+                font-weight: 400;
+            }
+        }
+
+        &__addendum,
+        > p:nth-of-type(2) {
+            font-family: var(--font-body);
+            font-size: 1.0625rem;
+            line-height: 1.6;
+            color: var(--ink-2);
+            margin-top: 2rem;
+            max-width: 56ch;
+        }
+
+        // Chip strip — soft pill, hairline, accent on hover.
+        &__chip {
+            font-family: var(--font-body);
+            font-size: 0.8125rem;
+            font-weight: 500;
+            letter-spacing: -0.005em;
+            text-transform: lowercase;
+            color: var(--color-ink);
+            border: 1px solid var(--color-rule);
+            background: transparent;
+            border-radius: 999px;
+            padding: 0.35rem 0.75rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                        color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &:hover { border-color: var(--color-accent); color: var(--color-accent); }
+        }
+
+        &__chip-thumb {
+            width: 0.75rem;
+            height: 0.75rem;
+            border: 1px solid var(--color-rule);
+            border-radius: 999px;
+            display: inline-block;
+        }
+    }
+
+    /* ===================================================================
+       SocialLinks — prominent named for personal sites. The contact
+       surface for a freelancer / creator. Both compact (inline strip)
+       and channels (card grid with named platform + handle) variants
+       get a warm treatment — soft border, accent on hover.
+       =================================================================== */
+    .social-links {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 2rem;
+        gap: 0.75rem;
+
+        a {
+            font-family: var(--font-body);
+            font-weight: 500;
+            font-size: 0.9375rem;
+            padding: 0.55rem 0.9rem;
+            border-radius: 999px;
+            border: 1px solid var(--color-rule);
+            background: transparent;
+            color: var(--color-ink);
+            text-decoration: none;
+            transition: border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                        color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                        background calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                        transform calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-emphasized);
+
+            &:hover {
+                border-color: var(--color-accent);
+                color: var(--color-accent);
+                background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+                transform: translateY(-1px);
+            }
+        }
+
+        &.large a { font-size: 1.0625rem; padding: 0.7rem 1.15rem; }
+
+        // Channels strip — card grid with platform name + handle row.
+        &.channels {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+            padding: 0;
+
+            a {
+                display: grid;
+                grid-template-columns: auto 1fr auto;
+                gap: 0.875rem;
+                align-items: center;
+                padding: 1.25rem 1.25rem;
+                border-radius: 10px;
+                background: var(--color-surface-inset);
+                border: 1px solid var(--color-rule);
+
+                .social-links__glyph,
+                svg {
+                    width: 1.25rem;
+                    height: 1.25rem;
+                    color: var(--color-accent);
+                }
+
+                .social-links__label,
+                .social-links__name {
+                    font-family: var(--font-display);
+                    font-weight: 500;
+                    font-size: 1.0625rem;
+                    letter-spacing: -0.015em;
+                    color: var(--color-ink);
+                }
+
+                .social-links__handle,
+                .social-links__sub {
+                    grid-column: 2;
+                    font-family: var(--font-mono);
+                    font-size: 0.75rem;
+                    letter-spacing: 0.04em;
+                    text-transform: lowercase;
+                    color: var(--ink-2);
+                }
+
+                .social-links__open,
+                .social-links__cta {
+                    font-family: var(--font-mono);
+                    font-size: 0.6875rem;
+                    letter-spacing: 0.08em;
+                    text-transform: lowercase;
+                    color: var(--ink-2);
+                    transition: color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+                }
+
+                &:hover {
+                    border-color: var(--color-accent);
+                    background: var(--color-surface);
+                    transform: translateY(-2px);
+                    .social-links__open,
+                    .social-links__cta { color: var(--color-accent); }
+                }
+            }
+        }
+    }
+
+    /* ===================================================================
+       SectionHeading — portfolio override. Mono lowercase eyebrow,
+       serif display heading, italic-styled subtitle. The portfolio
+       voice is quiet — the section heading shouldn't shout.
+       =================================================================== */
+    .section-heading {
+        margin: 0 auto;
+        padding: 4rem 2rem 2.5rem;
+        max-width: 1300px;
+
+        .sh-root {
+            display: grid;
+            gap: 0.875rem;
+            border-bottom: 1px solid var(--color-rule);
+            padding-bottom: 1.75rem;
+        }
+
+        .sh-eyebrow {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+            text-transform: lowercase;
+            color: var(--color-accent);
+            font-style: normal;
+            margin: 0;
+            &::before { font-style: normal; }
+        }
+
+        .sh-heading {
+            font-family: var(--font-display);
+            font-weight: 400;
+            font-variation-settings: 'opsz' 144, 'SOFT' 80;
+            font-size: clamp(2rem, 4.5vw, 3.5rem);
+            line-height: 1.05;
+            letter-spacing: -0.025em;
+            color: var(--color-ink);
+            margin: 0;
+        }
+
+        .sh-subtitle {
+            font-family: var(--font-display);
+            font-style: italic;
+            font-variation-settings: 'opsz' 96, 'SOFT' 100;
+            font-size: 1.1875rem;
+            line-height: 1.45;
+            color: var(--ink-2);
+            max-width: 56ch;
+            margin: 0;
+        }
+
+        &.centered-marquee .sh-root {
+            text-align: center;
+            border-bottom: 0;
+        }
+    }
+
+    /* ===================================================================
+       KeyValueDossier — "credits" treatment for personal portfolio.
+       Hairline-ruled rows with mono lowercase label column and serif
+       value column. Reads like a film-credit roll.
+       =================================================================== */
+    .key-value-dossier {
+        max-width: 1100px;
+        margin: 3rem auto;
+        padding: 0 2rem;
+
+        .kvd-root {
+            background: transparent;
+            color: var(--color-ink);
+            font-family: var(--font-body);
+            border: 0;
+            padding: 0;
+        }
+
+        .kvd-title {
+            font-family: var(--font-display);
+            font-weight: 500;
+            font-variation-settings: 'opsz' 96, 'SOFT' 60;
+            font-size: clamp(1.375rem, 2.6vw, 2rem);
+            letter-spacing: -0.02em;
+            line-height: 1.05;
+            color: var(--color-ink);
+            border-bottom: 1px solid var(--color-rule);
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .kvd-list { margin: 0; padding: 0; }
+
+        .kvd-row {
+            display: grid;
+            grid-template-columns: 12rem 1fr;
+            gap: 1.5rem;
+            padding: 0.875rem 0;
+            border-bottom: 1px solid var(--color-rule);
+            align-items: baseline;
+
+            &:last-child { border-bottom: 0; }
+
+            dt,
+            .kvd-label,
+            > :first-child {
+                font-family: var(--font-mono);
+                font-size: 0.6875rem;
+                letter-spacing: 0.08em;
+                text-transform: lowercase;
+                color: var(--ink-2);
+                margin: 0;
+            }
+
+            dd,
+            .kvd-value,
+            > :last-child {
+                font-family: var(--font-display);
+                font-weight: 400;
+                font-size: 1.0625rem;
+                letter-spacing: -0.01em;
+                color: var(--color-ink);
+                margin: 0;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .kvd-row { grid-template-columns: 1fr; gap: 0.25rem; }
+        }
+    }
+
+    /* ===================================================================
+       List (list-module) — credits, awards, publications. The case
+       variant becomes a chronological work list with year prefix in
+       accent mono; the facts variant becomes a credits roll; the
+       paper-grid stays a soft card set.
+       =================================================================== */
+    .list-module {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 3rem 2rem;
+
+        &__title {
+            font-family: var(--font-display);
+            font-weight: 500;
+            font-variation-settings: 'opsz' 96, 'SOFT' 60;
+            font-size: clamp(1.625rem, 3.2vw, 2.5rem);
+            letter-spacing: -0.02em;
+            line-height: 1.05;
+            margin: 0 0 2.25rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--color-rule);
+        }
+
+        // Paper-grid — soft 10px cards on inset surface.
+        &__paper-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1rem;
+        }
+
+        &__pg-card {
+            background: var(--color-surface-inset);
+            border: 1px solid var(--color-rule);
+            border-radius: 10px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            transition: border-color calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+                        transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-emphasized);
+
+            &:hover {
+                border-color: var(--color-accent);
+                transform: translateY(-2px);
+            }
+        }
+
+        &__pg-ord {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.08em;
+            text-transform: lowercase;
+            color: var(--color-accent);
+        }
+
+        &__pg-label {
+            font-family: var(--font-display);
+            font-weight: 500;
+            font-size: 1.0625rem;
+            letter-spacing: -0.01em;
+            color: var(--color-ink);
+        }
+
+        &__pg-meta {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.06em;
+            color: var(--ink-2);
+            text-transform: lowercase;
+        }
+
+        &__pg-value {
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            color: var(--ink-2);
+            margin: 0;
+        }
+
+        // Cases variant — chronological work list with year prefix.
+        &__cases {
+            display: flex;
+            flex-direction: column;
+            border-top: 1px solid var(--color-rule);
+        }
+
+        &__case {
+            display: grid;
+            grid-template-columns: 6rem 1fr;
+            gap: 2rem;
+            padding: 1.75rem 0;
+            border-bottom: 1px solid var(--color-rule);
+            text-decoration: none;
+            color: inherit;
+            transition: background calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &:hover {
+                background: var(--color-surface-inset);
+
+                .list-module__case-title { color: var(--color-accent); }
+            }
+
+            @media (max-width: 600px) {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+                padding: 1.25rem 0;
+            }
+        }
+
+        &__case-prefix {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            padding-left: 0.25rem;
+        }
+
+        &__case-prefix-main {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+            text-transform: lowercase;
+            color: var(--color-accent);
+        }
+
+        &__case-prefix-sub {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.06em;
+            color: var(--ink-2);
+            text-transform: lowercase;
+        }
+
+        &__case-body { display: flex; flex-direction: column; gap: 0.5rem; }
+
+        &__case-title {
+            font-family: var(--font-display);
+            font-weight: 500;
+            font-variation-settings: 'opsz' 96, 'SOFT' 60;
+            font-size: clamp(1.375rem, 2.4vw, 1.875rem);
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            color: var(--color-ink);
+            margin: 0;
+            transition: color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+        }
+
+        &__case-meta {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.08em;
+            text-transform: lowercase;
+            color: var(--ink-2);
+        }
+
+        &__case-desc {
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            line-height: 1.55;
+            color: var(--ink-2);
+            margin: 0;
+            max-width: 64ch;
+        }
+
+        &__case-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-top: 0.25rem;
+        }
+
+        &__case-tag {
+            font-family: var(--font-body);
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: -0.005em;
+            text-transform: lowercase;
+            color: var(--color-ink);
+            border: 1px solid var(--color-rule);
+            background: transparent;
+            padding: 0.25rem 0.6rem;
+            border-radius: 999px;
+        }
+
+        // Facts variant — credits-roll.
+        &__facts {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            border-top: 1px solid var(--color-rule);
+        }
+
+        &__facts-row {
+            display: grid;
+            grid-template-columns: 12rem 1fr;
+            gap: 1.5rem;
+            padding: 0.875rem 0;
+            border-bottom: 1px solid var(--color-rule);
+            align-items: baseline;
+
+            > :first-child {
+                font-family: var(--font-mono);
+                font-size: 0.6875rem;
+                letter-spacing: 0.08em;
+                text-transform: lowercase;
+                color: var(--ink-2);
+            }
+
+            > :last-child {
+                font-family: var(--font-display);
+                font-weight: 400;
+                font-size: 1.0625rem;
+                color: var(--color-ink);
+            }
+        }
+
+        &__items {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+
+            li {
+                display: flex;
+                justify-content: space-between;
+                gap: 1.5rem;
+                padding: 0.875rem 0;
+                border-bottom: 1px solid var(--color-rule);
+            }
+        }
+
+        &__label {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+            text-transform: lowercase;
+            color: var(--ink-2);
+        }
+
+        &__value {
+            font-family: var(--font-display);
+            font-weight: 400;
+            color: var(--color-ink);
+        }
+    }
+
+    /* ===================================================================
+       Buttons + CTAs — soft 8px corners, body-font label, accent fill
+       primary, ghost secondary. No uppercase shouting; this is a
+       personal site, not a sales floor.
+       =================================================================== */
+    .buy-cta, .place-order-button, .cart-actions__proceed, .add-to-cart-button,
+    .car-reservation-cta__reserve, .product-detail-hero__cta, .pricing-table__cta,
+    .empty-state-block__action--primary, .magic-link-request-form button[type="submit"],
+    .car-finance-estimator__submit, .reservation-widget__submit,
+    .event-buy-tickets-cta__trigger {
+        background: var(--color-accent);
+        color: var(--color-accent-ink);
+        border: 1px solid var(--color-accent);
+        border-radius: 999px;
+        font-family: var(--font-body);
+        font-weight: 500;
+        font-size: 0.9375rem;
+        letter-spacing: -0.005em;
+        text-transform: none;
+        padding: 0.7rem 1.4rem;
+        min-height: 44px;
+        transition: background calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                    border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                    transform calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-emphasized);
+
+        &:hover:not(:disabled) {
+            background: var(--accent-hover);
+            border-color: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        &:active:not(:disabled) { transform: translateY(0); }
+    }
+
+    /* ===================================================================
+       Cards (product, pricing, feature, account, etc.) — soft 10px
+       radii, hairline border, gentle hover lift. No drop shadows
+       except a quiet paper-shadow on hover.
+       =================================================================== */
+    .product-card, .car-listing-card, .pricing-table__plan,
+    .feature-grid__card, .changelog-timeline__entry,
+    .speaker-grid__card, .integration-grid__tile,
+    .project-tile-grid__cell, .saved-search-list__row,
+    .account-dashboard-grid__cell, .wishlist-grid__cell,
+    .car-vdp__trust-item, .testimonial-wall__card,
+    .empty-state-block, .save-search-prompt, .vat-badge {
+        border-radius: 10px;
+    }
+
+    .product-card, .car-listing-card,
+    .feature-grid__card, .pricing-table__plan,
+    .project-tile-grid__cell {
+        border: 1px solid var(--color-rule);
+        background: var(--color-surface);
+        transition: border-color calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+                    box-shadow calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+                    transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-emphasized);
+
+        &:hover {
+            border-color: color-mix(in srgb, var(--color-accent) 50%, var(--color-rule));
+            box-shadow: 0 18px 40px -28px rgba(31, 26, 22, 0.18);
+            transform: translateY(-2px);
+        }
+    }
+
+    /* ===================================================================
+       Breadcrumb + cadence chips — mono lowercase, soft.
+       =================================================================== */
+    .breadcrumb,
+    .saved-search-list__cadence,
+    .vat-badge,
+    .order-progress-timeline__step-label {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        letter-spacing: 0.06em;
+        text-transform: lowercase;
+        color: var(--ink-2);
+    }
+
+    /* ===================================================================
+       Project tile grid — soft-card variant of the project showcase.
+       =================================================================== */
+    .project-tile-grid {
+        column-gap: 1.5rem;
+
+        .project-tile {
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            transition: transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-emphasized);
+
+            &:hover { transform: translateY(-3px); }
+            &__title {
+                font-family: var(--font-display);
+                font-weight: 500;
+                letter-spacing: -0.015em;
+            }
+        }
+    }
+
+    /* ===================================================================
+       Process timeline — vertical, mono lowercase dates, accent dots.
+       =================================================================== */
+    .process-timeline {
+        &__date {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.06em;
+            text-transform: lowercase;
+            color: var(--ink-2);
+        }
+
+        &__title {
+            font-family: var(--font-display);
+            font-weight: 500;
+            letter-spacing: -0.015em;
+        }
+
+        &__dot { background: var(--color-accent); border-radius: 999px; }
+    }
+
+    /* ===================================================================
+       MetricsCallout — quiet version. Where agency turns metrics into
+       the signature big-number block, portfolio keeps numbers
+       restrained (a personal site doesn't brag in 6rem digits).
+       Serif numerals, mono lowercase labels.
+       =================================================================== */
+    .metrics-callout {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 2.5rem;
+        padding: 4rem 2rem;
+
+        &__item-value {
+            font-family: var(--font-display);
+            font-weight: 400;
+            font-variation-settings: 'opsz' 144, 'SOFT' 80;
+            font-size: clamp(2.25rem, 4.5vw, 3.5rem);
+            line-height: 1;
+            letter-spacing: -0.025em;
+            color: var(--color-ink);
+        }
+
+        &__item-description,
+        &__item-label {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.06em;
+            text-transform: lowercase;
+            color: var(--ink-2);
+            margin-top: 0.4rem;
+        }
+    }
+
+    /* ===================================================================
+       BeforeAfterSlider — soft 10px corner, accent drag handle.
+       =================================================================== */
+    .before-after-slider {
+        border-radius: 10px;
+
+        &__handle {
+            background: var(--color-accent);
+            border-radius: 999px;
+            width: 3px;
+
+            &::after {
+                background: var(--color-accent);
+                border-radius: 999px;
+                width: 36px;
+                height: 36px;
+                font-family: var(--font-body);
+                font-weight: 500;
+            }
+        }
+    }
+
+    /* ===================================================================
+       ServicesGridFancy — soft cards, accent-tint on hover (not full
+       fill — too aggressive for a personal site).
+       =================================================================== */
+    .services-grid-fancy {
+        &__card {
+            background: var(--color-surface-inset);
+            border: 1px solid var(--color-rule);
+            border-radius: 10px;
+            padding: 2rem;
+            transition: transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-emphasized),
+                        border-color calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+                        background calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &:hover {
+                transform: translateY(-4px);
+                border-color: var(--color-accent);
+                background: color-mix(in srgb, var(--color-accent) 6%, var(--color-surface-inset));
+            }
+
+            &__title {
+                font-family: var(--font-display);
+                font-weight: 500;
+                font-size: 1.375rem;
+                letter-spacing: -0.015em;
+            }
+        }
+    }
+
+    /* ===================================================================
+       Footer — minimal personal. Wordmark / signature on top, then a
+       single column of contact + social links. No multi-column nav —
+       this is a personal site, not a SaaS.
+       =================================================================== */
+    .site-footer {
+        background: var(--color-surface);
+        color: var(--color-ink);
+        padding: 5rem 2rem 3rem;
+        border-top: 1px solid var(--color-rule);
+
+        > .site-footer__wordmark,
+        .site-footer__brand {
+            font-family: var(--font-display);
+            font-style: italic;
+            font-weight: 400;
+            font-variation-settings: 'opsz' 144, 'SOFT' 120;
+            font-size: clamp(2.25rem, 6vw, 4rem);
+            letter-spacing: -0.025em;
+            line-height: 1;
+            color: var(--color-ink);
+            margin: 0 0 2.5rem;
+            display: block;
+        }
+
+        h4, .site-footer__heading {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: lowercase;
+            color: var(--ink-2);
+            margin-bottom: 0.875rem;
+        }
+
+        a {
+            color: var(--color-ink);
+            text-decoration: none;
+            font-family: var(--font-body);
+            font-weight: 500;
+            font-size: 0.9375rem;
+            letter-spacing: -0.005em;
+            transition: color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+        }
+
+        a:hover { color: var(--color-accent); }
+
+        .site-footer__columns,
+        > .site-footer__cols {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 2rem 2.5rem;
+            padding-bottom: 2.5rem;
+            border-bottom: 1px solid var(--color-rule);
+        }
+
+        .site-footer__column,
+        .site-footer__col {
+            display: flex;
+            flex-direction: column;
+            gap: 0.625rem;
+        }
+
+        .site-footer__contact,
+        .site-footer__address {
+            font-family: var(--font-mono);
+            font-size: 0.8125rem;
+            letter-spacing: 0.02em;
+            color: var(--ink-2);
+            line-height: 1.55;
+        }
+
+        .site-footer__meta,
+        .site-footer__legal {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.25rem;
+            margin-top: 1.75rem;
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.06em;
+            text-transform: lowercase;
+            color: var(--ink-2);
+        }
+    }
+
+    /* ===================================================================
+       All shipped modules — apply portfolio typography vocabulary
+       (Inter body, Fraunces serif display, mono lowercase metadata).
+       =================================================================== */
+    .cart-line-items, .cart-summary, .cart-actions, .checkout-progress-bar,
+    .checkout-address-form, .checkout-shipping-method, .checkout-payment-form,
+    .checkout-cart-summary, .place-order-button, .order-summary,
+    .magic-link-account-upgrade, .account-welcome, .shipping-calculator,
+    .download-invoice-button, .trust-badges, .money-back-guarantee,
+    .refer-a-friend-cta, .social-share-buttons,
+    .car-vdp, .order-detail-module, .order-progress-timeline,
+    .wishlist-grid, .saved-search-list, .account-dashboard-grid,
+    .magic-link-request-form, .magic-link-confirmation,
+    .oauth-button-stack, .pricing-table, .feature-grid,
+    .product-screenshot-hero, .logo-cloud,
+    .integration-grid, .changelog-timeline,
+    .restaurant-menu, .reservation-widget, .opening-hours, .contact-block,
+    .countdown-timer, .event-schedule-agenda, .speaker-grid,
+    .sponsor-strip, .event-buy-tickets-cta, .event-hero-video,
+    .empty-state-block, .sticky-cta-bar, .comparison-table,
+    .save-search-prompt {
+        font-family: var(--font-body);
+
+        h1, h2, h3, h4 {
+            font-family: var(--font-display);
+            font-weight: 500;
+            letter-spacing: -0.02em;
+        }
+    }
+
+    /* invisible primitives — no overrides */
+    .schema-org-injector { /* noop */ }
+    .cookie-consent-banner { /* forward-stub */ }
+}
