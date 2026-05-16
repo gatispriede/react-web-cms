@@ -558,6 +558,1062 @@
         h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.02em; }
     }
 
+    /* ===================================================================
+       Hero — FULL-BLEED PHOTO COVER. When the hero declares
+       `.is-fullbleed`, the agency variant becomes a cinematic
+       portfolio-cover: the background photo runs edge-to-edge, the
+       headline is bottom-left aligned over a dark wash, and the meta
+       strip becomes a credit line at the foot. This is the
+       Pentagram / Instrument / R/GA project-cover treatment — the
+       headline IS the design, but the photo is the ground.
+
+       Falls back gracefully when no `.is-fullbleed` modifier is
+       present — the centred-overlay default above still wins.
+       =================================================================== */
+    .hero.is-fullbleed {
+        min-height: 100vh;
+        align-items: flex-end;
+        justify-content: flex-start;
+        text-align: left;
+        padding: 0;
+        overflow: hidden;
+        color: var(--color-surface);
+
+        .hero__bg {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+
+            // Cinematic dark wash from the foot up — headline reads on
+            // any photo without us having to know the photo.
+            &::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background:
+                    linear-gradient(180deg, transparent 30%, rgba(0, 0, 0, 0.75) 100%),
+                    linear-gradient(90deg, rgba(0, 0, 0, 0.4) 0%, transparent 50%);
+            }
+
+            img { width: 100%; height: 100%; object-fit: cover; }
+        }
+
+        .hero__main {
+            position: relative;
+            z-index: 2;
+            margin: 0;
+            padding: 0 4vw 6rem;
+            max-width: 1600px;
+            width: 100%;
+        }
+
+        // Eyebrow becomes a mono credit-line above the headline.
+        .hero__eyebrow {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--color-accent);
+            margin-bottom: 1.5rem;
+        }
+
+        h1,
+        .hero__headline {
+            color: var(--color-surface);
+            mix-blend-mode: normal;
+            font-size: clamp(3rem, 10vw, 8rem);
+            max-width: 18ch;
+            text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+        }
+
+        .hero__subtitle,
+        .hero__tagline {
+            color: color-mix(in srgb, var(--color-surface) 80%, transparent);
+            max-width: 60ch;
+        }
+
+        // Meta strip becomes a credit line at the foot — date, client,
+        // discipline. Mono, hairline-separated, accent on the role.
+        .hero__meta,
+        .hero__coords {
+            justify-content: flex-start;
+            border-top: 1px solid color-mix(in srgb, var(--color-surface) 30%, transparent);
+            padding-top: 1rem;
+            margin-top: 2.5rem;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: color-mix(in srgb, var(--color-surface) 70%, transparent);
+            gap: 2rem;
+        }
+
+        // Portrait corners + label become accent-tinted in fullbleed mode.
+        .hero__portrait { display: none; } // fullbleed uses bg, not portrait
+    }
+
+    /* ===================================================================
+       ProjectGrid — agency's CORE module. Named editorial project cards
+       with full-bleed cover, headline + metadata strip below. The grid
+       is a single column on mobile, then 2-up at >=720px, then offset
+       2-up on wide viewports (asymmetric rhythm — cards alternate
+       vertical offset for a magazine-spread feel).
+
+       Hover: cover image slow-zooms (no scale-clipping), card lifts a
+       hairline, the "View work →" affordance reveals. No drop-shadows,
+       no gradient halos — restraint is the look.
+       =================================================================== */
+    .project-grid {
+        padding: 5rem 2rem;
+        max-width: 1600px;
+        margin: 0 auto;
+
+        &__head {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 1.5rem 2rem;
+            align-items: end;
+            margin-bottom: 4rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--color-rule);
+        }
+
+        &__num {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--color-accent);
+            align-self: start;
+            padding-top: 0.5rem;
+        }
+
+        &__title {
+            font-family: var(--font-display);
+            font-size: clamp(2.25rem, 5vw, 4rem);
+            font-weight: 700;
+            line-height: 0.95;
+            letter-spacing: -0.04em;
+            margin: 0;
+        }
+
+        &__sub {
+            font-family: var(--font-body);
+            font-size: 1rem;
+            color: var(--ink-2);
+            grid-column: 2;
+            max-width: 60ch;
+        }
+
+        &__items {
+            display: grid;
+            grid-template-columns: 1fr;
+            column-gap: 2rem;
+            row-gap: 5rem;
+
+            @media (min-width: 720px) {
+                grid-template-columns: repeat(2, 1fr);
+
+                // Asymmetric offset rhythm — every second item drops by
+                // a half-row. Magazine spread, not uniform grid.
+                .project-grid__item-wrap:nth-child(even) { transform: translateY(4rem); }
+            }
+        }
+
+        &__item-wrap { display: block; }
+
+        &__item {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            position: relative;
+        }
+
+        // Cover photo — large aspect, sharp 0-radius corners, slow
+        // zoom-out on hover.
+        &__cover {
+            display: block;
+            width: 100%;
+            aspect-ratio: 4 / 5;
+            background: var(--color-ink);
+            overflow: hidden;
+            position: relative;
+
+            img,
+            .ant-image,
+            .ant-image-img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                transition: transform calc(var(--motion-duration-slow) * var(--motion-scalar)) var(--motion-ease-emphasized);
+            }
+
+            &::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(180deg, transparent 60%, rgba(0, 0, 0, 0.4) 100%);
+                opacity: 0;
+                transition: opacity calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+            }
+        }
+
+        &__item:hover {
+            .project-grid__cover img,
+            .project-grid__cover .ant-image-img { transform: scale(1.04); }
+            .project-grid__cover::after { opacity: 1; }
+            .project-grid__more { color: var(--color-accent); }
+            .project-grid__card-title { color: var(--color-accent); }
+        }
+
+        // Year-badge over the cover, top-right, mono accent.
+        &__year {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            z-index: 2;
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--color-surface);
+            background: color-mix(in srgb, var(--color-accent) 90%, transparent);
+            padding: 0.25rem 0.625rem;
+            border-radius: 0;
+        }
+
+        &__art {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-display);
+            font-size: clamp(4rem, 12vw, 9rem);
+            color: var(--color-surface);
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        // Metadata strip below the cover — title, stack, kind, "more".
+        // Hairline rule on top, mono labels, restrained colour.
+        &__meta {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 0.75rem 1.5rem;
+            padding: 1.25rem 0 0;
+            border-top: 1px solid var(--color-rule);
+            margin-top: 1.25rem;
+        }
+
+        &__meta-main { display: flex; flex-direction: column; gap: 0.25rem; }
+
+        &__card-title {
+            font-family: var(--font-display);
+            font-size: clamp(1.5rem, 2.6vw, 2.25rem);
+            font-weight: 700;
+            line-height: 1;
+            letter-spacing: -0.03em;
+            color: var(--color-ink);
+            margin: 0;
+            transition: color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+        }
+
+        &__stack {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+        }
+
+        &__kind {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--color-accent);
+            align-self: start;
+            padding-top: 0.25rem;
+        }
+
+        &__more {
+            grid-column: 1 / -1;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+            margin-top: 0.5rem;
+            transition: color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &::after { content: '  \2192'; }
+        }
+
+        @media (max-width: 720px) {
+            padding: 3rem 1.25rem;
+            &__head { grid-template-columns: 1fr; }
+            &__sub { grid-column: 1; }
+            &__items { row-gap: 3rem; }
+        }
+    }
+
+    // ProjectCard — single-card variant of the same vocabulary.
+    .project-card {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        margin: 3rem auto;
+        max-width: 1200px;
+        padding: 0 2rem;
+
+        .project-card__cover,
+        & > img {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            object-fit: cover;
+            background: var(--color-ink);
+            border-radius: 0;
+            transition: transform calc(var(--motion-duration-slow) * var(--motion-scalar)) var(--motion-ease-emphasized);
+        }
+
+        .project-card__title,
+        & h3 {
+            font-family: var(--font-display);
+            font-size: clamp(1.75rem, 4vw, 3rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            line-height: 1;
+            margin: 1.5rem 0 0.5rem;
+            color: var(--color-ink);
+            transition: color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+        }
+
+        .project-card__meta {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+        }
+
+        &:hover {
+            .project-card__title, & h3 { color: var(--color-accent); }
+            & > img, .project-card__cover { transform: scale(1.02); }
+        }
+    }
+
+    /* ===================================================================
+       Gallery — additional MAGAZINE-SPREAD variant for `.masonry`.
+       Keeps the banner variant above intact for the default case; when
+       a gallery is explicitly authored as `.masonry` the agency look
+       becomes a tight asymmetric magazine spread instead of the
+       horizontal band — broken column-count rhythm with select tiles
+       spanning two rows. Targets the inline-defined masonry markup.
+       =================================================================== */
+    .gallery-wrapper.gallery-wrapper-app.masonry {
+        overflow: visible;
+        scroll-snap-type: none;
+        padding: 3rem 2rem;
+        max-width: 1600px;
+        margin: 0 auto;
+
+        .gallery-wrapper-images {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-auto-rows: 12rem;
+            gap: 1.25rem;
+            width: auto;
+            flex-wrap: initial;
+        }
+
+        .container {
+            width: auto;
+            height: auto;
+            grid-column: span 2;
+            grid-row: span 2;
+
+            // Asymmetric span rhythm.
+            &:nth-child(7n + 1) { grid-column: span 3; grid-row: span 3; }
+            &:nth-child(7n + 4) { grid-column: span 3; grid-row: span 2; }
+            &:nth-child(7n + 6) { grid-column: span 4; grid-row: span 2; }
+        }
+
+        @media (max-width: 900px) {
+            .gallery-wrapper-images { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 8rem; }
+            .container,
+            .container:nth-child(7n + 1),
+            .container:nth-child(7n + 4),
+            .container:nth-child(7n + 6) { grid-column: span 1; grid-row: span 2; }
+        }
+    }
+
+    /* ===================================================================
+       Testimonials (testimonials-module) — large pull-quote treatment.
+       Single-column on mobile, 2-up at >=720px. Each card is a stripped
+       editorial pull-quote — oversized opening glyph in coral, display
+       quote at clamp(1.5rem .. 2.25rem), hairline rule beneath the
+       quote, mono attribution under.
+       =================================================================== */
+    .testimonials-module {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 5rem 2rem;
+
+        &__head {
+            margin-bottom: 4rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--color-rule);
+        }
+
+        &__title {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 4vw, 3.25rem);
+            font-weight: 700;
+            line-height: 1;
+            letter-spacing: -0.04em;
+            margin: 0 0 0.75rem;
+        }
+
+        &__sub {
+            font-family: var(--font-body);
+            font-size: 1rem;
+            color: var(--ink-2);
+            max-width: 60ch;
+        }
+
+        &__grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 4rem 3rem;
+
+            @media (min-width: 720px) {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        &__card {
+            position: relative;
+            padding: 2.5rem 0 0;
+
+            &::before {
+                content: '\201C';
+                position: absolute;
+                top: -1rem;
+                left: -0.5rem;
+                font-family: var(--font-display);
+                font-size: 6rem;
+                line-height: 0.6;
+                color: var(--color-accent);
+                font-weight: 700;
+            }
+        }
+
+        &__quote {
+            font-family: var(--font-display);
+            font-size: clamp(1.375rem, 2.4vw, 2rem);
+            line-height: 1.2;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            color: var(--color-ink);
+            margin: 0 0 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--color-rule);
+
+            // Open + close quote glyphs hidden — the ::before glyph
+            // does the editorial duty.
+            quotes: none;
+            &::before, &::after { content: none; }
+        }
+
+        &__who {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        &__avatar {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            background: var(--color-surface-inset);
+            border: 1px solid var(--color-rule);
+            flex-shrink: 0;
+            overflow: hidden;
+
+            img { width: 100%; height: 100%; object-fit: cover; }
+        }
+
+        &__name {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 0.9375rem;
+            letter-spacing: -0.01em;
+            color: var(--color-ink);
+        }
+
+        &__role {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+        }
+    }
+
+    /* ===================================================================
+       Manifesto — agency "about us" block. Big display type, oversized
+       opening glyph in accent. Restrained, no halos, no gradients —
+       the type IS the design.
+       =================================================================== */
+    .manifesto {
+        max-width: 1200px;
+        margin: 6rem auto;
+        padding: 0 2rem;
+        position: relative;
+
+        &__body,
+        > p:first-of-type {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 5vw, 4rem);
+            line-height: 1.05;
+            font-weight: 700;
+            letter-spacing: -0.04em;
+            color: var(--color-ink);
+            margin: 0;
+
+            // Em-accent runs picked up by `<em class="em-accent">` — coral.
+            .em-accent {
+                color: var(--color-accent);
+                font-style: normal;
+            }
+        }
+
+        &__addendum,
+        > p:nth-of-type(2) {
+            font-family: var(--font-body);
+            font-size: 1.125rem;
+            line-height: 1.5;
+            color: var(--ink-2);
+            margin-top: 2.5rem;
+            max-width: 60ch;
+        }
+
+        &::before {
+            content: '\201C';
+            position: absolute;
+            top: -2rem;
+            left: 1rem;
+            font-family: var(--font-display);
+            font-size: clamp(6rem, 12vw, 12rem);
+            line-height: 0.5;
+            color: var(--color-accent);
+            font-weight: 700;
+            pointer-events: none;
+        }
+
+        // Chip strip — keep mono pill look, accent ring.
+        &__chip {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--color-ink);
+            border: 1px solid var(--color-rule);
+            background: transparent;
+            border-radius: 0;
+            padding: 0.4rem 0.75rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                        color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &:hover { border-color: var(--color-accent); color: var(--color-accent); }
+        }
+
+        &__chip-thumb {
+            width: 0.875rem;
+            height: 0.875rem;
+            border: 1px solid var(--color-rule);
+            display: inline-block;
+        }
+    }
+
+    /* ===================================================================
+       SectionHeading — agency override. The module ships `editorial`,
+       `tech-modern`, and `centered-marquee` base variants. For agency
+       theme we override the default variant landing on most sections
+       (`.section-heading.editorial` on agency body) to a stripped
+       all-caps mono eyebrow + oversized Geist display heading.
+       Pinned by theme attribute so this doesn't leak to editorial.
+       =================================================================== */
+    .section-heading {
+        margin: 0 auto;
+        padding: 4rem 2rem 2.5rem;
+        max-width: 1400px;
+
+        .sh-root {
+            display: grid;
+            gap: 1rem;
+            border-bottom: 1px solid var(--color-rule);
+            padding-bottom: 1.5rem;
+        }
+
+        .sh-eyebrow {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--color-accent);
+            font-style: normal;
+            margin: 0;
+
+            // The editorial variant ships a § NN prefix — strip the
+            // italic + serif inheritance, keep the prefix.
+            &::before { font-style: normal; }
+        }
+
+        .sh-heading {
+            font-family: var(--font-display);
+            font-size: clamp(2.25rem, 5vw, 4rem);
+            font-weight: 700;
+            line-height: 0.95;
+            letter-spacing: -0.04em;
+            color: var(--color-ink);
+            margin: 0;
+        }
+
+        .sh-subtitle {
+            font-family: var(--font-body);
+            font-size: 1.0625rem;
+            line-height: 1.45;
+            color: var(--ink-2);
+            font-style: normal;
+            max-width: 60ch;
+            margin: 0;
+        }
+
+        // Centered-marquee variant keeps centred alignment but agency
+        // typography vocabulary still wins.
+        &.centered-marquee .sh-root {
+            text-align: center;
+            border-bottom: 0;
+        }
+    }
+
+    /* ===================================================================
+       KeyValueDossier — agency "credits" treatment. Hairline-ruled
+       label/value rows with a mono uppercase label column and a
+       display-font value column. Replaces the default warm/serif
+       editorial styling under [data-theme-name="agency"].
+
+       Targets both the bare `.key-value-dossier > .kvd-*` markup and
+       any `[data-variant]` the module ships; agency wins on the body
+       attribute selector.
+       =================================================================== */
+    .key-value-dossier {
+        max-width: 1200px;
+        margin: 3rem auto;
+        padding: 0 2rem;
+
+        .kvd-root {
+            background: transparent;
+            color: var(--color-ink);
+            font-family: var(--font-body);
+            border: 0;
+            padding: 0;
+        }
+
+        .kvd-title {
+            font-family: var(--font-display);
+            font-size: clamp(1.5rem, 3vw, 2.25rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            line-height: 1;
+            color: var(--color-ink);
+            border-bottom: 1px solid var(--color-rule);
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .kvd-list { margin: 0; padding: 0; }
+
+        .kvd-row {
+            display: grid;
+            grid-template-columns: 11rem 1fr;
+            gap: 1.5rem;
+            padding: 0.875rem 0;
+            border-bottom: 1px solid var(--color-rule);
+            align-items: baseline;
+
+            &:last-child { border-bottom: 0; }
+
+            dt,
+            .kvd-label,
+            > :first-child {
+                font-family: var(--font-mono);
+                font-size: 0.6875rem;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                color: var(--ink-2);
+                margin: 0;
+            }
+
+            dd,
+            .kvd-value,
+            > :last-child {
+                font-family: var(--font-display);
+                font-size: 1.0625rem;
+                font-weight: 500;
+                letter-spacing: -0.01em;
+                color: var(--color-ink);
+                margin: 0;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .kvd-row { grid-template-columns: 1fr; gap: 0.25rem; }
+        }
+    }
+
+    /* ===================================================================
+       List (list-module) — case-card variant is agency's project
+       listing vocabulary. The paper-grid variant gets a sharp 0-radius
+       reskin; the cases variant becomes named project rows with a
+       prefix column (NN / year), title + meta + tags inline.
+       =================================================================== */
+    .list-module {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 3rem 2rem;
+
+        &__title {
+            font-family: var(--font-display);
+            font-size: clamp(1.75rem, 3.5vw, 2.75rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            line-height: 1;
+            margin: 0 0 2.5rem;
+            padding-bottom: 1.25rem;
+            border-bottom: 1px solid var(--color-rule);
+        }
+
+        // Paper-grid variant — sharp 0-radius cards on inset surface.
+        &__paper-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1rem;
+        }
+
+        &__pg-card {
+            background: var(--color-surface-inset);
+            border: 1px solid var(--color-rule);
+            border-radius: 0;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            transition: border-color calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+                        transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-emphasized);
+
+            &:hover {
+                border-color: var(--color-accent);
+                transform: translateY(-3px);
+            }
+        }
+
+        &__pg-ord {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--color-accent);
+        }
+
+        &__pg-label {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.0625rem;
+            letter-spacing: -0.01em;
+            color: var(--color-ink);
+        }
+
+        &__pg-meta {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.08em;
+            color: var(--ink-2);
+            text-transform: uppercase;
+        }
+
+        &__pg-value {
+            font-family: var(--font-body);
+            font-size: 0.875rem;
+            color: var(--ink-2);
+            margin: 0;
+        }
+
+        // Cases variant — named project rows. NN/year prefix in mono
+        // accent, title in display, meta + tags hairline-ruled below.
+        &__cases {
+            display: flex;
+            flex-direction: column;
+            border-top: 1px solid var(--color-rule);
+        }
+
+        &__case {
+            display: grid;
+            grid-template-columns: 7rem 1fr;
+            gap: 2rem;
+            padding: 2rem 0;
+            border-bottom: 1px solid var(--color-rule);
+            text-decoration: none;
+            color: inherit;
+            transition: background calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &:hover {
+                background: var(--color-surface-inset);
+
+                .list-module__case-title { color: var(--color-accent); }
+            }
+
+            @media (max-width: 600px) {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+                padding: 1.5rem 0;
+            }
+        }
+
+        &__case-prefix {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        &__case-prefix-main {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--color-accent);
+        }
+
+        &__case-prefix-sub {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.1em;
+            color: var(--ink-2);
+            text-transform: uppercase;
+        }
+
+        &__case-body { display: flex; flex-direction: column; gap: 0.5rem; }
+
+        &__case-title {
+            font-family: var(--font-display);
+            font-size: clamp(1.5rem, 2.6vw, 2.25rem);
+            font-weight: 700;
+            line-height: 1;
+            letter-spacing: -0.03em;
+            color: var(--color-ink);
+            margin: 0;
+            transition: color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+        }
+
+        &__case-meta {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+        }
+
+        &__case-desc {
+            font-family: var(--font-body);
+            font-size: 1rem;
+            line-height: 1.5;
+            color: var(--ink-2);
+            margin: 0;
+            max-width: 70ch;
+        }
+
+        &__case-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.25rem;
+        }
+
+        &__case-tag {
+            font-family: var(--font-mono);
+            font-size: 0.625rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--color-ink);
+            border: 1px solid var(--color-rule);
+            background: transparent;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0;
+        }
+
+        // Facts variant — definition list, mono labels, display values.
+        &__facts {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            border-top: 1px solid var(--color-rule);
+        }
+
+        &__facts-row {
+            display: grid;
+            grid-template-columns: 11rem 1fr;
+            gap: 1.5rem;
+            padding: 0.875rem 0;
+            border-bottom: 1px solid var(--color-rule);
+            align-items: baseline;
+
+            > :first-child {
+                font-family: var(--font-mono);
+                font-size: 0.6875rem;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                color: var(--ink-2);
+            }
+
+            > :last-child {
+                font-family: var(--font-display);
+                font-size: 1.0625rem;
+                font-weight: 500;
+                color: var(--color-ink);
+            }
+        }
+
+        // Plain-item variant — keep restrained.
+        &__items {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+
+            li {
+                display: flex;
+                justify-content: space-between;
+                gap: 1.5rem;
+                padding: 0.875rem 0;
+                border-bottom: 1px solid var(--color-rule);
+            }
+        }
+
+        &__label {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+        }
+
+        &__value {
+            font-family: var(--font-display);
+            font-weight: 500;
+            color: var(--color-ink);
+        }
+    }
+
+    /* ===================================================================
+       TestimonialWall — agency override of the generic wall. Same
+       editorial pull-quote vocabulary as testimonials-module — large
+       accent glyph, no card chrome, hairline rule under the quote.
+       =================================================================== */
+    .testimonial-wall {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 4rem 3rem;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 5rem 2rem;
+
+        @media (min-width: 720px) {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        &__card {
+            background: transparent;
+            border: 0;
+            border-radius: 0;
+            padding: 2.5rem 0 0;
+            position: relative;
+
+            &::before {
+                content: '\201C';
+                position: absolute;
+                top: -1rem;
+                left: -0.5rem;
+                font-family: var(--font-display);
+                font-size: 6rem;
+                line-height: 0.6;
+                color: var(--color-accent);
+                font-weight: 700;
+                opacity: 1;
+            }
+        }
+    }
+
+    /* ===================================================================
+       Footer — extend the existing brand-led XXL. Multi-column with
+       project / contact / studio sections; oversized wordmark slot at
+       top; mono section headings; display-font links.
+       =================================================================== */
+    .site-footer {
+        > .site-footer__wordmark,
+        .site-footer__brand {
+            font-family: var(--font-display);
+            font-size: clamp(3rem, 10vw, 8rem);
+            font-weight: 700;
+            letter-spacing: -0.05em;
+            line-height: 0.9;
+            color: var(--color-ink);
+            margin: 0 0 3rem;
+            display: block;
+        }
+
+        .site-footer__columns,
+        > .site-footer__cols {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 2.5rem 3rem;
+            padding-bottom: 3rem;
+            border-bottom: 1px solid var(--color-rule);
+        }
+
+        .site-footer__column,
+        .site-footer__col {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .site-footer__contact,
+        .site-footer__address {
+            font-family: var(--font-mono);
+            font-size: 0.8125rem;
+            letter-spacing: 0.04em;
+            color: var(--ink-2);
+            line-height: 1.5;
+        }
+
+        .site-footer__meta,
+        .site-footer__legal {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-top: 2rem;
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+        }
+    }
+
     /* invisible primitives — no overrides */
     .schema-org-injector { /* noop */ }
     .cookie-consent-banner { /* forward-stub */ }
