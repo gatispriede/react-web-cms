@@ -22,6 +22,9 @@
 # volume mount). No .gitkeep needed — git doesn't track empty dirs and nothing
 # here needs to survive a fresh clone.
 /uploads/
+# `.local/` is for ad-hoc dev artefacts — MCP migration payloads, scratch
+# JSON, smoke-test outputs. Never tracked.
+/.local/
 /ui/client/public/images
 /ui/client/public/temp
 /ui/client/public/uploads

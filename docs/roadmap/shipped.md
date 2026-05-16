@@ -2,6 +2,14 @@
 
 Archive of completed roadmap entries. Latest first. Active backlog lives in [README.md](README.md).
 
+## 2026-05-16 — Stitch pipeline POC #2 + zero-RichText-abuse milestone
+
+| # | Notes |
+|---|-------|
+| **SectionHeading module shipped + 20 sections migrated** | Second module through the Claude-design Stitch pipeline (commit `c4cb078`). Shape: `{eyebrow?, heading, subtitle?, align?}` — replaces the hand-typed `<h2>§ 01 · Title</h2><p><em>Subtitle</em></p>` pattern. Three style variants share JSX, theme SCSS picks the look: `editorial` (§ NN + serif + italic subtitle), `tech-modern` (saas-landing — violet mono eyebrow + sans display), `centered-marquee` (commerce — large centered marquee). Built end-to-end in ~25 min wall-clock via `npm run module:new` + claude-design + `npm run module:migrate` — well inside the ≤45-min acceptance bar set after module #1's retro. The optimization wave landed yesterday paid off. **Pipeline scaffolder bug surfaced + worked around manually:** the regex inserting the sample fixture matched the StatsStrip block's INNER `\n    ],\n` rather than the outer block close, breaking the surrounding samples array on first run. Tracked for the next tooling pass — every other scaffolder edit (6 file writes + 4 registry edits + 2 SCSS imports) landed cleanly. |
+| **Local site fully migrated — 0 RichText abuse patterns remaining** | Site-wide audit (`npm run stitch:audit`) drove the migration batch: 3 remaining KeyValueDossier sections (`cv-sec-cms-vitals`, `cv-sec-lss-vitals`, `cv-sec-home-matrix-row1` Languages list) + 20 SectionHeading sections (every § NN section head across Home / Contact / CMS / Android app). All 23 migrations went through `npm run module:migrate` against local MCP — the in-process `mcp:call` dispatch path with full validation + audit. Post-migration audit re-run: **0 occurrences across all 4 patterns** (`<dl><dt><dd>`, `<h2>` + `<p><em>`, `<ul><li><strong>`, hardcoded `class=` in RichText). The local site is now the reference shape — every structured-content piece is a typed module. Production migration deliberately not run (waiting on operator say-so per the standing "don't touch prod" instruction); the script-driven path means it's one command per page when ready. |
+| **`.local/` gitignored** | Workspace folder for ad-hoc dev artefacts (MCP migration payloads, scratch JSON, smoke-test outputs). Three KVD migration payloads from today's run live there. Pattern added to `.gitignore`. |
+
 ## 2026-05-16 — app-router-migration (Batch 2 — mongo re-entry guard + revalidate dual-mode)
 
 | # | Notes |
