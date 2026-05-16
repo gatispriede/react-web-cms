@@ -132,6 +132,8 @@ export enum EItemType {
     // `_CarsPageModules/` bind to the `/api/cars` storefront endpoint.
     CarsList = "CARS_LIST",
     CarDetail = "CAR_DETAIL",
+    /** Section Heading — scaffolded by module:new. */
+    SectionHeading = "SECTION_HEADING",
     Empty = 'EMPTY',
 }
 export default EItemType

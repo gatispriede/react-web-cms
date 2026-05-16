@@ -509,6 +509,18 @@ export const sampleContent: Record<string, PreviewSample[]> = {
             }),
         },
     ],
+    [EItemType.SectionHeading]: [
+        // Live shape on funisimo.pro: <h2>§ 01 · Capability matrix</h2><p><em>...</em></p>
+        {label: 'minimal', content: s({heading: 'Capability matrix'})},
+        {
+            label: 'full',
+            content: s({
+                eyebrow: '§ 01 · Capability matrix',
+                heading: 'Capability matrix',
+                subtitle: 'Self-reported · 0–10 scale',
+            }),
+        },
+    ],
     [EItemType.KeyValueDossier]: [
         // Matches the live cv-sec-home-vitals shape on funisimo.pro — the
         // exact RichText dl/dt/dd this module is replacing.

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<!--
+  SectionHeading — design session #1 (Claude, 2026-05-16)
+  Three variants for side-by-side review.
+
+  Live usage today: <h2>§ 01 · Capability matrix</h2><p><em>...</em></p>
+  Appears 20 times across funisimo.pro (Home, Contact, CMS, Android app).
+  Slots: eyebrow? + heading + subtitle? + align?
+-->
+<html lang="en"><head><meta charset="utf-8"><title>SectionHeading — variants</title>
+<style>
+:root {
+    --sh-content-max: 720px;
+    --sh-eyebrow-size: 0.75rem;
+    --sh-heading-size: 2rem;
+    --sh-subtitle-size: 1.05rem;
+}
+
+/* === editorial — § NN eyebrow, serif heading, italic subtitle === */
+section[data-variant="editorial"] {
+    --sh-surface: #FAF7F2;
+    --sh-ink: #1A1814;
+    --sh-accent: #B85C38;
+    --sh-eyebrow-ink: #5A554C;
+    --sh-font-display: 'Source Serif Pro', ui-serif, Georgia, serif;
+    --sh-font-body: 'Inter', system-ui, sans-serif;
+    --sh-font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+}
+section[data-variant="editorial"] .sh-root {
+    background: var(--sh-surface);
+    color: var(--sh-ink);
+    font-family: var(--sh-font-body);
+    padding: 1.5rem 1.5rem 1rem;
+    max-width: var(--sh-content-max);
+}
+section[data-variant="editorial"] .sh-eyebrow {
+    font-family: var(--sh-font-mono);
+    font-size: var(--sh-eyebrow-size);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--sh-eyebrow-ink);
+    margin: 0 0 0.4rem;
+}
+section[data-variant="editorial"] .sh-heading {
+    font-family: var(--sh-font-display);
+    font-size: var(--sh-heading-size);
+    font-weight: 500;
+    line-height: 1.15;
+    margin: 0 0 0.4rem;
+    color: var(--sh-ink);
+}
+section[data-variant="editorial"] .sh-subtitle {
+    font-style: italic;
+    font-size: var(--sh-subtitle-size);
+    color: var(--sh-eyebrow-ink);
+    margin: 0;
+}
+
+/* === tech-modern — accent-violet eyebrow, sans display, no rules === */
+section[data-variant="tech-modern"] {
+    --sh-surface: #0F172A;
+    --sh-ink: #E2E8F0;
+    --sh-accent: #A78BFA;
+    --sh-eyebrow-ink: #A78BFA;
+    --sh-font-display: 'Mona Sans', 'Inter Tight', sans-serif;
+    --sh-font-body: 'Inter', sans-serif;
+    --sh-font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+section[data-variant="tech-modern"] .sh-root {
+    background: var(--sh-surface);
+    color: var(--sh-ink);
+    font-family: var(--sh-font-body);
+    padding: 2rem 1.75rem 1rem;
+    max-width: var(--sh-content-max);
+}
+section[data-variant="tech-modern"] .sh-eyebrow {
+    font-family: var(--sh-font-mono);
+    font-size: var(--sh-eyebrow-size);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--sh-eyebrow-ink);
+    margin: 0 0 0.65rem;
+}
+section[data-variant="tech-modern"] .sh-heading {
+    font-family: var(--sh-font-display);
+    font-size: 2.25rem;
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+    margin: 0 0 0.5rem;
+    color: var(--sh-ink);
+}
+section[data-variant="tech-modern"] .sh-subtitle {
+    font-size: 1.1rem;
+    line-height: 1.5;
+    color: rgba(226, 232, 240, 0.7);
+    margin: 0;
+    font-style: normal;
+}
+
+/* === centered-marquee — large display, centered alignment === */
+section[data-variant="centered-marquee"] {
+    --sh-surface: #FFFFFF;
+    --sh-ink: #111827;
+    --sh-accent: #2563EB;
+    --sh-eyebrow-ink: #6B7280;
+    --sh-font-display: 'Inter Tight', sans-serif;
+    --sh-font-body: 'Inter', sans-serif;
+    --sh-font-mono: ui-monospace, monospace;
+}
+section[data-variant="centered-marquee"] .sh-root {
+    background: var(--sh-surface);
+    color: var(--sh-ink);
+    font-family: var(--sh-font-body);
+    padding: 2.5rem 1.5rem 1.25rem;
+    text-align: center;
+}
+section[data-variant="centered-marquee"] .sh-eyebrow {
+    font-family: var(--sh-font-mono);
+    font-size: var(--sh-eyebrow-size);
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--sh-eyebrow-ink);
+    margin: 0 0 0.6rem;
+}
+section[data-variant="centered-marquee"] .sh-heading {
+    font-family: var(--sh-font-display);
+    font-size: 2.75rem;
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.65rem;
+}
+section[data-variant="centered-marquee"] .sh-subtitle {
+    font-size: 1.15rem;
+    color: var(--sh-eyebrow-ink);
+    margin: 0 auto;
+    max-width: 540px;
+    font-style: normal;
+}
+
+body { font-family: system-ui; margin: 0; background: #ECECEC; }
+.review-grid { display: grid; gap: 1.5rem; padding: 1.5rem; max-width: 820px; margin: 0 auto; }
+.review-grid > section { box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.variant-label {
+    font-family: ui-monospace, monospace; font-size: 0.7rem; letter-spacing: 0.1em;
+    text-transform: uppercase; padding: 0.4rem 0.75rem; background: #1F2933; color: #fff;
+}
+</style></head>
+<body>
+<div class="review-grid">
+    <section data-variant="editorial">
+        <div class="variant-label">variant · editorial</div>
+        <div class="sh-root" data-testid="section-heading">
+            <p class="sh-eyebrow" data-testid="sh-eyebrow">§ 01 · Capability matrix</p>
+            <h2 class="sh-heading" data-testid="sh-heading">Capability matrix</h2>
+            <p class="sh-subtitle" data-testid="sh-subtitle">Self-reported · 0–10 scale</p>
+        </div>
+    </section>
+    <section data-variant="tech-modern">
+        <div class="variant-label">variant · tech-modern · saas-landing</div>
+        <div class="sh-root" data-testid="section-heading">
+            <p class="sh-eyebrow" data-testid="sh-eyebrow">SECTION 01 / CAPABILITIES</p>
+            <h2 class="sh-heading" data-testid="sh-heading">Capability matrix</h2>
+            <p class="sh-subtitle" data-testid="sh-subtitle">Self-reported across 0–10 scale, updated quarterly.</p>
+        </div>
+    </section>
+    <section data-variant="centered-marquee">
+        <div class="variant-label">variant · centered-marquee · commerce</div>
+        <div class="sh-root" data-testid="section-heading">
+            <p class="sh-eyebrow" data-testid="sh-eyebrow">CAPABILITIES</p>
+            <h2 class="sh-heading" data-testid="sh-heading">Capability matrix</h2>
+            <p class="sh-subtitle" data-testid="sh-subtitle">Self-reported · 0–10 scale, updated quarterly</p>
+        </div>
+    </section>
+</div></body></html>

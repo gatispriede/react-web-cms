@@ -117,6 +117,7 @@ import '../modules/ProjectTileGrid/ProjectTileGrid.scss';
 import '../modules/ReservationWidget/ReservationWidget.scss';
 import '../modules/RestaurantMenu/RestaurantMenu.scss';
 import '../modules/SavedSearchList/SavedSearchList.scss';
+import '../modules/SectionHeading/SectionHeading.scss';
 import '../modules/ServicesGridFancy/ServicesGridFancy.scss';
 import '../modules/SpeakerGrid/SpeakerGrid.scss';
 import '../modules/SponsorStrip/SponsorStrip.scss';
