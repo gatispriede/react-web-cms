@@ -12,7 +12,7 @@ import type {ColumnsType} from 'antd/es/table';
 import EmptyState from '@admin/lib/EmptyState';
 import {useTranslation} from 'react-i18next';
 import type {AuditEntry, AuditOp} from '@services/features/Audit/AuditService';
-import {useRefreshView} from '@client/lib/refreshBus';
+import {useRefreshView} from '@client/lib/useRefreshView';
 import {useViewModel} from '@client/lib/state/observable';
 import AdminInfoModule from '@admin/modules/shapes/AdminInfoModule';
 import type {AdminInfoBlock} from '@admin/modules/shapes/AdminInfoModule.types';

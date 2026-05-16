@@ -16,7 +16,7 @@ import {Alert, Badge, Button, Card, Modal, Popconfirm, Space, Spin, Tag, Typogra
 import type {ColumnsType} from "antd/es/table";
 import {DeleteOutlined, MailOutlined} from "@client/lib/icons";
 import {useTranslation} from "react-i18next";
-import {useRefreshView} from "@client/lib/refreshBus";
+import {useRefreshView} from "@client/lib/useRefreshView";
 import {useViewModel} from "@client/lib/state/observable";
 import {usePullToRefresh, PULL_THRESHOLD_PX} from "@admin/lib/usePullToRefresh";
 import {useIsMobile} from "@admin/lib/useIsMobile";

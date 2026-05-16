@@ -25,7 +25,7 @@ import type {ColumnsType} from 'antd/es/table';
 import {ReloadOutlined, CheckCircleFilled, CloseCircleFilled, DeleteOutlined} from '@client/lib/icons';
 import {useTranslation} from 'react-i18next';
 import {useViewModel} from '@client/lib/state/observable';
-import {useRefreshView} from '@client/lib/refreshBus';
+import {useRefreshView} from '@client/lib/useRefreshView';
 import AdminInfoModule from '@admin/modules/shapes/AdminInfoModule';
 import type {AdminInfoBlock} from '@admin/modules/shapes/AdminInfoModule.types';
 import {CompliancePanelViewModel, type DeletionRow} from './CompliancePanelViewModel';

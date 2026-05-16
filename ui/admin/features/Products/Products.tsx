@@ -18,7 +18,7 @@ import {DeleteOutlined, EditOutlined, EyeOutlined, LinkOutlined} from "@client/l
 import {useTranslation} from "react-i18next";
 import {IProduct, InProduct} from "@interfaces/IProduct";
 import AuditBadge from "@admin/shell/AuditBadge";
-import {useRefreshView} from "@client/lib/refreshBus";
+import {useRefreshView} from "@client/lib/useRefreshView";
 import {useViewModel} from "@client/lib/state/observable";
 import AdminCrudListModule from "@admin/modules/shapes/AdminCrudListModule";
 import AdminConflictModule from "@admin/modules/shapes/AdminConflictModule";

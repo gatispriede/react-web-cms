@@ -1,3 +1,4 @@
+"use client";
 import {Component} from "react";
 import LogoEditDialog from "@admin/features/Logo/LogoEditDialog";
 import MongoApi from "@services/api/client/MongoApi";

@@ -12,7 +12,7 @@ import {Badge, Button, Card, Popconfirm, Select, Space, Table, Tabs, Tag, Typogr
 import {DownloadOutlined, CheckCircleOutlined, CloseCircleOutlined, ReloadOutlined} from '@client/lib/icons';
 import {useTranslation} from 'react-i18next';
 import {useViewModel} from '@client/lib/state/observable';
-import {useRefreshView} from '@client/lib/refreshBus';
+import {useRefreshView} from '@client/lib/useRefreshView';
 import {CarsViewModel, type CarRow, type ReservationRow} from './CarsViewModel';
 
 const formatPrice = (cents: number | null | undefined, currency: string | null | undefined) => {

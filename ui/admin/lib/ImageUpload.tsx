@@ -8,7 +8,7 @@ import EditableTags from "@client/lib/EditableTags";
 import MongoApi from "@services/api/client/MongoApi";
 import {TFunction} from "i18next";
 import IImage from "@interfaces/IImage";
-import {useRefreshView} from "@client/lib/refreshBus";
+import {useRefreshView} from "@client/lib/useRefreshView";
 import BulkImageUploadModal from "@admin/lib/BulkImageUploadModal";
 
 /**

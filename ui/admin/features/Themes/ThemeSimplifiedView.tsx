@@ -4,7 +4,7 @@ import {CheckCircleFilled} from '@client/lib/icons';
 import {useTranslation} from 'react-i18next';
 import {ITheme} from '@interfaces/ITheme';
 import ThemePreviewFrame from './ThemePreviewFrame';
-import {useRefreshView} from '@client/lib/refreshBus';
+import {useRefreshView} from '@client/lib/useRefreshView';
 import {useViewModel} from '@client/lib/state/observable';
 import EmptyState from '@admin/lib/EmptyState';
 import {ThemesViewModel} from './ThemesViewModel';
