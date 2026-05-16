@@ -101,7 +101,17 @@ If a field is missing — author it in `theme.json` before Stitching, commit
 that as Step 0.5. The theme files are the source of truth; Stitch is a
 downstream consumer.
 
-### Step 3 — Stitch: the prompt
+### Step 3 — Design: the prompt
+
+> **The design step uses Claude (this session), NOT the external Stitch
+> API.** We attempted Stitch's HTTP surface during the POC and hit
+> permission walls — the `AQ.Ab8RN6I0…` key in `secrets.md` is Stitch's
+> own web-app client identifier, not a delegatable Gemini key, and
+> enabling Gemini API on the backing GCP project requires admin rights
+> we don't have. The Claude pivot produces equivalent typed HTML/CSS
+> we can extract directly. If we eventually get Gemini API access on a
+> project we control, drop it in as an alternative implementation —
+> the pipeline shape doesn't change.
 
 Standard prompt skeleton:
 
@@ -289,9 +299,37 @@ Smallest reusable shape with the highest active footprint (2 home-page
 sections, would migrate to contact + CMS + LSS pages). Stitch it, ship
 it end-to-end, run the retro, then move to `SectionHeading`.
 
-### POC acceptance
+### POC acceptance — module #1 closed 2026-05-16
 
-- [ ] Stitch prompt captured verbatim in this doc (Stitch session #1)
-- [ ] Frame screenshots saved under `docs/roadmap/_meta/design-artifacts/key-value-dossier/`
-- [ ] `KeyValueDossier` module landed end-to-end (display + editor + types + registry + scss + e2e baseline + MCP coverage + migration of `cv-sec-home-vitals` + `cv-sec-home-matrix-platforms`)
-- [ ] Process retro — what went well / what to change before the next module
+- [x] Prompt captured verbatim — `design-artifacts/key-value-dossier/prompt.md`
+- [x] Design output (3 variants) — `design-artifacts/key-value-dossier/response.html`
+- [x] Module landed end-to-end — commit `8b91aa0` (types + tsx + scss + index + editor + index + registry + samples + SCSS imports in pages router and app router)
+- [x] Live migration — `npm run mcp:call -- module.update` for both `cv-sec-home-vitals` and `cv-sec-home-matrix-platforms`, version 1 → 2, leftover `class="hero-vitals"` count = 0 on `http://localhost/`
+- [x] Process retro — see below
+
+## Retro — module #1, lessons for #2 onward
+
+### What worked
+- **Step 0 via MCP** (`page.get Home`) surfaced 3 reusable shapes cleanly. The audit is genuinely tool-driven, not vibes.
+- **Claude as the design step.** Three variants in one HTML doc, theme-token grounded. Extraction to typed React was straightforward.
+- **`npm run mcp:call`** is the canonical AI-session path. It dispatches in-process through `McpServer.dispatch()` — identical code path the stdio/HTTP transports use. Scope check, validation, audit, idempotency, rate-limit envelope all exercised. Use this; don't waste time chasing stdio/HTTP transport registration.
+
+### What bit us
+1. **Wrong theme tokens on first prompt** — I authored the prompt with values I assumed (`Tiempos`, `Source Serif`) instead of reading `services/themes/editorial/theme.json` first (`Source Serif Pro`, `Inter`). Pipeline says read theme.json first; I skipped. Fix: scripted via `npm run theme:prompt <slug>`.
+2. **SCSS imports in BOTH routers** — Next 16 dual-router setup means every new module needs an SCSS import in **both** `ui/client/pages/_app.tsx` (pages router) AND `ui/client/app/layout.tsx` (app router). Missing either → RSC build failure (specifically the "global CSS cannot be imported outside _app.tsx" error). Fix: scaffolder writes both.
+3. **MCP discovery dance** — burned ~30 min searching for a "local MCP" prefix that doesn't matter. The deferred-tools index is for stdio/HTTP transports; in-process `mcp:call` works regardless of those being registered. Documented at top of Step 3.
+4. **Hand-escaped JSON for migration** — `npm run mcp:call -- module.update '{"sectionId":...,"module":{"content":"{\"…\"}"}}'` is a shell-escape minefield (nested JSON inside JSON inside a shell arg). Fix: `npm run module:migrate <sectionId> <jsonFile>`.
+5. **Stitch API permission wall** — `secrets.md` had `AQ.Ab8RN6I0…` labelled as a Stitch API key, but it's Stitch's own web-app client identifier resolved against a GCP project (`reference-toolbox-6p7vm`) we have no admin rights on. Pivoted to Claude. Captured at the top of Step 3.
+
+### Tooling added in the same wave (Phase 1.5 — optimization)
+
+| Script | Purpose | Replaces |
+|--------|---------|----------|
+| `npm run module:new <Name>` | Scaffolds 6 files + 4 registry edits + 2 SCSS imports + sample fixture | 20 min of manual file authoring |
+| `npm run theme:prompt <slug>` | Prints theme.json fields as a copy-paste prompt block | "I guessed wrong tokens" failure mode |
+| `npm run module:migrate <sectionId> <jsonFile>` | Reads MCP `module.update` payload from a file, runs through `mcp:call` | Shell-escaped JSON |
+| `npm run stitch:audit` | Walks live pages via MCP, surfaces RichText abuse patterns ranked by frequency | "What should we Stitch next" hunt |
+
+### Acceptance for the optimization pass
+
+Module #2 (`SectionHeading`) is the test. If it ships in ≤45 min wall-clock from "let's start" → "live on `localhost/`", the optimization worked. If it's still 2-3h, retro again, find what's still manual.
