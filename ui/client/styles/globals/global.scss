@@ -6,6 +6,12 @@
 // `docs/roadmap/admin/motion-token-system.md`.
 @use '../motion-tokens';
 
+// Admin vertical-rhythm tokens — declared as `:root` custom props consumed
+// by admin shell components (PaneHeader / EmptyState / SaveBar) and any
+// pane swept to the tokens via the per-area follow-ups.
+// See `docs/roadmap/admin/admin-information-architecture.md`.
+@use "../../../admin/styles/admin-rhythm";
+
 @use "../../../admin/styles/Admin/EditSection";
 @use "../Layout/Content";
 @use "../../../admin/styles/Admin/Navigation";

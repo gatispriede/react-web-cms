@@ -8,9 +8,10 @@
  * the human surface (issuance is automatic + audit-grade).
  */
 import React, {useEffect} from 'react';
-import {Button, Card, DatePicker, Drawer, Modal, Select, Space, Switch, Table, Tag, Typography} from 'antd';
+import {Button, DatePicker, Drawer, Modal, Select, Space, Switch, Table, Tag, Typography} from 'antd';
 import type {ColumnsType} from 'antd/es/table';
-import EmptyState from '@admin/lib/EmptyState';
+import EmptyState from '@admin/shell/EmptyState';
+import PaneHeader from '@admin/shell/PaneHeader';
 import {useViewModel} from '@client/lib/state/observable';
 import type {IInvoice, InvoiceStatus} from '@interfaces/IInvoice';
 import {InvoicesViewModel} from './InvoicesViewModel';
@@ -61,39 +62,42 @@ const InvoicesListPane: React.FC = () => {
     const columns: ColumnsType<IInvoice> = [...baseColumns, ...cogsColumns];
 
     return (
-        <Card
-            data-testid="admin-invoices-pane"
-            title="Invoices"
-            extra={
-                <Space>
-                    <Select
-                        data-testid="admin-invoices-filter-status"
-                        style={{width: 160}}
-                        value={vm.statusFilter}
-                        onChange={vm.setStatusFilter}
-                        options={STATUS_FILTERS.map(f => ({value: f.value, label: f.label}))}
-                    />
-                    <DatePicker.RangePicker
-                        data-testid="admin-invoices-filter-range"
-                        onChange={(vals) => {
-                            const f = vals?.[0]?.format?.('YYYY-MM-DD') ?? null;
-                            const t = vals?.[1]?.format?.('YYYY-MM-DD') ?? null;
-                            vm.setDateRange(f, t);
-                        }}
-                    />
-                    <Switch
-                        data-testid="admin-invoices-toggle-cogs"
-                        checkedChildren="COGS on"
-                        unCheckedChildren="COGS off"
-                        checked={vm.showCogsColumn}
-                        onChange={vm.toggleCogs}
-                    />
-                    <Button data-testid="admin-invoices-export-btn" type="primary" onClick={vm.openExport}>
-                        Export period
-                    </Button>
-                </Space>
-            }
-        >
+        <div data-testid="admin-invoices-pane" style={{padding: 'var(--admin-rhythm-md, 16px)'}}>
+            <PaneHeader
+                testId="admin-invoices-header"
+                eyebrow="Commerce"
+                title="Invoices"
+                description="EU-compliant invoices issued automatically when an order is paid."
+                actions={
+                    <Space>
+                        <Select
+                            data-testid="admin-invoices-filter-status"
+                            style={{width: 160}}
+                            value={vm.statusFilter}
+                            onChange={vm.setStatusFilter}
+                            options={STATUS_FILTERS.map(f => ({value: f.value, label: f.label}))}
+                        />
+                        <DatePicker.RangePicker
+                            data-testid="admin-invoices-filter-range"
+                            onChange={(vals) => {
+                                const f = vals?.[0]?.format?.('YYYY-MM-DD') ?? null;
+                                const t = vals?.[1]?.format?.('YYYY-MM-DD') ?? null;
+                                vm.setDateRange(f, t);
+                            }}
+                        />
+                        <Switch
+                            data-testid="admin-invoices-toggle-cogs"
+                            checkedChildren="COGS on"
+                            unCheckedChildren="COGS off"
+                            checked={vm.showCogsColumn}
+                            onChange={vm.toggleCogs}
+                        />
+                        <Button data-testid="admin-invoices-export-btn" type="primary" onClick={vm.openExport}>
+                            Export period
+                        </Button>
+                    </Space>
+                }
+            />
             <Table<IInvoice>
                 data-testid="admin-invoices-table"
                 rowKey="id"
@@ -101,7 +105,13 @@ const InvoicesListPane: React.FC = () => {
                 dataSource={vm.rows}
                 loading={vm.loading}
                 pagination={{pageSize: 50, total: vm.total}}
-                locale={{emptyText: <EmptyState title="No invoices yet" description="Once a customer pays, the invoice will appear here."/>}}
+                locale={{emptyText: (
+                    <EmptyState
+                        testId="admin-invoices-empty"
+                        title="No invoices yet"
+                        description="Once a customer pays, the invoice will appear here."
+                    />
+                )}}
             />
 
             <Drawer
@@ -135,7 +145,7 @@ const InvoicesListPane: React.FC = () => {
                     onToChange={vm.setExportTo}
                 />
             </Modal>
-        </Card>
+        </div>
     );
 };
 

@@ -28,6 +28,7 @@ import {ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGr
 import {useViewModel} from '@client/lib/state/observable';
 import AdminInfoModule from '@admin/modules/shapes/AdminInfoModule';
 import type {AdminInfoBlock} from '@admin/modules/shapes/AdminInfoModule.types';
+import PaneHeader from '@admin/shell/PaneHeader';
 import {
     AnalyticsPanelViewModel,
     type AnalyticsRange,
@@ -270,25 +271,33 @@ const AnalyticsPanel: React.FC = () => {
     ];
 
     return (
-        <AdminInfoModule
-            testId="admin-analytics"
-            title={t('Analytics')}
-            headerExtra={
-                <Space>
-                    <Radio.Group
-                        value={vm.range}
-                        onChange={(e) => vm.setRange(e.target.value as AnalyticsRange)}
-                        options={RANGE_OPTIONS as unknown as {value: string; label: string}[]}
-                        optionType="button"
-                        buttonStyle="solid"
-                        size="small"
-                    />
-                    <Button onClick={() => void vm.refresh()} loading={vm.loading}>{t('Refresh')}</Button>
-                </Space>
-            }
-            toolbar={toolbar}
-            blocks={blocks}
-        />
+        <div style={{padding: 'var(--admin-rhythm-md, 16px)'}}>
+            <PaneHeader
+                testId="admin-analytics-header"
+                eyebrow={t('Analytics')}
+                title={t('Analytics')}
+                description={t('Public-audience pageviews, sessions, and top pages. Switch the audience chips to inspect admin / bot traffic separately.')}
+                actions={
+                    <Space>
+                        <Radio.Group
+                            value={vm.range}
+                            onChange={(e) => vm.setRange(e.target.value as AnalyticsRange)}
+                            options={RANGE_OPTIONS as unknown as {value: string; label: string}[]}
+                            optionType="button"
+                            buttonStyle="solid"
+                            size="small"
+                        />
+                        <Button onClick={() => void vm.refresh()} loading={vm.loading}>{t('Refresh')}</Button>
+                    </Space>
+                }
+            />
+            <AdminInfoModule
+                testId="admin-analytics"
+                title=""
+                toolbar={toolbar}
+                blocks={blocks}
+            />
+        </div>
     );
 };
 

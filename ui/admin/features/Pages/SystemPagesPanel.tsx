@@ -6,9 +6,11 @@
  * destructive confirm). VM4 — admin features must not use `useState`.
  */
 import React, {useEffect} from 'react';
-import {Button, Card, Empty, Space, Table, Tag, Typography} from 'antd';
+import {Button, Space, Table, Tag, Typography} from 'antd';
 import {useTranslation} from 'react-i18next';
 import {useViewModel} from '@client/lib/state/observable';
+import EmptyState from '@admin/shell/EmptyState';
+import PaneHeader from '@admin/shell/PaneHeader';
 import {SystemPagesViewModel, type SystemPageRow} from './SystemPagesViewModel';
 
 const SystemPagesPanel: React.FC = () => {
@@ -48,18 +50,30 @@ const SystemPagesPanel: React.FC = () => {
     ];
 
     return (
-        <div className="system-pages-panel" data-testid="system-pages-panel">
-            <Typography.Title level={3}>{t('System pages')}</Typography.Title>
-            <Typography.Paragraph type="secondary">
-                {t('Framework-required pages (cart, checkout flow, order-by-token, account dashboard, magic-link verify). Operator edits to composable sections are preserved; locked transactional sections always remain.')}
-            </Typography.Paragraph>
-            <Space style={{marginBottom: 12}}>
-                <Button onClick={() => void vm.refresh()} loading={vm.loading} data-testid="system-pages-refresh">
-                    {t('Refresh')}
-                </Button>
-            </Space>
+        <div
+            className="system-pages-panel"
+            data-testid="system-pages-panel"
+            style={{padding: 'var(--admin-rhythm-md, 16px)'}}
+        >
+            <PaneHeader
+                testId="admin-system-pages-header"
+                eyebrow={t('Content')}
+                title={t('System pages')}
+                description={t('Framework-required pages (cart, checkout flow, order-by-token, account dashboard, magic-link verify). Operator edits to composable sections are preserved; locked transactional sections always remain.')}
+                actions={
+                    <Space>
+                        <Button onClick={() => void vm.refresh()} loading={vm.loading} data-testid="system-pages-refresh">
+                            {t('Refresh')}
+                        </Button>
+                    </Space>
+                }
+            />
             {vm.rows.length === 0 && !vm.loading ? (
-                <Card><Empty description={t('No system pages registered')} data-testid="system-pages-empty" /></Card>
+                <EmptyState
+                    testId="system-pages-empty"
+                    title={t('No system pages registered')}
+                    description={t('System pages bootstrap automatically the first time a relevant feature loads. If this list stays empty after that, check the feature manifest.')}
+                />
             ) : (
                 <Table
                     rowKey="systemKey"

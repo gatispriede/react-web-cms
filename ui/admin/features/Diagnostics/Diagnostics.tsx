@@ -17,6 +17,7 @@ import {useTranslation} from 'react-i18next';
 import {useViewModel} from '@client/lib/state/observable';
 import AdminInfoModule from '@admin/modules/shapes/AdminInfoModule';
 import type {AdminInfoBlock} from '@admin/modules/shapes/AdminInfoModule.types';
+import PaneHeader from '@admin/shell/PaneHeader';
 import {DiagnosticsViewModel, type FeatureSummary} from './DiagnosticsViewModel';
 
 const DiagnosticsPane: React.FC = () => {
@@ -170,23 +171,31 @@ const DiagnosticsPane: React.FC = () => {
     });
 
     return (
-        <AdminInfoModule
-            testId="admin-diagnostics"
-            title={t('Diagnostics')}
-            error={vm.error}
-            lastUpdatedLabel={vm.lastFetchedAt ? `${t('Updated')}: ${vm.lastFetchedAt.toLocaleTimeString()}` : undefined}
-            headerExtra={
-                <Button
-                    data-testid="diagnostics-refresh"
-                    type="primary"
-                    loading={vm.loading || vm.probesRunning}
-                    onClick={() => { void vm.refresh(); void vm.runRouteProbes(); }}
-                >
-                    {t('Refresh')}
-                </Button>
-            }
-            blocks={blocks}
-        />
+        <div style={{padding: 'var(--admin-rhythm-md, 16px)'}}>
+            <PaneHeader
+                testId="admin-diagnostics-header"
+                eyebrow={t('System')}
+                title={t('Diagnostics')}
+                description={t('Build identity, route registry, storage health, and MCP coverage in one pane.')}
+                actions={
+                    <Button
+                        data-testid="diagnostics-refresh"
+                        type="primary"
+                        loading={vm.loading || vm.probesRunning}
+                        onClick={() => { void vm.refresh(); void vm.runRouteProbes(); }}
+                    >
+                        {t('Refresh')}
+                    </Button>
+                }
+            />
+            <AdminInfoModule
+                testId="admin-diagnostics"
+                title=""
+                error={vm.error}
+                lastUpdatedLabel={vm.lastFetchedAt ? `${t('Updated')}: ${vm.lastFetchedAt.toLocaleTimeString()}` : undefined}
+                blocks={blocks}
+            />
+        </div>
     );
 };
 
