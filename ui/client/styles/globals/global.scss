@@ -48,6 +48,8 @@
 @use "../../../../services/themes/restaurant/module-styles" as restaurantModules;
 @use "../../../../services/themes/portfolio/theme" as portfolioTheme;
 @use "../../../../services/themes/portfolio/module-styles" as portfolioModules;
+@use "../../../../services/themes/local-business/theme" as localBusinessTheme;
+@use "../../../../services/themes/local-business/module-styles" as localBusinessModules;
 
 // Per-module public renderers — one folder per item type under modules/.
 @use "../../modules/PlainImage/PlainImage";

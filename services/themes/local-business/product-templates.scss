@@ -1,0 +1,13 @@
+/* ==========================================================================
+   Local Business — product-templates layer.
+
+   No-op for now. Trade businesses rarely sell physical SKUs from their
+   site — service-tier pricing is covered by `pricing-table` in
+   `module-styles.scss`. If a local-business tenant later ships
+   product-detail pages (workshop merch, parts catalogues), Phase 1.F
+   product-display-templates land here.
+   ========================================================================== */
+
+[data-theme-name="local-business"] {
+    /* Empty by design. */
+}

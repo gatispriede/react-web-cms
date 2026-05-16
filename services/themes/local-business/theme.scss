@@ -1,0 +1,101 @@
+/* ==========================================================================
+   Local Business — first-class theme.
+
+   Warm off-white paper + deep trust-blue accent, Roboto Slab display +
+   Source Sans 3 body. Honest, photo-led, no gradients. The neighbourhood
+   electrician / plumber / optician / locksmith aesthetic — clean
+   photography, oversized phone CTAs, certification pills, generous
+   whitespace. Scoped under `[data-theme-name="local-business"]`.
+
+   6px radii — softer than Agency's 0px, tighter than SaaS Landing's 12px
+   and Commerce's 8px. Reads as "small business signage" — corners
+   exist but the design isn't trying to feel app-y.
+
+   Distinct from siblings:
+   - editorial: cream + serif + literary
+   - agency: stark + brutalist + scroll-tied
+   - saas-landing: dark + violet gradient + tech-modern
+   - commerce: white + emerald + retail-snappy
+   - restaurant: warmer khaki + burgundy + Fraunces + food-photo-led
+
+   Local Business shares the "warm + photo-led" axis with restaurant but
+   centres on people-photography (the proprietor, the team, the van, the
+   workshop) rather than food. Where restaurant uses Fraunces serif for
+   appetite, local-business uses Roboto Slab for honest signage.
+
+   Bespoke visuals live in `module-styles.scss` alongside.
+   ========================================================================== */
+
+[data-theme-name="local-business"] {
+    --color-surface:       light-dark(#FBFAF7, #1A1815);
+    --color-ink:           light-dark(#1F1B16, #F2EDE5);
+    --color-accent:        light-dark(#15467A, #5EA0E0);
+    --color-accent-ink:    light-dark(#FFFFFF, #0A1A2C);
+    --color-surface-inset: light-dark(#F2EEE5, #23201B);
+    --color-rule:          light-dark(#D8D1C2, #3A352E);
+
+    /* Secondary warm accent — used sparingly for "highlight" and CTA
+       hover-state. Mustard / amber tone that reads as the workshop
+       hi-vis stripe without screaming. NOT a gradient partner — only
+       used flat. */
+    --color-warm:          light-dark(#D97706, #F59E0B);
+    --color-warm-ink:      light-dark(#FFFFFF, #1A1815);
+
+    /* Trust-green for "available now" / opening-hours-open states. */
+    --color-trust-ok:      light-dark(#15803D, #4ADE80);
+
+    --background: var(--color-surface);
+    --ink:    var(--color-ink);
+    --ink-2:  color-mix(in srgb, var(--color-ink) 62%, transparent);
+    --accent: var(--color-accent);
+    --accent-hover: color-mix(in srgb, var(--color-accent) 85%, #000);
+    --warm:   var(--color-warm);
+
+    --font-display: 'Roboto Slab', 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    --font-body:    'Source Sans 3', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono:    ui-monospace, 'SF Mono', Menlo, monospace;
+
+    --theme-headingFont: var(--font-display);
+    --theme-bodyFont:    var(--font-body);
+
+    /* gentle-slow motion — same family as editorial / restaurant.
+       Local businesses don't need snap. */
+    --motion-duration-fast:       150ms;
+    --motion-duration-base:       260ms;
+    --motion-duration-slow:       420ms;
+    --motion-duration-deliberate: 680ms;
+    --motion-ease-standard:       cubic-bezier(0.32, 0.72, 0.24, 1);
+    --motion-ease-entrance:       cubic-bezier(0.16, 1, 0.3, 1);
+    --motion-ease-exit:           cubic-bezier(0.4, 0, 0.72, 0.12);
+    --motion-ease-emphasized:     cubic-bezier(0.2, 0.84, 0.32, 1);
+
+    --motion-distance-sm: 8px;
+    --motion-distance-md: 22px;
+    --motion-distance-lg: 64px;
+
+    /* 6px — softer than agency (0), tighter than saas (12) / commerce (8). */
+    --theme-borderRadius: 6px;
+
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-size: 17px;     /* baseSize bump: trade-business sites lean toward
+                            larger body type for readability over screens
+                            held at arm's length on a van bench. */
+
+    h1, h2, h3,
+    .heading,
+    .heading--display {
+        font-family: var(--font-display);
+        font-weight: 700;     /* Slab faces want weight to read as signage. */
+        letter-spacing: -0.005em;
+        line-height: 1.15;
+    }
+
+    /* Underline keyword italics in friendly amber — used by Hero / Services /
+       Manifesto render helpers (`*word*` markup). */
+    em, .accent-italic {
+        font-style: italic;
+        color: var(--color-accent);
+    }
+}
