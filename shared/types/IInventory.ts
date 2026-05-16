@@ -49,7 +49,25 @@ export interface HealthResult {
 export type IAdapterConfig =
     | {kind: 'mock'}
     | ({kind: 'generic-feed'} & GenericFeedConfig)
-    | {kind: 'ss-com-cars'; forceFixture?: boolean};
+    | {kind: 'ss-com-cars'; forceFixture?: boolean}
+    | TdSynnexStreamOneAdapterConfig;
+
+/**
+ * TD SYNNEX StreamOne Ion dropship adapter config — scaffold step of
+ * the pc-parts-dropshipping-integration roadmap item. Selected at
+ * runtime via `DROPSHIP_PROVIDER=tdSynnexStreamOne` (env-var pattern,
+ * dormant by default — `commerce.dropshipEnabled` site-flag must also
+ * be on). Credential fields stay empty until the operator acquires a
+ * TD SYNNEX partner account; the adapter's `isConfigured()` reports
+ * false until then.
+ */
+export interface TdSynnexStreamOneAdapterConfig {
+    kind: 'td-synnex-stream-one';
+    baseUrl?: string;
+    clientId?: string;
+    clientSecret?: string;
+    resellerId?: string;
+}
 
 export interface GenericFeedConfig {
     url: string;

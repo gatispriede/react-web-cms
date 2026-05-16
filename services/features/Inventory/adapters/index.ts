@@ -3,6 +3,7 @@ import type {IWarehouseAdapter} from './IWarehouseAdapter';
 import {MockAdapter} from './MockAdapter';
 import {GenericFeedAdapter} from './GenericFeedAdapter';
 import {SsComCarsAdapter} from './SsComCarsAdapter';
+import {TdSynnexStreamOneAdapter} from '@services/features/Dropship/TdSynnexStreamOne';
 
 /**
  * Adapter factory. Switches on the discriminated `IAdapterConfig.kind`.
@@ -21,10 +22,26 @@ export function createAdapter(config: IAdapterConfig): IWarehouseAdapter {
             return new GenericFeedAdapter(config);
         case 'ss-com-cars':
             return new SsComCarsAdapter(config);
+        case 'td-synnex-stream-one':
+            // Scaffold step of pc-parts-dropshipping-integration.
+            // Every method on this adapter throws
+            // `TdSynnexNotCredentialedError` until the operator
+            // acquires a TD SYNNEX partner account and drops creds
+            // into env. `commerce.dropshipEnabled` gates higher-level
+            // call sites; this factory entry just makes the adapter
+            // constructible for `isConfigured()` introspection +
+            // admin-pane display.
+            return new TdSynnexStreamOneAdapter({
+                baseUrl: config.baseUrl,
+                clientId: config.clientId,
+                clientSecret: config.clientSecret,
+                resellerId: config.resellerId,
+            });
         default:
             throw new Error(`createAdapter: unknown adapter kind '${(config as {kind: string}).kind}'`);
     }
 }
 
 export {MockAdapter, GenericFeedAdapter, SsComCarsAdapter};
+export {TdSynnexStreamOneAdapter} from '@services/features/Dropship/TdSynnexStreamOne';
 export type {IWarehouseAdapter};
