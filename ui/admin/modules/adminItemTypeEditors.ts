@@ -136,32 +136,119 @@ export interface AdminItemTypeEntry extends AdminItemType {
 
 const asEnum = (e: object) => e as unknown as Record<string, string>;
 
+/**
+ * Friendly Style-picker labels per module, keyed by enum *value*
+ * (the lowercase identifier stored on `item.style`). The picker
+ * displays these instead of the enum *key name* when present.
+ * Falls back to the key name (e.g. `CardGrid`) otherwise.
+ *
+ * Naming guidance:
+ *   - Plain English, no jargon. An operator with no design vocabulary
+ *     should be able to pick a variant from the dropdown alone.
+ *   - Disambiguate visually distinctive shapes — "Photo bleed" beats
+ *     "Editorial" when Editorial is also a theme name.
+ *   - Keep parenthetical hints when the visual is non-obvious from the
+ *     name, e.g. "Polaroid (rotated tiles)".
+ *   - 1-4 words max — a long label crowds the dropdown.
+ */
+const HERO_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    centered: 'Centered',
+    compact: 'Compact',
+    editorial: 'Photo bleed',
+    poster: 'Poster',
+};
+const KEY_VALUE_DOSSIER_STYLE_LABELS: Record<string, string> = {
+    editorial: 'Editorial (paper)',
+    'tech-modern': 'Modern (dark)',
+    'card-grid': 'Card grid',
+};
+const GALLERY_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard grid',
+    marquee: 'Marquee (scrolling)',
+    'logo-wall': 'Logo wall',
+    'hazard-strip': 'Hazard strip',
+    masonry: 'Masonry',
+};
+const LIST_STYLE_LABELS: Record<string, string> = {
+    default: 'Bullet list',
+    facts: 'Key facts',
+    inline: 'Inline (single line)',
+    cases: 'Case cards',
+    'paper-grid': 'Paper cards',
+};
+const SKILL_PILLS_STYLE_LABELS: Record<string, string> = {
+    default: 'Pills',
+    compact: 'Compact pills',
+    matrix: 'Skill matrix',
+    'stack-grid': 'Tech stack grid',
+};
+const SERVICES_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    numbered: 'Numbered list',
+    grid: 'Card grid',
+    cards: 'Inverted cards',
+    tiers: 'Architecture tiers',
+};
+const MANIFESTO_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    accent: 'Accent banner',
+};
+const CAROUSEL_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard slides',
+    cinematic: 'Cinematic (tall)',
+    polaroid: 'Polaroid (rotated)',
+    ribbon: 'Ribbon (thin)',
+    editorial: 'Editorial (square)',
+};
+const STATS_STRIP_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    editorial: 'Editorial (rules)',
+};
+const PROJECT_GRID_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard grid',
+    studio: 'Studio (gradient covers)',
+};
+const TESTIMONIALS_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    cards: 'Card grid',
+};
+const PROJECT_CARD_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    featured: 'Featured (large)',
+};
+const TIMELINE_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    editorial: 'Editorial (rule-divided)',
+    minimal: 'Minimal',
+};
+
 export const ADMIN_ITEM_TYPE_EDITORS: readonly AdminItemTypeEntry[] = [
     {key: EItemType.Text,            Editor: PlainTextEditor,        styleEnum: asEnum(EPlainTextStyle),       defaultContent: '{"value":""}',                                                                                                                                                              labelKey: 'Simple Text',          descriptionKey: 'Plain paragraph with inline style only.',                            category: 'content'},
     {key: EItemType.RichText,        Editor: RichTextEditor,         styleEnum: asEnum(ERichTextStyle),        defaultContent: '{"value":""}',                                                                                                                                                              labelKey: 'Rich text',            descriptionKey: 'HTML body with italic-accent runs and headings.',                    category: 'content'},
     {key: EItemType.Image,           Editor: PlainImageEditor,       styleEnum: asEnum(EImageStyle),           defaultContent: '{"src":"","useAsBackground":false}',                                                                                                                                        labelKey: 'Image',                descriptionKey: 'Single image with optional caption.',                                category: 'media'},
-    {key: EItemType.Gallery,         Editor: GalleryEditor,          styleEnum: asEnum(EGalleryStyle),         defaultContent: '{"items":[],"showCaptions":true}',                                                                                                                                           labelKey: 'Gallery',              descriptionKey: 'Image grid with optional text-only tiles.',                          category: 'media'},
-    {key: EItemType.Carousel,        Editor: CarouselEditor,         styleEnum: asEnum(ECarouselStyle),        defaultContent: '{"items":[]}',                                                                                                                                                              labelKey: 'Carousel',             descriptionKey: 'Horizontally scrollable image strip.',                               category: 'media'},
-    {key: EItemType.Hero,            Editor: HeroEditor,             styleEnum: asEnum(EHeroStyle),            defaultContent: '{"headline":"","subtitle":"","tagline":"","bgImage":"","accent":""}',                                                                                                       labelKey: 'Hero',                 descriptionKey: 'Full-bleed header with headline, subtitle, CTA.',                    category: 'hero'},
-    {key: EItemType.ProjectCard,     Editor: ProjectCardEditor,      styleEnum: asEnum(EProjectCardStyle),     defaultContent: '{"title":"","description":"","image":"","tags":[]}',                                                                                                                        labelKey: 'Project card',         descriptionKey: 'Single featured project with cover and tags.',                       category: 'content'},
-    {key: EItemType.SkillPills,      Editor: SkillPillsEditor,       styleEnum: asEnum(ESkillPillsStyle),      defaultContent: '{"category":"","items":[]}',                                                                                                                                                labelKey: 'Skill pills',          descriptionKey: 'Tag cloud or matrix of skills.',                                     category: 'content'},
-    {key: EItemType.Timeline,        Editor: TimelineEditor,         styleEnum: asEnum(ETimelineStyle),        defaultContent: '{"entries":[{"start":"","end":"","company":"","role":""}]}',                                                                                                                labelKey: 'Timeline',             descriptionKey: 'Vertical or horizontal milestone list.',                             category: 'content'},
+    {key: EItemType.Gallery,         Editor: GalleryEditor,          styleEnum: asEnum(EGalleryStyle), styleLabels: GALLERY_STYLE_LABELS,         defaultContent: '{"items":[],"showCaptions":true}',                                                                                                                                           labelKey: 'Gallery',              descriptionKey: 'Image grid with optional text-only tiles.',                          category: 'media'},
+    {key: EItemType.Carousel,        Editor: CarouselEditor,         styleEnum: asEnum(ECarouselStyle), styleLabels: CAROUSEL_STYLE_LABELS,        defaultContent: '{"items":[]}',                                                                                                                                                              labelKey: 'Carousel',             descriptionKey: 'Horizontally scrollable image strip.',                               category: 'media'},
+    {key: EItemType.Hero,            Editor: HeroEditor,             styleEnum: asEnum(EHeroStyle), styleLabels: HERO_STYLE_LABELS,            defaultContent: '{"headline":"","subtitle":"","tagline":"","bgImage":"","accent":""}',                                                                                                       labelKey: 'Hero',                 descriptionKey: 'Full-bleed header with headline, subtitle, CTA.',                    category: 'hero'},
+    {key: EItemType.ProjectCard,     Editor: ProjectCardEditor,      styleEnum: asEnum(EProjectCardStyle), styleLabels: PROJECT_CARD_STYLE_LABELS,     defaultContent: '{"title":"","description":"","image":"","tags":[]}',                                                                                                                        labelKey: 'Project card',         descriptionKey: 'Single featured project with cover and tags.',                       category: 'content'},
+    {key: EItemType.SkillPills,      Editor: SkillPillsEditor,       styleEnum: asEnum(ESkillPillsStyle), styleLabels: SKILL_PILLS_STYLE_LABELS,      defaultContent: '{"category":"","items":[]}',                                                                                                                                                labelKey: 'Skill pills',          descriptionKey: 'Tag cloud or matrix of skills.',                                     category: 'content'},
+    {key: EItemType.Timeline,        Editor: TimelineEditor,         styleEnum: asEnum(ETimelineStyle), styleLabels: TIMELINE_STYLE_LABELS,        defaultContent: '{"entries":[{"start":"","end":"","company":"","role":""}]}',                                                                                                                labelKey: 'Timeline',             descriptionKey: 'Vertical or horizontal milestone list.',                             category: 'content'},
     {key: EItemType.SocialLinks,     Editor: SocialLinksEditor,      styleEnum: asEnum(ESocialLinksStyle),     defaultContent: '{"links":[{"platform":"website","url":"","label":""}]}',                                                                                                                    labelKey: 'Social links',         descriptionKey: 'Row of icon links to external profiles.',                            category: 'cta'},
     {key: EItemType.BlogFeed,        Editor: BlogFeedEditor,         styleEnum: asEnum(EBlogFeedStyle),        defaultContent: '{"limit":6,"tag":"","heading":""}',                                                                                                                                         labelKey: 'Blog feed',            descriptionKey: 'Latest posts pulled from the Posts collection.',                     category: 'content'},
-    {key: EItemType.List,            Editor: ListEditor,             styleEnum: asEnum(EListStyle),            defaultContent: '{"title":"","items":[{"label":"","value":"","href":""}]}',                                                                                                                  labelKey: 'List',                 descriptionKey: 'Bullet or numbered list, optional meta fields.',                     category: 'content'},
-    {key: EItemType.Services,        Editor: ServicesEditor,         styleEnum: asEnum(EServicesStyle),        defaultContent: '{"sectionNumber":"","sectionTitle":"","sectionSubtitle":"","rows":[{"number":"01","title":"","description":"","ctaLabel":"","ctaHref":"","iconGlyph":"","tags":[]}]}',      labelKey: 'Services',             descriptionKey: 'Icon + heading + body cards grouped by row.',                        category: 'content'},
-    {key: EItemType.Testimonials,    Editor: TestimonialsEditor,     styleEnum: asEnum(ETestimonialsStyle),    defaultContent: '{"sectionTitle":"","sectionSubtitle":"","items":[{"quote":"","name":"","role":"","avatarInitial":""}]}',                                                                    labelKey: 'Testimonials',         descriptionKey: 'Quote cards with avatar and attribution.',                           category: 'content'},
+    {key: EItemType.List,            Editor: ListEditor,             styleEnum: asEnum(EListStyle), styleLabels: LIST_STYLE_LABELS,            defaultContent: '{"title":"","items":[{"label":"","value":"","href":""}]}',                                                                                                                  labelKey: 'List',                 descriptionKey: 'Bullet or numbered list, optional meta fields.',                     category: 'content'},
+    {key: EItemType.Services,        Editor: ServicesEditor,         styleEnum: asEnum(EServicesStyle), styleLabels: SERVICES_STYLE_LABELS,        defaultContent: '{"sectionNumber":"","sectionTitle":"","sectionSubtitle":"","rows":[{"number":"01","title":"","description":"","ctaLabel":"","ctaHref":"","iconGlyph":"","tags":[]}]}',      labelKey: 'Services',             descriptionKey: 'Icon + heading + body cards grouped by row.',                        category: 'content'},
+    {key: EItemType.Testimonials,    Editor: TestimonialsEditor,     styleEnum: asEnum(ETestimonialsStyle), styleLabels: TESTIMONIALS_STYLE_LABELS,    defaultContent: '{"sectionTitle":"","sectionSubtitle":"","items":[{"quote":"","name":"","role":"","avatarInitial":""}]}',                                                                    labelKey: 'Testimonials',         descriptionKey: 'Quote cards with avatar and attribution.',                           category: 'content'},
     {key: EItemType.StatsCard,       Editor: StatsCardEditor,        styleEnum: asEnum(EStatsCardStyle),       defaultContent: '{"tag":"","title":"","stats":[{"value":"","label":""}],"features":[]}',                                                                                                     labelKey: 'Stats card',           descriptionKey: 'Metric / number callout with feature list.',                         category: 'content'},
-    {key: EItemType.ProjectGrid,     Editor: ProjectGridEditor,      styleEnum: asEnum(EProjectGridStyle),     defaultContent: '{"sectionNumber":"","sectionTitle":"","sectionSubtitle":"","items":[{"title":"","stack":"","kind":"","year":"","coverArt":"","coverColor":"","moreLabel":"View engagement ↗","href":""}]}', labelKey: 'Project grid', descriptionKey: 'Card grid with image, title, tags per item.',                category: 'content'},
-    {key: EItemType.Manifesto,       Editor: ManifestoEditor,        styleEnum: asEnum(EManifestoStyle),       defaultContent: '{"body":"","addendum":"","chips":[]}',                                                                                                                                      labelKey: 'Manifesto',            descriptionKey: 'Full-width editorial block with chip footer.',                       category: 'hero'},
+    {key: EItemType.ProjectGrid,     Editor: ProjectGridEditor,      styleEnum: asEnum(EProjectGridStyle), styleLabels: PROJECT_GRID_STYLE_LABELS,     defaultContent: '{"sectionNumber":"","sectionTitle":"","sectionSubtitle":"","items":[{"title":"","stack":"","kind":"","year":"","coverArt":"","coverColor":"","moreLabel":"View engagement ↗","href":""}]}', labelKey: 'Project grid', descriptionKey: 'Card grid with image, title, tags per item.',                category: 'content'},
+    {key: EItemType.Manifesto,       Editor: ManifestoEditor,        styleEnum: asEnum(EManifestoStyle), styleLabels: MANIFESTO_STYLE_LABELS,       defaultContent: '{"body":"","addendum":"","chips":[]}',                                                                                                                                      labelKey: 'Manifesto',            descriptionKey: 'Full-width editorial block with chip footer.',                       category: 'hero'},
     {key: EItemType.InquiryForm,     Editor: InquiryFormEditor,      styleEnum: asEnum(EInquiryFormStyle),     defaultContent: '{"topics":[],"fields":[]}',                                                                                                                                                 labelKey: 'Inquiry form',         descriptionKey: 'Topic chips + name/email/message + submit (CV Contact).',            category: 'cta'},
     {key: EItemType.DataModel,       Editor: DataModelEditor,        styleEnum: asEnum(EDataModelStyle),       defaultContent: '{"fields":[],"collections":[],"audits":[]}',                                                                                                                                labelKey: 'Data model',           descriptionKey: 'Schema visualiser — fields table + collections aside + audit cards.',category: 'content'},
     {key: EItemType.InfraTopology,   Editor: InfraTopologyEditor,    styleEnum: asEnum(EInfraTopologyStyle),   defaultContent: '{"droplets":[]}',                                                                                                                                                           labelKey: 'Infra topology',       descriptionKey: 'Droplet/server cards + author-supplied SVG topology.',               category: 'content'},
     {key: EItemType.PipelineFlow,    Editor: PipelineFlowEditor,     styleEnum: asEnum(EPipelineFlowStyle),    defaultContent: '{"steps":[],"sideNotes":[]}',                                                                                                                                               labelKey: 'Pipeline flow',        descriptionKey: 'Linear CI/CD pipeline with status pills and side notes.',            category: 'content'},
     {key: EItemType.RepoTree,        Editor: RepoTreeEditor,         styleEnum: asEnum(ERepoTreeStyle),        defaultContent: '{"nodes":[]}',                                                                                                                                                              labelKey: 'Repo tree',            descriptionKey: 'Interactive repo path tree with detail pane.',                       category: 'content'},
     {key: EItemType.ArchitectureTiers, Editor: ArchitectureTiersEditor, styleEnum: asEnum(EArchitectureTiersStyle), defaultContent: '{"tiers":[]}',                                                                                                                                                         labelKey: 'Architecture tiers',   descriptionKey: 'Tier cards (concern/role/title/pills/modules) + shared footer + lifecycle rail.', category: 'content'},
-    {key: EItemType.StatsStrip,      Editor: StatsStripEditor,       styleEnum: asEnum(EStatsStripStyle),      defaultContent: '{"cells":[]}',                                                                                                                                                              labelKey: 'Stats strip',          descriptionKey: 'Horizontal numeric strip — value / unit / caption per cell.',        category: 'content'},
-    {key: EItemType.KeyValueDossier, Editor: KeyValueDossierEditor,  styleEnum: asEnum(EKeyValueDossierStyle), defaultContent: '{"items":[]}',                                                                                                                                                              labelKey: 'Key/value dossier',    descriptionKey: 'Structured label/value table — replaces hand-typed dl/dt/dd in RichText. 3 style variants.', category: 'content'},
+    {key: EItemType.StatsStrip,      Editor: StatsStripEditor,       styleEnum: asEnum(EStatsStripStyle), styleLabels: STATS_STRIP_STYLE_LABELS,      defaultContent: '{"cells":[]}',                                                                                                                                                              labelKey: 'Stats strip',          descriptionKey: 'Horizontal numeric strip — value / unit / caption per cell.',        category: 'content'},
+    {key: EItemType.KeyValueDossier, Editor: KeyValueDossierEditor,  styleEnum: asEnum(EKeyValueDossierStyle), styleLabels: KEY_VALUE_DOSSIER_STYLE_LABELS, defaultContent: '{"items":[]}',                                                                                                                                                              labelKey: 'Key/value dossier',    descriptionKey: 'Structured label/value table — replaces hand-typed dl/dt/dd in RichText. 3 style variants.', category: 'content'},
     {key: EItemType.Product,         Editor: ProductEditor,          styleEnum: asEnum(EProductStyle),         defaultContent: '{"mode":"grid","products":{"source":"manual","ids":[],"limit":6},"showBuyCta":true,"showPrice":true,"grid":{"columns":3,"density":"standard"}}',                                labelKey: 'Product',              descriptionKey: 'Featured / grid / carousel / comparison / related — pick mode in editor.', category: 'content'},
     // Phase 1.C — products-as-composable-page sub-jump B. Auto-injected by
     // CategoryTemplate / ProductDetailTemplate; the editors are placeholders

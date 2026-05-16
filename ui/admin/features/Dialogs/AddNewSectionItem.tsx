@@ -190,10 +190,17 @@ class AddNewSectionItem extends React.Component <IAddNewSectionItemProps> {
 
     setActiveOptionState(selectedModule: EItemType, style?: string, resetContent = false) {
         const styleEnum = styleEnumFor(selectedModule);
+        const def = getItemTypeDefinition(selectedModule);
+        const labels = def?.styleLabels ?? {};
+        // Prefer the friendly label (keyed by enum *value*); fall back to
+        // the enum *key name* (current behaviour). Either way, run through
+        // `t()` so locale files can translate. Empty/missing → key name.
+        const labelFor = (enumKey: string, enumValue: string): string =>
+            labels[enumValue] ? this.props.t(labels[enumValue]) : this.props.t(enumKey);
         const patch: any = {
             style: style ? style : (styleEnum.Default ?? EStyle.Default),
             styleOptions: Object.keys(styleEnum).map((key: string) => ({
-                label: key,
+                label: labelFor(key, styleEnum[key]),
                 value: styleEnum[key],
             })),
             selected: selectedModule
