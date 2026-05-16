@@ -107,6 +107,7 @@ These all gate the pre-public deploy. The code is shipped — operator action un
 
 ## Reference docs
 
+- [`_meta/stitch-design-pipeline.md`](_meta/stitch-design-pipeline.md) — when to reach for Stitch, what to expect back, how to turn its output into a typed module
 - [`_meta/target-architecture.md`](_meta/target-architecture.md) — naming conventions + top-level layout
 - [`_meta/project-standards-additions-2026-05-12.md`](_meta/project-standards-additions-2026-05-12.md) — 14 standards (Sonner / kbar / dnd-kit / motion tokens / cssVar / WCAG 2.2 AA / 44 px touch / container queries / EmailService.sendTemplated / data-edit-target / jumps-not-iterations / AI-agent-unit estimates)
 - [`_meta/agent-handoff-format.md`](_meta/agent-handoff-format.md) — template + starter-code patterns
