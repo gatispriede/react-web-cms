@@ -1,5 +1,21 @@
 # AUI mode — simplified-base, advanced-extends-simplified hierarchy
 
+> **Extended 2026-05-16 — three-tier mode hierarchy.** Original 2026-05-07
+> spec covered two modes (simplified / advanced). Operator feedback adds
+> a third tier: **AI-first**. The full hierarchy is now:
+>
+> | Mode | Target operator | Surface |
+> |---|---|---|
+> | **AI-first** | Operator who barely touches the UI; drives the site via natural-language conversation with an AI agent over MCP | Minimal admin chrome — just the homepage editor + an AI conversation pane. Everything else is MCP-driven from outside. The admin acts as a verification surface ("did the AI do what I asked?") rather than a control surface. |
+> | **Simplified** (was the default) | Operator who configures one site, lightly. Wants to edit the homepage, post a blog, change a logo. Doesn't want to see anything they won't use. | Pages that only have what an operator-of-one needs. Bulk operations / version history / raw JSON / power-user toggles all hidden. |
+> | **Advanced** (was the alternative) | Operator who wants full functionality — multi-site, complex content models, bulk operations, integrations, audit + observability | The full surface — everything the platform exposes. |
+>
+> Critically: **the mode is a runtime per-operator preference**, not a
+> build-time flag. An operator can switch modes from their account
+> settings; the admin re-renders with the chosen tier. The three modes
+> share the same underlying state, mutation surface, and MCP coverage
+> — only the UI extent differs.
+
 ## Goal
 
 The admin UI mode flag lets operators pick **simplified** (fewer controls, common operations only) or **advanced** (full control surface). Today the dispatch is `modes.simplified ?? modes.advanced` — a feature ships either both or just advanced. Themes + Posts proved the dispatch works.
