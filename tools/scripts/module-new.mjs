@@ -234,9 +234,14 @@ editFile(path.join(REPO_ROOT, 'ui', 'admin', 'modules', 'adminItemTypeEditors.ts
 
 editFile(path.join(REPO_ROOT, 'ui', 'client', 'lib', 'preview', 'samples.ts'), (s) => {
     if (s.includes(`[EItemType.${Name}]`)) return s;
-    // Append after the StatsStrip block. Match the closing of its array.
+    // Append after the StatsStrip block. The outer block's closing
+    // bracket is at exactly 4 spaces of indent; nested arrays (like
+    // StatsStrip's `cells: [...]`) close at 16+ spaces. Anchor to the
+    // 4-space indent so the non-greedy match doesn't bail on the
+    // first inner array close. (Earlier version used `\s*\],\n` which
+    // matched the inner `cells` array close instead of the outer block.)
     return s.replace(
-        /(\[EItemType\.StatsStrip\]: \[\s*[\s\S]+?\n\s*\],\n)/,
+        /(\[EItemType\.StatsStrip\]: \[[\s\S]+?\n    \],\n)/,
         `$1    [EItemType.${Name}]: [
         {label: 'minimal', content: s({text: 'Sample text'})},
         {label: 'full',    content: s({text: 'Sample text — replace with the real shape\\'s fields'})},
