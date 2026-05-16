@@ -42,7 +42,7 @@ import AnalyticsHost from '@client/lib/analytics/AnalyticsHost';
 import SignupBanner from '@client/components/Auth/SignupBanner';
 import CartDrawer from '@client/components/Commerce/CartDrawer';
 import ClientRuntimeHost from './ClientRuntimeHost';
-import {I18N_DEFAULT_NS, SUPPORTED_LNGS} from './i18n';
+import {I18N_DEFAULT_NS, SUPPORTED_LNGS} from './i18nConfig';
 
 interface ProvidersProps {
     children: React.ReactNode;

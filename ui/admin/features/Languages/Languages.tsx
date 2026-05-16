@@ -10,7 +10,7 @@ import AddNewLanguageDialog from "./AddNewLanguageDialog";
 import {useTranslation} from "next-i18next/pages";
 import {sanitizeKey} from "@utils/stringFunctions";
 import AuditBadge from "@admin/shell/AuditBadge";
-import {useRefreshView} from "@client/lib/refreshBus";
+import {useRefreshView} from "@client/lib/useRefreshView";
 import ConflictDialog from "@client/lib/ConflictDialog";
 import {useViewModel} from "@client/lib/state/observable";
 import {TranslationsViewModel} from "@admin/features/Translations/TranslationsViewModel";

@@ -4,7 +4,7 @@ import {notifyError} from '@admin/lib/notify';
 import {DeleteOutlined, PlusOutlined} from "@client/lib/icons";
 import {useTranslation} from "react-i18next";
 import AuditBadge from "@admin/shell/AuditBadge";
-import {useRefreshView} from "@client/lib/refreshBus";
+import {useRefreshView} from "@client/lib/useRefreshView";
 import ConflictDialog from "@client/lib/ConflictDialog";
 import {useViewModel} from "@client/lib/state/observable";
 import LinkTargetPicker from "@admin/lib/LinkTargetPicker";

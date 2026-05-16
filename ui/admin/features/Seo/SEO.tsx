@@ -17,7 +17,7 @@ import {notifyError} from '@admin/lib/notify';
 import {useTranslation} from "react-i18next";
 import ImageUrlInput from "@client/lib/ImageUrlInput";
 import AuditBadge from "@admin/shell/AuditBadge";
-import {useRefreshView} from "@client/lib/refreshBus";
+import {useRefreshView} from "@client/lib/useRefreshView";
 import ConflictDialog from "@client/lib/ConflictDialog";
 import {useViewModel} from "@client/lib/state/observable";
 import AdminFormModule from "@admin/modules/shapes/AdminFormModule";

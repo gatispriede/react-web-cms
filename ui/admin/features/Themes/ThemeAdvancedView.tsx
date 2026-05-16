@@ -5,7 +5,7 @@ import {CopyOutlined, DeleteOutlined, EditOutlined, PlusOutlined} from '@client/
 import {useTranslation} from 'react-i18next';
 import {ITheme, IThemeTokens} from '@interfaces/ITheme';
 import AuditBadge from '@admin/shell/AuditBadge';
-import {useRefreshView} from '@client/lib/refreshBus';
+import {useRefreshView} from '@client/lib/useRefreshView';
 import FontPicker, {FontPickerSlot} from './FontPicker';
 import ConflictDialog from '@client/lib/ConflictDialog';
 import {useViewModel} from '@client/lib/state/observable';

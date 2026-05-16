@@ -15,7 +15,7 @@ import React, {useEffect} from 'react';
 import {Alert, Button, Space, Switch, Typography} from 'antd';
 import {useTranslation} from 'react-i18next';
 import AuditBadge from '@admin/shell/AuditBadge';
-import {useRefreshView} from '@client/lib/refreshBus';
+import {useRefreshView} from '@client/lib/useRefreshView';
 import {useViewModel} from '@client/lib/state/observable';
 import AdminFormModule from '@admin/modules/shapes/AdminFormModule';
 import {CommerceViewModel} from './CommerceViewModel';

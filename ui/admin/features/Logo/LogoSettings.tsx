@@ -8,7 +8,7 @@ import ImageUpload from "@admin/lib/ImageUpload";
 import ImageDropTarget from "@client/lib/ImageDropTarget";
 import {PUBLIC_IMAGE_PATH} from "@utils/imgPath";
 import AuditBadge from "@admin/shell/AuditBadge";
-import {useRefreshView} from "@client/lib/refreshBus";
+import {useRefreshView} from "@client/lib/useRefreshView";
 import ConflictDialog from "@client/lib/ConflictDialog";
 import {useViewModel} from "@client/lib/state/observable";
 import AdminFormModule from "@admin/modules/shapes/AdminFormModule";

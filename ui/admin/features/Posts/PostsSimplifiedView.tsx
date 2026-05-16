@@ -5,7 +5,7 @@ import {DeleteOutlined, EditOutlined} from "@client/lib/icons";
 import {useTranslation} from "react-i18next";
 import ImageUrlInput from "@client/lib/ImageUrlInput";
 import {IPost} from "@interfaces/IPost";
-import {useRefreshView} from "@client/lib/refreshBus";
+import {useRefreshView} from "@client/lib/useRefreshView";
 import ConflictDialog from "@client/lib/ConflictDialog";
 import {useViewModel} from "@client/lib/state/observable";
 import AdminCrudListModule from "@admin/modules/shapes/AdminCrudListModule";

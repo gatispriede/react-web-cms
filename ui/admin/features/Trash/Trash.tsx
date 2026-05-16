@@ -14,7 +14,7 @@ import {Button, Popconfirm, Space, Tag, Typography} from 'antd';
 import type {ColumnsType} from 'antd/es/table';
 import {useTranslation} from 'react-i18next';
 import type {TrashGroupSummary} from '@services/api/client/TrashApi';
-import {useRefreshView} from '@client/lib/refreshBus';
+import {useRefreshView} from '@client/lib/useRefreshView';
 import {useViewModel} from '@client/lib/state/observable';
 import AdminCrudListModule from '@admin/modules/shapes/AdminCrudListModule';
 import {TrashViewModel} from './TrashViewModel';
