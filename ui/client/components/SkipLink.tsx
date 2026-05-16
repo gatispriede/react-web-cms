@@ -11,10 +11,10 @@
  * no hooks beyond `useTranslation`.
  */
 import React from 'react';
-import {useTranslation} from 'next-i18next/pages';
+import {useT} from 'next-i18next/client';
 
 export default function SkipLink(): React.ReactElement {
-    const {t} = useTranslation('common');
+    const {t} = useT('common');
     return (
         <a
             href="#main"

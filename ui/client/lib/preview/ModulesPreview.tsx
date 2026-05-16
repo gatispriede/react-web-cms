@@ -2,7 +2,7 @@ import React, {useMemo, useState} from 'react';
 import {Space, Switch, Typography, Button, Collapse} from 'antd';
 import {TFunction} from 'i18next';
 import {useTranslation} from 'react-i18next';
-import {useTranslation as useAppTranslation} from 'next-i18next/pages';
+import {useT as useAppTranslation} from 'next-i18next/client';
 import {IItem} from '@interfaces/IItem';
 import {itemTypeList, ItemTypeDefinition} from '@admin/lib/itemTypes/registry';
 import AdminPreviewModule from '@admin/modules/shapes/AdminPreviewModule';

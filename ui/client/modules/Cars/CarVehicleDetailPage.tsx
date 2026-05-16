@@ -4,7 +4,7 @@
  * spec (per-theme styling is Wave 5 work).
  */
 import React from 'react';
-import {useTranslation} from 'next-i18next/pages';
+import {useT as useTranslation} from 'next-i18next/client';
 import CarPhotoGallery from './CarPhotoGallery';
 import CarSpecTable from './CarSpecTable';
 import CarReservationCta from './CarReservationCta';

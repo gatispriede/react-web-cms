@@ -5,7 +5,7 @@
  */
 import React from 'react';
 import Link from 'next/link';
-import {useTranslation} from 'next-i18next/pages';
+import {useT as useTranslation} from 'next-i18next/client';
 import VatBadge from './VatBadge';
 import type {CarListing} from './types';
 

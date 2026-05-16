@@ -7,7 +7,7 @@
  * `'unknown'` so the operator review queue can flag it.
  */
 import React from 'react';
-import {useTranslation} from 'next-i18next/pages';
+import {useT as useTranslation} from 'next-i18next/client';
 import type {CarVatRegime} from './types';
 
 interface Props {

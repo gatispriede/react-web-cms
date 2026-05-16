@@ -2,7 +2,7 @@ import { useSession } from "next-auth/react"
 import React from "react";
 import {Button} from "antd";
 import UserStatusBar, {AdminView} from "@admin/shell/UserStatusBar";
-import { useTranslation } from 'next-i18next/pages'
+import { useT as useTranslation } from 'next-i18next/client'
 
 /** Phase 1.A auth-split: admin auth has its own NextAuth instance under
  *  `/api/admin/auth/*` + signin page at `/admin/signin`. Calling

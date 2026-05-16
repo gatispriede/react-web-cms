@@ -32,17 +32,18 @@ vi.mock('next-auth/react', () => ({
     signOut: (...args: any[]) => signOutSpy(...args),
 }));
 
-// next-i18next/pages — supplies `useTranslation` (for the `common` ns
-// fetch) and the `i18n` export the component reads to compute `lang`.
-vi.mock('next-i18next/pages', () => {
+// next-i18next/client — supplies `useT` (for the `common` ns fetch). The
+// returned `i18n` instance is also where the component reads `language` /
+// `resolvedLanguage` to compute `lang` (post `next-i18next/pages` sweep —
+// the standalone singleton import is gone, the hook owns the instance).
+vi.mock('next-i18next/client', () => {
     const i18n = {
         language: 'en',
         resolvedLanguage: 'en',
         use: () => i18n,
     };
     return {
-        i18n,
-        useTranslation: () => ({
+        useT: () => ({
             t: (k: string) => k,
             i18n,
         }),

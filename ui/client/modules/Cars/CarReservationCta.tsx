@@ -5,7 +5,7 @@
  * the deposit manually from the Cars admin pane.
  */
 import React, {useState} from 'react';
-import {useTranslation} from 'next-i18next/pages';
+import {useT as useTranslation} from 'next-i18next/client';
 
 interface Props {
     carExternalId?: string;

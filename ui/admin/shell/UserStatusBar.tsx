@@ -6,10 +6,9 @@ import {Session} from "next-auth";
 import AdminSettings from "./AdminSettings";
 import AdminSettingsLanguages from "@admin/features/Languages/Languages";
 import TranslationManager from "./TranslationManager";
-import {useTranslation} from "next-i18next/pages";
+import {useT as useTranslation} from "next-i18next/client";
 import Backend from "i18next-http-backend";
 import {TFunction} from "i18next";
-import {i18n} from "next-i18next/pages";
 import SiteFlagsApi from "@services/api/client/SiteFlagsApi";
 import CommandPalette from "./CommandPalette/CommandPalette";
 import {I18nextProvider, useTranslation as useReactTranslation} from "react-i18next";
@@ -132,10 +131,10 @@ const UserStatusBarInner = ({session, view, tApp}: {
     tApp: TFunction<string, undefined>
 }) => {
     const {t: tAdmin, i18n: adminI} = useReactTranslation();
-    let lang = i18n?.resolvedLanguage ?? (i18n?.language !== 'default' ? i18n?.language : null) ?? 'lv'
+    const {t: tCommon, i18n: i18nCommon} = useTranslation('common');
+    let lang = i18nCommon?.resolvedLanguage ?? (i18nCommon?.language !== 'default' ? i18nCommon?.language : null) ?? 'lv'
     const [, setBlogEnabled] = useState(true);
     const {mode: adminMode} = useAdminMode();
-    const {t: tCommon, i18n: i18nCommon} = useTranslation('common');
     i18nCommon.use(Backend);
     useEffect(() => {
         void new SiteFlagsApi().get().then(f => setBlogEnabled(f.blogEnabled !== false));

@@ -4,7 +4,7 @@
  * is Wave 5; this is the functional baseline.
  */
 import React from 'react';
-import {useTranslation} from 'next-i18next/pages';
+import {useT as useTranslation} from 'next-i18next/client';
 
 interface Props {
     attributes: Record<string, string>;

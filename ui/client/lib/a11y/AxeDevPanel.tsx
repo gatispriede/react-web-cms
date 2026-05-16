@@ -26,7 +26,7 @@
  * fast-feedback loop in between, not a substitute.
  */
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
-import {useTranslation} from 'next-i18next/pages';
+import {useT} from 'next-i18next/client';
 
 type Impact = 'critical' | 'serious' | 'moderate' | 'minor' | null | undefined;
 
@@ -78,7 +78,7 @@ function panelStyle(open: boolean): React.CSSProperties {
 }
 
 export default function AxeDevPanel(): React.ReactElement | null {
-    const {t} = useTranslation('common');
+    const {t} = useT('common');
     const [open, setOpen] = useState(false);
     const [busy, setBusy] = useState(false);
     const [results, setResults] = useState<AxeResultsLike | null>(null);

@@ -2,6 +2,16 @@
 
 Archive of completed roadmap entries. Latest first. Active backlog lives in [README.md](README.md).
 
+## 2026-05-16 — next-i18next/pages → /client sweep
+
+| # | Notes |
+|---|-------|
+| **Scope** | Follow-up surfaced from app-router-migration Batch 7 cutover. The B7 commit deleted the Pages-Router tree but `next-i18next@^16` exposes both `/pages` and `/client` subpaths concurrently, so ~11 `ui/` consumers still imported from the legacy `/pages` subpath. This sweep migrates every consumer onto `/client` so the next bump can drop the pages-router peer-dep (and unblock the eventual `next-auth@5` jump). |
+| **API mapping** | `useTranslation` (named) from `next-i18next/pages` → `useT` from `next-i18next/client` (re-aliased to `useTranslation` at the import site in mechanical consumers so the body stays untouched). The `i18n` singleton export from `next-i18next/pages` (only used inside two client components — `UserStatusBar.tsx` and `InlineTranslationEditor.tsx`) is now obtained via the hook's return shape (`const {i18n} = useT()`) which points at the same runtime instance under App Router. `serverSideTranslations` had a single consumer (`ui/client/lib/adminSsr.ts`) — a Pages-Router `GetServerSideProps` helper with **zero importers** post-B7 — and was deleted rather than migrated (it can never run under App Router; `ui/client/lib/adminSsrAppRouter.ts` is the live replacement). |
+| **Files touched** | `ui/client/components/SkipLink.tsx`, `ui/client/lib/a11y/AxeDevPanel.tsx`, `ui/client/lib/preview/ModulesPreview.tsx`, `ui/client/lib/InlineTranslationEditor.tsx`, `ui/client/modules/Cars/{VatBadge,CarListingCard,CarSpecTable,CarReservationCta,CarVehicleDetailPage}.tsx`, `ui/admin/features/Languages/Languages.tsx`, `ui/admin/features/Auth/login-btn.tsx` (+ its test), `ui/admin/shell/UserStatusBar.tsx` (+ its test). `ui/client/lib/adminSsr.ts` deleted (dead). |
+| **Verification** | `npx tsc -p ui/client/tsconfig.json --noEmit` clean on every touched file (two pre-existing errors in `services/agent/mcpAgentTools.ts` + `services/features/Mcp/validate.ts` remain — unrelated, called out in the prior admin-IA ship too). `npx vitest run ui/admin/shell/UserStatusBar.test.tsx ui/admin/features/Auth/login-btn.test.tsx` — 10 passed, 2 pre-existing failures (the `signIn`/`signOut` mock-spy tests; the components navigate via `window.location.href` not the mocked next-auth helpers, JSDOM's "Not implemented: navigation to another Document" warning is the giveaway; verified by re-running with the changes stashed — same failure). |
+| **Out of scope** | `pages/api/*` route handlers (Next supports the legacy i18n on API routes via the request context; left on `next-i18next/pages`). Docs / comments / `next-i18next.config.js` typedef reference (`@type {import('next-i18next/pages').UserConfig}`) left as-is — the type re-export is still valid under v16 and ships with the package. |
+
 ## 2026-05-16 — admin-information-architecture — new taxonomy + shared pane components
 
 | # | Notes |
