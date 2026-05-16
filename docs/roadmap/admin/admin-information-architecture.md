@@ -114,22 +114,75 @@ The inventory drives Phase 2 — the proposed taxonomy.
 
 ### Proposed taxonomy (subject to audit refinement)
 
-Top-level admin sections, each with a single canonical URL prefix:
+**Refined 2026-05-16 — task-driven, not noun-driven.** First-shipped
+taxonomy was 6 noun buckets (Site / Content / Commerce / People /
+Analytics / System). Refined after operator feedback: organise by
+*what am I doing in this area* rather than *what kind of thing is
+this*. New top-level is 5 buckets:
 
-| Section | Prefix | Hosts |
-|---|---|---|
-| **Site** | `/admin/site/*` | global site settings — domain, logo, favicon, languages, currencies, feature flags, theme, SEO defaults, footer, header |
-| **Content** | `/admin/content/*` | pages, posts, media library, translations (entries), navigation, releases, system pages |
-| **Commerce** | `/admin/commerce/*` | products, inventory, orders, invoices, dropship adapter status, pricing rules, payment provider config, shipping rules, abandoned carts |
-| **People** | `/admin/people/*` | customers, admin users, permissions, sessions, mailing list, inquiries |
-| **Analytics** | `/admin/analytics/*` | dashboard, traffic, events, conversion funnels, marketing attribution, audit log |
-| **System** | `/admin/system/*` | dev-only / power-user tools — feature-flag definitions, MCP tokens, build SHA, audit error log, diagnostics, bundle import/export, modules preview, theme files |
-| **My account** | `/admin/me/*` | the admin's own profile, preferences, sign-out |
+| Section | Prefix | What you do here | Contains |
+|---|---|---|---|
+| **Build** | `/admin/build/*` | Compose the site's page tree from modules (one central page editor) | AdminApp page editor |
+| **Content** | `/admin/content/*` | Author the content the site shows | Pages list, Posts, Products, Inventory, Orders, Invoices, Customers, Inquiries, Translations (entries), Cars, Releases, Trash, System pages |
+| **Settings** | `/admin/settings/*` | Configure how everything works (hierarchical sub-pages) | Site chrome (Header + Logo + Footer co-located), Theme + Layout, Languages, SEO defaults, **Features** (one page per feature = enable + config), Access (Admin users + Permissions), Account |
+| **Analytics** | `/admin/analytics/*` | See what happened | Overview, SEO health, Attribution, Conversion funnels, Audit log, Filters |
+| **System** | `/admin/system/*` | Power-user / dev tools | MCP tokens, Feature flag definitions (registry view), Diagnostics, Errors, Performance, Backups, Bundle import/export, Modules preview, Agent, Demo content (cars seed) |
 
-The split between Site and System is deliberate — **Site** is what an
-operator running the site cares about; **System** is what a developer
-or technical operator pokes at. Recurring confusion today comes from
-those two living interleaved.
+Plus a small **My account** drawer for the operator's own profile +
+sign-out (accessed via the user-status badge, not a top-bar bucket).
+
+#### Settings sub-structure (hierarchical, not flat)
+
+The biggest win of the refinement: Settings absorbs every configuration
+surface and groups them so that **things you configure together live
+together**. Two unifying principles:
+
+1. **Site chrome co-located.** Header + Logo + Footer share a single
+   sub-area (`/admin/settings/chrome/*`). Operators editing one
+   usually edit the others — splitting them across the admin makes
+   no sense.
+
+2. **Feature enable = feature config.** Today's split between the
+   Features registry (toggles) and per-feature configuration panes
+   is gone. Each feature gets ONE page that has both: the
+   enable toggle at the top + every setting that feature exposes
+   below it. The Features registry view (a full audit of all flags)
+   stays under System for power users.
+
+```
+/admin/settings/
+├── chrome/           ← Header + Logo + Footer co-located (one page or sub-tabs)
+├── theme/            ← Themes + Layout + appearance tokens
+├── languages/        ← language list + default + per-language toggles
+├── seo/              ← site-wide SEO defaults
+├── features/         ← one sub-page per feature, each = enable + config
+│   ├── auth/         ← enable + providers + magic-link + OAuth + signup flags
+│   ├── commerce/     ← enable + currencies + checkout + abandoned-cart + product surface
+│   ├── dropship/     ← enable + adapter pick (TME / TD SYNNEX) + credentials + markup
+│   ├── email/        ← enable + transport (Resend / SMTP) + templates + DKIM/SPF status
+│   ├── compliance/   ← GDPR consent banner + cookie classification + DNT
+│   └── redirects/    ← enable + redirect rules list
+├── access/           ← Admin users + Permissions + Auth (admin-side login config)
+└── account/          ← operator's own profile (alt access via user-status badge)
+```
+
+This consolidates ~18 disparate settings panes today into ~11
+sub-pages, each task-scoped.
+
+#### Bucket-assignment confirmations
+
+- **Admin users → Settings/access** (not System) — admin access is a
+  configuration concern, not a power-user tool.
+- **Customers → Content** (not Settings) — they're a list operators
+  view + filter + act on, not a config surface.
+- **Inquiries → Content** — same reasoning as Customers.
+- **People bucket dissolves** — its members fan out per the principles above.
+
+The split between Settings and System is the most important call:
+**Settings** is what an operator running the live site configures;
+**System** is what a developer / technical operator pokes at when
+something's wrong. Recurring confusion today came from those two
+living interleaved under "System/*".
 
 ### URL migration
 
