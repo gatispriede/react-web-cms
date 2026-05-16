@@ -72,9 +72,8 @@ These are acceptance criteria, not nice-to-haves.
 | Item | Track | Size | Notes |
 |------|-------|------|-------|
 | [logo-style-options.md](content/logo-style-options.md) | content | S-M | Listed above; gates first-class-themes' remaining 5 themes. |
-| [carousel-preview-layout-fix.md](content/carousel-preview-layout-fix.md) | content | S | Carousel preview misalignment in admin editor. |
-| [image-width-height-respect.md](content/image-width-height-respect.md) | content | S | Honour intrinsic image dims on render (currently auto-fills container). |
-| [module-transparency-style.md](content/module-transparency-style.md) | content | S | Per-section transparency / overlay options exposed in section editor. |
+
+> Triage 2026-05-16: `carousel-preview-layout-fix`, `image-width-height-respect`, `module-transparency-style` all shipped 2026-04-24 (banners on their spec docs + `shipped.md` entries + code verified). Removed from the active queue here; archaeology stays in `shipped.md`.
 
 ### Admin — content-publish workflow
 
