@@ -6,6 +6,15 @@
  * any row-actions column) + an empty state. Pure view capacity — the
  * pane's ViewModel + bespoke edit modal/drawer stay in the bridge,
  * rendered alongside this module (the established Batch-1 pattern).
+ *
+ * admin-information-architecture follow-up (2026-05-16): the hand-rolled
+ * header row was lifted into the shared `<PaneHeader>` component. The
+ * bridge's `title` / `eyebrow` / `description` props feed the title
+ * block; `onAdd` / `onRefresh` / `toolbar` / `headerExtra` collapse
+ * into the PaneHeader `actions` slot. Existing consumers don't need to
+ * change — the prop surface is unchanged, only the rendered chrome
+ * shifts to match the demonstrator panes (Footer / SystemPages /
+ * Invoices / Users / Analytics / Diagnostics).
  */
 import React from 'react';
 import {Button, Space, Table} from 'antd';
@@ -13,6 +22,7 @@ import {PlusOutlined, ReloadOutlined} from '@client/lib/icons';
 import type {ColumnsType} from 'antd/es/table';
 import EmptyState from '@admin/lib/EmptyState';
 import type {EmptyStateArtKey} from '@admin/lib/emptyStateArt';
+import PaneHeader from '@admin/shell/PaneHeader';
 
 export interface AdminCrudListEmptyState {
     testId: string;
@@ -29,6 +39,15 @@ export interface AdminCrudListEmptyState {
 export interface AdminCrudListModuleProps {
     testId: string;
     title?: string;
+    /** Small uppercase area label rendered above the title — feeds the
+     *  shared `<PaneHeader>` eyebrow (e.g. "Content", "Settings"). */
+    eyebrow?: string;
+    /** Optional one-line context below the title — feeds the shared
+     *  `<PaneHeader>` description slot. */
+    description?: string;
+    /** Override the testid used on the shared `<PaneHeader>` root.
+     *  Defaults to `${testId}-header`. */
+    paneHeaderTestId?: string;
     /** AntD column defs — the admin surface is AntD-native, so the
      *  bridge passes columns straight through (custom renderers, an
      *  Actions column, all of it). */
@@ -61,6 +80,9 @@ export interface AdminCrudListModuleProps {
 const AdminCrudListModule: React.FC<AdminCrudListModuleProps> = ({
     testId,
     title,
+    eyebrow,
+    description,
+    paneHeaderTestId,
     columns,
     rows,
     rowKey,
@@ -82,31 +104,40 @@ const AdminCrudListModule: React.FC<AdminCrudListModuleProps> = ({
     const renderEmpty = emptyState
         && (showEmptyState ?? (!loading && rows.length === 0));
 
+    const hasHeader = Boolean(title || eyebrow || description || onAdd || onRefresh || toolbar || headerExtra);
+    const headerActions = (onAdd || onRefresh || toolbar || headerExtra) ? (
+        <>
+            {onAdd && (
+                <Button
+                    data-testid={addTestId}
+                    type="primary"
+                    icon={<PlusOutlined/>}
+                    onClick={onAdd}
+                >{addLabel}</Button>
+            )}
+            {onRefresh && (
+                <Button
+                    data-testid={refreshTestId}
+                    icon={<ReloadOutlined/>}
+                    loading={loading}
+                    onClick={onRefresh}
+                >Refresh</Button>
+            )}
+            {toolbar}
+            {headerExtra}
+        </>
+    ) : undefined;
+
     return (
         <div data-testid={testId} style={{padding: 16}}>
-            {(title || onAdd || onRefresh || toolbar || headerExtra) && (
-                <Space style={{marginBottom: 16, width: '100%', justifyContent: 'space-between'}} align="start" wrap>
-                    <Space wrap>
-                        {onAdd && (
-                            <Button
-                                data-testid={addTestId}
-                                type="primary"
-                                icon={<PlusOutlined/>}
-                                onClick={onAdd}
-                            >{addLabel}</Button>
-                        )}
-                        {onRefresh && (
-                            <Button
-                                data-testid={refreshTestId}
-                                icon={<ReloadOutlined/>}
-                                loading={loading}
-                                onClick={onRefresh}
-                            >Refresh</Button>
-                        )}
-                        {toolbar}
-                    </Space>
-                    {headerExtra && <Space wrap>{headerExtra}</Space>}
-                </Space>
+            {hasHeader && (
+                <PaneHeader
+                    testId={paneHeaderTestId ?? `${testId}-header`}
+                    title={title}
+                    eyebrow={eyebrow}
+                    description={description}
+                    actions={headerActions}
+                />
             )}
             {renderEmpty ? (
                 <EmptyState

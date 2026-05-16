@@ -379,6 +379,70 @@ The audit table at `docs/roadmap/_meta/admin-pane-inventory.md` is the
 authoritative URL map — each sweep agent should consult it and tick
 its rows off.
 
+### Shared-module lift (2026-05-16)
+
+The first attempt at the per-area sweep hit three structural blockers:
+
+1. ~25 of the ~40 remaining panes have no App Router `page.tsx` — moving
+   them = creating routes that 404 today, which is feature work outside
+   the chrome-swap scope.
+2. CRUD panes use `AdminCrudListModule` which owns its own hand-rolled
+   header. Stacking a per-pane `<PaneHeader>` on top would render two
+   headers.
+3. Settings forms don't expose VM-level `dirty` state, so `<SaveBar>`
+   adoption needs feature work per-VM.
+
+Resolution: lift `<PaneHeader>` adoption **into** the shared module
+shapes — `AdminCrudListModule` + `AdminFormModule` — instead of
+sweeping the ~25 panes individually. One refactor per shape propagates
+the new chrome to every consumer of the shape without per-pane edits.
+Shipped 2026-05-16:
+
+- **`AdminCrudListModule`** — header row rewritten to render
+  `<PaneHeader>` whenever any header content is provided. `onAdd` /
+  `onRefresh` / `toolbar` / `headerExtra` collapse into the PaneHeader
+  `actions` slot. New optional props (`eyebrow` / `description` /
+  `paneHeaderTestId`) flow into the header; existing props unchanged.
+  Propagates to 16 CRUD-shaped panes: Cars, Email templates, Footer,
+  Inquiries, Inventory, Invoices admin loader, MCP tokens, Orders,
+  Permissions, Posts, Products, Product templates, Publishing,
+  Redirects, Releases, Trash, Users.
+- **`AdminFormModule`** — AntD `<Card>` chrome replaced with
+  `<PaneHeader>` + plain body container. Same prop additions. The save
+  row stays as-is (promotion to shared `<SaveBar>` deferred — see
+  below). Propagates to 9 form-shaped panes: Auth, Abandoned cart,
+  Checkout customisation, Commerce, Currency, Customer account,
+  Email, Logo, SEO.
+- **Users demonstrator** — its external `<PaneHeader>` was removed (it
+  now flows through the module), preventing a duplicate header. The
+  other 5 demonstrators (Footer, SystemPages, Invoices, Analytics,
+  Diagnostics) don't use the lifted shapes, so their external
+  `<PaneHeader>` stays intact.
+
+Deferred from this lift:
+
+- **Per-pane `eyebrow` / `description` adoption** — the lift gives
+  every CRUD + form pane the new chrome shape, but the title block
+  only fills in once each consumer passes `eyebrow` (bucket label) and
+  `description` (one-line context). Sweep agents add these as part of
+  per-area passes.
+- **`<SaveBar>` VM wiring** — settings forms need `dirty` state in
+  their ViewModels before SaveBar can collapse the inline save row.
+  Separate jump per VM, sequenced with the per-feature Settings work.
+- **Non-shared-module panes** — Themes, Layout, custom dashboards,
+  AdminApp page editor, and the ~25 panes that have no `page.tsx` —
+  these don't go through `AdminCrudListModule` / `AdminFormModule`,
+  so the module-level lift doesn't touch them. Per-pane chrome
+  adoption stays in the per-area sweep follow-ups above.
+- **~25 panes without `page.tsx`** — leave the App Router entry as
+  the gating concern. When a per-area sweep needs a pane reachable
+  via URL, that sweep's PR creates the page.tsx alongside the chrome
+  swap (not done speculatively here).
+
+The module-level lift means the per-area sweeps are now mostly about
+*content* (eyebrow + description strings, the right SaveBar wiring,
+empty-state copy) rather than chrome swaps — the chrome is uniform.
+
 ## Notes for the implementing agent
 
 - Start with the audit. Don't propose the taxonomy until the audit is

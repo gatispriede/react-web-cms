@@ -20,7 +20,6 @@ import {FeatureGrant, PageGrant, LocaleGrant} from "@interfaces/IPermission";
 import {useViewModel} from "@client/lib/state/observable";
 import AdminCrudListModule from "@admin/modules/shapes/AdminCrudListModule";
 import {onboardingCta} from "@admin/shell/EmptyState";
-import PaneHeader from "@admin/shell/PaneHeader";
 import {UsersViewModel} from "./UsersViewModel";
 
 /** Render-only Users pane — VM3 (2026-05-02). */
@@ -105,14 +104,12 @@ const AdminSettingsUsers = () => {
 
     return (
         <div style={{padding: 'var(--admin-rhythm-md, 16px)'}}>
-            <PaneHeader
-                testId="admin-users-header"
+            <AdminCrudListModule
+                testId="admin-users"
+                paneHeaderTestId="admin-users-header"
                 eyebrow={t('People')}
                 title={t('Users')}
                 description={t('Admin accounts with role + grants. Removing a user disables sign-in immediately.')}
-            />
-            <AdminCrudListModule
-                testId="admin-users"
                 columns={columns as unknown as ColumnsType<Record<string, unknown>>}
                 rows={vm.users as unknown as ReadonlyArray<Record<string, unknown>>}
                 rowKey="id"
