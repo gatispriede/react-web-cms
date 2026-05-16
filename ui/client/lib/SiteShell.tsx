@@ -45,6 +45,7 @@ import {IMongo} from "@interfaces/IMongo";
 import MongoApi from '@services/api/client/MongoApi';
 import {ISection} from "@interfaces/ISection";
 import Logo from "@client/features/Logo/Logo";
+import {ELogoContext} from "@enums/ELogoVariant";
 import Link from 'next/link'
 import Head from 'next/head'
 import {i18n as I18nInstance, TFunction} from "i18next";
@@ -759,12 +760,12 @@ class LegacyAppClass extends React.Component<IHomeProps> {
                                                     }}
                                                 />
                                                 <span className="site-tabs-left-cluster__logo">
-                                                    <Logo t={this.props.t} admin={false}/>
+                                                    <Logo t={this.props.t} admin={false} context={ELogoContext.MobileCollapsed}/>
                                                 </span>
                                             </div>
                                             <div className="site-tabs-center-cluster" style={{display: 'flex', alignItems: 'center', gap: 16}}>
                                                 <span className="site-tabs-center-cluster__logo">
-                                                    <Logo t={this.props.t} admin={false}/>
+                                                    <Logo t={this.props.t} admin={false} context={ELogoContext.Header}/>
                                                 </span>
                                                 <MainMenu
                                                     pages={menuPages}

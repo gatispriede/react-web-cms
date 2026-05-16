@@ -48,6 +48,13 @@ export function applyThemeCssVars(tokens: IThemeTokens | null | undefined): void
     if (typeof document.body !== 'undefined') {
         if (slug) document.body.setAttribute('data-theme-name', slug);
         else document.body.removeAttribute('data-theme-name');
+        // Logo lockup hint — read at runtime by the Logo renderer to pick a
+        // theme-appropriate variant (`'wordmark' | 'mark-only' | 'combined'`).
+        // Lives on body, not :root, so theme-preview wrappers can override
+        // it locally — same scoping contract as `data-theme-name`.
+        const lockup = typeof tokens.logoLockup === 'string' ? tokens.logoLockup : '';
+        if (lockup) document.body.setAttribute('data-logo-lockup', lockup);
+        else document.body.removeAttribute('data-logo-lockup');
     }
 }
 

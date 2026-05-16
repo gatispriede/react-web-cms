@@ -35,6 +35,12 @@ export interface IThemeTokens {
     fontSans?: string;
     /** Machine-readable slug for SCSS theme-scoping (`[data-theme-name="<slug>"]` — set on body in production, on the preview wrapper in Theme cards). */
     themeSlug?: string;
+    /**
+     * Preferred logo lockup declared by the active theme — drives the public
+     * Logo renderer's variant pick when no explicit override is passed.
+     * Mirrors `IThemeManifest.logoLockup` (`'wordmark' | 'mark-only' | 'combined'`).
+     */
+    logoLockup?: string;
     [key: string]: string | number | undefined;
 }
 

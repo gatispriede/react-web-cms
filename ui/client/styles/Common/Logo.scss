@@ -57,6 +57,34 @@
     img { width: 100%; height: 100%; object-fit: cover; }
     .logo-mark { border-radius: 50%; &::after { border-radius: 50%; } }
   }
+
+  /* ----------------------------------------------------------------------
+     Asset variants (logo-style-options — multi-variant). Each variant is a
+     distinct *asset* slot, picked at render time by `pickLogoVariant`. The
+     hooks below are structural-only — they apply when the operator either
+     opts into a variant explicitly or the theme's `logoLockup` selects one.
+
+     - `--variant-icon`: square-aspect mark, used in tight slots. Force a
+       square box around it so non-square `<img>` sources crop cleanly.
+     - `--variant-mono`: visual fallback when no actual mono asset was
+       uploaded — applies a `grayscale + contrast` filter chain so the Full
+       variant still renders legibly on dark surfaces. Real mono uploads
+       skip this because the filter is a no-op on already-mono PNG/SVG.
+     - `--variant-wordmark`: text-only lockup; remove the square constraint
+       that other variants might have inherited from theme overrides.
+     ---------------------------------------------------------------------- */
+  &.logo--variant-icon img {
+    aspect-ratio: 1 / 1;
+    object-fit: contain;
+    max-width: var(--logo-height);
+  }
+  &.logo--variant-mono img {
+    filter: grayscale(1) contrast(1.05);
+  }
+  &.logo--variant-wordmark img {
+    aspect-ratio: auto;
+    max-width: none;
+  }
 }
 
 .logo-mark {

@@ -1,5 +1,22 @@
 # Logo — theme-aware style variants
 
+> **SHIPPED 2026-05-16 (multi-variant asset slots — full / icon / mono / wordmark)** —
+> the spec's second jump landed. `ILogoContent` extended with a `variants`
+> record (`Partial<Record<ELogoVariant, ILogoVariantAsset>>`); `ELogoVariant`
+> enum at `shared/enums/ELogoVariant.ts` defines `Full | Icon | Mono | Wordmark`,
+> `ELogoContext` defines `Header | Footer | MobileCollapsed | Error`. Public
+> renderer (`ui/client/features/Logo/Logo.tsx`) picks a variant via
+> `pickLogoVariant(context, lockup)` using the active theme's `logoLockup`
+> (now plumbed through `IThemeTokens.logoLockup` → `body[data-logo-lockup]`
+> by `applyThemeCssVars`). `resolveLogoVariantSrc` falls back through requested
+> variant → `Full` → legacy `src` → `◆` mark, so existing single-image content
+> keeps working unchanged. Admin Logo settings (`ui/admin/features/Logo/LogoSettings.tsx`)
+> gained per-variant upload slots beneath the primary image. `Lockup` was
+> renamed `combined` in the manifest contract for `'mark-only' | 'wordmark' | 'combined'`;
+> picker treats `combined`/unset as `Full`. Unblocks first-class-themes'
+> remaining 5 themes since they can now declare `logoLockup` and operators
+> can upload distinct lockups per surface.
+
 > **Shipped (2026-04-24)** — the site-wide top-bar Logo (now at
 > `ui/client/features/Logo/Logo.tsx`, not a section module — see reshape)
 > accepts a `style` field persisted in the Logo JSON. Variants `default`,

@@ -1,18 +1,34 @@
 import {notifyError, notifySuccess, notifyWarning} from '@admin/lib/notify';
 import {ELogoStyle} from '@enums/ELogoStyle';
+import {ELogoVariant} from '@enums/ELogoVariant';
+import {ILogoContent, ILogoVariantAsset} from '@interfaces/ILogo';
 import MongoApi from '@services/api/client/MongoApi';
 import {PUBLIC_IMAGE_PATH} from '@utils/imgPath';
 import {ConflictError, isConflictError} from '@client/lib/conflict';
 import {observable} from '@client/lib/state/observable';
+
+export type LogoVariants = Partial<Record<ELogoVariant, ILogoVariantAsset>>;
 
 export interface LogoState {
     src: string;
     width: number;
     height: number;
     style: ELogoStyle;
+    /**
+     * Multi-variant slots (logo-style-options). Each variant is independently
+     * optional; the public renderer falls back through `Full` → legacy `src`
+     * → built-in mark. See `shared/types/ILogo.ts#resolveLogoVariantSrc`.
+     */
+    variants: LogoVariants;
 }
 
-export const DEFAULT_LOGO: LogoState = {src: '', width: 40, height: 40, style: ELogoStyle.Default};
+export const DEFAULT_LOGO: LogoState = {
+    src: '',
+    width: 40,
+    height: 40,
+    style: ELogoStyle.Default,
+    variants: {},
+};
 
 export interface LogoConflict {
     error: ConflictError<unknown>;
@@ -43,18 +59,37 @@ export class LogoViewModel {
             this.version = (raw as {version?: number})?.version;
             if (!raw?.content) { this.logo = {...DEFAULT_LOGO}; return; }
             try {
-                const parsed = JSON.parse(raw.content);
+                const parsed = JSON.parse(raw.content) as Partial<ILogoContent>;
                 const parsedStyle = typeof parsed?.style === 'string'
                     && (Object.values(ELogoStyle) as string[]).includes(parsed.style)
                     ? (parsed.style as ELogoStyle)
                     : DEFAULT_LOGO.style;
+                // Sanitise variants: drop unknown keys + non-string srcs. This
+                // is the back-compat seam — legacy rows have no `variants`
+                // field and parse to an empty record, leaving `src` as the
+                // sole asset (resolved as the `Full` variant by readers).
+                const validVariantKeys = new Set<string>(Object.values(ELogoVariant) as string[]);
+                const rawVariants = (parsed?.variants ?? {}) as Record<string, unknown>;
+                const variants: LogoVariants = {};
+                for (const [k, v] of Object.entries(rawVariants)) {
+                    if (!validVariantKeys.has(k)) continue;
+                    const entry = v as Partial<ILogoVariantAsset> | null | undefined;
+                    if (entry && typeof entry.src === 'string' && entry.src) {
+                        variants[k as ELogoVariant] = {
+                            src: entry.src,
+                            width: Number.isFinite(entry.width) ? entry.width as number : undefined,
+                            height: Number.isFinite(entry.height) ? entry.height as number : undefined,
+                        };
+                    }
+                }
                 this.logo = {
                     src: typeof parsed?.src === 'string' ? parsed.src : '',
-                    width: Number.isFinite(parsed?.width) ? parsed.width : DEFAULT_LOGO.width,
-                    height: Number.isFinite(parsed?.height) ? parsed.height : DEFAULT_LOGO.height,
+                    width: Number.isFinite(parsed?.width) ? parsed.width as number : DEFAULT_LOGO.width,
+                    height: Number.isFinite(parsed?.height) ? parsed.height as number : DEFAULT_LOGO.height,
                     style: parsedStyle,
+                    variants,
                 };
-            } catch { this.logo = {...DEFAULT_LOGO}; }
+            } catch { this.logo = {...DEFAULT_LOGO, variants: {}}; }
         } finally { this.loading = false; }
     }
 
@@ -71,6 +106,32 @@ export class LogoViewModel {
     setLogoSrc(src: string): void { this.logo = {...this.logo, src}; }
     setHeight(height: number): void { this.logo = {...this.logo, height}; }
     setStyle(style: ELogoStyle): void { this.logo = {...this.logo, style}; }
+
+    /** Set or replace a per-variant asset slot. */
+    setVariantSrc(variant: ELogoVariant, src: string): void {
+        const next: LogoVariants = {...this.logo.variants};
+        if (src) next[variant] = {...(next[variant] ?? {src: ''}), src};
+        else delete next[variant];
+        this.logo = {...this.logo, variants: next};
+    }
+
+    /** Drop a per-variant slot entirely. */
+    clearVariant(variant: ELogoVariant): void {
+        if (!this.logo.variants[variant]) return;
+        const next: LogoVariants = {...this.logo.variants};
+        delete next[variant];
+        this.logo = {...this.logo, variants: next};
+    }
+
+    /** Variant-aware version of `handleFile` — infers src then writes the slot. */
+    handleVariantFile(variant: ELogoVariant, f: any): void {
+        const src = this.inferLocation(f);
+        if (!src) {
+            notifyWarning(this.t('Could not determine the uploaded image location yet — try again.'));
+            return;
+        }
+        this.setVariantSrc(variant, src);
+    }
 
     private inferLocation(f: any): string | undefined {
         if (!f) return undefined;

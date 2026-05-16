@@ -145,5 +145,6 @@ export function manifestToTokens(m: IThemeManifest): IThemeTokens {
         fontMono: m.typography.mono,
         fontSize: m.typography.baseSize ?? 16,
         themeSlug: m.slug,
+        logoLockup: m.logoLockup,
     };
 }

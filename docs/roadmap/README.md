@@ -48,7 +48,7 @@ These are acceptance criteria, not nice-to-haves.
 |------|-------|------|-------|
 | [first-class-themes.md](storefront/first-class-themes.md) | 5 | XL (multi-week) | 5 of 8 themes still need design pass — `local-business`, `saas-landing`, `portfolio`, `agency`, `commerce`. `editorial` / `restaurant` / `event` shipped. Each remaining theme needs Stitch frames + per-module SCSS pass. |
 | [pc-parts-dropshipping-integration.md](storefront/pc-parts-dropshipping-integration.md) | 7 | XL (~5-7 days AI) | NEW — replaces deleted ss-com-cars spec. `IDropshipDistributorAdapter` extending W7b's warehouse adapter shape + `placeOrder` / `getOrderStatus` / `getReturnPolicy` / `quoteWholesale`. First impl against TD SYNNEX StreamOne (pan-EU + UK). Operator holds no inventory — every checkout forwards to distributor. Wires into existing Phase 1.B/1.C/1.D + W6a/W8g. **Operator post-merge: partner account onboarding (1-2 weeks).** |
-| [logo-style-options.md](content/logo-style-options.md) | content | S-M | Multi-variant logo (full / icon / mono) per theme; needed by first-class-themes' 5 remaining themes. |
+| ~~[logo-style-options.md](content/logo-style-options.md)~~ | ~~content~~ | ~~S-M~~ | **SHIPPED 2026-05-16** — multi-variant logo (full / icon / mono / wordmark) landed; see [shipped.md](shipped.md#2026-05-16--logo-style-options-multi-variant-logo-assets). Unblocks first-class-themes' remaining 5 themes. |
 
 ### Pre-public-deploy gates
 
@@ -71,7 +71,7 @@ These are acceptance criteria, not nice-to-haves.
 
 | Item | Track | Size | Notes |
 |------|-------|------|-------|
-| [logo-style-options.md](content/logo-style-options.md) | content | S-M | Listed above; gates first-class-themes' remaining 5 themes. |
+| ~~[logo-style-options.md](content/logo-style-options.md)~~ | ~~content~~ | ~~S-M~~ | **SHIPPED 2026-05-16** — see [shipped.md](shipped.md#2026-05-16--logo-style-options-multi-variant-logo-assets). |
 
 > Triage 2026-05-16: `carousel-preview-layout-fix`, `image-width-height-respect`, `module-transparency-style` all shipped 2026-04-24 (banners on their spec docs + `shipped.md` entries + code verified). Removed from the active queue here; archaeology stays in `shipped.md`.
 
