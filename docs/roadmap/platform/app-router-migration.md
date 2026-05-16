@@ -168,11 +168,32 @@ Tracked as a checklist; each batch lands as its own PR. Sizes are rough.
   `pages/robots.ts` — `app/` + `pages/` route collisions are hard Next
   errors. Scroll-mode hash redirect is the `[...slug].tsx` page's
   `useEffect` (lives outside SiteShell), untouched in this batch.
-- [ ] **Batch 4 — dynamic public routes (L).** `app/[...slug]/page.tsx`
-  ← `pages/[...slug].tsx` (with `generateStaticParams` from nav GraphQL).
-  `app/blog/page.tsx` + `app/blog/[slug]/page.tsx` ← `pages/blog/*` (with
-  `generateStaticParams` + `generateMetadata`). Per-route
-  `getStaticProps`/`getServerSideProps` → server-component data loading.
+- [x] **Batch 4 — dynamic public routes (L).** Shipped 2026-05-16.
+  `app/[...slug]/page.tsx` ← `pages/[...slug].tsx`: async Server
+  Component, looks up the navigation row via `resolveSlugChain` (shared
+  with the Pages-Router path), calls `fetchInitialPageData()`, hands
+  `<SiteShell page=… pageId=… slugChain=… initialData=…/>`. Locale-prefix
+  segments (`/lv/about`, `/lt/foo`) detected + stripped here since
+  App-Router routes are NOT covered by `next.config.js`'s pages-router
+  `i18n` block; active locale still resolves cookie-first in
+  `app/layout.tsx`. `notFound()` from `next/navigation` for unresolved
+  chains. `generateStaticParams` deliberately omitted — root layout is
+  already `dynamic = 'force-dynamic'` so every render is per-request.
+  `app/blog/page.tsx` + `app/blog/[slug]/page.tsx` ← `pages/blog/*`:
+  Server-Component route + `BlogIndexView` / `BlogPostView` `'use client'`
+  sub-components carrying antd `ConfigProvider` + `applyThemeCssVars`
+  `useEffect` + `useTranslation`. SEO `<Head>` moved to
+  `generateMetadata`; JSON-LD Article / Blog schema still emitted inline
+  via `<script type="application/ld+json">` (the App-Router `Metadata`
+  type has no first-class structured-data slot). Deleted:
+  `pages/[...slug].tsx`, `pages/blog/index.tsx`, `pages/blog/[slug].tsx`.
+  `LegacyAppClass` no longer exported from `ui/client/lib/SiteShell.tsx`
+  — was solely a B3 seam for the now-removed Pages-Router catch-all.
+  Scroll-mode hash redirect (the `useEffect` rewriting `/about` → `/#about`)
+  was NOT ported — under app router the SSR'd standalone page still
+  serves real HTML for crawlers; folded into SiteShell's own hash
+  handler in a follow-up if QA flags it. See
+  [shipped.md 2026-05-16 B4 entry](../shipped.md).
 - [ ] **Batch 5 — commerce + account routes (XL).** `cars/*`,
   `products/*`, `cart/*`, `checkout/*`, `account/*`, `orders/*` — each
   with its own data-loading conversion. Largest batch; may split

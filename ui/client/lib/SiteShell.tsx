@@ -18,13 +18,11 @@
  *    inheritance was implicit; under App Router this is mandatory.
  *  - Default export is now a small functional wrapper `SiteShell` that
  *    pulls `t` / `i18n` from `useTranslation('app')` and `pathname` from
- *    `usePathname()` and forwards them to the inner `App` class. The
- *    upstream API for the class itself is unchanged so the Pages-Router
- *    `[...slug].tsx` import continues to work without prop-plumbing
- *    edits. (The pages-router import shape is `<App t={...} i18n={...}
- *    pathname={...} .../>`; we re-export the class as a *named* export
- *    `LegacyAppClass` so callers that already supply those props keep
- *    using it directly until B4 reshapes them.)
+ *    `usePathname()` and forwards them to the inner `App` class. B4
+ *    deleted the Pages-Router `[...slug].tsx` consumer that imported the
+ *    class directly, so the class is now an internal implementation
+ *    detail of this module — it's no longer exported. If a future
+ *    consumer needs the prop-plumbed shape back, re-export here.
  *
  * NOT changed: every internal method (`buildStateFromInitialData`,
  * `initialize`, `handleHashChange`, `findIdForActiveTab`, the render
@@ -98,12 +96,14 @@ export interface ISiteShellProps {
     initialData?: InitialPageData,
 }
 
-// Legacy alias — Pages-Router `pages/[...slug].tsx` (and any test still
-// importing `App`) keep working. Renamed in the new file for clarity but
-// the wire shape is identical.
+// B4 — the Pages-Router catch-all (`pages/[...slug].tsx`) that used to
+// import this class directly is gone. The class is now an internal
+// detail of the module; the default `SiteShell` wrapper is the only
+// caller. Kept as `class` (vs collapsing into the functional wrapper)
+// to minimise behaviour deltas during the migration window.
 type IHomeProps = ISiteShellProps;
 
-export class LegacyAppClass extends React.Component<IHomeProps> {
+class LegacyAppClass extends React.Component<IHomeProps> {
     sections: any[] = []
     private MongoApi = new MongoApi()
     private PublishApi = new PublishApi()
