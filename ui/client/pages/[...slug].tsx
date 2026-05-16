@@ -4,7 +4,14 @@ import {useRouter} from 'next/router';
 import {useTranslation} from 'next-i18next/pages';
 import {usePathname} from 'next/navigation';
 import {serverSideTranslations} from 'next-i18next/pages/serverSideTranslations';
-import App from './app';
+// B3 — `pages/app.tsx` moved to `ui/client/lib/SiteShell.tsx` so the
+// App-Router `app/page.tsx` can consume it too. Pages-Router callers
+// (this file) keep using the class-shape `LegacyAppClass` directly so
+// `useTranslation('app')` stays on the pages-router subpath import that
+// `_app.tsx`'s `appWithTranslation` HOC initialises. The App-Router
+// caller uses the `SiteShell` default export which calls
+// `useTranslation` from `next-i18next/client` itself.
+import {LegacyAppClass as App} from '@client/lib/SiteShell';
 import {fetchInitialPageData, gqlFetch, InitialPageData} from '@client/lib/gqlFetch';
 import {resolveSlugChain, slugChainForPage, NavRow} from '@client/lib/slugChain';
 

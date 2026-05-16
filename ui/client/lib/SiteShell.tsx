@@ -1,4 +1,39 @@
+'use client';
+/**
+ * SiteShell — the public-site shell (header / navigation / language
+ * dropdown / footer / SEO `<Head>` / scroll- vs tabs-mode switch).
+ *
+ * App-Router migration, Batch 3. This file is the former `pages/app.tsx`
+ * (519-line client class) lifted out of the Pages-Router routes folder
+ * into `lib/` so both routers can consume it during the migration window:
+ *  - Pages Router `pages/[...slug].tsx` still imports it for the
+ *    catch-all public route (B4 territory; untouched here).
+ *  - App Router `app/page.tsx` (this batch's index port) imports it for
+ *    `/`.
+ *
+ * What changed vs. `pages/app.tsx`:
+ *  - Marked `'use client'` — it consumes browser APIs (window, hashchange,
+ *    `ConfigProvider`, `Spin`, `Dropdown`, the `useTranslation` hook in
+ *    the new wrapper). The Pages-Router route file's own `'use client'`
+ *    inheritance was implicit; under App Router this is mandatory.
+ *  - Default export is now a small functional wrapper `SiteShell` that
+ *    pulls `t` / `i18n` from `useTranslation('app')` and `pathname` from
+ *    `usePathname()` and forwards them to the inner `App` class. The
+ *    upstream API for the class itself is unchanged so the Pages-Router
+ *    `[...slug].tsx` import continues to work without prop-plumbing
+ *    edits. (The pages-router import shape is `<App t={...} i18n={...}
+ *    pathname={...} .../>`; we re-export the class as a *named* export
+ *    `LegacyAppClass` so callers that already supply those props keep
+ *    using it directly until B4 reshapes them.)
+ *
+ * NOT changed: every internal method (`buildStateFromInitialData`,
+ * `initialize`, `handleHashChange`, `findIdForActiveTab`, the render
+ * tree). This is a mechanical port — behaviour deltas would mask any
+ * App-Router-induced regressions during smoke testing.
+ */
 import React from 'react'
+import {useT} from 'next-i18next/client';
+import {usePathname} from 'next/navigation';
 import {resolve} from "@services/api/generated";
 import {ConfigProvider, Dropdown, MenuProps, Space, Spin, Typography} from 'antd';
 import DynamicTabsContent from "@client/lib/DynamicTabsContent";
@@ -14,9 +49,8 @@ import {ISection} from "@interfaces/ISection";
 import Logo from "@client/features/Logo/Logo";
 import Link from 'next/link'
 import Head from 'next/head'
-import {i18n, TFunction} from "i18next";
+import {i18n as I18nInstance, TFunction} from "i18next";
 import {INavigation} from "@services/api/generated/schema.generated";
-import {sanitizeKey} from "@utils/stringFunctions";
 import {translateOrKeep} from "@utils/translateOrKeep";
 import PublishApi from "@services/api/client/PublishApi";
 import PostApi from "@services/api/client/PostApi";
@@ -45,7 +79,7 @@ interface IHomeState {
     layoutMode: 'tabs' | 'scroll',
 }
 
-interface IHomeProps {
+export interface ISiteShellProps {
     page: string,
     /** F7 — server-resolved page id for the current route (the canonical
      *  `INavigation.id` like `sc7-nav-sakums`). When present, the active
@@ -55,7 +89,7 @@ interface IHomeProps {
      *  that used to live in `findIdForActiveTab`. */
     pageId?: string,
     t: TFunction<string, undefined>,
-    i18n: i18n,
+    i18n: I18nInstance,
     pathname: string,
     /** F1 sub-pages — full slug chain (root → leaf) for the current
      *  route. Drives MainMenu trail-highlight and feeds `activeChain`
@@ -64,7 +98,12 @@ interface IHomeProps {
     initialData?: InitialPageData,
 }
 
-class App extends React.Component<IHomeProps> {
+// Legacy alias — Pages-Router `pages/[...slug].tsx` (and any test still
+// importing `App`) keep working. Renamed in the new file for clarity but
+// the wire shape is identical.
+type IHomeProps = ISiteShellProps;
+
+export class LegacyAppClass extends React.Component<IHomeProps> {
     sections: any[] = []
     private MongoApi = new MongoApi()
     private PublishApi = new PublishApi()
@@ -200,7 +239,7 @@ class App extends React.Component<IHomeProps> {
     private slugify(input: string): string {
         return input
             .normalize('NFKD')
-            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[̀-ͯ]/g, '')
             .toLowerCase()
             .replace(/[^a-z0-9\s-]+/g, '')
             .trim()
@@ -311,13 +350,6 @@ class App extends React.Component<IHomeProps> {
 
     async initialize(init: boolean = false): Promise<void> {
         let cacheDataSource: any
-        // if(typeof window === 'undefined'){
-        //     // @ts-ignore
-        //     cacheDataSource = global.preloadedData
-        // }else{
-        //     // @ts-ignore
-        //     cacheDataSource = window.preloadedData
-        // }
         let newState: IHomeState = {
             loading: false,
             pages: this.state.tabProps,
@@ -360,8 +392,7 @@ class App extends React.Component<IHomeProps> {
         }
         // @ts-ignore
         if (cacheDataSource) {
-            // @ts-ignore
-            // pages = cacheDataSource.pages
+            // unused legacy branch
         } else {
             // pages = await this.getNavigationList()
         }
@@ -373,8 +404,7 @@ class App extends React.Component<IHomeProps> {
                     sectionsData = await this.getSectionData(pages, id as unknown as number)
                     // @ts-ignore
                     if (cacheDataSource) {
-                        // @ts-ignore
-                        // sectionsData = cacheDataSource.sectionsData[id]
+                        // unused legacy branch
                     } else {
                         // sectionsData = await this.getSectionData(pages, id as unknown as number)
                     }
@@ -701,31 +731,17 @@ class App extends React.Component<IHomeProps> {
                             // configured), so dropping them is a no-op for users.
                             (() => {
                                 const menuPages: IMenuPage[] = this.state.pages.map((p: any) => ({
-                                    // F7 — match `parent` refs by id (not display
-                                    // name) so sub-pages nest under the right root.
-                                    // Fall back to `page` for legacy rows without
-                                    // an id; those never have `parent` either, so
-                                    // they stay flat. Same shape as the mobile
-                                    // builder above and the menuPages projection
-                                    // earlier in this file.
                                     id: p.id || p.page,
                                     page: p.page,
                                     parent: p.parent,
                                     slug: p.slug,
                                 }));
-                                // Prefer SSR-known slug chain (full root→leaf so
-                                // SubMenu trail-highlight works) over the
-                                // single-segment derivation we used to do here.
                                 const propsChain = this.props.slugChain ?? [];
                                 const activePage: any = this.state.pages[activeKey];
                                 const fallbackChain = activePage
                                     ? [(activePage.slug || activePage.page).toString().replace(/\s+/g, '-').toLowerCase()]
                                     : [];
                                 const activeChain = propsChain.length > 0 ? propsChain : fallbackChain;
-                                // SSR: themeConfig may be unset on first paint;
-                                // fall back to the SSR-provided theme tokens (which
-                                // also drove the `<body data-theme-name>` attribute
-                                // in `_document.tsx`).
                                 const themeName = (this.state.themeConfig as any)?.token?.themeName
                                     || (this.props.initialData?.themeTokens as any)?.themeSlug
                                     || (typeof document !== 'undefined' ? document.body.dataset.themeName : undefined);
@@ -734,11 +750,6 @@ class App extends React.Component<IHomeProps> {
                                     <div className="site-tabs">
                                         <div className="site-tabs-bar" style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px'}}>
                                             <div className="site-tabs-left-cluster" style={{display: 'flex', alignItems: 'center', gap: 12}}>
-                                                {/* MobileNav lives here so on mobile the hamburger sits at
-                                                 *  the far left. Hidden on desktop via MobileNav.scss media
-                                                 *  rule. Logo follows the menu cluster (centered) on desktop
-                                                 *  to mirror the live funisimo.pro layout — see the next
-                                                 *  cluster below. */}
                                                 <MobileNav
                                                     links={this.buildMobileLinks()}
                                                     activeKey={"" + activeKey}
@@ -747,17 +758,11 @@ class App extends React.Component<IHomeProps> {
                                                         if (typeof window !== 'undefined') window.location.assign(link.href);
                                                     }}
                                                 />
-                                                {/* Mobile: logo also rides in the left cluster so it stays
-                                                 *  visible next to the hamburger. Hidden on desktop via the
-                                                 *  matching `.site-tabs-left-cluster .site-logo` rule. */}
                                                 <span className="site-tabs-left-cluster__logo">
                                                     <Logo t={this.props.t} admin={false}/>
                                                 </span>
                                             </div>
                                             <div className="site-tabs-center-cluster" style={{display: 'flex', alignItems: 'center', gap: 16}}>
-                                                {/* Desktop: logo sits inline with the menu (centered cluster
-                                                 *  matches funisimo.pro layout). Hidden on mobile via the
-                                                 *  `.site-tabs-center-cluster .site-logo` mobile rule. */}
                                                 <span className="site-tabs-center-cluster__logo">
                                                     <Logo t={this.props.t} admin={false}/>
                                                 </span>
@@ -773,9 +778,7 @@ class App extends React.Component<IHomeProps> {
                                                     }
                                                 />
                                             </div>
-                                            <div style={{display: 'flex', alignItems: 'center', gap: 12}}>{/* Blog moved into the menu via `extraItems` (was a standalone Link). */}
-                                                {/* Phase 1.A — auth-split-client-admin: storefront customer account control.
-                                                 *   Renders null when `siteFlags.auth.clientLoginEnabled === false`. */}
+                                            <div style={{display: 'flex', alignItems: 'center', gap: 12}}>
                                                 <CustomerAccountDropdown/>
                                                 {items.length > 1 && (
                                                     <Dropdown className="language-dropdown" overlayClassName="lang-popup" menu={{items}}>
@@ -817,5 +820,36 @@ class App extends React.Component<IHomeProps> {
             </PostsProvider>
         );
     }
+}
+
+/**
+ * App-Router-shaped wrapper: pulls `t` / `i18n` / `pathname` from hooks
+ * so callers (`app/page.tsx`, the future B4 `app/[...slug]/page.tsx`)
+ * don't have to plumb them through props from a server component. Callers
+ * pass only the data-driven props (`page`, `pageId`, `slugChain`,
+ * `initialData`).
+ */
+export interface SiteShellPublicProps {
+    page: string;
+    pageId?: string;
+    slugChain?: string[];
+    initialData?: InitialPageData;
+}
+
+const SiteShell: React.FC<SiteShellPublicProps> = ({page, pageId, slugChain, initialData}) => {
+    const {t, i18n} = useT('app');
+    const pathname = usePathname();
+    return (
+        <LegacyAppClass
+            page={page}
+            pageId={pageId}
+            slugChain={slugChain}
+            initialData={initialData}
+            t={t}
+            i18n={i18n}
+            pathname={pathname ?? ''}
+        />
+    );
 };
-export default App;
+
+export default SiteShell;

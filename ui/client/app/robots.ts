@@ -3,6 +3,13 @@ import type {MetadataRoute} from 'next';
 /**
  * Robots — W8h SEO program § robots.txt.
  *
+ * App Router migration, Batch 3 — moved from `pages/robots.ts` to
+ * `app/robots.ts`. The file's shape (`export default function robots():
+ * MetadataRoute.Robots`) is the App Router metadata-file convention.
+ * Living under `pages/` was a historical accident — Pages Router doesn't
+ * recognise this shape, so it was only ever functional under App-Router
+ * resolution. The move makes the path canonical.
+ *
  * Env-gated:
  *   - production: allow everything except admin / api / customer-account
  *   - everything else (dev / staging / preview): Disallow: /

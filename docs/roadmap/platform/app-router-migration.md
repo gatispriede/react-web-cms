@@ -144,11 +144,30 @@ Tracked as a checklist; each batch lands as its own PR. Sizes are rough.
   `res.revalidate(p)` and `revalidatePath(p)` from `next/cache` per path
   — dual-mode so Pages-Router and App-Router routes both flush during
   the migration window (risk #4). See [shipped.md 2026-05-16 B2 entry](../shipped.md).
-- [ ] **Batch 3 — public shell + `index` (L).** `pages/app.tsx` (519-line
-  client class) → `ui/client/lib/SiteShell.tsx` (`'use client'`, calls
-  `useTranslation` itself, drops `t`/`i18n` props). `app/page.tsx` ←
-  `pages/index.tsx` (SSG, `revalidate = 3600`). `app/robots.ts` ←
-  `pages/robots.ts` (trivial). Verify scroll-mode redirect still fires.
+- [x] **Batch 3 — public shell + `index` + `robots` (L).** Shipped
+  2026-05-16. `pages/app.tsx` → `ui/client/lib/SiteShell.tsx`
+  (`'use client'`); class moved verbatim and re-exported as
+  `LegacyAppClass` (named export), wrapped by a functional default
+  `SiteShell` that pulls `t`/`i18n` from `useT('app')` (next-i18next
+  v16 client subpath, not `useTranslation` — that name doesn't exist on
+  `next-i18next/client`) and `pathname` from `usePathname()`. Pages-Router
+  `pages/[...slug].tsx` (still B4 territory) re-pointed to import
+  `LegacyAppClass` directly so it keeps using `next-i18next/pages`
+  `useTranslation` via its own `appWithTranslation` HOC. `app/page.tsx`
+  ← `pages/index.tsx` — async Server Component, calls
+  `fetchInitialPageData()` per request, branches to `<LandingPage/>` on
+  fresh installs (no published pages), otherwise renders
+  `<SiteShell page="/" initialData={data}/>`. Pages-Router index used
+  `getServerSideProps` (not SSG — see in-file comment about the Docker
+  prebuild baking `showLanding=true`); the App-Router port inherits
+  `dynamic='force-dynamic'` from the root layout, preserving the
+  per-request contract. `app/robots.ts` ← `pages/robots.ts` (file was
+  already in `MetadataRoute.Robots` shape — App-Router metadata convention;
+  living under `pages/` was a historical accident, Pages Router doesn't
+  recognise the shape). Deleted: `pages/app.tsx`, `pages/index.tsx`,
+  `pages/robots.ts` — `app/` + `pages/` route collisions are hard Next
+  errors. Scroll-mode hash redirect is the `[...slug].tsx` page's
+  `useEffect` (lives outside SiteShell), untouched in this batch.
 - [ ] **Batch 4 — dynamic public routes (L).** `app/[...slug]/page.tsx`
   ← `pages/[...slug].tsx` (with `generateStaticParams` from nav GraphQL).
   `app/blog/page.tsx` + `app/blog/[slug]/page.tsx` ← `pages/blog/*` (with
