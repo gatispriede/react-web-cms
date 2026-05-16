@@ -7,7 +7,7 @@ Infra, MCP, migrations, tooling.
 | Item | Wave | Size | Status |
 |---|---|---|---|
 | [app-router-migration.md](app-router-migration.md) | 2 | XL (multi-batch) | Batch 1 shipped (App Router foundation + privacy/terms leaf pages). Remaining: B2 mongo re-entry guard + revalidate fix · B3 public shell + index + robots · B4 dynamic public routes · B5 commerce + account routes · B6 auth + admin · B7 cleanup + cutover. |
-| [mcp-real-world-ready.md](mcp-real-world-ready.md) | 2 | S | F8-stream shipped. **Remaining: un-skip MCP e2e suite** (test.skip blocks pending fixture wiring). |
+| ~~[mcp-real-world-ready.md](mcp-real-world-ready.md)~~ | 2 | S | **SHIPPED 2026-05-16.** F8-stream + MCP e2e suite green on Linux CI and Windows local dev. `adminStorageState` fixture pre-warms `/admin/signin` via plain fetch before opening a browser context — cold per-route compile (60–180 s on Windows) no longer races the fixture's own timeout. |
 | [backup-and-disaster-recovery.md](backup-and-disaster-recovery.md) | 8 | S (operator-action) | Restic + B2 code shipped. **Operator: B2 bucket + append-only application key + restic passphrase + first `restic init` + GitHub Actions drill workflow.** Runbook `docs/runbooks/backup-and-restore.md`. |
 | [terraform-kamal-migration.md](terraform-kamal-migration.md) | — | M (operator-coordinated) | Funisimo cutover shipped 2026-05-08. **Remaining: Skyclimber droplet cutover.** |
 

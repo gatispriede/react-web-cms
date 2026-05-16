@@ -64,7 +64,7 @@ These are acceptance criteria, not nice-to-haves.
 | Item | Track | Size | Notes |
 |------|-------|------|-------|
 | ~~[app-router-migration.md](platform/app-router-migration.md)~~ | ~~2~~ | ~~XL (multi-batch)~~ | **SHIPPED 2026-05-16** — all 7 batches (B1, B1.5, B2, B3, B4, B4.5, B5, B6, B7) landed. App Router migration complete; only `pages/api/*` route handlers remain in `pages/`. See [shipped.md](shipped.md#2026-05-16--app-router-migration-batch-7--cleanup--cutover-migration-complete) + [platform/app-router-migration.md](platform/app-router-migration.md) for the as-shipped detail. |
-| [mcp-real-world-ready.md](platform/mcp-real-world-ready.md) | 2 | S | F8-stream shipped. MCP e2e suite (`tests/e2e/mcp/full-site-lifecycle.spec.ts`) un-skipped on CI (Linux) per F8-e2e wave; Windows local dev still skipped pending an `adminStorageState` fixture timeout fix (~30s sign-in stall — same root cause as `tests/e2e/admin/mobile-shell.spec.ts`). **Remaining: investigate + fix the Windows fixture stall so local dev parity matches CI.** |
+| ~~[mcp-real-world-ready.md](platform/mcp-real-world-ready.md)~~ | 2 | S | **SHIPPED 2026-05-16.** F8-stream + MCP e2e suite green on Linux CI and Windows local dev. Windows `adminStorageState` fixture stall fixed by pre-warming `/admin/signin` via plain fetch before opening any browser context (cold per-route compile no longer races the fixture's own timeout); fixture budget raised to 240 s, signin URL change wait to 90 s. |
 
 ### Content + media
 

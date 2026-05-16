@@ -78,13 +78,25 @@ export const test = base.extend<E2ETestFixtures, E2EWorkerFixtures>({
      * storageState object travels into per-test contexts.
      */
     adminStorageState: [async ({browser, serverUrl, sharedAdmin}, use) => {
+        // Pre-warm `/admin/signin` BEFORE opening the browser context. The
+        // first-ever request to a route triggers Next dev's per-route
+        // Turbopack/webpack compile, which on Windows cold dev can take
+        // 60–180 s for the auth bundle (NextAuth + AntD form). A bare
+        // `page.goto('/admin/signin')` inside `signInThroughForm` blew
+        // past the previous 60 s fixture timeout, leaving the worker
+        // dead before the form ever rendered. A plain `fetch` here lets
+        // Next finish the compile cheaply (no browser actionability
+        // clock running) so the subsequent navigation is warm.
+        // 240 s matches the `server` fixture's compile budget; same
+        // failure mode, same envelope.
+        await prewarmRoute(`${serverUrl}/admin/signin`, 240_000);
         const ctx = await browser.newContext({baseURL: serverUrl});
         const page = await ctx.newPage();
         await signInThroughForm(page, sharedAdmin.email, sharedAdmin.password);
         const state = await ctx.storageState();
         await ctx.close();
         await use(state);
-    }, {scope: 'worker', timeout: 60_000}],
+    }, {scope: 'worker', timeout: 240_000}],
 
     /**
      * Backwards-compat alias — older specs request `seededAdmin` to assert
@@ -205,11 +217,38 @@ async function signInThroughForm(page: Page, email: string, password: string): P
     // `/api/admin/auth/*` + signin page at `/admin/signin`. The legacy
     // `/auth/signin` route serves the CUSTOMER instance now; admin
     // credentials are rejected there.
-    await page.goto('/admin/signin');
+    // Generous nav timeout: even with the route pre-warmed via fetch, the
+    // browser-side hydration + AntD bundle eval can still take 15–30 s on
+    // a Windows cold worker. 60 s gives headroom without masking real hangs.
+    await page.goto('/admin/signin', {timeout: 60_000});
     await page.getByTestId('admin-signin-email-input').fill(email);
     await page.getByTestId('admin-signin-password-input').fill(password);
     await page.getByTestId('admin-signin-submit-btn').click();
     // The admin shell lives under `/admin`. Wait for any non-signin URL —
-    // the post-login redirect target may evolve.
-    await expect(page).not.toHaveURL(/\/admin\/signin/, {timeout: 30_000});
+    // the post-login redirect target may evolve. Post-submit the browser
+    // navigates to `/admin` which can also cold-compile on the first hit;
+    // 90 s covers the worst-case Windows cold case while still failing
+    // fast on a genuinely broken signin.
+    await expect(page).not.toHaveURL(/\/admin\/signin/, {timeout: 90_000});
+}
+
+/**
+ * Hit a route via plain fetch so Next dev's per-route compile happens
+ * before any browser actionability budget starts. Tolerates the route
+ * returning any HTTP status — we only care that the bundle finished
+ * compiling and the runtime answered.
+ */
+async function prewarmRoute(url: string, timeoutMs: number): Promise<void> {
+    const started = Date.now();
+    let lastErr: unknown;
+    while (Date.now() - started < timeoutMs) {
+        try {
+            const res = await fetch(url, {redirect: 'manual'});
+            if (res.status > 0) return;
+        } catch (err) {
+            lastErr = err;
+        }
+        await new Promise(r => setTimeout(r, 750));
+    }
+    throw new Error(`prewarm ${url} did not respond within ${timeoutMs}ms: ${String(lastErr)}`);
 }

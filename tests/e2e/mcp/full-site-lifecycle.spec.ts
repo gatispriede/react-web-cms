@@ -8,22 +8,18 @@
  * Wave 3 F8-e2e: un-skipped. The previous suite-level `test.skip(true)`
  * was blocking CI even when the underlying issue ("Windows worker
  * fanout broken") only affects local Windows dev. Linux CI runners
- * (where prod deploys live) handle the worker fanout cleanly. We
- * keep the spec honest by replacing the unconditional skip with a
- * conditional one:
- *   - skipped on `process.platform === 'win32'` (local dev) until the
- *     adminStorageState auth fixture's 30s sign-in timeout on Windows
- *     is resolved (see mobile-shell.spec.ts agent report).
- *   - runs everywhere else.
+ * (where prod deploys live) handle the worker fanout cleanly.
+ *
+ * Wave 4 mcp-real-world-ready closeout: Windows skip removed. The
+ * `adminStorageState` fixture now pre-warms `/admin/signin` via a
+ * plain fetch before opening any browser context, so the per-route
+ * cold-compile (60–180 s on Windows) no longer races the fixture's
+ * own timeout. Per-fixture budget raised to 240 s to match the
+ * `server` fixture's envelope.
  */
 import {test, expect} from '../fixtures/auth';
 
 test.describe('MCP — full site lifecycle', () => {
-    test.skip(
-        process.platform === 'win32',
-        'adminStorageState auth fixture times out on Windows local dev; CI (Linux) runs the spec. See tests/e2e/admin/mobile-shell.spec.ts for the same issue.',
-    );
-
     test('drives a site from zero to published via the MCP tool surface', async ({adminPage, serverUrl}) => {
         // 1. Issue an MCP token (admin step). Resolved by the test
         //    seeding rather than navigating the admin UI; production runs

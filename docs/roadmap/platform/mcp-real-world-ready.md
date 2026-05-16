@@ -1,5 +1,7 @@
 # F8 — MCP coverage to real-world-ready
 
+> **Status: SHIPPED 2026-05-16.** F8 tool surface + MCP e2e suite green on Linux CI and Windows local dev. Final closeout was the `adminStorageState` Playwright fixture stall on Windows: `signInThroughForm` called `page.goto('/admin/signin')` which triggered Next dev's per-route cold compile (60–180 s on Windows) while the fixture itself had only a 60 s budget. Fix in `tests/e2e/fixtures/auth.ts`: pre-warm `/admin/signin` via a plain `fetch` (no actionability clock) before opening any browser context, raise the fixture budget to 240 s (matching the `server` fixture), bump `signInThroughForm`'s URL-change wait to 90 s for the post-login redirect that can also cold-compile `/admin`. The `process.platform === 'win32'` skip in `tests/e2e/mcp/full-site-lifecycle.spec.ts` is removed.
+
 ## Goal
 
 Every CMS operation an admin can do through the UI has a corresponding MCP tool of equal capability and equal guards. Every destructive tool is idempotent, audited, mode-gated, rate-limited. Discovery + introspection are first-class. By the end, an LLM agent (or a customer's headless integration) can operate a production site end-to-end without ever touching the admin UI.
