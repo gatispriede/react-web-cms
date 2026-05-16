@@ -5,6 +5,19 @@ description: Replace low-value preset themes with a curated set of first-class d
 
 # First-class themes — Stitch-designed, full coverage, per-audience
 
+> **STATUS: SHIPPED 2026-05-16.** All 8 themes have a per-module visual pass:
+> `editorial`, `restaurant`, `event` (shipped earlier — Q4 2025) and the
+> five completed today — `saas-landing` (gradient-aware tech-modern violet),
+> `agency` (editorial-cinematic portfolio + retained brutalist-coral chrome),
+> `local-business` (warm honest trade — blue trust + amber hi-vis),
+> `portfolio` (warm one-person Fraunces serif + terracotta), `commerce`
+> (catalogue-first DTC emerald + retained Amazon-style checkout chrome).
+> Each theme owns a `services/themes/<slug>/{theme.json, theme.scss,
+> module-styles.scss, product-templates.scss, README.md}` set. The Claude
+> design step (not external Stitch) drove the five most recent passes —
+> see [docs/roadmap/_meta/stitch-design-pipeline.md](../_meta/stitch-design-pipeline.md).
+> Spec doc kept for archaeology + future variant work.
+
 ## Goal
 
 Today's themes (`Paper`, `Studio`, `Industrial`, `HighContrast` — seeded via [themes-as-files.md](../platform/themes-as-files.md)) are **token re-skins**: a palette, a font, a radius. They don't differentiate the product. Several read as "simpleton" placeholders that give a prospect no reason to pick this CMS over a Squarespace template.

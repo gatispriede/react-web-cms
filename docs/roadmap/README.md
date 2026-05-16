@@ -46,7 +46,7 @@ These are acceptance criteria, not nice-to-haves.
 
 | Item | Track | Size | Notes |
 |------|-------|------|-------|
-| [first-class-themes.md](storefront/first-class-themes.md) | 5 | XL (multi-week) | 3 of 8 themes still need design pass — `local-business`, `portfolio`, `commerce`. `editorial` / `restaurant` / `event` / `saas-landing` / `agency` shipped. Each remaining theme needs Stitch frames + per-module SCSS pass. |
+| ~~[first-class-themes.md](storefront/first-class-themes.md)~~ | ~~5~~ | ~~XL~~ | **SHIPPED 2026-05-16** — all 8 themes have a per-module visual pass: `editorial`, `restaurant`, `event` (shipped earlier), `saas-landing`, `agency`, `local-business`, `portfolio`, `commerce` (shipped 2026-05-16). See [shipped.md](shipped.md#2026-05-16--first-class-themes-five-theme-visual-passes-complete). |
 | [pc-parts-dropshipping-integration.md](storefront/pc-parts-dropshipping-integration.md) | 7 | XL (~5-7 days AI) | NEW — replaces deleted ss-com-cars spec. `IDropshipDistributorAdapter` extending W7b's warehouse adapter shape + `placeOrder` / `getOrderStatus` / `getReturnPolicy` / `quoteWholesale`. First impl against TD SYNNEX StreamOne (pan-EU + UK). Operator holds no inventory — every checkout forwards to distributor. Wires into existing Phase 1.B/1.C/1.D + W6a/W8g. **Operator post-merge: partner account onboarding (1-2 weeks).** |
 | ~~[logo-style-options.md](content/logo-style-options.md)~~ | ~~content~~ | ~~S-M~~ | **SHIPPED 2026-05-16** — multi-variant logo (full / icon / mono / wordmark) landed; see [shipped.md](shipped.md#2026-05-16--logo-style-options-multi-variant-logo-assets). Unblocks first-class-themes' remaining 5 themes. |
 
@@ -98,7 +98,7 @@ These all gate the pre-public deploy. The code is shipped — operator action un
 | DNS records (SPF + DKIM + DMARC) + Resend domain verification | email-deliverability-hardening |
 | B2 bucket + append-only application key + restic passphrase + first `restic init` | backup-and-disaster-recovery |
 | Legal review on `/privacy` + `/terms` placeholders | gdpr-privacy-consent |
-| Per-theme Stitch design pass × 3 remaining themes | first-class-themes |
+| ~~Per-theme Stitch design pass × N remaining themes~~ | ~~first-class-themes~~ — **SHIPPED 2026-05-16**, all 8 themes complete |
 | Manual screen-reader passes (NVDA + VoiceOver + JAWS) | accessibility-wcag22-audit |
 | Skyclimber droplet cutover scheduling | terraform-kamal-migration |
 | Run `npm run features:codegen` once at merge | Generated registry stays in sync |
