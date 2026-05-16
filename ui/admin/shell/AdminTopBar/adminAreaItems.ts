@@ -59,51 +59,52 @@ export const buildAreaItems = (
     // Build — single page, the AdminApp page editor. No sub-rail items
     // beyond the editor itself; modules-preview is a dev tool under System.
     build: [
-        {path: '/admin/build', label: tAdmin('Pages'), icon: React.createElement(LayoutOutlined), testidSuffix: 'pages'},
+        {path: '/admin/build', label: tAdmin('Pages'), icon: React.createElement(LayoutOutlined), testidSuffix: 'pages', description: tAdmin('rail.build.pages.description')},
     ],
     // Content — author the content the site shows. Demonstrator
     // SystemPages + Invoices on new URLs; others still legacy.
     content: [
-        {path: '/admin/content/system-pages', label: tAdmin('System pages'), icon: React.createElement(FileTextOutlined), testidSuffix: 'system-pages', adminOnly: true},
-        {path: '/admin/content/posts', label: tAdmin('Posts'), icon: React.createElement(FileTextOutlined), testidSuffix: 'posts'},
-        {path: '/admin/content/products', label: tAdmin('Products'), icon: React.createElement(AppstoreOutlined), testidSuffix: 'products'},
-        {path: '/admin/content/inventory', label: tAdmin('Inventory'), icon: React.createElement(CloudUploadOutlined), testidSuffix: 'inventory', adminOnly: true},
-        {path: '/admin/content/orders', label: tAdmin('Orders'), icon: React.createElement(AppstoreOutlined), testidSuffix: 'orders'},
-        {path: '/admin/content/invoices', label: tAdmin('Invoices'), icon: React.createElement(FileTextOutlined), testidSuffix: 'invoices'},
-        {path: '/admin/system/inquiries', label: tAdmin('Inquiries'), icon: React.createElement(MailOutlined), testidSuffix: 'inquiries'},
-        {path: '/admin/content/translations', label: tAdmin('Translations'), icon: React.createElement(GlobalOutlined), testidSuffix: 'translations'},
-        {path: '/admin/release/publishing', label: tAdmin('Publishing'), icon: React.createElement(CloudUploadOutlined), testidSuffix: 'publishing', adminOnly: true},
+        {path: '/admin/content/system-pages', label: tAdmin('System pages'), icon: React.createElement(FileTextOutlined), testidSuffix: 'system-pages', adminOnly: true, description: tAdmin('rail.content.systemPages.description')},
+        {path: '/admin/content/posts', label: tAdmin('Posts'), icon: React.createElement(FileTextOutlined), testidSuffix: 'posts', description: tAdmin('rail.content.posts.description')},
+        {path: '/admin/content/products', label: tAdmin('Products'), icon: React.createElement(AppstoreOutlined), testidSuffix: 'products', description: tAdmin('rail.content.products.description')},
+        {path: '/admin/content/inventory', label: tAdmin('Inventory'), icon: React.createElement(CloudUploadOutlined), testidSuffix: 'inventory', adminOnly: true, description: tAdmin('rail.content.inventory.description')},
+        {path: '/admin/content/orders', label: tAdmin('Orders'), icon: React.createElement(AppstoreOutlined), testidSuffix: 'orders', description: tAdmin('rail.content.orders.description')},
+        {path: '/admin/content/invoices', label: tAdmin('Invoices'), icon: React.createElement(FileTextOutlined), testidSuffix: 'invoices', description: tAdmin('rail.content.invoices.description')},
+        {path: '/admin/system/inquiries', label: tAdmin('Inquiries'), icon: React.createElement(MailOutlined), testidSuffix: 'inquiries', description: tAdmin('rail.content.inquiries.description')},
+        {path: '/admin/content/translations', label: tAdmin('Translations'), icon: React.createElement(GlobalOutlined), testidSuffix: 'translations', description: tAdmin('rail.content.translations.description')},
+        {path: '/admin/release/publishing', label: tAdmin('Publishing'), icon: React.createElement(CloudUploadOutlined), testidSuffix: 'publishing', adminOnly: true, description: tAdmin('rail.content.publishing.description')},
     ],
     // Settings — hierarchical configuration surface. Demonstrator
     // Footer at `/admin/settings/chrome/footer` + Users at
     // `/admin/settings/access/users`; everything else still legacy.
     settings: [
-        {path: '/admin/settings/chrome/footer', label: tAdmin('Chrome'), icon: React.createElement(LayoutOutlined), testidSuffix: 'chrome'},
-        {path: '/admin/client-config/themes', label: tAdmin('Theme'), icon: React.createElement(BgColorsOutlined), testidSuffix: 'theme'},
-        {path: '/admin/languages', label: tAdmin('Languages'), icon: React.createElement(GlobalOutlined), testidSuffix: 'languages'},
-        {path: '/admin/seo', label: tAdmin('SEO defaults'), icon: React.createElement(SearchOutlined), testidSuffix: 'seo'},
-        {path: '/admin/system/email', label: tAdmin('Email'), icon: React.createElement(MailOutlined), testidSuffix: 'email', adminOnly: true},
-        {path: '/admin/system/compliance', label: tAdmin('Compliance'), icon: React.createElement(InfoCircleOutlined), testidSuffix: 'compliance', adminOnly: true},
-        {path: '/admin/system/redirects', label: tAdmin('Redirects'), icon: React.createElement(GlobalOutlined), testidSuffix: 'redirects', adminOnly: true},
-        {path: '/admin/settings/access/users', label: tAdmin('Users'), icon: React.createElement(UserOutlined), testidSuffix: 'users', adminOnly: true},
-        {path: '/admin/system/permissions', label: tAdmin('Permissions'), icon: React.createElement(UserOutlined), testidSuffix: 'permissions', adminOnly: true},
+        {path: '/admin/settings/chrome/footer', label: tAdmin('Chrome'), icon: React.createElement(LayoutOutlined), testidSuffix: 'chrome', description: tAdmin('rail.settings.chrome.description')},
+        {path: '/admin/client-config/themes', label: tAdmin('Theme'), icon: React.createElement(BgColorsOutlined), testidSuffix: 'theme', description: tAdmin('rail.settings.theme.description')},
+        {path: '/admin/languages', label: tAdmin('Languages'), icon: React.createElement(GlobalOutlined), testidSuffix: 'languages', description: tAdmin('rail.settings.languages.description')},
+        {path: '/admin/seo', label: tAdmin('SEO defaults'), icon: React.createElement(SearchOutlined), testidSuffix: 'seo', description: tAdmin('rail.settings.seo.description')},
+        {path: '/admin/system/email', label: tAdmin('Email'), icon: React.createElement(MailOutlined), testidSuffix: 'email', adminOnly: true, description: tAdmin('rail.settings.email.description')},
+        {path: '/admin/system/compliance', label: tAdmin('Compliance'), icon: React.createElement(InfoCircleOutlined), testidSuffix: 'compliance', adminOnly: true, description: tAdmin('rail.settings.compliance.description')},
+        {path: '/admin/system/redirects', label: tAdmin('Redirects'), icon: React.createElement(GlobalOutlined), testidSuffix: 'redirects', adminOnly: true, description: tAdmin('rail.settings.redirects.description')},
+        {path: '/admin/settings/access/users', label: tAdmin('Users'), icon: React.createElement(UserOutlined), testidSuffix: 'users', adminOnly: true, description: tAdmin('rail.settings.users.description')},
+        {path: '/admin/system/permissions', label: tAdmin('Permissions'), icon: React.createElement(UserOutlined), testidSuffix: 'permissions', adminOnly: true, description: tAdmin('rail.settings.permissions.description')},
     ],
     // Analytics rail — Analytics dashboard (the AnalyticsPanel
     // demonstrator) lives at `/admin/analytics`; others still legacy.
     analytics: [
-        {path: '/admin/analytics', label: tAdmin('Overview'), icon: React.createElement(AuditOutlined), testidSuffix: 'overview', adminOnly: true},
-        {path: '/admin/release/audit', label: tAdmin('Audit log'), icon: React.createElement(AuditOutlined), testidSuffix: 'audit-log', adminOnly: true},
-        {path: '/admin/system/analytics-filters', label: tAdmin('Filters'), icon: React.createElement(SettingOutlined), testidSuffix: 'filters', adminOnly: true},
+        {path: '/admin/analytics', label: tAdmin('Overview'), icon: React.createElement(AuditOutlined), testidSuffix: 'overview', adminOnly: true, description: tAdmin('rail.analytics.overview.description')},
+        {path: '/admin/release/audit', label: tAdmin('Audit log'), icon: React.createElement(AuditOutlined), testidSuffix: 'audit-log', adminOnly: true, description: tAdmin('rail.analytics.auditLog.description')},
+        {path: '/admin/system/analytics-filters', label: tAdmin('Filters'), icon: React.createElement(SettingOutlined), testidSuffix: 'filters', adminOnly: true, description: tAdmin('rail.analytics.filters.description')},
     ],
     // System rail — power-user / dev tools. Demonstrator Diagnostics
-    // on its new URL; others still legacy.
+    // on its new URL; others still legacy. (Surfaces as "Advanced" in
+    // the top bar — see AdminAreaButtons.tsx for the label-only rename.)
     system: [
-        {path: '/admin/system/diagnostics', label: tAdmin('Diagnostics'), icon: React.createElement(InfoCircleOutlined), testidSuffix: 'diagnostics', adminOnly: true},
-        {path: '/admin/system/mcp', label: tAdmin('MCP'), icon: React.createElement(AuditOutlined), testidSuffix: 'mcp', adminOnly: true},
-        {path: '/admin/system/features', label: tAdmin('Feature flags'), icon: React.createElement(SettingOutlined), testidSuffix: 'features', adminOnly: true},
-        {path: '/admin/system/agent', label: tAdmin('AI Agent'), icon: React.createElement(ThunderboltOutlined), testidSuffix: 'agent', adminOnly: true},
-        {path: '/admin/system/errors', label: tAdmin('Errors'), icon: React.createElement(AuditOutlined), testidSuffix: 'errors', adminOnly: true},
-        {path: '/admin/release/bundle', label: tAdmin('Bundle'), icon: React.createElement(DownloadOutlined), testidSuffix: 'bundle', adminOnly: true},
+        {path: '/admin/system/diagnostics', label: tAdmin('Diagnostics'), icon: React.createElement(InfoCircleOutlined), testidSuffix: 'diagnostics', adminOnly: true, description: tAdmin('rail.system.diagnostics.description')},
+        {path: '/admin/system/mcp', label: tAdmin('MCP'), icon: React.createElement(AuditOutlined), testidSuffix: 'mcp', adminOnly: true, description: tAdmin('rail.system.mcp.description')},
+        {path: '/admin/system/features', label: tAdmin('Feature flags'), icon: React.createElement(SettingOutlined), testidSuffix: 'features', adminOnly: true, description: tAdmin('rail.system.features.description')},
+        {path: '/admin/system/agent', label: tAdmin('AI Agent'), icon: React.createElement(ThunderboltOutlined), testidSuffix: 'agent', adminOnly: true, description: tAdmin('rail.system.agent.description')},
+        {path: '/admin/system/errors', label: tAdmin('Errors'), icon: React.createElement(AuditOutlined), testidSuffix: 'errors', adminOnly: true, description: tAdmin('rail.system.errors.description')},
+        {path: '/admin/release/bundle', label: tAdmin('Bundle'), icon: React.createElement(DownloadOutlined), testidSuffix: 'bundle', adminOnly: true, description: tAdmin('rail.system.bundle.description')},
     ],
 
     // ── Legacy rails (kept for 301-shim period) ──────────────────────

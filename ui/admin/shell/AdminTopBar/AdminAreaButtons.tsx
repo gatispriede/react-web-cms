@@ -1,5 +1,5 @@
 import React, {ReactNode} from "react";
-import {Button} from "antd";
+import {Button, Tooltip} from "antd";
 import {
     AuditOutlined,
     FileTextOutlined,
@@ -22,15 +22,25 @@ const topBarButton = (
     href: string,
     icon: ReactNode,
     label: string,
+    tooltip: string,
 ) => (
-    <Button
-        data-testid={`nav-area-${areaSlug}-link`}
-        type={isInArea(view, areaSlug) ? "primary" : "link"}
-        href={href}
-        icon={icon}
-    >
-        {label}
-    </Button>
+    // Tooltip wraps each top-bar area button with a one-line plain-English
+    // description. Non-technical operators (the audience for the admin-IA
+    // sweep) need a hint at the labels — "Build" / "Content" / "Advanced"
+    // are short by design; the tooltip carries the meaning. `mouseEnterDelay`
+    // matches the rail's 400 ms so hovering across the top bar doesn't
+    // flicker tooltips on every button.
+    <Tooltip key={areaSlug} title={tooltip} placement="bottom" mouseEnterDelay={0.4}>
+        <Button
+            data-testid={`nav-area-${areaSlug}-link`}
+            type={isInArea(view, areaSlug) ? "primary" : "link"}
+            href={href}
+            icon={icon}
+            aria-label={`${label} — ${tooltip}`}
+        >
+            {label}
+        </Button>
+    </Tooltip>
 );
 
 /**
@@ -62,12 +72,19 @@ const AdminAreaButtons = ({view, simplified, tAdmin}: {
     simplified: boolean,
     tAdmin: TFunction<"translation", undefined>,
 }) => (
+    // LABEL-ONLY rename (admin-IA sweep): the System bucket is renamed
+    // "Advanced" in the chrome to set the right expectation for
+    // non-technical operators ("System" reads as core/required; "Advanced"
+    // reads as opt-in power-user). The URL prefix `/admin/system/*` stays
+    // — 301 redirect-shim work + deep links + adminAreaItems all key off
+    // the `system` slug. Renaming the URL is a separate, riskier change
+    // tracked in the follow-on sweep.
     <>
-        {topBarButton(view, 'build', '/admin/build', <LayoutOutlined/>, tAdmin('Build'))}
-        {topBarButton(view, 'content', '/admin/content', <FileTextOutlined/>, tAdmin('Content'))}
-        {topBarButton(view, 'settings', '/admin/settings', <SettingOutlined/>, tAdmin('Settings'))}
-        {!simplified && topBarButton(view, 'analytics', '/admin/analytics', <AuditOutlined/>, tAdmin('Analytics'))}
-        {!simplified && topBarButton(view, 'system', '/admin/system', <ThunderboltOutlined/>, tAdmin('System'))}
+        {topBarButton(view, 'build', '/admin/build', <LayoutOutlined/>, tAdmin('Build'), tAdmin('topBar.build.tooltip'))}
+        {topBarButton(view, 'content', '/admin/content', <FileTextOutlined/>, tAdmin('Content'), tAdmin('topBar.content.tooltip'))}
+        {topBarButton(view, 'settings', '/admin/settings', <SettingOutlined/>, tAdmin('Settings'), tAdmin('topBar.settings.tooltip'))}
+        {!simplified && topBarButton(view, 'analytics', '/admin/analytics', <AuditOutlined/>, tAdmin('Analytics'), tAdmin('topBar.analytics.tooltip'))}
+        {!simplified && topBarButton(view, 'system', '/admin/system', <ThunderboltOutlined/>, tAdmin('Advanced'), tAdmin('topBar.advanced.tooltip'))}
     </>
 );
 

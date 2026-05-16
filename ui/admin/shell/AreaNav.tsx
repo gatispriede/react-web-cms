@@ -1,5 +1,5 @@
 import React, {ReactNode} from 'react';
-import {Menu} from 'antd';
+import {Menu, Tooltip} from 'antd';
 import {useIsMobile} from '@admin/lib/useIsMobile';
 
 /**
@@ -25,6 +25,13 @@ export type AreaNavItem = {
     testidSuffix: string;
     /** When true, hidden unless the viewer is an admin. */
     adminOnly?: boolean;
+    /**
+     * Plain-English one-line description, shown as a hover tooltip on the
+     * rail item. Translated by the caller. Operators who don't know what
+     * "SEO defaults" or "Bundle" means get a clear hint without leaving
+     * the rail. Optional — items without a description render no tooltip.
+     */
+    description?: string;
 };
 
 const AreaNav = ({
@@ -62,18 +69,35 @@ const AreaNav = ({
             data-testid={`nav-${area}-rail`}
             selectedKeys={active ? [active.path] : []}
             style={isMobile ? undefined : {minWidth: 200, borderInlineEnd: '1px solid rgba(0,0,0,0.06)'}}
-            items={visible.map(it => ({
-                key: it.path,
-                icon: it.icon,
-                label: (
+            items={visible.map(it => {
+                const link = (
                     <a
                         href={it.path}
                         data-testid={`nav-${area}-${it.testidSuffix}-link`}
                     >
                         {it.label}
                     </a>
-                ),
-            }))}
+                );
+                return {
+                    key: it.path,
+                    icon: it.icon,
+                    // DECISION: tooltip wraps only the label anchor — keeping
+                    // the icon outside the trigger means hover-targets feel
+                    // the same with/without a description. Tooltip placement
+                    // is `right` on the desktop vertical rail so it floats
+                    // out into the pane rather than overlapping the rail
+                    // itself; horizontal (mobile) gets `bottom`.
+                    label: it.description ? (
+                        <Tooltip
+                            title={it.description}
+                            placement={isMobile ? 'bottom' : 'right'}
+                            mouseEnterDelay={0.4}
+                        >
+                            {link}
+                        </Tooltip>
+                    ) : link,
+                };
+            })}
         />
     );
 };
