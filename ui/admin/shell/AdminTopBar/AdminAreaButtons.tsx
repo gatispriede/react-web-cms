@@ -1,21 +1,20 @@
 import React, {ReactNode} from "react";
 import {Button} from "antd";
 import {
-    AppstoreOutlined,
     AuditOutlined,
-    BgColorsOutlined,
     FileTextOutlined,
+    LayoutOutlined,
     SettingOutlined,
-    UserOutlined,
+    ThunderboltOutlined,
 } from "@client/lib/icons";
 import {TFunction} from "i18next";
 import {isInArea} from "./adminAreaItems";
 import type {AdminView} from "../UserStatusBar";
 
 /**
- * Top-bar area button — six entries, each highlighted when its prefix
- * is the active area. `isInArea` covers both `/admin/release` (landing)
- * and `/admin/release/bundle` (sub-page).
+ * Top-bar area button — five entries, each highlighted when its prefix
+ * is the active area. `isInArea` covers both `/admin/settings` (landing)
+ * and `/admin/settings/chrome/footer` (sub-page).
  */
 const topBarButton = (
     view: AdminView,
@@ -35,20 +34,28 @@ const topBarButton = (
 );
 
 /**
- * Six area buttons — admin-information-architecture jump (2026-05-16).
- * Replaces the legacy six-entry top bar (Build / Client config / Content
- * / SEO / Release / System) with the new operator-mental-model taxonomy:
+ * Five area buttons — admin-information-architecture re-pivot
+ * (2026-05-16, same day as the first ship).
  *
- *   Site — global site config (theme, logo, footer, languages, SEO defaults)
- *   Content — pages, posts, translations, releases
- *   Commerce — products, orders, invoices, inventory
- *   People — admin users, customers, permissions, inquiries
- *   Analytics — traffic, SEO health, audit log
- *   System — dev/power-user knobs (advanced-only)
+ * Refined from the first-shipped 6-bucket noun taxonomy (Site / Content
+ * / Commerce / People / Analytics / System) to the 5-bucket task-driven
+ * taxonomy. The shift: organise by *what am I doing in this area*
+ * rather than *what kind of thing is this*.
  *
- * Legacy URLs 301-redirect to new homes via next.config.js. System +
- * Analytics are advanced-only — simplified-mode authors don't need
- * either; their top bar drops to four buttons.
+ *   Build — compose the site's page tree from modules (the AdminApp page editor)
+ *   Content — author the content the site shows (pages list, posts, products, orders, invoices, customers, inquiries, releases, trash, system pages)
+ *   Settings — configure how everything works (hierarchical: chrome / theme / languages / seo / features/* / access / account)
+ *   Analytics — see what happened (overview, SEO health, audit log, attribution, filters)
+ *   System — power-user / dev tools (advanced-only — dim/hidden by default)
+ *
+ * Site / Commerce / People buckets dissolve. Their members fan out:
+ *   - Site → Settings (chrome / theme / seo / languages) or Settings/features/* per feature
+ *   - Commerce → Content (products / invoices / orders / inventory) or Settings/features/commerce + Settings/features/dropship
+ *   - People → Content (customers / inquiries) or Settings/access (admin users + permissions + auth config)
+ *
+ * Legacy URLs 301-redirect to new homes via next.config.js. System is
+ * advanced-only — simplified-mode authors don't see it; their top bar
+ * drops to four buttons (Build / Content / Settings / Analytics).
  */
 const AdminAreaButtons = ({view, simplified, tAdmin}: {
     view: AdminView,
@@ -56,12 +63,11 @@ const AdminAreaButtons = ({view, simplified, tAdmin}: {
     tAdmin: TFunction<"translation", undefined>,
 }) => (
     <>
-        {topBarButton(view, 'site', '/admin/site', <BgColorsOutlined/>, tAdmin('Site'))}
+        {topBarButton(view, 'build', '/admin/build', <LayoutOutlined/>, tAdmin('Build'))}
         {topBarButton(view, 'content', '/admin/content', <FileTextOutlined/>, tAdmin('Content'))}
-        {topBarButton(view, 'commerce', '/admin/commerce', <AppstoreOutlined/>, tAdmin('Commerce'))}
-        {topBarButton(view, 'people', '/admin/people', <UserOutlined/>, tAdmin('People'))}
+        {topBarButton(view, 'settings', '/admin/settings', <SettingOutlined/>, tAdmin('Settings'))}
         {!simplified && topBarButton(view, 'analytics', '/admin/analytics', <AuditOutlined/>, tAdmin('Analytics'))}
-        {!simplified && topBarButton(view, 'system', '/admin/system', <SettingOutlined/>, tAdmin('System'))}
+        {!simplified && topBarButton(view, 'system', '/admin/system', <ThunderboltOutlined/>, tAdmin('System'))}
     </>
 );
 

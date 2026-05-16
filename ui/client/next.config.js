@@ -146,33 +146,55 @@ const nextConfig = {
         {source: '/lt/admin/:path*', destination: '/admin/:path*', permanent: false, locale: false},
         {source: '/ru/admin', destination: '/admin', permanent: false, locale: false},
         {source: '/ru/admin/:path*', destination: '/admin/:path*', permanent: false, locale: false},
-        // Phase 2 of admin segregation — legacy URLs jump to the new area structure.
-        {source: '/admin/settings', destination: '/admin/build', permanent: false},
+        // Phase 2 of admin segregation — `/admin/languages` was a flat
+        // pages-router pane; translations live under Content now.
         {source: '/admin/languages', destination: '/admin/content/translations', permanent: false},
-        // admin-information-architecture jump (2026-05-16) — legacy URLs 301 to
-        // their new homes under the Site/Content/Commerce/People/Analytics/System
-        // taxonomy.
+        // `/admin/settings` previously 301'd to `/admin/build` (Phase 2
+        // of admin segregation). Re-pivot reclaims `/admin/settings` as
+        // a top-level bucket landing — the redirect is dropped; the
+        // route's `page.tsx` now bounces to the Footer demonstrator.
         //
-        // SCOPE NOTE: only the demonstrator panes whose loaders + App Router
-        // page directories were actually moved in the IA jump are redirected
-        // here. The other ~40 panes still serve from their legacy URLs (their
-        // loaders carry the legacy paneId so the lookup keeps working). Each
-        // per-area sweep follow-up:
-        //   1. Updates the bucket's loaders to the new paneId / route.
-        //   2. Moves the App Router page.tsx directories.
-        //   3. Adds the bucket's old→new redirect rows here.
-        // Adding a redirect *before* the new directory exists 404s the
-        // operator — don't.
+        // admin-information-architecture re-pivot (2026-05-16, same day
+        // as the first ship): the 6-bucket Site/Content/Commerce/People/
+        // Analytics/System taxonomy collapses to 5 task-driven buckets:
+        // Build / Content / Settings / Analytics / System. Old URLs 301
+        // here.
         //
-        // The shim ships for one release cycle (~2 months). After that the
-        // redirects are dropped — anyone still hitting an old URL gets a 404
-        // and updates their bookmark.
+        // SCOPE NOTE: only the demonstrator panes whose loaders + App
+        // Router page directories actually moved in this jump have
+        // direct old→new redirects. The other ~40 panes still serve
+        // from their legacy URLs (their loaders carry the legacy paneId
+        // so the lookup keeps working); per-area sweep follow-ups add
+        // their old→new rows here. Adding a redirect *before* the new
+        // directory exists 404s the operator — don't.
         //
-        // Demonstrator panes whose URLs landed in this commit:
-        {source: '/admin/content/footer', destination: '/admin/site/footer', permanent: false},
-        {source: '/admin/system/users', destination: '/admin/people/users', permanent: false},
+        // The shim ships for one release cycle (~2 months). After that
+        // the redirects are dropped — anyone still hitting an old URL
+        // gets a 404 and updates their bookmark.
+        //
+        // ── Demonstrator-pane direct redirects ─────────────────────
+        // Footer: legacy → first-ship 6-bucket → re-pivot 5-bucket
+        {source: '/admin/content/footer', destination: '/admin/settings/chrome/footer', permanent: false},
+        {source: '/admin/site/footer', destination: '/admin/settings/chrome/footer', permanent: false},
+        // Users: legacy → first-ship 6-bucket → re-pivot 5-bucket
+        {source: '/admin/system/users', destination: '/admin/settings/access/users', permanent: false},
+        {source: '/admin/people/users', destination: '/admin/settings/access/users', permanent: false},
+        // Invoices: first-ship 6-bucket → re-pivot 5-bucket (Commerce
+        // dissolved into Content for author-facing lists)
+        {source: '/admin/commerce/invoices', destination: '/admin/content/invoices', permanent: false},
+        // Analytics dashboard (first-ship URL stays canonical)
         {source: '/admin/seo/analytics', destination: '/admin/analytics', permanent: false},
+        // Diagnostics (renamed from `info`; first-ship URL stays canonical)
         {source: '/admin/system/info', destination: '/admin/system/diagnostics', permanent: false},
+
+        // ── First-ship 6-bucket landings (re-pivoted to 5-bucket) ──
+        // Operators bookmarked yesterday's 6-bucket URLs need the same-
+        // day re-pivot to keep working. Each defunct bucket maps to
+        // its 5-bucket home; sub-paths fall through to the legacy
+        // backing URLs (their loaders are still registered).
+        {source: '/admin/site', destination: '/admin/settings/chrome/footer', permanent: false},
+        {source: '/admin/commerce', destination: '/admin/content/invoices', permanent: false},
+        {source: '/admin/people', destination: '/admin/settings/access/users', permanent: false},
     ],
     rewrites: async () => [
         {

@@ -40,18 +40,9 @@ export type AdminView =
     | 'modules-preview'
     | 'build'
     | 'build/modules-preview'
-    // admin-information-architecture jump — new top-level buckets:
-    | 'site'
-    | 'site/themes'
-    | 'site/logo'
-    | 'site/layout'
-    | 'site/footer'
-    | 'site/seo'
-    | 'site/email'
-    | 'site/email-templates'
-    | 'site/compliance'
-    | 'site/redirects'
-    | 'site/account-settings'
+    // admin-information-architecture re-pivot (2026-05-16, same day as
+    // first ship) — 5 task-driven top-level buckets:
+    //   Build / Content / Settings / Analytics / System
     | 'content'
     | 'content/pages'
     | 'content/translations'
@@ -60,21 +51,32 @@ export type AdminView =
     | 'content/releases'
     | 'content/publishing'
     | 'content/trash'
-    | 'commerce'
-    | 'commerce/products'
-    | 'commerce/inventory'
-    | 'commerce/orders'
-    | 'commerce/invoices'
-    | 'commerce/settings'
-    | 'commerce/checkout'
-    | 'commerce/abandoned-carts'
-    | 'commerce/warehouse-sync'
-    | 'commerce/product-templates'
-    | 'people'
-    | 'people/users'
-    | 'people/inquiries'
-    | 'people/permissions'
-    | 'people/auth'
+    | 'content/products'
+    | 'content/inventory'
+    | 'content/orders'
+    | 'content/invoices'
+    | 'content/customers'
+    | 'content/inquiries'
+    | 'settings'
+    | 'settings/chrome'
+    | 'settings/chrome/footer'
+    | 'settings/chrome/header'
+    | 'settings/chrome/logo'
+    | 'settings/theme'
+    | 'settings/languages'
+    | 'settings/seo'
+    | 'settings/features'
+    | 'settings/features/auth'
+    | 'settings/features/commerce'
+    | 'settings/features/dropship'
+    | 'settings/features/email'
+    | 'settings/features/compliance'
+    | 'settings/features/redirects'
+    | 'settings/access'
+    | 'settings/access/users'
+    | 'settings/access/permissions'
+    | 'settings/access/auth'
+    | 'settings/account'
     | 'analytics'
     | 'analytics/seo'
     | 'analytics/audit-log'
@@ -91,16 +93,41 @@ export type AdminView =
     | 'system/backups'
     | 'system/modules-preview'
     | 'system/demo-content/cars'
-    // Legacy aliases preserved while the 301 shim is live — let the
-    // shell render the same pane for an operator on an old bookmark.
+    // First-ship 6-bucket aliases — kept for the 301-shim period so the
+    // shell still renders the right pane for anyone who bookmarked one
+    // of yesterday's 6-bucket URLs. Retired alongside the per-area sweeps.
+    | 'site'
+    | 'site/themes'
+    | 'site/logo'
+    | 'site/layout'
+    | 'site/footer'
+    | 'site/seo'
+    | 'site/email'
+    | 'site/email-templates'
+    | 'site/compliance'
+    | 'site/redirects'
+    | 'site/account-settings'
+    | 'commerce'
+    | 'commerce/products'
+    | 'commerce/inventory'
+    | 'commerce/orders'
+    | 'commerce/invoices'
+    | 'commerce/settings'
+    | 'commerce/checkout'
+    | 'commerce/abandoned-carts'
+    | 'commerce/warehouse-sync'
+    | 'commerce/product-templates'
+    | 'people'
+    | 'people/users'
+    | 'people/inquiries'
+    | 'people/permissions'
+    | 'people/auth'
+    // Pre-IA-jump legacy aliases preserved while the 301 shim is live.
     | 'client-config'
     | 'client-config/themes'
     | 'client-config/logo'
     | 'client-config/site-layout'
     | 'content/footer'
-    | 'content/products'
-    | 'content/inventory'
-    | 'content/orders'
     | 'seo'
     | 'seo/analytics'
     | 'release'
@@ -168,17 +195,20 @@ const UserStatusBarInner = ({session, view, tApp}: {
 
     const simplified = adminMode === 'simplified';
     const allAreaItems = buildAreaItems(tAdmin as TFunction<"translation", undefined>);
-    // Simplified-mode authors don't manage commerce — products / inventory
-    // / orders are advanced-only. The routes themselves still resolve if
-    // bookmarked, but the area-nav drops them.
+    // Simplified-mode authors don't manage commerce — the Content rail
+    // shows them just the author-facing rows (Posts / Translations /
+    // System pages). Products / Inventory / Orders / Invoices stay in
+    // the rail for advanced mode. The Commerce + People legacy rails
+    // are kept here intact — anyone landing on a legacy URL via the
+    // 301 shim still gets a working rail until those sweeps land.
     const areaItems = simplified
         ? {
             ...allAreaItems,
-            // Simplified-mode authors don't manage commerce — drop the
-            // entire Commerce rail. Products / inventory / orders now
-            // live under `/admin/commerce/*` post-IA jump (was under
-            // `/admin/content/*`).
-            commerce: (allAreaItems.commerce ?? []).filter(() => false),
+            content: (allAreaItems.content ?? []).filter(item =>
+                !item.path.includes('/products')
+                && !item.path.includes('/inventory')
+                && !item.path.includes('/orders')
+                && !item.path.includes('/invoices')),
         }
         : allAreaItems;
     // DECISION: derive currentPath from the view literal — the SSR-rendered
@@ -195,17 +225,19 @@ const UserStatusBarInner = ({session, view, tApp}: {
      * The five AREA_* prefixes get their rail; the legacy views render bare.
      */
     const activeArea: keyof typeof areaItems | null =
-        // admin-information-architecture jump — new buckets first.
-        isInArea(view, 'site') ? 'site'
-        : isInArea(view, 'commerce') ? 'commerce'
-        : isInArea(view, 'people') ? 'people'
+        // admin-information-architecture re-pivot — 5 task-driven buckets.
+        isInArea(view, 'settings') ? 'settings'
         : isInArea(view, 'analytics') ? 'analytics'
-        // Existing buckets that survive the IA jump (Content + System).
         : isInArea(view, 'content') ? 'content'
         : isInArea(view, 'system') ? 'system'
-        // Legacy aliases — kept while the 301 shim is live so an operator
-        // bookmark to `/admin/build` etc. still renders the right rail.
         : isInArea(view, 'build') ? 'build'
+        // First-ship 6-bucket legacy aliases — kept while the 301 shim
+        // is live so a yesterday-bookmark to `/admin/site/footer` etc.
+        // still renders the right rail.
+        : isInArea(view, 'site') ? 'site'
+        : isInArea(view, 'commerce') ? 'commerce'
+        : isInArea(view, 'people') ? 'people'
+        // Pre-IA-jump legacy aliases.
         : isInArea(view, 'client-config') ? 'client-config'
         : isInArea(view, 'seo') ? 'seo'
         : isInArea(view, 'release') ? 'release'

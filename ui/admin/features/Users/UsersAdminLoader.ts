@@ -13,7 +13,7 @@ import {EAdminModuleType} from '@enums/EAdminModuleType';
 import Users from './Users';
 
 export class UsersAdminLoader extends AdminLoader {
-    readonly paneId = 'people/users';
+    readonly paneId = 'settings/access/users';
     readonly slots: readonly AdminModuleSlot[] = [
         {type: EAdminModuleType.AdminCrudList, locked: true},
     ];

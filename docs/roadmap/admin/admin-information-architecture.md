@@ -13,6 +13,24 @@ description: Re-organise the admin UI. Today's panes accumulated organically —
 > bucket: Footer / SystemPages / Invoices / Users / Analytics /
 > Diagnostics) adopt the new chrome as reference examples.
 >
+> **Re-pivoted to 5-bucket task-driven taxonomy 2026-05-16 (same day).**
+> Operator feedback after the first ship: noun buckets (Site / Content
+> / Commerce / People / Analytics / System) read fine on the surface
+> but operators kept asking "where do I configure X" and bouncing
+> between buckets that all looked plausible. The refined shape
+> organises by *what am I doing in this area* instead — Build /
+> Content / Settings / Analytics / System. Settings absorbs every
+> configuration surface hierarchically (chrome / theme / languages /
+> seo / features/* / access / account). See the refined taxonomy
+> section below + `docs/roadmap/_meta/admin-pane-inventory.md` for the
+> 5-bucket URL map.
+>
+> Re-pivot scope: top bar + area rails + AdminView union + 6
+> demonstrator panes moved + redirect shim re-pointed (now covers both
+> the pre-IA legacy URLs AND the first-ship 6-bucket URLs as direct
+> 301s). No per-area sweep beyond the demonstrators; the follow-up
+> table below restructures around the 5 buckets.
+>
 > **Hybrid scope decision** (2026-05-16): the full ~46-pane chrome swap
 > + per-loader URL move would have meant 200+ Edit-tool calls in a
 > single commit on top of a taxonomy decision; landing risk too high
@@ -335,14 +353,14 @@ demonstrator panes). The remaining ~40 panes still:
 These break down per area. Each row is a small follow-up jump — one PR
 per bucket is the suggested unit:
 
+Restructured around the 5-bucket re-pivot:
+
 | Bucket | Demonstrator (done) | Remaining panes |
 |---|---|---|
-| **Site** | Footer | Themes, Logo, Layout, SEO defaults, Email config, Email templates, Compliance, Redirects, Languages, Account settings |
-| **Content** | SystemPages | AdminApp (pages tree), Posts, Translations, Publishing, Releases, Trash |
-| **Commerce** | Invoices | Products, Inventory, Orders, Settings, Abandoned cart, Checkout, Warehouse sync, Product templates |
-| **People** | Users | Permissions, Inquiries, Auth |
+| **Content** | SystemPages, Invoices | AdminApp (page tree — Build bucket), Posts, Products, Inventory, Orders, Customers, Inquiries, Translations, Publishing, Releases, Trash |
+| **Settings** | Footer, Users | Chrome (Header / Logo), Theme + Layout, Languages, SEO defaults, Features/auth, Features/commerce (+ checkout + abandoned-cart), Features/dropship (+ warehouse-sync), Features/email (+ templates), Features/compliance, Features/redirects, Access/permissions, Access/auth, Account |
 | **Analytics** | AnalyticsPanel | Audit log, Attribution, SEO overview, Analytics filters |
-| **System** | Diagnostics | MCP, Features, Errors, Agent, Performance, Backups, Bundle, Modules preview, Demo content (cars) |
+| **System** | Diagnostics | MCP, Features registry, Errors, Agent, Performance, Backups, Bundle, Modules preview, Demo content (cars) |
 
 Each per-area sweep covers:
 

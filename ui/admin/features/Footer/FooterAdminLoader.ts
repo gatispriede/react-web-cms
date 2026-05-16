@@ -16,7 +16,7 @@ import {EAdminModuleType} from '@enums/EAdminModuleType';
 import Footer from './Footer';
 
 export class FooterAdminLoader extends AdminLoader {
-    readonly paneId = 'site/footer';
+    readonly paneId = 'settings/chrome/footer';
     readonly slots: readonly AdminModuleSlot[] = [
         {type: EAdminModuleType.AdminForm, locked: true},
     ];

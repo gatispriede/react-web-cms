@@ -1,6 +1,7 @@
 /**
  * Invoices admin pane — list + detail drawer + export-range modal.
- * Mounted at `/admin/commerce/invoices`.
+ * Mounted at `/admin/content/invoices` (re-pivoted from
+ * `/admin/commerce/invoices` 2026-05-16).
  *
  * Data flows through `/api/admin/invoices` (the REST mirror of the
  * `invoice.*` MCP tools). PDF + CSV export endpoints are hit directly

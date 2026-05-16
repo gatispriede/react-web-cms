@@ -3,10 +3,13 @@
  * Smoke tests for UserStatusBar. These are the safety net for an
  * upcoming refactor — they assert on the public surface the rest of the
  * admin shell relies on:
- *  - top-bar area buttons (Site / Content / Commerce / People / Analytics / System)
+ *  - top-bar area buttons (Build / Content / Settings / Analytics / System)
  *    rendered with `nav-area-<slug>-link` testids — admin-information-architecture
- *    jump (2026-05-16) replaced the legacy six (Build / Client config / Content
- *    / SEO / Release / System) with the new operator-mental-model taxonomy.
+ *    re-pivot (2026-05-16, same day as the first ship) replaced the legacy
+ *    seven (build / client-config / content / seo / release / system + onboarding)
+ *    first with a 6-bucket noun taxonomy (Site / Content / Commerce / People /
+ *    Analytics / System), then refined that to the 5-bucket task-driven
+ *    taxonomy below.
  *  - active-area highlight via antd's `type="primary"` (rendered as the
  *    `ant-btn-primary` class)
  *  - `<AreaNav/>` rail rendered when an area view is active, including
@@ -201,11 +204,10 @@ describe('UserStatusBar', () => {
         expect(screen.getByText(/User: Ada/)).toBeInTheDocument();
         // Skip-to-content a11y affordance always present.
         expect(screen.getByText('Skip to content')).toBeInTheDocument();
-        // All six new-taxonomy area buttons render (admin + advanced mode).
-        expect(screen.getByTestId('nav-area-site-link')).toBeInTheDocument();
+        // All five new-taxonomy area buttons render (admin + advanced mode).
+        expect(screen.getByTestId('nav-area-build-link')).toBeInTheDocument();
         expect(screen.getByTestId('nav-area-content-link')).toBeInTheDocument();
-        expect(screen.getByTestId('nav-area-commerce-link')).toBeInTheDocument();
-        expect(screen.getByTestId('nav-area-people-link')).toBeInTheDocument();
+        expect(screen.getByTestId('nav-area-settings-link')).toBeInTheDocument();
         expect(screen.getByTestId('nav-area-analytics-link')).toBeInTheDocument();
         expect(screen.getByTestId('nav-area-system-link')).toBeInTheDocument();
     });
@@ -214,9 +216,9 @@ describe('UserStatusBar', () => {
         renderBar('system');
         const systemBtn = screen.getByTestId('nav-area-system-link');
         expect(systemBtn.className).toMatch(/ant-btn-primary/);
-        // Sibling Site button is NOT primary.
-        const siteBtn = screen.getByTestId('nav-area-site-link');
-        expect(siteBtn.className).not.toMatch(/ant-btn-primary/);
+        // Sibling Settings button is NOT primary.
+        const settingsBtn = screen.getByTestId('nav-area-settings-link');
+        expect(settingsBtn.className).not.toMatch(/ant-btn-primary/);
     });
 
     it('System area rail renders the right sub-pages for an admin viewer', () => {
@@ -265,33 +267,41 @@ describe('UserStatusBar', () => {
             'modules-preview',
             'build',
             'build/modules-preview',
-            'client-config',
-            'client-config/themes',
-            'client-config/logo',
-            'client-config/site-layout',
+            // 5-bucket re-pivot — new buckets:
             'content',
             'content/translations',
             'content/posts',
-            'content/footer',
             'content/products',
             'content/inventory',
             'content/orders',
-            'seo',
-            'seo/analytics',
-            'release',
-            'release/publishing',
-            'release/bundle',
-            'release/audit',
+            'content/invoices',
+            'content/system-pages',
+            'settings/chrome/footer',
+            'settings/theme',
+            'settings/seo',
+            'settings/features/auth',
+            'settings/features/email',
+            'settings/access/users',
+            'settings/access/permissions',
+            'settings/account',
+            'analytics',
+            'analytics/seo',
+            'analytics/audit-log',
             'system',
-            'system/users',
             'system/mcp',
-            'system/analytics-filters',
-            'system/inquiries',
+            'system/diagnostics',
             'system/features',
             'system/agent',
-            'system/info',
-            'system/email',
             'system/errors',
+            // First-ship 6-bucket aliases:
+            'site/footer',
+            'commerce/invoices',
+            'people/users',
+            // Pre-IA-jump aliases:
+            'client-config/themes',
+            'release/publishing',
+            'system/users',
+            'system/info',
         ];
         // Runtime sanity — non-empty + unique.
         expect(variants.length).toBeGreaterThan(0);
