@@ -36,6 +36,7 @@ import {EPipelineFlowStyle} from '@client/modules/PipelineFlow';
 import {ERepoTreeStyle} from '@client/modules/RepoTree';
 import {EArchitectureTiersStyle} from '@client/modules/ArchitectureTiers';
 import {EStatsStripStyle} from '@client/modules/StatsStrip';
+import {EKeyValueDossierStyle} from '@client/modules/KeyValueDossier';
 import {EProductStyle} from '@client/modules/Product';
 
 import {PlainTextEditor} from '@admin/modules/PlainText/PlainTextEditor';
@@ -62,6 +63,7 @@ import {PipelineFlowEditor} from '@admin/modules/PipelineFlow/PipelineFlowEditor
 import {RepoTreeEditor} from '@admin/modules/RepoTree/RepoTreeEditor';
 import {ArchitectureTiersEditor} from '@admin/modules/ArchitectureTiers/ArchitectureTiersEditor';
 import {StatsStripEditor} from '@admin/modules/StatsStrip/StatsStripEditor';
+import {KeyValueDossierEditor} from '@admin/modules/KeyValueDossier';
 import {ProductEditor} from '@admin/modules/Product/ProductEditor';
 import {EProductDetailHeroStyle} from '@client/modules/ProductDetailHero';
 import {EProductSpecTableStyle} from '@client/modules/ProductSpecTable';
@@ -159,6 +161,7 @@ export const ADMIN_ITEM_TYPE_EDITORS: readonly AdminItemTypeEntry[] = [
     {key: EItemType.RepoTree,        Editor: RepoTreeEditor,         styleEnum: asEnum(ERepoTreeStyle),        defaultContent: '{"nodes":[]}',                                                                                                                                                              labelKey: 'Repo tree',            descriptionKey: 'Interactive repo path tree with detail pane.',                       category: 'content'},
     {key: EItemType.ArchitectureTiers, Editor: ArchitectureTiersEditor, styleEnum: asEnum(EArchitectureTiersStyle), defaultContent: '{"tiers":[]}',                                                                                                                                                         labelKey: 'Architecture tiers',   descriptionKey: 'Tier cards (concern/role/title/pills/modules) + shared footer + lifecycle rail.', category: 'content'},
     {key: EItemType.StatsStrip,      Editor: StatsStripEditor,       styleEnum: asEnum(EStatsStripStyle),      defaultContent: '{"cells":[]}',                                                                                                                                                              labelKey: 'Stats strip',          descriptionKey: 'Horizontal numeric strip — value / unit / caption per cell.',        category: 'content'},
+    {key: EItemType.KeyValueDossier, Editor: KeyValueDossierEditor,  styleEnum: asEnum(EKeyValueDossierStyle), defaultContent: '{"items":[]}',                                                                                                                                                              labelKey: 'Key/value dossier',    descriptionKey: 'Structured label/value table — replaces hand-typed dl/dt/dd in RichText. 3 style variants.', category: 'content'},
     {key: EItemType.Product,         Editor: ProductEditor,          styleEnum: asEnum(EProductStyle),         defaultContent: '{"mode":"grid","products":{"source":"manual","ids":[],"limit":6},"showBuyCta":true,"showPrice":true,"grid":{"columns":3,"density":"standard"}}',                                labelKey: 'Product',              descriptionKey: 'Featured / grid / carousel / comparison / related — pick mode in editor.', category: 'content'},
     // Phase 1.C — products-as-composable-page sub-jump B. Auto-injected by
     // CategoryTemplate / ProductDetailTemplate; the editors are placeholders

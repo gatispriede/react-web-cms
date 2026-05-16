@@ -23,6 +23,11 @@ export enum EItemType {
     RepoTree = "REPO_TREE",
     ArchitectureTiers = "ARCHITECTURE_TIERS",
     StatsStrip = "STATS_STRIP",
+    /** Key/value dossier — replaces hand-typed `<dl><dt><dd>` in RichText.
+     *  Renders a structured fact table (label + value, optional href) with
+     *  3 style variants (editorial / tech-modern / card-grid). First module
+     *  through the Claude-design Stitch-substitute pipeline. 2026-05-16. */
+    KeyValueDossier = "KEY_VALUE_DOSSIER",
     /** Product module — mode-dispatched (featured/grid/carousel/comparison/related).
      *  See ui/client/modules/Product/ for the renderer + ui/admin/modules/Product/
      *  for the editor. Added by Phase 1.B (product-module-and-checkout-customization).

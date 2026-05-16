@@ -44,6 +44,7 @@ import PipelineFlow from '@client/modules/PipelineFlow';
 import RepoTree from '@client/modules/RepoTree';
 import ArchitectureTiers from '@client/modules/ArchitectureTiers';
 import StatsStrip from '@client/modules/StatsStrip';
+import KeyValueDossier from '@client/modules/KeyValueDossier';
 import Product from '@client/modules/Product';
 import ProductDetailHero from '@client/modules/ProductDetailHero';
 import ProductSpecTable from '@client/modules/ProductSpecTable';
@@ -123,6 +124,7 @@ export const CLIENT_ITEM_TYPES: readonly ClientItemType[] = [
     {key: EItemType.RepoTree, Display: RepoTree},
     {key: EItemType.ArchitectureTiers, Display: ArchitectureTiers},
     {key: EItemType.StatsStrip, Display: StatsStrip},
+    {key: EItemType.KeyValueDossier, Display: KeyValueDossier},
     {key: EItemType.Product, Display: Product},
     // Phase 1.C — products-as-composable-page sub-jump B.
     {key: EItemType.ProductDetailHero, Display: ProductDetailHero},
