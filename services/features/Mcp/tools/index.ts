@@ -40,6 +40,7 @@ import {PRODUCT_TEMPLATES_TOOLS} from './productTemplates';
 import {CHECKOUT_TOOLS} from './checkout';
 import {ABANDONED_CART_TOOLS} from './abandonedCart';
 import {MODULE_SCREENSHOT_TOOLS} from './moduleScreenshots';
+import {INVOICE_TOOLS} from './invoices';
 
 /**
  * Out of scope (defer):
@@ -89,6 +90,7 @@ export const ALL_MCP_TOOLS: McpTool[] = [
     ...CHECKOUT_TOOLS,
     ...ABANDONED_CART_TOOLS,
     ...MODULE_SCREENSHOT_TOOLS,
+    ...INVOICE_TOOLS,
 ];
 
 /**

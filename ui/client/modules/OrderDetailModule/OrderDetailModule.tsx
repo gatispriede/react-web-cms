@@ -21,6 +21,8 @@ const OrderDetailModule: React.FC<OrderDetailModuleProps> = ({
     payment,
     statusHistory,
     actions,
+    invoiceDownloadUrl,
+    invoiceDownloadLabel,
 }) => {
     const a = actions ?? {};
     return (
@@ -98,6 +100,19 @@ const OrderDetailModule: React.FC<OrderDetailModuleProps> = ({
                         ))}
                     </ol>
                 </section>
+            )}
+
+            {invoiceDownloadUrl && (
+                <div className="order-detail-module__invoice">
+                    <a
+                        href={invoiceDownloadUrl}
+                        className="order-detail-module__btn"
+                        data-testid={`${testId}-invoice-download`}
+                        rel="noopener"
+                    >
+                        {invoiceDownloadLabel ?? 'Download invoice (PDF)'}
+                    </a>
+                </div>
             )}
 
             <div className="order-detail-module__actions">

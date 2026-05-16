@@ -5,6 +5,7 @@ import {StockReservationService} from './StockReservationService';
 import {getPaymentProvider} from './payment';
 import type {ProductService} from '@services/features/Products/ProductService';
 import type {CartService} from '@services/features/Cart/CartService';
+import type {InvoiceService} from '@services/features/Invoicing/InvoiceService';
 import {getMongoConnection} from '@services/infra/mongoDBConnection';
 import {log} from '@services/infra/logger';
 
@@ -127,6 +128,12 @@ export class OrdersServiceLoader extends ServiceLoader {
             return undefined;
         })();
 
+        // Invoicing is an optional sibling — orders works without it
+        // (invoice issuance is a no-op), but when present the finalize
+        // flow atomically issues + persists the IInvoice. The dependency
+        // is loose so the boot graph stays acyclic.
+        const invoices = ctx.services.invoices as InvoiceService | undefined;
+
         const orders = new OrderService(
             ctx.db,
             products,
@@ -134,6 +141,7 @@ export class OrdersServiceLoader extends ServiceLoader {
             stockReservation,
             getPaymentProvider(),
             mailer,
+            invoices,
         );
 
         return {orders, stockReservation};

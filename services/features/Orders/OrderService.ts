@@ -22,6 +22,7 @@ import {getViesService} from '@services/features/Pricing/ViesService';
 import {getStripeTaxService} from '@services/features/Pricing/StripeTaxService';
 import {getShippingMethod, shippingMethodList} from './shippingMethods';
 import {log} from '@services/infra/logger';
+import type {InvoiceService} from '@services/features/Invoicing/InvoiceService';
 
 /**
  * OrderService — single owner of the `Orders` collection. Encapsulates
@@ -81,6 +82,14 @@ export class OrderService {
         private reservations: StockReservationService,
         private payment: IPaymentProvider,
         private mailer?: OrderMailer,
+        /**
+         * Optional `InvoiceService` — when supplied, `finalizeOrder` issues
+         * an `IInvoice` after the paid-state transition writes. Issuance is
+         * atomic with the order's `paid` flip: if the invoice insert throws,
+         * the order is reverted to `pending` so the customer can retry
+         * (Releases-pattern compensating saga on standalone Mongo).
+         */
+        private invoices?: InvoiceService,
     ) {
         this.orders = db.collection('Orders');
         this.counter = new OrderCounter(db);
@@ -503,6 +512,29 @@ export class OrderService {
             next.orderToken = mintOrderToken(next.id);
         }
         const written = await this.write(next, order.version);
+
+        // Issue the invoice atomically with the paid transition. If the
+        // invoice write fails, roll the order back to `pending-payment`
+        // (re-using the existing `pending` state) + log an audit-grade
+        // marker so the customer can retry without a half-finalised
+        // state. Stripe capture is left intact — refunding it lives on
+        // the operator (rare path, alarm-worthy).
+        if (this.invoices) {
+            try {
+                await this.invoices.issueForOrder(written);
+            } catch (err) {
+                log.error({scope: 'orders.finalize.invoice', err, orderId: order.id},
+                    'invoice issuance failed; reverting order to pending');
+                try {
+                    const reverted = this.appendStatus(written, 'pending', 'system', 'finalize.invoice-rollback');
+                    await this.write({...reverted, idempotencyKeys: {...reverted.idempotencyKeys, finalize: undefined}}, written.version);
+                } catch (rollbackErr) {
+                    log.error({scope: 'orders.finalize.rollback', err: rollbackErr, orderId: order.id},
+                        'order revert after invoice failure FAILED — manual repair required');
+                }
+                throw new OrderError('INVOICE_ISSUE_FAILED', {message: String((err as Error)?.message ?? err)});
+            }
+        }
 
         // Clear the cart — non-fatal.
         try {

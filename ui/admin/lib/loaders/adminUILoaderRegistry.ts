@@ -62,6 +62,7 @@ import {CheckoutCustomizationAdminUILoader} from '@admin/features/Checkout/Check
 import {AbandonedCartAdminUILoader} from '@admin/features/Checkout/AbandonedCartAdminUILoader';
 import {ModulesPreviewAdminUILoader} from '@admin/features/ModulesPreview/ModulesPreviewAdminUILoader';
 import {SeoAdminUILoader} from '@admin/features/Seo/SeoAdminUILoader';
+import {InvoicesAdminUILoader} from '@admin/features/Invoices/InvoicesAdminUILoader';
 
 const REGISTERED: AdminUILoader[] = [
     new PostsAdminUILoader(),
@@ -108,6 +109,7 @@ const REGISTERED: AdminUILoader[] = [
     new AbandonedCartAdminUILoader(),
     new ModulesPreviewAdminUILoader(),
     new SeoAdminUILoader(),
+    new InvoicesAdminUILoader(),
 ];
 
 /**

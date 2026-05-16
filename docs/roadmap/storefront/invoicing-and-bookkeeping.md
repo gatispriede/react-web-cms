@@ -3,6 +3,23 @@ name: invoicing-and-bookkeeping
 description: Every paid order produces a regulator-grade invoice (sequential number, full operator + customer details, line-level VAT breakdown, regime tagging) persisted as a first-class IInvoice document. Credit notes for refunds. PDF generation. Bookkeeping exports (monthly/quarterly) for tax filing. Wholesale-cost capture from the dropship adapter for COGS / margin tracking. Customer self-service download from /account/orders/[id]. Operator-grade audit trail.
 ---
 
+> **SHIPPED 2026-05-16** — `IInvoice` + `ICreditNote` schemas, `InvoiceService`
+> (issue / void-with-credit-note / list / get / CSV export),
+> gap-free `InvoiceSequence` numbering with per-year reset, deterministic
+> `@react-pdf/renderer`-backed PDF rendering, `OrderService.finalize` hook
+> with Releases-pattern rollback on standalone Mongo, MCP coverage
+> (`invoice.list` / `invoice.get` / `invoice.export` / `creditNote.create` /
+> `creditNote.list` / `creditNote.get`), admin `commerce/invoices` pane
+> (list / filter / detail drawer with download + void / period-CSV export
+> modal / COGS column toggle), customer self-service "Download invoice
+> (PDF)" link on `/account/orders/[id]`, REST mirrors at
+> `/api/admin/invoices` + `/api/account/invoice`. **Out-of-scope from
+> this jump** (carried per the original spec): e-invoicing standards
+> (PEPPOL / EN 16931 / ZUGFeRD), country-specific cryptographic regimes,
+> multi-entity, multi-language invoice copy, XLSX exporter, receipt-email
+> PDF attachment (link points at `/api/account/invoice`).
+> See [shipped.md](../shipped.md#2026-05-16--invoicing-and-bookkeeping-eu-compliant-invoices-credit-notes-pdf-csv-export).
+
 # Invoicing + bookkeeping
 
 ## Goal

@@ -17,6 +17,7 @@ import {diagnosticsFeature} from '../features/Diagnostics/feature.manifest';
 import {featureFlagsFeature} from '../features/FeatureFlags/feature.manifest';
 import {footerFeature} from '../features/Footer/feature.manifest';
 import {inventoryFeature} from '../features/Inventory/feature.manifest';
+import {invoicingFeature} from '../features/Invoicing/feature.manifest';
 import {languagesFeature} from '../features/Languages/feature.manifest';
 import {marketingFeature} from '../features/Marketing/feature.manifest';
 import {mcpFeature} from '../features/Mcp/feature.manifest';
@@ -54,6 +55,7 @@ export const featureRegistry: readonly FeatureManifest[] = [
     featureFlagsFeature,
     footerFeature,
     inventoryFeature,
+    invoicingFeature,
     languagesFeature,
     marketingFeature,
     mcpFeature,

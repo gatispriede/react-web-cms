@@ -208,6 +208,16 @@ export const OrderDetailHost: React.FC<{item: IItem}> = ({item}) => {
         };
     });
 
+    // Invoice download — only shown once the order has paid + an
+    // invoice has been issued. The status gate prevents a "pending"
+    // download attempt that would 404; the API endpoint itself
+    // re-validates ownership.
+    const showInvoice = String(order.status ?? '') !== 'pending'
+        && String(order.status ?? '') !== 'cancelled';
+    const invoiceUrl = showInvoice
+        ? `/api/account/invoice?orderId=${encodeURIComponent(String(id ?? order.id ?? ''))}`
+        : undefined;
+
     return (
         <OrderDetailModule
             testId="account-order-detail"
@@ -228,6 +238,7 @@ export const OrderDetailHost: React.FC<{item: IItem}> = ({item}) => {
                     window.location.href = c.supportHref ?? '/account/inbox';
                 },
             }}
+            invoiceDownloadUrl={invoiceUrl}
         />
     );
 };

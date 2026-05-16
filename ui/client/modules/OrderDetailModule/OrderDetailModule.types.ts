@@ -60,4 +60,13 @@ export interface OrderDetailModuleProps {
     payment: OrderPaymentSummary;
     statusHistory: OrderStatusHistoryEntry[];
     actions?: OrderDetailActions;
+    /**
+     * Optional invoice-download link. When set, the module renders an
+     * "Download invoice (PDF)" anchor that targets this URL. The
+     * customer-side `/account/orders/[id]` host fills this in once
+     * `InvoiceService.issueForOrder` has run for the order.
+     */
+    invoiceDownloadUrl?: string;
+    /** Stable label override for the invoice link (default: "Download invoice (PDF)"). */
+    invoiceDownloadLabel?: string;
 }
