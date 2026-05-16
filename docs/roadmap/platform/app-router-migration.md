@@ -136,11 +136,14 @@ directive — batch is typecheck-clean + structurally correct).
 
 Tracked as a checklist; each batch lands as its own PR. Sizes are rough.
 
-- [ ] **Batch 2 — mongo re-entry guard + revalidate fix (S).** Replace
-  `MongoDBConnection.adminSeeded` with a `seedingPromise` singleton
-  (risk #6) and `res.revalidate` → `revalidatePath` in
-  `pages/api/revalidate.ts` (risk #4). Mechanical, unblocks safe
-  concurrent server-component DB reads.
+- [x] **Batch 2 — mongo re-entry guard + revalidate fix (S).** Shipped
+  2026-05-16. `adminSeeded` boolean (in `UsersServiceLoader`, not
+  `MongoDBConnection` as the spec originally guessed) + `ThemeService.seeded`
+  static both replaced with `Promise<void> | null` singletons that null
+  on failure for retry (risk #6). `pages/api/revalidate.ts` calls both
+  `res.revalidate(p)` and `revalidatePath(p)` from `next/cache` per path
+  — dual-mode so Pages-Router and App-Router routes both flush during
+  the migration window (risk #4). See [shipped.md 2026-05-16 B2 entry](../shipped.md).
 - [ ] **Batch 3 — public shell + `index` (L).** `pages/app.tsx` (519-line
   client class) → `ui/client/lib/SiteShell.tsx` (`'use client'`, calls
   `useTranslation` itself, drops `t`/`i18n` props). `app/page.tsx` ←

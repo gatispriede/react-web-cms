@@ -28,7 +28,18 @@ const ACTIVE_KEY = 'activeThemeId';
 export class ThemeService {
     private themes: Collection;
     private settings: Collection;
-    private static seeded = false;
+    /**
+     * Re-entry guard — Promise-based singleton (not a bool). Under App
+     * Router, `app/layout.tsx` reads Mongo per request via
+     * `getMongoConnection()`, and any reconnect path can re-trigger
+     * `bootFeaturesAsync` → `onBoot` → `seedIfEmpty()` concurrently.
+     * A bool flag has a TOCTOU race (check-then-set across an `await`):
+     * two callers can both observe `false`, both flip it `true`, and
+     * both run the seed. Storing the in-flight Promise instead means
+     * the second caller awaits the first's work — one seed, every time.
+     * Cleared on failure so the next call retries.
+     */
+    private static seedingPromise: Promise<void> | null = null;
 
     constructor(db: Db) {
         this.themes = db.collection('Themes');
@@ -36,29 +47,39 @@ export class ThemeService {
     }
 
     async seedIfEmpty(): Promise<void> {
-        if (ThemeService.seeded) return;
-        ThemeService.seeded = true;
-        try {
-            const count = await this.themes.estimatedDocumentCount();
-            if (count === 0) {
-                const docs: ITheme[] = PRESETS.map(p => ({id: guid(), ...p}));
-                await this.themes.insertMany(docs as any);
-                await this.setActive(docs[0].id);
-                return;
-            }
-            // Collection already seeded: upsert any preset names that are
-            // missing so existing installations pick up new presets after a
-            // deploy. Customised themes (`custom: true`) are never touched.
-            for (const preset of PRESETS) {
-                const existing = await this.themes.findOne({name: preset.name, custom: false});
-                if (!existing) {
-                    await this.themes.insertOne({id: guid(), ...preset} as any);
+        if (ThemeService.seedingPromise) return ThemeService.seedingPromise;
+        ThemeService.seedingPromise = (async () => {
+            try {
+                const count = await this.themes.estimatedDocumentCount();
+                if (count === 0) {
+                    const docs: ITheme[] = PRESETS.map(p => ({id: guid(), ...p}));
+                    await this.themes.insertMany(docs as any);
+                    await this.setActive(docs[0].id);
+                    return;
                 }
+                // Collection already seeded: upsert any preset names that are
+                // missing so existing installations pick up new presets after a
+                // deploy. Customised themes (`custom: true`) are never touched.
+                for (const preset of PRESETS) {
+                    const existing = await this.themes.findOne({name: preset.name, custom: false});
+                    if (!existing) {
+                        await this.themes.insertOne({id: guid(), ...preset} as any);
+                    }
+                }
+            } catch (err) {
+                // Null out so the next caller retries — keeping a rejected
+                // promise cached would permanently break seeding for the
+                // process lifetime on a transient Mongo blip.
+                ThemeService.seedingPromise = null;
+                log.error({scope: 'theme.seedPresets', err}, 'failed to seed theme presets');
             }
-        } catch (err) {
-            ThemeService.seeded = false;
-            log.error({scope: 'theme.seedPresets', err}, 'failed to seed theme presets');
-        }
+        })();
+        return ThemeService.seedingPromise;
+    }
+
+    /** Test-only escape hatch — reset the in-flight seed singleton. */
+    static _resetSeedingPromiseForTest(): void {
+        ThemeService.seedingPromise = null;
     }
 
     async getThemes(): Promise<ITheme[]> {

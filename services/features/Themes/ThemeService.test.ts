@@ -21,8 +21,9 @@ afterAll(async () => {
 beforeEach(async () => {
     db = client.db(`theme_${Date.now()}_${Math.floor(Math.random() * 1e9)}`);
     service = new ThemeService(db);
-    // seedIfEmpty is a static singleton guard — reset so each test can seed fresh.
-    (ThemeService as any).seeded = false;
+    // seedIfEmpty is a static singleton guard (Promise-based since B2) —
+    // reset so each test can seed against a fresh db.
+    ThemeService._resetSeedingPromiseForTest();
 });
 
 describe('ThemeService', () => {
