@@ -509,6 +509,24 @@ export const sampleContent: Record<string, PreviewSample[]> = {
             }),
         },
     ],
+    [EItemType.KeyValueDossier]: [
+        // Matches the live cv-sec-home-vitals shape on funisimo.pro — the
+        // exact RichText dl/dt/dd this module is replacing.
+        {label: 'minimal', content: s({items: [{label: 'Based', value: 'Sigulda, Latvia (EU)'}]})},
+        {
+            label: 'full',
+            content: s({
+                title: 'Hero vitals',
+                items: [
+                    {label: 'Based', value: 'Sigulda, Latvia (EU)'},
+                    {label: 'Years', value: '15+ in digital'},
+                    {label: 'Mode',  value: 'Remote-first · Contract or permanent'},
+                    {label: 'Stack', value: 'TypeScript · React · Next.js · .NET · gRPC · Claude Code'},
+                    {label: 'Contact', value: 'support@funisimo.pro', href: 'mailto:support@funisimo.pro'},
+                ],
+            }),
+        },
+    ],
     [EItemType.Product]: [
         {label: 'minimal', content: s({mode: 'grid', products: {source: 'manual', ids: [], limit: 6}})},
         {
