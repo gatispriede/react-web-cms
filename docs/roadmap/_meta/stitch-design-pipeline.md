@@ -69,7 +69,7 @@ keeps reinventing. Stitch will design *that*, not the page.
 
 ### Step 1 — Capture: ground Stitch in the current state
 
-Two artefacts, both go into `docs/roadmap/_meta/stitch-artifacts/<module-name>/`:
+Two artefacts, both go into `docs/roadmap/_meta/design-artifacts/<module-name>/`:
 
 | Artefact | Source | Purpose |
 |----------|--------|---------|
@@ -292,6 +292,6 @@ it end-to-end, run the retro, then move to `SectionHeading`.
 ### POC acceptance
 
 - [ ] Stitch prompt captured verbatim in this doc (Stitch session #1)
-- [ ] Frame screenshots saved under `docs/roadmap/_meta/stitch-artifacts/key-value-dossier/`
+- [ ] Frame screenshots saved under `docs/roadmap/_meta/design-artifacts/key-value-dossier/`
 - [ ] `KeyValueDossier` module landed end-to-end (display + editor + types + registry + scss + e2e baseline + MCP coverage + migration of `cv-sec-home-vitals` + `cv-sec-home-matrix-platforms`)
 - [ ] Process retro — what went well / what to change before the next module
