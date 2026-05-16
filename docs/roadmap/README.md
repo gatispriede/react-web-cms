@@ -75,10 +75,11 @@ These are acceptance criteria, not nice-to-haves.
 
 > Triage 2026-05-16: `carousel-preview-layout-fix`, `image-width-height-respect`, `module-transparency-style` all shipped 2026-04-24 (banners on their spec docs + `shipped.md` entries + code verified). Removed from the active queue here; archaeology stays in `shipped.md`.
 
-### Admin — content-publish workflow
+### Admin — IA + workflow
 
 | Item | Track | Size | Notes |
 |------|-------|------|-------|
+| [admin-information-architecture.md](admin/admin-information-architecture.md) | admin | L-XL (1-3 days AI, 3-5 if audit surfaces >50 panes) | NEW 2026-05-16. Settings scattered across `/admin/system/*`, `/admin/build/*`, `/admin/content/*`, top-level routes, drawers, and modal dialogs with no coherent grouping. Spec proposes a 7-bucket taxonomy (Site / Content / Commerce / People / Analytics / System / My account), URL migration with 301 shim, shared `<PaneHeader>` / `<EmptyState>` / `<SaveBar>` components, vertical-rhythm tokens. Not a re-skin — IA + consistency pass on top of the already-shipped dark mode / kbar / Sonner / inline-editing work. Unblocks the operator-action phase by making the admin findable. |
 | ~~[admin-content-releases.md](admin/admin-content-releases.md)~~ | ~~2.5e~~ | ~~XL (~2-3 days AI)~~ | **SHIPPED 2026-05-16** — first-class `Release` entity + atomic publish + rollback + scheduled publish + perspective overlay + admin pane + `release.*` MCP coverage + shared `useAddToRelease` hook. See [shipped.md](shipped.md#2026-05-16--admin-content-releases-release-entity--atomic-publish). |
 
 ### Track-level READMEs
