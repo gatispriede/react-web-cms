@@ -5,6 +5,53 @@ description: Replace the previously-spec'd ss.com cars vertical with a PC-parts 
 
 # PC-parts dropshipping integration
 
+> **Decision Record — 2026-05-16 EU distributor research pivot**
+>
+> Original spec recommended **TD SYNNEX StreamOne** as the first impl
+> because of pan-EU reach + brand depth. Two web-research passes this
+> session ([PC parts](#) + [robotics/AI hardware](#)) showed:
+>
+> 1. **Every "tier-1" distributor (TD SYNNEX, Ingram Micro, Asbis) is
+>    indie-hostile.** 2–4 week onboarding, business-verification gauntlet,
+>    minimum-volume commitments, and physical-address checks that exclude
+>    one-person operators. The TD-SYNNEX scaffold is real-but-dormant —
+>    it sits in `services/features/Dropship/TdSynnexStreamOne.ts` waiting
+>    on a partner account that may take 1–2 weeks at best, longer
+>    realistically.
+>
+> 2. **TME (Transfer Multisort Elektronik, Łódź PL) is the indie path.**
+>    Self-service developer signup (https://developers.tme.eu/en/signup),
+>    free public REST API + GitHub SDKs, lightweight B2B trade account
+>    (days not weeks with valid VAT + business reg), EU-wide coverage,
+>    ~1M+ SKUs. Critically, TME's catalogue is **broader than PC parts**
+>    — it covers motors, sensors, MCUs, Pi/Jetson dev kits, batteries,
+>    connectors, robotics components, and AI-edge accelerators (Coral,
+>    Jetson dev kits, RealSense via Mouser-rebranded carriers). This
+>    means the same adapter unlocks three verticals: PC parts, robotics
+>    kits, AI/edge hardware.
+>
+> 3. **Margin reality is grimmer than the original spec assumed.** Pure
+>    component-level dropshipping in the EU is 3–5% gross margin after
+>    shipping + payment fees — not the 5–15% the spec banked on. Indie
+>    EU PC shops survive by stock-holding (Mindfactory/Alternate-style)
+>    or by adding kitting + integration + ROS support on top. Pure
+>    SKU arbitrage is a treadmill in this market regardless of vertical.
+>    See `docs/roadmap/storefront/first-class-themes.md` — the saas-landing
+>    + commerce themes are designed for a configured-kit product page,
+>    not a thousand-SKU price war.
+>
+> **First-impl pivot:** TME goes first. TD SYNNEX scaffold stays in
+> tree for the day operator credentials arrive but is no longer the
+> recommended-first integration. The `IDropshipDistributorAdapter`
+> interface needs zero changes — both adapters implement it.
+>
+> **Vertical broadening:** the spec name stays
+> "pc-parts-dropshipping-integration" for git-archaeology continuity,
+> but the actual delivered storefront is **components + robotics +
+> AI-edge hardware**. The CMS already supports this — same product
+> module, same checkout, same category tree, just a broader SKU
+> stream from TME.
+
 ## Goal
 
 Storefront sells PC parts (CPUs, GPUs, motherboards, RAM, SSDs, cases, peripherals) without holding inventory. Every customer order forwards to a distributor who ships direct.
@@ -27,15 +74,18 @@ This is the third commerce vertical (after auth-split + checkout-customization).
 
 ## Design
 
-### Distributor choice — three viable options
+### Distributor choice — ranked post-2026-05-16 research pivot
 
 Operator picks one for the first integration. Adapter is interchangeable post-launch.
 
-| Distributor | Coverage | API | Partner agreement | Notes |
-|---|---|---|---|---|
-| **TD SYNNEX** (StreamOne Ion) — **recommended first** | All EU + UK | REST + OData | Yes (operator must open partner account; typically 1-2 week setup) | Largest pan-EU reach. Full dropshipping support. Best brand catalogue depth. Docs at `developers.streamonecloud.com`. |
-| **Ingram Micro Xvantage** | All EU + UK | REST + GraphQL | Yes | Similar scale; comparable catalogue. Xvantage Marketplace API. |
-| **Asbis** | Central + Eastern EU (LV/PL/CZ/SK/HU) + selective UK | REST + SOAP | Yes | Smaller but operator-friendly (faster onboarding). Native Latvian presence — relevant if operator is LV-based. |
+| Distributor | Coverage | API | Onboarding | Verticals covered | Notes |
+|---|---|---|---|---|---|
+| **TME** (Transfer Multisort Elektronik) — **recommended first** | PL HQ, pan-EU shipping, 30 language sites | Free public REST + GitHub SDKs | Self-service developer signup (days); B2B trade-account also days with VAT | PC parts + robotics + maker/Pi/Arduino + AI-edge dev hardware | https://developers.tme.eu/en — anonymous token + signed HMAC for B2B writes. ~1M+ SKUs. The pivot pick. |
+| **Siewert & Kau** (DE) | DE HQ, EU-wide 24h ship | REST CSV feeds (price/stock) + openTRANS EDI (orders) | B2B trade account, days with VAT + Gewerbeschein | PC parts deep, ~30k brand-deep SKUs | Order leg is EDI not REST — adapter would need EDI transport. Strong second option for PC-parts depth. |
+| **ITscope** (DE, aggregator) | Pan-EU via 400+ underlying suppliers | Full REST API 2.1 | €49/mo subscription + trade verification, days | Whatever the underlying suppliers carry — Also, Tech Data, Ingram, Wortmann, S&K, Api | Multiplier play: one API surfaces many suppliers. Still need supplier relationships on the back end, but lighter than direct onboarding each. |
+| **ASBIS Baltics** (LV office) | Baltics + CEE primary | B2B portal + XML/CSV feeds (not REST-documented) | Standard B2B, faster for local LV operators | PC parts + some peripherals | Walk-in viable in Riga. Adapter would be CSV+portal not REST. |
+| **TD SYNNEX** (StreamOne Ion) — scaffold dormant | All EU + UK | REST + OData | 2–4 week B2B onboarding, volume commitments | PC parts, broad brand catalogue | Indie-hostile per 2026-05-16 research. Scaffold (`TdSynnexStreamOne.ts`) stays in tree but is no longer recommended-first. |
+| **Ingram Micro Xvantage** | All EU + UK | REST + GraphQL | Same gating as TD SYNNEX | PC parts | Not pursued. |
 
 **Out of scope:**
 - AliExpress dropshipping (quality / customs / VAT issues + slow shipping; wrong for PC parts where speed + warranty matter)
@@ -242,21 +292,28 @@ For B2B customers, distributors often want a separate purchase order flow with d
 ```
 # Dropship distributor — operator picks one + drops credentials
 COMMERCE_DROPSHIP_ENABLED=false
-COMMERCE_DROPSHIP_ADAPTER=tdSynnex                # tdSynnex | ingramMicro | asbis
+COMMERCE_DROPSHIP_ADAPTER=tme                     # tme | tdSynnex | ingramMicro | asbis
 
-# TD SYNNEX StreamOne Ion
+# TME (recommended first impl — self-service signup at developers.tme.eu)
+TME_API_BASE=https://api.tme.eu
+TME_TOKEN=                                        # anonymous integration token
+TME_APP_SECRET=                                   # HMAC-SHA1 signing key (required for B2B writes)
+TME_COUNTRY=LV                                    # ISO-3166-1 alpha-2
+TME_LANGUAGE=EN
+
+# TD SYNNEX StreamOne Ion (scaffold dormant — 2–4 week partner-account onboarding)
 TD_SYNNEX_API_BASE=https://api.streamonecloud.com
 TD_SYNNEX_CLIENT_ID=
 TD_SYNNEX_CLIENT_SECRET=
 TD_SYNNEX_RESELLER_ID=                            # operator's partner reseller code
 
-# Ingram Micro Xvantage
+# Ingram Micro Xvantage (not pursued post-research; kept for archaeology)
 INGRAM_API_BASE=https://api.ingrammicro.com
 INGRAM_CLIENT_ID=
 INGRAM_CLIENT_SECRET=
 INGRAM_CUSTOMER_NUMBER=
 
-# Asbis B2B
+# Asbis B2B (alternative — walk-in viable in Riga)
 ASBIS_API_BASE=https://b2b.asbis.com/api
 ASBIS_USERNAME=
 ASBIS_PASSWORD=
@@ -360,11 +417,16 @@ Recommended sub-jumps per §13:
 
 ## Operator post-merge ops (REQUIRED before going live)
 
-1. **Open TD SYNNEX (or Ingram / Asbis) partner account** — typically 1-2 weeks lead time. Operator's business needs registration number, VAT ID, bank reference, signed reseller agreement.
-2. **Generate OAuth client credentials in distributor's developer portal** — drop into `.env`.
-3. **Configure shipping origin** in distributor portal so shipments go from their warehouse to customer with operator's branding on the packing slip (if distributor supports white-label).
-4. **Smoke-test in sandbox** — distributor provides a sandbox environment; run a fake order through; confirm shipping address propagates correctly, tracking webhooks deliver, returns flow works.
-5. **Cutover** — flip `COMMERCE_DROPSHIP_ENABLED=true`, narrow the catalogue to a curated initial subset (~100 products) before opening firehose-mode sync.
+**TME-first path (recommended post-2026-05-16 research pivot):**
+
+1. **Sign up TME developer account** at https://developers.tme.eu/en/signup — self-service, anonymous-token issued immediately. Read-side calls (catalogue browse) work with this alone.
+2. **Sign up TME B2B trade account** in parallel — requires registered business + VAT ID. Days, not weeks. Once active, you get `TME_APP_SECRET` (HMAC signing key) needed for order placement.
+3. **Drop credentials in `.env`** — `TME_TOKEN`, `TME_APP_SECRET`, `TME_COUNTRY=LV`, `TME_LANGUAGE=EN`. Adapter's `isConfigured()` flips to true; admin pane stops surfacing the "not credentialed" banner.
+4. **Smoke-test** — TME has no formal sandbox; run a small real order through manually first (€10–50 to your own address) to confirm shipping propagation + tracking webhook delivery. Then switch the adapter to live.
+5. **Curate initial catalogue subset** (~100–200 SKUs) before opening firehose-mode sync. TME has 1M+ SKUs; you don't want them all in your storefront on day one.
+6. **Cutover** — flip `COMMERCE_DROPSHIP_ENABLED=true`, set `COMMERCE_DROPSHIP_ADAPTER=tme`.
+
+**TD SYNNEX path (only if operator already has the partnership):** same flow but with `TD_SYNNEX_*` env vars and `COMMERCE_DROPSHIP_ADAPTER=tdSynnex`. 1–2 weeks of upfront onboarding + reseller agreement before step 1 even starts.
 
 ## Out of scope
 

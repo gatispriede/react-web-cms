@@ -47,7 +47,7 @@ These are acceptance criteria, not nice-to-haves.
 | Item | Track | Size | Notes |
 |------|-------|------|-------|
 | ~~[first-class-themes.md](storefront/first-class-themes.md)~~ | ~~5~~ | ~~XL~~ | **SHIPPED 2026-05-16** — all 8 themes have a per-module visual pass: `editorial`, `restaurant`, `event` (shipped earlier), `saas-landing`, `agency`, `local-business`, `portfolio`, `commerce` (shipped 2026-05-16). See [shipped.md](shipped.md#2026-05-16--first-class-themes-five-theme-visual-passes-complete). |
-| [pc-parts-dropshipping-integration.md](storefront/pc-parts-dropshipping-integration.md) | 7 | XL (~5-7 days AI) | NEW — replaces deleted ss-com-cars spec. `IDropshipDistributorAdapter` extending W7b's warehouse adapter shape + `placeOrder` / `getOrderStatus` / `getReturnPolicy` / `quoteWholesale`. First impl against TD SYNNEX StreamOne (pan-EU + UK). Operator holds no inventory — every checkout forwards to distributor. Wires into existing Phase 1.B/1.C/1.D + W6a/W8g. **Operator post-merge: partner account onboarding (1-2 weeks).** |
+| [pc-parts-dropshipping-integration.md](storefront/pc-parts-dropshipping-integration.md) | 7 | XL (~5-7 days AI) | Interface + 2 adapter scaffolds shipped (`IDropshipDistributorAdapter` + `TdSynnexStreamOne` + `Tme`). **First-impl pivoted to TME 2026-05-16** after EU research showed TD SYNNEX is indie-hostile (2-4 week onboarding) while TME has self-service signup + free public REST API + GitHub SDKs + carries PC parts + robotics + maker/Pi/Jetson + AI-edge SKUs. **Operator post-merge: TME developer signup (immediate) + B2B trade account (days) — see spec § "Operator post-merge ops" TME-first path.** |
 | ~~[logo-style-options.md](content/logo-style-options.md)~~ | ~~content~~ | ~~S-M~~ | **SHIPPED 2026-05-16** — multi-variant logo (full / icon / mono / wordmark) landed; see [shipped.md](shipped.md#2026-05-16--logo-style-options-multi-variant-logo-assets). Unblocks first-class-themes' remaining 5 themes. |
 
 ### Pre-public-deploy gates
@@ -94,7 +94,7 @@ These all gate the pre-public deploy. The code is shipped — operator action un
 | Op | Item it gates |
 |----|---------------|
 | Stripe test → live API keys (`STRIPE_SECRET_KEY`, `STRIPE_PUBLIC_KEY`, `STRIPE_TAX_ENABLED`) | Checkout + multi-currency + Stripe Tax |
-| TD SYNNEX (or Ingram / Asbis) partner account + OAuth client | pc-parts-dropshipping-integration |
+| **TME developer signup** (immediate at developers.tme.eu) + **B2B trade account** (days with VAT) — recommended first per 2026-05-16 research pivot. TD SYNNEX / Asbis remain options if operator already has the relationship. | pc-parts-dropshipping-integration |
 | DNS records (SPF + DKIM + DMARC) + Resend domain verification | email-deliverability-hardening |
 | B2 bucket + append-only application key + restic passphrase + first `restic init` | backup-and-disaster-recovery |
 | Legal review on `/privacy` + `/terms` placeholders | gdpr-privacy-consent |
