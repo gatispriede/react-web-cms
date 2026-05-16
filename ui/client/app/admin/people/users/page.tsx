@@ -1,4 +1,5 @@
-/** `/admin/system/users` — App Router migration, Batch 6. Admin-only. */
+/** `/admin/people/users` — admin-information-architecture jump. Admin-only.
+ *  Moved from `/admin/system/users` per the new taxonomy; old URL 301s via next.config.js. */
 import React from 'react';
 import type {Metadata} from 'next';
 import {resolveAdminSession} from '@client/lib/adminSsrAppRouter';
@@ -9,5 +10,5 @@ export const metadata: Metadata = {title: 'Admin · Users', robots: {index: fals
 
 export default async function Page(): Promise<React.ReactElement> {
     const session = await resolveAdminSession({adminOnly: true});
-    return <AdminShell session={session} view="system/users"/>;
+    return <AdminShell session={session} view="people/users"/>;
 }

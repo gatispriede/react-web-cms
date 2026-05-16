@@ -1,7 +1,7 @@
 /**
  * admin-module-composed (Batch 2) — Users `AdminLoader` bridge.
  *
- * Registers the `system/users` pane with the `AdminPageRegistry`. The
+ * Registers the `people/users` pane with the `AdminPageRegistry`. The
  * bridge component (`Users.tsx`) wires `UsersViewModel` to a single
  * `AdminCrudList` view-module slot, keeping the bespoke edit Modal
  * rendered alongside. Self-registers on import; `UsersAdminUILoader`
@@ -13,7 +13,7 @@ import {EAdminModuleType} from '@enums/EAdminModuleType';
 import Users from './Users';
 
 export class UsersAdminLoader extends AdminLoader {
-    readonly paneId = 'system/users';
+    readonly paneId = 'people/users';
     readonly slots: readonly AdminModuleSlot[] = [
         {type: EAdminModuleType.AdminCrudList, locked: true},
     ];

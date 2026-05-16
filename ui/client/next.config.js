@@ -149,7 +149,30 @@ const nextConfig = {
         // Phase 2 of admin segregation — legacy URLs jump to the new area structure.
         {source: '/admin/settings', destination: '/admin/build', permanent: false},
         {source: '/admin/languages', destination: '/admin/content/translations', permanent: false},
-        {source: '/admin/modules-preview', destination: '/admin/build/modules-preview', permanent: false},
+        // admin-information-architecture jump (2026-05-16) — legacy URLs 301 to
+        // their new homes under the Site/Content/Commerce/People/Analytics/System
+        // taxonomy.
+        //
+        // SCOPE NOTE: only the demonstrator panes whose loaders + App Router
+        // page directories were actually moved in the IA jump are redirected
+        // here. The other ~40 panes still serve from their legacy URLs (their
+        // loaders carry the legacy paneId so the lookup keeps working). Each
+        // per-area sweep follow-up:
+        //   1. Updates the bucket's loaders to the new paneId / route.
+        //   2. Moves the App Router page.tsx directories.
+        //   3. Adds the bucket's old→new redirect rows here.
+        // Adding a redirect *before* the new directory exists 404s the
+        // operator — don't.
+        //
+        // The shim ships for one release cycle (~2 months). After that the
+        // redirects are dropped — anyone still hitting an old URL gets a 404
+        // and updates their bookmark.
+        //
+        // Demonstrator panes whose URLs landed in this commit:
+        {source: '/admin/content/footer', destination: '/admin/site/footer', permanent: false},
+        {source: '/admin/system/users', destination: '/admin/people/users', permanent: false},
+        {source: '/admin/seo/analytics', destination: '/admin/analytics', permanent: false},
+        {source: '/admin/system/info', destination: '/admin/system/diagnostics', permanent: false},
     ],
     rewrites: async () => [
         {

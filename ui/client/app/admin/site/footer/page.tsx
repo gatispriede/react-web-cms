@@ -1,4 +1,5 @@
-/** `/admin/content/footer` — App Router migration, Batch 6. */
+/** `/admin/site/footer` — admin-information-architecture jump.
+ *  Moved from `/admin/content/footer` per the new taxonomy; old URL 301s via next.config.js. */
 import React from 'react';
 import type {Metadata} from 'next';
 import {resolveAdminSession} from '@client/lib/adminSsrAppRouter';
@@ -9,5 +10,5 @@ export const metadata: Metadata = {title: 'Admin · Footer', robots: {index: fal
 
 export default async function Page(): Promise<React.ReactElement> {
     const session = await resolveAdminSession();
-    return <AdminShell session={session} view="content/footer"/>;
+    return <AdminShell session={session} view="site/footer"/>;
 }

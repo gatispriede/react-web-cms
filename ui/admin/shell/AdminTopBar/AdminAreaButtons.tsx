@@ -1,11 +1,11 @@
 import React, {ReactNode} from "react";
 import {Button} from "antd";
 import {
+    AppstoreOutlined,
+    AuditOutlined,
     BgColorsOutlined,
-    CloudUploadOutlined,
     FileTextOutlined,
-    LayoutOutlined,
-    SearchOutlined,
+    SettingOutlined,
     UserOutlined,
 } from "@client/lib/icons";
 import {TFunction} from "i18next";
@@ -35,17 +35,20 @@ const topBarButton = (
 );
 
 /**
- * Six area buttons — Phase 2 of admin segregation. The legacy
- * seven-entry nav (App building / Site settings / Languages /
- * Style matrix / Preview / Blog / Command) has been replaced;
- * legacy URLs 302-redirect via next.config.js.
+ * Six area buttons — admin-information-architecture jump (2026-05-16).
+ * Replaces the legacy six-entry top bar (Build / Client config / Content
+ * / SEO / Release / System) with the new operator-mental-model taxonomy:
  *
- * SEO / Release / System are advanced-only — simplified-mode
- * users get a stripped top bar focused on authoring. The
- * routes themselves still resolve directly if bookmarked,
- * but nav surfaces hide them. Per-pane simplified variants
- * are tracked separately (admin-ui-modes per-feature
- * simplified components item).
+ *   Site — global site config (theme, logo, footer, languages, SEO defaults)
+ *   Content — pages, posts, translations, releases
+ *   Commerce — products, orders, invoices, inventory
+ *   People — admin users, customers, permissions, inquiries
+ *   Analytics — traffic, SEO health, audit log
+ *   System — dev/power-user knobs (advanced-only)
+ *
+ * Legacy URLs 301-redirect to new homes via next.config.js. System +
+ * Analytics are advanced-only — simplified-mode authors don't need
+ * either; their top bar drops to four buttons.
  */
 const AdminAreaButtons = ({view, simplified, tAdmin}: {
     view: AdminView,
@@ -53,12 +56,12 @@ const AdminAreaButtons = ({view, simplified, tAdmin}: {
     tAdmin: TFunction<"translation", undefined>,
 }) => (
     <>
-        {topBarButton(view, 'build', '/admin/build', <LayoutOutlined/>, tAdmin('Build'))}
-        {topBarButton(view, 'client-config', '/admin/client-config', <BgColorsOutlined/>, tAdmin('Client config'))}
+        {topBarButton(view, 'site', '/admin/site', <BgColorsOutlined/>, tAdmin('Site'))}
         {topBarButton(view, 'content', '/admin/content', <FileTextOutlined/>, tAdmin('Content'))}
-        {!simplified && topBarButton(view, 'seo', '/admin/seo', <SearchOutlined/>, tAdmin('SEO'))}
-        {!simplified && topBarButton(view, 'release', '/admin/release', <CloudUploadOutlined/>, tAdmin('Release'))}
-        {!simplified && topBarButton(view, 'system', '/admin/system', <UserOutlined/>, tAdmin('System'))}
+        {topBarButton(view, 'commerce', '/admin/commerce', <AppstoreOutlined/>, tAdmin('Commerce'))}
+        {topBarButton(view, 'people', '/admin/people', <UserOutlined/>, tAdmin('People'))}
+        {!simplified && topBarButton(view, 'analytics', '/admin/analytics', <AuditOutlined/>, tAdmin('Analytics'))}
+        {!simplified && topBarButton(view, 'system', '/admin/system', <SettingOutlined/>, tAdmin('System'))}
     </>
 );
 

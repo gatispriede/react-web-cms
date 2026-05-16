@@ -1,7 +1,7 @@
 /**
  * admin-module-composed (Batch 1) — Diagnostics `AdminLoader` bridge.
  *
- * Registers the `system/info` pane with the `AdminPageRegistry`. The
+ * Registers the `system/diagnostics` pane with the `AdminPageRegistry`. The
  * bridge component (`Diagnostics.tsx`) wires `DiagnosticsViewModel` to
  * a single `AdminInfo` view-module slot. Self-registers on import;
  * `DiagnosticsAdminUILoader` side-imports this file.
@@ -12,7 +12,7 @@ import {EAdminModuleType} from '@enums/EAdminModuleType';
 import DiagnosticsPane from './Diagnostics';
 
 export class DiagnosticsAdminLoader extends AdminLoader {
-    readonly paneId = 'system/info';
+    readonly paneId = 'system/diagnostics';
     readonly slots: readonly AdminModuleSlot[] = [
         {type: EAdminModuleType.AdminInfo, locked: true},
     ];

@@ -41,13 +41,63 @@ export type AdminView =
     | 'modules-preview'
     | 'build'
     | 'build/modules-preview'
+    // admin-information-architecture jump — new top-level buckets:
+    | 'site'
+    | 'site/themes'
+    | 'site/logo'
+    | 'site/layout'
+    | 'site/footer'
+    | 'site/seo'
+    | 'site/email'
+    | 'site/email-templates'
+    | 'site/compliance'
+    | 'site/redirects'
+    | 'site/account-settings'
+    | 'content'
+    | 'content/pages'
+    | 'content/translations'
+    | 'content/posts'
+    | 'content/system-pages'
+    | 'content/releases'
+    | 'content/publishing'
+    | 'content/trash'
+    | 'commerce'
+    | 'commerce/products'
+    | 'commerce/inventory'
+    | 'commerce/orders'
+    | 'commerce/invoices'
+    | 'commerce/settings'
+    | 'commerce/checkout'
+    | 'commerce/abandoned-carts'
+    | 'commerce/warehouse-sync'
+    | 'commerce/product-templates'
+    | 'people'
+    | 'people/users'
+    | 'people/inquiries'
+    | 'people/permissions'
+    | 'people/auth'
+    | 'analytics'
+    | 'analytics/seo'
+    | 'analytics/audit-log'
+    | 'analytics/attribution'
+    | 'analytics/filters'
+    | 'system'
+    | 'system/mcp'
+    | 'system/features'
+    | 'system/agent'
+    | 'system/diagnostics'
+    | 'system/errors'
+    | 'system/performance'
+    | 'system/bundle'
+    | 'system/backups'
+    | 'system/modules-preview'
+    | 'system/demo-content/cars'
+    // Legacy aliases preserved while the 301 shim is live — let the
+    // shell render the same pane for an operator on an old bookmark.
     | 'client-config'
     | 'client-config/themes'
     | 'client-config/logo'
     | 'client-config/site-layout'
-    | 'content'
-    | 'content/translations'
-    | 'content/posts'
     | 'content/footer'
     | 'content/products'
     | 'content/inventory'
@@ -58,16 +108,11 @@ export type AdminView =
     | 'release/publishing'
     | 'release/bundle'
     | 'release/audit'
-    | 'system'
     | 'system/users'
-    | 'system/mcp'
     | 'system/analytics-filters'
     | 'system/inquiries'
-    | 'system/features'
-    | 'system/agent'
     | 'system/info'
-    | 'system/email'
-    | 'system/errors';
+    | 'system/email';
 
 /**
  * Inner chrome — uses the dedicated `adminI18n` instance via the
@@ -130,7 +175,11 @@ const UserStatusBarInner = ({session, view, tApp}: {
     const areaItems = simplified
         ? {
             ...allAreaItems,
-            content: allAreaItems.content.filter(it => !['products', 'inventory', 'orders'].includes(it.testidSuffix ?? '')),
+            // Simplified-mode authors don't manage commerce — drop the
+            // entire Commerce rail. Products / inventory / orders now
+            // live under `/admin/commerce/*` post-IA jump (was under
+            // `/admin/content/*`).
+            commerce: (allAreaItems.commerce ?? []).filter(() => false),
         }
         : allAreaItems;
     // DECISION: derive currentPath from the view literal — the SSR-rendered
@@ -147,12 +196,20 @@ const UserStatusBarInner = ({session, view, tApp}: {
      * The five AREA_* prefixes get their rail; the legacy views render bare.
      */
     const activeArea: keyof typeof areaItems | null =
-        isInArea(view, 'build') ? 'build'
-        : isInArea(view, 'client-config') ? 'client-config'
+        // admin-information-architecture jump — new buckets first.
+        isInArea(view, 'site') ? 'site'
+        : isInArea(view, 'commerce') ? 'commerce'
+        : isInArea(view, 'people') ? 'people'
+        : isInArea(view, 'analytics') ? 'analytics'
+        // Existing buckets that survive the IA jump (Content + System).
         : isInArea(view, 'content') ? 'content'
+        : isInArea(view, 'system') ? 'system'
+        // Legacy aliases — kept while the 301 shim is live so an operator
+        // bookmark to `/admin/build` etc. still renders the right rail.
+        : isInArea(view, 'build') ? 'build'
+        : isInArea(view, 'client-config') ? 'client-config'
         : isInArea(view, 'seo') ? 'seo'
         : isInArea(view, 'release') ? 'release'
-        : isInArea(view, 'system') ? 'system'
         : null;
 
     /**

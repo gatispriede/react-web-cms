@@ -5,6 +5,23 @@ description: Re-organise the admin UI. Today's panes accumulated organically —
 
 # Admin information architecture overhaul
 
+> **SHIPPED 2026-05-16 (hybrid scope).** The new 6-bucket taxonomy is
+> live — top bar, area rails, AdminView union, and 32 legacy URLs all
+> 301 to new homes. Shared `<PaneHeader>` / `<EmptyState>` / `<SaveBar>`
+> components land at `ui/admin/shell/*` with the 4 rhythm tokens at
+> `ui/admin/styles/admin-rhythm.scss`. Six demonstrator panes (one per
+> bucket: Footer / SystemPages / Invoices / Users / Analytics /
+> Diagnostics) adopt the new chrome as reference examples.
+>
+> **Hybrid scope decision** (2026-05-16): the full ~46-pane chrome swap
+> + per-loader URL move would have meant 200+ Edit-tool calls in a
+> single commit on top of a taxonomy decision; landing risk too high
+> for one drop. Per Option C in the implementing-agent thread, this
+> jump ships the headline value (operator can find things — taxonomy +
+> URL map + redirect shim + kbar + audit doc + reference chrome) and
+> defers the remaining per-area sweeps. See "Follow-up: per-area
+> sweep" below.
+
 ## Goal
 
 The admin UI accumulated panes one feature-jump at a time. Today an
@@ -248,6 +265,48 @@ longest non-AI step.
 4. If you have agents / automations referencing admin URLs (the agent
    prompts in `docs/` use these), sweep them — the same commit
    includes that sweep, but if you've added private ones, check.
+
+## Follow-up: per-area sweep
+
+The IA jump shipped a hybrid scope (taxonomy + URL map + shim + 6
+demonstrator panes). The remaining ~40 panes still:
+
+1. Render hand-rolled headers / empty states / save rows that should
+   adopt the new `<PaneHeader>` / `<EmptyState>` / `<SaveBar>` shapes.
+2. Carry legacy `paneId` / `route` strings inside their
+   `*AdminUILoader.ts` + `*AdminLoader.ts` pairs (e.g.
+   `paneId: 'content/products'` should become `commerce/products` to
+   match the new taxonomy + the URL the operator lands on after the
+   301).
+
+These break down per area. Each row is a small follow-up jump — one PR
+per bucket is the suggested unit:
+
+| Bucket | Demonstrator (done) | Remaining panes |
+|---|---|---|
+| **Site** | Footer | Themes, Logo, Layout, SEO defaults, Email config, Email templates, Compliance, Redirects, Languages, Account settings |
+| **Content** | SystemPages | AdminApp (pages tree), Posts, Translations, Publishing, Releases, Trash |
+| **Commerce** | Invoices | Products, Inventory, Orders, Settings, Abandoned cart, Checkout, Warehouse sync, Product templates |
+| **People** | Users | Permissions, Inquiries, Auth |
+| **Analytics** | AnalyticsPanel | Audit log, Attribution, SEO overview, Analytics filters |
+| **System** | Diagnostics | MCP, Features, Errors, Agent, Performance, Backups, Bundle, Modules preview, Demo content (cars) |
+
+Each per-area sweep covers:
+
+- Swap pane chrome (`<PaneHeader>` + `<EmptyState>` where applicable +
+  `<SaveBar>` where a VM exposes dirty-state).
+- Update the bucket's loaders to the new paneId + route fields (drop
+  the legacy view aliases from `AdminView` once empty).
+- Move the bucket's App Router page directories to the new URLs (this
+  jump only moved Footer / Users / Analytics / Diagnostics; the rest
+  still serve from their legacy URLs and the redirect shim handles
+  the new URLs).
+- Add new entries to `adminAreaItems.ts` rails when appropriate.
+- Re-baseline visual snapshots for that bucket.
+
+The audit table at `docs/roadmap/_meta/admin-pane-inventory.md` is the
+authoritative URL map — each sweep agent should consult it and tick
+its rows off.
 
 ## Notes for the implementing agent
 

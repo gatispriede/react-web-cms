@@ -1,7 +1,7 @@
 /**
  * admin-module-composed — Footer `AdminLoader` bridge.
  *
- * Registers the `content/footer` pane with the `AdminPageRegistry`. The
+ * Registers the `site/footer` pane with the `AdminPageRegistry`. The
  * Footer pane is a single-doc config surface (enable switch + column
  * grid + bottom line + ConflictDialog), not a clean CRUD list — it
  * doesn't reduce to `AdminCrudListModule`, so the bridge keeps its
@@ -16,7 +16,7 @@ import {EAdminModuleType} from '@enums/EAdminModuleType';
 import Footer from './Footer';
 
 export class FooterAdminLoader extends AdminLoader {
-    readonly paneId = 'content/footer';
+    readonly paneId = 'site/footer';
     readonly slots: readonly AdminModuleSlot[] = [
         {type: EAdminModuleType.AdminForm, locked: true},
     ];

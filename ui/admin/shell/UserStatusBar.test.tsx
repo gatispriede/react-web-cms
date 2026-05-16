@@ -3,8 +3,10 @@
  * Smoke tests for UserStatusBar. These are the safety net for an
  * upcoming refactor — they assert on the public surface the rest of the
  * admin shell relies on:
- *  - top-bar area buttons (Build / Client config / Content / SEO / Release / System)
- *    rendered with `nav-area-<slug>-link` testids
+ *  - top-bar area buttons (Site / Content / Commerce / People / Analytics / System)
+ *    rendered with `nav-area-<slug>-link` testids — admin-information-architecture
+ *    jump (2026-05-16) replaced the legacy six (Build / Client config / Content
+ *    / SEO / Release / System) with the new operator-mental-model taxonomy.
  *  - active-area highlight via antd's `type="primary"` (rendered as the
  *    `ant-btn-primary` class)
  *  - `<AreaNav/>` rail rendered when an area view is active, including
@@ -198,12 +200,12 @@ describe('UserStatusBar', () => {
         expect(screen.getByText(/User: Ada/)).toBeInTheDocument();
         // Skip-to-content a11y affordance always present.
         expect(screen.getByText('Skip to content')).toBeInTheDocument();
-        // All six area buttons render (admin + advanced mode).
-        expect(screen.getByTestId('nav-area-build-link')).toBeInTheDocument();
-        expect(screen.getByTestId('nav-area-client-config-link')).toBeInTheDocument();
+        // All six new-taxonomy area buttons render (admin + advanced mode).
+        expect(screen.getByTestId('nav-area-site-link')).toBeInTheDocument();
         expect(screen.getByTestId('nav-area-content-link')).toBeInTheDocument();
-        expect(screen.getByTestId('nav-area-seo-link')).toBeInTheDocument();
-        expect(screen.getByTestId('nav-area-release-link')).toBeInTheDocument();
+        expect(screen.getByTestId('nav-area-commerce-link')).toBeInTheDocument();
+        expect(screen.getByTestId('nav-area-people-link')).toBeInTheDocument();
+        expect(screen.getByTestId('nav-area-analytics-link')).toBeInTheDocument();
         expect(screen.getByTestId('nav-area-system-link')).toBeInTheDocument();
     });
 
@@ -211,36 +213,30 @@ describe('UserStatusBar', () => {
         renderBar('system');
         const systemBtn = screen.getByTestId('nav-area-system-link');
         expect(systemBtn.className).toMatch(/ant-btn-primary/);
-        // Sibling Build button is NOT primary.
-        const buildBtn = screen.getByTestId('nav-area-build-link');
-        expect(buildBtn.className).not.toMatch(/ant-btn-primary/);
+        // Sibling Site button is NOT primary.
+        const siteBtn = screen.getByTestId('nav-area-site-link');
+        expect(siteBtn.className).not.toMatch(/ant-btn-primary/);
     });
 
     it('System area rail renders the right sub-pages for an admin viewer', () => {
         renderBar('system', 'admin');
         const rail = screen.getByTestId('nav-system-rail');
-        // Admin sees both core and adminOnly entries.
-        expect(within(rail).getByTestId('nav-system-users-link')).toBeInTheDocument();
+        // Admin sees the system rail's adminOnly entries.
+        expect(within(rail).getByTestId('nav-system-diagnostics-link')).toBeInTheDocument();
         expect(within(rail).getByTestId('nav-system-mcp-link')).toBeInTheDocument();
-        expect(within(rail).getByTestId('nav-system-inquiries-link')).toBeInTheDocument();
-        // adminOnly entries also visible for admin.
-        expect(within(rail).getByTestId('nav-system-email-link')).toBeInTheDocument();
         expect(within(rail).getByTestId('nav-system-features-link')).toBeInTheDocument();
-        expect(within(rail).getByTestId('nav-system-info-link')).toBeInTheDocument();
+        expect(within(rail).getByTestId('nav-system-errors-link')).toBeInTheDocument();
     });
 
     it('System area rail filters adminOnly entries for non-admin viewers', () => {
         renderBar('system', 'viewer');
-        const rail = screen.getByTestId('nav-system-rail');
-        // Core entries visible.
-        expect(within(rail).getByTestId('nav-system-users-link')).toBeInTheDocument();
-        expect(within(rail).getByTestId('nav-system-mcp-link')).toBeInTheDocument();
-        expect(within(rail).getByTestId('nav-system-inquiries-link')).toBeInTheDocument();
-        // adminOnly entries hidden.
-        expect(within(rail).queryByTestId('nav-system-email-link')).not.toBeInTheDocument();
-        expect(within(rail).queryByTestId('nav-system-features-link')).not.toBeInTheDocument();
-        expect(within(rail).queryByTestId('nav-system-info-link')).not.toBeInTheDocument();
-        expect(within(rail).queryByTestId('nav-system-errors-link')).not.toBeInTheDocument();
+        // Every entry in the post-IA System rail is adminOnly — for a viewer
+        // the rail is empty (or absent). `nav-system-rail` may still render
+        // with zero items; the testids of the adminOnly entries should be
+        // gone.
+        expect(screen.queryByTestId('nav-system-diagnostics-link')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('nav-system-features-link')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('nav-system-errors-link')).not.toBeInTheDocument();
     });
 
     it('clicking Sign out invokes next-auth signOut()', () => {

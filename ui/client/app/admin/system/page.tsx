@@ -14,6 +14,8 @@ import {resolveAdminSession} from '@client/lib/adminSsrAppRouter';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminSystemPage(): Promise<never> {
-    await resolveAdminSession({redirectTo: '/admin/system/users'});
+    // Post admin-information-architecture jump: System bucket is dev/power-user
+    // surfaces only. Bounce to MCP (most-used system pane).
+    await resolveAdminSession({redirectTo: '/admin/system/mcp'});
     throw new Error('unreachable');
 }
