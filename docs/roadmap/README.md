@@ -64,7 +64,7 @@ These are acceptance criteria, not nice-to-haves.
 | Item | Track | Size | Notes |
 |------|-------|------|-------|
 | [app-router-migration.md](platform/app-router-migration.md) | 2 | XL (multi-batch) | Batch 1 of N shipped (App Router foundation + privacy/terms leaf pages). **Remaining batches:** B2 mongo re-entry guard + revalidate fix · B3 public shell + index + robots · B4 dynamic public routes · B5 commerce + account routes · B6 auth + admin pages · B7 cleanup + cutover. |
-| [mcp-real-world-ready.md](platform/mcp-real-world-ready.md) | 2 | S | F8-stream shipped. **Remaining: un-skip MCP e2e suite** (test.skip blocks pending fixture wiring). |
+| [mcp-real-world-ready.md](platform/mcp-real-world-ready.md) | 2 | S | F8-stream shipped. MCP e2e suite (`tests/e2e/mcp/full-site-lifecycle.spec.ts`) un-skipped on CI (Linux) per F8-e2e wave; Windows local dev still skipped pending an `adminStorageState` fixture timeout fix (~30s sign-in stall — same root cause as `tests/e2e/admin/mobile-shell.spec.ts`). **Remaining: investigate + fix the Windows fixture stall so local dev parity matches CI.** |
 | [terraform-kamal-migration.md](platform/terraform-kamal-migration.md) | — | M (operator-coordinated) | Funisimo cutover shipped 2026-05-08. **Remaining: Skyclimber droplet cutover.** |
 
 ### Content + media
