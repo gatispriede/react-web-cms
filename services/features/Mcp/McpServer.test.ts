@@ -101,7 +101,7 @@ describe('McpServer dispatch', () => {
             token: tokenWith(['write:products'], 'cli'),
         });
         expect(out.ok).toBe(true);
-        const env = JSON.parse(out.result!.content[0].text);
+        const env = JSON.parse((out.result!.content[0] as {type: "text"; text: string}).text);
         expect(env.ok).toBe(true);
         const body = env.data;
         expect(body.saveProduct?.id).toBeTruthy();
@@ -180,7 +180,7 @@ describe('McpServer dispatch', () => {
             token: tokenWith(['read:inventory']),
         });
         expect(out.ok).toBe(true);
-        const env = JSON.parse(out.result!.content[0].text);
+        const env = JSON.parse((out.result!.content[0] as {type: "text"; text: string}).text);
         expect(env.ok).toBe(true);
         const body = env.data;
         expect(body.adapterId).toBe('mock');
@@ -195,7 +195,7 @@ describe('McpServer dispatch', () => {
             token: tokenWith(['read:audit']),
         });
         expect(out.ok).toBe(true);
-        const env = JSON.parse(out.result!.content[0].text);
+        const env = JSON.parse((out.result!.content[0] as {type: "text"; text: string}).text);
         expect(env.ok).toBe(true);
         const body = env.data;
         expect(body.total).toBeGreaterThanOrEqual(1);

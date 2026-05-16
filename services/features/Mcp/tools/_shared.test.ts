@@ -207,7 +207,7 @@ describe('compose', () => {
             maxPerMinute: 100,
         });
         const out = await handler({} as any, ctx());
-        const payload = JSON.parse(out.content[0].text) as Envelope<{n: number}>;
+        const payload = JSON.parse((out.content[0] as {type: "text"; text: string}).text) as Envelope<{n: number}>;
         expect(payload).toEqual({ok: true, data: {n: 1}});
     });
 
@@ -223,7 +223,7 @@ describe('compose', () => {
         await handler({} as any, ctx());
         await handler({} as any, ctx());
         const blocked = await handler({} as any, ctx());
-        const env = JSON.parse(blocked.content[0].text);
+        const env = JSON.parse((blocked.content[0] as {type: "text"; text: string}).text);
         expect(env.ok).toBe(false);
         expect(env.error.code).toBe('RATE_LIMITED');
         expect(calls).toBe(2);
@@ -242,8 +242,8 @@ describe('compose', () => {
         const b = await handler({idempotencyKey: 'k'} as any, ctx());
         // Handler ran exactly once; second call replayed the cached envelope.
         expect(n).toBe(1);
-        const envA = JSON.parse(a.content[0].text);
-        const envB = JSON.parse(b.content[0].text);
+        const envA = JSON.parse((a.content[0] as {type: "text"; text: string}).text);
+        const envB = JSON.parse((b.content[0] as {type: "text"; text: string}).text);
         expect(envA).toEqual(envB);
         expect(envA.ok).toBe(true);
         expect(envA.data).toBe(1);

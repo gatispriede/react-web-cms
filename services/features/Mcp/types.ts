@@ -63,8 +63,19 @@ export interface McpToolContext {
     notify?: (params: {progress: number; total?: number; message?: string}) => Promise<void>;
 }
 
+/**
+ * MCP content block. Mirrors the spec's `Content` union — text is the
+ * default; image blocks carry base64-encoded bytes + their MIME type so
+ * downstream clients can display them inline (Claude included). New
+ * block kinds (audio, resource, …) extend this union as the project
+ * adopts them.
+ */
+export type McpContentBlock =
+    | {type: 'text'; text: string}
+    | {type: 'image'; data: string; mimeType: string};
+
 export interface McpToolResult {
-    content: Array<{type: 'text'; text: string}>;
+    content: McpContentBlock[];
 }
 
 export interface McpToolRateLimit {
