@@ -1,6 +1,8 @@
 import {ServiceLoader} from '@services/infra/ServiceLoader';
 import type {FeatureContext, FeatureIndexSpec} from '@services/infra/featureManifest';
 import {ReleaseService} from './ReleaseService';
+import {registerReleaseScheduler} from './ReleaseScheduler';
+import {log} from '@services/infra/logger';
 
 /**
  * Releases Loader — first-class Content Releases (admin-content-releases.md).
@@ -26,8 +28,20 @@ export class ReleasesServiceLoader extends ServiceLoader {
         return {releases: new ReleaseService(ctx.db, client)};
     }
 
+    async onBoot(ctx: FeatureContext): Promise<void> {
+        const svc = ctx.services.releases as ReleaseService | undefined;
+        if (!svc) return;
+        try {
+            const result = registerReleaseScheduler(svc);
+            log.info({scope: 'releases.boot', schedulerRegistered: result.registered, reason: result.reason}, 'releases boot complete');
+        } catch (err) {
+            log.warn({scope: 'releases.boot', err}, 'release scheduler registration failed');
+        }
+    }
+
     readonly indexes: readonly FeatureIndexSpec[] = [
         {collection: 'Releases', spec: {id: 1}, options: {unique: true, name: 'releases_id_unique'}},
         {collection: 'Releases', spec: {status: 1, createdAt: -1}, options: {name: 'releases_status_createdAt'}},
+        {collection: 'Releases', spec: {status: 1, scheduledFor: 1}, options: {name: 'releases_scheduler_due'}},
     ];
 }

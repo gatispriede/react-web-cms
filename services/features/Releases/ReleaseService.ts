@@ -120,6 +120,22 @@ export class ReleaseService {
         return docs.map(d => toReleaseSummary(d));
     }
 
+    /**
+     * Releases due for scheduled publish at `nowIso` — drafts (or
+     * previously-failed retryables, which the scheduler intentionally
+     * ignores to avoid retry storms) whose `scheduledFor` ≤ now.
+     */
+    async listDue(nowIso: string): Promise<IRelease[]> {
+        const docs = await this.col()
+            .find({status: 'draft' as ReleaseStatus, scheduledFor: {$exists: true, $lte: nowIso}} as any)
+            .toArray();
+        return docs.map(d => {
+            const clone = {...(d as Record<string, unknown>)};
+            delete clone._id;
+            return clone as unknown as IRelease;
+        });
+    }
+
     async get(id: string): Promise<IRelease | null> {
         const doc = await this.col().findOne({id});
         if (!doc) return null;
@@ -224,10 +240,40 @@ export class ReleaseService {
     async previewAt(releaseId: string): Promise<{
         releaseId: string;
         members: ReleaseMember[];
+        /**
+         * Overlay map keyed by `${entity}:${id}` → frozen draft snapshot.
+         * The public perspective resolver in App Router consults this when
+         * `?previewRelease=<id>` is present to swap live reads for the
+         * release's drafts (everything not in the map falls through to
+         * the published store unchanged).
+         */
+        overlay: Record<string, Record<string, unknown>>;
     }> {
         const r = await this.get(releaseId);
         if (!r) throw new Error(`release not found: ${releaseId}`);
-        return {releaseId: r.id, members: r.members};
+        const overlay: Record<string, Record<string, unknown>> = {};
+        for (const m of r.members) {
+            if (m.snapshot) overlay[`${m.entity}:${m.id}`] = m.snapshot;
+        }
+        return {releaseId: r.id, members: r.members, overlay};
+    }
+
+    /**
+     * Resolve "what would I read for {entity, id} if this release were
+     * live?" — returns the release member's frozen snapshot when the
+     * entity is in the release, otherwise `null` (caller falls back to
+     * the published row). Used by the public perspective layer when
+     * `?previewRelease=<id>` is present on a request.
+     */
+    async resolvePerspective(
+        releaseId: string,
+        entity: ReleaseEntityKind,
+        id: string,
+    ): Promise<Record<string, unknown> | null> {
+        const r = await this.get(releaseId);
+        if (!r) return null;
+        const hit = r.members.find(m => m.entity === entity && m.id === id);
+        return hit?.snapshot ?? null;
     }
 
     // ─── Publish ────────────────────────────────────────────────────

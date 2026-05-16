@@ -78,7 +78,7 @@ These are acceptance criteria, not nice-to-haves.
 
 | Item | Track | Size | Notes |
 |------|-------|------|-------|
-| [admin-content-releases.md](admin/admin-content-releases.md) | 2.5e | XL (~2-3 days AI) | First-class `Release` entity — group N drafts → preview at perspective → publish atomically → rollback. Differentiator vs Strapi / Payload. **Note:** Phase 1.D shipped `IPage.source = 'system-page'` discriminator which this can build on. |
+| ~~[admin-content-releases.md](admin/admin-content-releases.md)~~ | ~~2.5e~~ | ~~XL (~2-3 days AI)~~ | **SHIPPED 2026-05-16** — first-class `Release` entity + atomic publish + rollback + scheduled publish + perspective overlay + admin pane + `release.*` MCP coverage + shared `useAddToRelease` hook. See [shipped.md](shipped.md#2026-05-16--admin-content-releases-release-entity--atomic-publish). |
 
 ### Track-level READMEs
 

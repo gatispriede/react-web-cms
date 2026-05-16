@@ -4,6 +4,13 @@ description: First-class Release object — group N draft documents → preview 
 research: see research-findings-2026-05-12.md §1 Content Releases
 ---
 
+> **SHIPPED 2026-05-16** — first-class `Release` entity + atomic publish + rollback + scheduled publish + perspective overlay + admin pane (simplified + advanced) + `release.*` MCP coverage + shared `useAddToRelease` hook. See [shipped.md](../shipped.md#2026-05-16--admin-content-releases-release-entity--atomic-publish).
+>
+> **What's still open (intentional cuts, separate items):**
+> - Full SSR iframe perspective swap — the backend overlay map + `release.previewAt` MCP tool ship the data; wiring `?previewRelease=<id>` into `gqlFetch` + the GraphQL resolver chain is the deeper rewrite called out in the spec's Open Questions.
+> - Per-feature "Add to release" toolbar buttons — the shared `useAddToRelease` hook is shipped; the 7 editor panes (Pages, Posts, Products, Themes, Navigation, Footer, Seo) will adopt it incrementally as each pane gets touched for unrelated work, to keep this commit reviewable.
+> - Per-feature publish guards (`canPublish`) — publish writes captured snapshots without re-validation; richer guards land when the first failure mode is observed.
+
 # Content Releases — atomic publish groups
 
 ## Goal
