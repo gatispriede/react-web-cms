@@ -15,7 +15,7 @@
  * just fetches the car by `[slug]` and hands it over.
  */
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
-import {useRouter} from 'next/router';
+import {useParams} from 'next/navigation';
 import type {IItem} from '@interfaces/IItem';
 import type {IProduct} from '@interfaces/IProduct';
 import type {VatRegime} from '@client/components/VatBadge';
@@ -141,8 +141,10 @@ export const CarsListHost: React.FC<{item: IItem}> = ({item}) => {
 };
 
 export const CarDetailHost: React.FC<{item: IItem}> = () => {
-    const router = useRouter();
-    const slug = typeof router.query.slug === 'string' ? router.query.slug : null;
+    // App-Router-compatible param read; also works in Pages Router (Next 13+).
+    const params = useParams();
+    const rawSlug = (params as Record<string, string | string[] | undefined> | null)?.slug ?? null;
+    const slug = typeof rawSlug === 'string' ? rawSlug : (Array.isArray(rawSlug) ? (rawSlug[0] ?? null) : null);
     const [car, setCar] = useState<CarListing | null>(null);
     const [loading, setLoading] = useState(true);
 

@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useState} from 'react';
-import {useRouter} from 'next/router';
+import {usePathname, useRouter} from 'next/navigation';
 
 /**
  * Tiny step-state hook for the checkout flow. Persists `orderId` plus
@@ -48,7 +48,12 @@ const STEP_ROUTES: Record<CheckoutStep, string> = {
 
 export function useCheckoutMachine() {
     const [state, setState] = useState<CheckoutState>(() => readState());
+    // App-Router-compatible router. `next/navigation`'s `useRouter` only
+    // exposes `push/replace/back/forward/refresh/prefetch` — no `asPath`
+    // — so we read the current location via `usePathname()` separately.
+    // Works in Pages Router too (Next 13+).
     const router = useRouter();
+    const pathname = usePathname() ?? '';
 
     useEffect(() => { writeState(state); }, [state]);
 
@@ -65,11 +70,11 @@ export function useCheckoutMachine() {
         // takes over on rehydrate.
         if (typeof window !== 'undefined') {
             const target = STEP_ROUTES[step];
-            if (target && router.asPath !== target) {
-                void router.push(target);
+            if (target && pathname !== target) {
+                router.push(target);
             }
         }
-    }, [router]);
+    }, [router, pathname]);
 
     const reset = useCallback(() => {
         setState({step: 'cart'});

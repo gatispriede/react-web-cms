@@ -194,10 +194,71 @@ Tracked as a checklist; each batch lands as its own PR. Sizes are rough.
   serves real HTML for crawlers; folded into SiteShell's own hash
   handler in a follow-up if QA flags it. See
   [shipped.md 2026-05-16 B4 entry](../shipped.md).
-- [ ] **Batch 5 — commerce + account routes (XL).** `cars/*`,
-  `products/*`, `cart/*`, `checkout/*`, `account/*`, `orders/*` — each
-  with its own data-loading conversion. Largest batch; may split
-  further per-route-group.
+- [x] **Batch 4.5 — router API unification (S).** Shipped 2026-05-16.
+  Mid-B5 the locked module files (`_AccountPageModules/{wrappers,authWrappers}.tsx`,
+  `_BlogPageModules/wrappers.tsx`, `_CarsPageModules/wrappers.tsx`,
+  `Checkout/CheckoutProgressBar`) plus the shared hooks
+  (`lib/facetedFilter/useFilterState.ts`, `lib/checkout/useCheckoutMachine.ts`)
+  all imported `useRouter` from `next/router` — that hook returns `null`
+  under App Router. Swapped every consumer to `next/navigation`'s
+  surface: `useParams()` for dynamic route params (replacing
+  `router.query.id` / `router.query.slug`), `useSearchParams()` for
+  query strings, `usePathname()` for path reads, and `useRouter()` from
+  `next/navigation` for `push`/`replace` (same method names, no
+  `.asPath`, no `{shallow}` flag — same outcome in App Router because
+  same-route query changes don't re-run server components anyway). The
+  `next/navigation` hooks are App-Router-native AND work in Pages
+  Router (Next 13+), so the still-Pages-Router pages that mount these
+  modules during the migration window keep functioning.
+  `ui/client/lib/account/session.ts` gained an App-Router variant
+  `requireCustomerSessionAppRouter(callbackUrl)` that calls
+  `getServerSession(authOptions)` directly and `throw`s
+  `redirect('/account/signin?…')` for non-customers — the existing
+  Pages-Router helper untouched. Direct prerequisite for B5: without
+  this swap every `/account/*` and `/products` route would hit
+  `useRouter() === null` at first render.
+- [x] **Batch 5 — commerce + account routes (XL).** Shipped 2026-05-16.
+  `cars/*`, `products/*`, `cart/*`, `checkout/*`, `account/*` (except
+  the auth handshake — `/account/{signin,signup,magic-link,verify}`
+  stay in `pages/` as B6 territory), `orders/[token]` all ported to
+  App Router. Each route follows the established pattern: async Server
+  Component for `page.tsx` doing the data fetch + feature-gate +
+  customer-session guard, paired with a `'use client'` `*View.tsx`
+  carrying antd `ConfigProvider`, the `applyThemeCssVars` `useEffect`,
+  `useT(...)`, and any client-only hooks. SEO `<Head>` moved to
+  `generateMetadata`; `notFound()` from `next/navigation` for missing
+  rows; the Pages-Router `gatePath('/foo', loader)` wrapper replaced
+  with a direct `gateForPath('/foo')` + `isFeatureEnabled(id)` check
+  + `notFound()` at the top of each server file. The single-step
+  checkout's `/checkout` index reads `commerce.checkout.flow` from
+  `getSiteFlags()` server-side and `redirect('/checkout/address')` for
+  `multi-step` — same outcome the old `<MultiStepRedirect>` client-side
+  `useEffect` produced, just at the server boundary. `/orders/[token]`'s
+  rate-limit + token-bearer check moves to a small
+  `clientIpFromHeaders()` helper that pulls `x-forwarded-for` /
+  `x-real-ip` out of `headers()` (App Router has no `req` to feed the
+  Pages-Router `clientIp(req)` helper). `/account/settings` ports its
+  server-side user-row lookup + `commerce.accountSettingsEnabled`
+  master-switch read 1:1 — the only delta is `ctx.query.tab` →
+  `searchParams` (a `Promise<Record<string, string | string[] |
+  undefined>>` in the App-Router signature). Deleted (Pages Router):
+  `pages/cars/{index,[slug]}.tsx`, `pages/cart/index.tsx`,
+  `pages/checkout/{index,address,shipping,payment,confirmation/[id]}.tsx`,
+  `pages/account/{index,addresses,inbox,notifications,privacy,profile,settings,orders/index,orders/[id]}.tsx`,
+  `pages/orders/[token].tsx`, `pages/products/{index,[slug],category/[slug]}.tsx`
+  — `app/foo` + `pages/foo` collisions are a hard Next error.
+  Deliberately untouched: `pages/account/{signin,signup,magic-link,verify}.tsx`
+  (auth handshake — B6), `pages/_app.tsx` + `pages/_document.tsx`
+  (still need by the auth pages + admin pages — B6/B7 cleanup),
+  `pages/admin/*`, `pages/auth/*`, `pages/api/*`. **Verification:**
+  `npx tsc -p ui/client/tsconfig.json --noEmit` + `npx tsc -p
+  tsconfig.test.json --noEmit` — clean on every touched file; the
+  pre-existing pre-B5 errors (`services/agent/mcpAgentTools.ts:90`,
+  `services/features/Mcp/validate.ts:98`,
+  `services/features/Pages/WarehousePageSyncWorker.test.ts` callback
+  arity ×6) are unchanged. Full `next build` not run this batch (per
+  the integration directive — typecheck-clean + structurally correct
+  is the batch gate). Next up: **B6 — auth + admin pages**.
 - [ ] **Batch 6 — auth + admin pages (M).** `app/admin/page.tsx` +
   `app/admin/{settings,languages,modules-preview}/page.tsx` ←
   `pages/admin*`. `getServerSession(req,res,authOptions)` →

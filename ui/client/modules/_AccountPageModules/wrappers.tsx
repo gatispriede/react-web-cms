@@ -13,7 +13,7 @@
  * — one file per page-family, the pure modules stay pristine + tested.
  */
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
-import {useRouter} from 'next/router';
+import {useParams} from 'next/navigation';
 import {Alert, Checkbox, Form, Input, Modal} from 'antd';
 import type {IItem} from '@interfaces/IItem';
 import {gql, parseEnvelope} from '@client/lib/account/gqlClient';
@@ -151,13 +151,19 @@ function toOrderAddress(raw: unknown): OrderAddress | undefined {
 
 export const OrderDetailHost: React.FC<{item: IItem}> = ({item}) => {
     const c = parse<OrderDetailContent>(item.content);
-    const router = useRouter();
-    const id = typeof router.query.id === 'string' ? router.query.id : null;
+    // App-Router-compatible param read. `useParams()` works in both routers
+    // since Next 13 (the Pages-Router shim returns the same dynamic segment
+    // map shape `{id: 'abc'}`). Empty/object-typed during SSR / first
+    // hydration tick — same wait-for-resolve pattern as the old
+    // `router.query.id` read.
+    const params = useParams();
+    const rawId = (params as Record<string, string | string[] | undefined> | null)?.id ?? null;
+    const id = typeof rawId === 'string' ? rawId : (Array.isArray(rawId) ? (rawId[0] ?? null) : null);
     const [order, setOrder] = useState<Record<string, unknown> | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // `router.query.id` is empty during SSR / first hydration tick —
+        // `useParams()` is empty during SSR / first hydration tick —
         // stay in the loading state until the param resolves.
         if (!id) return;
         let live = true;

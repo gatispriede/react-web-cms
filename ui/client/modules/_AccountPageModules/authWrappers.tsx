@@ -9,13 +9,13 @@
  *     public, cache-30s endpoint the edge middleware uses),
  *   - wires `onSubmit` / `onOauthChoose` to NextAuth + the customer
  *     GraphQL surface,
- *   - reads `?returnTo=` / `?callbackUrl=` via `useRouter()`.
+ *   - reads `?returnTo=` / `?callbackUrl=` via `useSearchParams()`.
  *
  * The hard 404 on `auth.clientLoginEnabled === false` stays server-side
  * in the page `getServerSideProps`.
  */
 import React, {useEffect, useMemo, useState} from 'react';
-import {useRouter} from 'next/router';
+import {useSearchParams} from 'next/navigation';
 import {signIn} from 'next-auth/react';
 import type {IItem} from '@interfaces/IItem';
 import {gql, parseEnvelope} from '@client/lib/account/gqlClient';
@@ -93,14 +93,18 @@ function cleanAuthError(raw: string): string {
 }
 
 function useReturnTo(paramNames: string[]): string {
-    const router = useRouter();
+    // App-Router-compatible query read via `useSearchParams()`. Works in
+    // Pages Router too (Next 13+). Restrict to relative `/`-prefixed
+    // values — same open-redirect guard the original `router.query` read
+    // had implicitly via the `startsWith('/')` check.
+    const search = useSearchParams();
     return useMemo(() => {
         for (const name of paramNames) {
-            const v = router.query[name];
+            const v = search?.get(name) ?? null;
             if (typeof v === 'string' && v.startsWith('/')) return v;
         }
         return '/account';
-    }, [router.query, paramNames]);
+    }, [search, paramNames]);
 }
 
 async function requestMagicLink(email: string, callbackUrl: string): Promise<{ok: true} | {ok: false; error: string}> {

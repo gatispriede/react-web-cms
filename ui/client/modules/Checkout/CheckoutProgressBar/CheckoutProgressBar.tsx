@@ -1,6 +1,6 @@
 /** CheckoutProgressBar — Phase 1.D. Locked address→shipping→payment indicator. */
 import React from 'react';
-import {useRouter} from 'next/router';
+import {usePathname} from 'next/navigation';
 import Link from 'next/link';
 import type {IItem} from '@interfaces/IItem';
 import type {ICheckoutProgressBar} from './CheckoutProgressBar.types';
@@ -39,8 +39,9 @@ function stepFromPath(path: string): Step {
 const CheckoutProgressBar: React.FC<CheckoutProgressBarProps> = ({item, currentStep}) => {
     const c = parseContent(item.content);
     void c;
-    const router = useRouter();
-    const resolved: Step = currentStep ?? stepFromPath(router.pathname || '');
+    // App-Router-compatible path read; works in Pages Router too (Next 13+).
+    const pathname = usePathname() ?? '';
+    const resolved: Step = currentStep ?? stepFromPath(pathname);
     const activeIdx = STEPS.findIndex(s => s.key === resolved);
 
     return (

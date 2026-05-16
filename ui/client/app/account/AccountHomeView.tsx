@@ -1,0 +1,55 @@
+'use client';
+/**
+ * Client view for `/account` — App Router migration, Batch 5.
+ * Direct lift of the former `pages/account/index.tsx` body.
+ */
+import React, {useEffect, useState} from 'react';
+import Link from 'next/link';
+import {signOut} from 'next-auth/react';
+import {Button, Card, Spin, Typography} from 'antd';
+import {gql} from '@client/lib/account/gqlClient';
+
+const {Title, Text} = Typography;
+
+const AccountHomeView: React.FC = () => {
+    const [me, setMe] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        gql(`query Me { mongo { me { id name email phone shippingAddresses { id name } } } }`)
+            .then(d => setMe(d?.mongo?.me))
+            .finally(() => setLoading(false));
+    }, []);
+
+    return (
+        <div style={{maxWidth: 720, margin: '40px auto', padding: 16}}>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                <Title level={2}>My account</Title>
+                <Button onClick={() => signOut({callbackUrl: '/'})}>Sign out</Button>
+            </div>
+            {loading ? <Spin/> : (
+                <>
+                    <Card title="Profile" style={{marginBottom: 16}} extra={<Link href="/account/profile">Edit</Link>}>
+                        <div><Text strong>Name:</Text> {me?.name || '—'}</div>
+                        <div><Text strong>Email:</Text> {me?.email}</div>
+                        <div><Text strong>Phone:</Text> {me?.phone || '—'}</div>
+                    </Card>
+                    <Card title="Shipping addresses" extra={<Link href="/account/addresses">Manage</Link>}>
+                        {me?.shippingAddresses?.length
+                            ? me.shippingAddresses.map((a: any) => <div key={a.id}>{a.name}</div>)
+                            : <Text type="secondary">No saved addresses yet.</Text>}
+                    </Card>
+                    <Card
+                        title="Notification preferences"
+                        style={{marginTop: 16}}
+                        extra={<Link href="/account/notifications" data-testid="account-notifications-link">Manage</Link>}
+                    >
+                        <Text type="secondary">Choose how you receive order updates, marketing, and other notifications.</Text>
+                    </Card>
+                </>
+            )}
+        </div>
+    );
+};
+
+export default AccountHomeView;
