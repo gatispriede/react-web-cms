@@ -5,6 +5,19 @@ description: Refactor `/products`, `/products/[category]`, `/products/[category]
 
 # Products as a composable page
 
+> **UX polish — 2026-05-16.** Storefront detail + listing UX upgraded on
+> top of the composable-page architecture: `/products/[slug]` rebuilt
+> with brand row + category chips + VAT label + spec `<Table>` from
+> `attributes` + "About this item" card + yellow pill add-to-cart;
+> `/products/index.tsx` initially gained wide-search + sort + category
+> chips (later partly superseded by W6b `FacetedFilterPanel` after the
+> develop ↔ test-lEADs merge); new `/products/category/[slug].tsx`
+> 1-level-deep landing page. Admin nav flags
+> `commerce.nav.productsEnabled` + `commerce.nav.productsCategoriesAsSubnav`
+> defined in `commerceFlags.ts`. Placeholder image resolver added at
+> `ui/client/lib/productImage.ts`. See
+> [shipped.md 2026-05-16 storefront UX polish](../shipped.md).
+
 ## Goal
 
 Make the products catalogue a first-class composable page in the CMS, not a hand-coded `/products` route. Warehouse-sourced inventory (W7b ss.com adapter, future Shopify / WooCommerce / DIY adapters) auto-populates an `IPage` tree where:

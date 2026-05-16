@@ -7,6 +7,18 @@
 > [Batch 1 shipped](#batch-1-shipped-2026-05-14) and
 > [Remaining batches](#remaining-batches) below. NOT struck from
 > `README.md` — the item is not fully done.
+>
+> **Batch 1.5 — RSC boundary cleanup (2026-05-16).** Three build-blocking
+> RSC violations surfaced when `/admin` and error/404 chains first ran
+> against the App Router root layout: `refreshBus.ts` mixed a React hook
+> with a non-React class (server-reachable via `MongoApi` → `authOptions`
+> → `layout.tsx`), `Logo.tsx` class component pulled into `not-found.tsx`
+> chain unmarked, and `app/i18n.ts` co-located `initServerI18next` (uses
+> `fs/promises`) with constants the client `providers.tsx` imported.
+> Fixes: split `useRefreshView.ts` out + `Logo`/`ImageUpload` `"use client"`
+> + `i18nConfig.ts` pure-data module. Direct prerequisite for B2 — without
+> these every error/404 render under app-router fails to compile. See
+> [shipped.md 2026-05-16 RSC boundary cleanup](../shipped.md).
 
 Migrate `ui/client/pages/` → `ui/client/app/`. Pages router → App router.
 

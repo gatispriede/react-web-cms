@@ -5,6 +5,16 @@ description: Refactor `/cart`, `/checkout`, `/checkout/address`, `/checkout/ship
 
 # Checkout as a composable page
 
+> **UX polish — 2026-05-16.** Amazon-style chrome added on top of the
+> composable-page architecture: `CheckoutShell` (secure-checkout header
+> bar + 2-col grid + sticky red Order Summary), custom grid on `/cart`,
+> `CartLineItems` row layout (120×120 image + qty stepper + line
+> subtotal), `CartSummary` yellow-pill CTA. Cart icon state moved to a
+> module-level singleton via `useSyncExternalStore`. Hydration mismatch
+> fixed by pinning `formatMoney` to `'en-US'`; `Breadcrumb` accepts both
+> `{content}` and `{item: {content}}` shapes. See
+> [shipped.md 2026-05-16 storefront UX polish](../shipped.md).
+
 ## Goal
 
 Today `/cart`, `/checkout/address`, `/checkout/shipping`, `/checkout/payment`, `/checkout/confirmation` are hand-coded React routes. Each step renders a fixed layout — the operator can change the site theme but can't add a "100% money-back guarantee" badge above the payment form, can't insert an FAQ section between shipping and payment, can't show their trust seals or testimonials at any step.

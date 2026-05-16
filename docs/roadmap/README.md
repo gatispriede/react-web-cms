@@ -126,10 +126,13 @@ These all gate the pre-public deploy. The code is shipped — operator action un
 
 **Total to public launch: ~130-200h AI** + 4-8 weeks calendar for operator wall-clock dependencies.
 
-## Recent shipped (2026-05-13 → 2026-05-14)
+## Recent shipped (2026-05-13 → 2026-05-16)
 
 See [shipped.md](shipped.md) for full archive. Highlights:
 
+- **2026-05-16 — RSC boundary cleanup.** App-router B1 leftovers fixed: `refreshBus.ts` split (class server-safe + `useRefreshView.ts` `"use client"`), `Logo.tsx` + `ImageUpload.tsx` marked client, `app/i18n.ts` split into pure-data `i18nConfig.ts` + server-only `i18n.ts`. Unblocks `/admin` + error/404 render paths for Batch 2.
+- **2026-05-16 — Storefront UX polish.** Amazon-style cart + checkout chrome (yellow CTA pill, sticky red Order Summary, secure-checkout header); richer product detail (brand row, spec table, About card); storefront search + sort + category subpages; `/account/signin` AntD restyle; bundle-import 200 MB body cap.
+- **2026-05-15 → 2026-05-16 — Develop ↔ test-lEADs merge.** 59-commit parallel branch reconciled; 17 code + 81 snapshot conflicts resolved; cutover preview `master-temp` branch.
 - Commerce + auth track (Phase 0 shared abstractions + Phase 1.A–F + 6 deferred sub-jumps): auth-split, Product module, products-as-composable-page, checkout-as-composable-page, client-account-settings, product-display-templates, checkout customization, abandoned cart, port wiring + auto-301, dispatch + bespoke editors, inline tabs, template polish.
 - Q4-cap visual baselines: 11 surfaces + 60+ module snapshots.
 - TS error burn-down: 107 → 0 across services + ui/client.
