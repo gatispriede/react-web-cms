@@ -182,6 +182,8 @@ Spec: [docs/features/ecommerce/inventory-warehouse.md](features/ecommerce/invent
 
 The CMS bundles a stdio MCP server that gives AI clients typed tools for content, products, themes, inventory and audit log operations. The full spec is in [docs/features/tooling/mcp-server.md](features/tooling/mcp-server.md).
 
+> **Running prod + local side-by-side?** See [runbooks/mcp-environments.md](runbooks/mcp-environments.md) for the naming gotcha (the local entry has historically been registered as `redis-cloud-mcp`, which mislabels it; the prod one is `funisimo-prod`).
+
 ### 9.1 Issue a token
 
 `Settings → MCP` → `Issue token` → name it (e.g. `claude-code-laptop`) → pick scopes → `Issue`. The secret is shown **once** — copy it now.
