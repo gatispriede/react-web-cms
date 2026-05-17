@@ -147,8 +147,11 @@ const nextConfig = {
         {source: '/ru/admin', destination: '/admin', permanent: false, locale: false},
         {source: '/ru/admin/:path*', destination: '/admin/:path*', permanent: false, locale: false},
         // Phase 2 of admin segregation — `/admin/languages` was a flat
-        // pages-router pane; translations live under Content now.
-        {source: '/admin/languages', destination: '/admin/content/translations', permanent: false},
+        // pages-router pane; translations also live under Content at
+        // `/admin/content/translations`. The redirect is removed so the
+        // Settings rail's Languages link stays at `/admin/languages`
+        // (resolves to Settings via PARENT_BUCKET_OVERRIDES) instead of
+        // bouncing to `/admin/content/translations` (Content bucket).
         // `/admin/settings` previously 301'd to `/admin/build` (Phase 2
         // of admin segregation). Re-pivot reclaims `/admin/settings` as
         // a top-level bucket landing — the redirect is dropped; the
