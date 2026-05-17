@@ -1,20 +1,24 @@
 import {useEffect} from 'react';
-import {useRouter} from 'next/router';
+import {usePathname, useSearchParams} from 'next/navigation';
 import {trackPageview} from './track';
 
 /**
  * Auto-pageview hook — calls `trackPageview()` on every route change.
- * Mount once (typically in `_app.tsx`) and forget. Cheap; respects the
- * privacy opt-out built into `track.ts`.
+ * Mount once (in `app/providers.tsx` via `AnalyticsHost`) and forget.
+ * Cheap; respects the privacy opt-out built into `track.ts`.
  *
- * The first pageview fires on mount; subsequent fires on `routeChangeComplete`.
+ * Pages Router predecessor used `router.events.on('routeChangeComplete')`.
+ * App Router has no event bus; instead we watch `usePathname()` +
+ * `useSearchParams()` and fire on change. The first pageview also fires
+ * on mount.
  */
 export function useAutoPageview(): void {
-    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
     useEffect(() => {
-        trackPageview();
-        const onRouteChange = (path: string) => trackPageview(path);
-        router.events.on('routeChangeComplete', onRouteChange);
-        return () => router.events.off('routeChangeComplete', onRouteChange);
-    }, [router.events]);
+        const path = searchParams && searchParams.toString()
+            ? `${pathname}?${searchParams.toString()}`
+            : (pathname ?? '');
+        trackPageview(path);
+    }, [pathname, searchParams]);
 }
