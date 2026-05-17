@@ -8,7 +8,7 @@ import {
     ThunderboltOutlined,
 } from "@client/lib/icons";
 import {TFunction} from "i18next";
-import {isInArea} from "./adminAreaItems";
+import {PARENT_BUCKET_OVERRIDES, isInArea} from "./adminAreaItems";
 import type {AdminView} from "../UserStatusBar";
 
 /**
@@ -33,7 +33,7 @@ const topBarButton = (
     <Tooltip key={areaSlug} title={tooltip} placement="bottom" mouseEnterDelay={0.4}>
         <Button
             data-testid={`nav-area-${areaSlug}-link`}
-            type={isInArea(view, areaSlug) ? "primary" : "link"}
+            type={(PARENT_BUCKET_OVERRIDES[view] === areaSlug || isInArea(view, areaSlug)) ? "primary" : "link"}
             href={href}
             icon={icon}
             aria-label={`${label} — ${tooltip}`}

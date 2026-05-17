@@ -32,6 +32,64 @@ export const isInArea = (view: AdminView, area: string) =>
     view === area || view.startsWith(area + '/');
 
 /**
+ * Parent-bucket override map.
+ *
+ * The new 5-bucket rails (Build / Content / Settings / Analytics / System)
+ * include items that still point at LEGACY URLs (e.g. Publishing at
+ * `/admin/release/publishing`, Theme at `/admin/client-config/themes`).
+ * Without this map, opening one of those links from the parent bucket
+ * makes `isInArea()` resolve the area as the legacy prefix
+ * (`release`, `client-config`) — the rail swaps mid-navigation.
+ *
+ * This map pins each cross-area item to its parent bucket so the rail
+ * stays put. Derived from the new-bucket rail entries themselves — keep
+ * in sync with `buildAreaItems()` below.
+ *
+ * Keys are view literals (path with leading `/admin/` stripped).
+ */
+const NEW_BUCKETS = ['build', 'content', 'settings', 'analytics', 'system'] as const;
+export const PARENT_BUCKET_OVERRIDES: Record<string, string> = {
+    // Content bucket — cross-area links to legacy URLs.
+    'release/publishing': 'content',
+    'system/inquiries': 'content',
+    // Settings bucket — cross-area links to legacy URLs.
+    'client-config/themes': 'settings',
+    'languages': 'settings',
+    'seo': 'settings',
+    'system/email': 'settings',
+    'system/compliance': 'settings',
+    'system/redirects': 'settings',
+    'system/permissions': 'settings',
+    // Analytics bucket — cross-area links.
+    'release/audit': 'analytics',
+    'system/analytics-filters': 'analytics',
+    // System bucket — cross-area links to legacy URLs.
+    'release/bundle': 'system',
+};
+
+/**
+ * Resolve which bucket the active view belongs to. Consults the
+ * cross-area override map first (so e.g. `release/publishing` stays in
+ * `content` instead of swapping to the legacy `release` rail), then falls
+ * back to prefix matching against the bucket list passed in.
+ *
+ * Returns `null` when no bucket matches — caller renders bare (no rail).
+ */
+export const resolveActiveArea = (view: AdminView, buckets: readonly string[]): string | null => {
+    const override = PARENT_BUCKET_OVERRIDES[view];
+    if (override && buckets.includes(override)) return override;
+    // Prefer new buckets over legacy ones — guarantees a cross-area link
+    // still maps to its new home even when no explicit override exists.
+    for (const area of NEW_BUCKETS) {
+        if (buckets.includes(area) && isInArea(view, area)) return area;
+    }
+    for (const area of buckets) {
+        if (isInArea(view, area)) return area;
+    }
+    return null;
+};
+
+/**
  * Per-area sub-page rails. Each entry is the URL list rendered as the
  * left-hand `<AreaNav/>` on the area's pages. Item order is the visible
  * order; `adminOnly` items disappear for editor/viewer sessions.

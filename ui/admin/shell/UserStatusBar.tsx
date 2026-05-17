@@ -21,7 +21,7 @@ import {useAdminMode} from "@admin/lib/adminMode";
 import FeatureFlagsPanel from "@admin/features/Platform/FeatureFlagsPanel";
 import {UserRole} from "@interfaces/IUser";
 import AdminTopBar from "./AdminTopBar/AdminTopBar";
-import {buildAreaItems, isInArea} from "./AdminTopBar/adminAreaItems";
+import {buildAreaItems, resolveActiveArea} from "./AdminTopBar/adminAreaItems";
 
 /**
  * Phase 2 of admin segregation (docs/features/platform/admin-segregation.md).
@@ -224,24 +224,14 @@ const UserStatusBarInner = ({session, view, tApp}: {
      * Pick which area's rail (if any) should render based on the active view.
      * The five AREA_* prefixes get their rail; the legacy views render bare.
      */
-    const activeArea: keyof typeof areaItems | null =
-        // admin-information-architecture re-pivot — 5 task-driven buckets.
-        isInArea(view, 'settings') ? 'settings'
-        : isInArea(view, 'analytics') ? 'analytics'
-        : isInArea(view, 'content') ? 'content'
-        : isInArea(view, 'system') ? 'system'
-        : isInArea(view, 'build') ? 'build'
-        // First-ship 6-bucket legacy aliases — kept while the 301 shim
-        // is live so a yesterday-bookmark to `/admin/site/footer` etc.
-        // still renders the right rail.
-        : isInArea(view, 'site') ? 'site'
-        : isInArea(view, 'commerce') ? 'commerce'
-        : isInArea(view, 'people') ? 'people'
-        // Pre-IA-jump legacy aliases.
-        : isInArea(view, 'client-config') ? 'client-config'
-        : isInArea(view, 'seo') ? 'seo'
-        : isInArea(view, 'release') ? 'release'
-        : null;
+    // Resolve the active rail via the shared helper. Consults the
+    // parent-bucket override map first (so cross-area links in the new
+    // 5-bucket rails — Publishing at `/admin/release/publishing`, Theme
+    // at `/admin/client-config/themes`, etc. — keep the parent bucket's
+    // rail visible instead of swapping to the legacy area's rail), then
+    // falls back to prefix matching. New buckets are preferred over
+    // legacy aliases.
+    const activeArea = resolveActiveArea(view, Object.keys(areaItems)) as keyof typeof areaItems | null;
 
     /**
      * Map the view literal to the component to render in the main pane.
