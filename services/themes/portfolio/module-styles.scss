@@ -1787,6 +1787,22 @@
         }
     }
 
+    /* ===================================================================
+       Kinetic-typography signature — PORTFOLIO = SOFT DRIFT.
+       Headline parallax-drifts through its scroll range — sketchbook
+       inertia, not a hard reveal. Pairs with the broken-grid layout.
+       =================================================================== */
+    @supports (animation-timeline: view()) {
+        .hero__headline {
+            animation: kinetic-drift-frame linear both;
+            animation-timeline: view();
+            animation-range: cover 0% cover 100%;
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .hero__headline { animation: none; }
+    }
+
     /* invisible primitives — no overrides */
     .schema-org-injector { /* noop */ }
     .cookie-consent-banner { /* forward-stub */ }

@@ -1676,6 +1676,22 @@
         }
     }
 
+    /* ===================================================================
+       Kinetic-typography signature — AGENCY = HORIZONTAL SLIDE.
+       Confident lateral motion as the hero scrolls into frame — the
+       cinematic-portfolio-cover personality.
+       =================================================================== */
+    @supports (animation-timeline: view()) {
+        .hero__headline {
+            animation: kinetic-slide-in-frame linear both;
+            animation-timeline: view();
+            animation-range: entry 0% cover 40%;
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .hero__headline { animation: none; }
+    }
+
     /* invisible primitives — no overrides */
     .schema-org-injector { /* noop */ }
     .cookie-consent-banner { /* forward-stub */ }

@@ -1,0 +1,136 @@
+// Kinetic-typography primitives — opt-in scroll-driven motion for hero
+// headlines + section titles. Tracks the 2026 trend identified across
+// Awwwards / Figma / Creative Bloq / GemPages / Fontfabric: kinetic
+// type as a primary branding language.
+//
+// Implementation is pure CSS via `animation-timeline: view()` /
+// `scroll()` (Chrome 115+, Firefox 138+, Safari 26 with flag). The
+// `@supports` gate lets unsupported browsers fall through to the
+// static rendering — graceful degradation, no JS required.
+//
+// All durations + easings still route through the motion-token system,
+// so `prefers-reduced-motion: reduce` (which flips `--motion-scalar` to
+// 0) collapses every kinetic effect to instant.
+//
+// Per-theme flavors live under `services/themes/<slug>/module-styles.scss`
+// — they tag `.hero__headline` (and friends) with a theme-specific
+// kinetic personality (letter-spacing pulse for editorial, drift-up for
+// commerce, horizontal slide for agency, etc.).
+//
+// Imported once via `ui/client/styles/globals/global.scss`.
+
+// ---------- Reveal-by-view: richer than the IntersectionObserver-driven
+// `.reveal-on-scroll`. Element fades + rises as it enters viewport and
+// settles once fully in-frame. Pure CSS — no observer, no React state.
+@supports (animation-timeline: view()) {
+    .kinetic-rise {
+        animation: kinetic-rise-in linear both;
+        animation-timeline: view();
+        animation-range: entry 0% cover 30%;
+    }
+
+    @keyframes kinetic-rise-in {
+        from {
+            opacity: 0;
+            transform: translate3d(0, var(--motion-distance-md), 0);
+        }
+        to {
+            opacity: 1;
+            transform: none;
+        }
+    }
+}
+
+// ---------- Headline that rises + decompresses letter-spacing as it
+// enters the viewport. The "editorial pulse" — text settles into place.
+@supports (animation-timeline: view()) {
+    .kinetic-letterspace {
+        animation: kinetic-letterspace-in linear both;
+        animation-timeline: view();
+        animation-range: entry 0% cover 40%;
+    }
+
+    @keyframes kinetic-letterspace-in {
+        from {
+            letter-spacing: -0.08em;
+            opacity: 0.5;
+        }
+        to {
+            letter-spacing: inherit;
+            opacity: 1;
+        }
+    }
+}
+
+// ---------- Headline horizontal-slide — text drifts in from the
+// inline-start edge. The "agency cinematic" — confident lateral motion.
+@supports (animation-timeline: view()) {
+    .kinetic-slide-in {
+        animation: kinetic-slide-in-frame linear both;
+        animation-timeline: view();
+        animation-range: entry 0% cover 35%;
+    }
+
+    @keyframes kinetic-slide-in-frame {
+        from {
+            opacity: 0;
+            transform: translate3d(-6vw, 0, 0);
+        }
+        to {
+            opacity: 1;
+            transform: none;
+        }
+    }
+}
+
+// ---------- Scale-down on scroll-out — headline compresses as the
+// section scrolls past. The "saas-landing snap" — keeps the hero
+// alive across the fold.
+@supports (animation-timeline: view()) {
+    .kinetic-scale-out {
+        animation: kinetic-scale-out-frame linear both;
+        animation-timeline: view();
+        animation-range: exit -30% exit 100%;
+    }
+
+    @keyframes kinetic-scale-out-frame {
+        from {
+            transform: none;
+            opacity: 1;
+        }
+        to {
+            transform: scale3d(0.92, 0.92, 1);
+            opacity: 0.6;
+        }
+    }
+}
+
+// ---------- Scroll-progress drift — element nudges as the viewport
+// scrolls past. The "portfolio sketchbook" — soft parallax accent.
+@supports (animation-timeline: view()) {
+    .kinetic-drift {
+        animation: kinetic-drift-frame linear both;
+        animation-timeline: view();
+        animation-range: cover 0% cover 100%;
+    }
+
+    @keyframes kinetic-drift-frame {
+        from { transform: translate3d(0, -1.5vh, 0); }
+        to   { transform: translate3d(0,  1.5vh, 0); }
+    }
+}
+
+// `prefers-reduced-motion: reduce` collapses every kinetic animation —
+// belt-and-braces alongside the `--motion-scalar` zero-out.
+@media (prefers-reduced-motion: reduce) {
+    .kinetic-rise,
+    .kinetic-letterspace,
+    .kinetic-slide-in,
+    .kinetic-scale-out,
+    .kinetic-drift {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+        letter-spacing: inherit !important;
+    }
+}

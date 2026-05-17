@@ -1927,6 +1927,22 @@
         }
     }
 
+    /* ===================================================================
+       Kinetic-typography signature — LOCAL-BUSINESS = SLAB RISE.
+       Quick rise-in matching the poster-stack ProjectGrid hover. Civic
+       poster cadence — confident, no drift afterwards.
+       =================================================================== */
+    @supports (animation-timeline: view()) {
+        .hero__headline {
+            animation: kinetic-rise-in linear both;
+            animation-timeline: view();
+            animation-range: entry 0% cover 25%;
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .hero__headline { animation: none; }
+    }
+
     .schema-org-injector { /* noop */ }
     .cookie-consent-banner { /* forward-stub */ }
 }

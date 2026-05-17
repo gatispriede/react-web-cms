@@ -1958,6 +1958,21 @@
         }
     }
 
+    /* ===================================================================
+       Kinetic-typography signature — COMMERCE = QUIET RISE.
+       Restrained scroll-in so the catalogue chrome stays the focus.
+       =================================================================== */
+    @supports (animation-timeline: view()) {
+        .hero__headline {
+            animation: kinetic-rise-in linear both;
+            animation-timeline: view();
+            animation-range: entry 0% cover 30%;
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .hero__headline { animation: none; }
+    }
+
     /* invisible primitives — no overrides */
     .schema-org-injector { /* noop */ }
     .cookie-consent-banner { /* forward-stub — no overrides */ }

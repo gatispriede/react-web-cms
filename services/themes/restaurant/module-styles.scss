@@ -833,6 +833,22 @@
         }
     }
 
+    /* ===================================================================
+       Kinetic-typography signature — RESTAURANT = SOFT LETTER-SPACE.
+       Warm, hand-written settle — letterspace eases out as the headline
+       comes into frame. Matches the dashed-rule + italic-accent palette.
+       =================================================================== */
+    @supports (animation-timeline: view()) {
+        .hero__headline {
+            animation: kinetic-letterspace-in linear both;
+            animation-timeline: view();
+            animation-range: entry 0% cover 50%;
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .hero__headline { animation: none; }
+    }
+
     .schema-org-injector { /* noop */ }
     .cookie-consent-banner { /* forward-stub */ }
 }

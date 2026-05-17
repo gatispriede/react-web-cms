@@ -29,6 +29,11 @@
 
 // Cross-cutting primitives
 @use "../Common/Reveal";
+// Kinetic-typography primitives — scroll-driven CSS animation timeline.
+// Per-theme flavors layer on via `services/themes/<slug>/module-styles.scss`
+// (e.g. `.hero__headline { animation: kinetic-letterspace-in ...; }`).
+// Tracks the 2026 type-as-hero / kinetic-motion design trend.
+@use "../Common/Kinetic";
 @use "../Common/SiteFooter";
 @use "../Common/MobileNav";
 @use "../Common/NavMenu";

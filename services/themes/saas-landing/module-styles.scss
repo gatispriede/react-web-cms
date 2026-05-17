@@ -1242,6 +1242,24 @@
         }
     }
 
+    /* ===================================================================
+       Kinetic-typography signature — SAAS-LANDING = RISE + SCALE-OUT.
+       The product-tour cadence: headline rises in on entry, then
+       compresses as the hero scrolls past so the next section can pop.
+       =================================================================== */
+    @supports (animation-timeline: view()) {
+        .hero__headline {
+            animation:
+                kinetic-rise-in linear both,
+                kinetic-scale-out-frame linear both;
+            animation-timeline: view(), view();
+            animation-range: entry 0% cover 35%, exit -20% exit 100%;
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .hero__headline { animation: none; }
+    }
+
     .schema-org-injector { /* noop */ }
     .cookie-consent-banner { /* forward-stub */ }
 }

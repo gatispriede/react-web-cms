@@ -731,6 +731,23 @@
         }
     }
 
+    /* ===================================================================
+       Kinetic-typography signature — EDITORIAL = LETTER-SPACE PULSE.
+       The hero headline settles into its tracking as the section enters
+       the viewport. Tracks the 2026 type-as-hero trend (Awwwards / Figma /
+       Creative Bloq).
+       =================================================================== */
+    @supports (animation-timeline: view()) {
+        .hero__headline {
+            animation: kinetic-letterspace-in linear both;
+            animation-timeline: view();
+            animation-range: entry 0% cover 45%;
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .hero__headline { animation: none; }
+    }
+
     .schema-org-injector { /* invisible primitive — no overrides needed */ }
     .cookie-consent-banner { /* forward-stub — no overrides */ }
 }
