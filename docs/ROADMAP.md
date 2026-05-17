@@ -4,12 +4,12 @@ Forward-looking only. Architecture: [PROJECT_ANALYSIS.md](PROJECT_ANALYSIS.md) +
 
 ---
 
-## Status (2026-05-13, late)
+## Status (2026-05-17)
 
-- **`origin/develop` HEAD:** `c4b86dc` — commerce + auth track (Phase 0 + Phase 1, 12 jumps) + 32-commit follow-up batch covering Phase-1.D state wiring, motion-token sample migration, BreadcrumbBar enhancements, ~47 new modules across cross-theme primitives + cars vertical + customer-account + restaurant + event themes.
-- **`origin/claude/test-lEADs` HEAD:** `3f56f2f` — 5 commits ahead of develop with SaaS-landing (7 modules) + Agency/Portfolio (6 modules) themes + Turbopack global-CSS systemic fix (68 SCSS imports hoisted to `_app.tsx`). **Awaiting develop merge** — last attempt hit HTTP 403 (branch protection); needs manual merge or relaxed permissions.
-- **Pending caveats:** optional `@react-pdf/renderer` install (operator decision); `OgImageGenerator` cross-theme primitive (needs `@vercel/og` install, operator decision); preview-samples test fixture stale (2 pre-existing failures unrelated to new work).
-- **Operator post-merge ops queued:** email DNS (SPF/DKIM/DMARC), B2+restic, Stripe test keys, ss.com path A/B/C, legal `/privacy`+`/terms`, screen-reader passes, Q4-cap visual baselines.
+- **`origin/develop` HEAD:** `cdd7f5d` — all threads merged. 100+ commits since last status covering: App Router migration complete (B2–B7 + cutover), 8 first-class themes shipped (editorial / commerce / agency / saas-landing / restaurant / portfolio / local-business + structural variants), admin-information-architecture (5-bucket task-driven taxonomy: Build / Content / Settings / Analytics / System), EU-compliant invoicing + credit notes + PDF + CSV, admin content releases (Release entity + atomic publish), dropship TME adapter scaffold, OnboardingChecklistService (active first-time guide), Stitch design pipeline + 2 POC modules (KeyValueDossier, SectionHeading), useAutoPageview migrated to App Router.
+- **Known regression:** nav rail swaps when clicking cross-area links (e.g. Content → Publishing shows the legacy `release` rail instead of staying in `content`; Settings → Theme shows legacy `client-config` rail). Root cause: items in the new 5-bucket rails still point at legacy URLs (`/admin/release/publishing`, `/admin/client-config/themes`), and `isInArea()` resolves area by URL prefix. Fix: either move those pages to their new bucket URLs or add an override map in `isInArea()` for cross-area links.
+- **Pending caveats:** `OgImageGenerator` cross-theme primitive (needs `@vercel/og` install, operator decision); visual baselines need operator capture run (`playwright test --update-snapshots`).
+- **Operator post-merge ops queued:** email DNS (SPF/DKIM/DMARC), B2+restic, Stripe test keys, legal `/privacy`+`/terms`, screen-reader passes, visual baseline capture.
 
 ---
 
@@ -43,11 +43,12 @@ Runbook: [runbooks/upgrade-droplets.md](runbooks/upgrade-droplets.md). Smoke che
 
 ### Forward work — platform & admin
 
+- **Admin-IA nav rail regression (bug)** — cross-area links in the 5-bucket rails (Content → Publishing at `/admin/release/publishing`, Settings → Theme at `/admin/client-config/themes`) cause the subnav to swap to the legacy area's rail instead of staying in the parent bucket. `isInArea()` in `adminAreaItems.ts` resolves area by URL prefix. Fix: move remaining pages to their new bucket URLs or add a parent-bucket override map. **S** (~1h).
 - [Module-compose every customer page](roadmap/platform/all-pages-module-composed.md) — filed 2026-05-13 from operator feedback during first-class-themes pass: every customer-facing URL (account/* / blog / welcome / cars / etc.) should render via a system-page registration + module dispatch — no bespoke JSX. Where a module doesn't exist for the surface, ship one. Phase 1.C + 1.D already module-composed products + checkout + account dashboard + magic-link; this jump covers the remaining 14 hand-coded customer pages and ~8 net-new modules (OrdersList, AddressList, PaymentMethodList, NotificationInbox, SignupForm, SigninForm, BlogPost, CarsList). **XL** (multi-week, parallelisable per page). Closes the "themes only affect module-composed pages, so all pages must be module-composed" gap.
-- [Module-compose every admin pane](roadmap/admin/admin-module-composed.md) — filed 2026-05-13 by operator feedback: "even admin should be made of our modules ... except for build page that is unique". Extract content of the 40+ hand-coded `ui/admin/features/*` panes into ~7 reusable admin module shapes (CRUD list, single-doc form, info surface, action panel, wizard, preview, conflict). Then re-compose each admin URL via an admin `SystemPageRegistry`. **`/admin/build`** (the page-section editor) is the only exempt surface — it IS the meta-editor. Sliced by shape — read-only info surfaces first (Diagnostics / Audit / Errors), CRUD lists next, then forms / wizards / previews. **XL** (multi-week, parallelisable per pane).
+- ~~[Module-compose every admin pane](roadmap/admin/admin-module-composed.md)~~ — ✅ shipped (commits `da3dc60`→`aaf1c3a`). All ~40 admin panes module-composed via 7 `EAdminModuleType` shapes (info surface, CRUD list, single-doc form, action panel, wizard, preview, conflict). `/admin/build` remains the only exempt surface.
 - **Radical per-module theme variants** — companion to first-class themes. Filed 2026-05-13 by operator feedback: "main part of themes is that they don't just change color and font; it should be more radical per module — alignment, placement, arrangement, animations, even functionality. example: Gallery — default = list of image + text, another theme = layered, another = banner". Same DOM contract; fundamentally different layout / arrangement / animation per theme. **First pass shipped 2026-05-14** — Gallery / Hero / Timeline now carry structural variants across all 5 first-class themes (`services/themes/<slug>/module-styles.scss`, scoped `[data-theme-name="<slug>"]`, pure CSS, no DOM change): Gallery = broken-grid / banner-band / tight-grid / depth-stack / vertical-list; Hero = photo-bleed-left / centred-overlay / split / split-glow / photo-bleed-centre; Timeline = broken-grid / horizontal-track / compact-vertical / horizontal-track / centred-spine. **Remaining**: ProjectGrid / OrderProgressTimeline / Footer still get only token-reskin per theme — next pass. **L** (first pass done; remainder ~S-M).
-- [F6 — site-mode toggle: scroll vs multipage](roadmap/platform/site-mode-toggle.md) — `siteFlags.siteMode` switch so sites can render as single-page-scroll or multipage-routed. **M** (1-2 days). 4-phase plan in [roadmap/README.md](roadmap/README.md).
-- [Admin dark-mode audit](roadmap/admin/admin-dark-mode-audit.md) — screenshot 5 representative admin pages, run through Stitch, fix global-first via AntD ConfigProvider `cssVar: true` tokens. **M** (~1 day). Depends on Q4-cap baselines.
+- ~~[F6 — site-mode toggle: scroll vs multipage](roadmap/platform/site-mode-toggle.md)~~ — ✅ shipped (commit `32ec743`).
+- ~~[Admin dark-mode audit](roadmap/admin/admin-dark-mode-audit.md)~~ — ✅ shipped (commit `1c98911`).
 - ~~**Mobile column behavior**~~ — ✅ already shipped (commit `1b7051d`). Section-level `layout.mobileBehavior` enum (`stack` | `collapse` | `keep-ratio`) — see [roadmap/platform/mobile-column-behavior.md](roadmap/platform/mobile-column-behavior.md). Implementation lives in `ui/client/lib/SectionContent.tsx` (runtime), `ui/admin/features/Dialogs/AddNewSectionItem.tsx` (admin Select), and `services/features/Mcp/tools/pages.ts` (`page.section.upsert` schema). Originally listed as "needs spec doc" — the spec doc exists and is current.
 - **Visual baseline capture** — fixture-setup diagnosis ✅ closed 2026-05-13. Each spec died in `MongoMemoryServer.create()` because the library auto-resolved to the absolute-latest MongoDB tarball (8.2.1 on ubuntu2404) which the CDN hasn't published, returning 403 → "Status Code is 403 (MongoDB's 404)" → ~3ms instant fail per spec. Pinned `config.mongodbMemoryServer.version` to `7.0.14` (LTS, widest platform-binary coverage incl. ubuntu2404) in `package.json`. **Remaining = operator capture run**: free port 80, then `npx playwright test --project=visual --update-snapshots` and commit `tests/e2e/visual/__snapshots__/`. ~30 min wall-clock.
 - **F8 MCP follow-ups** — streaming transport for bundle/image ops (✅ partly shipped 6c091be), plugin SDK for third-party tools, E2E un-skip post Windows-fanout fix. See [roadmap/platform/mcp-real-world-ready.md](roadmap/platform/mcp-real-world-ready.md).
@@ -55,23 +56,22 @@ Runbook: [runbooks/upgrade-droplets.md](runbooks/upgrade-droplets.md). Smoke che
 
 ### Forward work — admin UX (Wave 2.5)
 
-- [admin-command-palette.md](roadmap/admin/admin-command-palette.md) — kbar-style command palette. **M**.
-- [admin-empty-states-onboarding.md](roadmap/admin/admin-empty-states-onboarding.md) — operator-grade empty states with illustration set + onboarding wizard tie-in. **M**.
-- [admin-permissions-ux.md](roadmap/admin/admin-permissions-ux.md) — grant-grid editor + per-resource overlays. **L**.
-- [admin-inline-editing.md](roadmap/admin/admin-inline-editing.md) — `data-edit-target` round-trip from public client to admin overlay. **L**.
-- [admin-content-releases.md](roadmap/admin/admin-content-releases.md) — staging + scheduled-publish + rollback. **XL**.
+- ~~[admin-command-palette.md](roadmap/admin/admin-command-palette.md)~~ — ✅ shipped (commit `d287ac4`).
+- ~~[admin-empty-states-onboarding.md](roadmap/admin/admin-empty-states-onboarding.md)~~ — ✅ shipped (commit `9fd1548`).
+- ~~[admin-permissions-ux.md](roadmap/admin/admin-permissions-ux.md)~~ — ✅ shipped (commit `8a3b978`).
+- ~~[admin-inline-editing.md](roadmap/admin/admin-inline-editing.md)~~ — ✅ shipped (commit `8a3b978`).
+- ~~[admin-content-releases.md](roadmap/admin/admin-content-releases.md)~~ — ✅ shipped (commit `96b2b06`).
 
 ### Forward work — storefront enablers (Wave 6)
 
-- [storefront-receipt-emails.md](roadmap/storefront/storefront-receipt-emails.md) — 9 transactional email templates (magicLink / verifyEmail / passwordReset / orderConfirmation / carReservationConfirmation / inquiryAcknowledgement / scheduledPublishFailed / lowStockAlert / savedSearchAlert) with visual progress timeline + theme-token-driven layout. **M** (~3h AI).
-- [storefront-faceted-filter-system.md](roadmap/storefront/storefront-faceted-filter-system.md) — filter chips + URL state + saved-search integration. Consumed by ss.com + the existing `/products` route. **L** (~6-8h AI).
-- [client-signup-and-anonymous-checkout.md](roadmap/storefront/client-signup-and-anonymous-checkout.md) — `customer` rank, public `/account/*` routes, magic-link / password / OAuth options, marketing attribution capture, guest checkout via `orderToken`, guest→customer upgrade path. **L** (1-2 weeks). Depends on clean email deliverability.
+- ~~[storefront-receipt-emails.md](roadmap/storefront/storefront-receipt-emails.md)~~ — ✅ shipped (commit `f9d582a`).
+- ~~[storefront-faceted-filter-system.md](roadmap/storefront/storefront-faceted-filter-system.md)~~ — ✅ shipped (commit `9320684`).
+- ~~[client-signup-and-anonymous-checkout.md](roadmap/storefront/client-signup-and-anonymous-checkout.md)~~ — ✅ shipped (commit `e1a4538`).
 
 ### Forward work — storefront stretch (blocked on operator decisions)
 
-- [ss.com as product warehouse — cars first](roadmap/storefront/ss-com-cars-integration.md) — **XL** (multi-week). **Blocked on operator acquisition path A/B/C** (partner data licence / public RSS / scrape-off-table). Cars-vertical modules (CarListingCard, CarPhotoGallery, CarSpecTable, CarReservationCta, CarComparisonTable, CarFinanceEstimator, CarVehicleDetailPage, VatBadge) are all shipped and ready to consume the warehouse data when path is selected.
-- [Car-parts distributor API research](roadmap/storefront/car-parts-distributor-research.md) — research-only jump (no code until operator picks A/B/C per distributor). Matrix across TecDoc/TecAlliance, Inter Cars, AutoDoc, EBROS, DEPO, AD Auto, Stahlgruber, GROUPAUTO, Allegro, eBay Motors Parts. **M** (~2-3h research AI + operator wall-clock for partner contracts).
-- [First-class themes — Stitch-designed, full coverage](roadmap/storefront/first-class-themes.md) — replace 4 token-reskin presets with ≥5 Stitch-designed themes; each ships design doc + frames covering every module type. **5/5 shipped 2026-05-13:** **Editorial** (cream / serif / gentle-slow / 2px) · **Commerce** (white / Space Grotesk / emerald / snappy / 8px — home theme for cars vertical) · **Agency** (stark / Geist / coral / expressive-bold spring / 0px / hide-on-down nav) · **SaaS-landing** (dark / Mona Sans / violet gradient / snappy / 12px / sticky-blur nav) · **Restaurant** (khaki paper / Fraunces / burgundy / considered / mixed 0px-menu+4px-button / centered-hero nav). Per-theme baseline specs at `tests/e2e/visual/themes/{editorial,commerce,agency,saas-landing,restaurant}.spec.ts` — **275 tests total** awaiting operator capture run. **Follow-up jump (filed in user feedback 2026-05-13):** more radical per-module layout differences across themes — Gallery list-vs-banner-vs-layered, Hero split-vs-overlay-vs-photo-bleed, Timeline horizontal-vs-vertical-vs-broken-grid. **First pass shipped 2026-05-14** — Gallery / Hero / Timeline now have structural variants across all 5 themes (see "Radical per-module theme variants" in the open queue). ProjectGrid / OrderProgressTimeline / Footer still token-reskin only — next pass.
+- **PC-parts dropship vertical** — pivoted from ss.com cars to PC-parts dropshipping via TME (commit `6d98404`). `IDropshipDistributorAdapter` interface shipped + TME adapter scaffold with real-call wiring behind `isConfigured` guard. Cars-vertical modules remain in tree but are secondary.
+- ~~[First-class themes — Stitch-designed, full coverage](roadmap/storefront/first-class-themes.md)~~ — ✅ **8 themes shipped** (editorial / commerce / agency / saas-landing / restaurant / portfolio / local-business + Paper v5). Per-module structural variants for Gallery / Hero / Timeline across all themes. Per-theme visual pass across module catalogue. ProjectGrid / OrderProgressTimeline / Footer still token-reskin only — next pass.
 - **OgImageGenerator** cross-theme primitive — uses `@vercel/og` or equivalent. **Operator install decision pending** (~$0 cost, but adds 1 dep + 1 API route).
 
 ### Forward work — pre-public-deploy gates (Wave 8 — ~120-160h AI)
@@ -79,12 +79,12 @@ Runbook: [runbooks/upgrade-droplets.md](runbooks/upgrade-droplets.md). Smoke che
 EAA-mandated + operational hygiene before any public-internet deploy:
 
 - [accessibility-wcag22-audit.md](roadmap/storefront/accessibility-wcag22-audit.md) — WCAG 2.2 AA across new storefront surfaces (modules ship 44px tap targets + theme-tokenised contrast; audit closes the gap).
-- [gdpr-privacy-consent.md](roadmap/storefront/gdpr-privacy-consent.md) — consent UI, DNT honor, data export, delete-account, PII redaction. `CookieConsentBanner` forward-stub already in tree; Wave 8b drops in the real flow.
+- ~~[gdpr-privacy-consent.md](roadmap/storefront/gdpr-privacy-consent.md)~~ — ✅ W8b slice shipped (commit `f91a8ae`). `CookieConsentBanner` live.
 - [email-deliverability-hardening.md](roadmap/storefront/email-deliverability-hardening.md) — SPF/DKIM/DMARC, suppression list, warmup. **Operator action required for DNS records.**
 - [performance-budget-ci.md](roadmap/platform/performance-budget-ci.md) — Lighthouse + Core Web Vitals + size-limit in CI.
 - [backup-and-disaster-recovery.md](roadmap/platform/backup-and-disaster-recovery.md) — Restic + B2 + drill, RPO 6h / RTO 1h. **Operator action: B2 bucket + restic init + passphrase.**
 - [customer-notification-preferences.md](roadmap/storefront/customer-notification-preferences.md) — preference center + in-app inbox.
-- [multi-currency-and-tax.md](roadmap/storefront/multi-currency-and-tax.md) — FX rates + Stripe Tax + VIES. **Operator action: Stripe keys.**
+- ~~[multi-currency-and-tax.md](roadmap/storefront/multi-currency-and-tax.md)~~ — ✅ shipped (commit `edea545`).
 - [seo-program.md](roadmap/storefront/seo-program.md) — sitemap + OG + schema.org + redirects (the new `SchemaOrgInjector` primitive seeds this).
 
 ### Forward work — infra / deploy fragility
@@ -92,22 +92,26 @@ EAA-mandated + operational hygiene before any public-internet deploy:
 - **Deploy auto-rollback on health-check fail** — tag `app:current` before rebuild + restore on health-check failure, or promote `SEAMLESS_DEPLOY=1` to default. **S**.
 - **Image registry (GHCR)** — biggest single deploy-fragility win. Cold start 6-8 min → ~30 sec. **M** (~half day), $0-3/mo.
 - **Declarative `.env` (split static vs runtime)** — pairs with image-registry. **S**.
-- **Terraform droplet + DNS + firewall** — replace imperative SSH bootstrap with `terraform apply`. Multi-droplet provisioning becomes a matrix entry. **L** (1-2 days), $0-5/mo for state backend.
+- ~~**Terraform droplet + DNS + firewall**~~ — cancelled (commit `4e96515`). Imperative SSH bootstrap is good enough for POC scale.
 - ~~**Bundle-import → `markRestartRequired()` hook**~~ — ✅ shipped 2026-05-13. `detectLocaleDrift()` in `BundleService.ts` compares the imported bundle's language symbol set to the runtime `next-i18next.config.js` locale list; any drift surfaces as a `source: 'i18n'` restart-required reason (idempotent via `key: 'bundle-locale-drift'`). 7 unit tests cover drift / no-drift / dedupe / empty-symbol / whitespace / live-config paths. Avoids the locale-stale errors seen on skyclimber import.
 
 ---
 
 ## What landed recently
 
-See [`roadmap/shipped.md`](roadmap/shipped.md) for the full archive. Highlights from 2026-05-13:
+See [`roadmap/shipped.md`](roadmap/shipped.md) for the full archive. Highlights since 2026-05-14:
 
-- **Commerce + auth track** (`76b1658`) — Phase 0 shared abstractions + Phase 1 (6 main items + 6 deferred sub-jumps), ~520 net-new files, ~50 new MCP tools, ~15 e2e specs.
-- **Phase-1.D state wiring** (`fbc5dda`) — 12 locked transactional modules now read live cart + checkout-machine state and wire `OrderApi` end-to-end.
-- **47 new modules from the catalogue:** 7 cross-theme primitives (BreadcrumbBar enhancements, EmptyStateBlock, StickyCtaBar, ComparisonTable, SchemaOrgInjector, SaveSearchPrompt, CookieConsentBanner stub), 8 customer-account modules (OrderProgressTimeline, WishlistGrid, SavedSearchList, MagicLinkRequestForm, MagicLinkConfirmation, OauthButtonStack, AccountDashboardGrid, OrderDetailModule), 9 cars-vertical (VatBadge, CarListingCard, CarPhotoGallery, CarSpecTable, CarReservationCta, CarComparisonTable, CarFinanceEstimator, CarVehicleDetailPage, plus the existing Breadcrumb upgrade), 4 Restaurant (RestaurantMenu, ReservationWidget, OpeningHours, ContactBlock), 6 Event (CountdownTimer, EventScheduleAgenda, SpeakerGrid, SponsorStrip, EventBuyTicketsCta, EventHeroVideo), 7 SaaS-landing (PricingTable, FeatureGrid, ProductScreenshotHero, LogoCloud, TestimonialWall, IntegrationGrid, ChangelogTimeline), 6 Agency/Portfolio (ProjectCaseStudy, ProjectTileGrid, BeforeAfterSlider, MetricsCallout, ProcessTimeline, ServicesGridFancy). ~190 new unit tests across the batch.
-- **Wave 0 foundational** — motion-token system (Carbon/Material 3 ratios + `--motion-scalar` reduced-motion switch + stylelint warn-only rules + sample migration), admin Sonner toast adoption + Undo affordance, testid-coverage CI script with AST walk + allowlist. All three verified pre-session.
-- **Turbopack global-CSS systemic fix** (`3f56f2f`) — Next 16 / Turbopack enforces "global CSS only from `_app.tsx`". Hoisted 68 module SCSS imports to `pages/_app.tsx` as a one-shot fix; per-component `.tsx` files no longer import their own SCSS. Class names + DOM structure unchanged.
-- **Car-parts distributor API research roadmap item filed** — `docs/roadmap/storefront/car-parts-distributor-research.md`.
-- **Cleanup:** `products/[slug]` rules-of-hooks bug fix; motion-token sample migration across 5 SCSS files (33→24 stylelint warnings).
+- **App Router migration complete** (B2–B7 + cutover) — mongo re-entry guard, revalidate dual-mode, public shell, dynamic routes (`[...slug]` + blog), commerce/account routes, auth + admin routes, cleanup + cutover. Pages Router tree removed. `useAutoPageview` migrated to `usePathname`/`useSearchParams`.
+- **8 first-class themes shipped** — editorial, commerce, agency, saas-landing, restaurant, portfolio, local-business + Paper (v5). Each carries per-theme baseline specs. Radical per-module structural variants for Gallery / Hero / Timeline across all themes.
+- **Admin information architecture** — 5-bucket task-driven taxonomy (Build / Content / Settings / Analytics / System). Shared `<PaneHeader>` lifted into `AdminCrudListModule` + `AdminFormModule` (propagates to 16 CRUD + 9 form panes). Plain-English labels + tooltips for non-technical operators. 301 redirect shim for legacy URLs. **Known regression:** cross-area nav rail swap (see Status).
+- **EU-compliant invoicing** — `InvoiceService` + `InvoiceSequence` (atomic per-year numbering), credit notes with void + refund flow, `@react-pdf/renderer` A4 PDF, RFC-4180 CSV export, 6 MCP tools, admin pane with COGS toggle.
+- **Admin content releases** — Release entity + atomic publish (`release.create` / `release.publish` / `release.rollback`).
+- **Dropship TME adapter** — `IDropshipDistributorAdapter` interface + TME real-call wiring behind `isConfigured` guard. Pivoted first-impl from TD SYNNEX to TME.
+- **OnboardingChecklistService** — active first-time guide. Cross-cutting checklist (site title, contact email, DKIM, payment provider, backups, etc.) with per-operator dismissals + guided-tour step tracking.
+- **Stitch design pipeline** — 6-step process codified + 2 POC modules shipped (KeyValueDossier, SectionHeading). Module screenshot MCP tools (`module.screenshot.list` / `module.screenshot.get`).
+- **Admin module-compose** — all ~40 admin panes module-composed via 7 `EAdminModuleType` shapes. Admin dark mode wired. kbar command palette shipped. Sonner toast system. Empty states + onboarding. Permissions UX + inline editing.
+- **Storefront** — faceted filter system (chips + URL state + saved search), Amazon-style cart + checkout chrome, richer product detail + search/sort/category subpages, category-keyed product placeholders + Redis fallback.
+- **Infra** — TS error burn-down 107→0, logo style options (multi-variant assets), admin auth split fixes (session cookie path, sign-out, sign-in button), bundle-import body cap, SCSS hoist sweep (50 more module imports).
 
 ---
 
