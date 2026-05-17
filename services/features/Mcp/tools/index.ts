@@ -1,5 +1,6 @@
 import {McpTool} from '../types';
 import {log} from '@services/infra/logger';
+import {getPluginTools} from '../plugin';
 import {PAGE_TOOLS} from './pages';
 import {MODULE_TOOLS} from './modules';
 import {TRANSLATION_TOOLS} from './translations';
@@ -107,7 +108,13 @@ function isDestructiveByName(name: string): boolean {
 
 export function buildToolRegistry(): Map<string, McpTool> {
     const map = new Map<string, McpTool>();
-    for (const t of ALL_MCP_TOOLS) {
+    // Built-in tools first — they own the bare top-level namespaces
+    // (`page.*`, `module.*`, `bundle.*` …). Plugin tools layer on top
+    // via the registry at `services/features/Mcp/plugin/`; the plugin
+    // module rewrites each tool's name to `${namespace}.${name}` so
+    // plugin contributions cannot shadow built-ins.
+    const allTools: McpTool[] = [...ALL_MCP_TOOLS, ...getPluginTools()];
+    for (const t of allTools) {
         if (map.has(t.name)) {
             throw new Error(`MCP tool registry: duplicate tool name ${t.name}`);
         }
