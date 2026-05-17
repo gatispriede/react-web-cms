@@ -8,7 +8,7 @@ Forward-looking only. Architecture: [PROJECT_ANALYSIS.md](PROJECT_ANALYSIS.md) +
 
 - **`origin/develop` HEAD:** `cdd7f5d` — all threads merged. 100+ commits since last status covering: App Router migration complete (B2–B7 + cutover), 8 first-class themes shipped (editorial / commerce / agency / saas-landing / restaurant / portfolio / local-business + structural variants), admin-information-architecture (5-bucket task-driven taxonomy: Build / Content / Settings / Analytics / System), EU-compliant invoicing + credit notes + PDF + CSV, admin content releases (Release entity + atomic publish), dropship TME adapter scaffold, OnboardingChecklistService (active first-time guide), Stitch design pipeline + 2 POC modules (KeyValueDossier, SectionHeading), useAutoPageview migrated to App Router.
 - ~~**Known regression:** nav rail swap on cross-area links~~ — ✅ fixed 2026-05-17. Added `PARENT_BUCKET_OVERRIDES` map + `resolveActiveArea()` helper in `adminAreaItems.ts`. The shell + top-bar both consult it before falling back to prefix matching, so Content → Publishing keeps the Content rail and Content button highlighted; Settings → Theme keeps the Settings rail. 13 unit tests cover the override map + fallback semantics.
-- **Pending caveats:** `OgImageGenerator` cross-theme primitive (needs `@vercel/og` install, operator decision); visual baselines need operator capture run (`playwright test --update-snapshots`).
+- **Pending caveats:** visual baselines need operator capture run (`playwright test --update-snapshots`).
 - **Operator post-merge ops queued:** email DNS (SPF/DKIM/DMARC), B2+restic, Stripe test keys, legal `/privacy`+`/terms`, screen-reader passes, visual baseline capture.
 
 ---
@@ -72,7 +72,7 @@ Runbook: [runbooks/upgrade-droplets.md](runbooks/upgrade-droplets.md). Smoke che
 
 - **PC-parts dropship vertical** — pivoted from ss.com cars to PC-parts dropshipping via TME (commit `6d98404`). `IDropshipDistributorAdapter` interface shipped + TME adapter scaffold with real-call wiring behind `isConfigured` guard. Cars-vertical modules remain in tree but are secondary.
 - ~~[First-class themes — Stitch-designed, full coverage](roadmap/storefront/first-class-themes.md)~~ — ✅ **8 themes shipped** (editorial / commerce / agency / saas-landing / restaurant / portfolio / local-business + Paper v5). Per-module structural variants for Gallery / Hero / Timeline across all themes. Per-theme visual pass across module catalogue. ProjectGrid / OrderProgressTimeline / Footer still token-reskin only — next pass.
-- **OgImageGenerator** cross-theme primitive — uses `@vercel/og` or equivalent. **Operator install decision pending** (~$0 cost, but adds 1 dep + 1 API route).
+- ~~**OgImageGenerator** cross-theme primitive~~ — ✅ shipped 2026-05-17. `@vercel/og` installed (MIT, ~0 runtime cost — Satori + resvg-wasm). `/api/og/<slug...>` upgraded from hand-rolled SVG to `unstable_createNodejsStream`-rendered PNG. Fixes a real bug: Twitter only accepts JPG/PNG/WEBP/GIF for `og:image` / `twitter:image`, so the previous SVG output silently broke Twitter cards. Cache contract preserved (one-year `immutable` + ETag conditional GETs). Endpoint stays on the Node runtime; theme accent + logo data-URL flow through to the JSX template Satori renders.
 
 ### Forward work — pre-public-deploy gates (Wave 8 — ~120-160h AI)
 
