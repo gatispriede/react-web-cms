@@ -1713,6 +1713,251 @@
         font-size: 0.875rem;
     }
 
+    /* ===================================================================
+       ProjectGrid — VARIANT: TIGHT UNIFORM GRID (product-card cadence).
+       Structural axis vs siblings: agency = offset spread, editorial =
+       typographic ledger, portfolio = broken-grid, saas = elevated cards,
+       restaurant = menu-list, local-business = poster-stack.
+       Commerce = uniform 3-up product-tile grid — every card identical,
+       quick scan, retail rhythm.
+       =================================================================== */
+    .project-grid {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 3rem 2rem;
+
+        &__head {
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
+            gap: 1rem;
+            margin-bottom: 1.75rem;
+        }
+        &__num {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+        }
+        &__title {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: clamp(1.5rem, 3vw, 2.25rem);
+            letter-spacing: -0.02em;
+            margin: 0;
+        }
+        &__sub {
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            color: var(--ink-2);
+            max-width: 48ch;
+        }
+
+        &__items {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1.25rem;
+        }
+        &__item-wrap { display: block; }
+        &__item {
+            display: flex;
+            flex-direction: column;
+            background: var(--color-surface);
+            border: 1px solid var(--color-rule);
+            border-radius: var(--theme-borderRadius);
+            overflow: hidden;
+            text-decoration: none;
+            color: inherit;
+            transition: border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                        transform calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+        }
+        &__cover {
+            aspect-ratio: 4 / 3;
+            background: var(--color-surface-inset);
+            position: relative;
+            overflow: hidden;
+            img, .ant-image, .ant-image-img {
+                width: 100%; height: 100%; object-fit: cover;
+                transition: transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+            }
+        }
+        &__year {
+            position: absolute; top: 0.5rem; left: 0.5rem;
+            font-family: var(--font-mono);
+            font-size: 0.625rem;
+            background: var(--color-surface);
+            color: var(--color-ink);
+            padding: 2px 6px;
+            border-radius: 999px;
+        }
+        &__art {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--font-display);
+            font-size: 2rem;
+            color: var(--ink-2);
+        }
+        &__meta {
+            padding: 0.875rem 1rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            flex: 1;
+        }
+        &__card-title {
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 1rem;
+            line-height: 1.3;
+            margin: 0;
+        }
+        &__stack, &__kind {
+            font-size: 0.8125rem;
+            color: var(--ink-2);
+        }
+        &__more {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--color-accent);
+            padding: 0.75rem 1rem;
+            border-top: 1px solid var(--color-rule);
+        }
+        &__item:hover {
+            border-color: var(--color-accent);
+            transform: translateY(-2px);
+            .project-grid__cover img,
+            .project-grid__cover .ant-image-img { transform: scale(1.03); }
+        }
+    }
+
+    /* ===================================================================
+       OrderProgressTimeline — VARIANT: HORIZONTAL PILL TRACK.
+       Already token-reskinned for dot colors above. This block lays out
+       the steps as a horizontal track with connector segments — the
+       retail-receipt cadence.
+       =================================================================== */
+    .order-progress-timeline {
+        list-style: none;
+        margin: 0;
+        padding: 1rem 0;
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(0, 1fr);
+        gap: 0;
+        position: relative;
+
+        &__step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 0.75rem 0.5rem;
+            position: relative;
+
+            // connector line between steps
+            &::before {
+                content: '';
+                position: absolute;
+                top: calc(0.75rem + 0.5rem); // align to dot center
+                left: 50%;
+                right: -50%;
+                height: 2px;
+                background: var(--color-rule);
+                z-index: 0;
+            }
+            &:last-child::before { display: none; }
+        }
+        &__step[data-status="done"]::before {
+            background: var(--color-accent);
+        }
+        &__dot {
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            border: 2px solid var(--color-rule);
+            background: var(--color-surface);
+            z-index: 1;
+            position: relative;
+        }
+        &__step[data-status="done"] &__dot,
+        &__step[data-status="active"] &__dot {
+            border-color: var(--color-accent);
+        }
+        &__step[data-status="active"] &__dot {
+            box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 20%, transparent);
+        }
+        &__label {
+            margin-top: 0.5rem;
+            font-family: var(--font-body);
+            font-weight: 500;
+            font-size: 0.8125rem;
+            color: var(--color-ink);
+        }
+        &__date {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            color: var(--ink-2);
+            margin-top: 0.125rem;
+        }
+
+        @media (max-width: 640px) {
+            grid-auto-flow: row;
+            grid-auto-columns: auto;
+            &__step::before { display: none; }
+            &__step {
+                flex-direction: row;
+                align-items: center;
+                gap: 0.75rem;
+                text-align: left;
+            }
+            &__label { margin-top: 0; }
+        }
+    }
+
+    /* ===================================================================
+       Footer — VARIANT: DENSE CATALOGUE GRID.
+       Multi-column dense link grid (5+ columns at wide), bold wordmark
+       row at top, bottom rule strip with legal + brand. The
+       department-store directory pattern.
+       =================================================================== */
+    .site-footer {
+        padding: 3rem 2rem 1.5rem;
+
+        &__columns {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 2rem 2.5rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--color-rule);
+        }
+        &__column {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+
+            ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+                font-size: 0.875rem;
+            }
+        }
+        &__bottom {
+            margin-top: 1.5rem;
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+        }
+    }
+
     /* invisible primitives — no overrides */
     .schema-org-injector { /* noop */ }
     .cookie-consent-banner { /* forward-stub — no overrides */ }
