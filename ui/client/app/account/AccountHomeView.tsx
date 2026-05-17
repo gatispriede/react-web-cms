@@ -1,54 +1,38 @@
 'use client';
 /**
- * Client view for `/account` — App Router migration, Batch 5.
- * Direct lift of the former `pages/account/index.tsx` body.
+ * Client view for `/account` — module-compose pass 2026-05-17.
+ *
+ * Previously rendered hand-coded profile + addresses cards from
+ * `pages/account/index.tsx`. Now delegates to `SystemPageDispatch` with
+ * `systemKey="account-home"`, which mounts the locked
+ * `AccountDashboardGridHost` smart wrapper alongside any operator-
+ * composed marketing sections.
+ *
+ * The bespoke sign-out + profile-summary controls that lived here moved
+ * to `/account/settings` (where the rest of the profile editing lives).
  */
-import React, {useEffect, useState} from 'react';
-import Link from 'next/link';
-import {signOut} from 'next-auth/react';
-import {Button, Card, Spin, Typography} from 'antd';
-import {gql} from '@client/lib/account/gqlClient';
+import React from 'react';
+import {ConfigProvider} from 'antd';
+import {useT} from 'next-i18next/client';
+import staticTheme from '@client/features/Themes/themeConfig';
+import {type ISystemPageSnapshot} from '@client/lib/systemPage/loadSystemPage';
+import SystemPageDispatch from '@client/lib/systemPage/SystemPageDispatch';
 
-const {Title, Text} = Typography;
+interface AccountHomeViewProps {
+    systemPage: ISystemPageSnapshot | null;
+}
 
-const AccountHomeView: React.FC = () => {
-    const [me, setMe] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        gql(`query Me { mongo { me { id name email phone shippingAddresses { id name } } } }`)
-            .then(d => setMe(d?.mongo?.me))
-            .finally(() => setLoading(false));
-    }, []);
-
+const AccountHomeView: React.FC<AccountHomeViewProps> = ({systemPage}) => {
+    const {t} = useT('translation');
+    const {t: tApp} = useT('app');
     return (
-        <div style={{maxWidth: 720, margin: '40px auto', padding: 16}}>
-            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                <Title level={2}>My account</Title>
-                <Button onClick={() => signOut({callbackUrl: '/'})}>Sign out</Button>
-            </div>
-            {loading ? <Spin/> : (
-                <>
-                    <Card title="Profile" style={{marginBottom: 16}} extra={<Link href="/account/profile">Edit</Link>}>
-                        <div><Text strong>Name:</Text> {me?.name || '—'}</div>
-                        <div><Text strong>Email:</Text> {me?.email}</div>
-                        <div><Text strong>Phone:</Text> {me?.phone || '—'}</div>
-                    </Card>
-                    <Card title="Shipping addresses" extra={<Link href="/account/addresses">Manage</Link>}>
-                        {me?.shippingAddresses?.length
-                            ? me.shippingAddresses.map((a: any) => <div key={a.id}>{a.name}</div>)
-                            : <Text type="secondary">No saved addresses yet.</Text>}
-                    </Card>
-                    <Card
-                        title="Notification preferences"
-                        style={{marginTop: 16}}
-                        extra={<Link href="/account/notifications" data-testid="account-notifications-link">Manage</Link>}
-                    >
-                        <Text type="secondary">Choose how you receive order updates, marketing, and other notifications.</Text>
-                    </Card>
-                </>
-            )}
-        </div>
+        <ConfigProvider theme={staticTheme}>
+            <main data-testid="page-account-home" style={{maxWidth: 880, margin: '0 auto', padding: '32px 20px 80px'}}>
+                {systemPage
+                    ? <SystemPageDispatch systemKey="account-home" sections={systemPage.defaultSections} t={t} tApp={tApp}/>
+                    : null}
+            </main>
+        </ConfigProvider>
     );
 };
 

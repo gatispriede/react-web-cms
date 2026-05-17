@@ -39,6 +39,17 @@ function lockedSection(moduleType: EItemType, lockReason: string): ISection {
 }
 
 systemPageRegistry.register({
+    systemKey: 'account-home',
+    slug: '/account',
+    titleI18nKey: 'account.home.title',
+    accessGate: 'customer-session',
+    seo: {indexable: false},
+    defaultSections: () => [
+        lockedSection(EItemType.AccountDashboardGrid, 'section.locked.account-home'),
+    ],
+});
+
+systemPageRegistry.register({
     systemKey: 'account-orders',
     slug: '/account/orders',
     titleI18nKey: 'account.orders.title',

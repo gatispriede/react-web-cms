@@ -94,6 +94,24 @@ export const NotificationInboxEditor: React.FC<IInputContent> = (props) => {
     );
 };
 
+/**
+ * `/account` home dashboard — locked entry-points grid. v1 ships with
+ * no operator-editable copy; the dashboard renders the default card
+ * set defined in `AccountDashboardGrid.types.ts` and surfaces saved-
+ * address count as the only badge. A future operator-controllable
+ * card-visibility / reorder editor would slot here.
+ */
+export const AccountDashboardGridEditor: React.FC<IInputContent> = () => {
+    return (
+        <div className="account-editor account-editor--dashboard-grid" data-testid="editor-account-dashboard-grid">
+            <p style={{margin: 0, color: 'var(--ink-2)'}}>
+                Locked layout — renders the default account-page entry-points grid.
+                Compose marketing modules around the locked section to extend the page.
+            </p>
+        </div>
+    );
+};
+
 // ── Auth batch ───────────────────────────────────────────────────────
 
 interface SigninFormContent {

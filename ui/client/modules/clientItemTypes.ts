@@ -81,6 +81,7 @@ import {
     OrderDetailHost,
     AddressListHost,
     NotificationInboxHost,
+    AccountDashboardGridHost,
 } from '@client/modules/_AccountPageModules/wrappers';
 // all-pages-module-composed — Auth batch smart wrappers.
 import {
@@ -165,6 +166,7 @@ export const CLIENT_ITEM_TYPES: readonly ClientItemType[] = [
     {key: EItemType.OrderDetail, Display: OrderDetailHost as never},
     {key: EItemType.AddressList, Display: AddressListHost as never},
     {key: EItemType.NotificationInbox, Display: NotificationInboxHost as never},
+    {key: EItemType.AccountDashboardGrid, Display: AccountDashboardGridHost as never},
     // all-pages-module-composed — Auth batch.
     {key: EItemType.SigninForm, Display: SigninFormHost as never},
     {key: EItemType.SignupForm, Display: SignupFormHost as never},

@@ -27,6 +27,8 @@ import AddressList from '@client/modules/AddressList/AddressList';
 import type {AddressListAddress} from '@client/modules/AddressList/AddressList.types';
 import NotificationInbox from '@client/modules/NotificationInbox/NotificationInbox';
 import type {NotificationRow} from '@client/modules/NotificationInbox/NotificationInbox.types';
+import AccountDashboardGrid from '@client/modules/AccountDashboardGrid/AccountDashboardGrid';
+import type {AccountDashboardCard} from '@client/modules/AccountDashboardGrid/AccountDashboardGrid.types';
 
 /** Parse the operator-editable copy blob; tolerate malformed strings. */
 function parse<T>(raw: string | undefined): T {
@@ -427,5 +429,85 @@ export const NotificationInboxHost: React.FC<{item: IItem}> = ({item}) => {
                 description: c.emptyDescription,
             }}
         />
+    );
+};
+
+// ── Account dashboard ────────────────────────────────────────────────
+//
+// Module-composes `/account` — the last hand-coded customer page. Reads
+// the customer's saved-address count + unread-inbox count so the grid
+// cards carry meaningful badges; falls back to no badge when either
+// query fails (the grid still works, just without counts).
+
+interface AccountDashboardContent {
+    /** Optional per-card override map — operators can drop a card by
+     *  setting `{<key>: {hidden: true}}` or relabel a card by setting
+     *  `{<key>: {label: '…'}}`. Default cards come from
+     *  `DEFAULT_CARD_DEFS` in `AccountDashboardGrid.types.ts`. */
+    cards?: Partial<Record<string, {hidden?: boolean; label?: string; href?: string}>>;
+}
+
+const ACCOUNT_DASHBOARD_QUERY =
+    'query Me { mongo { me { shippingAddresses { id } } } }';
+
+const DEFAULT_CARD_ORDER = ['orders', 'addresses', 'searches', 'wishlist', 'payments', 'settings'] as const;
+const FALLBACK_LABELS: Record<string, string> = {
+    orders: 'Orders',
+    addresses: 'Addresses',
+    searches: 'Saved searches',
+    wishlist: 'Wishlist',
+    payments: 'Payment methods',
+    settings: 'Settings',
+};
+const FALLBACK_HREFS: Record<string, string> = {
+    orders: '/account/orders',
+    addresses: '/account/addresses',
+    searches: '/account/searches',
+    wishlist: '/account/wishlist',
+    payments: '/account/payments',
+    settings: '/account/settings',
+};
+
+export const AccountDashboardGridHost: React.FC<{item: IItem}> = ({item}) => {
+    const c = parse<AccountDashboardContent>(item.content);
+    const [addressCount, setAddressCount] = useState<number | undefined>(undefined);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        let cancelled = false;
+        gql(ACCOUNT_DASHBOARD_QUERY)
+            .then(d => {
+                if (cancelled) return;
+                const addrs = d?.mongo?.me?.shippingAddresses;
+                setAddressCount(Array.isArray(addrs) ? addrs.length : undefined);
+            })
+            .catch(() => { /* tolerate — render without badges */ })
+            .finally(() => { if (!cancelled) setLoading(false); });
+        return () => { cancelled = true; };
+    }, []);
+
+    // Counts only attach to cards whose semantics match the available
+    // signal — addresses gets the saved-address count; orders /
+    // wishlist / etc. stay unbadged until those services expose count
+    // queries through the customer GraphQL surface.
+    const cards: AccountDashboardCard[] = [];
+    for (const key of DEFAULT_CARD_ORDER) {
+        const override = c.cards?.[key];
+        if (override?.hidden) continue;
+        cards.push({
+            key,
+            label: override?.label ?? FALLBACK_LABELS[key],
+            href: override?.href ?? FALLBACK_HREFS[key],
+            count: key === 'addresses' ? addressCount : undefined,
+        });
+    }
+
+    if (loading && addressCount === undefined) {
+        return <p data-testid="account-dashboard-loading">Loading…</p>;
+    }
+    return (
+        <div className="account-dashboard-host" style={wrapStyle} data-testid="account-dashboard-host">
+            <AccountDashboardGrid testId="account-dashboard" cards={cards}/>
+        </div>
     );
 };

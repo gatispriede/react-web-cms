@@ -105,6 +105,12 @@ export enum EItemType {
     OrderDetail = "ORDER_DETAIL",
     AddressList = "ADDRESS_LIST",
     NotificationInbox = "NOTIFICATION_INBOX",
+    /** `/account` home dashboard — locked entry-points grid + profile
+     *  summary card. Smart wrapper fetches the customer's name/email +
+     *  saved-address count and renders the `AccountDashboardGrid`
+     *  presentational module. Ships 2026-05-17 to module-compose the
+     *  last hand-coded customer page. */
+    AccountDashboardGrid = "ACCOUNT_DASHBOARD_GRID",
     // all-pages-module-composed — Auth batch. Smart-wrapper modules for
     // the `/account/signin` `/account/signup` `/account/magic-link`
     // routes — bind the pure SigninForm / SignupForm /
