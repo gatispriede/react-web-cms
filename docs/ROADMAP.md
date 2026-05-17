@@ -78,10 +78,10 @@ Runbook: [runbooks/upgrade-droplets.md](runbooks/upgrade-droplets.md). Smoke che
 
 EAA-mandated + operational hygiene before any public-internet deploy:
 
-- [accessibility-wcag22-audit.md](roadmap/storefront/accessibility-wcag22-audit.md) — WCAG 2.2 AA across new storefront surfaces (modules ship 44px tap targets + theme-tokenised contrast; audit closes the gap).
+- [accessibility-wcag22-audit.md](roadmap/storefront/accessibility-wcag22-audit.md) — WCAG 2.2 AA across new storefront surfaces (modules ship 44px tap targets + theme-tokenised contrast; audit closes the gap). **CI batch live** — Pa11y job in `.github/workflows/ci.yml` runs against the 7 routes in `.pa11yci.json` (`continue-on-error: true` while baseline beds in). Remaining: per-module manual sweeps + flip the flag to PR-blocking once the report stabilises.
 - ~~[gdpr-privacy-consent.md](roadmap/storefront/gdpr-privacy-consent.md)~~ — ✅ W8b slice shipped (commit `f91a8ae`). `CookieConsentBanner` live.
 - [email-deliverability-hardening.md](roadmap/storefront/email-deliverability-hardening.md) — SPF/DKIM/DMARC, suppression list, warmup. **Operator action required for DNS records.**
-- [performance-budget-ci.md](roadmap/platform/performance-budget-ci.md) — Lighthouse + Core Web Vitals + size-limit in CI.
+- ~~[performance-budget-ci.md](roadmap/platform/performance-budget-ci.md)~~ — ✅ shipped (W8d). `.size-limit.cjs` + `lighthouserc.cjs` + `web-vitals` perfBeacon + admin RUM pane (`/admin/system/performance`) + CI jobs (size-limit + lhci in `.github/workflows/ci.yml`) all wired. `continue-on-error: true` while budgets bed in; flip the flag once the baseline stabilises.
 - [backup-and-disaster-recovery.md](roadmap/platform/backup-and-disaster-recovery.md) — Restic + B2 + drill, RPO 6h / RTO 1h. **Operator action: B2 bucket + restic init + passphrase.**
 - [customer-notification-preferences.md](roadmap/storefront/customer-notification-preferences.md) — preference center + in-app inbox.
 - ~~[multi-currency-and-tax.md](roadmap/storefront/multi-currency-and-tax.md)~~ — ✅ shipped (commit `edea545`).
