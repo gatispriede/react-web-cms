@@ -620,3 +620,75 @@ export const AccountProfileFormHost: React.FC<{item: IItem}> = ({item}) => {
         </div>
     );
 };
+
+// ── Account settings (tabbed layout) ─────────────────────────────────
+//
+// Module-composes `/account/settings`. Unlike the other Account
+// wrappers, the settings layout NEEDS server-resolved props: the
+// customer profile (`me`), the operator-hidden tab list, and the
+// `commerce.accountSettingsEnabled` master switch. Server resolution
+// already happens in the page.tsx loader; rather than re-fetch on
+// mount (which would flash the unauthenticated state), the smart
+// wrapper reads the data off the SystemPageDispatch `pageProps`
+// channel introduced in the same commit.
+//
+// pageProps contract (page-scoped):
+//   {
+//     me: IUser;
+//     activeTab: AccountSettingsTab;
+//     hiddenTabs: AccountSettingsTab[];
+//     enabled: boolean;
+//   }
+
+import {AccountSettingsLayout as AccountSettingsLayoutComponent} from '@client/components/AccountSettings/AccountSettingsLayout';
+import type {AccountSettingsTab} from '@client/components/AccountSettings/types';
+import type {IUser} from '@interfaces/IUser';
+
+interface AccountSettingsPageProps {
+    me?: IUser;
+    activeTab?: AccountSettingsTab;
+    hiddenTabs?: AccountSettingsTab[];
+    enabled?: boolean;
+}
+
+interface AccountSettingsLayoutContent {
+    /** Copy shown when `commerce.accountSettingsEnabled` is false. */
+    disabledMessage?: string;
+    /** Copy shown when the smart wrapper is mounted without pageProps
+     *  (e.g. operator drops the module on a non-/account/settings page
+     *  by mistake). Defaults to a self-explanatory developer-facing
+     *  note rather than a customer-facing string. */
+    missingDataMessage?: string;
+}
+
+export const AccountSettingsLayoutHost: React.FC<{item: IItem; pageProps?: Record<string, unknown>}> = ({item, pageProps}) => {
+    const c = parse<AccountSettingsLayoutContent>(item.content);
+    const data = (pageProps ?? {}) as AccountSettingsPageProps;
+
+    if (!data.me) {
+        // No server data — render a placeholder so misplacement on a
+        // non-settings page is obvious to the operator rather than
+        // silently dead.
+        return (
+            <main data-testid="account-settings-no-data" style={{padding: 16, color: 'var(--ink-2)'}}>
+                {c.missingDataMessage ?? 'AccountSettingsLayout requires server-resolved pageProps (mount on /account/settings).'}
+            </main>
+        );
+    }
+    if (data.enabled === false) {
+        return (
+            <main data-testid="account-settings-disabled">
+                <h1>{c.disabledMessage ?? 'Settings are not available on this site.'}</h1>
+            </main>
+        );
+    }
+    return (
+        <main data-testid="account-settings-host">
+            <AccountSettingsLayoutComponent
+                me={data.me}
+                activeTab={data.activeTab ?? 'profile'}
+                hiddenTabs={data.hiddenTabs ?? []}
+            />
+        </main>
+    );
+};

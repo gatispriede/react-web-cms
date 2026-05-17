@@ -46,6 +46,22 @@ test.describe('feature — /account/profile module-composed form pair', () => {
     });
 });
 
+test.describe('feature — /account/settings module-composed tabbed layout', () => {
+    test('renders the settings host with SSR pageProps wired through SystemPageDispatch', async ({customerPage}) => {
+        // /account/settings exercises the new pageProps channel: the
+        // server-resolved `me + hiddenTabs + enabled` shape is forwarded
+        // through SystemPageDispatch to the locked AccountSettingsLayout
+        // smart wrapper. If pageProps wiring breaks, the wrapper
+        // surfaces its missing-data sentinel instead of the layout.
+        await customerPage.goto('/account/settings');
+        await expect(customerPage.getByTestId('page-account-settings')).toBeVisible();
+        await expect(customerPage.getByTestId('account-settings-host')).toBeVisible({timeout: 15_000});
+        // The missing-data sentinel must NOT render — if it does,
+        // pageProps didn't reach the smart wrapper.
+        await expect(customerPage.getByTestId('account-settings-no-data')).toHaveCount(0);
+    });
+});
+
 test.describe('feature — /account/verify module-composed magic-link confirm', () => {
     test('shows the missing-token alert when no token is in the URL', async ({anonPage}) => {
         // Defeat-pre-fetch contract: opening /account/verify with no

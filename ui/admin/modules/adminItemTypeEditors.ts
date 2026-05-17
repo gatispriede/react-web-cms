@@ -112,6 +112,7 @@ import {
     NotificationInboxEditor,
     AccountDashboardGridEditor,
     AccountProfileFormEditor,
+    AccountSettingsLayoutEditor,
     SigninFormEditor,
     SignupFormEditor,
     CustomerVerifyConfirmEditor,
@@ -302,6 +303,7 @@ export const ADMIN_ITEM_TYPE_EDITORS: readonly AdminItemTypeEntry[] = [
     {key: EItemType.NotificationInbox,        Editor: NotificationInboxEditor,        styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Notification inbox',      descriptionKey: 'Locked — in-app notifications with mark-read + dismiss.',                      category: 'content'},
     {key: EItemType.AccountDashboardGrid,     Editor: AccountDashboardGridEditor,     styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Account dashboard',      descriptionKey: 'Locked — /account home entry-points grid (orders / addresses / settings).',   category: 'content'},
     {key: EItemType.AccountProfileForm,       Editor: AccountProfileFormEditor,       styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Account profile + password', descriptionKey: 'Locked — personal-details + password change form pair for /account/profile.', category: 'content'},
+    {key: EItemType.AccountSettingsLayout,    Editor: AccountSettingsLayoutEditor,    styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Account settings layout', descriptionKey: 'Locked — tabbed customer settings (profile / security / notifications / privacy / language) for /account/settings.', category: 'content'},
     // all-pages-module-composed — Auth batch (smart wrappers; copy-only editors).
     {key: EItemType.SigninForm,               Editor: SigninFormEditor,               styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Sign-in form',           descriptionKey: 'Locked — customer sign-in: password / magic-link / OAuth per site flags.',    category: 'cta'},
     {key: EItemType.SignupForm,               Editor: SignupFormEditor,               styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Sign-up form',           descriptionKey: 'Locked — customer sign-up with optional B2B (company + VAT) capture.',         category: 'cta'},

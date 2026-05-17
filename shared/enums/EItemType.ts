@@ -121,6 +121,12 @@ export enum EItemType {
      *  drives NextAuth `signIn('customer-magic', …)` on explicit click.
      *  Ships 2026-05-17 alongside AccountDashboardGrid. */
     CustomerVerifyConfirm = "CUSTOMER_VERIFY_CONFIRM",
+    /** `/account/settings` — tabbed customer settings (profile / address
+     *  / notifications / privacy / etc.). Smart wrapper reads server-
+     *  resolved `me`, `activeTab`, `hiddenTabs`, `enabled` from the
+     *  `pageProps` channel so the SSR auth + flags pipeline doesn't
+     *  duplicate as a client refetch. Ships 2026-05-17. */
+    AccountSettingsLayout = "ACCOUNT_SETTINGS_LAYOUT",
     // all-pages-module-composed — Auth batch. Smart-wrapper modules for
     // the `/account/signin` `/account/signup` `/account/magic-link`
     // routes — bind the pure SigninForm / SignupForm /

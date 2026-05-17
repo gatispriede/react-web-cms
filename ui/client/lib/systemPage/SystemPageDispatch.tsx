@@ -22,7 +22,38 @@ import {EItemType} from '@enums/EItemType';
 import type {ISection} from '@interfaces/ISection';
 import type {IItem} from '@interfaces/IItem';
 
-const DISPLAYS: ReadonlyMap<string, React.ComponentType<{item: IItem; t: TFunction<'translation', undefined>; tApp: TFunction<string, undefined>; admin?: boolean}>> =
+/**
+ * `pageProps` channel — opt-in escape hatch for SSR-resolved data that
+ * a locked smart-wrapper module needs without re-fetching client-side.
+ *
+ * Original use case: `/account/settings` server-resolves the customer
+ * profile + site flags (`getCustomerProfileService` + `SiteFlagsService`)
+ * to avoid a brief unauthenticated flash + extra round-trip. Without a
+ * pageProps channel the smart wrapper would have to re-fetch identical
+ * data on mount, duplicating server work.
+ *
+ * The dispatch is a bag of properties — the page's loader serialises
+ * its server data into a JSON-safe object, the dispatch passes the
+ * same map to every module's Display, and modules pick the keys they
+ * care about. Keys are page-scoped (a settings page's pageProps shape
+ * is its own contract); no global namespace.
+ */
+export type SystemPageProps = Record<string, unknown>;
+
+/**
+ * The renderer contract the dispatch expects from every registered
+ * Display. `pageProps` is optional; modules that ignore it stay
+ * source-compatible with the original `{item, t, tApp, admin}` shape.
+ */
+export interface ClientModuleDisplayProps {
+    item: IItem;
+    t: TFunction<'translation', undefined>;
+    tApp: TFunction<string, undefined>;
+    admin?: boolean;
+    pageProps?: SystemPageProps;
+}
+
+const DISPLAYS: ReadonlyMap<string, React.ComponentType<ClientModuleDisplayProps>> =
     new Map(CLIENT_ITEM_TYPES.map(c => [c.key as string, c.Display as never]));
 
 export interface ISystemPageDispatchProps {
@@ -35,6 +66,11 @@ export interface ISystemPageDispatchProps {
     /** Optional test marker — lets e2e specs assert system-page dispatch
      *  fired for a given `systemKey`. */
     systemKey?: string;
+    /** Page-scoped server data forwarded to every module's Display via
+     *  the `pageProps` channel. The map shape is the page's contract
+     *  with its locked module(s) — no global keys. JSON-safe so it
+     *  serialises cleanly through the Server-Component boundary. */
+    pageProps?: SystemPageProps;
 }
 
 /**
@@ -42,7 +78,7 @@ export interface ISystemPageDispatchProps {
  * column count matches the section's `slots` or `.type`; each cell
  * renders a single module via its registered `Display`.
  */
-const SystemPageDispatch: React.FC<ISystemPageDispatchProps> = ({sections, t, tApp, systemKey}) => {
+const SystemPageDispatch: React.FC<ISystemPageDispatchProps> = ({sections, t, tApp, systemKey, pageProps}) => {
     return (
         <div className="system-page-dispatch" data-testid="system-page-dispatch" data-system-key={systemKey}>
             {sections.map((section, sIdx) => {
@@ -72,7 +108,7 @@ const SystemPageDispatch: React.FC<ISystemPageDispatchProps> = ({sections, t, tA
                                     style={{gridColumn: `span ${span}`, position: 'relative'}}
                                     data-testid={`system-page-module-${String(item.type).toLowerCase().replace(/_/g, '-')}`}
                                 >
-                                    <Display item={item} t={t} tApp={tApp} admin={false}/>
+                                    <Display item={item} t={t} tApp={tApp} admin={false} pageProps={pageProps}/>
                                 </div>
                             );
                         })}

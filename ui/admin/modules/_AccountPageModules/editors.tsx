@@ -210,3 +210,18 @@ export const CustomerVerifyConfirmEditor: React.FC<IInputContent> = (props) => {
         </div>
     );
 };
+
+interface AccountSettingsLayoutContent {
+    disabledMessage?: string;
+    missingDataMessage?: string;
+}
+
+export const AccountSettingsLayoutEditor: React.FC<IInputContent> = (props) => {
+    const [d, patch] = useTypedContent<AccountSettingsLayoutContent>(props);
+    return (
+        <div className="account-editor account-editor--settings-layout" data-testid="editor-account-settings-layout">
+            <Field label="Disabled copy (when commerce.accountSettingsEnabled = false)" testid="account-settings-disabled" value={d.disabledMessage ?? ''} onChange={v => patch({disabledMessage: v})} placeholder="Settings are not available on this site."/>
+            <Field label="Missing-data copy (developer-facing, shown when mounted without server pageProps)" testid="account-settings-missing" value={d.missingDataMessage ?? ''} onChange={v => patch({missingDataMessage: v})}/>
+        </div>
+    );
+};

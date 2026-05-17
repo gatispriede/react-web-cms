@@ -72,6 +72,17 @@ systemPageRegistry.register({
 });
 
 systemPageRegistry.register({
+    systemKey: 'account-settings',
+    slug: '/account/settings',
+    titleI18nKey: 'account.settings.title',
+    accessGate: 'customer-session',
+    seo: {indexable: false},
+    defaultSections: () => [
+        lockedSection(EItemType.AccountSettingsLayout, 'section.locked.account-settings'),
+    ],
+});
+
+systemPageRegistry.register({
     systemKey: 'account-orders',
     slug: '/account/orders',
     titleI18nKey: 'account.orders.title',
