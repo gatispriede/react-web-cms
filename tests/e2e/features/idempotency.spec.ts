@@ -83,11 +83,13 @@ test.describe('feature — useGuardedAction idempotency', () => {
     });
 
     test.skip('button becomes reusable after the in-flight call settles', async ({adminPage}) => {
-        // TODO: unskip once we have a non-destructive guarded button to
-        // exercise (Delete navigates away, so reusability can't be tested
-        // on the same DOM node). The Save button on a module editor is a
-        // good candidate but its testid lives under module-editor-save-btn
-        // and isn't wired through useGuardedAction yet.
+        // Dropped 2026-05-17 — the hook's reusable-after-settle behaviour
+        // is covered by the unit test at ui/admin/lib/useGuardedAction.test.tsx,
+        // and the only e2e-exercisable guarded actions are destructive
+        // (Delete navigates away, so reusability can't be observed on
+        // the same DOM node). Kept as a skip stub rather than removed
+        // so the historical context survives — re-enable if a long-lived
+        // non-destructive guarded action shows up.
         const _ = adminPage;
     });
 });
