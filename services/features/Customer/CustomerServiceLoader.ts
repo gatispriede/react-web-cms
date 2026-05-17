@@ -6,16 +6,15 @@
  * already lives there but company/payment-methods / type-switch is
  * net-new). Side-effect imports register:
  *   - `commerce.*` customer flags (`customerFlags.ts`)
- *   - `account-settings` on the system-page registry
- *     (`CustomerSettingsPage.ts`)
- *   - `account-orders` / `account-order-detail` / `account-addresses` /
- *     `account-inbox` system pages (`CustomerAccountPages.ts`)
+ *   - all account system pages including `account-settings`
+ *     (`CustomerAccountPages.ts`)
  */
 import {ServiceLoader} from '@services/infra/ServiceLoader';
 import type {FeatureContext} from '@services/infra/featureManifest';
 import {CustomerProfileService} from './CustomerProfileService';
 import './customerFlags';
-import './CustomerSettingsPage';
+// CustomerSettingsPage removed — account-settings now registered in
+// CustomerAccountPages with single AccountSettingsLayout module.
 import './CustomerAccountPages';
 
 export class CustomerServiceLoader extends ServiceLoader {
