@@ -748,6 +748,144 @@
         .hero__headline { animation: none; }
     }
 
+    /* ===================================================================
+       Theme motion signature — EDITORIAL = NEWSPAPER COLUMN.
+       Override the shared `.reveal-on-scroll` so content enters from the
+       inline-start edge with a long, settled ease. The "broadsheet
+       unfolds" feel — never bouncy, never aggressive.
+       =================================================================== */
+    @supports (animation-timeline: view()) {
+        .reveal-on-scroll {
+            opacity: 1;
+            transform: none;
+            transition: none;
+            animation: kinetic-slide-left-in linear both;
+            animation-timeline: view();
+            animation-range: entry 0% cover 35%;
+        }
+    }
+    /* Hover signature — links + headings tinge accent + slow underline
+       grow. Cards take a 1px lift, never a shadow halo. Stays
+       restrained — editorial doesn't shout. */
+    .services-module__row,
+    .feature-grid__card,
+    .pricing-table__plan,
+    .project-tile,
+    .testimonial-wall__card,
+    .blog-feed article {
+        transition:
+            transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+            border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &:hover {
+            transform: translateY(-1px);
+            border-color: var(--color-rule);
+        }
+    }
+
+    /* ===================================================================
+       Services — VARIANT: ESSAY LEDGER.
+       Each row reads as a numbered editorial entry — large serif title,
+       single hairline rule between, generous left-padded number column.
+       =================================================================== */
+    .services-module {
+        max-width: 82ch;
+        margin: 0 auto;
+        padding: 4rem 2rem;
+
+        &__rows {
+            display: flex;
+            flex-direction: column;
+        }
+        &__row {
+            display: grid;
+            grid-template-columns: 4rem 1fr;
+            column-gap: 2rem;
+            row-gap: 0.5rem;
+            padding: 2.5rem 0;
+            border-bottom: 1px solid var(--color-rule);
+            background: transparent;
+        }
+        &__row-icon { display: none; }
+        &__row-num {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+            grid-row: 1 / span 2;
+            padding-top: 0.5rem;
+        }
+        &__row-title {
+            font-family: var(--font-display);
+            font-weight: 400;
+            font-size: clamp(1.5rem, 3vw, 2.125rem);
+            line-height: 1.1;
+            letter-spacing: -0.01em;
+            margin: 0;
+        }
+        &__row-desc {
+            font-family: var(--font-body);
+            font-size: 1.0625rem;
+            line-height: 1.65;
+            color: var(--ink-2);
+            max-width: 60ch;
+        }
+        &__row-tags { display: none; }
+    }
+
+    /* ===================================================================
+       FeatureGrid — VARIANT: BULLETED LEDGER.
+       Two-column ledger of dot-marked entries — no cards, no icons.
+       Reads as a manifesto, not a product grid.
+       =================================================================== */
+    .feature-grid {
+        max-width: 82ch;
+        margin: 0 auto;
+        padding: 3rem 2rem;
+        list-style: none;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2.5rem 3rem;
+
+        @media (max-width: 720px) {
+            grid-template-columns: 1fr;
+        }
+
+        &__card {
+            background: transparent;
+            border: 0;
+            padding: 0 0 0 1.5rem;
+            position: relative;
+
+            &::before {
+                content: '';
+                position: absolute;
+                top: 0.625rem;
+                left: 0;
+                width: 0.5rem;
+                height: 0.5rem;
+                background: var(--color-accent);
+                border-radius: 50%;
+            }
+        }
+        &__icon { display: none; }
+        &__title {
+            font-family: var(--font-display);
+            font-weight: 400;
+            font-size: 1.25rem;
+            line-height: 1.2;
+            margin: 0 0 0.5rem;
+        }
+        &__desc {
+            font-family: var(--font-body);
+            font-size: 1rem;
+            line-height: 1.55;
+            color: var(--ink-2);
+            margin: 0;
+        }
+    }
+
     .schema-org-injector { /* invisible primitive — no overrides needed */ }
     .cookie-consent-banner { /* forward-stub — no overrides */ }
 }

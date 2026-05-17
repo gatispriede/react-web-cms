@@ -120,6 +120,34 @@
     }
 }
 
+// ---------- Slide-from-left reveal — used by themes whose entrance
+// language reads horizontally (agency cinematic, editorial newspaper
+// column).
+@supports (animation-timeline: view()) {
+    @keyframes kinetic-slide-left-in {
+        from { opacity: 0; transform: translate3d(-4vw, 0, 0); }
+        to   { opacity: 1; transform: none; }
+    }
+}
+
+// ---------- Zoom-in — used by themes whose entrance reads as a
+// camera-aperture (saas product-tour, commerce hero-pop).
+@supports (animation-timeline: view()) {
+    @keyframes kinetic-zoom-in {
+        from { opacity: 0; transform: scale3d(0.94, 0.94, 1); }
+        to   { opacity: 1; transform: none; }
+    }
+}
+
+// ---------- Tilt-in — used by themes whose entrance reads as a
+// poster being placed (local-business poster-stack, restaurant card).
+@supports (animation-timeline: view()) {
+    @keyframes kinetic-tilt-in {
+        from { opacity: 0; transform: translate3d(0, 12px, 0) rotate(-1deg); }
+        to   { opacity: 1; transform: none; }
+    }
+}
+
 // `prefers-reduced-motion: reduce` collapses every kinetic animation —
 // belt-and-braces alongside the `--motion-scalar` zero-out.
 @media (prefers-reduced-motion: reduce) {

@@ -1973,6 +1973,99 @@
         .hero__headline { animation: none; }
     }
 
+    /* ===================================================================
+       Theme motion signature — COMMERCE = QUIET RISE.
+       Restrained scroll-in everywhere; the catalogue is the focus, not
+       the entrance animation.
+       =================================================================== */
+    @supports (animation-timeline: view()) {
+        .reveal-on-scroll {
+            opacity: 1;
+            transform: none;
+            transition: none;
+            animation: kinetic-rise-in linear both;
+            animation-timeline: view();
+            animation-range: entry 0% cover 25%;
+        }
+    }
+    /* Hover signature — accent border, 2px lift, soft shadow nudge.
+       The product-tile cadence applied across every interactive card. */
+    .services-module__row,
+    .pricing-table__plan,
+    .testimonial-wall__card,
+    .blog-feed article {
+        transition:
+            transform calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+            border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+            box-shadow calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &:hover {
+            transform: translateY(-2px);
+            border-color: var(--color-accent);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        }
+    }
+
+    /* ===================================================================
+       Services — VARIANT: PRODUCT-CARD CADENCE.
+       Each row reads as a product tile — uniform 3-up grid with a small
+       icon-eyebrow, bold title, short description, no trailing meta.
+       =================================================================== */
+    .services-module {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 3rem 2rem;
+
+        &__rows {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.25rem;
+        }
+        &__row {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 1.5rem 1.25rem;
+            background: var(--color-surface);
+            border: 1px solid var(--color-rule);
+            border-radius: var(--theme-borderRadius);
+        }
+        &__row-icon {
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 1.5rem;
+            color: var(--color-accent);
+        }
+        &__row-num {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+        }
+        &__row-title {
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 1.1875rem;
+            letter-spacing: -0.015em;
+            line-height: 1.2;
+            margin: 0;
+        }
+        &__row-desc {
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            line-height: 1.5;
+            color: var(--ink-2);
+            margin: 0;
+        }
+        &__row-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            margin-top: 0.25rem;
+        }
+    }
+
     /* invisible primitives — no overrides */
     .schema-org-injector { /* noop */ }
     .cookie-consent-banner { /* forward-stub — no overrides */ }

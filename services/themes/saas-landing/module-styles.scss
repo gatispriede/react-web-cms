@@ -1260,6 +1260,162 @@
         .hero__headline { animation: none; }
     }
 
+    /* ===================================================================
+       Theme motion signature — SAAS-LANDING = ZOOM-POP.
+       Cards aperture-in on enter, soft shadow pulse on hover. The
+       product-tour cadence applied across every elevated surface.
+       =================================================================== */
+    @supports (animation-timeline: view()) {
+        .reveal-on-scroll {
+            opacity: 1;
+            transform: none;
+            transition: none;
+            animation: kinetic-zoom-in linear both;
+            animation-timeline: view();
+            animation-range: entry 0% cover 30%;
+        }
+    }
+    /* Hover signature — elevation + shadow + accent border. The
+       floating-card language across services / pricing / testimonials. */
+    .services-module__row,
+    .feature-grid__card,
+    .pricing-table__plan,
+    .testimonial-wall__card {
+        transition:
+            transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-emphasized),
+            box-shadow calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-emphasized),
+            border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06), 0 16px 40px rgba(0,0,0,0.08);
+            border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-rule));
+        }
+    }
+
+    /* ===================================================================
+       Services — VARIANT: ELEVATED FEATURE TILES.
+       Each row is an elevated card with soft gradient eyebrow + accent
+       border-left strip. Product-tour-grid cadence.
+       =================================================================== */
+    .services-module {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 4rem 2rem;
+
+        &__rows {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        &__row {
+            display: flex;
+            flex-direction: column;
+            gap: 0.625rem;
+            padding: 1.75rem 1.75rem 1.75rem 2rem;
+            background: var(--color-surface);
+            border: 1px solid var(--color-rule);
+            border-left: 4px solid var(--color-accent);
+            border-radius: calc(var(--theme-borderRadius) * 1.25);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        }
+        &__row-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface));
+            color: var(--color-accent);
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+        &__row-num {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--color-accent);
+        }
+        &__row-title {
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 1.1875rem;
+            letter-spacing: -0.015em;
+            line-height: 1.25;
+            margin: 0;
+        }
+        &__row-desc {
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            line-height: 1.55;
+            color: var(--ink-2);
+            margin: 0;
+        }
+    }
+
+    /* ===================================================================
+       FeatureGrid — VARIANT: ELEVATED CHECKBOX-LIST.
+       Each feature is a floating card with a green check-eyebrow.
+       =================================================================== */
+    .feature-grid {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 3rem 2rem;
+        list-style: none;
+        display: grid;
+        gap: 1.25rem;
+
+        &--cols-2 { grid-template-columns: repeat(2, 1fr); }
+        &--cols-3 { grid-template-columns: repeat(3, 1fr); }
+
+        @media (max-width: 720px) {
+            grid-template-columns: 1fr !important;
+        }
+
+        &__card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-rule);
+            border-radius: calc(var(--theme-borderRadius) * 1.25);
+            padding: 1.5rem 1.5rem 1.5rem 3rem;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+
+            &::before {
+                content: '✓';
+                position: absolute;
+                top: 1.5rem;
+                left: 1rem;
+                width: 1.5rem;
+                height: 1.5rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: color-mix(in srgb, var(--color-accent) 18%, var(--color-surface));
+                color: var(--color-accent);
+                border-radius: 50%;
+                font-size: 0.875rem;
+                font-weight: 700;
+            }
+        }
+        &__icon { display: none; }
+        &__title {
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 1.0625rem;
+            line-height: 1.25;
+            margin: 0 0 0.375rem;
+        }
+        &__desc {
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            line-height: 1.5;
+            color: var(--ink-2);
+            margin: 0;
+        }
+    }
+
     .schema-org-injector { /* noop */ }
     .cookie-consent-banner { /* forward-stub */ }
 }

@@ -1692,6 +1692,165 @@
         .hero__headline { animation: none; }
     }
 
+    /* ===================================================================
+       Theme motion signature — AGENCY = HORIZONTAL CINEMATIC.
+       Content lateral-slides in from the inline-start edge. Deep ease,
+       no bounce. Pairs with the headline horizontal-slide signature.
+       =================================================================== */
+    @supports (animation-timeline: view()) {
+        .reveal-on-scroll {
+            opacity: 1;
+            transform: none;
+            transition: none;
+            animation: kinetic-slide-left-in linear both;
+            animation-timeline: view();
+            animation-range: entry 0% cover 30%;
+        }
+    }
+    /* Hover signature — sharp 1px slab shift, no shadow halo. Title
+       turns accent. Restraint is the look. */
+    .services-module__row,
+    .feature-grid__card,
+    .pricing-table__plan,
+    .project-grid__item,
+    .testimonial-wall__card {
+        transition:
+            transform calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-emphasized),
+            color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &:hover {
+            transform: translate3d(-2px, -2px, 0);
+        }
+    }
+
+    /* ===================================================================
+       Services — VARIANT: NUMBERED CASE-STUDY SLABS.
+       Oversized display titles dominate; row number is mono micro-cap;
+       full-width row separator is the bottom rule of each row. Cinematic
+       agency cadence.
+       =================================================================== */
+    .services-module {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 5rem 2rem;
+
+        &__rows {
+            display: flex;
+            flex-direction: column;
+        }
+        &__row {
+            display: grid;
+            grid-template-columns: 6rem 1fr;
+            column-gap: 3rem;
+            row-gap: 1rem;
+            padding: 3.5rem 0;
+            border-bottom: 1px solid var(--color-rule);
+            background: transparent;
+            align-items: start;
+        }
+        &__row-icon {
+            grid-row: 1 / span 2;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--color-accent);
+        }
+        &__row-num {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+            padding-top: 0.5rem;
+        }
+        &__row-title {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: clamp(2rem, 4.5vw, 3.5rem);
+            line-height: 0.95;
+            letter-spacing: -0.04em;
+            margin: 0;
+        }
+        &__row-desc {
+            font-family: var(--font-body);
+            font-size: 1.0625rem;
+            line-height: 1.55;
+            color: var(--ink-2);
+            max-width: 64ch;
+        }
+        &__row-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.375rem;
+            margin-top: 0.5rem;
+
+            > * {
+                font-family: var(--font-mono);
+                font-size: 0.6875rem;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                padding: 0.25rem 0.625rem;
+                border: 1px solid var(--color-rule);
+                color: var(--ink-2);
+            }
+        }
+    }
+
+    /* ===================================================================
+       FeatureGrid — VARIANT: ASCII GRID.
+       Hairline-divided cells, mono labels, sharp 0-radius corners. The
+       blueprint feel.
+       =================================================================== */
+    .feature-grid {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 4rem 2rem;
+        list-style: none;
+        display: grid;
+        gap: 0;
+        border-top: 1px solid var(--color-ink);
+        border-left: 1px solid var(--color-ink);
+
+        &--cols-2 { grid-template-columns: repeat(2, 1fr); }
+        &--cols-3 { grid-template-columns: repeat(3, 1fr); }
+
+        @media (max-width: 720px) {
+            grid-template-columns: 1fr !important;
+        }
+
+        &__card {
+            padding: 2rem 1.5rem;
+            background: transparent;
+            border-right: 1px solid var(--color-ink);
+            border-bottom: 1px solid var(--color-ink);
+            border-radius: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.625rem;
+        }
+        &__icon {
+            font-family: var(--font-mono);
+            font-size: 1.25rem;
+            color: var(--color-accent);
+        }
+        &__title {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.375rem;
+            letter-spacing: -0.02em;
+            line-height: 1.15;
+            margin: 0;
+        }
+        &__desc {
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            line-height: 1.55;
+            color: var(--ink-2);
+            margin: 0;
+        }
+    }
+
     /* invisible primitives — no overrides */
     .schema-org-injector { /* noop */ }
     .cookie-consent-banner { /* forward-stub */ }

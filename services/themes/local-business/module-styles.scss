@@ -1943,6 +1943,101 @@
         .hero__headline { animation: none; }
     }
 
+    /* ===================================================================
+       Theme motion signature — LOCAL-BUSINESS = POSTER TILT.
+       Cards arrive with a small tilt-then-settle, like a poster being
+       tacked up. Pairs with poster-stack hover offset on ProjectGrid.
+       =================================================================== */
+    @supports (animation-timeline: view()) {
+        .reveal-on-scroll {
+            opacity: 1;
+            transform: none;
+            transition: none;
+            animation: kinetic-tilt-in linear both;
+            animation-timeline: view();
+            animation-range: entry 0% cover 25%;
+        }
+    }
+    /* Hover signature — slab translate + warm shadow drop. Civic poster
+       feel — confident, not floaty. */
+    .services-module__row,
+    .feature-grid__card,
+    .blog-feed article,
+    .testimonial-wall__card {
+        transition:
+            transform calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-emphasized),
+            box-shadow calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-emphasized);
+
+        &:hover {
+            transform: translate(-3px, -3px);
+            box-shadow: 6px 6px 0 var(--color-warm);
+        }
+    }
+
+    /* (Services keeps the existing local-business per-row card style
+       defined upstream; the hover signature above layers on top.) */
+
+    /* ===================================================================
+       FeatureGrid — VARIANT: POSTER GRID.
+       Slab cards, thick ink border, warm number badge. The civic poster
+       wall — every cell reads as a separate piece of work.
+       =================================================================== */
+    .feature-grid {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 3rem 1.5rem;
+        list-style: none;
+        display: grid;
+        gap: 1rem;
+
+        &--cols-2 { grid-template-columns: repeat(2, 1fr); }
+        &--cols-3 { grid-template-columns: repeat(3, 1fr); }
+
+        @media (max-width: 720px) {
+            grid-template-columns: 1fr !important;
+        }
+
+        &__card {
+            background: var(--color-surface);
+            border: 2px solid var(--color-ink);
+            border-radius: 0;
+            padding: 1.5rem 1.5rem 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            position: relative;
+        }
+        &__icon {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--color-warm);
+            color: var(--color-ink);
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 0.875rem;
+            padding: 0.25rem 0.625rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+        &__title {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.1875rem;
+            letter-spacing: -0.005em;
+            line-height: 1.2;
+            text-transform: uppercase;
+            margin: 0;
+        }
+        &__desc {
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            line-height: 1.55;
+            color: var(--ink-2);
+            margin: 0;
+        }
+    }
+
     .schema-org-injector { /* noop */ }
     .cookie-consent-banner { /* forward-stub */ }
 }

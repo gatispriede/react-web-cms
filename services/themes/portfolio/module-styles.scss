@@ -1803,6 +1803,139 @@
         .hero__headline { animation: none; }
     }
 
+    /* ===================================================================
+       Theme motion signature — PORTFOLIO = SOFT DRIFT.
+       Content parallax-drifts through its scroll range — sketchbook
+       inertia. Pairs with the hero drift signature.
+       =================================================================== */
+    @supports (animation-timeline: view()) {
+        .reveal-on-scroll {
+            opacity: 1;
+            transform: none;
+            transition: none;
+            animation: kinetic-drift-frame linear both;
+            animation-timeline: view();
+            animation-range: cover 0% cover 100%;
+        }
+    }
+    /* Hover signature — soft scale-up, no border tint. Sketchbook
+       cards behave like polaroids — they lift, they don't snap. */
+    .services-module__row,
+    .feature-grid__card,
+    .project-tile,
+    .testimonial-wall__card {
+        transition:
+            transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-emphasized);
+
+        &:hover {
+            transform: scale(1.012);
+        }
+    }
+
+    /* ===================================================================
+       Services — VARIANT: THUMBNAIL-CROPPED TILES.
+       Soft-card tile grid with cropped numbers as eyebrow + serif title.
+       The sketchbook contact-sheet feel.
+       =================================================================== */
+    .services-module {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 4rem 2rem;
+
+        &__rows {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.5rem;
+        }
+        &__row {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 1.5rem;
+            background: var(--color-surface);
+            border-radius: calc(var(--theme-borderRadius) * 0.75);
+            border: 0;
+            background: color-mix(in srgb, var(--color-accent) 4%, var(--color-surface));
+        }
+        &__row-icon {
+            font-family: var(--font-display);
+            font-weight: 500;
+            font-size: 1.25rem;
+            color: var(--color-accent);
+        }
+        &__row-num {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.04em;
+            text-transform: lowercase;
+            color: var(--ink-2);
+        }
+        &__row-title {
+            font-family: var(--font-display);
+            font-weight: 500;
+            font-size: 1.1875rem;
+            letter-spacing: -0.01em;
+            line-height: 1.25;
+            margin: 0;
+        }
+        &__row-desc {
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            line-height: 1.55;
+            color: var(--ink-2);
+            margin: 0;
+        }
+    }
+
+    /* ===================================================================
+       FeatureGrid — VARIANT: STICKER SHEET.
+       Soft-tinted cards with rounded corners + accent dot label.
+       =================================================================== */
+    .feature-grid {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 3rem 2rem;
+        list-style: none;
+        display: grid;
+        gap: 1.25rem;
+
+        &--cols-2 { grid-template-columns: repeat(2, 1fr); }
+        &--cols-3 { grid-template-columns: repeat(3, 1fr); }
+
+        @media (max-width: 720px) {
+            grid-template-columns: 1fr !important;
+        }
+
+        &__card {
+            background: color-mix(in srgb, var(--color-accent) 6%, var(--color-surface));
+            border: 0;
+            border-radius: calc(var(--theme-borderRadius) * 1.25);
+            padding: 1.5rem;
+        }
+        &__icon {
+            display: inline-block;
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            color: var(--color-accent);
+            margin-bottom: 0.5rem;
+        }
+        &__title {
+            font-family: var(--font-display);
+            font-weight: 500;
+            font-size: 1.125rem;
+            letter-spacing: -0.01em;
+            line-height: 1.25;
+            margin: 0 0 0.375rem;
+        }
+        &__desc {
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            line-height: 1.55;
+            color: var(--ink-2);
+            margin: 0;
+        }
+    }
+
     /* invisible primitives — no overrides */
     .schema-org-injector { /* noop */ }
     .cookie-consent-banner { /* forward-stub */ }
