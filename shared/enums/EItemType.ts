@@ -111,6 +111,16 @@ export enum EItemType {
      *  presentational module. Ships 2026-05-17 to module-compose the
      *  last hand-coded customer page. */
     AccountDashboardGrid = "ACCOUNT_DASHBOARD_GRID",
+    /** `/account/profile` — locked profile + password form pair.
+     *  Smart wrapper fetches `me { name email phone }` and wires the
+     *  `updateMyProfile` + `changeMyPassword` mutations. Ships
+     *  2026-05-17 alongside AccountDashboardGrid. */
+    AccountProfileForm = "ACCOUNT_PROFILE_FORM",
+    /** `/account/verify` — magic-link confirmation. Smart wrapper reads
+     *  `?token=` + `?callbackUrl=` from the URL search params and
+     *  drives NextAuth `signIn('customer-magic', …)` on explicit click.
+     *  Ships 2026-05-17 alongside AccountDashboardGrid. */
+    CustomerVerifyConfirm = "CUSTOMER_VERIFY_CONFIRM",
     // all-pages-module-composed — Auth batch. Smart-wrapper modules for
     // the `/account/signin` `/account/signup` `/account/magic-link`
     // routes — bind the pure SigninForm / SignupForm /

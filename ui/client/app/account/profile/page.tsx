@@ -1,14 +1,16 @@
 /**
- * `/account/profile` — App Router migration, Batch 5.
+ * `/account/profile` — module-compose pass 2026-05-17.
  *
- * Server-Component port of the former `pages/account/profile.tsx`.
- * Customer-session guard then renders the `'use client'` profile +
- * password-change forms. All form I/O stays client-side via `gql()`.
- * Pages-Router file deleted in the same commit.
+ * Loads the `account-profile` system page snapshot (mounts the locked
+ * `AccountProfileForm` smart wrapper) and hands it to the client view.
+ * Replaces the previous bespoke profile + password JSX with a single
+ * SystemPageDispatch call so operators can compose marketing modules
+ * around the locked block.
  */
 import React from 'react';
 import type {Metadata} from 'next';
 import {requireCustomerSessionAppRouter} from '@client/lib/account/session';
+import {loadSystemPageSnapshot} from '@client/lib/systemPage/loadSystemPage';
 import AccountProfileView from './AccountProfileView';
 
 export const dynamic = 'force-dynamic';
@@ -17,5 +19,6 @@ export const metadata: Metadata = {title: 'Profile'};
 
 export default async function AccountProfilePage(): Promise<React.ReactElement> {
     await requireCustomerSessionAppRouter('/account/profile');
-    return <AccountProfileView/>;
+    const systemPage = loadSystemPageSnapshot('account-profile');
+    return <AccountProfileView systemPage={systemPage}/>;
 }

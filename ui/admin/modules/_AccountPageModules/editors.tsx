@@ -112,6 +112,25 @@ export const AccountDashboardGridEditor: React.FC<IInputContent> = () => {
     );
 };
 
+interface AccountProfileFormContent {
+    headline?: string;
+    profileCardTitle?: string;
+    passwordCardTitle?: string;
+    successMessage?: string;
+}
+
+export const AccountProfileFormEditor: React.FC<IInputContent> = (props) => {
+    const [d, patch] = useTypedContent<AccountProfileFormContent>(props);
+    return (
+        <div className="account-editor account-editor--profile-form" data-testid="editor-account-profile-form">
+            <Field label="Section heading (optional)" testid="profile-form-headline" value={d.headline ?? ''} onChange={v => patch({headline: v})}/>
+            <Field label="Personal-details card title" testid="profile-form-card-title" value={d.profileCardTitle ?? ''} onChange={v => patch({profileCardTitle: v})} placeholder="Personal details"/>
+            <Field label="Password card title" testid="profile-form-pw-title" value={d.passwordCardTitle ?? ''} onChange={v => patch({passwordCardTitle: v})} placeholder="Change password"/>
+            <Field label="Save-success message (optional)" testid="profile-form-success" value={d.successMessage ?? ''} onChange={v => patch({successMessage: v})} placeholder="Profile updated"/>
+        </div>
+    );
+};
+
 // ── Auth batch ───────────────────────────────────────────────────────
 
 interface SigninFormContent {
@@ -167,6 +186,27 @@ export const MagicLinkRequestFormEditor: React.FC<IInputContent> = (props) => {
             <Field label="Submit button label" testid="magic-link-submit" value={d.submitLabel ?? ''} onChange={v => patch({submitLabel: v})} placeholder="Email me a link"/>
             <Field label="Success headline" testid="magic-link-success-headline" value={d.successHeadline ?? ''} onChange={v => patch({successHeadline: v})} placeholder="Check your inbox"/>
             <Field label="Success body" testid="magic-link-success-body" value={d.successBody ?? ''} onChange={v => patch({successBody: v})}/>
+        </div>
+    );
+};
+
+interface CustomerVerifyContent {
+    headline?: string;
+    body?: string;
+    submitLabel?: string;
+    missingTokenTitle?: string;
+    defaultCallbackUrl?: string;
+}
+
+export const CustomerVerifyConfirmEditor: React.FC<IInputContent> = (props) => {
+    const [d, patch] = useTypedContent<CustomerVerifyContent>(props);
+    return (
+        <div className="account-editor account-editor--customer-verify" data-testid="editor-customer-verify">
+            <Field label="Headline" testid="customer-verify-headline" value={d.headline ?? ''} onChange={v => patch({headline: v})} placeholder="Confirm sign-in"/>
+            <Field label="Body copy" testid="customer-verify-body" value={d.body ?? ''} onChange={v => patch({body: v})}/>
+            <Field label="Submit button label" testid="customer-verify-submit" value={d.submitLabel ?? ''} onChange={v => patch({submitLabel: v})} placeholder="Sign in to continue"/>
+            <Field label="Missing-token title" testid="customer-verify-missing" value={d.missingTokenTitle ?? ''} onChange={v => patch({missingTokenTitle: v})} placeholder="Missing token"/>
+            <Field label="Default callback URL (optional)" testid="customer-verify-callback" value={d.defaultCallbackUrl ?? ''} onChange={v => patch({defaultCallbackUrl: v})} placeholder="/account"/>
         </div>
     );
 };

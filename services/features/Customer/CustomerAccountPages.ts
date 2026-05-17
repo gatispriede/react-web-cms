@@ -50,6 +50,28 @@ systemPageRegistry.register({
 });
 
 systemPageRegistry.register({
+    systemKey: 'account-profile',
+    slug: '/account/profile',
+    titleI18nKey: 'account.profile.title',
+    accessGate: 'customer-session',
+    seo: {indexable: false},
+    defaultSections: () => [
+        lockedSection(EItemType.AccountProfileForm, 'section.locked.account-profile'),
+    ],
+});
+
+systemPageRegistry.register({
+    systemKey: 'account-verify',
+    slug: '/account/verify',
+    titleI18nKey: 'account.verify.title',
+    accessGate: 'open',
+    seo: {indexable: false},
+    defaultSections: () => [
+        lockedSection(EItemType.CustomerVerifyConfirm, 'section.locked.account-verify'),
+    ],
+});
+
+systemPageRegistry.register({
     systemKey: 'account-orders',
     slug: '/account/orders',
     titleI18nKey: 'account.orders.title',

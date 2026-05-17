@@ -15,8 +15,10 @@
  * in the page `getServerSideProps`.
  */
 import React, {useEffect, useMemo, useState} from 'react';
+import Link from 'next/link';
 import {useSearchParams} from 'next/navigation';
-import {signIn} from 'next-auth/react';
+import {Alert, Button, Spin} from 'antd';
+import {signIn, getSession} from 'next-auth/react';
 import type {IItem} from '@interfaces/IItem';
 import {gql, parseEnvelope} from '@client/lib/account/gqlClient';
 import {attachMarketingSessionToUser} from '@client/lib/marketingCapture';
@@ -299,6 +301,101 @@ export const MagicLinkRequestFormHost: React.FC<{item: IItem}> = ({item}) => {
                 successHeadline={c.successHeadline}
                 successBody={c.successBody}
             />
+        </div>
+    );
+};
+
+// ── Customer verify (magic-link confirmation) ────────────────────────
+//
+// Module-composes `/account/verify` — the magic-link click-to-confirm
+// page. Reads `?token=` and `?callbackUrl=` from useSearchParams() and
+// drives NextAuth `signIn('customer-magic', …)` only on explicit button
+// click. The defeat-pre-fetch contract (token consumed only on user
+// POST, never on GET/HEAD email pre-fetch) is preserved because the
+// signIn call lives inside an onClick handler, not in an effect.
+
+interface CustomerVerifyContent {
+    /** Card title (default: 'Confirm sign-in'). */
+    headline?: string;
+    /** Body line above the confirm button (default copy below). */
+    body?: string;
+    /** Confirm button label (default: 'Sign in to continue'). */
+    submitLabel?: string;
+    /** Error copy when no `?token=` is present in the URL. */
+    missingTokenTitle?: string;
+    /** Default callback URL when `?callbackUrl=` is absent. */
+    defaultCallbackUrl?: string;
+}
+
+export const CustomerVerifyConfirmHost: React.FC<{item: IItem}> = ({item}) => {
+    const c = parse<CustomerVerifyContent>(item.content);
+    const sp = useSearchParams();
+    const token = sp?.get('token') ?? null;
+    const callbackUrl = sp?.get('callbackUrl') ?? (c.defaultCallbackUrl ?? '/account');
+    const [submitting, setSubmitting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const onConfirm = async (): Promise<void> => {
+        if (!token) return;
+        setSubmitting(true);
+        setError(null);
+        try {
+            const res = await signIn('customer-magic', {redirect: false, token, callbackUrl});
+            if (res?.ok) {
+                try {
+                    const session = await getSession();
+                    const userId = (session?.user as {id?: string} | undefined)?.id;
+                    if (userId) await attachMarketingSessionToUser(userId);
+                } catch { /* attribution is best-effort */ }
+            }
+            if (res?.ok && res.url) {
+                window.location.href = res.url;
+            } else if (res?.ok) {
+                window.location.href = callbackUrl;
+            } else {
+                setError('This link has expired or already been used. Request a new one.');
+            }
+        } catch (e: any) {
+            setError(e?.message || 'Could not complete sign-in');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="customer-verify-host" data-testid="customer-verify-host">
+            <h2 style={{marginTop: 0, marginBottom: 16}}>{c.headline ?? 'Confirm sign-in'}</h2>
+            {!token ? (
+                <Alert
+                    type="error"
+                    showIcon
+                    data-testid="customer-verify-no-token"
+                    message={c.missingTokenTitle ?? 'Missing token'}
+                    description={(
+                        <span>
+                            Open the link from your email to continue, or{' '}
+                            <Link href="/account/magic-link">request a new one</Link>.
+                        </span>
+                    )}
+                />
+            ) : (
+                <>
+                    {error ? <Alert type="error" showIcon style={{marginBottom: 12}} message={error} data-testid="customer-verify-error"/> : null}
+                    <p style={{marginBottom: 16}}>
+                        {c.body ?? 'Click the button below to finish signing in. This link can only be used once.'}
+                    </p>
+                    <Button type="primary" block onClick={onConfirm} loading={submitting} data-testid="customer-verify-confirm-btn">
+                        {submitting ? <Spin size="small"/> : (c.submitLabel ?? 'Sign in to continue')}
+                    </Button>
+                    {error ? (
+                        <div style={{marginTop: 16, textAlign: 'center'}}>
+                            <Link href={`/account/magic-link?callbackUrl=${encodeURIComponent(callbackUrl)}`} data-testid="customer-verify-resend-link">
+                                Send a new link
+                            </Link>
+                        </div>
+                    ) : null}
+                </>
+            )}
         </div>
     );
 };

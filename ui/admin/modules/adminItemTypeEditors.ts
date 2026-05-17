@@ -111,8 +111,10 @@ import {
     AddressListEditor,
     NotificationInboxEditor,
     AccountDashboardGridEditor,
+    AccountProfileFormEditor,
     SigninFormEditor,
     SignupFormEditor,
+    CustomerVerifyConfirmEditor,
     MagicLinkRequestFormEditor,
 } from '@admin/modules/_AccountPageModules/editors';
 // all-pages-module-composed — Blog batch editor.
@@ -299,10 +301,12 @@ export const ADMIN_ITEM_TYPE_EDITORS: readonly AdminItemTypeEntry[] = [
     {key: EItemType.AddressList,              Editor: AddressListEditor,              styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Address book',           descriptionKey: 'Locked — saved shipping addresses with add / edit / delete.',                  category: 'content'},
     {key: EItemType.NotificationInbox,        Editor: NotificationInboxEditor,        styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Notification inbox',      descriptionKey: 'Locked — in-app notifications with mark-read + dismiss.',                      category: 'content'},
     {key: EItemType.AccountDashboardGrid,     Editor: AccountDashboardGridEditor,     styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Account dashboard',      descriptionKey: 'Locked — /account home entry-points grid (orders / addresses / settings).',   category: 'content'},
+    {key: EItemType.AccountProfileForm,       Editor: AccountProfileFormEditor,       styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Account profile + password', descriptionKey: 'Locked — personal-details + password change form pair for /account/profile.', category: 'content'},
     // all-pages-module-composed — Auth batch (smart wrappers; copy-only editors).
     {key: EItemType.SigninForm,               Editor: SigninFormEditor,               styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Sign-in form',           descriptionKey: 'Locked — customer sign-in: password / magic-link / OAuth per site flags.',    category: 'cta'},
     {key: EItemType.SignupForm,               Editor: SignupFormEditor,               styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Sign-up form',           descriptionKey: 'Locked — customer sign-up with optional B2B (company + VAT) capture.',         category: 'cta'},
     {key: EItemType.MagicLinkRequestForm,     Editor: MagicLinkRequestFormEditor,     styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Magic-link request',     descriptionKey: 'Locked — passwordless sign-in: emails a one-click link.',                     category: 'cta'},
+    {key: EItemType.CustomerVerifyConfirm,    Editor: CustomerVerifyConfirmEditor,    styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Magic-link confirm',     descriptionKey: 'Locked — magic-link click-to-confirm for /account/verify.',                   category: 'cta'},
     // all-pages-module-composed — Blog batch.
     {key: EItemType.BlogPost,                 Editor: BlogPostEditor,                 styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Blog post',              descriptionKey: 'Locked — single post body: title, cover, sanitised HTML, author, date, tags.', category: 'content'},
     // all-pages-module-composed — Marketing batch.

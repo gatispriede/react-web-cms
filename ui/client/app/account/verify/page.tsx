@@ -1,32 +1,23 @@
 /**
- * `/account/verify` — App Router migration, Batch 6 (W6c).
+ * `/account/verify` — module-compose pass 2026-05-17.
  *
- * Server-Component port of `pages/account/verify.tsx`. Reads the
- * `?token=` and `?callbackUrl=` query params from `searchParams` (the
- * App-Router `Promise` form) and hands them to the `'use client'` view
- * that drives NextAuth's `signIn('customer-magic', …)` on explicit user
- * click. The defeat-pre-fetch contract (token consumed only on POST,
- * never on GET/HEAD) is preserved — the server-component does NOT call
- * `signIn` itself.
- *
- * Pages-Router file deleted in the same commit.
+ * Previously read `?token=` + `?callbackUrl=` server-side and passed
+ * them as props to a bespoke VerifyView. The defeat-pre-fetch contract
+ * (token consumed only on user click, never on email-client GET/HEAD
+ * pre-fetch) is preserved: the smart wrapper reads search params via
+ * `useSearchParams()` and only calls `signIn('customer-magic', …)` from
+ * an explicit `onClick`. No server-side token consumption — the page
+ * just loads the system-page snapshot.
  */
 import React from 'react';
 import type {Metadata} from 'next';
+import {loadSystemPageSnapshot} from '@client/lib/systemPage/loadSystemPage';
 import VerifyView from './VerifyView';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {title: 'Confirm sign-in', robots: {index: false, follow: false}};
 
-export default async function VerifyPage({
-    searchParams,
-}: {
-    searchParams: Promise<Record<string, string | string[] | undefined>>;
-}): Promise<React.ReactElement> {
-    const sp = await searchParams;
-    const tokenRaw = Array.isArray(sp.token) ? sp.token[0] : sp.token;
-    const cbRaw = Array.isArray(sp.callbackUrl) ? sp.callbackUrl[0] : sp.callbackUrl;
-    const token = typeof tokenRaw === 'string' ? tokenRaw : null;
-    const callbackUrl = typeof cbRaw === 'string' ? cbRaw : '/account';
-    return <VerifyView token={token} callbackUrl={callbackUrl}/>;
+export default async function VerifyPage(): Promise<React.ReactElement> {
+    const systemPage = loadSystemPageSnapshot('account-verify');
+    return <VerifyView systemPage={systemPage}/>;
 }

@@ -82,12 +82,14 @@ import {
     AddressListHost,
     NotificationInboxHost,
     AccountDashboardGridHost,
+    AccountProfileFormHost,
 } from '@client/modules/_AccountPageModules/wrappers';
 // all-pages-module-composed — Auth batch smart wrappers.
 import {
     SigninFormHost,
     SignupFormHost,
     MagicLinkRequestFormHost,
+    CustomerVerifyConfirmHost,
 } from '@client/modules/_AccountPageModules/authWrappers';
 // all-pages-module-composed — Blog batch smart wrapper.
 import {BlogPostHost} from '@client/modules/_BlogPageModules/wrappers';
@@ -167,10 +169,12 @@ export const CLIENT_ITEM_TYPES: readonly ClientItemType[] = [
     {key: EItemType.AddressList, Display: AddressListHost as never},
     {key: EItemType.NotificationInbox, Display: NotificationInboxHost as never},
     {key: EItemType.AccountDashboardGrid, Display: AccountDashboardGridHost as never},
+    {key: EItemType.AccountProfileForm, Display: AccountProfileFormHost as never},
     // all-pages-module-composed — Auth batch.
     {key: EItemType.SigninForm, Display: SigninFormHost as never},
     {key: EItemType.SignupForm, Display: SignupFormHost as never},
     {key: EItemType.MagicLinkRequestForm, Display: MagicLinkRequestFormHost as never},
+    {key: EItemType.CustomerVerifyConfirm, Display: CustomerVerifyConfirmHost as never},
     // all-pages-module-composed — Blog batch.
     {key: EItemType.BlogPost, Display: BlogPostHost as never},
     // all-pages-module-composed — Marketing batch.

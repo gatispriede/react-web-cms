@@ -14,7 +14,7 @@
  */
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {useParams} from 'next/navigation';
-import {Alert, Checkbox, Form, Input, Modal} from 'antd';
+import {Alert, Button, Card, Checkbox, Form, Input, Modal, Spin} from 'antd';
 import type {IItem} from '@interfaces/IItem';
 import {gql, parseEnvelope} from '@client/lib/account/gqlClient';
 import {formatMoney, myOrder, myOrders} from '@client/lib/checkout/api';
@@ -508,6 +508,115 @@ export const AccountDashboardGridHost: React.FC<{item: IItem}> = ({item}) => {
     return (
         <div className="account-dashboard-host" style={wrapStyle} data-testid="account-dashboard-host">
             <AccountDashboardGrid testId="account-dashboard" cards={cards}/>
+        </div>
+    );
+};
+
+// ── Account profile + password ───────────────────────────────────────
+//
+// Module-composes `/account/profile`. Two stacked AntD Cards — personal
+// details (name / email / phone) and password change. Identical
+// behaviour to the bespoke page it replaces; just authored as a single
+// locked smart-wrapper so /account/profile can render through
+// SystemPageDispatch.
+
+interface AccountProfileFormContent {
+    /** Optional section heading rendered above the personal-details card. */
+    headline?: string;
+    /** Override the personal-details card title (default: 'Personal details'). */
+    profileCardTitle?: string;
+    /** Override the password card title (default: 'Change password'). */
+    passwordCardTitle?: string;
+    /** Optional success message after a profile save. */
+    successMessage?: string;
+}
+
+export const AccountProfileFormHost: React.FC<{item: IItem}> = ({item}) => {
+    const c = parse<AccountProfileFormContent>(item.content);
+    const [loading, setLoading] = useState(true);
+    const [profileForm] = Form.useForm();
+    const [pwForm] = Form.useForm();
+    const [profileMsg, setProfileMsg] = useState<{type: 'success' | 'error'; text: string} | null>(null);
+    const [pwMsg, setPwMsg] = useState<{type: 'success' | 'error'; text: string} | null>(null);
+    const [savingProfile, setSavingProfile] = useState(false);
+    const [savingPw, setSavingPw] = useState(false);
+
+    useEffect(() => {
+        let cancelled = false;
+        gql('query Me { mongo { me { name email phone } } }')
+            .then(d => {
+                if (cancelled) return;
+                const me = d?.mongo?.me;
+                if (me) profileForm.setFieldsValue(me);
+            })
+            .finally(() => { if (!cancelled) setLoading(false); });
+        return () => { cancelled = true; };
+    }, [profileForm]);
+
+    const saveProfile = useCallback(async (values: {name?: string; email?: string; phone?: string}) => {
+        setSavingProfile(true);
+        setProfileMsg(null);
+        try {
+            const data = await gql(
+                'mutation Update($customer: InUser!) { mongo { updateMyProfile(customer: $customer) } }',
+                {customer: values},
+            );
+            const env = parseEnvelope(data?.mongo?.updateMyProfile);
+            if (env.error) setProfileMsg({type: 'error', text: env.error});
+            else setProfileMsg({type: 'success', text: c.successMessage ?? 'Profile updated'});
+        } catch (e: any) {
+            setProfileMsg({type: 'error', text: e?.message || 'Update failed'});
+        } finally {
+            setSavingProfile(false);
+        }
+    }, [c.successMessage]);
+
+    const changePassword = useCallback(async (values: {oldPassword: string; newPassword: string}) => {
+        setSavingPw(true);
+        setPwMsg(null);
+        try {
+            const data = await gql(
+                'mutation Pw($oldPassword: String!, $newPassword: String!) { mongo { changeMyPassword(oldPassword: $oldPassword, newPassword: $newPassword) } }',
+                values,
+            );
+            const env = parseEnvelope(data?.mongo?.changeMyPassword);
+            if (env.error) setPwMsg({type: 'error', text: env.error});
+            else { setPwMsg({type: 'success', text: 'Password changed'}); pwForm.resetFields(); }
+        } catch (e: any) {
+            setPwMsg({type: 'error', text: e?.message || 'Change failed'});
+        } finally {
+            setSavingPw(false);
+        }
+    }, [pwForm]);
+
+    return (
+        <div className="account-profile-host" style={wrapStyle} data-testid="account-profile-host">
+            {c.headline ? <h2 className="account-profile-host__title">{c.headline}</h2> : null}
+            {loading ? <Spin data-testid="account-profile-loading"/> : (
+                <>
+                    <Card title={c.profileCardTitle ?? 'Personal details'} style={{marginBottom: 16}} data-testid="account-profile-card">
+                        {profileMsg ? <Alert style={{marginBottom: 12}} type={profileMsg.type} showIcon message={profileMsg.text} data-testid={`account-profile-${profileMsg.type}`}/> : null}
+                        <Form form={profileForm} layout="vertical" onFinish={saveProfile}>
+                            <Form.Item label="Name" name="name"><Input data-testid="account-profile-name"/></Form.Item>
+                            <Form.Item label="Email" name="email" rules={[{type: 'email'}]}><Input data-testid="account-profile-email"/></Form.Item>
+                            <Form.Item label="Phone" name="phone"><Input data-testid="account-profile-phone"/></Form.Item>
+                            <Button type="primary" htmlType="submit" loading={savingProfile} data-testid="account-profile-save">Save</Button>
+                        </Form>
+                    </Card>
+                    <Card title={c.passwordCardTitle ?? 'Change password'} data-testid="account-password-card">
+                        {pwMsg ? <Alert style={{marginBottom: 12}} type={pwMsg.type} showIcon message={pwMsg.text} data-testid={`account-password-${pwMsg.type}`}/> : null}
+                        <Form form={pwForm} layout="vertical" onFinish={changePassword}>
+                            <Form.Item label="Current password" name="oldPassword" rules={[{required: true}]}>
+                                <Input.Password autoComplete="current-password" data-testid="account-password-old"/>
+                            </Form.Item>
+                            <Form.Item label="New password" name="newPassword" rules={[{required: true, min: 8}]}>
+                                <Input.Password autoComplete="new-password" data-testid="account-password-new"/>
+                            </Form.Item>
+                            <Button type="primary" htmlType="submit" loading={savingPw} data-testid="account-password-save">Change password</Button>
+                        </Form>
+                    </Card>
+                </>
+            )}
         </div>
     );
 };
