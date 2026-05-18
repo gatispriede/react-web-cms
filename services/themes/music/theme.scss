@@ -1,0 +1,96 @@
+/* ==========================================================================
+   Music — first-class theme.
+
+   Deep plum surface + neon mint accent (dark default), Anton display +
+   Inter body, expressive-bold motion. Scoped under
+   `[data-theme-name="music"]`. Nocturnal, electric, underground.
+
+   `darkDefault: true` in the manifest — the light branch of light-dark()
+   still has to look intentional (pale lavender surface, hot-pink accent),
+   so the theme reads as deliberately styled in either mode.
+   ========================================================================== */
+
+[data-theme-name="music"] {
+    --color-surface:       light-dark(#F4EFF6, #16101F);
+    --color-ink:           light-dark(#1A1124, #F0EAF6);
+    --color-accent:        light-dark(#FF5C7A, #5CFFC4);
+    --color-accent-ink:    light-dark(#160812, #0A1F18);
+    --color-surface-inset: light-dark(#E7DEF0, #21172E);
+    --color-rule:          light-dark(#C9BBD8, #3A2C4E);
+
+    --background: var(--color-surface);
+    --ink:    var(--color-ink);
+    --ink-2:  color-mix(in srgb, var(--color-ink) 65%, transparent);
+    --accent: var(--color-accent);
+    /* Hover brightens the neon rather than darkens it — keep the glow
+       intact, mix toward white instead of black. */
+    --accent-hover: color-mix(in srgb, var(--color-accent) 85%, #fff);
+
+    --font-display: 'Anton', 'Druk', 'Fraktion Mono', 'Oswald', ui-sans-serif, sans-serif;
+    --font-body:    'Inter', 'Manrope', system-ui, -apple-system, sans-serif;
+    --font-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+    --theme-headingFont: var(--font-display);
+    --theme-bodyFont:    var(--font-body);
+
+    font-size: 16px;
+
+    /* ---- Motion personality (expressive-bold) -------------------------- */
+    --motion-duration-fast:       150ms;
+    --motion-duration-base:       240ms;
+    --motion-duration-slow:       360ms;
+    --motion-duration-deliberate: 600ms;
+    --motion-ease-standard:       cubic-bezier(0.34, 1.56, 0.64, 1);
+    --motion-ease-entrance:       cubic-bezier(0.34, 1.56, 0.64, 1);
+    --motion-ease-exit:           cubic-bezier(0.36, 0, 0.66, -0.56);
+    --motion-ease-emphasized:     cubic-bezier(0.68, -0.55, 0.32, 1.55);
+
+    --motion-distance-sm: 14px;
+    --motion-distance-md: 40px;
+    --motion-distance-lg: 110px;
+
+    --theme-borderRadius: 4px;
+
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+
+    h1, h2, h3,
+    .heading,
+    .heading--display {
+        font-family: var(--font-display);
+        font-weight: 700;
+        letter-spacing: 0.01em;
+        text-transform: uppercase;
+        line-height: 0.92;
+    }
+
+    /* Neon glow on the marquee headline — the signature move. */
+    h1,
+    .heading--display {
+        text-shadow: 0 0 12px var(--color-accent);
+    }
+
+    /* Hover pulse — filter swap rides the motion scalar via transition. */
+    .btn,
+    button,
+    a.cta {
+        transition: filter 220ms var(--motion-ease-standard),
+                    background 220ms var(--motion-ease-standard);
+    }
+
+    .btn:hover,
+    button:hover,
+    a.cta:hover {
+        filter: brightness(1.15);
+    }
+
+    .label--mono,
+    .meta--mono {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--color-accent);
+    }
+}

@@ -1,0 +1,115 @@
+/* ==========================================================================
+   Real Estate — first-class theme.
+
+   Photography-led neutrals: cream surface, charcoal ink, single bronze accent.
+   Forum display (a refined serif) + Manrope body — editorial, calm, considered.
+   Snappy-default motion. Cards lift subtly on hover; bronze underlines on links.
+   Header shrinks on scroll via `[data-scrolled]`.
+
+   Scoped under `[data-theme-name="real-estate"]`.
+   ========================================================================== */
+
+[data-theme-name="real-estate"] {
+    --color-surface:       light-dark(#F6F2EC, #15110D);
+    --color-ink:           light-dark(#1A1A1A, #EFEAE2);
+    --color-accent:        light-dark(#8C5A2B, #C68A4E);
+    --color-accent-ink:    light-dark(#FFFFFF, #15110D);
+    --color-surface-inset: light-dark(#ECE6DC, #1F1A14);
+    --color-rule:          light-dark(#CFC6B7, #3A3128);
+
+    --background: var(--color-surface);
+    --ink:    var(--color-ink);
+    --ink-2:  color-mix(in srgb, var(--color-ink) 65%, transparent);
+    --accent: var(--color-accent);
+    --accent-hover: color-mix(in srgb, var(--color-accent) 85%, #000);
+
+    --font-display: 'Forum', 'Geist', 'Manrope', system-ui, sans-serif;
+    --font-body:    'Manrope', 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono:    'Geist Mono', 'JetBrains Mono', ui-monospace, Menlo, monospace;
+
+    --theme-headingFont: var(--font-display);
+    --theme-bodyFont:    var(--font-body);
+
+    /* snappy-default motion — quick, photographic. */
+    --motion-duration-fast:       150ms;
+    --motion-duration-base:       260ms;
+    --motion-duration-slow:       480ms;
+    --motion-duration-deliberate: 760ms;
+    --motion-ease-standard:       cubic-bezier(0.4, 0, 0.2, 1);
+    --motion-ease-entrance:       cubic-bezier(0, 0, 0.2, 1);
+    --motion-ease-exit:           cubic-bezier(0.4, 0, 1, 1);
+    --motion-ease-emphasized:     cubic-bezier(0.2, 0, 0, 1);
+
+    --motion-distance-sm: 6px;
+    --motion-distance-md: 16px;
+    --motion-distance-lg: 40px;
+
+    --theme-borderRadius: 2px;
+
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.55;
+
+    h1, h2, h3,
+    .heading,
+    .heading--display {
+        font-family: var(--font-display);
+        font-weight: 400;
+        letter-spacing: 0;
+        line-height: 1.1;
+        color: var(--color-ink);
+    }
+
+    /* Bronze accent underlines on every inline link. */
+    a {
+        color: var(--color-ink);
+        text-decoration: underline;
+        text-decoration-color: var(--color-accent);
+        text-decoration-thickness: 1px;
+        text-underline-offset: 3px;
+        transition: text-decoration-thickness var(--motion-duration-fast) var(--motion-ease-standard);
+
+        &:hover {
+            text-decoration-thickness: 2px;
+        }
+    }
+
+    /* Subtle hover-lift on listing & project cards — photo-first feel. */
+    .project-card,
+    .car-listing-card,
+    .listing-card,
+    .property-card {
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
+
+        &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px color-mix(in srgb, var(--color-ink) 12%, transparent);
+        }
+    }
+
+    /* Header shrink-on-scroll — runtime toggles [data-scrolled] on <body>. */
+    .site-header,
+    .header {
+        padding: 1.5rem 0;
+        transition: padding var(--motion-duration-base) var(--motion-ease-standard),
+                    background var(--motion-duration-base) var(--motion-ease-standard);
+    }
+
+    &[data-scrolled] .site-header,
+    &[data-scrolled] .header {
+        padding: 0.75rem 0;
+        background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+        backdrop-filter: blur(8px);
+    }
+
+    .label--mono,
+    .meta--mono {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ink-2);
+    }
+}
