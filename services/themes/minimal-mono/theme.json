@@ -1,0 +1,32 @@
+{
+    "slug": "minimal-mono",
+    "name": "Minimal Mono",
+    "tagline": "Pure black and white with one electric-blue accent — aggressive whitespace, zero chrome, brutalist-clean.",
+    "audience": "Solo developers, opinionated designers, photographers wanting zero chrome, manifesto sites, single-voice indie projects",
+    "mood": ["brutalist", "precise", "uncompromising", "spacious", "raw"],
+    "palette": {
+        "surface":      {"light": "#FFFFFF", "dark": "#000000"},
+        "ink":          {"light": "#000000", "dark": "#FFFFFF"},
+        "accent":       {"light": "#1D4ED8", "dark": "#60A5FA"},
+        "accentInk":    {"light": "#FFFFFF", "dark": "#000000"},
+        "surfaceInset": {"light": "#F4F4F4", "dark": "#0B0B0B"},
+        "rule":         {"light": "#000000", "dark": "#FFFFFF"}
+    },
+    "typography": {
+        "display": "'Geist Mono', 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace",
+        "body":    "'Geist Mono', 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace",
+        "mono":    "'Geist Mono', 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace",
+        "baseSize": 15
+    },
+    "motion": "reduced-static",
+    "headerBehavior": "sticky-static",
+    "footerLayout": "minimal-1row",
+    "logoLockup": "wordmark",
+    "moduleStyleHints": {
+        "hero": "oversized-type",
+        "posts": "list",
+        "productGrid": "tight-grid"
+    },
+    "darkDefault": false,
+    "placeholder": true
+}
