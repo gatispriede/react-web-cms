@@ -56,6 +56,14 @@ export interface AdminItemType {
     readonly defaultContent: string;
     /** Allowed style enum (drives the Style picker). */
     readonly styleEnum: Record<string, string>;
+    /**
+     * Optional friendly labels for the Style picker, keyed by enum
+     * VALUE (the lowercase identifier stored in `item.style`).
+     * Falls back to the enum KEY NAME when absent — current behaviour.
+     * Use this to humanise technical enum names like `card-grid` →
+     * `Card grid`. Run through `t()` for i18n.
+     */
+    readonly styleLabels?: Record<string, string>;
     /** Translation keys for label + description in the picker. */
     readonly labelKey: string;
     readonly descriptionKey: string;

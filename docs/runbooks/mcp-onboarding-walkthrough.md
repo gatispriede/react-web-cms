@@ -7,7 +7,7 @@ exact tool call (JSON request/response) + expected outcome.
 This is the F8 acceptance gate target — an LLM agent (or a customer
 integration) can stand a site up from zero through these 10 steps.
 
-Reference: [mcp-real-world-ready](../roadmap/mcp-real-world-ready.md).
+Reference: [mcp-real-world-ready](../roadmap/platform/mcp-real-world-ready.md).
 
 ## Prerequisites
 

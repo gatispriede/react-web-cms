@@ -8,7 +8,7 @@
 
 import type {NextApiRequest, NextApiResponse} from 'next';
 import {getServerSession}                     from 'next-auth/next';
-import {authOptions}                          from '../auth/authOptions';
+import {adminAuthOptions as authOptions}      from '../auth/authOptions';
 import fs   from 'fs';
 import path from 'path';
 

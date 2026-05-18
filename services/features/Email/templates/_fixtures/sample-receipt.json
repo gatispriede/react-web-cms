@@ -1,0 +1,80 @@
+{
+    "order": {
+        "id": "ord_8e3f2a1c9b4d",
+        "orderNumber": "1042",
+        "customerId": null,
+        "guestEmail": "buyer@example.com",
+        "orderToken": "tok_sample",
+        "lineItems": [
+            {
+                "productId": "p_shoe_olive",
+                "sku": "OLIVE-42",
+                "title": "Trail Runner — Olive",
+                "image": "/img/products/trail-runner-olive.jpg",
+                "quantity": 1,
+                "unitPrice": 12999,
+                "lineTotal": 12999
+            },
+            {
+                "productId": "p_socks_merino",
+                "sku": "MERINO-M",
+                "title": "Merino Wool Socks (3-pack)",
+                "image": "/img/products/socks-merino.jpg",
+                "quantity": 2,
+                "unitPrice": 2499,
+                "lineTotal": 4998
+            }
+        ],
+        "subtotal": 17997,
+        "shippingTotal": 599,
+        "taxTotal": 3905,
+        "discountTotal": 0,
+        "total": 22501,
+        "currency": "EUR",
+        "shippingAddress": {
+            "name": "Anna Bērziņa",
+            "line1": "Brīvības iela 42",
+            "line2": "Apt 7",
+            "city": "Rīga",
+            "region": "Rīga",
+            "postalCode": "LV-1010",
+            "country": "LV"
+        },
+        "shippingMethod": {
+            "code": "standard",
+            "label": "Standard delivery",
+            "price": 599,
+            "etaDays": 3
+        },
+        "paymentRef": {
+            "provider": "mock",
+            "authorizationId": "auth_sample",
+            "captureId": "cap_sample",
+            "last4": "4242",
+            "brand": "visa"
+        },
+        "idempotencyKeys": {},
+        "status": "paid",
+        "statusHistory": [
+            {"status": "pending", "at": "2026-05-12T09:14:00.000Z", "by": "system"},
+            {"status": "paid",    "at": "2026-05-12T09:14:18.000Z", "by": "mock-payment"}
+        ],
+        "vatRegime": {
+            "kind": "b2c-eu",
+            "vatRate": 0.21,
+            "buyerCountry": "LV",
+            "sellerCountry": "LV",
+            "note": "VAT 21% — Latvia",
+            "provider": "internal"
+        },
+        "createdAt": "2026-05-12T09:14:00.000Z",
+        "updatedAt": "2026-05-12T09:14:18.000Z",
+        "version": 3
+    },
+    "customerName": "Anna",
+    "orderViewUrl": "https://example.com/orders/by-token/tok_sample",
+    "accountUpgradeUrl": "https://example.com/account/upgrade?token=tok_sample",
+    "vatLabel": "VAT 21% — Latvia",
+    "nextStepDate": "Within 24 hours",
+    "unsubscribeUrl": "https://example.com/api/unsubscribe/sample-token"
+}

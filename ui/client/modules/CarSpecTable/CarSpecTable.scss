@@ -1,0 +1,67 @@
+.car-spec-table-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.car-spec-table {
+    width: 100%;
+    color: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+
+    &--dl {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0;
+        margin: 0;
+        padding: 0;
+    }
+
+    &__row {
+        display: grid;
+        grid-template-columns: minmax(140px, 35%) 1fr;
+        gap: 1rem;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid color-mix(in srgb, currentColor 8%, transparent);
+
+        &:last-child { border-bottom: none; }
+    }
+
+    &__label {
+        color: var(--ink-2, color-mix(in srgb, currentColor 70%, transparent));
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin: 0;
+    }
+
+    &__value {
+        font-size: 0.9375rem;
+        margin: 0;
+    }
+
+    &--table {
+        border-collapse: collapse;
+    }
+
+    &--table th,
+    &--table td {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid color-mix(in srgb, currentColor 8%, transparent);
+        text-align: left;
+        font-weight: 400;
+        font-size: 0.9375rem;
+    }
+
+    &--table th {
+        color: var(--ink-2, color-mix(in srgb, currentColor 70%, transparent));
+        font-size: 0.875rem;
+        font-weight: 500;
+        width: 35%;
+    }
+
+    &__group-heading {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0 0 0.5rem;
+        color: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+    }
+}

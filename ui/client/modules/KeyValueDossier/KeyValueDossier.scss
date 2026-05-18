@@ -1,0 +1,124 @@
+/**
+ * KeyValueDossier — module styles.
+ *
+ * Default look = editorial variant (warm cream paper, serif body, monospace
+ * labels, hairline rules). Per-theme overrides live in
+ * services/themes/<slug>/module-styles.scss and switch via
+ * `section[data-variant="..."]`.
+ *
+ * All colours hit through CSS custom properties so a theme can swap the
+ * palette without re-stating the layout.
+ */
+.key-value-dossier {
+  --kvd-surface: var(--theme-colorBgBase, #FAF7F2);
+  --kvd-ink: var(--theme-colorTextBase, #1A1814);
+  --kvd-accent: var(--theme-colorAccent, var(--theme-colorPrimary, #B85C38));
+  --kvd-rule: var(--theme-colorBorder, #D8D1BF);
+  --kvd-label-ink: var(--theme-colorTextSecondary, #5A554C);
+  --kvd-font-display: var(--theme-fontDisplay, 'Source Serif Pro', ui-serif, Georgia, serif);
+  --kvd-font-body: var(--theme-fontBody, 'Inter', system-ui, sans-serif);
+  --kvd-font-mono: var(--theme-fontMono, ui-monospace, 'SF Mono', Menlo, monospace);
+
+  --kvd-row-pad-y: 0.65rem;
+  --kvd-label-col: 140px;
+  --kvd-label-size: 0.74rem;
+  --kvd-value-size: 1rem;
+  --kvd-title-size: 1.15rem;
+
+  section { display: block; }
+
+  .kvd-root {
+    background: var(--kvd-surface);
+    color: var(--kvd-ink);
+    font-family: var(--kvd-font-body);
+    padding: 1.25rem 1.5rem;
+  }
+
+  .kvd-title {
+    font-family: var(--kvd-font-display);
+    font-size: var(--kvd-title-size);
+    font-weight: 500;
+    margin: 0 0 0.5rem;
+    padding-top: 0.25rem;
+    padding-bottom: 0.45rem;
+    border-bottom: 1px solid var(--kvd-rule);
+    letter-spacing: 0.005em;
+  }
+
+  .kvd-list {
+    margin: 0;
+    display: grid;
+    grid-template-columns: var(--kvd-label-col) 1fr;
+    column-gap: 1.25rem;
+    row-gap: 0;
+  }
+
+  .kvd-row {
+    display: contents;
+  }
+
+  dt {
+    font-family: var(--kvd-font-mono);
+    font-size: var(--kvd-label-size);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--kvd-label-ink);
+    padding: var(--kvd-row-pad-y) 0;
+    border-top: 1px solid var(--kvd-rule);
+    align-self: baseline;
+  }
+
+  dd {
+    margin: 0;
+    font-size: var(--kvd-value-size);
+    line-height: 1.45;
+    padding: var(--kvd-row-pad-y) 0;
+    border-top: 1px solid var(--kvd-rule);
+  }
+
+  dd a {
+    color: var(--kvd-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  /* --- Variant: tech-modern (saas-landing) ----------------------------- */
+  section[data-variant="tech-modern"] {
+    --kvd-label-ink: var(--theme-colorAccent, #A78BFA);
+    --kvd-rule: transparent;
+
+    .kvd-list { row-gap: 0.85rem; column-gap: 1.5rem; }
+    .kvd-title { border-bottom: none; padding-bottom: 0; margin-bottom: 1rem; font-weight: 600; }
+    dt, dd { padding: 0; border-top: none; }
+    dd a { text-decoration: none; border-bottom: 1px solid currentColor; }
+  }
+
+  /* --- Variant: card-grid (commerce) ----------------------------------- */
+  section[data-variant="card-grid"] {
+    --kvd-surface-card: var(--theme-colorBgContainer, #F7F8FA);
+
+    .kvd-list { grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
+    .kvd-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      padding: 0.85rem 1rem;
+      background: var(--kvd-surface-card);
+      border: 1px solid var(--kvd-rule);
+      border-radius: 6px;
+    }
+    dt, dd { padding: 0; border-top: none; }
+    dd { font-weight: 500; }
+  }
+
+  /* --- Mobile fallback ------------------------------------------------- */
+  @media (max-width: 640px) {
+    .kvd-list { grid-template-columns: 1fr; }
+    dt { padding-bottom: 0; }
+    dd { padding-top: 0.15rem; border-top: none; padding-bottom: var(--kvd-row-pad-y); }
+
+    section[data-variant="card-grid"] .kvd-list {
+      grid-template-columns: 1fr;
+    }
+  }
+}

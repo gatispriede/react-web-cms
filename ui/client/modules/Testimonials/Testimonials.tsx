@@ -7,6 +7,7 @@ import {translateOrKeep} from "@utils/translateOrKeep";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import RevealOnScroll from "@client/lib/RevealOnScroll";
 import {slugifyAnchor} from "@utils/stringFunctions";
+import {inlineEditAttr} from "@client/lib/inlineEditAttr";
 import type {ITestimonials} from "./Testimonials.types";
 export type {ITestimonials, ITestimonial} from "./Testimonials.types";
 export {ETestimonialsStyle} from "./Testimonials.types";
@@ -33,31 +34,33 @@ function renderAccentRuns(text: string, tr: (s: string) => string): React.ReactN
     });
 }
 
-const Testimonials = ({item, tApp}: {
+const Testimonials = ({item, tApp, admin}: {
     item: IItem;
     t: TFunction<"translation", undefined>;
     tApp: TFunction<string, undefined>;
+    admin?: boolean;
 }) => {
     const c = new TestimonialsContent(EItemType.Testimonials, item.content).data;
     const trStr = (v: string) => translateOrKeep(tApp, v);
     const tr = (v: string) => <InlineTranslatable tApp={tApp as any} source={v}/>;
+    const editId = item.name || EItemType.Testimonials;
 
     return (
         <section className={`testimonials-module ${item.style ?? ''}`}>
             {(c.sectionTitle || c.sectionSubtitle) && (
                 <header className="testimonials-module__head">
                     {c.sectionTitle && (
-                        <h2 id={slugifyAnchor(c.sectionTitle)} className="testimonials-module__title">{renderAccentRuns(c.sectionTitle, trStr)}</h2>
+                        <h2 id={slugifyAnchor(c.sectionTitle)} className="testimonials-module__title" {...inlineEditAttr(admin, editId, 'sectionTitle')}>{renderAccentRuns(c.sectionTitle, trStr)}</h2>
                     )}
                     {c.sectionSubtitle && (
-                        <div className="testimonials-module__sub">{tr(c.sectionSubtitle)}</div>
+                        <div className="testimonials-module__sub" {...inlineEditAttr(admin, editId, 'sectionSubtitle')}>{tr(c.sectionSubtitle)}</div>
                     )}
                 </header>
             )}
             <div className="testimonials-module__grid">
                 {c.items.map((q, i) => (
                     <RevealOnScroll key={i} className="testimonials-module__card" delay={i * 80}>
-                        <blockquote className="testimonials-module__quote">{tr(q.quote)}</blockquote>
+                        <blockquote className="testimonials-module__quote" {...inlineEditAttr(admin, editId, `items.${i}.quote`)}>{tr(q.quote)}</blockquote>
                         <div className="testimonials-module__who">
                             <div className="testimonials-module__avatar" aria-hidden>
                                 {(q.avatarInitial ?? q.name?.[0] ?? '').toUpperCase()}

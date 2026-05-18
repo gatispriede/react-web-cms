@@ -1,0 +1,72 @@
+.opening-hours {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-radius: var(--theme-borderRadius, 8px);
+    background: var(--theme-colorBgContainer, #fff);
+
+    &__caption {
+        // Visually hidden but SR-readable.
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    &__status {
+        align-self: flex-start;
+        display: inline-flex;
+        align-items: center;
+        min-height: 28px;
+        padding: 0.25rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        transition: background calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &--open {
+            background: color-mix(in srgb, #2e7d32 14%, transparent);
+            color: #2e7d32;
+        }
+
+        &--closed {
+            background: color-mix(in srgb, #d4380d 14%, transparent);
+            color: #d4380d;
+        }
+    }
+
+    &__table {
+        width: 100%;
+        border-collapse: collapse;
+        color: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+    }
+
+    &__row {
+        border-bottom: 1px solid var(--theme-colorBgInset, color-mix(in srgb, currentColor 8%, transparent));
+
+        &.is-today {
+            background: var(--theme-colorBgInset, color-mix(in srgb, currentColor 4%, transparent));
+            font-weight: 500;
+        }
+    }
+
+    &__day {
+        text-align: left;
+        padding: 0.5rem 0.75rem;
+        font-weight: inherit;
+        color: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+    }
+
+    &__hours {
+        padding: 0.5rem 0.75rem;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+        color: var(--ink-2, color-mix(in srgb, currentColor 70%, transparent));
+    }
+}

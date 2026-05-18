@@ -11,7 +11,7 @@
  *   - Async actions mutate `this.*` directly; reactivity layer notifies.
  *   - Errors flash through AntD `message`.
  */
-import {message}        from 'antd';
+import {notifyError, notifySuccess, notifyWarning} from '@admin/lib/notify';
 import SiteFlagsApi     from '@services/api/client/SiteFlagsApi';
 
 export type EmailProvider = 'smtp' | 'resend' | 'disabled';
@@ -72,7 +72,7 @@ export class EmailViewModel {
             }
         } catch (err) {
             console.error('[EmailViewModel.refresh]', err);
-            message.error(String((err as Error)?.message ?? err));
+            notifyError(err);
         } finally {
             this.loading = false;
         }
@@ -107,10 +107,10 @@ export class EmailViewModel {
                 },
             };
             await this.flagsApi.save(next);
-            message.success('Email config saved.');
+            notifySuccess('Email config saved.');
             await this.refresh();
         } catch (err) {
-            message.error(String((err as Error)?.message ?? err));
+            notifyError(err);
         } finally {
             this.saving = false;
         }
@@ -118,7 +118,7 @@ export class EmailViewModel {
 
     async testSend(): Promise<void> {
         if (!this.testRecipient || !this.testRecipient.includes('@')) {
-            message.warning('Enter a recipient email first.');
+            notifyWarning('Enter a recipient email first.');
             return;
         }
         this.testing = true;
@@ -132,12 +132,12 @@ export class EmailViewModel {
             });
             const json = await r.json();
             this.lastTestResult = {ok: !!json.ok, provider: json.provider, error: json.error, durationMs: json.durationMs};
-            if (json.ok) message.success(`Sent via ${json.provider} in ${json.durationMs}ms`);
-            else message.error(`Test failed: ${json.error ?? 'unknown'}`);
+            if (json.ok) notifySuccess(`Sent via ${json.provider} in ${json.durationMs}ms`);
+            else notifyError(`Test failed: ${json.error ?? 'unknown'}`);
         } catch (err) {
             const msg = String((err as Error)?.message ?? err);
             this.lastTestResult = {ok: false, error: msg};
-            message.error(msg);
+            notifyError(msg);
         } finally {
             this.testing = false;
         }

@@ -11,9 +11,16 @@ import {log} from '@services/infra/logger';
  * `ADMIN_USERNAME`, `ADMIN_DEFAULT_PASSWORD`, `ADMIN_PASSWORD_HASH`,
  * `BCRYPT_ROUNDS`. Co-located here since this is the only consumer.
  *
- * `onBoot` runs the admin-seed flow. The `adminSeeded` module-scoped flag
- * (preserved from the old static field on `MongoDBConnection`) prevents
- * double-seeding on a `setupClient` reconnect. Cleared on failure so the
+ * `onBoot` runs the admin-seed flow. Re-entry guard is a Promise-based
+ * singleton (App Router compat — B2 of app-router-migration): under
+ * Pages Router a bool flag was safe because boot ran serially during
+ * `_app`'s initial-props chain. Under App Router, `app/layout.tsx`
+ * reads Mongo per request via `getMongoConnection()` and any reconnect
+ * path can re-trigger `bootFeaturesAsync` → `onBoot` concurrently.
+ * A bool has a TOCTOU race across the `await` inside `setupAdmin()` —
+ * two callers can both observe `false`, both flip it `true`, and both
+ * insert the admin user. Storing the in-flight Promise instead means
+ * the second caller awaits the first's work. Cleared on failure so the
  * next boot retries.
  *
  * NOTE: CustomerAuth split (per ROADMAP service-modularity backlog) is
@@ -22,7 +29,7 @@ import {log} from '@services/infra/logger';
  * `CustomerAuthServiceLoader` after L3 wraps.
  */
 
-let adminSeeded = false;
+let seedingPromise: Promise<void> | null = null;
 
 export class UsersServiceLoader extends ServiceLoader {
     readonly id = 'users';
@@ -105,28 +112,33 @@ extend type MutationMongo {
     }
 
     async onBoot(ctx: FeatureContext): Promise<void> {
-        if (adminSeeded) return;
-        adminSeeded = true;
+        if (seedingPromise) return seedingPromise;
         const users = ctx.services.users as UserService | undefined;
         if (!users) return;
-        try {
-            const admin = await users.setupAdmin();
-            if (admin) {
-                // Was a bare `console.log` before — that wrote raw text to
-                // stdout, which corrupted the MCP stdio JSON-RPC stream.
-                // Going through the structured logger respects MCP_STDIO=1
-                // (stdio.ts sets that before this loader runs) and routes
-                // the line to stderr.
-                log.info({scope: 'auth.bootstrap', email: admin.email}, 'admin user ready');
+        seedingPromise = (async () => {
+            try {
+                const admin = await users.setupAdmin();
+                if (admin) {
+                    // Was a bare `console.log` before — that wrote raw text to
+                    // stdout, which corrupted the MCP stdio JSON-RPC stream.
+                    // Going through the structured logger respects MCP_STDIO=1
+                    // (stdio.ts sets that before this loader runs) and routes
+                    // the line to stderr.
+                    log.info({scope: 'auth.bootstrap', email: admin.email}, 'admin user ready');
+                }
+            } catch (err) {
+                // Null out so the next boot retries — a stuck rejected
+                // promise would permanently disable admin seeding for the
+                // process lifetime on a transient Mongo blip.
+                seedingPromise = null;
+                log.error({scope: 'auth.bootstrap', err}, 'admin seed failed');
             }
-        } catch (err) {
-            adminSeeded = false;
-            log.error({scope: 'auth.bootstrap', err}, 'admin seed failed');
-        }
+        })();
+        return seedingPromise;
     }
 }
 
-/** Test-only escape hatch — reset the module-scoped seed flag. */
+/** Test-only escape hatch — reset the in-flight admin-seed singleton. */
 export function _resetAdminSeededForTest(): void {
-    adminSeeded = false;
+    seedingPromise = null;
 }

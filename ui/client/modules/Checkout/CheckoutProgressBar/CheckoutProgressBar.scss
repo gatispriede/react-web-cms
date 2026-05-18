@@ -1,0 +1,7 @@
+.checkout-progress-bar {
+    display: flex; gap: 0.5rem; list-style: none; padding: 0; margin: 0 0 1rem;
+    &__step { display: flex; align-items: center; gap: 0.35rem; opacity: 0.55; }
+    &__step.is-done { opacity: 1; }
+    &__step.is-active { font-weight: 600; }
+    &__num { width: 1.5rem; height: 1.5rem; display: inline-flex; align-items: center; justify-content: center; border: 1px solid currentColor; border-radius: 50%; }
+}

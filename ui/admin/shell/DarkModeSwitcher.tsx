@@ -1,64 +1,37 @@
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 import {Switch} from 'antd';
+import {useTranslation} from 'react-i18next';
 import {BulbFilled, BulbOutlined} from '@client/lib/icons';
-
-const STORAGE_KEY = 'admin.darkMode';
+import {useAdminDarkMode} from '@admin/lib/adminDarkMode';
 
 /**
- * Top-bar dark/light toggle — moved out of the AdminApp secondary
- * header so it lives in the persistent admin top-top nav (visible on
- * every admin route, not just `/admin/build`).
+ * Top-bar dark/light toggle — lives in the persistent admin top-top nav
+ * (visible on every admin route, not just `/admin/build`).
  *
- * Single source of truth: localStorage `admin.darkMode`. The
- * `[data-admin-theme]` attribute on `documentElement` drives both
- * AntD `ConfigProvider` (read by `AdminApp` on mount) and the
- * `AdminDarkMode.scss` overrides for non-AntD chrome.
+ * State lives in `@admin/lib/adminDarkMode` — a module-scoped store
+ * (same pattern as `adminMode.ts`). That store is the single source of
+ * truth: it persists to localStorage `admin.darkMode`, stamps
+ * `data-admin-theme` on `<html>`, and notifies every subscriber. The
+ * key consumer besides this toggle is `AdminApp`'s `ConfigProvider`,
+ * which now re-renders its theme algorithm the instant the toggle
+ * flips — no page reload needed (the pre-audit bug).
  *
- * Subscribes to `storage` events so flipping the toggle in one tab
- * propagates to other tabs immediately.
+ * Cross-tab sync is handled inside the store via a `storage` listener.
  */
-const readSaved = (): boolean => {
-    if (typeof window === 'undefined') return false;
-    return window.localStorage.getItem(STORAGE_KEY) === '1';
-};
-
-const apply = (on: boolean): void => {
-    if (typeof document === 'undefined') return;
-    document.documentElement.setAttribute('data-admin-theme', on ? 'dark' : 'light');
-};
-
 const DarkModeSwitcher: React.FC = () => {
-    const [dark, setDark] = useState<boolean>(false);
-
-    useEffect(() => {
-        const initial = readSaved();
-        setDark(initial);
-        apply(initial);
-        const onStorage = (e: StorageEvent) => {
-            if (e.key !== STORAGE_KEY) return;
-            const next = e.newValue === '1';
-            setDark(next);
-            apply(next);
-        };
-        window.addEventListener('storage', onStorage);
-        return () => window.removeEventListener('storage', onStorage);
-    }, []);
-
-    const toggle = (next: boolean) => {
-        setDark(next);
-        apply(next);
-        if (typeof window !== 'undefined') {
-            window.localStorage.setItem(STORAGE_KEY, next ? '1' : '0');
-        }
-    };
+    const {t} = useTranslation();
+    const {dark, setDark} = useAdminDarkMode();
 
     return (
         <Switch
             checked={dark}
-            onChange={toggle}
+            onChange={setDark}
             checkedChildren={<BulbFilled/>}
             unCheckedChildren={<BulbOutlined/>}
+            aria-label={t('Toggle dark mode')}
+            title={dark ? t('Switch to light mode') : t('Switch to dark mode')}
             data-testid="admin-dark-mode-switch"
+            data-state={dark ? 'dark' : 'light'}
         />
     );
 };

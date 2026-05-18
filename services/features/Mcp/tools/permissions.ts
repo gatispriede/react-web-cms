@@ -178,4 +178,127 @@ export const permissionRevoke: McpTool = defineTool({
     return batch;
 });
 
-export const PERMISSION_TOOLS: McpTool[] = [permissionList, permissionGrant, permissionRevoke];
+/**
+ * `permission.applyTier` — UX-convenience tool that maps the 4-tier model
+ * (Full / Edit / Comment / View) used by the admin permissions pane onto
+ * the engine's `(scope, resourceId)` rows. Same as the client-side
+ * `tierToGrants` translator, surfaced to MCP so agents can speak the
+ * tier vocabulary directly.
+ *
+ * Per `docs/roadmap/admin/admin-permissions-ux.md`:
+ *   - View / Comment  → no engine grant rows (reads are open)
+ *   - Edit            → grant `(scope, resourceId='*')`
+ *   - Full            → same as Edit; publish/delete are role-rank gated
+ *                       on the user doc (not modelled per-tier yet)
+ *
+ * Idempotent — applying the same tier twice is a no-op against the
+ * underlying rows.
+ */
+const TIER_VALUES = ['Full', 'Edit', 'Comment', 'View'] as const;
+type Tier = typeof TIER_VALUES[number];
+
+export const permissionApplyTier: McpTool = defineTool({
+    name: 'permission.applyTier',
+    description: 'Set a tier (Full / Edit / Comment / View) for a user on a scope. Expands the tier into the granular `(scope, resourceId)` grants the engine consumes — View/Comment removes the wildcard row, Edit/Full upserts it. Use this instead of `permission.grant` when agents speak the tier vocabulary surfaced by the admin pane.',
+    scopes: ['admin:auth'],
+    idempotent: true,
+    inputSchema: {
+        type: 'object',
+        properties: {
+            userId: {type: 'string', minLength: 1},
+            scope: {type: 'string', minLength: 1, description: 'Engine scope — `page` / `module` / `element`.'},
+            tier: {type: 'string', enum: [...TIER_VALUES]},
+            idempotencyKey: {type: 'string'},
+        },
+        required: ['userId', 'scope', 'tier'],
+    },
+}, async (args, ctx) => {
+    await enforceModeForTool(ctx.actor, 'permission.applyTier');
+    const tier = args.tier as Tier;
+    const wildcardResource = '*';
+    if (tier === 'Edit' || tier === 'Full') {
+        await ctx.services.permissionService.grant({
+            userId: args.userId,
+            scope: args.scope,
+            resourceId: wildcardResource,
+            grantedBy: ctx.actor,
+        });
+        return {ok: true, tier, applied: 'grant'};
+    }
+    // View / Comment — strip the wildcard row if present (per-resource
+    // override rows are left alone; operators manage those explicitly).
+    await ctx.services.permissionService.revoke({
+        userId: args.userId,
+        scope: args.scope,
+        resourceId: wildcardResource,
+    });
+    return {ok: true, tier, applied: 'revoke'};
+});
+
+/**
+ * `permission.applyGrant` — MCP coverage for the admin grant-grid.
+ *
+ * The grant-grid (admin Permissions pane) edits the Q10 three-dimension
+ * `Grant` union — `feature` / `page` / `locale` — per
+ * `docs/roadmap/admin/admin-permissions-ux.md`. Each grid cell persists
+ * as an engine `Permissions` row under the dimension name as the
+ * `scope` string (`grantScopeFor` on the client). This tool is the
+ * MCP-side parity for that surface: agents grant/revoke a single
+ * `(dimension, resourceId)` cell with the same vocabulary the grid
+ * speaks, so the canonical write path covers the grant-grid the same
+ * way `permission.applyTier` covers the tier grid.
+ *
+ * Idempotent — `set:true` re-granting an existing row is a no-op,
+ * `set:false` revoking a missing row is a no-op.
+ */
+const GRANT_DIMENSIONS = ['feature', 'page', 'locale'] as const;
+type GrantDimension = typeof GRANT_DIMENSIONS[number];
+
+export const permissionApplyGrant: McpTool = defineTool({
+    name: 'permission.applyGrant',
+    description: 'Grant or revoke a single feature/page/locale dimension grant for a user — the MCP parity for the admin grant-grid. `dimension` is one of `feature` / `page` / `locale`; `resourceId` is the feature flag id, page slug, or locale code; `set:true` grants the cell, `set:false` revokes it. Each cell persists as an engine `Permissions` row under the dimension name as `scope`. Idempotent.',
+    scopes: ['admin:auth'],
+    idempotent: true,
+    inputSchema: {
+        type: 'object',
+        properties: {
+            userId: {type: 'string', minLength: 1},
+            dimension: {type: 'string', enum: [...GRANT_DIMENSIONS], description: 'Grant dimension — `feature` / `page` / `locale`.'},
+            resourceId: {type: 'string', minLength: 1, description: 'Feature flag id, page slug, or locale code.'},
+            set: {type: 'boolean', description: 'true → grant the cell; false → revoke it.'},
+            idempotencyKey: {type: 'string'},
+        },
+        required: ['userId', 'dimension', 'resourceId', 'set'],
+    },
+}, async (args, ctx) => {
+    await enforceModeForTool(ctx.actor, 'permission.applyGrant');
+    const dimension = args.dimension as GrantDimension;
+    // The dimension name *is* the engine scope string — mirrors the
+    // client-side `grantScopeFor` convention so the grid + MCP write the
+    // same rows. The engine `scope` column is a free `String!` (the
+    // `PermissionScope` union is advisory only — see `permission.applyTier`,
+    // which likewise hands the service an unconstrained scope).
+    if (args.set) {
+        const row = await ctx.services.permissionService.grant({
+            userId: args.userId,
+            scope: args.dimension,
+            resourceId: args.resourceId,
+            grantedBy: ctx.actor,
+        });
+        return {ok: true, dimension, resourceId: args.resourceId, applied: 'grant', row};
+    }
+    const result = await ctx.services.permissionService.revoke({
+        userId: args.userId,
+        scope: args.dimension,
+        resourceId: args.resourceId,
+    });
+    return {ok: true, dimension, resourceId: args.resourceId, applied: 'revoke', deleted: result.deleted};
+});
+
+export const PERMISSION_TOOLS: McpTool[] = [
+    permissionList,
+    permissionGrant,
+    permissionRevoke,
+    permissionApplyTier,
+    permissionApplyGrant,
+];

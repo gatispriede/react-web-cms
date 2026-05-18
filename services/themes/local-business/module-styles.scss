@@ -1,0 +1,2043 @@
+/* ==========================================================================
+   Local Business — per-module overrides.
+
+   Warm-paper surface + deep trust-blue accent + flat amber highlight.
+   The neighbourhood electrician / plumber / optician / locksmith
+   aesthetic — clean photography, oversized phone CTAs, certification
+   pills, generous whitespace, NO gradients. Roboto Slab signage for
+   headings, Source Sans 3 body. 6px radii.
+
+   Visual baselines under `tests/e2e/visual/__snapshots__/themes/local-business/`.
+   ========================================================================== */
+
+[data-theme-name="local-business"] {
+
+    /* ===================================================================
+       Header — sticky-static. Sits on a warm-paper background with a
+       fine rule beneath; on scroll the rule thickens and the phone
+       link in the nav gains an amber underline so the trade-business
+       "call us" CTA stays one tap away.
+
+       Distinct from saas-landing (backdrop-blur + gradient border),
+       agency (hide-on-down), restaurant (centred-hero-integrated).
+       Local business stays calm, present, calls out the phone.
+       =================================================================== */
+    .main-nav {
+        background: var(--color-surface);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        padding: 0.875rem 1.5rem;
+        border-bottom: 1px solid var(--color-rule);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+
+        a {
+            color: var(--color-ink);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        // Phone-number links in the nav get the trade hi-vis underline.
+        a[href^="tel:"] {
+            color: var(--color-accent);
+            font-weight: 700;
+            border-bottom: 2px solid var(--color-warm);
+            padding-bottom: 1px;
+
+            &::before {
+                content: '\260E';
+                margin-right: 0.4em;
+                color: var(--color-warm);
+            }
+        }
+
+        &.is-scrolled {
+            border-bottom-width: 2px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        }
+    }
+
+    /* ===================================================================
+       Hero — VARIANT: SPLIT with PROPRIETOR PHOTO. Copy on the left
+       (eyebrow + slab headline + tagline + oversized phone CTA),
+       a clean portrait of the proprietor / team / van on the right
+       framed by a hairline rule + soft drop shadow. Real DOM:
+       `.hero > .hero__main` (+ `.hero__portrait`, `.hero__cta-row`,
+       `.hero__eyebrow`).
+
+       Structural axis vs siblings: editorial = photo-bleed bottom-left,
+       agency = centred overlay, restaurant = photo-bleed centred,
+       saas = split with floating-glow portrait. Local-business = split
+       with FRAMED portrait — no rotation, no glow, no gradient. Honest
+       photography sits square in its frame the way the business card
+       photo does.
+       =================================================================== */
+    .hero {
+        position: relative;
+        min-height: 64vh;
+        padding: 3.5rem 1.75rem 4rem;
+        background: var(--color-surface);
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+        align-items: center;
+
+        @media (min-width: 880px) {
+            grid-template-columns: 1.1fr 1fr;
+            padding: 5rem 2.5rem 5.5rem;
+        }
+
+        &__main {
+            position: relative;
+            z-index: 2;
+            max-width: 56ch;
+        }
+
+        &__eyebrow {
+            font-family: var(--font-body);
+            font-size: 0.875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: var(--color-accent);
+            margin-bottom: 1rem;
+        }
+
+        h1,
+        &__headline {
+            font-family: var(--font-display);
+            font-size: clamp(2.25rem, 5.5vw, 3.75rem);
+            font-weight: 700;
+            line-height: 1.08;
+            letter-spacing: -0.01em;
+            color: var(--color-ink);
+            margin: 0 0 1.25rem;
+
+            em, .accent-italic {
+                font-style: italic;
+                color: var(--color-accent);
+            }
+        }
+
+        &__subtitle,
+        &__tagline {
+            font-family: var(--font-body);
+            font-size: 1.1875rem;
+            line-height: 1.55;
+            color: var(--ink-2);
+            max-width: 54ch;
+            margin-bottom: 1.75rem;
+        }
+
+        // CTA row — primary is the oversized phone button, secondary is
+        // a ghost "request a callback" link.
+        &__cta-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.875rem;
+            align-items: center;
+        }
+
+        &__cta {
+            font-family: var(--font-body);
+            font-weight: 700;
+            font-size: 1.0625rem;
+            padding: 0.95rem 1.6rem;
+            border-radius: var(--theme-borderRadius);
+            min-height: 52px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+
+            &--primary {
+                background: var(--color-accent);
+                color: var(--color-accent-ink);
+                border: 2px solid var(--color-accent);
+                box-shadow: 0 2px 0 var(--color-warm); /* hi-vis stripe under the button */
+
+                &:hover {
+                    background: var(--accent-hover);
+                    transform: translateY(-1px);
+                }
+            }
+
+            &--secondary {
+                background: transparent;
+                color: var(--color-accent);
+                border: 2px solid var(--color-rule);
+
+                &:hover { border-color: var(--color-accent); }
+            }
+
+            // Phone-link CTA gets a leading handset glyph.
+            &[href^="tel:"]::before {
+                content: '\260E';
+                font-size: 1.15em;
+            }
+        }
+
+        // Framed portrait — honest, square, no rotation, soft shadow,
+        // amber bottom-stripe (the trade signature).
+        &--has-portrait { display: grid; }
+        &__portrait {
+            position: relative;
+            justify-self: center;
+            border-radius: var(--theme-borderRadius);
+            overflow: hidden;
+            background: var(--color-surface-inset);
+            box-shadow:
+                0 12px 30px rgba(0, 0, 0, 0.10),
+                0 0 0 1px var(--color-rule);
+
+            &::after {
+                content: '';
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                height: 6px;
+                background: var(--color-warm);
+            }
+        }
+
+        &__portrait-label {
+            font-family: var(--font-body);
+            font-size: 0.8125rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            color: var(--color-ink);
+            background: var(--color-surface);
+            padding: 0.35rem 0.7rem;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        animation: local-business-hero-enter calc(var(--motion-duration-slow) * var(--motion-scalar)) var(--motion-ease-emphasized) backwards;
+    }
+
+    @keyframes local-business-hero-enter {
+        from { opacity: 0; transform: translateY(var(--motion-distance-md)); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===================================================================
+       Services — VARIANT: NUMBERED-LIST TRUST-LED. Each service is a
+       row with an oversized slab numeral on the left, the title +
+       description in the middle, and a "book this" link on the right.
+       Real DOM: `.services-module > .services-module__rows >
+       .services-module__row`. Different from agency (oversized type
+       cells) and saas (gradient tile cards) — this is the printed
+       services list the trade business hands you on a leaflet, scaled
+       up.
+       =================================================================== */
+    .services-module {
+        padding: 3.5rem 1.5rem;
+
+        &__rows {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            border-top: 1px solid var(--color-rule);
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        &__row {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            grid-template-rows: auto auto;
+            column-gap: 1.5rem;
+            row-gap: 0.4rem;
+            align-items: baseline;
+            padding: 1.75rem 0.5rem;
+            border-bottom: 1px solid var(--color-rule);
+            transition: background calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &:hover { background: var(--color-surface-inset); }
+        }
+
+        &__row-num {
+            grid-row: 1 / 3;
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: clamp(2rem, 4vw, 3rem);
+            color: var(--color-accent);
+            line-height: 1;
+            min-width: 3ch;
+            font-variant-numeric: tabular-nums;
+        }
+
+        &__row-icon {
+            display: none; /* slab numeral replaces icon in this theme */
+        }
+
+        &__row-title {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.375rem;
+            letter-spacing: -0.005em;
+            color: var(--color-ink);
+            margin: 0;
+        }
+
+        &__row-desc {
+            grid-column: 2;
+            font-family: var(--font-body);
+            font-size: 1.0625rem;
+            line-height: 1.5;
+            color: var(--ink-2);
+            max-width: 60ch;
+        }
+
+        &__row-cta {
+            grid-row: 1 / 3;
+            font-family: var(--font-body);
+            font-weight: 600;
+            color: var(--color-accent);
+            border-bottom: 2px solid transparent;
+            transition: border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &:hover { border-bottom-color: var(--color-warm); }
+        }
+
+        &__row-tags {
+            grid-column: 2;
+            font-family: var(--font-body);
+            font-size: 0.8125rem;
+            color: var(--ink-2);
+        }
+
+        @media (max-width: 720px) {
+            &__row { grid-template-columns: auto 1fr; }
+            &__row-cta { grid-column: 2; grid-row: 3; padding-top: 0.5rem; }
+        }
+    }
+
+    /* ===================================================================
+       OpeningHours — VARIANT: LARGE ALWAYS-VISIBLE. Big slab "OPEN NOW"
+       state at the top in trust-green when applicable, table of weekday
+       hours under it. Sits in a framed inset card so it reads as a
+       window-decal: pin it to the page wherever you want users to know
+       you're available.
+       =================================================================== */
+    .opening-hours {
+        background: var(--color-surface-inset);
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+        padding: 1.75rem 1.5rem;
+        max-width: 480px;
+
+        &__caption {
+            font-family: var(--font-body);
+            font-size: 0.8125rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+            margin-bottom: 0.5rem;
+        }
+
+        &__status {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.625rem;
+            letter-spacing: -0.005em;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+
+            &::before {
+                content: '';
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                background: var(--color-trust-ok);
+                box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-trust-ok) 25%, transparent);
+            }
+
+            &--closed::before {
+                background: var(--ink-2);
+                box-shadow: none;
+            }
+        }
+
+        &__table {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        &__row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            padding: 0.55rem 0;
+            border-bottom: 1px dashed var(--color-rule);
+            font-size: 1rem;
+
+            &:last-child { border-bottom: 0; }
+            &.is-today {
+                font-weight: 700;
+                color: var(--color-accent);
+            }
+        }
+
+        &__day {
+            font-family: var(--font-body);
+            color: var(--color-ink);
+        }
+
+        &__hours {
+            font-family: var(--font-body);
+            font-variant-numeric: tabular-nums;
+            color: var(--color-ink);
+        }
+    }
+
+    /* ===================================================================
+       ContactBlock — VARIANT: PHONE-UP-FRONT. Phone link is rendered
+       as a slab-numeral CTA at the top, with email + address listed
+       under it. The trade-business calling card.
+       =================================================================== */
+    .contact-block {
+        background: var(--color-surface);
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+        padding: 2rem 1.75rem;
+        max-width: 480px;
+
+        &__headline {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.5rem;
+            margin-bottom: 1.25rem;
+            letter-spacing: -0.005em;
+        }
+
+        &__fields {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        &__field {
+            display: grid;
+            grid-template-columns: 7rem 1fr;
+            align-items: baseline;
+            gap: 0.75rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--color-rule);
+
+            &:last-child { border-bottom: 0; }
+        }
+
+        &__label {
+            font-family: var(--font-body);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--ink-2);
+        }
+
+        &__value, &__address {
+            font-family: var(--font-body);
+            font-size: 1.0625rem;
+            color: var(--color-ink);
+        }
+
+        // Phone link is the hero of the card — slab + accent + amber stripe.
+        &__link[href^="tel:"] {
+            display: inline-block;
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--color-accent);
+            border-bottom: 3px solid var(--color-warm);
+            padding-bottom: 2px;
+            letter-spacing: -0.01em;
+            font-variant-numeric: tabular-nums;
+        }
+
+        &__link[href^="mailto:"] {
+            color: var(--color-accent);
+            font-weight: 600;
+            text-decoration: underline;
+            text-decoration-thickness: 1px;
+            text-underline-offset: 3px;
+        }
+
+        &__social {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            list-style: none;
+            padding: 0;
+        }
+
+        &__social-link {
+            color: var(--color-accent);
+
+            &:hover { color: var(--color-warm); }
+        }
+    }
+
+    /* ===================================================================
+       Testimonials — VARIANT: PHOTO CARD QUOTES. Each card is a soft
+       framed inset with the customer photo top-left, name + role under,
+       quote in slab italic. Honest customer-voice; no centred carousel.
+       =================================================================== */
+    .testimonials-module {
+        padding: 3.5rem 1.5rem;
+
+        &__head { text-align: left; max-width: 60ch; margin-bottom: 2.5rem; }
+
+        &__title {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: clamp(1.75rem, 3.4vw, 2.5rem);
+            letter-spacing: -0.01em;
+        }
+
+        &__sub {
+            font-family: var(--font-body);
+            color: var(--ink-2);
+            font-size: 1.0625rem;
+        }
+
+        &__grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.25rem;
+        }
+
+        &__card {
+            background: var(--color-surface-inset);
+            border: 1px solid var(--color-rule);
+            border-radius: var(--theme-borderRadius);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            position: relative;
+            transition: transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &:hover { transform: translateY(-2px); }
+
+            &::before {
+                content: '\201C';
+                font-family: var(--font-display);
+                font-size: 3rem;
+                line-height: 0.6;
+                color: var(--color-warm);
+                position: absolute;
+                top: 0.75rem;
+                right: 1rem;
+                opacity: 0.7;
+            }
+        }
+
+        &__quote {
+            font-family: var(--font-display);
+            font-style: italic;
+            font-weight: 500;
+            font-size: 1.0625rem;
+            line-height: 1.5;
+            color: var(--color-ink);
+        }
+
+        &__who {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: auto;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--color-rule);
+        }
+
+        &__avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: var(--color-surface);
+            border: 2px solid var(--color-warm);
+            flex-shrink: 0;
+        }
+
+        &__name {
+            font-family: var(--font-body);
+            font-weight: 700;
+            color: var(--color-ink);
+            font-size: 0.9375rem;
+        }
+
+        &__role {
+            font-family: var(--font-body);
+            font-size: 0.8125rem;
+            color: var(--ink-2);
+        }
+    }
+
+    /* ===================================================================
+       Gallery — VARIANT: BEFORE/AFTER UNIFORM GRID. Tight 3-col grid of
+       finished-work photography. No tilt, no overlap, no broken grid —
+       this is the trade-business portfolio: tidy rows of completed
+       jobs, captioned in body sans. Real DOM:
+       `.gallery-wrapper.gallery-wrapper-app > .gallery-wrapper-images
+       > .container > (.image, .text)`.
+
+       Structural axis vs siblings: editorial = broken grid,
+       agency = banner band, saas = overlapping depth stack,
+       restaurant = vertical list, commerce = tight uniform grid.
+       Local-business = tight uniform grid, but warmer + with
+       amber caption bar.
+       =================================================================== */
+    .gallery-wrapper.gallery-wrapper-app {
+        &.default, &.Default, &.masonry, &.BorderedAlignedByThree {
+            padding: 3.5rem 1.5rem;
+
+            .gallery-wrapper-images {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                column-count: initial;
+                gap: 1rem;
+                max-width: 1100px;
+                margin: 0 auto;
+            }
+
+            .container {
+                margin: 0;
+                border-radius: var(--theme-borderRadius);
+                overflow: hidden;
+                background: var(--color-surface);
+                border: 1px solid var(--color-rule);
+                transition: transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+                            box-shadow calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+
+                &:hover {
+                    transform: translateY(-3px);
+                    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+                }
+
+                .image {
+                    aspect-ratio: 4 / 3;
+                    width: 100%;
+                    overflow: hidden;
+                    border-bottom: 3px solid var(--color-warm);
+
+                    .ant-image, img { width: 100%; height: 100%; }
+                    img { object-fit: cover; }
+                }
+
+                .text p {
+                    font-family: var(--font-body);
+                    font-size: 0.9375rem;
+                    color: var(--color-ink);
+                    padding: 0.75rem 1rem;
+                    border-top: 0;
+                    margin: 0;
+                }
+            }
+
+            .gallery-tile--text {
+                background: var(--color-accent);
+                display: flex;
+                align-items: center;
+
+                .text p {
+                    color: var(--color-accent-ink);
+                    font-family: var(--font-display);
+                    font-weight: 700;
+                    font-size: 1.0625rem;
+                }
+            }
+        }
+    }
+
+    /* ===================================================================
+       TrustBadges — certification pills. Soft outlined chips. The
+       "Gas Safe registered", "NICEIC approved", "Public liability
+       insured", "20+ years in business" row that lives directly under
+       the hero on every trade-business site.
+       =================================================================== */
+    .trust-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.625rem;
+        padding: 1rem 0;
+        margin: 0;
+        list-style: none;
+
+        li {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.95rem;
+            background: var(--color-surface-inset);
+            border: 1px solid var(--color-rule);
+            border-radius: 999px;
+            font-family: var(--font-body);
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--color-ink);
+
+            &::before {
+                content: '\2713';
+                color: var(--color-trust-ok);
+                font-weight: 700;
+            }
+        }
+    }
+
+    /* ===================================================================
+       PricingTable — VARIANT: SERVICE TIER FLAT. Three flat cards.
+       Highlighted tier is marked with an amber top-stripe + a "Most
+       requested" label — no gradient, no glow. Reads like the printed
+       price-list on the workshop wall.
+       =================================================================== */
+    .pricing-table {
+        padding: 3rem 1.5rem;
+
+        &__tiers {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.25rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        &__tier {
+            background: var(--color-surface);
+            border: 1px solid var(--color-rule);
+            border-radius: var(--theme-borderRadius);
+            padding: 2rem 1.5rem;
+            position: relative;
+            transition: transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+                        box-shadow calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+            }
+
+            &--highlighted {
+                border-color: var(--color-accent);
+                border-width: 2px;
+                box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 10%, transparent);
+
+                &::before {
+                    content: '';
+                    position: absolute;
+                    inset: -2px -2px auto -2px;
+                    height: 6px;
+                    background: var(--color-warm);
+                    border-radius: var(--theme-borderRadius) var(--theme-borderRadius) 0 0;
+                }
+            }
+        }
+
+        &__popular {
+            position: absolute;
+            top: 0.75rem;
+            right: 1rem;
+            font-family: var(--font-body);
+            font-size: 0.6875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--color-warm);
+        }
+
+        &__tier-name {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--color-ink);
+        }
+
+        &__price {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 2.75rem;
+            line-height: 1;
+            letter-spacing: -0.02em;
+            color: var(--color-accent);
+            font-variant-numeric: tabular-nums;
+            margin: 0.75rem 0;
+        }
+
+        &__savings {
+            font-family: var(--font-body);
+            font-size: 0.875rem;
+            color: var(--color-warm);
+            font-weight: 600;
+        }
+
+        &__tier-desc {
+            font-family: var(--font-body);
+            color: var(--ink-2);
+            font-size: 0.9375rem;
+            line-height: 1.5;
+        }
+
+        &__cta {
+            display: inline-flex;
+            justify-content: center;
+            font-family: var(--font-body);
+            font-weight: 700;
+            font-size: 1rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--theme-borderRadius);
+            background: var(--color-surface-inset);
+            color: var(--color-accent);
+            border: 2px solid var(--color-rule);
+            min-height: 48px;
+
+            &--highlighted {
+                background: var(--color-accent);
+                color: var(--color-accent-ink);
+                border-color: var(--color-accent);
+            }
+        }
+
+        &__toggle {
+            display: inline-flex;
+            background: var(--color-surface-inset);
+            border-radius: 999px;
+            padding: 4px;
+            margin: 0 auto 2rem;
+        }
+
+        &__toggle-btn {
+            font-family: var(--font-body);
+            font-weight: 600;
+            font-size: 0.875rem;
+            padding: 0.4rem 1rem;
+            border-radius: 999px;
+            color: var(--ink-2);
+            background: transparent;
+            border: none;
+
+            &--active {
+                background: var(--color-surface);
+                color: var(--color-accent);
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            }
+        }
+    }
+
+    /* ===================================================================
+       SkillPills — soft outline pills, accent text. Used for "services
+       offered" quick-scan rows ("Boiler installs · Bathroom plumbing ·
+       Leak detection · Emergency callouts").
+       =================================================================== */
+    .skill-pills {
+        padding: 1.5rem 0;
+
+        &__category {
+            font-family: var(--font-body);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--ink-2);
+            margin-bottom: 0.75rem;
+        }
+
+        &__list, &__row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            padding: 0.45rem 0.875rem;
+            border-radius: 999px;
+            background: var(--color-surface-inset);
+            border: 1px solid var(--color-rule);
+            color: var(--color-ink);
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            font-weight: 500;
+            transition: border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &:hover { border-color: var(--color-accent); color: var(--color-accent); }
+        }
+    }
+
+    /* ===================================================================
+       InquiryForm — VARIANT: CALLBACK REQUEST. Compact "Request a
+       callback" card with prominent submit. Slab heading, body inputs
+       on warm surface. Mirrors the proprietor-photo hero — the form is
+       the digital equivalent of the leaflet's tear-off contact slip.
+       =================================================================== */
+    .inquiry-form {
+        background: var(--color-surface-inset);
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+        padding: 2rem 1.75rem;
+        max-width: 560px;
+
+        &__eyebrow {
+            font-family: var(--font-body);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--color-accent);
+        }
+
+        &__title {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.625rem;
+            letter-spacing: -0.005em;
+            margin: 0.25rem 0 0.5rem;
+            color: var(--color-ink);
+        }
+
+        &__subtitle {
+            font-family: var(--font-body);
+            color: var(--ink-2);
+            font-size: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        &__topics-label {
+            font-family: var(--font-body);
+            font-size: 0.8125rem;
+            font-weight: 700;
+            color: var(--color-ink);
+            margin-bottom: 0.5rem;
+        }
+
+        &__chip {
+            padding: 0.4rem 0.85rem;
+            background: var(--color-surface);
+            border: 1px solid var(--color-rule);
+            border-radius: 999px;
+            font-family: var(--font-body);
+            font-size: 0.875rem;
+            color: var(--color-ink);
+            cursor: pointer;
+
+            &--active, &.is-active {
+                background: var(--color-accent);
+                color: var(--color-accent-ink);
+                border-color: var(--color-accent);
+            }
+        }
+
+        &__label {
+            font-family: var(--font-body);
+            font-size: 0.8125rem;
+            font-weight: 700;
+            color: var(--color-ink);
+        }
+
+        input, textarea, select {
+            font-family: var(--font-body);
+            font-size: 1rem;
+            background: var(--color-surface);
+            border: 1px solid var(--color-rule);
+            border-radius: var(--theme-borderRadius);
+            padding: 0.7rem 0.85rem;
+            color: var(--color-ink);
+            transition: border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &:focus {
+                border-color: var(--color-accent);
+                outline: 3px solid color-mix(in srgb, var(--color-accent) 20%, transparent);
+                outline-offset: 0;
+            }
+        }
+
+        &__sidenote {
+            font-family: var(--font-body);
+            font-size: 0.8125rem;
+            color: var(--ink-2);
+        }
+
+        &__submit {
+            background: var(--color-accent);
+            color: var(--color-accent-ink);
+            border: 2px solid var(--color-accent);
+            border-radius: var(--theme-borderRadius);
+            font-family: var(--font-body);
+            font-weight: 700;
+            font-size: 1rem;
+            padding: 0.85rem 1.5rem;
+            min-height: 48px;
+            box-shadow: 0 2px 0 var(--color-warm);
+            cursor: pointer;
+
+            &:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        }
+    }
+
+    /* ===================================================================
+       Manifesto — small-business promise. Used for the "What you can
+       expect from us" / "Our promise" / "Why we do this" pull-quote.
+       Slab italic, modest scale, amber leading quote mark.
+       =================================================================== */
+    .manifesto {
+        max-width: 60ch;
+        margin: 4rem auto;
+        padding: 0 1.75rem;
+        font-family: var(--font-display);
+        font-style: italic;
+        font-weight: 500;
+        font-size: clamp(1.25rem, 2.4vw, 1.875rem);
+        line-height: 1.4;
+        color: var(--color-ink);
+
+        &::before {
+            content: '\201C';
+            font-family: var(--font-display);
+            font-style: normal;
+            font-size: 3.5rem;
+            line-height: 0.5;
+            color: var(--color-warm);
+            margin-right: 0.2em;
+            vertical-align: -0.35em;
+        }
+
+        &__body { font-family: inherit; }
+
+        &__addendum {
+            display: block;
+            margin-top: 1rem;
+            font-style: normal;
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            color: var(--ink-2);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+    }
+
+    /* ===================================================================
+       MoneyBackGuarantee — framed promise block. Amber left-stripe + slab
+       headline. Reads like the "no fix, no fee" sticker on the van door.
+       =================================================================== */
+    .money-back-guarantee {
+        padding: 1.5rem 1.5rem 1.5rem 1.75rem;
+        border-left: 6px solid var(--color-warm);
+        border-radius: var(--theme-borderRadius);
+        background: var(--color-surface-inset);
+
+        h3 {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--color-accent);
+            margin: 0 0 0.35rem;
+        }
+
+        p {
+            font-family: var(--font-body);
+            font-size: 1rem;
+            color: var(--color-ink);
+            margin: 0;
+            line-height: 1.5;
+        }
+    }
+
+    /* ===================================================================
+       Footer — minimal-1row. Phone, address, opening hours capsule,
+       social row. Warm surface inset, slab footer headings.
+       =================================================================== */
+    .site-footer {
+        background: var(--color-surface-inset);
+        color: var(--color-ink);
+        padding: 3rem 1.5rem 2rem;
+        border-top: 3px solid var(--color-warm);
+
+        h4, &__heading {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--color-ink);
+            margin-bottom: 0.75rem;
+        }
+
+        a {
+            color: var(--color-accent);
+            text-decoration: none;
+            font-family: var(--font-body);
+
+            &:hover { text-decoration: underline; text-underline-offset: 3px; }
+        }
+
+        // Phone number gets the always-on hi-vis treatment.
+        a[href^="tel:"] {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.1875rem;
+            border-bottom: 2px solid var(--color-warm);
+            padding-bottom: 1px;
+
+            &:hover { text-decoration: none; }
+        }
+    }
+
+    /* ===================================================================
+       BlogFeed — card grid, warm surface. Used for "News from the
+       workshop" / "Recent jobs" surfaces.
+       =================================================================== */
+    .blog-feed {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.25rem;
+
+        .blog-card,
+        .ant-card.blog-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-rule);
+            border-radius: var(--theme-borderRadius);
+            overflow: hidden;
+            transition: transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+                        box-shadow calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+            }
+
+            .ant-card-body { background: transparent; color: var(--color-ink); }
+            .ant-card-meta-title {
+                font-family: var(--font-display);
+                font-weight: 700;
+                font-size: 1.125rem;
+                letter-spacing: -0.005em;
+                color: var(--color-ink);
+            }
+            .ant-card-meta-description {
+                color: var(--ink-2);
+                font-family: var(--font-body);
+            }
+
+            .ant-tag {
+                font-family: var(--font-body);
+                font-size: 0.75rem;
+                font-weight: 600;
+                background: var(--color-surface-inset);
+                color: var(--color-accent);
+                border-color: var(--color-rule);
+                border-radius: 999px;
+            }
+        }
+    }
+
+    /* ===================================================================
+       Timeline — vertical centred spine. Used for "How we work" / "Job
+       lifecycle" / "What to expect" walkthroughs. Slab milestones, body
+       descriptions, amber spine.
+       =================================================================== */
+    .timeline {
+        position: relative;
+        padding: 2rem 0;
+        max-width: 720px;
+        margin: 0 auto;
+
+        &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 1.25rem;
+            width: 2px;
+            background: var(--color-rule);
+        }
+
+        &__entry {
+            position: relative;
+            padding: 0.5rem 0 1.5rem 3rem;
+            border-left: 0;
+            margin-bottom: 0;
+
+            &::before {
+                content: '';
+                position: absolute;
+                top: 0.7rem;
+                left: calc(1.25rem - 6px);
+                width: 14px;
+                height: 14px;
+                background: var(--color-warm);
+                border-radius: 50%;
+                border: 3px solid var(--color-surface);
+                box-shadow: 0 0 0 1px var(--color-rule);
+            }
+
+            .timeline__when {
+                font-family: var(--font-body);
+                font-size: 0.8125rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                color: var(--color-accent);
+                margin-bottom: 0.35rem;
+            }
+
+            .timeline__who {
+                font-family: var(--font-display);
+                font-weight: 700;
+                font-size: 1.125rem;
+                color: var(--color-ink);
+            }
+        }
+    }
+
+    /* ===================================================================
+       FeatureGrid / ServicesGridFancy / ProjectTileGrid — flat warm
+       cards. Used for "Why choose us" tiles, alternate service grids,
+       and recent-job mini-portfolios. No gradients, just honest
+       framing + amber accent on hover.
+       =================================================================== */
+    .feature-grid__card,
+    .services-grid-fancy__card,
+    .project-tile,
+    .project-tile-grid__cell {
+        background: var(--color-surface);
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+        padding: 1.5rem;
+        transition: transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+                    border-color calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+                    box-shadow calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &:hover {
+            transform: translateY(-2px);
+            border-color: var(--color-accent);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+        }
+    }
+
+    .feature-grid__icon {
+        color: var(--color-accent);
+        font-size: 1.75rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .feature-grid__title,
+    .project-tile__title,
+    .project-tile-grid__cell__title {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 1.125rem;
+        letter-spacing: -0.005em;
+        color: var(--color-ink);
+    }
+
+    /* ===================================================================
+       MetricsCallout — "20+ years in business · 4,800+ jobs · 4.9★ on
+       Google". Big slab numerals, body-sans labels under. No gradient.
+       =================================================================== */
+    .metrics-callout {
+        background: var(--color-surface-inset);
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+        padding: 2.5rem 2rem;
+        gap: 2rem;
+
+        &__item-value,
+        &__value {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: clamp(2.25rem, 4.5vw, 3.25rem);
+            line-height: 1;
+            letter-spacing: -0.02em;
+            color: var(--color-accent);
+            font-variant-numeric: tabular-nums;
+        }
+
+        &__item-description,
+        &__item-label,
+        &__desc {
+            font-family: var(--font-body);
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--ink-2);
+            margin-top: 0.4rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+    }
+
+    /* ===================================================================
+       StatsStrip — flat row of numbered facts with amber separators.
+       Read as the workshop wall-board.
+       =================================================================== */
+    .stats-strip {
+        &__row {
+            border-top: 1px solid var(--color-rule);
+            border-bottom: 1px solid var(--color-rule);
+            background: var(--color-surface);
+        }
+
+        &__cell {
+            border-right: 1px solid var(--color-rule);
+            padding: 1.5rem 1.5rem;
+
+            &.is-hl { background: color-mix(in srgb, var(--color-warm) 8%, transparent); }
+        }
+
+        &__v {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: clamp(1.5rem, 2.8vw, 2.25rem);
+            letter-spacing: -0.01em;
+            color: var(--color-accent);
+        }
+
+        &__unit {
+            font-family: var(--font-body);
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--color-warm);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        &__k {
+            font-family: var(--font-body);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--ink-2);
+            margin-top: 0.4rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+    }
+
+    /* ===================================================================
+       StatsCard — service-result tile. Flat, framed, amber-led title.
+       =================================================================== */
+    .stats-card {
+        background: var(--color-surface);
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+        padding: 1.5rem;
+
+        &__tag {
+            font-family: var(--font-body);
+            font-size: 0.6875rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--color-warm);
+            border: 1px solid color-mix(in srgb, var(--color-warm) 50%, transparent);
+            border-radius: 4px;
+            padding: 0.2rem 0.5rem;
+            display: inline-block;
+        }
+
+        &__title {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.125rem;
+            letter-spacing: -0.005em;
+            color: var(--color-ink);
+        }
+
+        &__n {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 2rem;
+            color: var(--color-accent);
+            font-variant-numeric: tabular-nums;
+        }
+
+        &__l {
+            font-family: var(--font-body);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--ink-2);
+        }
+
+        &__features li {
+            font-family: var(--font-body);
+            color: var(--color-ink);
+            border-top: 1px solid var(--color-rule);
+
+            &::before { color: var(--color-trust-ok); }
+        }
+    }
+
+    /* ===================================================================
+       Buttons + CTAs — flat accent + amber underline. The signature
+       "trade hi-vis" CTA — no gradients, no glow, but the amber stripe
+       under the button reads as the road-marker / van-stripe.
+       =================================================================== */
+    .buy-cta, .place-order-button, .cart-actions__proceed,
+    .pricing-table__cta--primary, .pricing-table__cta--highlighted,
+    .empty-state-block__action--primary,
+    .product-detail-hero__cta,
+    .magic-link-request-form button[type="submit"],
+    .reservation-widget__submit,
+    .event-buy-tickets-cta__trigger {
+        background: var(--color-accent);
+        color: var(--color-accent-ink);
+        border: 2px solid var(--color-accent);
+        border-radius: var(--theme-borderRadius);
+        font-family: var(--font-body);
+        font-weight: 700;
+        font-size: 1rem;
+        padding: 0.8rem 1.5rem;
+        min-height: 48px;
+        cursor: pointer;
+        box-shadow: 0 2px 0 var(--color-warm);
+        transition: transform calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                    box-shadow calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                    background calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &:hover:not(:disabled) {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 0 var(--color-warm);
+        }
+
+        &:active:not(:disabled) {
+            transform: translateY(1px);
+            box-shadow: 0 1px 0 var(--color-warm);
+        }
+    }
+
+    /* ===================================================================
+       Commerce + customer-account modules — pick up warm surface
+       inheritance + trust-blue accent.
+       =================================================================== */
+    .product-card, .car-listing-card, .order-detail-module,
+    .account-dashboard-grid__cell, .wishlist-grid__cell,
+    .saved-search-list__row, .car-vdp__trust-item,
+    .speaker-grid__card, .empty-state-block, .save-search-prompt {
+        background: var(--color-surface);
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+    }
+
+    .order-progress-timeline__step[data-status="done"] .order-progress-timeline__dot,
+    .order-progress-timeline__step[data-status="active"] .order-progress-timeline__dot {
+        background: var(--color-accent);
+    }
+
+    .vat-badge {
+        border-radius: 4px;
+        font-family: var(--font-body);
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        background: var(--color-surface-inset);
+        color: var(--ink-2);
+    }
+
+    /* ===================================================================
+       Sections / SectionHeading — slab heading with amber underline.
+       Used on every page-section title.
+       =================================================================== */
+    .section-heading {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: clamp(1.625rem, 3.2vw, 2.25rem);
+        letter-spacing: -0.01em;
+        color: var(--color-ink);
+        padding-bottom: 0.5rem;
+        border-bottom: 3px solid var(--color-warm);
+        display: inline-block;
+        margin-bottom: 1.5rem;
+    }
+
+    /* ===================================================================
+       LogoCloud / SponsorStrip / IntegrationGrid — "as featured in" /
+       "approved partners" tiles. Flat, framed, monochrome by default —
+       these read as press / approval credentials on a trade-business
+       site rather than tech-integration showcases.
+       =================================================================== */
+    .logo-cloud {
+        img, svg {
+            filter: grayscale(1);
+            opacity: 0.75;
+            transition: filter calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+                        opacity calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &:hover { filter: none; opacity: 1; }
+        }
+    }
+
+    .integration-grid__tile,
+    .sponsor-strip__sponsor {
+        background: var(--color-surface);
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+        padding: 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 5rem;
+        transition: border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                    transform calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        img, svg {
+            max-height: 2.25rem;
+            filter: grayscale(1);
+            opacity: 0.8;
+        }
+
+        &:hover {
+            border-color: var(--color-accent);
+            transform: translateY(-2px);
+
+            img, svg { filter: none; opacity: 1; }
+        }
+    }
+
+    /* ===================================================================
+       TestimonialWall (the standalone module — Testimonials above is the
+       Testimonials renderer; TestimonialWall is the 3-up grid variant).
+       =================================================================== */
+    .testimonial-wall {
+        gap: 1.25rem;
+
+        &__card {
+            background: var(--color-surface-inset);
+            border: 1px solid var(--color-rule);
+            border-radius: var(--theme-borderRadius);
+            padding: 1.5rem;
+            position: relative;
+
+            &::before {
+                content: '\201C';
+                font-family: var(--font-display);
+                font-size: 2.5rem;
+                line-height: 1;
+                color: var(--color-warm);
+                position: absolute;
+                top: 0.5rem;
+                left: 1rem;
+                opacity: 0.7;
+            }
+        }
+    }
+
+    /* ===================================================================
+       ProcessTimeline — used for "How a job goes" (1: call, 2: visit,
+       3: quote, 4: book, 5: complete). Numbered steps with slab
+       numerals, dashed connector.
+       =================================================================== */
+    .process-timeline {
+        padding: 2rem 0;
+
+        &__step {
+            font-family: var(--font-body);
+        }
+
+        &__step-num {
+            font-family: var(--font-display);
+            font-weight: 700;
+            color: var(--color-accent);
+        }
+
+        &__step-title {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.125rem;
+            color: var(--color-ink);
+        }
+    }
+
+    /* ===================================================================
+       BeforeAfterSlider — gallery hero variant. Frame the slider in the
+       warm-paper surround, amber handle.
+       =================================================================== */
+    .before-after-slider {
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+        overflow: hidden;
+        background: var(--color-surface);
+
+        &__handle, .ant-image-mask {
+            background: var(--color-warm);
+        }
+    }
+
+    /* ===================================================================
+       ComparisonTable — "us vs the bigger national firm" surface. Flat,
+       framed, amber accent on the highlighted column rather than
+       gradient outline.
+       =================================================================== */
+    .comparison-table-wrap {
+        background: var(--color-surface);
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+        padding: 0.5rem;
+    }
+
+    .comparison-table {
+        font-family: var(--font-body);
+
+        &__col {
+            background: transparent;
+            border-bottom: 1px solid var(--color-rule);
+            font-family: var(--font-display);
+            font-weight: 700;
+            letter-spacing: -0.005em;
+
+            &--highlighted {
+                background: var(--color-surface-inset);
+                border-top: 4px solid var(--color-warm);
+            }
+        }
+
+        &__badge {
+            background: var(--color-warm);
+            color: var(--color-warm-ink);
+            font-family: var(--font-body);
+            font-weight: 700;
+            font-size: 0.6875rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        &__group-cell {
+            background: var(--color-surface-inset);
+            font-family: var(--font-body);
+            font-weight: 700;
+            font-size: 0.8125rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+        }
+
+        &__row-label {
+            background: transparent;
+            color: var(--ink-2);
+            border-bottom: 1px solid var(--color-rule);
+            font-family: var(--font-body);
+        }
+
+        &__cell {
+            border-bottom: 1px solid var(--color-rule);
+
+            &--col-highlighted {
+                background: color-mix(in srgb, var(--color-warm) 6%, transparent);
+            }
+        }
+
+        &__bool--true::before { color: var(--color-trust-ok); }
+        &__bool--false::before { color: var(--ink-2); }
+    }
+
+    /* ===================================================================
+       Code blocks + mono surfaces — minimal use in local-business, but
+       wire them up so any pSEO / data-driven page (price-list table,
+       service-area code) renders consistently.
+       =================================================================== */
+    code, pre, .label--mono, .meta--mono, .breadcrumb {
+        font-family: var(--font-mono);
+        font-size: 0.875rem;
+    }
+
+    /* All shipped modules — Source Sans 3 body, Roboto Slab titles. */
+    .cart-line-items, .cart-summary, .cart-actions, .checkout-progress-bar,
+    .checkout-address-form, .checkout-shipping-method, .checkout-payment-form,
+    .checkout-cart-summary, .place-order-button, .order-summary,
+    .magic-link-account-upgrade, .account-welcome, .shipping-calculator,
+    .download-invoice-button, .trust-badges, .money-back-guarantee,
+    .refer-a-friend-cta, .social-share-buttons,
+    .order-detail-module, .order-progress-timeline,
+    .wishlist-grid, .saved-search-list, .account-dashboard-grid,
+    .magic-link-request-form, .magic-link-confirmation,
+    .oauth-button-stack, .reservation-widget,
+    .opening-hours, .contact-block, .countdown-timer,
+    .event-schedule-agenda, .speaker-grid, .sponsor-strip,
+    .event-buy-tickets-cta, .event-hero-video,
+    .before-after-slider, .metrics-callout, .process-timeline,
+    .services-grid-fancy, .project-case-study, .project-tile-grid,
+    .empty-state-block, .sticky-cta-bar, .comparison-table {
+        font-family: var(--font-body);
+
+        h1, h2, h3, h4 {
+            font-family: var(--font-display);
+            font-weight: 700;
+            letter-spacing: -0.005em;
+        }
+    }
+
+    /* ===================================================================
+       ProjectGrid — VARIANT: POSTER-STACK.
+       Structural axis vs siblings: agency = offset spread, editorial =
+       ledger, commerce = uniform tiles, portfolio = broken-grid, saas =
+       elevated cards, restaurant = menu-list.
+       Local-business = poster-stack — large rectangular slab cards, big
+       numbered tags, warm rule borders. Civic poster feel reads as the
+       "Recent jobs" wall of a workshop.
+       =================================================================== */
+    .project-grid {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 3.5rem 1.5rem;
+
+        &__head {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 3px solid var(--color-warm);
+        }
+        &__num {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 0.9375rem;
+            color: var(--color-warm);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        &__title {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: clamp(1.75rem, 4vw, 2.5rem);
+            letter-spacing: -0.01em;
+            line-height: 1.05;
+            margin: 0;
+        }
+        &__sub {
+            font-family: var(--font-body);
+            color: var(--ink-2);
+            font-size: 1rem;
+            width: 100%;
+        }
+
+        &__items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+        &__item-wrap { display: block; }
+        &__item {
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            background: var(--color-surface);
+            border: 2px solid var(--color-ink);
+            border-radius: 0;
+            text-decoration: none;
+            color: inherit;
+            position: relative;
+            transition: transform calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                        box-shadow calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+        }
+        &__cover {
+            aspect-ratio: 3 / 2;
+            background: var(--color-surface-inset);
+            position: relative;
+            overflow: hidden;
+            border-bottom: 2px solid var(--color-ink);
+            img, .ant-image, .ant-image-img { width: 100%; height: 100%; object-fit: cover; }
+        }
+        &__year {
+            position: absolute;
+            top: 0; right: 0;
+            background: var(--color-warm);
+            color: var(--color-ink);
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 0.875rem;
+            padding: 0.25rem 0.75rem;
+            letter-spacing: 0.04em;
+        }
+        &__art {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 3rem;
+            color: var(--color-ink);
+        }
+        &__meta {
+            padding: 1rem 1rem 0.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        &__card-title {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.1875rem;
+            letter-spacing: -0.005em;
+            line-height: 1.2;
+            margin: 0;
+            text-transform: uppercase;
+        }
+        &__stack, &__kind {
+            font-family: var(--font-body);
+            font-size: 0.875rem;
+            color: var(--ink-2);
+        }
+        &__more {
+            background: var(--color-ink);
+            color: var(--color-surface);
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 0.8125rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 0.625rem 1rem;
+            text-align: center;
+        }
+        &__item:hover {
+            transform: translate(-3px, -3px);
+            box-shadow: 6px 6px 0 var(--color-warm);
+        }
+    }
+
+    /* ===================================================================
+       OrderProgressTimeline — VARIANT: COMPACT HORIZONTAL LEDGER.
+       Flat blocks, thick warm connectors, slab labels — civic register
+       cadence.
+       =================================================================== */
+    .order-progress-timeline {
+        list-style: none;
+        padding: 1rem 0;
+        margin: 0;
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(0, 1fr);
+        gap: 0;
+
+        &__step {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 0.75rem 1rem;
+            border-left: 4px solid var(--color-rule);
+            position: relative;
+
+            &:first-child { border-left-color: var(--color-warm); }
+        }
+        &__step[data-status="done"],
+        &__step[data-status="active"] {
+            border-left-color: var(--color-warm);
+        }
+        &__dot {
+            width: 0.75rem;
+            height: 0.75rem;
+            border-radius: 0;
+            background: var(--color-rule);
+            margin-bottom: 0.375rem;
+        }
+        &__step[data-status="done"] &__dot,
+        &__step[data-status="active"] &__dot { background: var(--color-warm); }
+        &__step[data-status="active"] &__dot {
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-warm) 30%, transparent);
+        }
+        &__label {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: var(--color-ink);
+            line-height: 1.2;
+        }
+        &__date {
+            font-family: var(--font-body);
+            font-size: 0.75rem;
+            color: var(--ink-2);
+            margin-top: 0.125rem;
+        }
+
+        @media (max-width: 720px) {
+            grid-auto-flow: row;
+            grid-auto-columns: auto;
+            &__step {
+                border-left: 0;
+                border-top: 4px solid var(--color-rule);
+                padding: 0.75rem 0 0.5rem;
+            }
+            &__step[data-status="done"],
+            &__step[data-status="active"] { border-top-color: var(--color-warm); }
+        }
+    }
+
+    /* ===================================================================
+       Footer — VARIANT: ADDRESS-CARD-LED.
+       Big address + hours card on the left, secondary link columns
+       compact on the right. Reads as the storefront window before any
+       link directory.
+       =================================================================== */
+    .site-footer {
+        &__columns {
+            display: grid;
+            grid-template-columns: 1.4fr repeat(auto-fit, minmax(140px, 1fr));
+            gap: 2rem;
+            align-items: start;
+        }
+        &__column {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+
+            ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 0.375rem;
+                font-size: 0.9375rem;
+            }
+
+            // First column promoted to the address card — slab background,
+            // thicker warm border, bigger heading.
+            &:first-child {
+                background: var(--color-surface);
+                border: 2px solid var(--color-ink);
+                border-left: 6px solid var(--color-warm);
+                padding: 1rem 1.25rem;
+
+                h4 {
+                    font-size: 1.0625rem;
+                    text-transform: uppercase;
+                    letter-spacing: 0.04em;
+                }
+                ul { font-size: 1rem; font-family: var(--font-body); }
+            }
+        }
+        &__bottom {
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--color-rule);
+            font-family: var(--font-body);
+            font-size: 0.8125rem;
+            color: var(--ink-2);
+        }
+    }
+
+    /* ===================================================================
+       Kinetic-typography signature — LOCAL-BUSINESS = SLAB RISE.
+       Quick rise-in matching the poster-stack ProjectGrid hover. Civic
+       poster cadence — confident, no drift afterwards.
+       =================================================================== */
+    @supports (animation-timeline: view()) {
+        .hero__headline {
+            animation: kinetic-rise-in linear both;
+            animation-timeline: view();
+            animation-range: entry 0% cover 25%;
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .hero__headline { animation: none; }
+    }
+
+    /* ===================================================================
+       Theme motion signature — LOCAL-BUSINESS = POSTER TILT.
+       Cards arrive with a small tilt-then-settle, like a poster being
+       tacked up. Pairs with poster-stack hover offset on ProjectGrid.
+       =================================================================== */
+    @supports (animation-timeline: view()) {
+        .reveal-on-scroll {
+            opacity: 1;
+            transform: none;
+            transition: none;
+            animation: kinetic-tilt-in linear both;
+            animation-timeline: view();
+            animation-range: entry 0% cover 25%;
+        }
+    }
+    /* Hover signature — slab translate + warm shadow drop. Civic poster
+       feel — confident, not floaty. */
+    .services-module__row,
+    .feature-grid__card,
+    .blog-feed article,
+    .testimonial-wall__card {
+        transition:
+            transform calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-emphasized),
+            box-shadow calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-emphasized);
+
+        &:hover {
+            transform: translate(-3px, -3px);
+            box-shadow: 6px 6px 0 var(--color-warm);
+        }
+    }
+
+    /* (Services keeps the existing local-business per-row card style
+       defined upstream; the hover signature above layers on top.) */
+
+    /* ===================================================================
+       FeatureGrid — VARIANT: POSTER GRID.
+       Slab cards, thick ink border, warm number badge. The civic poster
+       wall — every cell reads as a separate piece of work.
+       =================================================================== */
+    .feature-grid {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 3rem 1.5rem;
+        list-style: none;
+        display: grid;
+        gap: 1rem;
+
+        &--cols-2 { grid-template-columns: repeat(2, 1fr); }
+        &--cols-3 { grid-template-columns: repeat(3, 1fr); }
+
+        @media (max-width: 720px) {
+            grid-template-columns: 1fr !important;
+        }
+
+        &__card {
+            background: var(--color-surface);
+            border: 2px solid var(--color-ink);
+            border-radius: 0;
+            padding: 1.5rem 1.5rem 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            position: relative;
+        }
+        &__icon {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--color-warm);
+            color: var(--color-ink);
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 0.875rem;
+            padding: 0.25rem 0.625rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+        &__title {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.1875rem;
+            letter-spacing: -0.005em;
+            line-height: 1.2;
+            text-transform: uppercase;
+            margin: 0;
+        }
+        &__desc {
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            line-height: 1.55;
+            color: var(--ink-2);
+            margin: 0;
+        }
+    }
+
+    .schema-org-injector { /* noop */ }
+    .cookie-consent-banner { /* forward-stub */ }
+}

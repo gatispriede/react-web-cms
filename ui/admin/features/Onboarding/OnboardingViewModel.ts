@@ -1,6 +1,7 @@
-import {message} from 'antd';
+import {notifyError, notifyPromise, notifySuccess} from '@admin/lib/notify';
 import {observable} from '@client/lib/state/observable';
 import {resolve} from '@services/api/generated';
+import adminI18n from '@admin/i18n/adminI18n';
 
 /**
  * Q7 — onboarding wizard view-model. Owns the 3-step state machine
@@ -40,6 +41,8 @@ export class OnboardingViewModel {
     submitting = false;
     error: string | null = null;
     done = false;
+    seedSample = true;
+    seeding = false;
 
     constructor(
         private readonly onComplete: () => void = () => {},
@@ -76,6 +79,51 @@ export class OnboardingViewModel {
         if (this.step > 0) this.step -= 1;
     }
 
+    setSeedSample(value: boolean): void {
+        this.seedSample = value;
+    }
+
+    /**
+     * Imports the curated `seeds/admin-onboarding.bundle.json` so the
+     * fresh admin lands on a non-blank surface. Calls the same
+     * `/api/import` route the Bundle pane uses — idempotent stable ids
+     * mean re-running upserts rather than duplicating.
+     */
+    async seedSampleBundle(): Promise<void> {
+        if (this.seeding) return;
+        this.seeding = true;
+        try {
+            await notifyPromise(
+                (async () => {
+                    const res = await fetch('/seeds/admin-onboarding.bundle.json');
+                    if (!res.ok) throw new Error(`Seed fetch failed: ${res.status}`);
+                    const bundle = await res.json();
+                    const imp = await fetch('/api/import', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(bundle),
+                    });
+                    const data = await imp.json();
+                    if (!imp.ok || data.error) {
+                        throw new Error(data.error || `Import failed: ${imp.status}`);
+                    }
+                    return data;
+                })(),
+                {
+                    loading: adminI18n.t('Seeding sample content…'),
+                    success: adminI18n.t('Sample content imported'),
+                    error: (err) => adminI18n.t('errors.generic', {message: String((err as Error)?.message ?? err)}),
+                },
+            );
+        } catch (err) {
+            // notifyPromise already surfaced the error toast; swallow so
+            // the wizard can still complete with the bootstrap success.
+            notifyError(err);
+        } finally {
+            this.seeding = false;
+        }
+    }
+
     async submit(): Promise<void> {
         if (!this.canAdvance() || this.submitting) return;
         this.submitting = true;
@@ -93,15 +141,18 @@ export class OnboardingViewModel {
             const parsed = JSON.parse(raw || '{}');
             if (parsed.error) {
                 this.error = String(parsed.error);
-                message.error(this.error);
+                notifyError(this.error);
                 return;
             }
             this.done = true;
-            message.success('Welcome — start by adding your first page.');
+            if (this.seedSample) {
+                await this.seedSampleBundle();
+            }
+            notifySuccess('Welcome — start by adding your first page.');
             this.onComplete();
         } catch (err) {
             this.error = String((err as Error).message ?? err);
-            message.error(this.error);
+            notifyError(this.error);
         } finally {
             this.submitting = false;
         }

@@ -1,0 +1,891 @@
+/* ==========================================================================
+   Editorial — per-module overrides.
+
+   Scope: [data-theme-name="editorial"]. Every block here either tweaks a
+   module that genuinely diverges from default (Hero, Gallery, MainMenu,
+   Footer, ProjectCaseStudy …) or polishes a commerce/customer-account
+   module to match the warm-paper + serif aesthetic.
+
+   Token-driven modules (most of the 47 in the catalogue) are NOT touched
+   here — they pick up the theme palette + typography + motion overrides
+   from `theme.scss` automatically via the CSS custom properties. The
+   overrides below are reserved for cases where a default value is
+   geometrically wrong for the theme (e.g. rounded radii on a flat
+   editorial aesthetic, or sticky-static header where Editorial wants
+   centered-hero-integrated).
+
+   Visual baselines for these blocks live under
+   `tests/e2e/visual/__snapshots__/themes/editorial/`. The per-theme
+   capture spec at `tests/e2e/visual/themes/editorial.spec.ts` walks
+   every EItemType under `[data-theme-name="editorial"]` and snapshots
+   the result.
+   ========================================================================== */
+
+[data-theme-name="editorial"] {
+
+    /* ===================================================================
+       Header / nav — Editorial picks `centered-hero-integrated`.
+       Nav floats over the hero, condenses to a slim bar after scroll
+       past the hero's bottom edge. See moduleStyleHints.hero =
+       'full-bleed-overlay-nav' in theme.json.
+       =================================================================== */
+    .main-nav {
+        background: transparent;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 10;
+        padding: 1.5rem 2rem;
+
+        a {
+            color: var(--color-surface);
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.4);
+            font-family: var(--font-body);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            font-size: 0.8125rem;
+        }
+
+        // Condensed state once the hero scrolls out (toggled by client JS).
+        &.is-condensed {
+            position: sticky;
+            background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+            backdrop-filter: blur(6px);
+            padding: 0.75rem 2rem;
+
+            a {
+                color: var(--color-ink);
+                text-shadow: none;
+            }
+        }
+    }
+
+    /* ===================================================================
+       Hero — VARIANT: PHOTO-BLEED banner, content bottom-aligned.
+       Real DOM: `.hero > .hero__main` (+ optional `.hero__bg`,
+       `.hero__portrait`, `.hero__meta`, `.hero__coords`). Editorial
+       turns the hero into a tall full-bleed banner: the title block
+       sits at the bottom-left over the photo, meta/coords kept as a
+       hairline strip beneath. No DOM change — pure layout.
+
+       Structural axis vs siblings: agency = OVERLAY (centred, stacked),
+       commerce / saas = SPLIT (copy ⇆ portrait). Editorial = PHOTO-BLEED.
+       =================================================================== */
+    .hero {
+        min-height: 78vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: flex-start;
+        padding: 4rem 2rem 2.5rem;
+        border-bottom: 0;
+        text-align: left;
+
+        // Editorial dims the photo with a top-to-bottom scrim so the
+        // bottom-anchored title block always clears contrast.
+        &.is-fullbleed::before {
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.55) 100%);
+        }
+
+        &__main {
+            max-width: 62ch;
+        }
+
+        &__headline {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 7vw, 5.5rem);
+            font-weight: 400;
+            line-height: 1.02;
+        }
+
+        &__subtitle,
+        &__tagline {
+            font-family: var(--font-body);
+        }
+
+        // Meta + coords drop to a single hairline strip under the title.
+        &__meta,
+        &__coords {
+            border-top: 1px solid color-mix(in srgb, var(--color-surface) 40%, transparent);
+            width: 100%;
+        }
+
+        // When a portrait tile is present Editorial still bottom-aligns
+        // it beside the copy rather than the default top-aligned split.
+        &--has-portrait {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            align-items: end;
+            gap: 3rem;
+        }
+
+        &__portrait {
+            justify-self: end;
+            border-radius: 0;
+        }
+
+        // Hero reveal — slow + deliberate, large distance.
+        animation: editorial-hero-enter calc(var(--motion-duration-deliberate) * var(--motion-scalar)) var(--motion-ease-emphasized) backwards;
+
+        @media (max-width: 720px) {
+            min-height: 60vh;
+            padding: 3rem 1.25rem 2rem;
+
+            &--has-portrait { grid-template-columns: 1fr; }
+        }
+    }
+
+    @keyframes editorial-hero-enter {
+        from { opacity: 0; transform: translateY(var(--motion-distance-lg)); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===================================================================
+       Manifesto — large-type editorial pull-quote feel.
+       =================================================================== */
+    .manifesto {
+        max-width: 64ch;
+        margin: 5rem auto;
+        padding: 0 2rem;
+        font-family: var(--font-display);
+        font-size: clamp(1.5rem, 2.5vw, 2rem);
+        line-height: 1.4;
+        font-style: italic;
+        color: var(--color-ink);
+
+        &::before { content: '\201C'; font-size: 4rem; line-height: 0.5; color: var(--color-accent); margin-right: 0.25em; vertical-align: -0.4em; }
+    }
+
+    /* ===================================================================
+       Gallery — VARIANT: LAYERED / broken-grid magazine spread.
+       Real DOM: `.gallery-wrapper.gallery-wrapper-app > .gallery-wrapper-images
+       > .container > (.image, .text)`. Editorial breaks the uniform grid:
+       a dense auto-flow grid where every 3rd / 5th tile spans two columns
+       or two rows, generous whitespace, hairline-free flat crops. The
+       layered feel comes from staggered row spans, not z-index.
+
+       Structural axis vs siblings: commerce = tight uniform grid,
+       agency = full-bleed banner band, restaurant = vertical list,
+       saas = depth-stacked. Editorial = broken/asymmetric grid.
+       =================================================================== */
+    .gallery-wrapper.gallery-wrapper-app {
+        &.default, &.Default, &.masonry, &.BorderedAlignedByThree {
+            padding: 3rem 2rem;
+
+            .gallery-wrapper-images {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                grid-auto-flow: dense;
+                grid-auto-rows: 14vw;
+                gap: 1.75rem;
+                column-count: initial;
+            }
+
+            .container {
+                border-radius: 0;
+                background: transparent;
+                margin: 0;
+                display: flex;
+                flex-direction: column;
+
+                // Broken-grid rhythm — alternating large + tall tiles.
+                &:nth-child(5n + 1) { grid-column: span 2; grid-row: span 2; }
+                &:nth-child(7n + 4) { grid-row: span 2; }
+                &:nth-child(4n + 3) { grid-column: span 2; }
+
+                .image {
+                    flex: 1;
+                    aspect-ratio: auto;
+                    overflow: hidden;
+                    .ant-image, img { width: 100%; height: 100%; }
+                    img {
+                        object-fit: cover;
+                        filter: contrast(1.02) saturate(0.95);
+                        transition: filter calc(var(--motion-duration-slow) * var(--motion-scalar)) var(--motion-ease-standard);
+                    }
+                }
+
+                &:hover .image img { filter: contrast(1.06) saturate(1); }
+
+                .text p {
+                    font-family: var(--font-body);
+                    font-size: 0.8125rem;
+                    text-transform: none;
+                    letter-spacing: 0.01em;
+                    color: var(--ink-2);
+                    border-top: 0;
+                    padding: 0.625rem 0 0;
+                }
+            }
+
+            .gallery-tile--text {
+                background: var(--color-surface-inset);
+                .text { padding: 1.5rem; font-family: var(--font-display); font-style: italic; }
+            }
+        }
+
+        @media (max-width: 720px) {
+            &.default, &.Default, &.masonry, &.BorderedAlignedByThree {
+                .gallery-wrapper-images {
+                    grid-template-columns: repeat(2, 1fr);
+                    grid-auto-rows: 32vw;
+                }
+                .container:nth-child(5n + 1) { grid-column: span 2; }
+            }
+        }
+    }
+
+    /* ===================================================================
+       ProjectCaseStudy + ProjectTileGrid + BlogFeed — the storefront
+       reading surfaces. Inherit display serif on titles.
+       =================================================================== */
+    .project-case-study {
+        max-width: 72ch;
+        margin: 0 auto;
+        padding: 4rem 2rem;
+
+        &__title { font-family: var(--font-display); font-size: clamp(2rem, 4.5vw, 3.5rem); font-weight: 400; line-height: 1.1; }
+        &__section h2 { font-family: var(--font-display); font-size: 1.75rem; font-weight: 400; margin-top: 3rem; }
+        &__section { font-family: var(--font-body); font-size: 1.0625rem; line-height: 1.65; }
+    }
+
+    .project-tile-grid {
+        column-gap: 2rem;
+
+        .project-tile {
+            border-radius: 0;
+            margin-bottom: 2rem;
+
+            &__title { font-family: var(--font-display); font-weight: 400; }
+        }
+    }
+
+    .blog-feed {
+        max-width: 64ch;
+        margin: 0 auto;
+
+        article {
+            border-bottom: 1px solid var(--color-rule);
+            padding: 2rem 0;
+
+            h2 { font-family: var(--font-display); font-size: 1.625rem; font-weight: 400; }
+            time { color: var(--ink-2); letter-spacing: 0.05em; text-transform: uppercase; font-size: 0.75rem; }
+        }
+
+        article:last-child { border-bottom: none; }
+    }
+
+    /* ===================================================================
+       Timeline — VARIANT: BROKEN-GRID, alternating-side entries.
+       Real DOM: `.timeline > .timeline__entry > (.timeline__when,
+       .timeline__body)`. Editorial drops the single left spine and
+       instead alternates entries left / right of a centred hairline,
+       each entry offset and indented for a literary, broken-column feel.
+
+       Structural axis vs siblings: agency / saas = HORIZONTAL track,
+       commerce = compact vertical, restaurant = centred spine.
+       Editorial = broken-grid alternation.
+       =================================================================== */
+    .timeline {
+        --timeline-rule: var(--color-rule);
+        position: relative;
+        padding-left: 0;
+        max-width: 60rem;
+        margin: 0 auto;
+
+        // Centred hairline spine.
+        &::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: var(--timeline-rule);
+            opacity: 1;
+            transform: translateX(-50%);
+        }
+
+        &__entry {
+            position: relative;
+            width: 50%;
+            box-sizing: border-box;
+            padding: 0 2.5rem 3rem;
+            border-left: 0;
+
+            // Accent dot pinned to the spine.
+            &::before {
+                content: '';
+                position: absolute;
+                top: 0.4rem;
+                width: 9px;
+                height: 9px;
+                background: var(--color-accent);
+                border-radius: 50%;
+                left: auto;
+                right: -4.5px;
+            }
+
+            // Odd entries sit left of the spine, even entries right —
+            // each nudged outward for the broken-column rhythm.
+            &:nth-child(odd) {
+                margin-left: 0;
+                text-align: right;
+                transform: translateX(-1.5rem);
+            }
+            &:nth-child(even) {
+                margin-left: 50%;
+                text-align: left;
+                transform: translateX(1.5rem);
+                &::before { left: -4.5px; right: auto; }
+            }
+
+            .timeline__when {
+                font-family: var(--font-body);
+                letter-spacing: 0.06em;
+            }
+            .timeline__who { font-family: var(--font-display); font-weight: 400; }
+        }
+
+        @media (max-width: 720px) {
+            &::before { left: 4px; transform: none; }
+            &__entry {
+                width: 100%;
+                padding: 0 0 2rem 2rem;
+                text-align: left;
+                &:nth-child(odd),
+                &:nth-child(even) {
+                    margin-left: 0;
+                    text-align: left;
+                    transform: none;
+                }
+                &::before,
+                &:nth-child(even)::before { left: 0; right: auto; }
+            }
+        }
+    }
+
+    /* ===================================================================
+       Footer — minimal one-row, hairline top rule.
+       =================================================================== */
+    .site-footer {
+        background: transparent;
+        border-top: 1px solid var(--color-rule);
+        padding: 2rem;
+        font-size: 0.875rem;
+        color: var(--ink-2);
+
+        a {
+            color: var(--color-ink);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+        }
+
+        a:hover { border-bottom-color: var(--color-accent); }
+    }
+
+    /* ===================================================================
+       Breadcrumb — uppercase mono-look tracking.
+       =================================================================== */
+    .breadcrumb {
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-2);
+
+        a { color: var(--color-ink); }
+        &__sep { color: var(--color-rule); }
+    }
+
+    /* ===================================================================
+       Commerce + customer-account modules — pick up palette + serif on
+       titles. Buttons drop their radius to match the flat aesthetic.
+       =================================================================== */
+    .cart-line-items, .cart-summary, .cart-actions, .checkout-progress-bar,
+    .checkout-address-form, .checkout-shipping-method, .checkout-payment-form,
+    .checkout-cart-summary, .place-order-button, .order-summary,
+    .magic-link-account-upgrade, .account-welcome, .shipping-calculator,
+    .download-invoice-button, .trust-badges, .money-back-guarantee,
+    .refer-a-friend-cta, .social-share-buttons,
+    .product-card, .product-detail-hero, .product-spec-table,
+    .car-listing-card, .car-photo-gallery, .car-spec-table,
+    .car-reservation-cta, .car-comparison-table, .car-finance-estimator,
+    .car-vdp, .order-detail-module, .order-progress-timeline,
+    .wishlist-grid, .saved-search-list, .account-dashboard-grid,
+    .magic-link-request-form, .magic-link-confirmation,
+    .oauth-button-stack, .pricing-table, .feature-grid,
+    .product-screenshot-hero, .logo-cloud, .testimonial-wall,
+    .integration-grid, .changelog-timeline,
+    .restaurant-menu, .reservation-widget, .opening-hours, .contact-block,
+    .countdown-timer, .event-schedule-agenda, .speaker-grid,
+    .sponsor-strip, .event-buy-tickets-cta, .event-hero-video,
+    .before-after-slider, .metrics-callout, .process-timeline,
+    .services-grid-fancy,
+    .empty-state-block, .sticky-cta-bar, .comparison-table,
+    .save-search-prompt, .vat-badge {
+        font-family: var(--font-body);
+    }
+
+    h1, h2, h3, h4,
+    .cart-line-items__title, .cart-summary__title,
+    .checkout-cart-summary h3, .order-summary h2,
+    .product__title, .product-detail-hero__title,
+    .car-vdp__title, .order-detail-module__title,
+    .pricing-table__plan-name, .feature-grid__title,
+    .project-case-study__title, .blog-feed article h2,
+    .changelog-timeline__title, .restaurant-menu__title,
+    .speaker-grid__name {
+        font-family: var(--font-display);
+    }
+
+    /* Square the buttons + cards (editorial = flat, not rounded). */
+    .place-order-button,
+    .cart-actions__proceed,
+    .empty-state-block__action,
+    .car-reservation-cta__reserve,
+    .car-reservation-cta__cancel,
+    .car-reservation-cta__contact,
+    .oauth-button,
+    .pricing-table__cta,
+    .magic-link-request-form button[type="submit"],
+    .car-finance-estimator__submit,
+    .reservation-widget__submit,
+    .event-buy-tickets-cta__trigger,
+    .save-search-prompt button {
+        border-radius: 2px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        font-size: 0.875rem;
+    }
+
+    .product-card,
+    .car-listing-card,
+    .car-vdp__trust-item,
+    .pricing-table__plan,
+    .feature-grid__card,
+    .changelog-timeline__entry,
+    .speaker-grid__card,
+    .integration-grid__tile,
+    .project-tile-grid__cell,
+    .saved-search-list__row,
+    .account-dashboard-grid__cell,
+    .wishlist-grid__cell {
+        border-radius: 2px;
+    }
+
+    /* VatBadge keeps semantic colours — only flatten its radius. */
+    .vat-badge { border-radius: 2px; }
+
+    /* Cars VDP price block — display serif on the price. */
+    .car-vdp__price,
+    .pricing-table__price {
+        font-family: var(--font-display);
+        font-weight: 400;
+    }
+
+    /* ===================================================================
+       Cross-theme primitives — minor palette + radius polish.
+       =================================================================== */
+    .empty-state-block { padding: 6rem 2rem; }
+    .empty-state-block__title { font-family: var(--font-display); font-weight: 400; }
+
+    .comparison-table caption {
+        font-family: var(--font-display);
+        font-weight: 400;
+        font-size: 1.5rem;
+        text-align: left;
+        margin-bottom: 1rem;
+    }
+
+    /* ===================================================================
+       ProjectGrid — VARIANT: TYPOGRAPHIC LEDGER.
+       Structural axis vs siblings: agency = offset magazine spread,
+       portfolio = broken-grid with offset, commerce = tight uniform grid,
+       saas = elevated cards, restaurant = menu-list, local-business =
+       poster-stack. Editorial = vertical ledger, hairline rules, large
+       serif headlines that lead — covers shrink to thumb-print marginalia.
+       Same DOM, pure rearrangement.
+       =================================================================== */
+    .project-grid {
+        max-width: 88ch;
+        margin: 0 auto;
+        padding: 5rem 2rem;
+
+        &__head {
+            display: block;
+            margin-bottom: 3rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--color-rule);
+        }
+        &__num {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+            margin-bottom: 0.75rem;
+        }
+        &__title {
+            font-family: var(--font-display);
+            font-weight: 400;
+            font-size: clamp(2rem, 4.5vw, 3.5rem);
+            line-height: 1.05;
+            letter-spacing: -0.01em;
+            margin: 0;
+        }
+        &__sub {
+            font-family: var(--font-body);
+            color: var(--ink-2);
+            margin-top: 0.5rem;
+        }
+
+        &__items {
+            display: block;
+        }
+        &__item-wrap { display: block; }
+        &__item {
+            display: grid;
+            grid-template-columns: 5rem 1fr auto;
+            gap: 1.5rem 1.75rem;
+            align-items: baseline;
+            padding: 2rem 0;
+            border-bottom: 1px solid var(--color-rule);
+            text-decoration: none;
+            color: inherit;
+        }
+        &__cover {
+            grid-row: span 2;
+            aspect-ratio: 4 / 5;
+            background: var(--color-surface-inset, var(--color-rule));
+            position: relative;
+            overflow: hidden;
+            img, .ant-image, .ant-image-img { width: 100%; height: 100%; object-fit: cover; }
+        }
+        &__year {
+            position: absolute; bottom: 0.25rem; left: 0.25rem;
+            font-family: var(--font-mono);
+            font-size: 0.625rem;
+            color: var(--color-surface);
+            background: rgba(0,0,0,0.5);
+            padding: 1px 4px;
+        }
+        &__art {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            color: var(--color-surface);
+        }
+        &__meta {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        &__card-title {
+            font-family: var(--font-display);
+            font-weight: 400;
+            font-size: clamp(1.375rem, 2.5vw, 2rem);
+            line-height: 1.1;
+            margin: 0;
+            transition: color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+        }
+        &__stack, &__kind {
+            font-family: var(--font-body);
+            font-style: italic;
+            color: var(--ink-2);
+            font-size: 0.9375rem;
+        }
+        &__more {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+            align-self: center;
+        }
+        &__item:hover {
+            .project-grid__card-title { color: var(--color-accent); }
+            .project-grid__more { color: var(--color-accent); }
+        }
+    }
+
+    /* ===================================================================
+       OrderProgressTimeline — VARIANT: VERTICAL RULED LEDGER.
+       Hairline dots (no fill on default), serif-numeral feel via
+       counter-style on label, tab-aligned date column.
+       =================================================================== */
+    .order-progress-timeline {
+        list-style: none;
+        padding: 1rem 0;
+        margin: 0;
+        counter-reset: opt-step;
+        display: block;
+        border-left: 1px solid var(--color-rule);
+
+        &__step {
+            counter-increment: opt-step;
+            display: grid;
+            grid-template-columns: 1.5rem 1fr auto;
+            align-items: center;
+            gap: 0.75rem 1rem;
+            padding: 1rem 1.25rem;
+            position: relative;
+        }
+        &__dot {
+            width: 0.625rem;
+            height: 0.625rem;
+            border-radius: 50%;
+            border: 1px solid var(--color-rule);
+            background: var(--color-surface);
+            margin-left: -0.3125rem; // straddle the rail
+            justify-self: start;
+            transform: translateX(-1rem);
+        }
+        &__step[data-status="done"] &__dot {
+            background: var(--color-ink);
+            border-color: var(--color-ink);
+        }
+        &__step[data-status="active"] &__dot {
+            background: var(--color-accent);
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 18%, transparent);
+        }
+        &__label {
+            font-family: var(--font-display);
+            font-size: 1.0625rem;
+            font-weight: 400;
+            &::before {
+                content: counter(opt-step, decimal-leading-zero) ' · ';
+                font-family: var(--font-mono);
+                font-size: 0.75rem;
+                color: var(--ink-2);
+                letter-spacing: 0.08em;
+            }
+        }
+        &__date {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+        }
+    }
+
+    /* ===================================================================
+       Footer — VARIANT: MASTHEAD WITH VERTICAL RULES.
+       Newspaper-spread feel: columns separated by hairline vertical rules,
+       small-caps headings, hairline-bottom hover already in the default.
+       =================================================================== */
+    .site-footer {
+        padding: 3rem 2rem;
+
+        &__columns {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 0;
+        }
+        &__column {
+            padding: 0 1.5rem;
+            border-left: 1px solid var(--color-rule);
+            &:first-child { border-left: 0; padding-left: 0; }
+            h4 {
+                font-family: var(--font-mono);
+                font-size: 0.6875rem;
+                font-weight: 500;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                color: var(--ink-2);
+                margin: 0 0 0.75rem;
+            }
+            ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 0.375rem;
+                font-family: var(--font-display);
+                font-size: 1rem;
+            }
+        }
+        &__bottom {
+            margin-top: 2.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--color-rule);
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+        }
+
+        @media (max-width: 720px) {
+            &__column {
+                border-left: 0;
+                border-top: 1px solid var(--color-rule);
+                padding: 1rem 0 0;
+                &:first-child { border-top: 0; padding-top: 0; }
+            }
+        }
+    }
+
+    /* ===================================================================
+       Kinetic-typography signature — EDITORIAL = LETTER-SPACE PULSE.
+       The hero headline settles into its tracking as the section enters
+       the viewport. Tracks the 2026 type-as-hero trend (Awwwards / Figma /
+       Creative Bloq).
+       =================================================================== */
+    @supports (animation-timeline: view()) {
+        .hero__headline {
+            animation: kinetic-letterspace-in linear both;
+            animation-timeline: view();
+            animation-range: entry 0% cover 45%;
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .hero__headline { animation: none; }
+    }
+
+    /* ===================================================================
+       Theme motion signature — EDITORIAL = NEWSPAPER COLUMN.
+       Override the shared `.reveal-on-scroll` so content enters from the
+       inline-start edge with a long, settled ease. The "broadsheet
+       unfolds" feel — never bouncy, never aggressive.
+       =================================================================== */
+    @supports (animation-timeline: view()) {
+        .reveal-on-scroll {
+            opacity: 1;
+            transform: none;
+            transition: none;
+            animation: kinetic-slide-left-in linear both;
+            animation-timeline: view();
+            animation-range: entry 0% cover 35%;
+        }
+    }
+    /* Hover signature — links + headings tinge accent + slow underline
+       grow. Cards take a 1px lift, never a shadow halo. Stays
+       restrained — editorial doesn't shout. */
+    .services-module__row,
+    .feature-grid__card,
+    .pricing-table__plan,
+    .project-tile,
+    .testimonial-wall__card,
+    .blog-feed article {
+        transition:
+            transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+            border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &:hover {
+            transform: translateY(-1px);
+            border-color: var(--color-rule);
+        }
+    }
+
+    /* ===================================================================
+       Services — VARIANT: ESSAY LEDGER.
+       Each row reads as a numbered editorial entry — large serif title,
+       single hairline rule between, generous left-padded number column.
+       =================================================================== */
+    .services-module {
+        max-width: 82ch;
+        margin: 0 auto;
+        padding: 4rem 2rem;
+
+        &__rows {
+            display: flex;
+            flex-direction: column;
+        }
+        &__row {
+            display: grid;
+            grid-template-columns: 4rem 1fr;
+            column-gap: 2rem;
+            row-gap: 0.5rem;
+            padding: 2.5rem 0;
+            border-bottom: 1px solid var(--color-rule);
+            background: transparent;
+        }
+        &__row-icon { display: none; }
+        &__row-num {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+            grid-row: 1 / span 2;
+            padding-top: 0.5rem;
+        }
+        &__row-title {
+            font-family: var(--font-display);
+            font-weight: 400;
+            font-size: clamp(1.5rem, 3vw, 2.125rem);
+            line-height: 1.1;
+            letter-spacing: -0.01em;
+            margin: 0;
+        }
+        &__row-desc {
+            font-family: var(--font-body);
+            font-size: 1.0625rem;
+            line-height: 1.65;
+            color: var(--ink-2);
+            max-width: 60ch;
+        }
+        &__row-tags { display: none; }
+    }
+
+    /* ===================================================================
+       FeatureGrid — VARIANT: BULLETED LEDGER.
+       Two-column ledger of dot-marked entries — no cards, no icons.
+       Reads as a manifesto, not a product grid.
+       =================================================================== */
+    .feature-grid {
+        max-width: 82ch;
+        margin: 0 auto;
+        padding: 3rem 2rem;
+        list-style: none;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2.5rem 3rem;
+
+        @media (max-width: 720px) {
+            grid-template-columns: 1fr;
+        }
+
+        &__card {
+            background: transparent;
+            border: 0;
+            padding: 0 0 0 1.5rem;
+            position: relative;
+
+            &::before {
+                content: '';
+                position: absolute;
+                top: 0.625rem;
+                left: 0;
+                width: 0.5rem;
+                height: 0.5rem;
+                background: var(--color-accent);
+                border-radius: 50%;
+            }
+        }
+        &__icon { display: none; }
+        &__title {
+            font-family: var(--font-display);
+            font-weight: 400;
+            font-size: 1.25rem;
+            line-height: 1.2;
+            margin: 0 0 0.5rem;
+        }
+        &__desc {
+            font-family: var(--font-body);
+            font-size: 1rem;
+            line-height: 1.55;
+            color: var(--ink-2);
+            margin: 0;
+        }
+    }
+
+    .schema-org-injector { /* invisible primitive — no overrides needed */ }
+    .cookie-consent-banner { /* forward-stub — no overrides */ }
+}

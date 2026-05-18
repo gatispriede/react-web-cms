@@ -33,7 +33,7 @@ Sign-in is rate-limited via [`pages/api/_rateLimit.ts`](../../src/frontend/pages
 - On first `MongoDBConnection.setupClient()` — so the dev environment seeds automatically.
 - Manually via the GraphQL `mongo.setupAdmin` query — usable from a fresh deployment that wants to seed via API.
 
-Defaults: `email = ADMIN_USERNAME ?? 'Admin'` (lowercased + suffixed `@admin.com`), `password = ADMIN_DEFAULT_PASSWORD` plain-text or `ADMIN_PASSWORD_HASH` precomputed bcrypt. See [`DEPLOY.md`](../../DEPLOY.md) for the env var setup. The first-boot password story is captured in `roadmap/production/first-boot-admin-password.md` (Layer 1 shipped: `mustChangePassword` flag forces a rotate-on-first-login).
+Defaults: `email = ADMIN_USERNAME ?? 'Admin'` (lowercased + suffixed `@admin.com`), `password = ADMIN_DEFAULT_PASSWORD` plain-text or `ADMIN_PASSWORD_HASH` precomputed bcrypt. See [`DEPLOY.md`](../DEPLOY.md) for the env var setup. The first-boot password story is captured in `roadmap/production/first-boot-admin-password.md` (Layer 1 shipped: `mustChangePassword` flag forces a rotate-on-first-login).
 
 ## `authz` Proxy — server-side mutation gates
 

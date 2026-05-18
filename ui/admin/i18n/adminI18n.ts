@@ -9,7 +9,7 @@
  * locales are a small, version-controlled set and don't need translator
  * round-tripping through the same Languages collection the public site
  * uses. Adding a new admin locale: drop a JSON file under
- * `src/frontend/admin-locales/` and add it to `LOCALES` + `RESOURCES`.
+ * `ui/admin/i18n/` and add it to `LOCALES` + `RESOURCES`.
  *
  * Locale precedence on the client (first match wins):
  *   1. `localStorage.admin.locale` — the explicit user choice

@@ -1,0 +1,5 @@
+.checkout-shipping-method {
+    padding: 1rem 0; display: flex; flex-direction: column; gap: 0.5rem;
+    h3 { margin: 0 0 0.5rem; font-size: 1rem; font-weight: 600; }
+    label { padding: 0.5rem; border: 1px solid var(--theme-colorBorder, #eee); border-radius: 4px; cursor: pointer; }
+}

@@ -60,6 +60,7 @@ const ProjectCardEditor = ({content, setContent, t}: IInputContent) => {
                                     value={data.primaryLink ?? {url: ''}}
                                     onChange={(link) => update('primaryLink', link.url || link.label ? link : undefined)}
                                     placeholder="https://…"
+                                    hostId="project-card-primary"
                                 />
                             </Col>
                             <Col xs={24} md={12}>
@@ -69,6 +70,7 @@ const ProjectCardEditor = ({content, setContent, t}: IInputContent) => {
                                     value={data.secondaryLink ?? {url: ''}}
                                     onChange={(link) => update('secondaryLink', link.url || link.label ? link : undefined)}
                                     placeholder="https://github.com/…"
+                                    hostId="project-card-secondary"
                                 />
                             </Col>
                         </Row>

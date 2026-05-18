@@ -1,0 +1,16 @@
+.product-spec-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+
+    th, td {
+        padding: 0.5rem 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-muted, #eee);
+        vertical-align: top;
+    }
+
+    th { width: 35%; font-weight: 600; }
+
+    &--empty { padding: 1rem; opacity: 0.7; }
+}

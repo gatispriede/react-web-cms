@@ -1,0 +1,73 @@
+/* ==========================================================================
+   Commerce — first-class theme.
+
+   White surface + slate-black ink + emerald accent, Space Grotesk display +
+   Inter body, snappy retail motion. Scoped under
+   `[data-theme-name="commerce"]`. Semantic tokens use `light-dark()` so
+   the same selector covers both modes — mode = brightness, theme = identity,
+   orthogonal axes (per first-class-themes.md §3).
+
+   Bespoke visuals live in `module-styles.scss` alongside.
+   ========================================================================== */
+
+[data-theme-name="commerce"] {
+    /* ---- Semantic palette (light, dark) — mirrors theme.json. ---------- */
+    --color-surface:       light-dark(#FFFFFF, #0B0F0D);
+    --color-ink:           light-dark(#18181B, #F1F5F2);
+    --color-accent:        light-dark(#10B981, #34D399);
+    --color-accent-ink:    light-dark(#FFFFFF, #062019);
+    --color-surface-inset: light-dark(#F4F4F5, #1A1F1C);
+    --color-rule:          light-dark(#E4E4E7, #27272A);
+
+    /* Legacy aliases — many modules still read these without the
+       --color- prefix. Mirror so older SCSS keeps rendering correctly. */
+    --background: var(--color-surface);
+    --ink:    var(--color-ink);
+    --ink-2:  color-mix(in srgb, var(--color-ink) 65%, transparent);
+    --accent: var(--color-accent);
+    --accent-hover: color-mix(in srgb, var(--color-accent) 88%, #000);
+
+    /* ---- Typography ---------------------------------------------------- */
+    --font-display: 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-body:    'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono:    ui-monospace, 'SF Mono', Menlo, monospace;
+
+    --theme-headingFont: var(--font-display);
+    --theme-bodyFont:    var(--font-body);
+
+    /* ---- Motion personality (snappy-default) --------------------------- */
+    /* Storefront convention: <200ms on every hover/tap. --motion-scalar
+       still gates everything to 0 under prefers-reduced-motion. */
+    --motion-duration-fast:       100ms;
+    --motion-duration-base:       180ms;
+    --motion-duration-slow:       280ms;
+    --motion-duration-deliberate: 480ms;
+    --motion-ease-standard:       cubic-bezier(0.4, 0, 0.2, 1);
+    --motion-ease-entrance:       cubic-bezier(0, 0, 0.2, 1);
+    --motion-ease-exit:           cubic-bezier(0.4, 0, 1, 1);
+    --motion-ease-emphasized:     cubic-bezier(0.4, 0, 0.05, 1);
+
+    /* Shorter entrance distance — retail favours subtle reveals. */
+    --motion-distance-sm: 6px;
+    --motion-distance-md: 16px;
+    --motion-distance-lg: 40px;
+
+    /* ---- Borders + radii ---------------------------------------------- */
+    /* Soft, modern: 8px radius on cards + buttons. */
+    --theme-borderRadius: 8px;
+
+    /* ---- Body baseline ------------------------------------------------- */
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+
+    /* Display-class headings get the Space Grotesk treatment with
+       a tighter tracking + slightly bolder weight than Editorial. */
+    h1, h2, h3,
+    .heading,
+    .heading--display {
+        font-family: var(--font-display);
+        font-weight: 600;
+        letter-spacing: -0.02em;
+    }
+}

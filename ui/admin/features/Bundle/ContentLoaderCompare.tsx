@@ -1,5 +1,6 @@
 import React, {useEffect, useMemo} from 'react';
-import {Alert, Button, Input, Popover, Space, Switch, Table, Tag, Tooltip, Typography, message} from 'antd';
+import {Alert, Button, Input, Popover, Space, Switch, Table, Tag, Tooltip, Typography} from 'antd';
+import {notifyError} from '@admin/lib/notify';
 import {DownloadOutlined, EditOutlined, InfoCircleOutlined, SearchOutlined, UploadOutlined} from '@client/lib/icons';
 import TranslationManager from '@admin/shell/TranslationManager';
 import CsvImportDialog from './CsvImportDialog';
@@ -291,7 +292,7 @@ export const ContentLoaderCompare = ({translationManager, dataPromise}: {
                         onTakeTheirs={async () => { vm.dismissConflict(); await vm.reloadMeta(); }}
                         onKeepMine={async () => {
                             try { await c.retry(); }
-                            catch (err) { message.error(String((err as Error)?.message ?? err)); vm.dismissConflict(); }
+                            catch (err) { notifyError(err); vm.dismissConflict(); }
                         }}
                     />
                 );

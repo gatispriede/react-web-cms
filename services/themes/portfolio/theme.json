@@ -1,0 +1,37 @@
+{
+    "slug": "portfolio",
+    "name": "Portfolio",
+    "tagline": "Warm minimalism for individual creative professionals — designers, photographers, freelance devs, illustrators, writers.",
+    "audience": "Solo creators, freelancers, individual creative professionals; personal-brand sites where the work and the person are the product",
+    "mood": ["warm", "minimal", "personal", "considered", "human"],
+    "palette": {
+        "surface":      {"light": "#FAF7F2", "dark": "#161311"},
+        "ink":          {"light": "#1F1A16", "dark": "#F2EDE5"},
+        "accent":       {"light": "#C2410C", "dark": "#FB923C"},
+        "accentInk":    {"light": "#FFFFFF", "dark": "#1F1A16"},
+        "surfaceInset": {"light": "#F2ECE2", "dark": "#211C18"},
+        "rule":         {"light": "#D9CFC1", "dark": "#3A332C"}
+    },
+    "typography": {
+        "display": "'Fraunces', 'Cormorant Garamond', 'Source Serif Pro', Georgia, serif",
+        "body":    "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "mono":    "'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace",
+        "baseSize": 17
+    },
+    "motion": "gentle-considered",
+    "headerBehavior": "sticky-static",
+    "footerLayout": "minimal-personal",
+    "logoLockup": "wordmark-initials",
+    "moduleStyleHints": {
+        "hero": "portrait-led-statement",
+        "projectGrid": "asymmetric-personal",
+        "gallery": "magazine-spread",
+        "timeline": "vertical-spine",
+        "skillPills": "lowercase-pill",
+        "testimonials": "hand-set-pullquote",
+        "manifesto": "first-person-display",
+        "socialLinks": "prominent-named",
+        "posts": "list-led-no-cover"
+    },
+    "darkDefault": false
+}

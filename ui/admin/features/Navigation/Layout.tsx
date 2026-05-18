@@ -1,8 +1,9 @@
 import React, {useEffect} from "react";
-import {Alert, Button, Card, Divider, Input, InputNumber, Radio, Space, Switch, Typography, message} from "antd";
+import {Alert, Button, Card, Divider, Input, InputNumber, Radio, Space, Switch, Typography} from "antd";
+import {notifyError} from '@admin/lib/notify';
 import {useTranslation} from "react-i18next";
 import AuditBadge from "@admin/shell/AuditBadge";
-import {useRefreshView} from "@client/lib/refreshBus";
+import {useRefreshView} from "@client/lib/useRefreshView";
 import ConflictDialog from "@client/lib/ConflictDialog";
 import {useViewModel} from "@client/lib/state/observable";
 import {LayoutViewModel} from "./LayoutViewModel";
@@ -181,7 +182,7 @@ const AdminSettingsLayout: React.FC = () => {
                         onTakeTheirs={vm.takeTheirs}
                         onKeepMine={async () => {
                             try { await vm.conflict?.retry(); }
-                            catch (err) { message.error(String((err as Error)?.message ?? err)); vm.dismissConflict(); }
+                            catch (err) { notifyError(err); vm.dismissConflict(); }
                         }}
                     />
                 );

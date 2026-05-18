@@ -39,7 +39,7 @@ function getKey(): Buffer | null {
     if (!raw) {
         if (!warned) {
             warned = true;
-            // eslint-disable-next-line no-console
+             
             console.warn(
                 '[secretBox] SECRETBOX_KEY is not set — secrets will be ' +
                 'stored in PLAINTEXT in the database. Set a 32-byte base64 ' +

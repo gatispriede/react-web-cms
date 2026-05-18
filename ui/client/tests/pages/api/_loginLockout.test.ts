@@ -7,7 +7,7 @@ import {
     recordFailure,
     recordSuccess,
     sweepLockouts,
-} from '../../../pages/api/_loginLockout';
+} from '../../../lib/api-helpers/loginLockout';
 
 beforeEach(() => { vi.useFakeTimers(); _resetLockoutsForTests(); });
 afterEach(() => { vi.useRealTimers(); sweepLockouts(Date.now() + 10_000_000); });

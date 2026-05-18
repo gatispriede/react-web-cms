@@ -1,4 +1,3 @@
-const {i18n} = require('../../next-i18next.config.js')
 const {loadCustomBuildParams} = require('./next-utils.config')
 const {tsconfigPath} = loadCustomBuildParams()
 // E2E full-suite builds (`pnpm e2e:full:build`) write into a sibling
@@ -98,11 +97,23 @@ const nextConfig = {
         NEXT_PUBLIC_BASE_URL: 'http://localhost:80',
         NEXT_PUBLIC_BUILD_ID: resolvedBuildId,
     },
-    i18n: i18n,
+    // Pages-Router `i18n` block removed in B7 of the App Router migration —
+    // locale handling now lives in `app/layout.tsx` + `app/i18n.ts` (server
+    // cookie/Accept-Language read + `next-i18next/server` init). The
+    // `locale: false` flags on the admin redirects below are now no-ops
+    // (Next ignores unknown redirect props) but kept for documentation of
+    // intent: those rules must NEVER be locale-rewritten by any future
+    // re-introduction of the `i18n` block. See
+    // `docs/roadmap/platform/app-router-migration.md` (STATUS: SHIPPED).
     reactStrictMode: true,
 
     typescript: {
         tsconfigPath,
+        // E2E baseline capture path — let next build emit even when type
+        // errors exist in the working tree. Visual baseline capture is the
+        // goal; runtime bundle is what matters, not the type-check pass.
+        // Operator should fix TS errors before any non-E2E build / deploy.
+        ignoreBuildErrors: process.env.E2E_BUILD === '1',
     },
     sassOptions: {},
     // Make webpack watch the shared services/ directory (sits outside ui/client/).
@@ -135,10 +146,58 @@ const nextConfig = {
         {source: '/lt/admin/:path*', destination: '/admin/:path*', permanent: false, locale: false},
         {source: '/ru/admin', destination: '/admin', permanent: false, locale: false},
         {source: '/ru/admin/:path*', destination: '/admin/:path*', permanent: false, locale: false},
-        // Phase 2 of admin segregation — legacy URLs jump to the new area structure.
-        {source: '/admin/settings', destination: '/admin/build', permanent: false},
-        {source: '/admin/languages', destination: '/admin/content/translations', permanent: false},
-        {source: '/admin/modules-preview', destination: '/admin/build/modules-preview', permanent: false},
+        // Phase 2 of admin segregation — `/admin/languages` was a flat
+        // pages-router pane; translations also live under Content at
+        // `/admin/content/translations`. The redirect is removed so the
+        // Settings rail's Languages link stays at `/admin/languages`
+        // (resolves to Settings via PARENT_BUCKET_OVERRIDES) instead of
+        // bouncing to `/admin/content/translations` (Content bucket).
+        // `/admin/settings` previously 301'd to `/admin/build` (Phase 2
+        // of admin segregation). Re-pivot reclaims `/admin/settings` as
+        // a top-level bucket landing — the redirect is dropped; the
+        // route's `page.tsx` now bounces to the Footer demonstrator.
+        //
+        // admin-information-architecture re-pivot (2026-05-16, same day
+        // as the first ship): the 6-bucket Site/Content/Commerce/People/
+        // Analytics/System taxonomy collapses to 5 task-driven buckets:
+        // Build / Content / Settings / Analytics / System. Old URLs 301
+        // here.
+        //
+        // SCOPE NOTE: only the demonstrator panes whose loaders + App
+        // Router page directories actually moved in this jump have
+        // direct old→new redirects. The other ~40 panes still serve
+        // from their legacy URLs (their loaders carry the legacy paneId
+        // so the lookup keeps working); per-area sweep follow-ups add
+        // their old→new rows here. Adding a redirect *before* the new
+        // directory exists 404s the operator — don't.
+        //
+        // The shim ships for one release cycle (~2 months). After that
+        // the redirects are dropped — anyone still hitting an old URL
+        // gets a 404 and updates their bookmark.
+        //
+        // ── Demonstrator-pane direct redirects ─────────────────────
+        // Footer: legacy → first-ship 6-bucket → re-pivot 5-bucket
+        {source: '/admin/content/footer', destination: '/admin/settings/chrome/footer', permanent: false},
+        {source: '/admin/site/footer', destination: '/admin/settings/chrome/footer', permanent: false},
+        // Users: legacy → first-ship 6-bucket → re-pivot 5-bucket
+        {source: '/admin/system/users', destination: '/admin/settings/access/users', permanent: false},
+        {source: '/admin/people/users', destination: '/admin/settings/access/users', permanent: false},
+        // Invoices: first-ship 6-bucket → re-pivot 5-bucket (Commerce
+        // dissolved into Content for author-facing lists)
+        {source: '/admin/commerce/invoices', destination: '/admin/content/invoices', permanent: false},
+        // Analytics dashboard (first-ship URL stays canonical)
+        {source: '/admin/seo/analytics', destination: '/admin/analytics', permanent: false},
+        // Diagnostics (renamed from `info`; first-ship URL stays canonical)
+        {source: '/admin/system/info', destination: '/admin/system/diagnostics', permanent: false},
+
+        // ── First-ship 6-bucket landings (re-pivoted to 5-bucket) ──
+        // Operators bookmarked yesterday's 6-bucket URLs need the same-
+        // day re-pivot to keep working. Each defunct bucket maps to
+        // its 5-bucket home; sub-paths fall through to the legacy
+        // backing URLs (their loaders are still registered).
+        {source: '/admin/site', destination: '/admin/settings/chrome/footer', permanent: false},
+        {source: '/admin/commerce', destination: '/admin/content/invoices', permanent: false},
+        {source: '/admin/people', destination: '/admin/settings/access/users', permanent: false},
     ],
     rewrites: async () => [
         {
@@ -153,7 +212,28 @@ const nextConfig = {
             source: "/sitemap-:id.xml",
             destination: "/api/sitemap-:id.xml",
         },
+        // Admin PWA manifest — referenced as `/admin/manifest.json` from
+        // the admin shell `<link rel="manifest">`. The actual handler
+        // lives under `pages/api/admin/` (Next pages-router only invokes
+        // the `(req,res)=>…` shape under `pages/api/`); the rewrite gives
+        // it the clean admin URL the spec + browsers expect.
+        {
+            source: "/admin/manifest.json",
+            destination: "/api/admin/manifest.json",
+        },
     ],
+    // Next 16 introduced a per-middleware body-size cap (default 10 MB)
+    // that's independent of the per-route `bodyParser.sizeLimit`. The
+    // bundle import (`/api/import`) sends the entire serialised site —
+    // photos, CMS pages, themes — and routinely exceeds 10 MB on
+    // moderately-sized installs. Without this cap raised, the route
+    // handler sees a truncated body and the JSON parse rejects with
+    // "400 Invalid JSON". Key is `experimental.proxyClientMaxBodySize`
+    // (renamed from `middlewareClientMaxBodySize` in Next 16). Matches
+    // the route's 200 MB `api.bodyParser.sizeLimit` in import.ts.
+    experimental: {
+        proxyClientMaxBodySize: '200mb',
+    },
     // Locale JSON files are the runtime translation store — admin saves
     // rewrite them live, so browsers MUST fetch fresh every time. Without
     // this, the first reload after a save serves cached JSON and changes

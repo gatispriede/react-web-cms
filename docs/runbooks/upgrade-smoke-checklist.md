@@ -10,7 +10,7 @@ Operator runs this on each droplet **after** the blue/green flip (Step 4 of [upg
 - [ ] `curl -fsS https://<domain>/api/info | jq -r .build` returns a fresh ISO timestamp (within the last hour).
 - [ ] `curl -fsS -I https://<domain>/api/health` returns `HTTP/2 200`.
 
-## Routes (F3 cancelled — see [v1-url-namespace.md](../roadmap/v1-url-namespace.md) postmortem)
+## Routes (F3 cancelled — see [v1-url-namespace.md](../roadmap/platform/v1-url-namespace.md) postmortem)
 
 - [ ] `curl -fsS -I https://<domain>/admin/build` → `HTTP/2 200` or `302` to login.
 - [ ] `curl -fsS -I https://<domain>/api/graphql` → `HTTP/2 200` (or method-not-allowed for HEAD; either acceptable).

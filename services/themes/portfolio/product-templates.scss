@@ -1,0 +1,28 @@
+// Portfolio theme — per-template style overrides.
+// Portfolio rarely sells SKUs; templates lean reading-first, generous
+// gaps, single-cover hero. If a portfolio site sells prints / books /
+// presets, the spacing reads "limited edition" not "retail aisle".
+
+.template-built-in-premium {
+    --product-template-hero-gap: 3rem;
+    --product-template-gallery-max-cols: 3;
+}
+
+.template-built-in-standard {
+    --product-template-hero-gap: 2rem;
+}
+
+.template-built-in-quick-buy {
+    --product-template-hero-gap: 1.25rem;
+    --product-template-cta-emphasis: 1.1;
+}
+
+.template-built-in-bundle {
+    --product-template-hero-gap: 2rem;
+    --product-template-grid-min-card: 240px;
+}
+
+.template-built-in-b2b-spec-sheet {
+    --product-template-hero-gap: 1.5rem;
+    --product-template-spec-density: comfortable;
+}

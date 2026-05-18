@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import type {TFunction} from 'i18next';
 import Logo from '@client/features/Logo/Logo';
+import {ELogoContext} from '@enums/ELogoVariant';
 
 interface IErrorScreenProps {
     /** Status code shown as the hero numeral (e.g. 404, 500). */
@@ -59,7 +60,7 @@ const ErrorScreen: React.FC<IErrorScreenProps> = ({
                 favicon role so the tab icon and the error page lead with
                 the same brand anchor. */}
             <div style={{transform: 'scale(1.5)', transformOrigin: 'center'}}>
-                <Logo admin={false} t={t}/>
+                <Logo admin={false} t={t} context={ELogoContext.Error}/>
             </div>
 
             <div

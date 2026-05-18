@@ -3,8 +3,13 @@
  * Smoke tests for UserStatusBar. These are the safety net for an
  * upcoming refactor — they assert on the public surface the rest of the
  * admin shell relies on:
- *  - top-bar area buttons (Build / Client config / Content / SEO / Release / System)
- *    rendered with `nav-area-<slug>-link` testids
+ *  - top-bar area buttons (Build / Content / Settings / Analytics / System)
+ *    rendered with `nav-area-<slug>-link` testids — admin-information-architecture
+ *    re-pivot (2026-05-16, same day as the first ship) replaced the legacy
+ *    seven (build / client-config / content / seo / release / system + onboarding)
+ *    first with a 6-bucket noun taxonomy (Site / Content / Commerce / People /
+ *    Analytics / System), then refined that to the 5-bucket task-driven
+ *    taxonomy below.
  *  - active-area highlight via antd's `type="primary"` (rendered as the
  *    `ant-btn-primary` class)
  *  - `<AreaNav/>` rail rendered when an area view is active, including
@@ -30,17 +35,18 @@ vi.mock('next-auth/react', () => ({
     signOut: (...args: any[]) => signOutSpy(...args),
 }));
 
-// next-i18next/pages — supplies `useTranslation` (for the `common` ns
-// fetch) and the `i18n` export the component reads to compute `lang`.
-vi.mock('next-i18next/pages', () => {
+// next-i18next/client — supplies `useT` (for the `common` ns fetch). The
+// returned `i18n` instance is also where the component reads `language` /
+// `resolvedLanguage` to compute `lang` (post `next-i18next/pages` sweep —
+// the standalone singleton import is gone, the hook owns the instance).
+vi.mock('next-i18next/client', () => {
     const i18n = {
         language: 'en',
         resolvedLanguage: 'en',
         use: () => i18n,
     };
     return {
-        i18n,
-        useTranslation: () => ({
+        useT: () => ({
             t: (k: string) => k,
             i18n,
         }),
@@ -116,11 +122,13 @@ vi.mock('@client/lib/reportError', () => ({
     installErrorReporter: () => {},
 }));
 
-// CommandPalette — render-free placeholder + a no-op hotkey hook.
-vi.mock('@admin/shell/CommandPalette', () => ({
+// CommandPalette — render-through provider placeholder + trigger stub.
+// The kbar palette is mounted at the shell level; the test only needs
+// it to render its children without pulling kbar into the test bundle.
+vi.mock('@admin/shell/CommandPalette/CommandPalette', () => ({
     __esModule: true,
-    default: () => <div data-testid="command-palette"/>,
-    useCommandPaletteHotkey: () => {},
+    default: ({children}: {children?: React.ReactNode}) => <div data-testid="command-palette">{children}</div>,
+    CommandPaletteTrigger: ({label}: {label: string}) => <button data-testid="cmdk-trigger">{label}</button>,
 }));
 
 // Chrome placeholders.
@@ -141,10 +149,10 @@ vi.mock('./AdminApp', () => ({__esModule: true, default: () => <div/>}));
 vi.mock('./AdminSettings', () => ({__esModule: true, default: () => <div/>}));
 vi.mock('./TranslationManager', () => ({__esModule: true, default: class {}}));
 vi.mock('@admin/features/Languages/Languages', () => ({__esModule: true, default: () => <div/>}));
-vi.mock('@admin/features/Themes/Theme', () => ({__esModule: true, default: () => <div/>}));
+vi.mock('@admin/features/Themes/ThemeAdvancedView', () => ({__esModule: true, default: () => <div/>}));
 vi.mock('@admin/features/Logo/LogoSettings', () => ({__esModule: true, default: () => <div/>}));
 vi.mock('@admin/features/Navigation/Layout', () => ({__esModule: true, default: () => <div/>}));
-vi.mock('@admin/features/Posts/Posts', () => ({__esModule: true, default: () => <div/>}));
+vi.mock('@admin/features/Posts/PostsAdvancedView', () => ({__esModule: true, default: () => <div/>}));
 vi.mock('@admin/features/Footer/Footer', () => ({__esModule: true, default: () => <div/>}));
 vi.mock('@admin/features/Products/Products', () => ({__esModule: true, default: () => <div/>}));
 vi.mock('@admin/features/Inventory/Inventory', () => ({__esModule: true, default: () => <div/>}));
@@ -196,12 +204,11 @@ describe('UserStatusBar', () => {
         expect(screen.getByText(/User: Ada/)).toBeInTheDocument();
         // Skip-to-content a11y affordance always present.
         expect(screen.getByText('Skip to content')).toBeInTheDocument();
-        // All six area buttons render (admin + advanced mode).
+        // All five new-taxonomy area buttons render (admin + advanced mode).
         expect(screen.getByTestId('nav-area-build-link')).toBeInTheDocument();
-        expect(screen.getByTestId('nav-area-client-config-link')).toBeInTheDocument();
         expect(screen.getByTestId('nav-area-content-link')).toBeInTheDocument();
-        expect(screen.getByTestId('nav-area-seo-link')).toBeInTheDocument();
-        expect(screen.getByTestId('nav-area-release-link')).toBeInTheDocument();
+        expect(screen.getByTestId('nav-area-settings-link')).toBeInTheDocument();
+        expect(screen.getByTestId('nav-area-analytics-link')).toBeInTheDocument();
         expect(screen.getByTestId('nav-area-system-link')).toBeInTheDocument();
     });
 
@@ -209,36 +216,30 @@ describe('UserStatusBar', () => {
         renderBar('system');
         const systemBtn = screen.getByTestId('nav-area-system-link');
         expect(systemBtn.className).toMatch(/ant-btn-primary/);
-        // Sibling Build button is NOT primary.
-        const buildBtn = screen.getByTestId('nav-area-build-link');
-        expect(buildBtn.className).not.toMatch(/ant-btn-primary/);
+        // Sibling Settings button is NOT primary.
+        const settingsBtn = screen.getByTestId('nav-area-settings-link');
+        expect(settingsBtn.className).not.toMatch(/ant-btn-primary/);
     });
 
     it('System area rail renders the right sub-pages for an admin viewer', () => {
         renderBar('system', 'admin');
         const rail = screen.getByTestId('nav-system-rail');
-        // Admin sees both core and adminOnly entries.
-        expect(within(rail).getByTestId('nav-system-users-link')).toBeInTheDocument();
+        // Admin sees the system rail's adminOnly entries.
+        expect(within(rail).getByTestId('nav-system-diagnostics-link')).toBeInTheDocument();
         expect(within(rail).getByTestId('nav-system-mcp-link')).toBeInTheDocument();
-        expect(within(rail).getByTestId('nav-system-inquiries-link')).toBeInTheDocument();
-        // adminOnly entries also visible for admin.
-        expect(within(rail).getByTestId('nav-system-email-link')).toBeInTheDocument();
         expect(within(rail).getByTestId('nav-system-features-link')).toBeInTheDocument();
-        expect(within(rail).getByTestId('nav-system-info-link')).toBeInTheDocument();
+        expect(within(rail).getByTestId('nav-system-errors-link')).toBeInTheDocument();
     });
 
     it('System area rail filters adminOnly entries for non-admin viewers', () => {
         renderBar('system', 'viewer');
-        const rail = screen.getByTestId('nav-system-rail');
-        // Core entries visible.
-        expect(within(rail).getByTestId('nav-system-users-link')).toBeInTheDocument();
-        expect(within(rail).getByTestId('nav-system-mcp-link')).toBeInTheDocument();
-        expect(within(rail).getByTestId('nav-system-inquiries-link')).toBeInTheDocument();
-        // adminOnly entries hidden.
-        expect(within(rail).queryByTestId('nav-system-email-link')).not.toBeInTheDocument();
-        expect(within(rail).queryByTestId('nav-system-features-link')).not.toBeInTheDocument();
-        expect(within(rail).queryByTestId('nav-system-info-link')).not.toBeInTheDocument();
-        expect(within(rail).queryByTestId('nav-system-errors-link')).not.toBeInTheDocument();
+        // Every entry in the post-IA System rail is adminOnly — for a viewer
+        // the rail is empty (or absent). `nav-system-rail` may still render
+        // with zero items; the testids of the adminOnly entries should be
+        // gone.
+        expect(screen.queryByTestId('nav-system-diagnostics-link')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('nav-system-features-link')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('nav-system-errors-link')).not.toBeInTheDocument();
     });
 
     it('clicking Sign out invokes next-auth signOut()', () => {
@@ -266,33 +267,41 @@ describe('UserStatusBar', () => {
             'modules-preview',
             'build',
             'build/modules-preview',
-            'client-config',
-            'client-config/themes',
-            'client-config/logo',
-            'client-config/site-layout',
+            // 5-bucket re-pivot — new buckets:
             'content',
             'content/translations',
             'content/posts',
-            'content/footer',
             'content/products',
             'content/inventory',
             'content/orders',
-            'seo',
-            'seo/analytics',
-            'release',
-            'release/publishing',
-            'release/bundle',
-            'release/audit',
+            'content/invoices',
+            'content/system-pages',
+            'settings/chrome/footer',
+            'settings/theme',
+            'settings/seo',
+            'settings/features/auth',
+            'settings/features/email',
+            'settings/access/users',
+            'settings/access/permissions',
+            'settings/account',
+            'analytics',
+            'analytics/seo',
+            'analytics/audit-log',
             'system',
-            'system/users',
             'system/mcp',
-            'system/analytics-filters',
-            'system/inquiries',
+            'system/diagnostics',
             'system/features',
             'system/agent',
-            'system/info',
-            'system/email',
             'system/errors',
+            // First-ship 6-bucket aliases:
+            'site/footer',
+            'commerce/invoices',
+            'people/users',
+            // Pre-IA-jump aliases:
+            'client-config/themes',
+            'release/publishing',
+            'system/users',
+            'system/info',
         ];
         // Runtime sanity — non-empty + unique.
         expect(variants.length).toBeGreaterThan(0);

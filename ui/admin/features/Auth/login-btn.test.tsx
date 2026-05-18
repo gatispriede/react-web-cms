@@ -15,12 +15,11 @@ vi.mock('next-auth/react', () => ({
     signIn: (...args: any[]) => signInSpy(...args),
 }));
 
-// `next-i18next` `useTranslation` — returns an identity `t` so we can assert
-// on the English source strings directly. The component calls `useTranslation`
+// `next-i18next/client` `useT` — returns an identity `t` so we can assert
+// on the English source strings directly. The component calls `useT`
 // for both `common` and `app`; a single factory covers both.
-vi.mock('next-i18next', () => ({
-    useTranslation: () => ({t: (k: string) => k, i18n: {language: 'en', resolvedLanguage: 'en'}}),
-    i18n: {language: 'en', resolvedLanguage: 'en'},
+vi.mock('next-i18next/client', () => ({
+    useT: () => ({t: (k: string) => k, i18n: {language: 'en', resolvedLanguage: 'en'}}),
 }));
 
 // `UserStatusBar` pulls in the entire admin shell (AdminApp, CommandPalette,

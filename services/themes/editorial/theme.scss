@@ -1,0 +1,78 @@
+/* ==========================================================================
+   Editorial — first-class theme.
+
+   Warm cream paper + deep ink, Source Serif Pro display + Inter body,
+   slow-deliberate motion. Scoped under `[data-theme-name="editorial"]`.
+   Semantic tokens use `light-dark()` so the same selector covers both
+   modes — mode = brightness, theme = identity, orthogonal axes (per
+   first-class-themes.md §3).
+
+   Bespoke visuals live in `module-styles.scss` alongside.
+   ========================================================================== */
+
+[data-theme-name="editorial"] {
+    /* ---- Semantic palette (light, dark) — mirrors theme.json. ---------- */
+    --color-surface:       light-dark(#FAF7F2, #161412);
+    --color-ink:           light-dark(#1A1814, #EDE9DE);
+    --color-accent:        light-dark(#B85C38, #D87A52);
+    --color-accent-ink:    light-dark(#FAF7F2, #16140F);
+    --color-surface-inset: light-dark(#F2EEE3, #1F1B16);
+    --color-rule:          light-dark(#D8D1BF, #3A332C);
+
+    /* Legacy aliases — many modules still read these without the
+       --color- prefix. Mirror so older SCSS keeps rendering correctly. */
+    --background: var(--color-surface);
+    --ink:    var(--color-ink);
+    --ink-2:  color-mix(in srgb, var(--color-ink) 65%, transparent);
+    --accent: var(--color-accent);
+    --accent-hover: color-mix(in srgb, var(--color-accent) 85%, #000);
+
+    /* ---- Typography ---------------------------------------------------- */
+    --font-display: 'Source Serif Pro', ui-serif, Georgia, 'Times New Roman', serif;
+    --font-body:    'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono:    ui-monospace, 'SF Mono', Menlo, monospace;
+
+    /* AntD ConfigProvider reads these — bridge the two surfaces so the
+       admin chrome inside the editorial theme inherits the same display
+       font without per-feature SCSS. */
+    --theme-headingFont: var(--font-display);
+    --theme-bodyFont:    var(--font-body);
+
+    /* Slightly larger base size — editorial reads better at 17px. */
+    font-size: 17px;
+
+    /* ---- Motion personality (gentle-slow) ------------------------------ */
+    /* Multiply the standard scale by ~1.6 so every interaction feels like
+       turning a page. --motion-scalar still gates everything to 0 under
+       prefers-reduced-motion. */
+    --motion-duration-fast:       240ms;
+    --motion-duration-base:       400ms;
+    --motion-duration-slow:       640ms;
+    --motion-duration-deliberate: 1100ms;
+    --motion-ease-standard:       cubic-bezier(0.2, 0, 0, 1);
+    --motion-ease-entrance:       cubic-bezier(0, 0, 0.15, 1);
+    --motion-ease-emphasized:     cubic-bezier(0.05, 0, 0.05, 1);
+
+    /* Slightly larger entrance distance — reveals travel a bit further. */
+    --motion-distance-sm: 12px;
+    --motion-distance-md: 32px;
+    --motion-distance-lg: 96px;
+
+    /* ---- Borders + radii ---------------------------------------------- */
+    /* Editorial favours hairline rules over rounded boxes. */
+    --theme-borderRadius: 2px;
+
+    /* ---- Body baseline ------------------------------------------------- */
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+
+    /* Display-class headings inherit the serif. */
+    h1, h2, h3,
+    .heading,
+    .heading--display {
+        font-family: var(--font-display);
+        font-weight: 400;
+        letter-spacing: -0.01em;
+    }
+}

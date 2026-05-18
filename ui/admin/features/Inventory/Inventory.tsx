@@ -1,11 +1,28 @@
+/**
+ * admin-module-composed — Inventory bridge.
+ *
+ * The `AdminLoader` bridge for `content/inventory`. `InventoryViewModel`
+ * is unchanged ("admin stays mostly same"); the hand-coded "Stock by
+ * product" list chrome is replaced by `AdminCrudListModule`. The pane
+ * also carries a status header, sync action buttons, a run-log table,
+ * the adapter-config form, and a bespoke errors Drawer + dead-letters
+ * Modal — those have no clean CRUD-list shape, so they stay rendered
+ * alongside the module in the bridge fragment.
+ *
+ * Registered with the `AdminPageRegistry` by `InventoryAdminLoader`; the
+ * shell reaches it via `AdminPageDispatch` (see `InventoryAdminUILoader`).
+ */
 import React, {useEffect, useMemo} from "react";
 import {Alert, Badge, Button, Drawer, Form, Input, InputNumber, Modal, Popconfirm, Select, Space, Table, Tag, Typography} from "antd";
+import type {ColumnsType} from "antd/es/table";
 import {ReloadOutlined} from "@client/lib/icons";
 import {useTranslation} from "react-i18next";
 import type {IInventoryRun} from "@interfaces/IInventory";
 import type {IProduct} from "@interfaces/IProduct";
 import AuditBadge from "@admin/shell/AuditBadge";
 import {useViewModel} from "@client/lib/state/observable";
+import EmptyState from "@admin/lib/EmptyState";
+import AdminCrudListModule from "@admin/modules/shapes/AdminCrudListModule";
 import {InventoryViewModel} from "./InventoryViewModel";
 
 /** Render-only Inventory pane — VM3 (2026-05-02). */
@@ -127,25 +144,16 @@ const AdminSettingsInventory: React.FC = () => {
                 />
             )}
 
-            <Space style={{marginBottom: 8}}>
-                <Typography.Title level={5} style={{margin: 0}}>{t('Stock by product')}</Typography.Title>
-                <Button
-                    size="small"
-                    icon={<ReloadOutlined/>}
-                    data-testid="admin-inventory-stock-refresh-btn"
-                    loading={vm.loadingProducts}
-                    onClick={() => vm.refreshProducts()}
-                >{t('Refresh')}</Button>
-            </Space>
-            <Table
+            <Typography.Title level={5} style={{margin: '0 0 8px'}}>{t('Stock by product')}</Typography.Title>
+            <AdminCrudListModule
+                testId="admin-inventory-stock-table"
+                columns={stockColumns as unknown as ColumnsType<Record<string, unknown>>}
+                rows={vm.products as unknown as ReadonlyArray<Record<string, unknown>>}
                 rowKey="slug"
-                size="small"
-                pagination={{pageSize: 10}}
-                columns={stockColumns as any}
-                dataSource={vm.products}
                 loading={vm.loadingProducts}
-                style={{marginBottom: 24}}
-                data-testid="admin-inventory-stock-table"
+                pageSize={10}
+                onRefresh={() => vm.refreshProducts()}
+                refreshTestId="admin-inventory-stock-refresh-btn"
             />
 
             <Typography.Title level={5}>{t('Run log')}</Typography.Title>
@@ -156,6 +164,16 @@ const AdminSettingsInventory: React.FC = () => {
                 columns={runColumns as any}
                 dataSource={vm.runs}
                 style={{marginBottom: 24}}
+                locale={{
+                    emptyText: (
+                        <EmptyState
+                            testId="inventory-runs-empty-state"
+                            title={t('empty.inventoryRuns.title')}
+                            description={t('empty.inventoryRuns.description')}
+                            art="inventory"
+                        />
+                    ),
+                }}
             />
 
             <Typography.Title level={5}>{t('Adapter config')}</Typography.Title>

@@ -1,5 +1,6 @@
 import {ServiceLoader} from '@services/infra/ServiceLoader';
 import type {AnyCascadeRule, FeatureAuthzContribution, FeatureContext} from '@services/infra/featureManifest';
+import {RedirectsService} from './RedirectsService';
 import {SiteFlagsService} from './SiteFlagsService';
 import {SiteSeoService} from './SiteSeoService';
 
@@ -18,6 +19,9 @@ export class SeoServiceLoader extends ServiceLoader {
         return {
             siteFlags: new SiteFlagsService(ctx.db),
             siteSeo: new SiteSeoService(ctx.db),
+            // W8h SEO program — operator-editable redirect table.
+            // Consumed by `ui/client/middleware.ts` before route resolution.
+            redirects: new RedirectsService(ctx.db),
         };
     }
 

@@ -133,6 +133,7 @@ async function main() {
             env: {
                 ...process.env,
                 NODE_ENV: 'production',
+                E2E_BUILD: '1',
                 E2E_BUILD_DIR: '.next-e2e',
                 GRAPHQL_ENDPOINT: gqlUrl,
                 // gqty's SSR fetch reads `INTERNAL_GRAPHQL_URL` first;

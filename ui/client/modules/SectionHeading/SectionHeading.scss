@@ -1,0 +1,122 @@
+/**
+ * SectionHeading — module styles.
+ *
+ * Default look matches the editorial variant (§ NN eyebrow + serif
+ * heading + italic subtitle, warm cream paper). Per-theme variant
+ * deltas live in services/themes/<slug>/module-styles.scss and switch
+ * via `section[data-variant="..."]`.
+ *
+ * All colours and typography hit through CSS custom properties so a
+ * theme can swap the palette without re-stating the layout.
+ */
+.section-heading {
+  --sh-surface: var(--theme-colorBgBase, #FAF7F2);
+  --sh-ink: var(--theme-colorTextBase, #1A1814);
+  --sh-accent: var(--theme-colorAccent, var(--theme-colorPrimary, #B85C38));
+  --sh-eyebrow-ink: var(--theme-colorTextSecondary, #5A554C);
+  --sh-font-display: var(--theme-fontDisplay, 'Source Serif Pro', ui-serif, Georgia, serif);
+  --sh-font-body: var(--theme-fontBody, 'Inter', system-ui, sans-serif);
+  --sh-font-mono: var(--theme-fontMono, ui-monospace, 'SF Mono', Menlo, monospace);
+
+  --sh-content-max: 720px;
+  --sh-eyebrow-size: 0.75rem;
+  --sh-heading-size: 2rem;
+  --sh-subtitle-size: 1.05rem;
+
+  section { display: block; }
+
+  .sh-root {
+    background: var(--sh-surface);
+    color: var(--sh-ink);
+    font-family: var(--sh-font-body);
+    padding: 1.5rem 1.5rem 1rem;
+    max-width: var(--sh-content-max);
+  }
+
+  /* Default alignment is left; the data-align attribute lets the variant
+     (or explicit operator override) opt into centered without restyling. */
+  section[data-align="center"] .sh-root {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .sh-eyebrow {
+    font-family: var(--sh-font-mono);
+    font-size: var(--sh-eyebrow-size);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--sh-eyebrow-ink);
+    margin: 0 0 0.4rem;
+  }
+
+  .sh-heading {
+    font-family: var(--sh-font-display);
+    font-size: var(--sh-heading-size);
+    font-weight: 500;
+    line-height: 1.15;
+    margin: 0 0 0.4rem;
+    color: var(--sh-ink);
+  }
+
+  .sh-subtitle {
+    font-style: italic;
+    font-size: var(--sh-subtitle-size);
+    color: var(--sh-eyebrow-ink);
+    margin: 0;
+    max-width: 540px;
+  }
+
+  section[data-align="center"] .sh-subtitle {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* --- Variant: tech-modern (saas-landing) ----------------------------- */
+  section[data-variant="tech-modern"] {
+    --sh-eyebrow-ink: var(--theme-colorAccent, #A78BFA);
+
+    .sh-root { padding-top: 2rem; }
+    .sh-eyebrow { letter-spacing: 0.1em; margin-bottom: 0.65rem; }
+    .sh-heading {
+      font-weight: 600;
+      letter-spacing: -0.015em;
+      font-size: 2.25rem;
+    }
+    .sh-subtitle {
+      font-style: normal;
+      font-size: 1.1rem;
+      color: var(--theme-colorTextSecondary, rgba(226, 232, 240, 0.7));
+    }
+  }
+
+  /* --- Variant: centered-marquee (commerce) ---------------------------- */
+  section[data-variant="centered-marquee"] {
+    .sh-root {
+      padding: 2.5rem 1.5rem 1.25rem;
+      text-align: center;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .sh-eyebrow { letter-spacing: 0.16em; margin-bottom: 0.6rem; }
+    .sh-heading {
+      font-weight: 700;
+      font-size: 2.75rem;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+    }
+    .sh-subtitle {
+      font-style: normal;
+      font-size: 1.15rem;
+      margin: 0 auto;
+      max-width: 540px;
+    }
+  }
+
+  /* --- Mobile ---------------------------------------------------------- */
+  @media (max-width: 640px) {
+    --sh-heading-size: 1.6rem;
+    .sh-root { padding: 1.25rem 1.25rem 0.85rem; }
+    section[data-variant="centered-marquee"] .sh-heading { font-size: 2rem; }
+  }
+}

@@ -13,15 +13,35 @@ export class ProductApi {
         inStockOnly?: boolean;
         source?: 'manual' | 'warehouse';
     } = {}): Promise<IProduct[]> {
+        // Direct fetch instead of gqty.resolve — same workaround pattern
+        // as ThemeApi.listThemes() and UserApi.removeUser(). gqty's
+        // resolve silently returned nothing here (no network request
+        // ever issued) even with `getProducts` present in the generated
+        // schema; the admin Products page rendered "No products yet"
+        // despite 7 products living in Mongo. Raw POST resolves cleanly.
         try {
-            const args: any = {
+            const args = {
                 includeDrafts: !!opts.includeDrafts,
                 limit: opts.limit ?? 50,
+                category: opts.category ?? null,
+                inStockOnly: opts.inStockOnly ?? null,
+                source: opts.source ?? null,
             };
-            if (opts.category) args.category = opts.category;
-            if (opts.inStockOnly) args.inStockOnly = true;
-            if (opts.source) args.source = opts.source;
-            const raw = await resolve(({query}) => (query as any).mongo.getProducts(args));
+            const r = await fetch('/api/graphql', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    query: `query L($includeDrafts: Boolean, $limit: Int, $category: String, $inStockOnly: Boolean, $source: String) { mongo { getProducts(includeDrafts: $includeDrafts, limit: $limit, category: $category, inStockOnly: $inStockOnly, source: $source) } }`,
+                    variables: args,
+                }),
+            });
+            const json = await r.json();
+            if (json?.errors?.length) {
+                log.error({scope: 'product.list', errors: json.errors}, 'product list graphql errors');
+                return [];
+            }
+            const raw = json?.data?.mongo?.getProducts;
             return raw ? JSON.parse(raw) : [];
         } catch (err) {
             log.error({scope: 'product.list', err}, 'product list failed');

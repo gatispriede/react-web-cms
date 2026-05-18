@@ -11,7 +11,10 @@
 body[data-admin-inline-edit="true"] {
     [data-i18n-key] {
         position: relative;
-        transition: background-color 120ms ease, outline-color 120ms ease;
+        // Motion tokens — see docs/roadmap/admin/motion-token-system.md.
+        transition:
+            background-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+            outline-color    calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
         outline: 1px dashed transparent;
         outline-offset: 2px;
         cursor: text;

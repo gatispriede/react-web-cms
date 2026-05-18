@@ -1,0 +1,21 @@
+.sub-products-grid {
+    margin: var(--module-gap-y, 2rem) 0;
+
+    &__title {
+        font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+        margin: 0 0 1rem;
+    }
+
+    &__grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+        min-height: 4rem;
+    }
+
+    &--unbound {
+        opacity: 0.7;
+        padding: 1rem;
+        border: 1px dashed var(--color-border, #ddd);
+    }
+}

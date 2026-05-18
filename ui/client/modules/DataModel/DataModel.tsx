@@ -6,6 +6,7 @@ import {TFunction} from "i18next";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import RevealOnScroll from "@client/lib/RevealOnScroll";
 import {slugifyAnchor} from "@utils/stringFunctions";
+import {inlineEditAttr} from "@client/lib/inlineEditAttr";
 import type {IDataModel} from "./DataModel.types";
 export type {IDataModel, IDataModelField, IDataModelCollection, IDataModelAudit} from "./DataModel.types";
 export {EDataModelStyle} from "./DataModel.types";
@@ -28,26 +29,28 @@ export class DataModelContent extends ContentManager {
     setField<K extends keyof IDataModel>(k: K, v: IDataModel[K]) { this._parsedContent[k] = v; }
 }
 
-const DataModel = ({item, tApp}: {
+const DataModel = ({item, tApp, admin}: {
     item: IItem;
     t: TFunction<"translation", undefined>;
     tApp: TFunction<string, undefined>;
+    admin?: boolean;
 }) => {
     const c = new DataModelContent(EItemType.DataModel, item.content).data;
     const tr = (v: string) => <InlineTranslatable tApp={tApp as any} source={v}/>;
+    const editId = item.name || EItemType.DataModel;
 
     return (
         <RevealOnScroll className={`data-model ${item.style ?? ''}`}>
             {(c.eyebrow || c.title || c.subtitle) && (
                 <header className="data-model__head">
-                    {c.eyebrow && <div className="data-model__eyebrow">{tr(c.eyebrow)}</div>}
-                    {c.title && <h2 id={slugifyAnchor(c.title)} className="data-model__title">{tr(c.title)}</h2>}
-                    {c.subtitle && <p className="data-model__subtitle">{tr(c.subtitle)}</p>}
+                    {c.eyebrow && <div className="data-model__eyebrow" {...inlineEditAttr(admin, editId, 'eyebrow')}>{tr(c.eyebrow)}</div>}
+                    {c.title && <h2 id={slugifyAnchor(c.title)} className="data-model__title" {...inlineEditAttr(admin, editId, 'title')}>{tr(c.title)}</h2>}
+                    {c.subtitle && <p className="data-model__subtitle" {...inlineEditAttr(admin, editId, 'subtitle')}>{tr(c.subtitle)}</p>}
                 </header>
             )}
             <div className="data-model__body">
                 <div className="data-model__table-wrap">
-                    {c.tableTitle && <div className="data-model__sub">{tr(c.tableTitle)}</div>}
+                    {c.tableTitle && <div className="data-model__sub" {...inlineEditAttr(admin, editId, 'tableTitle')}>{tr(c.tableTitle)}</div>}
                     <table className="data-model__table">
                         <thead>
                             <tr>
@@ -74,25 +77,25 @@ const DataModel = ({item, tApp}: {
                     </table>
                 </div>
                 <aside className="data-model__aside">
-                    {c.collectionsTitle && <div className="data-model__sub">{tr(c.collectionsTitle)}</div>}
+                    {c.collectionsTitle && <div className="data-model__sub" {...inlineEditAttr(admin, editId, 'collectionsTitle')}>{tr(c.collectionsTitle)}</div>}
                     <ul className="data-model__collections">
                         {(c.collections ?? []).map((col, i) => (
                             <li key={i}>
-                                <span className="data-model__col-name">{tr(col.name)}</span>
-                                {col.count && <span className="data-model__col-count">{tr(col.count)}</span>}
+                                <span className="data-model__col-name" {...inlineEditAttr(admin, editId, `collections.${i}.name`)}>{tr(col.name)}</span>
+                                {col.count && <span className="data-model__col-count" {...inlineEditAttr(admin, editId, `collections.${i}.count`)}>{tr(col.count)}</span>}
                             </li>
                         ))}
                     </ul>
-                    {c.asideNote && <p className="data-model__aside-note">{tr(c.asideNote)}</p>}
+                    {c.asideNote && <p className="data-model__aside-note" {...inlineEditAttr(admin, editId, 'asideNote')}>{tr(c.asideNote)}</p>}
                 </aside>
             </div>
             {(c.audits?.length ?? 0) > 0 && (
                 <div className="data-model__audits">
                     {(c.audits ?? []).map((a, i) => (
                         <div key={i} className="data-model__audit">
-                            {a.tag && <div className="data-model__audit-tag">{tr(a.tag)}</div>}
-                            <div className="data-model__audit-title">{tr(a.title)}</div>
-                            <div className="data-model__audit-body">{tr(a.body)}</div>
+                            {a.tag && <div className="data-model__audit-tag" {...inlineEditAttr(admin, editId, `audits.${i}.tag`)}>{tr(a.tag)}</div>}
+                            <div className="data-model__audit-title" {...inlineEditAttr(admin, editId, `audits.${i}.title`)}>{tr(a.title)}</div>
+                            <div className="data-model__audit-body" {...inlineEditAttr(admin, editId, `audits.${i}.body`)}>{tr(a.body)}</div>
                         </div>
                     ))}
                 </div>

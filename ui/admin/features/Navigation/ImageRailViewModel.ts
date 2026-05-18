@@ -1,4 +1,4 @@
-import {message} from 'antd';
+import {notifySuccess, notifyWarning} from '@admin/lib/notify';
 import AssetApi from '@services/api/client/AssetApi';
 import IImage from '@interfaces/IImage';
 import {refreshBus} from '@client/lib/refreshBus';
@@ -100,8 +100,8 @@ export class ImageRailViewModel {
         }
         this.busy = false;
         this.clearSelection();
-        if (fail === 0) void message.success(`Deleted ${ok} image${ok === 1 ? '' : 's'}`);
-        else void message.warning(`Deleted ${ok}, ${fail} failed`);
+        if (fail === 0) notifySuccess(`Deleted ${ok} image${ok === 1 ? '' : 's'}`);
+        else notifyWarning(`Deleted ${ok}, ${fail} failed`);
         await this.refresh();
     }
 

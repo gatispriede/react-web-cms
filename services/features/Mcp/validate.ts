@@ -94,6 +94,13 @@ function validateProp(key: string, prop: JSONSchemaProp, value: unknown): unknow
             }
             return value;
         }
+        case undefined:
+        case 'any':
+            // Schema entry declared no `type`. Used by polymorphic-value
+            // tools (`commerce.config.set`, `i18n.upsertKeys`, …) where
+            // the runtime handler does its own per-flag/per-key type
+            // guard. Pass through unchanged.
+            return value;
         default:
             throw new McpError('invalid_args', `unsupported schema type for ${key}`);
     }

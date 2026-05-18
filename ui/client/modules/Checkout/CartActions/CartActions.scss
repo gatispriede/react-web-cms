@@ -1,0 +1,5 @@
+.cart-actions {
+    display: flex; gap: 0.75rem; align-items: center; justify-content: space-between; padding: 1rem 0;
+    &__clear { background: transparent; border: 1px solid var(--theme-colorBorder, #ddd); padding: 0.5rem 1rem; cursor: pointer; }
+    &__proceed { background: var(--theme-colorPrimary, #1677ff); color: #fff; padding: 0.5rem 1.25rem; border-radius: 4px; text-decoration: none; }
+}

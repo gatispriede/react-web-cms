@@ -1,0 +1,85 @@
+.car-finance-estimator {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-radius: var(--theme-borderRadius, 8px);
+    background: var(--theme-colorBgContainer, #fff);
+
+    &__header h3 {
+        margin: 0 0 0.25rem;
+        font-size: 1.125rem;
+    }
+
+    &__header p {
+        margin: 0;
+        color: var(--ink-2, color-mix(in srgb, currentColor 70%, transparent));
+        font-size: 0.875rem;
+    }
+
+    &__row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+
+    label {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        font-size: 0.875rem;
+        color: var(--ink-2, color-mix(in srgb, currentColor 70%, transparent));
+    }
+
+    input,
+    textarea {
+        // WCAG 2.2 AA: 44 px minimum.
+        min-height: 44px;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--ink-2, color-mix(in srgb, currentColor 25%, transparent));
+        border-radius: var(--theme-borderRadius, 8px);
+        background: var(--theme-colorBgContainer, #fff);
+        color: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+        font: inherit;
+        transition: border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &:focus {
+            outline: none;
+            border-color: var(--accent, var(--theme-colorPrimary, #1677ff));
+        }
+    }
+
+    textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    &__error {
+        margin: 0;
+        color: var(--theme-colorError, #d4380d);
+        font-size: 0.875rem;
+    }
+
+    &__submit {
+        min-height: 44px;
+        padding: 0.625rem 1.25rem;
+        border-radius: var(--theme-borderRadius, 8px);
+        background: var(--accent, var(--theme-colorPrimary, #1677ff));
+        color: var(--theme-colorTextLightSolid, #fff);
+        border: 1px solid var(--accent, var(--theme-colorPrimary, #1677ff));
+        font-weight: 500;
+        cursor: pointer;
+        transition: background calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &:hover:not(:disabled) {
+            background: var(--accent-hover, color-mix(in srgb, var(--accent, var(--theme-colorPrimary, #1677ff)) 88%, #000));
+        }
+
+        &:disabled { opacity: 0.5; cursor: not-allowed; }
+    }
+
+    &--sent {
+        text-align: center;
+        font-weight: 500;
+    }
+}

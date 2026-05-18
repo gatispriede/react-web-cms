@@ -1,4 +1,4 @@
-import {message} from 'antd';
+import {notifyError, notifySuccess} from '@admin/lib/notify';
 import McpTokenApi from '@services/api/client/McpTokenApi';
 import {ALL_MCP_SCOPES, IMcpIssuedToken, IMcpTokenSummary, McpScope} from '@interfaces/IMcp';
 import {observable} from '@client/lib/state/observable';
@@ -32,8 +32,9 @@ export class McpTokensViewModel {
         proxy.revokeAction = new GuardedAction<[string]>(
             async (_g, id) => {
                 const res = await proxy.api.revoke(id);
-                if ('error' in res && res.error) { void message.error(res.error); return; }
-                void message.success('Revoked');
+                if ('error' in res && res.error) { notifyError(res.error); return; }
+                // TODO: wire Undo — MCP token revoke is irreversible (no trash collection).
+                notifySuccess('Revoked');
                 await proxy.refresh();
             },
             {onPendingChange: (v) => { proxy.revokePending = v; }},
@@ -65,10 +66,10 @@ export class McpTokensViewModel {
     }
 
     async issue(): Promise<void> {
-        if (!this.name.trim()) { void message.error('Token name is required'); return; }
-        if (!this.scopes.length) { void message.error('Pick at least one scope'); return; }
+        if (!this.name.trim()) { notifyError('Token name is required'); return; }
+        if (!this.scopes.length) { notifyError('Pick at least one scope'); return; }
         const res = await this.api.issue(this.name.trim(), this.scopes, this.ttlDays);
-        if ('error' in res && res.error) { void message.error(res.error); return; }
+        if ('error' in res && res.error) { notifyError(res.error); return; }
         this.issuedSecret = res as IMcpIssuedToken;
         this.issueOpen = false;
         this.name = '';
@@ -83,9 +84,9 @@ export class McpTokensViewModel {
         if (!this.issuedSecret) return;
         try {
             await navigator.clipboard.writeText(this.issuedSecret.secret);
-            void message.success('Secret copied');
+            notifySuccess('Secret copied');
         } catch {
-            void message.error('Copy failed — select the text manually');
+            notifyError('Copy failed — select the text manually');
         }
     }
 }

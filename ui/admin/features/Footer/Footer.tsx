@@ -1,12 +1,14 @@
 import React, {useEffect} from "react";
-import {Alert, Button, Card, Col, Input, Row, Space, Switch, Typography, message} from "antd";
+import {Alert, Button, Card, Col, Input, Row, Space, Switch, Typography} from "antd";
+import {notifyError} from '@admin/lib/notify';
 import {DeleteOutlined, PlusOutlined} from "@client/lib/icons";
 import {useTranslation} from "react-i18next";
 import AuditBadge from "@admin/shell/AuditBadge";
-import {useRefreshView} from "@client/lib/refreshBus";
+import {useRefreshView} from "@client/lib/useRefreshView";
 import ConflictDialog from "@client/lib/ConflictDialog";
 import {useViewModel} from "@client/lib/state/observable";
 import LinkTargetPicker from "@admin/lib/LinkTargetPicker";
+import PaneHeader from "@admin/shell/PaneHeader";
 import {FooterViewModel} from "./FooterViewModel";
 
 /** Render-only Footer pane — state lives on `FooterViewModel`. VM3 (2026-05-02). */
@@ -18,20 +20,28 @@ const AdminSettingsFooter: React.FC = () => {
     useRefreshView(vm.refresh, 'settings');
 
     return (
-        <div style={{padding: 16}}>
+        <div style={{padding: 'var(--admin-rhythm-md, 16px)'}}>
+            <PaneHeader
+                testId="admin-footer-header"
+                eyebrow={t('Site')}
+                title={t('Footer')}
+                description={t('Global footer — columns of links + bottom copyright line. Auto-generated Site / Writing columns can be overridden by adding a column with the same title.')}
+                actions={
+                    <Space align="center">
+                        <Switch checked={vm.config.enabled} onChange={vm.setEnabled}/>
+                        <span>{vm.config.enabled ? t('Footer visible') : t('Footer hidden')}</span>
+                        <Button data-testid="footer-save-btn" type="primary" onClick={vm.save} loading={vm.saving}>{t('Save')}</Button>
+                        <Button onClick={vm.refresh} loading={vm.loading}>{t('Refresh')}</Button>
+                        <AuditBadge editedBy={vm.config.editedBy} editedAt={vm.config.editedAt}/>
+                    </Space>
+                }
+            />
             <Alert
                 type="info"
                 showIcon
-                style={{marginBottom: 16}}
+                style={{marginBottom: 'var(--admin-rhythm-md, 16px)'}}
                 message={t('Columns with these titles are auto-generated: Site (your pages) and Writing (blog). You can override by adding a column with the same title.')}
             />
-            <Space style={{marginBottom: 16}} align="center">
-                <Switch checked={vm.config.enabled} onChange={vm.setEnabled}/>
-                <span>{vm.config.enabled ? t('Footer visible') : t('Footer hidden')}</span>
-                <Button data-testid="footer-save-btn" type="primary" onClick={vm.save} loading={vm.saving}>{t('Save')}</Button>
-                <Button onClick={vm.refresh} loading={vm.loading}>{t('Refresh')}</Button>
-                <AuditBadge editedBy={vm.config.editedBy} editedAt={vm.config.editedAt}/>
-            </Space>
             <Row gutter={[12, 12]}>
                 {vm.config.columns.map((col, i) => (
                     <Col xs={24} md={12} lg={8} key={i}>
@@ -66,6 +76,7 @@ const AdminSettingsFooter: React.FC = () => {
                                                         value={entry.url ?? ''}
                                                         onChange={(v) => vm.patchEntry(i, j, {url: v})}
                                                         placeholder={t('Pick page or anchor')}
+                                                        hostId={`footer-col-${i}-entry-${j}`}
                                                     />
                                                 ) : (
                                                     <Input
@@ -123,7 +134,7 @@ const AdminSettingsFooter: React.FC = () => {
                         onTakeTheirs={vm.takeTheirs}
                         onKeepMine={async () => {
                             try { await vm.conflict?.retry(); }
-                            catch (err) { message.error(String((err as Error)?.message ?? err)); vm.dismissConflict(); }
+                            catch (err) { notifyError(err); vm.dismissConflict(); }
                         }}
                     />
                 );

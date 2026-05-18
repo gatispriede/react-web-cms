@@ -16,9 +16,9 @@
  */
 
 import type {NextApiRequest, NextApiResponse} from 'next';
-import {requireRole} from './_authHelpers';
-import {requireSameOrigin} from './_origin';
-import {clientIp, rateLimit} from './_rateLimit';
+import {requireRole} from '@client/lib/api-helpers/authHelpers';
+import {requireSameOrigin} from '@client/lib/api-helpers/origin';
+import {clientIp, rateLimit} from '@client/lib/api-helpers/rateLimit';
 import {getMongoConnection} from '@services/infra/mongoDBConnection';
 
 const COLLECTION = 'Inquiries';

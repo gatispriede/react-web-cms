@@ -1,9 +1,9 @@
 import type {NextApiRequest, NextApiResponse} from 'next';
 import {getServerSession} from 'next-auth/next';
-import {authOptions} from './auth/[...nextauth]';
-import {requireSameOrigin} from './_origin';
+import {adminAuthOptions as authOptions} from './auth/authOptions';
+import {requireSameOrigin} from '@client/lib/api-helpers/origin';
 import {getMongoConnection} from '@services/infra/mongoDBConnection';
-import {clientIp, rateLimit} from './_rateLimit';
+import {clientIp, rateLimit} from '@client/lib/api-helpers/rateLimit';
 
 /**
  * Layer 2 presence API.

@@ -21,24 +21,30 @@ afterAll(async () => {
 beforeEach(async () => {
     db = client.db(`theme_${Date.now()}_${Math.floor(Math.random() * 1e9)}`);
     service = new ThemeService(db);
-    // seedIfEmpty is a static singleton guard — reset so each test can seed fresh.
-    (ThemeService as any).seeded = false;
+    // seedIfEmpty is a static singleton guard (Promise-based since B2) —
+    // reset so each test can seed against a fresh db.
+    ThemeService._resetSeedingPromiseForTest();
 });
 
 describe('ThemeService', () => {
-    it('seedIfEmpty seeds the preset list and makes the first preset active', async () => {
+    it('seedIfEmpty seeds the first-class theme presets and makes the first one active', async () => {
         await service.seedIfEmpty();
         const list = await service.getThemes();
-        // Preset list is curated in ThemeService.PRESETS — covers editorial
-        // themes (Industrial / Studio / Paper), the colour-only basics
-        // (Classic / Ocean / Forest / Midnight), and the High contrast a11y
-        // preset. Assertion is "every seeded row is a preset" rather than a
-        // hard count so adding a preset doesn't require updating this test.
-        expect(list.length).toBeGreaterThanOrEqual(8);
+        // Preset list = first-class themes only as of 2026-05-13. Legacy
+        // colour-only presets (Industrial / Studio / Paper / High contrast +
+        // the inline Classic / Ocean / Brandappart / Forest / Midnight
+        // blocks) were dropped because they only varied colour + radius
+        // without module-level structural differences. Assertion is a >=5
+        // floor so adding a new first-class theme doesn't require updating
+        // this test.
+        expect(list.length).toBeGreaterThanOrEqual(5);
         expect(list.every(t => t.custom === false)).toBe(true);
+        // Every seeded preset must be a known first-class theme name.
+        const FIRST_CLASS_NAMES = new Set(['Editorial', 'Commerce', 'SaaS Landing', 'Agency', 'Restaurant']);
+        for (const t of list) expect(FIRST_CLASS_NAMES.has(t.name)).toBe(true);
         const active = await service.getActive();
-        expect(active?.name).toBe('Industrial');
-        expect(list.some(t => t.name === 'High contrast')).toBe(true);
+        expect(active).not.toBeNull();
+        expect(FIRST_CLASS_NAMES.has(active!.name)).toBe(true);
     });
 
     it('saveTheme inserts custom themes and setActive switches them', async () => {

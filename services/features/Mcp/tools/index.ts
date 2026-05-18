@@ -1,5 +1,6 @@
 import {McpTool} from '../types';
 import {log} from '@services/infra/logger';
+import {getPluginTools} from '../plugin';
 import {PAGE_TOOLS} from './pages';
 import {MODULE_TOOLS} from './modules';
 import {TRANSLATION_TOOLS} from './translations';
@@ -22,6 +23,25 @@ import {DIAGNOSTICS_TOOLS} from './diagnostics';
 import {DISCOVERY_TOOLS} from './discovery';
 import {EMAIL_TOOLS} from './email';
 import {ANCHOR_TOOLS} from './anchors';
+import {RELEASE_TOOLS} from './releases';
+import {PRICING_TOOLS} from './pricing';
+import {NOTIFICATION_TOOLS} from './notifications';
+import {SEO_TOOLS} from './seo';
+import {BACKUP_TOOLS} from './backup';
+import {MARKETING_TOOLS} from './marketing';
+import {CARS_TOOLS} from './cars';
+import {COMPLIANCE_TOOLS} from './compliance';
+import {A11Y_TOOLS} from './a11y';
+import {SYSTEM_PAGES_TOOLS} from './systemPages';
+import {COMMERCE_TOOLS} from './commerce';
+import {AUTH_TOOLS} from './auth';
+import {WAREHOUSE_SYNC_TOOLS} from './warehouseSync';
+import {ACCOUNT_SETTINGS_TOOLS} from './accountSettings';
+import {PRODUCT_TEMPLATES_TOOLS} from './productTemplates';
+import {CHECKOUT_TOOLS} from './checkout';
+import {ABANDONED_CART_TOOLS} from './abandonedCart';
+import {MODULE_SCREENSHOT_TOOLS} from './moduleScreenshots';
+import {INVOICE_TOOLS} from './invoices';
 
 /**
  * Out of scope (defer):
@@ -53,6 +73,25 @@ export const ALL_MCP_TOOLS: McpTool[] = [
     ...DISCOVERY_TOOLS,
     ...EMAIL_TOOLS,
     ...ANCHOR_TOOLS,
+    ...RELEASE_TOOLS,
+    ...PRICING_TOOLS,
+    ...NOTIFICATION_TOOLS,
+    ...SEO_TOOLS,
+    ...BACKUP_TOOLS,
+    ...MARKETING_TOOLS,
+    ...CARS_TOOLS,
+    ...COMPLIANCE_TOOLS,
+    ...A11Y_TOOLS,
+    ...SYSTEM_PAGES_TOOLS,
+    ...COMMERCE_TOOLS,
+    ...AUTH_TOOLS,
+    ...WAREHOUSE_SYNC_TOOLS,
+    ...ACCOUNT_SETTINGS_TOOLS,
+    ...PRODUCT_TEMPLATES_TOOLS,
+    ...CHECKOUT_TOOLS,
+    ...ABANDONED_CART_TOOLS,
+    ...MODULE_SCREENSHOT_TOOLS,
+    ...INVOICE_TOOLS,
 ];
 
 /**
@@ -69,7 +108,13 @@ function isDestructiveByName(name: string): boolean {
 
 export function buildToolRegistry(): Map<string, McpTool> {
     const map = new Map<string, McpTool>();
-    for (const t of ALL_MCP_TOOLS) {
+    // Built-in tools first — they own the bare top-level namespaces
+    // (`page.*`, `module.*`, `bundle.*` …). Plugin tools layer on top
+    // via the registry at `services/features/Mcp/plugin/`; the plugin
+    // module rewrites each tool's name to `${namespace}.${name}` so
+    // plugin contributions cannot shadow built-ins.
+    const allTools: McpTool[] = [...ALL_MCP_TOOLS, ...getPluginTools()];
+    for (const t of allTools) {
         if (map.has(t.name)) {
             throw new Error(`MCP tool registry: duplicate tool name ${t.name}`);
         }

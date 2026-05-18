@@ -5,8 +5,14 @@
  * local state. Mutations send via the customer pages' `gql()` helper
  * (same path used by /account/*) — the cart cookie is sent same-origin
  * automatically by `credentials: 'same-origin'` in `gqlClient.ts`.
+ *
+ * Cross-component sync: every `useCart()` consumer subscribes to a
+ * single module-level store via `useSyncExternalStore`. `addItem` from
+ * the product detail page immediately updates the header `CartIcon`'s
+ * badge count — no full-page refresh required, no React Context
+ * provider needed at the root.
  */
-import {useCallback, useEffect, useState} from 'react';
+import {useCallback, useEffect, useSyncExternalStore} from 'react';
 import {gql} from '@client/lib/account/gqlClient';
 import type {Cart} from '@interfaces/ICart';
 
@@ -35,6 +41,56 @@ const parse = (raw: string | undefined | null): Cart => {
     }
 };
 
+// ── Module-level singleton store ────────────────────────────────────
+// All `useCart()` consumers read from the same `state` ref and
+// subscribe to the same listener set. Mutating the store via `setState`
+// fans the new snapshot out to every subscribed component in one tick.
+//
+// Why not React Context: the storefront `_app.tsx` doesn't wrap the
+// public-site tree in a `<CartProvider>` today (and adding it touches
+// every page). A module-level store keeps the wiring identical to
+// the previous useState-based hook from the consumer's POV.
+let state: Cart = EMPTY;
+let loaded = false;
+let inflight: Promise<void> | null = null;
+const listeners = new Set<() => void>();
+
+function setState(next: Cart): void {
+    state = next;
+    listeners.forEach(l => l());
+}
+
+function subscribe(listener: () => void): () => void {
+    listeners.add(listener);
+    return () => { listeners.delete(listener); };
+}
+
+function getSnapshot(): Cart { return state; }
+function getServerSnapshot(): Cart { return EMPTY; }
+
+async function refreshShared(): Promise<void> {
+    if (inflight) return inflight;
+    inflight = (async () => {
+        try {
+            const data = await gql(CART_QUERY);
+            setState(parse(data?.mongo?.cart));
+        } catch {
+            // network blip — keep last-known state
+        } finally {
+            loaded = true;
+            inflight = null;
+        }
+    })();
+    return inflight;
+}
+
+async function send(q: string, vars: Record<string, any>, field: string): Promise<Cart> {
+    const data = await gql(q, vars);
+    const next = parse(data?.mongo?.[field]);
+    setState(next);
+    return next;
+}
+
 export interface UseCart {
     cart: Cart;
     loading: boolean;
@@ -46,29 +102,15 @@ export interface UseCart {
 }
 
 export function useCart(): UseCart {
-    const [cart, setCart] = useState<Cart>(EMPTY);
-    const [loading, setLoading] = useState(true);
+    const cart = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
-    const refresh = useCallback(async () => {
-        try {
-            const data = await gql(CART_QUERY);
-            setCart(parse(data?.mongo?.cart));
-        } catch {
-            // network blip — keep last-known state
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+    // First mount in the page kicks the shared fetch. Subsequent
+    // consumers see the same in-flight promise via `refreshShared`'s
+    // inflight guard, so we don't spam `/api/graphql` with parallel
+    // identical reads.
+    useEffect(() => { if (!loaded) void refreshShared(); }, []);
 
-    useEffect(() => { void refresh(); }, [refresh]);
-
-    const send = async (q: string, vars: Record<string, any>, field: string): Promise<Cart> => {
-        const data = await gql(q, vars);
-        const next = parse(data?.mongo?.[field]);
-        setCart(next);
-        return next;
-    };
-
+    const refresh = useCallback(() => refreshShared(), []);
     const addItem = useCallback((productId: string, sku: string, qty = 1) =>
         send(ADD, {pid: productId, sku, qty}, 'cartAddItem'), []);
     const updateQty = useCallback((productId: string, sku: string, qty: number) =>
@@ -77,5 +119,5 @@ export function useCart(): UseCart {
         send(REM, {pid: productId, sku}, 'cartRemoveItem'), []);
     const clear = useCallback(() => send(CLR, {}, 'cartClear'), []);
 
-    return {cart, loading, refresh, addItem, updateQty, removeItem, clear};
+    return {cart, loading: !loaded, refresh, addItem, updateQty, removeItem, clear};
 }

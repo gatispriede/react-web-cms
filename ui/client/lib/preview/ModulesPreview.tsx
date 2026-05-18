@@ -1,8 +1,11 @@
 import React, {useMemo, useState} from 'react';
 import {Space, Switch, Typography, Button, Collapse} from 'antd';
 import {TFunction} from 'i18next';
+import {useTranslation} from 'react-i18next';
+import {useT as useAppTranslation} from 'next-i18next/client';
 import {IItem} from '@interfaces/IItem';
 import {itemTypeList, ItemTypeDefinition} from '@admin/lib/itemTypes/registry';
+import AdminPreviewModule from '@admin/modules/shapes/AdminPreviewModule';
 import {sampleContent, PreviewSample} from './samples';
 import {resolveSampleMedia} from './samplesMedia';
 import ThemeSwitcher from './ThemeSwitcher';
@@ -11,8 +14,8 @@ import ThemeSwitcher from './ThemeSwitcher';
  * C10 — admin modules-preview page body.
  *
  * Renders every module from the item-type registry against every declared
- * style variant and every fixture in `samples.ts`. A sticky toolbar swaps
- * the active theme (same helper the public app boots with) + flips a global
+ * style variant and every fixture in `samples.ts`. A toolbar swaps the
+ * active theme (same helper the public app boots with) + flips a global
  * `is-transparent` toggle so operators can eyeball theme regressions + the
  * C8 transparency behaviour on one page without navigating real content.
  *
@@ -25,11 +28,17 @@ import ThemeSwitcher from './ThemeSwitcher';
  * `SectionContent` reducer, no undo plumbing. Samples are pure data and
  * every module's `Display` component is invoked directly with a synthetic
  * `IItem`.
+ *
+ * admin-module-composed: this is now the `AdminLoader` *bridge* for the
+ * `modules-preview` pane. The matrix VM logic + the actual preview render
+ * are unchanged; the toolbar moves into `AdminPreviewModule`'s `controls`
+ * slot and the `<Collapse>` becomes its `children`. The dispatch renders
+ * this with NO props, so the bridge resolves `t` / `tApp` itself.
  */
-export default function ModulesPreview({t, tApp}: {
-    t: TFunction<'translation', undefined>;
-    tApp: TFunction<string, undefined>;
-}) {
+export default function ModulesPreview() {
+    const {t} = useTranslation();
+    const {t: tApp} = useAppTranslation('app');
+
     const [transparentOn, setTransparentOn] = useState(false);
     const [filter, setFilter] = useState<string>('');
     const entries = useMemo(() => itemTypeList(), []);
@@ -48,86 +57,84 @@ export default function ModulesPreview({t, tApp}: {
     const expandAll = () => setActiveKeys(visibleEntries.map((d) => d.key));
     const collapseAll = () => setActiveKeys([]);
 
-    return (
-        <div className="modules-preview-page" style={{padding: '16px 24px'}}>
-            <div
-                className="modules-preview-toolbar"
-                style={{
-                    position: 'sticky',
-                    top: 0,
-                    zIndex: 10,
-                    background: 'var(--theme-colorBgBase, #fff)',
-                    padding: '12px 0',
-                    borderBottom: '1px solid rgba(0,0,0,0.08)',
-                    marginBottom: 24,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 24,
-                    flexWrap: 'wrap',
-                }}
-            >
-                <ThemeSwitcher/>
-                <Space align="center">
-                    <Typography.Text style={{fontSize: 12, opacity: 0.7}}>Transparent bg</Typography.Text>
-                    <Switch size="small" checked={transparentOn} onChange={setTransparentOn}/>
-                </Space>
-                <Space align="center">
-                    <Typography.Text style={{fontSize: 12, opacity: 0.7}}>Filter</Typography.Text>
-                    <input
-                        value={filter}
-                        onChange={(e) => setFilter(e.target.value)}
-                        placeholder="module name"
-                        style={{padding: '4px 8px', border: '1px solid rgba(0,0,0,0.15)', borderRadius: 4}}
-                    />
-                    {filter && <Button size="small" type="link" onClick={() => setFilter('')}>clear</Button>}
-                </Space>
-                <Space align="center">
-                    <Button size="small" onClick={expandAll}>{t('Expand all')}</Button>
-                    <Button size="small" onClick={collapseAll}>{t('Collapse all')}</Button>
-                </Space>
-                <Typography.Text type="secondary" style={{fontSize: 12, marginLeft: 'auto'}}>
-                    {t('Matrix: every module × every style × every sample. Switch the theme to spot regressions.')}
-                </Typography.Text>
-            </div>
-
-            <Collapse
-                activeKey={activeKeys}
-                onChange={(keys) => setActiveKeys(Array.isArray(keys) ? keys : [keys])}
-                bordered
-                items={visibleEntries.map((def) => {
-                    const samples: PreviewSample[] = sampleContent[def.key] ?? [];
-                    const styleValues = Object.values(def.styleEnum).filter((v) => typeof v === 'string') as string[];
-                    return {
-                        key: def.key,
-                        label: (
-                            // Bold per-module separation header — the whole point of the
-                            // matrix is scanning across types quickly, so the heading
-                            // has to read as a hard divider even collapsed. Heavy weight
-                            // + uppercase title, muted enum key + count summary to the
-                            // right so operators know "what's in here" before expanding.
-                            <div style={{display: 'flex', alignItems: 'baseline', gap: 12, width: '100%'}}>
-                                <span style={{
-                                    fontSize: 16,
-                                    fontWeight: 800,
-                                    textTransform: 'uppercase',
-                                    letterSpacing: 1.1,
-                                    color: 'var(--theme-colorTextBase, #111)',
-                                }}>
-                                    {t(def.labelKey)}
-                                </span>
-                                <code style={{fontSize: 11, opacity: 0.55, fontFamily: 'ui-monospace, monospace'}}>
-                                    {def.key}
-                                </code>
-                                <span style={{marginLeft: 'auto', fontSize: 11, opacity: 0.55, fontFamily: 'ui-monospace, monospace'}}>
-                                    {samples.length} sample{samples.length === 1 ? '' : 's'} × {styleValues.length} style{styleValues.length === 1 ? '' : 's'}
-                                </span>
-                            </div>
-                        ),
-                        children: <ModuleBody def={def} samples={samples} styleValues={styleValues} transparentOn={transparentOn} t={t} tApp={tApp}/>,
-                    };
-                })}
-            />
+    const controls = (
+        <div
+            className="modules-preview-toolbar"
+            style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 24,
+                flexWrap: 'wrap',
+                width: '100%',
+            }}
+        >
+            <ThemeSwitcher/>
+            <Space align="center">
+                <Typography.Text style={{fontSize: 12, opacity: 0.7}}>Transparent bg</Typography.Text>
+                <Switch size="small" checked={transparentOn} onChange={setTransparentOn}/>
+            </Space>
+            <Space align="center">
+                <Typography.Text style={{fontSize: 12, opacity: 0.7}}>Filter</Typography.Text>
+                <input
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value)}
+                    placeholder="module name"
+                    style={{padding: '4px 8px', border: '1px solid rgba(0,0,0,0.15)', borderRadius: 4}}
+                />
+                {filter && <Button size="small" type="link" onClick={() => setFilter('')}>clear</Button>}
+            </Space>
+            <Space align="center">
+                <Button size="small" onClick={expandAll}>{t('Expand all')}</Button>
+                <Button size="small" onClick={collapseAll}>{t('Collapse all')}</Button>
+            </Space>
+            <Typography.Text type="secondary" style={{fontSize: 12, marginLeft: 'auto'}}>
+                {t('Matrix: every module × every style × every sample. Switch the theme to spot regressions.')}
+            </Typography.Text>
         </div>
+    );
+
+    return (
+        <AdminPreviewModule testId="admin-modules-preview" title={t('Modules preview')} controls={controls}>
+            <div className="modules-preview-page" style={{padding: '16px 24px'}}>
+                <Collapse
+                    activeKey={activeKeys}
+                    onChange={(keys) => setActiveKeys(Array.isArray(keys) ? keys : [keys])}
+                    bordered
+                    items={visibleEntries.map((def) => {
+                        const samples: PreviewSample[] = sampleContent[def.key] ?? [];
+                        const styleValues = Object.values(def.styleEnum).filter((v) => typeof v === 'string') as string[];
+                        return {
+                            key: def.key,
+                            label: (
+                                // Bold per-module separation header — the whole point of the
+                                // matrix is scanning across types quickly, so the heading
+                                // has to read as a hard divider even collapsed. Heavy weight
+                                // + uppercase title, muted enum key + count summary to the
+                                // right so operators know "what's in here" before expanding.
+                                <div style={{display: 'flex', alignItems: 'baseline', gap: 12, width: '100%'}}>
+                                    <span style={{
+                                        fontSize: 16,
+                                        fontWeight: 800,
+                                        textTransform: 'uppercase',
+                                        letterSpacing: 1.1,
+                                        color: 'var(--theme-colorTextBase, #111)',
+                                    }}>
+                                        {t(def.labelKey)}
+                                    </span>
+                                    <code style={{fontSize: 11, opacity: 0.55, fontFamily: 'ui-monospace, monospace'}}>
+                                        {def.key}
+                                    </code>
+                                    <span style={{marginLeft: 'auto', fontSize: 11, opacity: 0.55, fontFamily: 'ui-monospace, monospace'}}>
+                                        {samples.length} sample{samples.length === 1 ? '' : 's'} × {styleValues.length} style{styleValues.length === 1 ? '' : 's'}
+                                    </span>
+                                </div>
+                            ),
+                            children: <ModuleBody def={def} samples={samples} styleValues={styleValues} transparentOn={transparentOn} t={t} tApp={tApp}/>,
+                        };
+                    })}
+                />
+            </div>
+        </AdminPreviewModule>
     );
 }
 

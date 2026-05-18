@@ -6,12 +6,11 @@ import {Session} from "next-auth";
 import AdminSettings from "./AdminSettings";
 import AdminSettingsLanguages from "@admin/features/Languages/Languages";
 import TranslationManager from "./TranslationManager";
-import {useTranslation} from "next-i18next/pages";
+import {useT as useTranslation} from "next-i18next/client";
 import Backend from "i18next-http-backend";
 import {TFunction} from "i18next";
-import {i18n} from "next-i18next/pages";
 import SiteFlagsApi from "@services/api/client/SiteFlagsApi";
-import {useCommandPaletteHotkey} from "./CommandPalette";
+import CommandPalette from "./CommandPalette/CommandPalette";
 import {I18nextProvider, useTranslation as useReactTranslation} from "react-i18next";
 import adminI18n, {AdminLocale, setAdminLocale, detectStoredOrNavigatorLocale} from "@admin/i18n/adminI18n";
 import ModulesPreview from "@client/lib/preview/ModulesPreview";
@@ -22,7 +21,7 @@ import {useAdminMode} from "@admin/lib/adminMode";
 import FeatureFlagsPanel from "@admin/features/Platform/FeatureFlagsPanel";
 import {UserRole} from "@interfaces/IUser";
 import AdminTopBar from "./AdminTopBar/AdminTopBar";
-import {buildAreaItems, isInArea} from "./AdminTopBar/adminAreaItems";
+import {buildAreaItems, resolveActiveArea} from "./AdminTopBar/adminAreaItems";
 
 /**
  * Phase 2 of admin segregation (docs/features/platform/admin-segregation.md).
@@ -41,33 +40,112 @@ export type AdminView =
     | 'modules-preview'
     | 'build'
     | 'build/modules-preview'
+    // admin-information-architecture re-pivot (2026-05-16, same day as
+    // first ship) — 5 task-driven top-level buckets:
+    //   Build / Content / Settings / Analytics / System
+    | 'content'
+    | 'content/pages'
+    | 'content/translations'
+    | 'content/posts'
+    | 'content/system-pages'
+    | 'content/releases'
+    | 'content/publishing'
+    | 'content/trash'
+    | 'content/products'
+    | 'content/inventory'
+    | 'content/orders'
+    | 'content/invoices'
+    | 'content/customers'
+    | 'content/inquiries'
+    | 'settings'
+    | 'settings/chrome'
+    | 'settings/chrome/footer'
+    | 'settings/chrome/header'
+    | 'settings/chrome/logo'
+    | 'settings/theme'
+    | 'settings/languages'
+    | 'settings/seo'
+    | 'settings/features'
+    | 'settings/features/auth'
+    | 'settings/features/commerce'
+    | 'settings/features/dropship'
+    | 'settings/features/email'
+    | 'settings/features/compliance'
+    | 'settings/features/redirects'
+    | 'settings/access'
+    | 'settings/access/users'
+    | 'settings/access/permissions'
+    | 'settings/access/auth'
+    | 'settings/account'
+    | 'analytics'
+    | 'analytics/seo'
+    | 'analytics/audit-log'
+    | 'analytics/attribution'
+    | 'analytics/filters'
+    | 'system'
+    | 'system/mcp'
+    | 'system/features'
+    | 'system/agent'
+    | 'system/diagnostics'
+    | 'system/errors'
+    | 'system/performance'
+    | 'system/bundle'
+    | 'system/backups'
+    | 'system/compliance'
+    | 'system/redirects'
+    | 'system/permissions'
+    | 'system/inquiries'
+    | 'system/email'
+    | 'system/audit-log'
+    | 'system/analytics-filters'
+    | 'system/modules-preview'
+    | 'system/demo-content/cars'
+    // First-ship 6-bucket aliases — kept for the 301-shim period so the
+    // shell still renders the right pane for anyone who bookmarked one
+    // of yesterday's 6-bucket URLs. Retired alongside the per-area sweeps.
+    | 'site'
+    | 'site/themes'
+    | 'site/logo'
+    | 'site/layout'
+    | 'site/footer'
+    | 'site/seo'
+    | 'site/email'
+    | 'site/email-templates'
+    | 'site/compliance'
+    | 'site/redirects'
+    | 'site/account-settings'
+    | 'commerce'
+    | 'commerce/products'
+    | 'commerce/inventory'
+    | 'commerce/orders'
+    | 'commerce/invoices'
+    | 'commerce/settings'
+    | 'commerce/checkout'
+    | 'commerce/abandoned-carts'
+    | 'commerce/warehouse-sync'
+    | 'commerce/product-templates'
+    | 'people'
+    | 'people/users'
+    | 'people/inquiries'
+    | 'people/permissions'
+    | 'people/auth'
+    // Pre-IA-jump legacy aliases preserved while the 301 shim is live.
     | 'client-config'
     | 'client-config/themes'
     | 'client-config/logo'
     | 'client-config/site-layout'
-    | 'content'
-    | 'content/translations'
-    | 'content/posts'
     | 'content/footer'
-    | 'content/products'
-    | 'content/inventory'
-    | 'content/orders'
     | 'seo'
     | 'seo/analytics'
     | 'release'
     | 'release/publishing'
     | 'release/bundle'
     | 'release/audit'
-    | 'system'
     | 'system/users'
-    | 'system/mcp'
     | 'system/analytics-filters'
     | 'system/inquiries'
-    | 'system/features'
-    | 'system/agent'
     | 'system/info'
-    | 'system/email'
-    | 'system/errors';
+    | 'system/email';
 
 /**
  * Inner chrome — uses the dedicated `adminI18n` instance via the
@@ -87,12 +165,10 @@ const UserStatusBarInner = ({session, view, tApp}: {
     tApp: TFunction<string, undefined>
 }) => {
     const {t: tAdmin, i18n: adminI} = useReactTranslation();
-    let lang = i18n?.resolvedLanguage ?? (i18n?.language !== 'default' ? i18n?.language : null) ?? 'lv'
+    const {t: tCommon, i18n: i18nCommon} = useTranslation('common');
+    let lang = i18nCommon?.resolvedLanguage ?? (i18nCommon?.language !== 'default' ? i18nCommon?.language : null) ?? 'lv'
     const [, setBlogEnabled] = useState(true);
     const {mode: adminMode} = useAdminMode();
-    const [paletteOpen, setPaletteOpen] = useState(false);
-    useCommandPaletteHotkey(setPaletteOpen);
-    const {t: tCommon, i18n: i18nCommon} = useTranslation('common');
     i18nCommon.use(Backend);
     useEffect(() => {
         void new SiteFlagsApi().get().then(f => setBlogEnabled(f.blogEnabled !== false));
@@ -126,13 +202,20 @@ const UserStatusBarInner = ({session, view, tApp}: {
 
     const simplified = adminMode === 'simplified';
     const allAreaItems = buildAreaItems(tAdmin as TFunction<"translation", undefined>);
-    // Simplified-mode authors don't manage commerce — products / inventory
-    // / orders are advanced-only. The routes themselves still resolve if
-    // bookmarked, but the area-nav drops them.
+    // Simplified-mode authors don't manage commerce — the Content rail
+    // shows them just the author-facing rows (Posts / Translations /
+    // System pages). Products / Inventory / Orders / Invoices stay in
+    // the rail for advanced mode. The Commerce + People legacy rails
+    // are kept here intact — anyone landing on a legacy URL via the
+    // 301 shim still gets a working rail until those sweeps land.
     const areaItems = simplified
         ? {
             ...allAreaItems,
-            content: allAreaItems.content.filter(it => !['products', 'inventory', 'orders'].includes(it.testidSuffix ?? '')),
+            content: (allAreaItems.content ?? []).filter(item =>
+                !item.path.includes('/products')
+                && !item.path.includes('/inventory')
+                && !item.path.includes('/orders')
+                && !item.path.includes('/invoices')),
         }
         : allAreaItems;
     // DECISION: derive currentPath from the view literal — the SSR-rendered
@@ -148,14 +231,14 @@ const UserStatusBarInner = ({session, view, tApp}: {
      * Pick which area's rail (if any) should render based on the active view.
      * The five AREA_* prefixes get their rail; the legacy views render bare.
      */
-    const activeArea: keyof typeof areaItems | null =
-        isInArea(view, 'build') ? 'build'
-        : isInArea(view, 'client-config') ? 'client-config'
-        : isInArea(view, 'content') ? 'content'
-        : isInArea(view, 'seo') ? 'seo'
-        : isInArea(view, 'release') ? 'release'
-        : isInArea(view, 'system') ? 'system'
-        : null;
+    // Resolve the active rail via the shared helper. Consults the
+    // parent-bucket override map first (so cross-area links in the new
+    // 5-bucket rails — Publishing at `/admin/release/publishing`, Theme
+    // at `/admin/client-config/themes`, etc. — keep the parent bucket's
+    // rail visible instead of swapping to the legacy area's rail), then
+    // falls back to prefix matching. New buckets are preferred over
+    // legacy aliases.
+    const activeArea = resolveActiveArea(view, Object.keys(areaItems)) as keyof typeof areaItems | null;
 
     /**
      * Map the view literal to the component to render in the main pane.
@@ -203,7 +286,12 @@ const UserStatusBarInner = ({session, view, tApp}: {
                 );
             case 'modules-preview':
             case 'build/modules-preview':
-                return <ModulesPreview t={tAdmin as TFunction<"translation", undefined>} tApp={tApp}/>;
+                // admin-module-composed: `ModulesPreview` is now the
+                // `AdminLoader` bridge — it resolves `t` / `tApp` itself and
+                // composes `AdminPreviewModule`. The registered
+                // `ModulesPreviewAdminUILoader` dispatches the same pane via
+                // `AdminPageDispatch`; this legacy case stays as a fallback.
+                return <ModulesPreview/>;
 
             // Area landings — render nothing in the pane; AreaNav covers it.
             case 'client-config':
@@ -224,13 +312,17 @@ const UserStatusBarInner = ({session, view, tApp}: {
     };
 
     return (
-        <>
+        // The kbar `<CommandPalette>` provider wraps the entire admin
+        // chrome — top-bar trigger + every dispatched pane — so ⌘K and the
+        // `CommandPaletteTrigger` button work from any admin route, not
+        // just the build view. (`AdminApp` no longer mounts its own.)
+        <CommandPalette lang={lang}>
             <Head>
                 {/* PWA install — admin pages get their own manifest. iOS Safari +
                     Android Chrome show "Add to Home Screen" → standalone mode.
                     Public site keeps `public/manifest.json` for the storefront
                     PWA install. */}
-                <link rel="manifest" href="/api/admin/manifest.json"/>
+                <link rel="manifest" href="/admin/manifest.json"/>
                 <meta name="apple-mobile-web-app-capable" content="yes"/>
                 <meta name="apple-mobile-web-app-title" content="CMS Admin"/>
                 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
@@ -245,8 +337,6 @@ const UserStatusBarInner = ({session, view, tApp}: {
                 simplified={simplified}
                 tAdmin={tAdmin as TFunction<"translation", undefined>}
                 lang={lang}
-                paletteOpen={paletteOpen}
-                setPaletteOpen={setPaletteOpen}
             />
             <main id="admin-main" aria-label={tAdmin("Admin workspace")} className="admin-main">
                 {activeArea ? (
@@ -269,7 +359,7 @@ const UserStatusBarInner = ({session, view, tApp}: {
                     renderPane()
                 )}
             </main>
-        </>
+        </CommandPalette>
     )
 }
 

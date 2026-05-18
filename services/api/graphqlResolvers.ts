@@ -61,7 +61,7 @@ export interface ResolverHooks {
 /**
  * Shared GraphQL resolver shapes used by both servers:
  *  - `Next /api/graphql` (apollo-server-micro, session-aware, role-gated)
- *  - `src/Server/index.ts` standalone (express-graphql, localhost/build-time only)
+ *  - `services/index.ts` standalone (express-graphql, localhost/build-time only)
  *
  * The two servers exist for different reasons: the Next route serves live
  * admin traffic behind NextAuth; the standalone server runs during SSG build

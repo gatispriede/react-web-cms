@@ -4,7 +4,7 @@
 
 Adds a **second, distinct authentication surface** for end-customers of the e-commerce
 storefront, alongside the existing admin auth (NextAuth + JWT, see
-[`authentication.md`](./authentication.md) and [`../architecture/auth-roles.md`](../architecture/auth-roles.md)).
+[`authentication.md`](../core/authentication.md) and [`../architecture/auth-roles.md`](../../architecture/auth-roles.md)).
 Customers sign in/up on the public site (`ui/client/pages/account/*`); admin staff
 continue to sign in at `/auth/signin` and operate `ui/admin`. The two session
 populations must not collide — an admin cookie must not authorise a customer-only

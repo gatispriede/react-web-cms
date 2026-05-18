@@ -1,7 +1,10 @@
 // @vitest-environment node
 import {describe, it, expect} from 'vitest';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import sharp from 'sharp';
-import {optimizeImageBuffer} from './imageOptimize';
+import {optimizeImageBuffer, readImageMetadata} from './imageOptimize';
 
 /**
  * Compose fixture buffers inline via sharp so the tests stay hermetic —
@@ -55,12 +58,19 @@ describe('optimizeImageBuffer', () => {
         expect(r.format).toBe('png');
     });
 
-    it('unreadable bytes pass through untouched', async () => {
+    it('unreadable bytes pass through untouched and report readable:false', async () => {
         const garbage = Buffer.from('not an image at all');
         const r = await optimizeImageBuffer(garbage);
         expect(r.buffer).toBe(garbage);
         expect(r.optimised).toBe(false);
         expect(r.format).toBeNull();
+        // `readable:false` is the signal upload handlers use to reject with 400.
+        expect(r.readable).toBe(false);
+    });
+
+    it('valid raster reports readable:true (distinct from corrupt input)', async () => {
+        const r = await optimizeImageBuffer(await makeJpeg(300, 200));
+        expect(r.readable).toBe(true);
     });
 
     it('ratio lock forces cover-crop to target dimensions', async () => {
@@ -69,5 +79,35 @@ describe('optimizeImageBuffer', () => {
         expect(r.width).toBe(1920);
         expect(r.height).toBe(1080);
         expect(r.optimised).toBe(true);
+    });
+});
+
+describe('readImageMetadata', () => {
+    it('reads width/height/format for a raster file on disk', async () => {
+        const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'imgmeta-'));
+        const file = path.join(dir, 'fixture.jpg');
+        await fs.writeFile(file, await makeJpeg(640, 480));
+        try {
+            const meta = await readImageMetadata(file);
+            expect(meta.width).toBe(640);
+            expect(meta.height).toBe(480);
+            expect(meta.format).toBe('jpeg');
+        } finally {
+            await fs.rm(dir, {recursive: true, force: true});
+        }
+    });
+
+    it('returns empty metadata for a corrupt / missing file rather than throwing', async () => {
+        const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'imgmeta-'));
+        const file = path.join(dir, 'garbage.jpg');
+        await fs.writeFile(file, Buffer.from('definitely not an image'));
+        try {
+            const meta = await readImageMetadata(file);
+            expect(meta.width).toBeUndefined();
+            expect(meta.height).toBeUndefined();
+            expect(meta.format).toBeNull();
+        } finally {
+            await fs.rm(dir, {recursive: true, force: true});
+        }
     });
 });

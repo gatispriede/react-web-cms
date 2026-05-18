@@ -1,0 +1,45 @@
+/*
+ * Inline-edit overlay styles.
+ *
+ * The highlight + pill follow Sanity Presentation's visual language:
+ * a thin primary-color outline on the hovered field, plus a small pill
+ * in the top-right corner labelling which field the operator is about
+ * to edit. Pointer-events:none on the overlay so the underlying click
+ * is still tracked by the document-level capture listener — the visual
+ * is decoration, not an interaction surface.
+ */
+
+.inline-edit-overlay {
+    pointer-events: none;
+}
+
+.inline-edit-overlay__highlight {
+    outline: 2px solid var(--ant-color-primary, #1677ff);
+    outline-offset: 2px;
+    border-radius: 4px;
+    transition: outline-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+}
+
+.inline-edit-overlay__pill {
+    position: absolute;
+    top: -22px;
+    right: 0;
+    background: var(--ant-color-primary, #1677ff);
+    color: var(--ant-color-white, #fff);
+    font-size: 11px;
+    line-height: 1;
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    max-width: 320px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: var(--ant-font-family-code, ui-monospace, SFMono-Regular, Menlo, monospace);
+}
+
+/* When the operator has the drawer open, dim the rest of the page so the
+ * surface they're editing visually pops. AntD's drawer mask handles the
+ * scrim; this rule keeps the hover highlight from racing with the mask. */
+.ant-drawer-open .inline-edit-overlay__highlight {
+    display: none;
+}

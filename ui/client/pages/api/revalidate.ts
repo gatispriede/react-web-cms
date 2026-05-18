@@ -1,8 +1,9 @@
 import type {NextApiRequest, NextApiResponse} from 'next';
+import {revalidatePath} from 'next/cache';
 import {gqlFetch} from '@client/lib/gqlFetch';
 import {pageNameToPath, isHomePage} from '@utils/pagePath';
 import {ROLE_RANK, sessionFromReq} from '@services/features/Auth/authz';
-import {authOptions} from './auth/authOptions';
+import {adminAuthOptions as authOptions} from './auth/authOptions';
 
 /**
  * On-demand ISR endpoint. Admin mutations (theme save, section save, nav
@@ -221,13 +222,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const max = Number(process.env.REVALIDATE_MAX ?? 200);
     const unique = [...new Set(expanded)].slice(0, max);
 
+    // Dual-mode revalidation (B2 of app-router-migration). `res.revalidate`
+    // is the Pages Router API and is a no-op for App-Router routes;
+    // `revalidatePath` from `next/cache` is the App Router equivalent and
+    // is a no-op (well, harmless cache-tag bump) for Pages Router routes.
+    // While the migration is in flight some routes live in `pages/*` and
+    // some in `app/*` — call BOTH so whichever router owns the path
+    // actually flushes. Once Phase 7 cleanup deletes the last Pages Router
+    // page, the `res.revalidate` call can be removed.
     const results = await Promise.all(unique.map(async (p) => {
+        let pagesOk = false;
+        let appOk = false;
+        let lastErr: unknown;
         try {
             await res.revalidate(p);
-            return {path: p, ok: true};
-        } catch (err: any) {
-            return {path: p, ok: false, error: err?.message ?? String(err)};
+            pagesOk = true;
+        } catch (err) {
+            lastErr = err;
         }
+        try {
+            revalidatePath(p);
+            appOk = true;
+        } catch (err) {
+            lastErr = err;
+        }
+        if (pagesOk || appOk) return {path: p, ok: true};
+        const e = lastErr as any;
+        return {path: p, ok: false, error: e?.message ?? String(e)};
     }));
 
     return res.status(200).json({count: unique.length, results});

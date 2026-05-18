@@ -1,0 +1,23 @@
+/**
+ * Admin vertical-rhythm tokens — `admin-information-architecture` jump.
+ *
+ * Four cascading spacing tokens used across admin panes so headers,
+ * forms, and savebars line up at the same intervals regardless of which
+ * feature shipped them. Imported globally via the admin entrypoint;
+ * panes consume the tokens through `var(--admin-rhythm-md)` etc.
+ *
+ *   xs (4px)   — within-control spacing (icon ↔ label, chip clusters)
+ *   sm (8px)   — control-to-control (button rows, inline form fields)
+ *   md (16px)  — section-to-section within a pane
+ *   lg (32px)  — pane-header ↔ content, content ↔ savebar
+ *
+ * Sweep follow-up: panes still using inline `style={{margin: 16}}` or
+ * hardcoded `padding: 24px` should swap to `var(--admin-rhythm-md)` /
+ * `var(--admin-rhythm-lg)` as the per-area sweep agents land.
+ */
+:root {
+    --admin-rhythm-xs: 4px;
+    --admin-rhythm-sm: 8px;
+    --admin-rhythm-md: 16px;
+    --admin-rhythm-lg: 32px;
+}

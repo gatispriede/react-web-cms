@@ -1,4 +1,4 @@
-import {message} from 'antd';
+import {notifyError, notifySuccess} from '@admin/lib/notify';
 import UserApi from '@services/api/client/UserApi';
 import LanguageApi from '@services/api/client/LanguageApi';
 import {IUser, InUser} from '@interfaces/IUser';
@@ -38,8 +38,9 @@ export class UsersViewModel {
         proxy.removeAction = new GuardedAction<[IUser]>(
             async ({idempotencyKey}, user) => {
                 const result = await proxy.api.removeUser(user.id, {idempotencyKey});
-                if (result.error) { message.error(result.error); return; }
-                message.success(proxy.t('User removed'));
+                if (result.error) { notifyError(result.error); return; }
+                // TODO: wire Undo — user removal does not currently route through the trash collection.
+                notifySuccess(proxy.t('User removed'));
                 await proxy.refresh();
             },
             {onPendingChange: (v) => { proxy.removePending = v; }},
@@ -53,7 +54,7 @@ export class UsersViewModel {
             this.users = await this.api.listUsers();
             await this.refreshGrantOptions();
         } catch (err) {
-            message.error(String(err));
+            notifyError(err);
         } finally {
             this.loading = false;
         }
@@ -141,11 +142,11 @@ export class UsersViewModel {
             const result = this.editing?.id
                 ? await this.api.updateUser(payload)
                 : await this.api.addUser(payload);
-            if (result.error) { message.error(result.error); return; }
+            if (result.error) { notifyError(result.error); return; }
             if (this.editing?.id && values.password && this.editing.email === currentEmail) {
                 await onOwnPasswordRotated();
             }
-            message.success(this.editing?.id ? this.t('User updated') : this.t('User created'));
+            notifySuccess(this.editing?.id ? this.t('User updated') : this.t('User created'));
             this.close();
             await this.refresh();
         } finally {

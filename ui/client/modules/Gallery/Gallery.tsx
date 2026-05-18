@@ -1,7 +1,6 @@
-import React from "react";
+import React, {useState} from "react";
 import ContentManager from "@client/lib/ContentManager";
 import {EItemType} from "@enums/EItemType";
-import {Image} from "antd";
 import {IItem} from "@interfaces/IItem";
 import {ETextPosition} from "@enums/ETextPosition";
 import {TFunction} from "i18next";
@@ -9,6 +8,8 @@ import type {IGallery, IGalleryItem, IGalleryItemLegacy} from "./Gallery.types";
 import SizedImage from "@client/lib/SizedImage";
 import {toImageRef} from "@interfaces/IImageRef";
 import {toLinkRef} from "@interfaces/ILinkRef";
+import {inlineEditAttr} from "@client/lib/inlineEditAttr";
+import GalleryLightbox from "./GalleryLightbox";
 export type {IGallery, IGalleryItem} from "./Gallery.types";
 export {EGalleryStyle} from "./Gallery.types";
 
@@ -45,6 +46,8 @@ const normalize = (raw: IGallery | undefined): IGallery => ({
     items: Array.isArray(raw?.items) ? raw!.items.map(normalizeItem) : [],
     disablePreview: !!raw?.disablePreview,
     aspectRatio: raw?.aspectRatio,
+    // `showCaptions` defaults to `true` — alt-as-caption is the new baseline.
+    showCaptions: raw?.showCaptions ?? true,
 });
 
 export class GalleryContent extends ContentManager {
@@ -81,6 +84,10 @@ export class GalleryContent extends ContentManager {
         this._parsedContent.aspectRatio = value;
     }
 
+    setShowCaptions(value: boolean) {
+        this._parsedContent.showCaptions = value;
+    }
+
     moveItem(from: number, to: number) {
         const items = this._parsedContent.items ?? [];
         if (from < 0 || to < 0 || from >= items.length || to >= items.length || from === to) return;
@@ -89,22 +96,50 @@ export class GalleryContent extends ContentManager {
     }
 }
 
-const Gallery = ({item, t: _t, tApp: _tApp}: {
+const Gallery = ({item, t: _t, tApp: _tApp, admin}: {
     item: IItem,
     t: TFunction<"translation", undefined>,
-    tApp: TFunction<string, undefined>
+    tApp: TFunction<string, undefined>,
+    admin?: boolean,
 }) => {
+    const editId = item.name || EItemType.Image;
     const gallery = new GalleryContent(EItemType.Image, item.content);
     gallery.setDisablePreview(item.action !== "onClick");
     const data = gallery.data
     const isMarquee = item.style === 'marquee' || item.style === 'logo-wall' || item.style === 'hazard-strip';
     const aspectRatio = data.aspectRatio && data.aspectRatio !== 'free' ? data.aspectRatio : undefined;
+    const showCaptions = data.showCaptions !== false;
+
+    // Lightbox eligibility: previews not disabled by the section action, the
+    // tile carries a `preview` flag, and it actually has an image. The
+    // lightbox cycles only over this filtered subset, so the index it works
+    // with is a position in `previewable`, not in `data.items`.
+    const lightboxEnabled = !data.disablePreview;
+    const previewable = data.items
+        .map((it, i) => ({it, i}))
+        .filter(({it}) => it.preview !== false && Boolean(it.image.src));
+    // -1 = lightbox closed (matches the GalleryLightbox `index` contract).
+    const [lightboxIndex, setLightboxIndex] = useState(-1);
+
+    const openLightbox = (galleryIndex: number) => {
+        const pos = previewable.findIndex(({i}) => i === galleryIndex);
+        if (pos >= 0) setLightboxIndex(pos);
+    };
+
     const renderTile = (galleryItem: IGalleryItem, index: number, isClone: boolean) => {
         const img = galleryItem.image;
         const hasImage = Boolean(img.src);
         const imgStyle: React.CSSProperties = {};
         if (img.width) imgStyle.width = typeof img.width === 'number' ? `${img.width}px` : img.width;
         if (img.height) imgStyle.height = typeof img.height === 'number' ? `${img.height}px` : img.height;
+        // Caption: with `showCaptions` on, `alt` is the primary label (always
+        // meaningful for client photo reels) and `text` becomes an optional
+        // secondary line. With it off, only the explicit `text` shows — the
+        // legacy behaviour. Legacy galleries with no `alt` still surface
+        // `text` as the primary line so nothing disappears.
+        const captionPrimary = showCaptions ? (img.alt || galleryItem.text) : galleryItem.text;
+        const captionSecondary = showCaptions && img.alt ? galleryItem.text : '';
+        const tileClickable = !isClone && lightboxEnabled && hasImage && galleryItem.preview !== false;
         const inner = (
             <>
                 {hasImage && (
@@ -112,33 +147,37 @@ const Gallery = ({item, t: _t, tApp: _tApp}: {
                         className={'image'}
                         data-sized={(img.width || img.height) ? true : undefined}
                     >
-                        {isClone ? (
+                        {/* `.ant-image` span kept as a structural alias so the
+                            existing Gallery.scss + per-theme variant selectors
+                            (which target `.image .ant-image`) keep matching.
+                            The image itself is now a plain lazy `<img>` — the
+                            AntD `<Image>` preview is superseded by the
+                            dedicated `GalleryLightbox`. */}
+                        <span className={'ant-image'}>
                             <SizedImage
                                 src={'/' + img.src}
                                 alt={img.alt}
                                 width={img.width || undefined}
                                 height={img.height || undefined}
                                 style={imgStyle}
+                                loading={'lazy'}
+                                decoding={'async'}
                             />
-                        ) : (
-                            <Image
-                                preview={data.disablePreview ? false : galleryItem.preview}
-                                src={'/' + img.src}
-                                alt={img.alt}
-                                width={img.width || undefined}
-                                height={img.height || undefined}
-                            />
-                        )}
+                        </span>
                     </div>
                 )}
-                {galleryItem.text && (
+                {captionPrimary && (
                     <div className={'text'}>
-                        <p>{galleryItem.text}</p>
+                        <p {...inlineEditAttr(admin, editId, `items.${index}.text`)}>{captionPrimary}</p>
+                        {captionSecondary && (
+                            <p className={'text-secondary'}>{captionSecondary}</p>
+                        )}
                     </div>
                 )}
             </>
         );
-        const containerClass = `container text-${galleryItem.textPosition}${hasImage ? '' : ' gallery-tile--text'}`;
+        const containerClass = `container text-${galleryItem.textPosition}${hasImage ? '' : ' gallery-tile--text'}${tileClickable ? ' gallery-tile--zoom' : ''}`;
+        const testId = `gallery-tile-${index}`;
         const linkUrl = galleryItem.link?.url;
         if (linkUrl && !isClone) {
             return (
@@ -147,6 +186,7 @@ const Gallery = ({item, t: _t, tApp: _tApp}: {
                     className={`${containerClass} gallery-tile--link`}
                     href={linkUrl}
                     aria-label={galleryItem.link?.label || undefined}
+                    data-testid={testId}
                     onClick={(e) => {
                         e.stopPropagation();
                     }}
@@ -155,10 +195,28 @@ const Gallery = ({item, t: _t, tApp: _tApp}: {
                 </a>
             );
         }
+        if (tileClickable) {
+            return (
+                <button
+                    key={`o-${index}`}
+                    type={'button'}
+                    className={containerClass}
+                    data-testid={testId}
+                    aria-label={(captionPrimary || img.alt || 'Open image') as string}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        openLightbox(index);
+                    }}
+                >
+                    {inner}
+                </button>
+            );
+        }
         return (
             <div
                 key={`${isClone ? 'c' : 'o'}-${index}`}
                 className={containerClass}
+                data-testid={isClone ? undefined : testId}
                 aria-hidden={isClone ? true : undefined}
             >
                 {inner}
@@ -169,14 +227,19 @@ const Gallery = ({item, t: _t, tApp: _tApp}: {
         <div
             className={`gallery-wrapper gallery-wrapper-app ${item.style}`}
             data-aspect-ratio={aspectRatio}
+            data-testid={'gallery'}
             onClick={e => e.stopPropagation()}
         >
             <div className={'gallery-wrapper-images'}>
-                <Image.PreviewGroup>
-                    {data.items.map((it, i) => renderTile(it, i, false))}
-                </Image.PreviewGroup>
+                {data.items.map((it, i) => renderTile(it, i, false))}
                 {isMarquee && data.items.map((it, i) => renderTile(it, i, true))}
             </div>
+            <GalleryLightbox
+                items={previewable.map(({it}) => it)}
+                index={lightboxIndex}
+                onClose={() => setLightboxIndex(-1)}
+                onNavigate={setLightboxIndex}
+            />
         </div>
     )
 }

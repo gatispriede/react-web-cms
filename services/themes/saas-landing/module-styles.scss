@@ -1,0 +1,1421 @@
+/* ==========================================================================
+   SaaS Landing — per-module overrides.
+
+   Tech-modern, dark-default, violet-gradient accents, sticky-static
+   header with backdrop-blur, 12px radii, JetBrains Mono for version
+   tags + code labels.
+
+   Visual baselines under `tests/e2e/visual/__snapshots__/themes/saas-landing/`.
+   ========================================================================== */
+
+[data-theme-name="saas-landing"] {
+
+    /* ===================================================================
+       Header — sticky-static. Distinct from Editorial overlay nav,
+       Commerce shrink-on-scroll, Agency hide-on-down. Stays put,
+       gains a backdrop blur + gradient bottom-border on scroll.
+       =================================================================== */
+    .main-nav {
+        background: color-mix(in srgb, var(--color-surface) 80%, transparent);
+        backdrop-filter: blur(12px);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        padding: 1rem 2rem;
+        border-bottom: 1px solid var(--color-rule);
+
+        a {
+            color: var(--color-ink);
+            font-family: var(--font-body);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        // Gradient bottom border on scroll — toggled via .is-scrolled.
+        &.is-scrolled {
+            border-bottom: 1px solid transparent;
+            background-image:
+                linear-gradient(color-mix(in srgb, var(--color-surface) 80%, transparent), color-mix(in srgb, var(--color-surface) 80%, transparent)),
+                var(--accent-gradient);
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+        }
+    }
+
+    /* ===================================================================
+       Hero — VARIANT: SPLIT with floating-glow portrait. Gradient-wash
+       background, copy left, the portrait "screenshot" floats on the
+       right with a soft shadow + accent glow. Real DOM:
+       `.hero > .hero__main` (+ optional `.hero__portrait`, `.hero__bg`,
+       `.hero__meta`, `.hero__coords`). When no portrait is present the
+       copy column holds the left half against the gradient wash.
+
+       Structural axis vs siblings: editorial = photo-bleed (bottom-left),
+       agency = centred overlay, restaurant = photo-bleed centred.
+       Commerce / saas = split. Commerce keeps it tight; saas floats the
+       portrait off the baseline with depth + glow.
+       =================================================================== */
+    .hero {
+        position: relative;
+        min-height: 70vh;
+        padding: 5rem 2rem;
+        background:
+            radial-gradient(ellipse at top right, color-mix(in srgb, var(--color-accent) 25%, transparent) 0%, transparent 50%),
+            radial-gradient(ellipse at bottom left, color-mix(in srgb, #38BDF8 25%, transparent) 0%, transparent 50%),
+            var(--color-surface);
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 3rem;
+        align-items: center;
+        text-align: left;
+
+        @media (min-width: 900px) {
+            grid-template-columns: 1.1fr 1fr;
+        }
+
+        &__main {
+            position: relative;
+            z-index: 2;
+            max-width: 56ch;
+        }
+
+        h1,
+        &__headline {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 700;
+            line-height: 1.05;
+            letter-spacing: -0.03em;
+            color: var(--color-ink);
+            margin: 0 0 1.5rem;
+
+            // Gradient text on the second-half headline span.
+            .accent-gradient,
+            .hero__headline-soft {
+                background: var(--accent-gradient, linear-gradient(90deg, var(--color-accent), #38BDF8));
+                -webkit-background-clip: text;
+                background-clip: text;
+                color: transparent;
+            }
+        }
+
+        &__subtitle,
+        &__tagline {
+            font-family: var(--font-body);
+            font-size: 1.125rem;
+            color: var(--ink-2);
+            max-width: 56ch;
+            margin-bottom: 2rem;
+        }
+
+        // Portrait floats off the baseline with depth + accent glow.
+        &--has-portrait { display: grid; }
+        &__portrait {
+            justify-self: center;
+            border-radius: calc(var(--theme-borderRadius) * 1.5);
+            overflow: hidden;
+            transform: translateY(-0.75rem) rotate(-1.5deg);
+            box-shadow:
+                0 24px 60px rgba(0, 0, 0, 0.35),
+                0 0 0 1px var(--color-rule),
+                0 0 50px color-mix(in srgb, var(--color-accent) 35%, transparent);
+            transition: transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-emphasized);
+
+            &:hover { transform: translateY(-0.75rem) rotate(0deg); }
+        }
+
+        animation: saas-hero-enter calc(var(--motion-duration-slow) * var(--motion-scalar)) var(--motion-ease-emphasized) backwards;
+
+        @media (max-width: 720px) {
+            &__portrait { transform: none; &:hover { transform: none; } }
+        }
+    }
+
+    @keyframes saas-hero-enter {
+        from { opacity: 0; transform: translateY(var(--motion-distance-md)); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===================================================================
+       Gallery — VARIANT: DEPTH STACK. Tiles overlap on a tilted plane,
+       each one offset + scaled with a layered drop shadow; hover lifts
+       the hovered tile clear of the stack. Real DOM:
+       `.gallery-wrapper.gallery-wrapper-app > .gallery-wrapper-images
+       > .container > (.image, .text)`.
+
+       Structural axis vs siblings: editorial = broken grid,
+       agency = banner band, commerce = tight uniform grid,
+       restaurant = vertical list. SaaS = overlapping depth stack.
+       =================================================================== */
+    .gallery-wrapper.gallery-wrapper-app {
+        &.default, &.Default, &.masonry, &.BorderedAlignedByThree {
+            padding: 4rem 2rem;
+            perspective: 1400px;
+
+            .gallery-wrapper-images {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                column-count: initial;
+                gap: 1.25rem;
+            }
+
+            .container {
+                margin: 0;
+                border-radius: calc(var(--theme-borderRadius) * 1.25);
+                overflow: hidden;
+                background: var(--color-surface-inset);
+                box-shadow: 0 18px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--color-rule);
+                transition: transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-emphasized),
+                            box-shadow calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+
+                // Staggered depth — each column sits on a different plane.
+                &:nth-child(3n + 1) { transform: translateY(1.5rem) rotateY(6deg) scale(0.97); }
+                &:nth-child(3n + 2) { transform: translateY(-0.5rem) scale(1); z-index: 2; }
+                &:nth-child(3n)     { transform: translateY(1.5rem) rotateY(-6deg) scale(0.97); }
+
+                &:hover {
+                    transform: translateY(-0.5rem) rotateY(0deg) scale(1.02);
+                    z-index: 5;
+                    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45),
+                                0 0 0 1px var(--color-accent),
+                                0 0 50px color-mix(in srgb, var(--color-accent) 30%, transparent);
+                }
+
+                .image {
+                    aspect-ratio: 4 / 3;
+                    width: 100%;
+                    overflow: hidden;
+                    .ant-image, img { width: 100%; height: 100%; }
+                    img { object-fit: cover; }
+                }
+
+                .text p {
+                    font-family: var(--font-body);
+                    font-size: 0.8125rem;
+                    text-transform: none;
+                    letter-spacing: 0;
+                    color: var(--ink-2);
+                    border-top: 0;
+                    padding: 0.75rem 1rem;
+                }
+            }
+
+            .gallery-tile--text {
+                background: var(--accent-gradient, var(--color-accent));
+                display: flex;
+                align-items: center;
+                .text p { color: var(--color-accent-ink); font-weight: 600; }
+            }
+        }
+
+        @media (max-width: 720px) {
+            &.default, &.Default, &.masonry, &.BorderedAlignedByThree {
+                perspective: none;
+                .gallery-wrapper-images { grid-template-columns: 1fr; }
+                .container {
+                    &:nth-child(3n + 1),
+                    &:nth-child(3n + 2),
+                    &:nth-child(3n) { transform: none; }
+                }
+            }
+        }
+    }
+
+    /* ===================================================================
+       Timeline — VARIANT: HORIZONTAL track. Version-history reads left
+       to right along a gradient connector; entries are snap-scrolled
+       cards. Real DOM:
+       `.timeline > .timeline__entry > (.timeline__when, .timeline__body)`.
+
+       Structural axis vs siblings: editorial = broken-grid alternation,
+       commerce = compact vertical, restaurant = centred spine.
+       Agency / saas = horizontal track. SaaS adds the gradient connector
+       + glowing nodes.
+       =================================================================== */
+    .timeline {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        padding: 3rem 0 1.5rem;
+        gap: 1rem;
+        position: relative;
+
+        &::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 3.6rem;
+            height: 3px;
+            width: auto;
+            background: var(--accent-gradient, linear-gradient(90deg, var(--color-accent), #38BDF8));
+            opacity: 1;
+            border-radius: 2px;
+        }
+
+        &__entry {
+            flex: 0 0 auto;
+            width: clamp(240px, 24vw, 320px);
+            box-sizing: border-box;
+            padding: 1.75rem 1.25rem 1rem;
+            margin-bottom: 0;
+            border-left: 0;
+            border-radius: calc(var(--theme-borderRadius) * 1.25);
+            background: var(--color-surface-inset);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25), 0 0 0 1px var(--color-rule);
+            scroll-snap-align: start;
+            position: relative;
+
+            &::before {
+                content: '';
+                position: absolute;
+                top: calc(3.6rem - 6px);
+                left: 1.25rem;
+                width: 14px;
+                height: 14px;
+                background: var(--color-accent);
+                border-radius: 50%;
+                box-shadow: 0 0 0 4px var(--color-surface),
+                            0 0 16px color-mix(in srgb, var(--color-accent) 60%, transparent);
+            }
+
+            .timeline__when {
+                font-family: var(--font-mono);
+                font-size: 0.75rem;
+                letter-spacing: 0.04em;
+                color: var(--ink-2);
+                margin-bottom: 1.5rem;
+            }
+            .timeline__who { font-family: var(--font-display); font-weight: 700; }
+        }
+
+        @media (max-width: 720px) {
+            &__entry { width: 78vw; }
+        }
+    }
+
+    /* ===================================================================
+       Pricing table — highlighted middle tier with violet gradient
+       outline + glow.
+       =================================================================== */
+    .pricing-table__plan {
+        background: var(--color-surface-inset);
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+        padding: 2rem;
+        transition: transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+                    box-shadow calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        &--highlighted {
+            position: relative;
+            border: 2px solid transparent;
+            background:
+                linear-gradient(var(--color-surface-inset), var(--color-surface-inset)) padding-box,
+                var(--accent-gradient) border-box;
+            box-shadow: 0 0 0 8px color-mix(in srgb, var(--color-accent) 8%, transparent);
+
+            &::before {
+                content: 'Most popular';
+                position: absolute;
+                top: -0.75rem;
+                left: 50%;
+                transform: translateX(-50%);
+                background: var(--accent-gradient);
+                color: var(--color-accent-ink);
+                font-family: var(--font-mono);
+                font-size: 0.6875rem;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                padding: 0.25rem 0.875rem;
+                border-radius: 999px;
+            }
+        }
+    }
+
+    .pricing-table__price {
+        font-family: var(--font-display);
+        font-size: 3rem;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        background: var(--accent-gradient);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    /* ===================================================================
+       Feature grid — icon-on-gradient tiles. Each card has a soft
+       gradient halo on hover.
+       =================================================================== */
+    .feature-grid__card {
+        background: var(--color-surface-inset);
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+        padding: 1.75rem;
+        position: relative;
+        overflow: hidden;
+        transition: border-color calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            background: var(--accent-gradient);
+            border-radius: var(--theme-borderRadius);
+            opacity: 0;
+            z-index: -1;
+            transition: opacity calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+        }
+
+        &:hover {
+            border-color: transparent;
+
+            &::before { opacity: 1; }
+        }
+    }
+
+    .feature-grid__icon {
+        color: var(--color-accent);
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .feature-grid__title {
+        font-family: var(--font-display);
+        font-weight: 600;
+        letter-spacing: -0.02em;
+    }
+
+    /* ===================================================================
+       Logo cloud — monochrome by default, accent on hover.
+       =================================================================== */
+    .logo-cloud {
+        img, svg {
+            filter: grayscale(1) brightness(0.6);
+            opacity: 0.7;
+            transition: filter calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+                        opacity calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &:hover {
+                filter: none;
+                opacity: 1;
+            }
+        }
+    }
+
+    /* ===================================================================
+       Changelog timeline — version tags rendered as mono pills.
+       =================================================================== */
+    .changelog-timeline__entry {
+        background: var(--color-surface-inset);
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .changelog-timeline__version {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+        color: var(--color-accent);
+        padding: 0.25rem 0.625rem;
+        border-radius: 999px;
+        display: inline-block;
+    }
+
+    .changelog-timeline__date {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        color: var(--ink-2);
+        letter-spacing: 0.04em;
+    }
+
+    /* ===================================================================
+       Integration grid + sponsor strip — gradient outline on tiles.
+       Logos sit on a soft inset surface with a violet outline that
+       blooms on hover. Pairs with `monochrome-hover-color` logoCloud
+       hint.
+       =================================================================== */
+    .integration-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 1rem;
+        padding: 2rem 0;
+    }
+
+    .integration-grid__tile,
+    .sponsor-strip__sponsor {
+        background: var(--color-surface-inset);
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+        padding: 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 5.5rem;
+        transition: border-color calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+                    transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-emphasized),
+                    box-shadow calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        img, svg {
+            max-height: 2.25rem;
+            filter: grayscale(1) brightness(0.85);
+            opacity: 0.75;
+            transition: filter calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+                        opacity calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+        }
+
+        &:hover {
+            border-color: var(--color-accent);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px color-mix(in srgb, var(--color-accent) 25%, transparent);
+
+            img, svg { filter: none; opacity: 1; }
+        }
+    }
+
+    /* ===================================================================
+       MetricsCallout — big violet numbers, mono uppercase labels.
+       Sits on a faint gradient halo so it reads as a "live dashboard
+       strip" against the dark surface.
+       =================================================================== */
+    .metrics-callout {
+        background:
+            radial-gradient(ellipse at center, color-mix(in srgb, var(--color-accent) 10%, transparent) 0%, transparent 70%),
+            var(--color-surface-inset);
+        border: 1px solid var(--color-rule);
+        border-radius: calc(var(--theme-borderRadius) * 1.25);
+        padding: 3rem 2rem;
+        gap: 2.5rem;
+
+        &__item-value,
+        &__value {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: clamp(2.75rem, 5.5vw, 4rem);
+            line-height: 1;
+            letter-spacing: -0.04em;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-variant-numeric: tabular-nums;
+        }
+
+        &__item-description,
+        &__item-label,
+        &__desc {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+            margin-top: 0.5rem;
+        }
+    }
+
+    /* ===================================================================
+       StatsStrip — flat row of mono-labelled metrics with a violet
+       hairline above + below; highlighted cell glows with an accent
+       wash. The signature "live ops" strip on saas landings.
+       =================================================================== */
+    .stats-strip {
+        &__row {
+            border-top: 1px solid var(--color-rule);
+            border-bottom: 1px solid var(--color-rule);
+            background: var(--color-surface-inset);
+        }
+
+        &__cell {
+            border-right: 1px solid var(--color-rule);
+            padding: 1.5rem 1.75rem;
+
+            &.is-hl {
+                background:
+                    linear-gradient(180deg,
+                        color-mix(in srgb, var(--color-accent) 14%, transparent),
+                        color-mix(in srgb, var(--color-accent) 4%, transparent));
+            }
+        }
+
+        &__v {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: clamp(1.75rem, 3vw, 2.5rem);
+            letter-spacing: -0.03em;
+            color: var(--color-ink);
+        }
+
+        &__unit {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.08em;
+            color: var(--color-accent);
+            text-transform: uppercase;
+        }
+
+        &__k {
+            font-family: var(--font-mono);
+            font-size: 0.625rem;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+            margin-top: 0.5rem;
+        }
+    }
+
+    /* ===================================================================
+       StatsCard — gradient-bordered tile, big violet metrics, mono
+       feature list with check glyphs in the accent tone.
+       =================================================================== */
+    .stats-card {
+        background: var(--color-surface-inset);
+        border: 1px solid var(--color-rule);
+        border-radius: calc(var(--theme-borderRadius) * 1.25);
+        padding: 1.75rem;
+
+        &__tag {
+            font-family: var(--font-mono);
+            font-size: 0.625rem;
+            letter-spacing: 0.14em;
+            color: var(--color-accent);
+            border: 1px solid color-mix(in srgb, var(--color-accent) 40%, transparent);
+            border-radius: 4px;
+            padding: 0.2rem 0.5rem;
+        }
+
+        &__title {
+            font-family: var(--font-display);
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            color: var(--color-ink);
+        }
+
+        &__n {
+            font-family: var(--font-display);
+            font-weight: 700;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        &__l {
+            font-family: var(--font-mono);
+            font-size: 0.625rem;
+            letter-spacing: 0.14em;
+            color: var(--ink-2);
+        }
+
+        &__features li {
+            font-family: var(--font-body);
+            color: var(--ink-2);
+            border-top: 1px solid var(--color-rule);
+
+            &::before { color: var(--color-accent); }
+        }
+
+        &.panel {
+            background: var(--color-surface);
+            border-color: transparent;
+            border-left: 3px solid var(--color-accent);
+            box-shadow: 0 0 0 1px var(--color-rule),
+                        0 12px 32px rgba(0, 0, 0, 0.25);
+
+            .stats-card__title { color: var(--color-ink); }
+        }
+    }
+
+    /* ===================================================================
+       ComparisonTable — vs-competitor table. The "us" column gets a
+       gradient outline + accent wash; other columns stay on the inset
+       surface. The signature SaaS-landing pricing-page artifact.
+       =================================================================== */
+    .comparison-table-wrap {
+        background: var(--color-surface-inset);
+        border: 1px solid var(--color-rule);
+        border-radius: calc(var(--theme-borderRadius) * 1.25);
+        padding: 0.5rem;
+    }
+
+    .comparison-table {
+        font-family: var(--font-body);
+
+        &__col {
+            background: transparent;
+            border-bottom: 1px solid var(--color-rule);
+            font-family: var(--font-display);
+            font-weight: 600;
+            letter-spacing: -0.01em;
+
+            &--highlighted {
+                background:
+                    linear-gradient(var(--color-surface-inset), var(--color-surface-inset)) padding-box,
+                    var(--accent-gradient) border-box;
+                border: 2px solid transparent;
+                box-shadow: 0 0 24px color-mix(in srgb, var(--color-accent) 25%, transparent);
+            }
+        }
+
+        &__badge {
+            background: var(--accent-gradient);
+            color: var(--color-accent-ink);
+            font-family: var(--font-mono);
+            font-size: 0.625rem;
+            letter-spacing: 0.1em;
+        }
+
+        &__group-cell {
+            background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.08em;
+            color: var(--color-accent);
+        }
+
+        &__row-label {
+            background: transparent;
+            color: var(--ink-2);
+            border-bottom: 1px solid var(--color-rule);
+            font-family: var(--font-body);
+        }
+
+        &__cell {
+            border-bottom: 1px solid var(--color-rule);
+
+            &--col-highlighted {
+                background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+                border-left: 2px solid var(--color-accent);
+                border-right: 2px solid var(--color-accent);
+            }
+        }
+
+        &__bool--true::before { color: var(--color-accent); }
+        &__bool--false::before { color: var(--ink-2); }
+    }
+
+    /* ===================================================================
+       BlogFeed — card grid per moduleStyleHints.posts = 'card-grid'.
+       AntD Card overrides: dark inset surface, accent border on hover,
+       lifted shadow. Mono date eyebrow, display-font title.
+       =================================================================== */
+    .blog-feed {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+
+        .blog-card,
+        .ant-card.blog-card {
+            background: var(--color-surface-inset);
+            border: 1px solid var(--color-rule);
+            border-radius: calc(var(--theme-borderRadius) * 1.25);
+            overflow: hidden;
+            transition: transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-emphasized),
+                        border-color calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+                        box-shadow calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &:hover {
+                transform: translateY(-4px);
+                border-color: var(--color-accent);
+                box-shadow: 0 18px 40px rgba(0, 0, 0, 0.3),
+                            0 0 40px color-mix(in srgb, var(--color-accent) 20%, transparent);
+            }
+
+            .ant-card-body { background: transparent; color: var(--color-ink); }
+            .ant-card-meta-title {
+                font-family: var(--font-display);
+                font-weight: 600;
+                letter-spacing: -0.015em;
+                color: var(--color-ink);
+            }
+            .ant-card-meta-description { color: var(--ink-2); font-family: var(--font-body); }
+
+            .ant-tag {
+                font-family: var(--font-mono);
+                font-size: 0.625rem;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+                color: var(--color-accent);
+                border-color: transparent;
+                border-radius: 999px;
+            }
+        }
+    }
+
+    /* ===================================================================
+       ProjectTileGrid / ProjectCard — tight card grid, accent on hover.
+       SaaS uses these for case-study / customer-story surfaces; keep
+       them less dramatic than the agency case-study treatment.
+       =================================================================== */
+    .project-tile-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 1.25rem;
+
+        .project-tile,
+        &__cell {
+            background: var(--color-surface-inset);
+            border: 1px solid var(--color-rule);
+            border-radius: calc(var(--theme-borderRadius) * 1.25);
+            overflow: hidden;
+            padding: 0;
+            transition: border-color calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+                        transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-emphasized);
+
+            &:hover {
+                border-color: var(--color-accent);
+                transform: translateY(-3px);
+            }
+
+            &__title {
+                font-family: var(--font-display);
+                font-weight: 600;
+                letter-spacing: -0.02em;
+                color: var(--color-ink);
+                padding: 1rem 1.25rem 0.25rem;
+            }
+
+            &__excerpt,
+            &__meta {
+                font-family: var(--font-body);
+                color: var(--ink-2);
+                font-size: 0.875rem;
+                padding: 0 1.25rem 1rem;
+            }
+        }
+    }
+
+    /* ===================================================================
+       Faceted-filter panel — sidebar + chip bar styling. Sits on a soft
+       inset background, violet chips, mono range labels — matches the
+       saas-landing storefront aesthetic.
+       =================================================================== */
+    .faceted-filter-panel {
+        gap: 1.25rem;
+
+        &__saved-note {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.04em;
+            color: var(--ink-2);
+        }
+    }
+
+    .faceted-filter-chips {
+        gap: 0.5rem;
+
+        &__chip {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.04em;
+            border: 1px solid color-mix(in srgb, var(--color-accent) 40%, transparent);
+            background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+            color: var(--color-accent);
+            border-radius: 999px;
+            transition: background calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                        border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &:hover {
+                background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+                border-color: var(--color-accent);
+            }
+        }
+
+        &__clear {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.04em;
+            color: var(--color-accent);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &:hover { border-bottom-color: var(--color-accent); }
+        }
+    }
+
+    .faceted-filter-sidebar {
+        background: var(--color-surface-inset);
+        border: 1px solid var(--color-rule);
+        border-radius: calc(var(--theme-borderRadius) * 1.25);
+        padding: 1.25rem;
+        gap: 1.5rem;
+    }
+
+    .faceted-facet {
+        &__legend {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--color-accent);
+            margin-bottom: 0.75rem;
+        }
+
+        &__option {
+            font-family: var(--font-body);
+            color: var(--color-ink);
+
+            &--zero { color: var(--ink-2); opacity: 0.5; }
+        }
+
+        &__option-count {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--ink-2);
+        }
+
+        &__range-label {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+        }
+
+        &__range-input {
+            background: var(--color-surface);
+            border: 1px solid var(--color-rule);
+            color: var(--color-ink);
+            font-family: var(--font-mono);
+            font-size: 0.8125rem;
+            border-radius: 6px;
+            transition: border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &:focus { border-color: var(--color-accent); outline: none; }
+        }
+    }
+
+    /* ===================================================================
+       Manifesto — large gradient pull-quote, mono-attribution under.
+       Used on About / values pages.
+       =================================================================== */
+    .manifesto {
+        max-width: 64ch;
+        margin: 5rem auto;
+        padding: 0 2rem;
+        font-family: var(--font-display);
+        font-size: clamp(1.5rem, 2.8vw, 2.25rem);
+        line-height: 1.3;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        color: var(--color-ink);
+
+        &::before {
+            content: '\201C';
+            font-family: var(--font-display);
+            font-size: 4rem;
+            line-height: 0.5;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-right: 0.25em;
+            vertical-align: -0.4em;
+        }
+    }
+
+    /* ===================================================================
+       ProductScreenshotHero — the SaaS signature. Soft drop shadow,
+       gradient halo behind the screenshot.
+       =================================================================== */
+    .product-screenshot-hero {
+        background:
+            radial-gradient(ellipse at center, color-mix(in srgb, var(--color-accent) 20%, transparent) 0%, transparent 60%),
+            var(--color-surface);
+        padding: 4rem 2rem;
+
+        &__screenshot {
+            box-shadow:
+                0 24px 64px rgba(0, 0, 0, 0.15),
+                0 0 0 1px var(--color-rule);
+            border-radius: var(--theme-borderRadius);
+        }
+    }
+
+    /* ===================================================================
+       TestimonialWall — 3-up grid, soft cards with quote marks.
+       =================================================================== */
+    .testimonial-wall {
+        gap: 1.5rem;
+
+        &__card {
+            background: var(--color-surface-inset);
+            border: 1px solid var(--color-rule);
+            border-radius: var(--theme-borderRadius);
+            padding: 1.75rem;
+            position: relative;
+
+            &::before {
+                content: '\201C';
+                font-family: var(--font-display);
+                font-size: 3rem;
+                line-height: 1;
+                color: var(--color-accent);
+                position: absolute;
+                top: 0.5rem;
+                left: 1rem;
+                opacity: 0.5;
+            }
+        }
+    }
+
+    /* ===================================================================
+       Buttons + primary CTAs — violet gradient on primary, ghost on
+       secondary.
+       =================================================================== */
+    .buy-cta, .place-order-button, .cart-actions__proceed,
+    .pricing-table__cta--primary, .pricing-table__cta,
+    .empty-state-block__action--primary,
+    .car-reservation-cta__reserve, .product-detail-hero__cta,
+    .magic-link-request-form button[type="submit"],
+    .car-finance-estimator__submit, .reservation-widget__submit,
+    .event-buy-tickets-cta__trigger {
+        background: var(--accent-gradient);
+        color: var(--color-accent-ink);
+        border: none;
+        border-radius: var(--theme-borderRadius);
+        font-family: var(--font-body);
+        font-weight: 600;
+        font-size: 0.9375rem;
+        padding: 0.75rem 1.75rem;
+        min-height: 44px;
+        cursor: pointer;
+        transition: transform calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                    box-shadow calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px color-mix(in srgb, var(--color-accent) 40%, transparent);
+        }
+
+        &:active:not(:disabled) { transform: translateY(0); }
+    }
+
+    /* ===================================================================
+       Commerce + customer-account modules — pick up dark surface
+       inheritance + violet accent.
+       =================================================================== */
+    .product-card, .car-listing-card, .order-detail-module,
+    .account-dashboard-grid__cell, .wishlist-grid__cell,
+    .saved-search-list__row, .car-vdp__trust-item,
+    .speaker-grid__card, .empty-state-block, .save-search-prompt {
+        background: var(--color-surface-inset);
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+    }
+
+    .order-progress-timeline__step[data-status="done"] .order-progress-timeline__dot,
+    .order-progress-timeline__step[data-status="active"] .order-progress-timeline__dot {
+        background: var(--accent-gradient);
+    }
+
+    .saved-search-list__cadence--realtime { background: color-mix(in srgb, var(--color-accent) 18%, transparent); color: var(--color-accent); }
+    .vat-badge { border-radius: 6px; font-family: var(--font-mono); font-size: 0.6875rem; letter-spacing: 0.04em; }
+
+    /* ===================================================================
+       Code blocks + version chips — JetBrains Mono.
+       =================================================================== */
+    code,
+    pre,
+    .label--mono,
+    .meta--mono,
+    .breadcrumb,
+    .car-spec-table th {
+        font-family: var(--font-mono);
+        font-size: 0.875rem;
+    }
+
+    /* ===================================================================
+       Footer — multi-column dark.
+       =================================================================== */
+    .site-footer {
+        background: var(--color-surface);
+        color: var(--ink-2);
+        padding: 4rem 2rem 2rem;
+        border-top: 1px solid var(--color-rule);
+
+        h4, .site-footer__heading {
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 0.8125rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--color-ink);
+            margin-bottom: 1rem;
+        }
+
+        a {
+            color: var(--ink-2);
+            text-decoration: none;
+            transition: color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &:hover { color: var(--color-accent); }
+        }
+    }
+
+    /* All shipped modules — Inter body, Mona Sans titles. */
+    .cart-line-items, .cart-summary, .cart-actions, .checkout-progress-bar,
+    .checkout-address-form, .checkout-shipping-method, .checkout-payment-form,
+    .checkout-cart-summary, .place-order-button, .order-summary,
+    .magic-link-account-upgrade, .account-welcome, .shipping-calculator,
+    .download-invoice-button, .trust-badges, .money-back-guarantee,
+    .refer-a-friend-cta, .social-share-buttons,
+    .car-vdp, .order-detail-module, .order-progress-timeline,
+    .wishlist-grid, .saved-search-list, .account-dashboard-grid,
+    .magic-link-request-form, .magic-link-confirmation,
+    .oauth-button-stack, .restaurant-menu, .reservation-widget,
+    .opening-hours, .contact-block, .countdown-timer,
+    .event-schedule-agenda, .speaker-grid, .sponsor-strip,
+    .event-buy-tickets-cta, .event-hero-video,
+    .before-after-slider, .metrics-callout, .process-timeline,
+    .services-grid-fancy, .project-case-study, .project-tile-grid,
+    .empty-state-block, .sticky-cta-bar, .comparison-table {
+        font-family: var(--font-body);
+
+        h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.02em; }
+    }
+
+    /* ===================================================================
+       ProjectGrid — VARIANT: ELEVATED CARDS + SOFT GRADIENT COVERS.
+       Structural axis vs siblings: agency = offset spread, editorial =
+       ledger, commerce = tight uniform grid, portfolio = broken-grid,
+       restaurant = menu-list, local-business = poster-stack.
+       Saas-landing = elevated cards on a soft surface — product-tour feel.
+       =================================================================== */
+    .project-grid {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 4rem 2rem;
+
+        &__head { display: grid; gap: 0.5rem; margin-bottom: 2.5rem; text-align: center; }
+        &__num { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-accent); }
+        &__title { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.75rem, 4vw, 2.75rem); letter-spacing: -0.025em; line-height: 1.1; margin: 0; }
+        &__sub { font-size: 1rem; color: var(--ink-2); max-width: 60ch; margin: 0 auto; }
+
+        &__items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+        &__item-wrap { display: block; }
+        &__item {
+            display: block;
+            background: var(--color-surface);
+            border: 1px solid var(--color-rule);
+            border-radius: calc(var(--theme-borderRadius) * 1.5);
+            overflow: hidden;
+            text-decoration: none;
+            color: inherit;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04);
+            transition: transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-emphasized),
+                        box-shadow calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-emphasized),
+                        border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+        }
+        &__cover {
+            aspect-ratio: 16 / 10;
+            background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 12%, var(--color-surface)) 0%, var(--color-surface) 100%);
+            position: relative;
+            overflow: hidden;
+            img, .ant-image, .ant-image-img { width: 100%; height: 100%; object-fit: cover; }
+        }
+        &__year { position: absolute; top: 0.75rem; right: 0.75rem; font-family: var(--font-mono); font-size: 0.6875rem; color: var(--ink-2); background: var(--color-surface); padding: 2px 8px; border-radius: 999px; border: 1px solid var(--color-rule); }
+        &__art { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 2.5rem; color: color-mix(in srgb, var(--color-accent) 40%, transparent); }
+        &__meta { padding: 1.25rem 1.5rem 1.5rem; display: flex; flex-direction: column; gap: 0.375rem; }
+        &__card-title { font-family: var(--font-display); font-weight: 600; font-size: 1.125rem; line-height: 1.3; margin: 0; }
+        &__stack, &__kind { font-size: 0.875rem; color: var(--ink-2); }
+        &__more { font-family: var(--font-body); font-size: 0.8125rem; font-weight: 500; color: var(--color-accent); margin-top: 0.25rem; }
+        &__item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06), 0 16px 40px rgba(0,0,0,0.08);
+            border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-rule));
+        }
+    }
+
+    /* ===================================================================
+       OrderProgressTimeline — VARIANT: ELEVATED STEPPED TRACK.
+       Floating card per step at wide viewports, soft connector.
+       =================================================================== */
+    .order-progress-timeline {
+        list-style: none;
+        padding: 1.5rem 0;
+        margin: 0;
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(0, 1fr);
+        gap: 0.75rem;
+
+        &__step {
+            background: var(--color-surface);
+            border: 1px solid var(--color-rule);
+            border-radius: calc(var(--theme-borderRadius) * 1.25);
+            padding: 1rem 1rem 1.125rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+            transition: transform calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+        }
+        &__step[data-status="active"] {
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 20%, transparent);
+            transform: translateY(-2px);
+        }
+        &__step[data-status="done"] {
+            background: color-mix(in srgb, var(--color-accent) 5%, var(--color-surface));
+            border-color: color-mix(in srgb, var(--color-accent) 30%, var(--color-rule));
+        }
+        &__dot {
+            width: 0.875rem; height: 0.875rem; border-radius: 50%;
+            background: var(--color-surface);
+            border: 2px solid var(--color-rule);
+        }
+        &__label { font-family: var(--font-display); font-weight: 600; font-size: 0.9375rem; color: var(--color-ink); line-height: 1.25; }
+        &__date { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--ink-2); }
+
+        @media (max-width: 720px) {
+            grid-auto-flow: row;
+            grid-auto-columns: auto;
+        }
+    }
+
+    /* ===================================================================
+       Footer — VARIANT: LIGHT 4-COL WITH FEATURE COLUMN.
+       Soft tinted surface; first column doubles as brand + tagline area,
+       the rest are link directory columns.
+       =================================================================== */
+    .site-footer {
+        background: color-mix(in srgb, var(--color-accent) 4%, var(--color-surface));
+        border-top: 1px solid var(--color-rule);
+        padding: 4rem 2rem 2rem;
+
+        &__columns {
+            display: grid;
+            grid-template-columns: 1.5fr repeat(auto-fit, minmax(140px, 1fr));
+            gap: 2.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--color-rule);
+        }
+        &__column {
+            display: flex;
+            flex-direction: column;
+            gap: 0.625rem;
+
+            h4 {
+                font-family: var(--font-display);
+                font-weight: 600;
+                font-size: 0.8125rem;
+                letter-spacing: 0.04em;
+                text-transform: uppercase;
+                color: var(--ink-2);
+                margin: 0 0 0.5rem;
+            }
+            ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+                font-size: 0.9375rem;
+            }
+        }
+        &__bottom {
+            max-width: 1200px;
+            margin: 1.25rem auto 0;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--ink-2);
+            text-align: center;
+        }
+    }
+
+    /* ===================================================================
+       Kinetic-typography signature — SAAS-LANDING = RISE + SCALE-OUT.
+       The product-tour cadence: headline rises in on entry, then
+       compresses as the hero scrolls past so the next section can pop.
+       =================================================================== */
+    @supports (animation-timeline: view()) {
+        .hero__headline {
+            animation:
+                kinetic-rise-in linear both,
+                kinetic-scale-out-frame linear both;
+            animation-timeline: view(), view();
+            animation-range: entry 0% cover 35%, exit -20% exit 100%;
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .hero__headline { animation: none; }
+    }
+
+    /* ===================================================================
+       Theme motion signature — SAAS-LANDING = ZOOM-POP.
+       Cards aperture-in on enter, soft shadow pulse on hover. The
+       product-tour cadence applied across every elevated surface.
+       =================================================================== */
+    @supports (animation-timeline: view()) {
+        .reveal-on-scroll {
+            opacity: 1;
+            transform: none;
+            transition: none;
+            animation: kinetic-zoom-in linear both;
+            animation-timeline: view();
+            animation-range: entry 0% cover 30%;
+        }
+    }
+    /* Hover signature — elevation + shadow + accent border. The
+       floating-card language across services / pricing / testimonials. */
+    .services-module__row,
+    .feature-grid__card,
+    .pricing-table__plan,
+    .testimonial-wall__card {
+        transition:
+            transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-emphasized),
+            box-shadow calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-emphasized),
+            border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06), 0 16px 40px rgba(0,0,0,0.08);
+            border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-rule));
+        }
+    }
+
+    /* ===================================================================
+       Services — VARIANT: ELEVATED FEATURE TILES.
+       Each row is an elevated card with soft gradient eyebrow + accent
+       border-left strip. Product-tour-grid cadence.
+       =================================================================== */
+    .services-module {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 4rem 2rem;
+
+        &__rows {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        &__row {
+            display: flex;
+            flex-direction: column;
+            gap: 0.625rem;
+            padding: 1.75rem 1.75rem 1.75rem 2rem;
+            background: var(--color-surface);
+            border: 1px solid var(--color-rule);
+            border-left: 4px solid var(--color-accent);
+            border-radius: calc(var(--theme-borderRadius) * 1.25);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        }
+        &__row-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface));
+            color: var(--color-accent);
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+        &__row-num {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--color-accent);
+        }
+        &__row-title {
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 1.1875rem;
+            letter-spacing: -0.015em;
+            line-height: 1.25;
+            margin: 0;
+        }
+        &__row-desc {
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            line-height: 1.55;
+            color: var(--ink-2);
+            margin: 0;
+        }
+    }
+
+    /* ===================================================================
+       FeatureGrid — VARIANT: ELEVATED CHECKBOX-LIST.
+       Each feature is a floating card with a green check-eyebrow.
+       =================================================================== */
+    .feature-grid {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 3rem 2rem;
+        list-style: none;
+        display: grid;
+        gap: 1.25rem;
+
+        &--cols-2 { grid-template-columns: repeat(2, 1fr); }
+        &--cols-3 { grid-template-columns: repeat(3, 1fr); }
+
+        @media (max-width: 720px) {
+            grid-template-columns: 1fr !important;
+        }
+
+        &__card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-rule);
+            border-radius: calc(var(--theme-borderRadius) * 1.25);
+            padding: 1.5rem 1.5rem 1.5rem 3rem;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+
+            &::before {
+                content: '✓';
+                position: absolute;
+                top: 1.5rem;
+                left: 1rem;
+                width: 1.5rem;
+                height: 1.5rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: color-mix(in srgb, var(--color-accent) 18%, var(--color-surface));
+                color: var(--color-accent);
+                border-radius: 50%;
+                font-size: 0.875rem;
+                font-weight: 700;
+            }
+        }
+        &__icon { display: none; }
+        &__title {
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 1.0625rem;
+            line-height: 1.25;
+            margin: 0 0 0.375rem;
+        }
+        &__desc {
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            line-height: 1.5;
+            color: var(--ink-2);
+            margin: 0;
+        }
+    }
+
+    .schema-org-injector { /* noop */ }
+    .cookie-consent-banner { /* forward-stub */ }
+}

@@ -84,4 +84,34 @@ describe('AssetService images', () => {
         await service.deleteImage('i1');
         expect(await service.getImages('hero')).toHaveLength(0);
     });
+
+    it('listImagesWithUsage returns images unchanged when no connection is supplied', async () => {
+        await service.saveImage({id: 'u1', name: 'used.png', location: 'api/used.png', type: 'image/png', size: 10, tags: ['All'], created: '2026-01-01'} as any);
+        const out = await service.listImagesWithUsage('All');
+        expect(out).toHaveLength(1);
+        expect(out[0].name).toBe('used.png');
+        expect(out[0].usageCount).toBeUndefined();
+    });
+
+    it('listImagesWithUsage attaches a usageCount per image from the scan', async () => {
+        await service.saveImage({id: 'u1', name: 'hero.png', location: 'api/hero.png', type: 'image/png', size: 10, tags: ['All'], created: '2026-01-01'} as any);
+        await service.saveImage({id: 'u2', name: 'orphan.png', location: 'api/orphan.png', type: 'image/png', size: 10, tags: ['All'], created: '2026-01-02'} as any);
+
+        // Minimal UsageConnection fixture — only the methods loadUsageSources
+        // touches. `hero.png` is referenced by one section; `orphan.png` by none.
+        const conn = {
+            getImages: async () => service.getImages('All'),
+            getNavigationCollection: async () => [{page: 'Home', sections: ['s1']}],
+            getSections: async () => [{id: 's1', content: [{content: '{"src":"api/hero.png"}'}]}],
+            getPosts: async () => '[]',
+            getLogo: async () => undefined,
+            getFooter: async () => 'null',
+            getSiteSeo: async () => 'null',
+            getThemes: async () => '[]',
+        };
+        const out = await service.listImagesWithUsage('All', conn as any);
+        const byName = Object.fromEntries(out.map(i => [i.name, i.usageCount]));
+        expect(byName['hero.png']).toBe(1);
+        expect(byName['orphan.png']).toBe(0);
+    });
 });

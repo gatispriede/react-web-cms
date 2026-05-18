@@ -2,6 +2,7 @@ import {ServiceLoader} from '@services/infra/ServiceLoader';
 import type {FeatureAuthzContribution, FeatureContext} from '@services/infra/featureManifest';
 import {getMongoConnection} from '@services/infra/mongoDBConnection';
 import {OnboardingService, OnboardingBootstrapInput} from './OnboardingService';
+import {OnboardingChecklistService} from './OnboardingChecklistService';
 import {log} from '@services/infra/logger';
 
 /**
@@ -36,7 +37,10 @@ export class OnboardingServiceLoader extends ServiceLoader {
 
     buildServices(ctx: FeatureContext): Record<string, unknown> {
         const hashSaltRounds = Number(process.env.BCRYPT_ROUNDS) || 10;
-        return {onboarding: new OnboardingService(ctx.db, hashSaltRounds)};
+        return {
+            onboarding: new OnboardingService(ctx.db, hashSaltRounds),
+            onboardingChecklist: new OnboardingChecklistService(ctx.db),
+        };
     }
 
     readonly schemaSDL = `extend type QueryMongo {

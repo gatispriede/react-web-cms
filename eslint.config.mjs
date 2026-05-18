@@ -133,6 +133,11 @@ export default [
                         name: '@ant-design/icons',
                         message: 'Direct imports from @ant-design/icons are forbidden — import the same name from ui/client/lib/icons (lucide adapter). See docs/roadmap/icon-consolidation.md.',
                     },
+                    {
+                        name: 'antd',
+                        importNames: ['message'],
+                        message: 'AntD `message` is banned — use the Sonner wrappers in ui/admin/lib/notify.ts (notifySuccess / notifyError / notifyPromise / notifyDestructive). See docs/roadmap/admin/admin-toast-system-sonner.md.',
+                    },
                 ],
                 patterns: [
                     {
@@ -156,11 +161,50 @@ export default [
         files: ['ui/admin/features/**/*.{ts,tsx}'],
         rules: {
             'no-restricted-imports': ['error', {
-                paths: [{
-                    name: 'react',
-                    importNames: ['useState'],
-                    message: 'useState is banned in admin features. Use a <Feature>ViewModel.ts wrapped with observable() instead. See docs/features/platform/view-model-classes.md.',
-                }],
+                paths: [
+                    {
+                        name: 'react',
+                        importNames: ['useState'],
+                        message: 'useState is banned in admin features. Use a <Feature>ViewModel.ts wrapped with observable() instead. See docs/features/platform/view-model-classes.md.',
+                    },
+                    {
+                        name: 'antd',
+                        importNames: ['message'],
+                        message: 'AntD `message` is banned — use the Sonner wrappers in ui/admin/lib/notify.ts (notifySuccess / notifyError / notifyPromise / notifyDestructive). See docs/roadmap/admin/admin-toast-system-sonner.md.',
+                    },
+                ],
+            }],
+        },
+    },
+    // AUI hierarchy (2026-05-07) — simplified base must NOT depend on
+    // advanced. Lazy-load + one-way composition lets simplified-mode
+    // users skip the advanced bundle entirely. Re-states VM4's bans
+    // (useState, AntD `message`) because this block overrides
+    // `no-restricted-imports` for `*SimplifiedView.{ts,tsx}` and ESLint
+    // rule entries don't merge — the last config wins, in full.
+    // See `docs/architecture/aui-mode.md`.
+    {
+        files: ['ui/admin/features/**/*SimplifiedView.{ts,tsx}'],
+        rules: {
+            'no-restricted-imports': ['error', {
+                paths: [
+                    {
+                        name: 'react',
+                        importNames: ['useState'],
+                        message: 'useState is banned in admin features. Use a <Feature>ViewModel.ts wrapped with observable() instead. See docs/features/platform/view-model-classes.md.',
+                    },
+                    {
+                        name: 'antd',
+                        importNames: ['message'],
+                        message: 'AntD `message` is banned — use the Sonner wrappers in ui/admin/lib/notify.ts (notifySuccess / notifyError / notifyPromise / notifyDestructive). See docs/roadmap/admin/admin-toast-system-sonner.md.',
+                    },
+                ],
+                patterns: [
+                    {
+                        group: ['**/*AdvancedView', '**/*AdvancedView.tsx', '**/*AdvancedView.ts'],
+                        message: 'Simplified views must NOT import Advanced views — the dependency is one-way (advanced composes simplified). See docs/architecture/aui-mode.md.',
+                    },
+                ],
             }],
         },
     },

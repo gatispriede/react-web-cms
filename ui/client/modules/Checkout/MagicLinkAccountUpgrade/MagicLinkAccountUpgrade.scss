@@ -1,0 +1,5 @@
+.magic-link-account-upgrade { padding: 1.5rem; border: 1px solid var(--theme-colorBorder, #eee); border-radius: 6px; background: var(--theme-colorBgContainer, #fff);
+    h3 { margin: 0 0 0.5rem; font-size: 1rem; }
+    p { margin: 0 0 0.75rem; color: var(--theme-colorTextSecondary, #555); }
+    &__cta { display: inline-block; background: var(--theme-colorPrimary, #1677ff); color: #fff; padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none; }
+}

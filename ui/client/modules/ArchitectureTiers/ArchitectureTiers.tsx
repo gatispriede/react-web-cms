@@ -6,6 +6,7 @@ import {TFunction} from "i18next";
 import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import RevealOnScroll from "@client/lib/RevealOnScroll";
 import {slugifyAnchor} from "@utils/stringFunctions";
+import {inlineEditAttr} from "@client/lib/inlineEditAttr";
 import type {IArchitectureTiers} from "./ArchitectureTiers.types";
 export type {IArchitectureTiers, IArchitectureTier, IArchitectureLifecycleStep} from "./ArchitectureTiers.types";
 export {EArchitectureTiersStyle} from "./ArchitectureTiers.types";
@@ -22,30 +23,32 @@ export class ArchitectureTiersContent extends ContentManager {
     setField<K extends keyof IArchitectureTiers>(k: K, v: IArchitectureTiers[K]) { this._parsedContent[k] = v; }
 }
 
-const ArchitectureTiers = ({item, tApp}: {
+const ArchitectureTiers = ({item, tApp, admin}: {
     item: IItem;
     t: TFunction<"translation", undefined>;
     tApp: TFunction<string, undefined>;
+    admin?: boolean;
 }) => {
     const c = new ArchitectureTiersContent(EItemType.ArchitectureTiers, item.content).data;
     const tr = (v: string) => <InlineTranslatable tApp={tApp as any} source={v}/>;
     const tiers = c.tiers ?? [];
     const lifecycle = c.lifecycleSteps ?? [];
+    const editId = item.name || EItemType.ArchitectureTiers;
 
     return (
         <RevealOnScroll className={`arch-tiers ${item.style ?? ''}`}>
             {(c.eyebrow || c.title || c.subtitle) && (
                 <header className="arch-tiers__head">
-                    {c.eyebrow && <div className="arch-tiers__eyebrow">{tr(c.eyebrow)}</div>}
-                    {c.title && <h2 id={slugifyAnchor(c.title)} className="arch-tiers__title">{tr(c.title)}</h2>}
-                    {c.subtitle && <p className="arch-tiers__subtitle">{tr(c.subtitle)}</p>}
+                    {c.eyebrow && <div className="arch-tiers__eyebrow" {...inlineEditAttr(admin, editId, 'eyebrow')}>{tr(c.eyebrow)}</div>}
+                    {c.title && <h2 id={slugifyAnchor(c.title)} className="arch-tiers__title" {...inlineEditAttr(admin, editId, 'title')}>{tr(c.title)}</h2>}
+                    {c.subtitle && <p className="arch-tiers__subtitle" {...inlineEditAttr(admin, editId, 'subtitle')}>{tr(c.subtitle)}</p>}
                 </header>
             )}
 
             {c.intro && (
                 <div className="arch-tiers__intro">
                     <div className="arch-tiers__intro-label">DESIGN AIM</div>
-                    <div className="arch-tiers__intro-body">{tr(c.intro)}</div>
+                    <div className="arch-tiers__intro-body" {...inlineEditAttr(admin, editId, 'intro')}>{tr(c.intro)}</div>
                 </div>
             )}
 
@@ -55,12 +58,12 @@ const ArchitectureTiers = ({item, tApp}: {
                         <div key={i} className="arch-tiers__card">
                             <div className="arch-tiers__card-head">
                                 {t.ord && <span className="arch-tiers__ord">{t.ord}</span>}
-                                {t.concern && <span className="arch-tiers__concern">{tr(t.concern)}</span>}
+                                {t.concern && <span className="arch-tiers__concern" {...inlineEditAttr(admin, editId, `tiers.${i}.concern`)}>{tr(t.concern)}</span>}
                             </div>
-                            {t.role && <div className="arch-tiers__role">{tr(t.role)}</div>}
-                            <div className="arch-tiers__card-title">{tr(t.title)}</div>
+                            {t.role && <div className="arch-tiers__role" {...inlineEditAttr(admin, editId, `tiers.${i}.role`)}>{tr(t.role)}</div>}
+                            <div className="arch-tiers__card-title" {...inlineEditAttr(admin, editId, `tiers.${i}.title`)}>{tr(t.title)}</div>
                             {t.description && (
-                                <p className="arch-tiers__card-desc">{tr(t.description)}</p>
+                                <p className="arch-tiers__card-desc" {...inlineEditAttr(admin, editId, `tiers.${i}.description`)}>{tr(t.description)}</p>
                             )}
                             {t.pills && t.pills.length > 0 && (
                                 <div className="arch-tiers__pills">
@@ -86,8 +89,8 @@ const ArchitectureTiers = ({item, tApp}: {
 
             {(c.sharedTitle || c.sharedDescription) && (
                 <div className="arch-tiers__shared">
-                    {c.sharedTitle && <div className="arch-tiers__shared-title">{tr(c.sharedTitle)}</div>}
-                    {c.sharedDescription && <div className="arch-tiers__shared-desc">{tr(c.sharedDescription)}</div>}
+                    {c.sharedTitle && <div className="arch-tiers__shared-title" {...inlineEditAttr(admin, editId, 'sharedTitle')}>{tr(c.sharedTitle)}</div>}
+                    {c.sharedDescription && <div className="arch-tiers__shared-desc" {...inlineEditAttr(admin, editId, 'sharedDescription')}>{tr(c.sharedDescription)}</div>}
                     {c.sharedPills && c.sharedPills.length > 0 && (
                         <div className="arch-tiers__pills">
                             {c.sharedPills.map((p, j) => (

@@ -2,7 +2,7 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {Button, Checkbox, Input, Space, Tooltip, Typography, message} from 'antd';
 import LanguageApi from '@services/api/client/LanguageApi';
 import TranslationMetaApi from '@services/api/client/TranslationMetaApi';
-import {i18n as nextI18n} from 'next-i18next/pages';
+import {useT} from 'next-i18next/client';
 import type {INewLanguage} from '@interfaces/INewLanguage';
 import {hashSource} from '@services/features/Languages/TranslationMetaService';
 
@@ -35,6 +35,11 @@ interface EditorState {
 const longThreshold = 200;
 
 export const InlineTranslationEditor: React.FC = () => {
+    // App-Router-native i18n handle (post `next-i18next/pages` sweep) — the
+    // hook returns the same runtime i18n instance the legacy `i18n` singleton
+    // pointed at. `useT` is the documented way to reach it inside a client
+    // component.
+    const {i18n: nextI18n} = useT();
     const [state, setState] = useState<EditorState | null>(null);
     const [saving, setSaving] = useState(false);
     const [languages, setLanguages] = useState<Record<string, INewLanguage>>({});

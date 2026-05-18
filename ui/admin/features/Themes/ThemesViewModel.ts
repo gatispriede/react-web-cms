@@ -1,4 +1,4 @@
-import {message} from 'antd';
+import {notifyError, notifySuccess} from '@admin/lib/notify';
 import ThemeApi from '@services/api/client/ThemeApi';
 import {ITheme, IThemeTokens, InTheme} from '@interfaces/ITheme';
 import {ConflictError, isConflictError} from '@client/lib/conflict';
@@ -76,8 +76,9 @@ export class ThemesViewModel {
         proxy.removeAction = new GuardedAction<[string]>(
             async ({idempotencyKey}, id) => {
                 const result = await proxy.themeApi.deleteTheme(id, {idempotencyKey});
-                if (result.error) { message.error(result.error); return; }
-                message.success(proxy.t('Theme deleted'));
+                if (result.error) { notifyError(result.error); return; }
+                // TODO: wire Undo — theme delete routes through trash but the deleteTheme API does not return a trashGroup yet.
+                notifySuccess(proxy.t('Theme deleted'));
                 await proxy.refresh();
             },
             {onPendingChange: (v) => { proxy.removePending = v; }},
@@ -102,8 +103,8 @@ export class ThemesViewModel {
 
     async activate(id: string): Promise<void> {
         const result = await this.themeApi.setActive(id);
-        if (result.error) { message.error(result.error); return; }
-        message.success(this.t('Theme activated — reload to see changes site-wide.'));
+        if (result.error) { notifyError(result.error); return; }
+        notifySuccess(this.t('Theme activated — reload to see changes site-wide.'));
         this.activeId = id;
     }
 
@@ -113,8 +114,8 @@ export class ThemesViewModel {
 
     async resetPreset(id: string): Promise<void> {
         const result = await this.themeApi.resetPreset(id);
-        if (result.error) { message.error(result.error); return; }
-        message.success(this.t('Preset reset to on-disk defaults'));
+        if (result.error) { notifyError(result.error); return; }
+        notifySuccess(this.t('Preset reset to on-disk defaults'));
         await this.refresh();
     }
 
@@ -178,8 +179,8 @@ export class ThemesViewModel {
 
     private async performSave(draft: InTheme, expectedVersion: number | undefined): Promise<boolean> {
         const result = await this.themeApi.saveTheme(draft, expectedVersion);
-        if (result.error) { message.error(result.error); return false; }
-        message.success(this.t('Theme saved'));
+        if (result.error) { notifyError(result.error); return false; }
+        notifySuccess(this.t('Theme saved'));
         this.closeEditor();
         await this.refresh();
         return true;
@@ -188,7 +189,7 @@ export class ThemesViewModel {
     async save(): Promise<void> {
         const draft = this.editing;
         if (!draft) return;
-        if (!draft.name.trim()) { message.error(this.t('Name is required')); return; }
+        if (!draft.name.trim()) { notifyError(this.t('Name is required')); return; }
         this.saving = true;
         try {
             await this.performSave(draft, this.editingVersion);
@@ -207,7 +208,7 @@ export class ThemesViewModel {
                     },
                 };
             } else {
-                message.error(String((err as Error)?.message ?? err));
+                notifyError(err);
             }
         } finally {
             this.saving = false;

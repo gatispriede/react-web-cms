@@ -12,6 +12,56 @@ const PUBLIC_IMAGES_DIR = path.join(process.cwd(), 'ui/client/public/images');
 const IMAGE_PATH_PREFIX = 'api/';
 const BUNDLE_VERSION = 1;
 
+interface LanguageRowLike {
+    symbol?: string;
+}
+
+/**
+ * Return the set of language symbols present in the imported bundle but
+ * absent from the runtime `next-i18next.config.js` locale list.
+ *
+ * Exported for tests; callers in the import path use this to decide
+ * whether to surface a locale-drift restart-required banner. Pure —
+ * does not read the filesystem unless `configLocales` is omitted, in
+ * which case it best-effort reads the repo-root `next-i18next.config.js`.
+ * A read failure returns `[]` (fail-open — the rest of the import is
+ * more important than this one warning).
+ */
+export function detectLocaleDrift(
+    languages: ReadonlyArray<LanguageRowLike>,
+    configLocales?: ReadonlyArray<string>,
+): string[] {
+    const locales = configLocales ?? readConfigLocales();
+    if (!locales) return [];
+    const configured = new Set(locales);
+    const seen = new Set<string>();
+    const drift: string[] = [];
+    for (const lang of languages) {
+        const sym = lang?.symbol?.trim();
+        if (!sym) continue;
+        if (seen.has(sym)) continue;
+        seen.add(sym);
+        if (!configured.has(sym)) drift.push(sym);
+    }
+    return drift;
+}
+
+function readConfigLocales(): readonly string[] | null {
+    try {
+        // Static relative path (not `path.join(process.cwd(), …)`): a
+        // computed `require()` argument is unresolvable for the Turbopack
+        // bundler — it can't trace `process.cwd()` and aborts the build.
+        // `next-i18next.config.js` lives at the repo root, three levels up.
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const cfg = require('../../../next-i18next.config.js');
+        const locales = cfg?.i18n?.locales;
+        return Array.isArray(locales) ? locales.filter((l): l is string => typeof l === 'string') : null;
+    } catch (err) {
+        log.warn({scope: 'bundle.localeDriftReadFail', err}, 'could not read next-i18next.config.js locale list');
+        return null;
+    }
+}
+
 export interface SiteBundle {
     manifest: {
         version: number;
@@ -362,6 +412,23 @@ export class BundleService {
         if (bundle.site.siteFlags !== undefined) await putSetting('siteFlags', bundle.site.siteFlags);
         if (bundle.site.footer !== undefined) await putSetting('footer', bundle.site.footer);
         if (bundle.site.siteSeo !== undefined) await putSetting('siteSeo', bundle.site.siteSeo);
+
+        // Locale-drift detection — bundle ships languages whose symbol set
+        // differs from the runtime `next-i18next.config.js` locale list.
+        // Next.js i18n is static (locales baked into URL routing at build
+        // time), so a new symbol in the bundle won't serve until both the
+        // file is edited AND the process is restarted. Without this signal
+        // the operator imports the bundle, the language appears in the
+        // admin Languages pane, but `/en/...` 404s for the new symbol
+        // (the locale-stale errors seen on the skyclimber import).
+        const driftSymbols = detectLocaleDrift(bundle.site.languages ?? []);
+        if (driftSymbols.length > 0) {
+            markRestartRequired({
+                source: 'i18n',
+                key: 'bundle-locale-drift',
+                detail: `Imported bundle introduces locale${driftSymbols.length === 1 ? '' : 's'} not in next-i18next.config.js: ${driftSymbols.join(', ')}. Add to i18n.locales and restart to serve them.`,
+            });
+        }
 
         // Wave 3 — surface the "restart to pick up new modules" hint.
         // A bundle import can ship new modules / item types whose

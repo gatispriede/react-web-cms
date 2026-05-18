@@ -1,4 +1,4 @@
-import {message} from 'antd';
+import {notifyError, notifySuccess} from '@admin/lib/notify';
 import {observable} from '@client/lib/state/observable';
 
 export interface InquirySummary {
@@ -60,7 +60,7 @@ export class InquiriesViewModel {
         try {
             this.rows = await fetchList();
         } catch (err) {
-            message.error(String((err as Error)?.message ?? err));
+            notifyError(err);
         } finally {
             this.loading = false;
         }
@@ -72,7 +72,7 @@ export class InquiriesViewModel {
         try {
             this.openDoc = await fetchOne(id);
         } catch (err) {
-            message.error(String((err as Error)?.message ?? err));
+            notifyError(err);
             this.openId = null;
         } finally {
             this.openLoading = false;
@@ -87,20 +87,22 @@ export class InquiriesViewModel {
     async remove(id: string): Promise<void> {
         try {
             await deleteOne(id);
-            message.success(this.t('Inquiry deleted'));
+            // TODO: wire Undo — inquiry delete does not currently return a trashGroup handle.
+            notifySuccess(this.t('Inquiry deleted'));
             await this.refresh();
         } catch (err) {
-            message.error(String((err as Error)?.message ?? err));
+            notifyError(err);
         }
     }
 
     async removeAll(): Promise<void> {
         try {
             const deleted = await deleteAll();
-            message.success(this.t('Deleted {{n}} inquiries', {n: deleted}));
+            // TODO: wire Undo — bulk inquiry delete does not currently return a trashGroup handle.
+            notifySuccess(this.t('Deleted {{n}} inquiries', {n: deleted}));
             await this.refresh();
         } catch (err) {
-            message.error(String((err as Error)?.message ?? err));
+            notifyError(err);
         }
     }
 

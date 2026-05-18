@@ -40,7 +40,10 @@
   line-height: 1 !important;
   min-height: 38px !important;
   text-decoration: none !important; // AntD Typography.Link underline + visited state
-  transition: background 150ms ease, color 150ms ease !important;
+  // Motion tokens — see docs/roadmap/admin/motion-token-system.md.
+  transition:
+      background calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+      color      calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard) !important;
 
   &:hover,
   &[aria-expanded="true"] {

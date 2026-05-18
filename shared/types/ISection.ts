@@ -74,8 +74,23 @@ export interface ISection {
     /** Optimistic-concurrency counter — bumped server-side on each save.
      *  Frontend stashes this at read-time and sends it back as
      *  `expectedVersion` on save; server rejects with a `ConflictError`
-     *  if a peer has bumped past us. See `src/Server/conflict.ts`. */
+     *  if a peer has bumped past us. See `services/infra/conflict.ts`. */
     version?: number
     editedBy?: string
     editedAt?: string
+    /** When true, this section is system-managed and operators cannot remove it.
+     *  Used by composable system pages (checkout, account-settings, product-leaf, etc.)
+     *  where transactional/required content must always render. Content edits within the
+     *  section remain allowed; only delete + structural removal is blocked.
+     *  Default unset = unlocked. Back-compat with legacy operator-authored sections.
+     *  Server-side guard: `NavigationService.removeSectionItem` rejects with
+     *  `SECTION_LOCKED` when this is true. Admin UI hides the delete control and
+     *  renders a `<LockedSectionAffordance>` tooltip next to the section title.
+     */
+    locked?: boolean
+    /** Operator-facing reason shown in tooltip on the lock affordance.
+     *  Pass a literal string OR an i18n key (e.g. `'section.locked.checkout-payment'`).
+     *  Keys are resolved through the admin `t()` table; literals are rendered as-is.
+     */
+    lockReason?: string
 }

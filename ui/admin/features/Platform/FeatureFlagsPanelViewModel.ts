@@ -1,4 +1,4 @@
-import {message} from 'antd';
+import {notifyError, notifySuccess} from '@admin/lib/notify';
 import {observable} from '@client/lib/state/observable';
 
 export interface FlagRow {
@@ -76,8 +76,8 @@ export class FeatureFlagsPanelViewModel {
         this.savingId = row.id;
         try {
             const res = await setFlag(row.id, next);
-            if (!res.ok) { void message.error(res.error ?? this.t('Save failed')); return; }
-            void message.success(next
+            if (!res.ok) { notifyError(res.error ?? this.t('Save failed')); return; }
+            notifySuccess(next
                 ? this.t('{{name}} enabled', {name: row.displayName})
                 : this.t('{{name}} disabled', {name: row.displayName}));
             await this.refresh();
@@ -88,8 +88,8 @@ export class FeatureFlagsPanelViewModel {
         this.savingId = row.id;
         try {
             const res = await clearFlag(row.id);
-            if (!res.ok) { void message.error(res.error ?? this.t('Reset failed')); return; }
-            void message.success(this.t('Reset to default'));
+            if (!res.ok) { notifyError(res.error ?? this.t('Reset failed')); return; }
+            notifySuccess(this.t('Reset to default'));
             await this.refresh();
         } finally { this.savingId = null; }
     }

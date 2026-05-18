@@ -71,6 +71,7 @@ const ProjectGridEditor: React.FC<IInputContent> = ({content, setContent, t}) =>
                                             onChange={(v) => patchItem(i, {href: v})}
                                             placeholder="#scichart"
                                             label={t('Link')}
+                                            hostId={`project-grid-item-${i}`}
                                         />
                                     </div>
                                 </Space>

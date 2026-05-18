@@ -1,0 +1,17 @@
+// Admin-side re-export of the motion-token system.
+//
+// The actual token definitions live in
+// `ui/client/styles/_motion-tokens.scss` — this file forwards them so admin
+// partials can `@use '../../styles/motion-tokens'` (or equivalent) without
+// reaching across the client/admin boundary inline.
+//
+// Spec: docs/roadmap/admin/motion-token-system.md (item 0b).
+//
+// In practice the tokens reach the admin chrome through
+// `ui/client/styles/globals/global.scss`, which is the single Next.js global
+// stylesheet entry mounted in `_app.tsx`. Admin partials are `@use`d under
+// that file, so `:root { --motion-* }` is already defined when any admin
+// SCSS rule resolves. This forwarder exists so an admin-only entry (when
+// one ever splits out) can pick the tokens up without re-declaring them.
+
+@forward '../../client/styles/motion-tokens';

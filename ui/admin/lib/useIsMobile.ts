@@ -36,9 +36,9 @@ export function useIsMobile(breakpoint: number = ADMIN_MOBILE_BREAKPOINT_PX): bo
             mql.addEventListener('change', listener);
             return () => mql.removeEventListener('change', listener);
         }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         (mql as any).addListener(listener);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         return () => (mql as any).removeListener(listener);
     }, [breakpoint]);
     return isMobile;

@@ -26,7 +26,7 @@
  */
 
 import {getIdempotencyService} from '@services/infra/idempotency';
-import {rateLimit as slidingWindowRateLimit} from '@client/pages/api/_rateLimit';
+import {rateLimit as slidingWindowRateLimit} from '@client/lib/api-helpers/rateLimit';
 import {FeatureRestrictedError} from '../modeEnforcement';
 import {McpError, McpTool, McpToolContext, McpToolResult} from '../types';
 
@@ -35,10 +35,10 @@ import {McpError, McpTool, McpToolContext, McpToolResult} from '../types';
 // loose (mirrors the existing `McpTool.handler` signature which also
 // accepts `any`). Tightening here would force every handler to add
 // runtime casts for already-validated fields.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export type RawHandler<T = unknown> = (args: any, ctx: McpToolContext) => Promise<T>;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export type ToolHandler = (args: any, ctx: McpToolContext) => Promise<McpToolResult>;
 
 export type ErrorCode =
@@ -220,7 +220,7 @@ export interface WithErrorEnvelopeOpts {
 }
 
 const DEFAULT_LOG_UNKNOWN = (err: unknown, toolName: string): void => {
-    // eslint-disable-next-line no-console
+     
     console.error(`[mcp:${toolName}] unhandled`, err);
 };
 
@@ -354,7 +354,7 @@ export interface BulkItemResult {
     id: string;
     ok: boolean;
     error?: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     [k: string]: any;
 }
 

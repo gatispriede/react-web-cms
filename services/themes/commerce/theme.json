@@ -1,0 +1,33 @@
+{
+    "slug": "commerce",
+    "name": "Commerce",
+    "tagline": "Catalogue-first, tight grid, snappy retail motion — for DTC shops, makers, and the cars vertical.",
+    "audience": "DTC product shops, makers, wellness/eco retail, cars vertical (ss.com home)",
+    "mood": ["clean", "catalogue-first", "fresh", "snappy", "conversion-optimised"],
+    "palette": {
+        "surface":      {"light": "#FFFFFF", "dark": "#0B0F0D"},
+        "ink":          {"light": "#18181B", "dark": "#F1F5F2"},
+        "accent":       {"light": "#10B981", "dark": "#34D399"},
+        "accentInk":    {"light": "#FFFFFF", "dark": "#062019"},
+        "surfaceInset": {"light": "#F4F4F5", "dark": "#1A1F1C"},
+        "rule":         {"light": "#E4E4E7", "dark": "#27272A"}
+    },
+    "typography": {
+        "display": "'Space Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "body":    "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "mono":    "ui-monospace, 'SF Mono', Menlo, monospace",
+        "baseSize": 16
+    },
+    "motion": "snappy-default",
+    "headerBehavior": "shrink-on-scroll",
+    "footerLayout": "brand-led-xxl",
+    "logoLockup": "combined",
+    "moduleStyleHints": {
+        "hero": "photo-bleed",
+        "productGrid": "tight-grid",
+        "carListing": "dense-card",
+        "posts": "card-grid",
+        "cart": "drawer-always"
+    },
+    "darkDefault": false
+}

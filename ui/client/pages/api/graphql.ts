@@ -26,14 +26,15 @@ import {ApolloServer} from '@apollo/server';
 import {startServerAndCreateNextHandler} from '@as-integrations/next';
 // @ts-expect-error — no type defs published; value is `(depth: number) => ValidationRule`
 import depthLimit from 'graphql-depth-limit';
-import {sessionFromReq, type GraphqlSession} from '@services/features/Auth/authz';
+import {type GraphqlSession} from '@services/features/Auth/authz';
 import {nextResolvers as resolvers, type ResolverHooks} from '@services/api/graphqlResolvers';
 import {getMongoConnection} from '@services/infra/mongoDBConnection';
 import {McpTokenService} from '@services/features/Mcp/McpTokenService';
 import {composedCacheVersionKeys, composedSchemaSDL} from '@services/infra/featureRegistry';
 import {applyCacheHeaders} from '@services/infra/cacheHeaders';
-import {authOptions} from './auth/authOptions';
-import {clientIp, rateLimit} from './_rateLimit';
+import {adminAuthOptions, customerAuthOptions} from './auth/authOptions';
+import {resolveSessionFromReq} from '@services/features/Auth/authz';
+import {clientIp, rateLimit} from '@client/lib/api-helpers/rateLimit';
 import {
     COOKIE_NAME as CART_COOKIE_NAME,
     buildSetCookieHeader,
@@ -119,7 +120,7 @@ const apolloServer = new ApolloServer<GqlContext>({
 
 const handler = startServerAndCreateNextHandler<NextApiRequest, GqlContext>(apolloServer, {
     context: async (req, res) => {
-        const session = (await sessionFromMcpBearer(req)) ?? await sessionFromReq(req, res, authOptions);
+        const session = (await sessionFromMcpBearer(req)) ?? await resolveSessionFromReq(req, res, {adminAuthOptions, customerAuthOptions});
         const ip = clientIp(req as any);
         // Cart cookie: parse the request once; expose getter/setter to
         // resolvers. Forged or malformed cookies are treated as absent;

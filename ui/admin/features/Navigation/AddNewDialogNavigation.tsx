@@ -1,5 +1,6 @@
 import React from "react";
-import {Button, Input, message, Modal, Select, Tooltip} from "antd";
+import {Button, Input, Modal, Select, Tooltip} from "antd";
+import {notifyError} from '@admin/lib/notify';
 import {DownOutlined, UpOutlined} from "@client/lib/icons";
 import MongoApi from "@services/api/client/MongoApi";
 import {ISeo} from "@interfaces/ISeo";
@@ -172,17 +173,11 @@ class AddNewDialogNavigation extends React.Component<IProps, {}> {
                     // (concurrent edits) can still trip the server check.
                     if (res && res.ok === false) {
                         if (res.error === 'cycle') {
-                            message.error({
-                                content: this.props.t('Cannot move a page under its own descendant'),
-                                'data-testid': 'nav-page-cycle-error-toast',
-                            } as any);
+                            notifyError(this.props.t('Cannot move a page under its own descendant'));
                         } else if (res.error === 'depth-cap') {
-                            message.error({
-                                content: this.props.t('Maximum nesting depth is 3 levels'),
-                                'data-testid': 'nav-page-depth-error-toast',
-                            } as any);
+                            notifyError(this.props.t('Maximum nesting depth is 3 levels'));
                         } else {
-                            message.error(String(res.error));
+                            notifyError(String(res.error));
                         }
                         return;
                     }

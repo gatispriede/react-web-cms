@@ -1,5 +1,5 @@
 /**
- * Frontend mirror of `src/Server/conflict.ts` — detects the conflict-shape
+ * Frontend mirror of `services/infra/conflict.ts` — detects the conflict-shape
  * JSON the server returns from optimistic-concurrency mutations and turns
  * it into a typed error API wrappers can throw and editor surfaces can
  * catch via the `onConflict` topic.

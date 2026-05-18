@@ -1,4 +1,4 @@
-import {message} from 'antd';
+import {notifyError, notifySuccess} from '@admin/lib/notify';
 import FooterApi from '@services/api/client/FooterApi';
 import {DEFAULT_FOOTER, IFooterColumn, IFooterConfig, IFooterEntry} from '@interfaces/IFooter';
 import {ConflictError, isConflictError} from '@client/lib/conflict';
@@ -82,10 +82,10 @@ export class FooterViewModel {
     private async performSave(cfg: IFooterConfig, expectedVersion: number | undefined): Promise<boolean> {
         const result = await this.api.save(cfg, expectedVersion);
         if ((result as {error?: string}).error) {
-            message.error((result as {error?: string}).error ?? '');
+            notifyError((result as {error?: string}).error ?? '');
             return false;
         }
-        message.success(this.t('Footer saved'));
+        notifySuccess(this.t('Footer saved'));
         if (typeof (result as {version?: number}).version === 'number') {
             this.config = {...this.config, version: (result as {version?: number}).version};
         }
@@ -109,7 +109,7 @@ export class FooterViewModel {
                     },
                 };
             } else {
-                message.error(String((err as Error)?.message ?? err));
+                notifyError(err);
             }
         } finally { this.saving = false; }
     }

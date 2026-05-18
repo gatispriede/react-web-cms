@@ -18,10 +18,20 @@ import {getMongoConnection} from '@services/infra/mongoDBConnection';
 import {PUBLIC_IMAGE_PATH} from '@utils/imgPath';
 import {defineTool} from './_shared';
 import {loadUsageSources, scanImageUsage, UsageConnection} from '@services/features/Assets/ImageUsageService';
+import {optimizeImageBuffer, type RatioLock} from '@services/features/Assets/imageOptimize';
+import {buildImageRecord} from '@services/infra/imageMetadata';
 
 const IMAGES_DIR = path.join(process.cwd(), 'ui/client/public/images');
 const NAME_RE = /[^a-zA-Z0-9._-]+/g;
 const ALLOWED_EXT = /\.(jpe?g|png|gif|webp|svg|avif|bmp)$/i;
+
+// Mirror the ratio set the admin bulk-upload modal + `/api/upload-batch`
+// accept. `free` (or omitted) keeps the upload uncropped; any other value
+// triggers the same sharp cover-crop the admin surface uses, so MCP — the
+// canonical AI write path — has parity with the human bulk-upload flow.
+const RATIO_LOCKS: RatioLock[] = ['free', '1:1', '4:3', '3:2', '16:9'];
+const normaliseRatio = (raw: unknown): RatioLock =>
+    (typeof raw === 'string' && (RATIO_LOCKS as string[]).includes(raw)) ? raw as RatioLock : 'free';
 
 function sanitiseFilename(name: string): string {
     const base = path.basename(name).replace(/\s+/g, '_').replace(NAME_RE, '');
@@ -72,7 +82,7 @@ export const imageList: McpTool = defineTool({
 export const imageUpload: McpTool = defineTool({
     // SAFE: not a GraphQL mutation — direct service write
     name: 'image.upload',
-    description: 'Upload an image from a base64 payload. Filename is sanitised; only standard image extensions allowed. Returns the public location.',
+    description: 'Upload an image from a base64 payload. Filename is sanitised; only standard image extensions allowed. The bytes run through the same optimise pipeline as the admin upload form — resize to a 1920px long edge, recompress, strip EXIF — and the persisted record carries width/height/sizeBytes/format. Pass `ratio` (one of free/1:1/4:3/3:2/16:9) to cover-crop the image to that aspect ratio on ingest, matching the admin bulk-upload modal. Corrupt payloads are rejected. Returns the public location + optimised size.',
     scopes: ['write:content'],
     idempotent: true,
     rateLimit: {maxPerMinute: 20},
@@ -84,6 +94,7 @@ export const imageUpload: McpTool = defineTool({
             contentBase64: {type: 'string', minLength: 1},
             contentType: {type: 'string'},
             tags: {type: 'array', items: {type: 'string'}},
+            ratio: {type: 'string', enum: ['free', '1:1', '4:3', '3:2', '16:9'], description: 'Aspect-ratio lock — cover-crops the image to this ratio on ingest. Omit or pass "free" to keep the original framing.'},
             idempotencyKey: {type: 'string'},
         },
     },
@@ -96,21 +107,47 @@ export const imageUpload: McpTool = defineTool({
         return {ok: false, error: 'image already exists', filename};
     }
     const buf = Buffer.from(String(args.contentBase64), 'base64');
-    fs.writeFileSync(dest, buf);
+    const ratio = normaliseRatio(args.ratio);
+    // Run the shared optimise pipeline before writing — MCP is the canonical
+    // write path, so an LLM-uploaded image gets the same resize/recompress/
+    // EXIF-strip treatment as one dropped through the admin form. When a
+    // `ratio` is passed the same sharp cover-crop the bulk-upload modal uses
+    // runs here too — MCP/admin parity for the aspect-ratio control. Corrupt
+    // bytes (`readable: false`) are rejected; SVG/GIF pass through untouched.
+    const opt = await optimizeImageBuffer(buf, ratio !== 'free' ? {ratio} : {});
+    if (!opt.readable) {
+        return {ok: false, error: 'unrecognised or corrupt image file', filename};
+    }
+    fs.writeFileSync(dest, opt.buffer);
     const tags = Array.isArray(args.tags) ? args.tags.filter(Boolean) as string[] : [];
     const withAll = tags.includes('All') ? tags : ['All', ...tags];
     const ext = path.extname(filename).slice(1).toLowerCase();
     const conn: any = getMongoConnection();
-    await conn.assetService.saveImage({
+    // Same persisted record shape as the upload endpoints — width/height/
+    // sizeBytes/originalName/uploadedBy/uploadedAt/optimised/format ride
+    // through to Mongo (write-through; GraphQL SDL exposure is a separate
+    // read-side migration).
+    const record = buildImageRecord(opt, {
         id: guid(),
-        name: filename,
+        storedName: filename,
         location: `${PUBLIC_IMAGE_PATH}${filename}`,
-        created: new Date().toDateString(),
         type: typeof args.contentType === 'string' ? args.contentType : `image/${ext === 'jpg' ? 'jpeg' : ext}`,
-        size: buf.length,
         tags: withAll,
-    } as any);
-    return {ok: true, filename, location: `${PUBLIC_IMAGE_PATH}${filename}`, size: buf.length};
+        originalName: String(args.filename),
+        uploadedBy: ctx.actor,
+        fallbackSize: buf.length,
+    });
+    await conn.assetService.saveImage(record as any);
+    return {
+        ok: true,
+        filename,
+        location: `${PUBLIC_IMAGE_PATH}${filename}`,
+        size: opt.size,
+        width: opt.width,
+        height: opt.height,
+        optimised: opt.optimised,
+        ratio,
+    };
 });
 
 async function deleteOneImage(

@@ -42,6 +42,17 @@ export interface ItemTypeDefinition {
     }>;
     /** Enum of allowed style values for this type; used to populate the Style picker. */
     styleEnum: Record<string, string>;
+    /**
+     * Friendly labels for the Style picker, keyed by enum *value*
+     * (lowercase identifier — same string stored in `item.style`).
+     * Optional. When absent or a key is missing, the picker falls back
+     * to the enum *key name* (`Default`, `Centered`, …) — current
+     * behaviour. Labels run through `t()` for i18n.
+     *
+     * Use this to humanise technical enum names. Example for
+     * `KeyValueDossier`: `{ 'card-grid': 'Card grid', 'tech-modern': 'Tech-modern' }`.
+     */
+    styleLabels?: Record<string, string>;
     /** Default content JSON for a freshly created item. */
     defaultContent: string;
 }
@@ -62,6 +73,7 @@ const compose = (): ItemTypeDefinition[] => {
             Display: Display as ItemTypeDefinition['Display'],
             Editor: a.Editor as ItemTypeDefinition['Editor'],
             styleEnum: a.styleEnum,
+            styleLabels: (a as any).styleLabels,
             defaultContent: a.defaultContent,
         });
         displays.delete(a.key as string);

@@ -1,4 +1,4 @@
-import {message} from 'antd';
+import {notifyError, notifyInfo, notifySuccess, notifyWarning} from '@admin/lib/notify';
 import TranslationManager from '@admin/shell/TranslationManager';
 import {INewLanguage} from '@interfaces/INewLanguage';
 import {ConflictError, isConflictError} from '@client/lib/conflict';
@@ -169,19 +169,19 @@ export class TranslationsViewModel {
             expectedVersion,
         );
         if ((result as any)?.error) {
-            message.error(String((result as any).error));
+            notifyError(String((result as any).error));
             return false;
         }
         await this.i18n.reloadResources(this.currentLanguage);
         await this.refreshMenu();
         this.bumpReload();
-        message.success(this.tAdmin('Translations saved'));
+        notifySuccess(this.tAdmin('Translations saved'));
         return true;
     }
 
     async saveNewTranslation(): Promise<void> {
         if (this.currentLanguage === 'default') {
-            message.warning(this.tAdmin('Select a non-default language before saving.'));
+            notifyWarning(this.tAdmin('Select a non-default language before saving.'));
             return;
         }
         this.saving = true;
@@ -198,7 +198,7 @@ export class TranslationsViewModel {
                             await this.performTranslationSave(err.currentVersion);
                             this.conflict = null;
                         } catch (e) {
-                            message.error(String((e as Error)?.message ?? e));
+                            notifyError(e);
                             this.conflict = null;
                         } finally {
                             this.saving = false;
@@ -206,7 +206,7 @@ export class TranslationsViewModel {
                     },
                 };
             } else {
-                message.error(String((err as Error)?.message ?? err));
+                notifyError(err);
             }
         } finally {
             this.saving = false;
@@ -218,7 +218,7 @@ export class TranslationsViewModel {
         const lang = this.languages[this.currentLanguage];
         if (!lang?.symbol) return;
         if (lang.default) {
-            message.info(this.tAdmin('Already the default language.'));
+            notifyInfo(this.tAdmin('Already the default language.'));
             return;
         }
         this.saving = true;
@@ -235,18 +235,18 @@ export class TranslationsViewModel {
                 version: lang.version,
             } as INewLanguage);
             if ((result as any)?.error) {
-                message.error(String((result as any).error));
+                notifyError(String((result as any).error));
                 return;
             }
-            message.success(this.tAdmin('Default language updated'));
+            notifySuccess(this.tAdmin('Default language updated'));
             await this.refreshMenu();
             this.bumpReload();
         } catch (err) {
             if (isConflictError(err)) {
                 await this.refreshMenu();
-                message.warning(this.tAdmin('Language was modified elsewhere — please retry.'));
+                notifyWarning(this.tAdmin('Language was modified elsewhere — please retry.'));
             } else {
-                message.error(String((err as Error)?.message ?? err));
+                notifyError(err);
             }
         } finally {
             this.saving = false;
@@ -259,7 +259,7 @@ export class TranslationsViewModel {
         // has no fallback to fall through to and the public site renders raw
         // keys.
         if (this.languages[this.currentLanguage]?.default) {
-            message.warning(this.tAdmin('The default language cannot be deleted.'));
+            notifyWarning(this.tAdmin('The default language cannot be deleted.'));
             return;
         }
         this.saving = true;
@@ -273,9 +273,10 @@ export class TranslationsViewModel {
             this.currentLanguageName = 'App Translations';
             await this.refreshMenu();
             this.bumpReload();
-            message.success(this.tAdmin('Language deleted'));
+            // TODO: wire Undo — language delete does not currently route through the trash collection.
+            notifySuccess(this.tAdmin('Language deleted'));
         } catch (err) {
-            message.error(String((err as Error)?.message ?? err));
+            notifyError(err);
         } finally {
             this.saving = false;
         }

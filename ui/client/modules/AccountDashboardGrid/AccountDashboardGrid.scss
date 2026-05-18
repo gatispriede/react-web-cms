@@ -1,0 +1,56 @@
+.account-dashboard-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+
+    &__cell {
+        background: var(--theme-colorBgContainer, #fff);
+        border-radius: var(--theme-borderRadius, 8px);
+        border: 1px solid color-mix(in srgb, currentColor 8%, transparent);
+        transition: transform calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                    box-shadow calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+        }
+    }
+
+    &__link {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        grid-template-rows: auto auto;
+        gap: 0.25rem 0.75rem;
+        padding: 1rem;
+        text-decoration: none;
+        color: var(--ink, var(--theme-colorTextBase, #1f1f1f));
+        // WCAG 2.2 AA: 44 px tap target ensured via padding + content height.
+        min-height: 88px;
+    }
+
+    &__icon {
+        grid-row: 1 / span 2;
+        font-size: 1.5rem;
+        color: var(--accent, var(--theme-colorPrimary, #1677ff));
+    }
+
+    &__label {
+        font-weight: 600;
+        font-size: 0.9375rem;
+    }
+
+    &__count {
+        font-weight: 700;
+        font-size: 1.125rem;
+        color: var(--accent, var(--theme-colorPrimary, #1677ff));
+    }
+
+    &__helper {
+        grid-column: 2 / -1;
+        font-size: 0.8125rem;
+        color: var(--ink-2, color-mix(in srgb, currentColor 70%, transparent));
+    }
+}

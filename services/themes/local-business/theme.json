@@ -1,0 +1,41 @@
+{
+    "slug": "local-business",
+    "name": "Local Business",
+    "tagline": "Warm, photo-led, trust-signal-heavy — for plumbers, electricians, opticians, locksmiths and other neighbourhood trade businesses.",
+    "audience": "Local trade and service businesses — electricians, plumbers, opticians, locksmiths, garages, small workshops, single-operator service companies",
+    "mood": ["warm", "honest", "trustworthy", "photo-led", "approachable"],
+    "palette": {
+        "surface":      {"light": "#FBFAF7", "dark": "#1A1815"},
+        "ink":          {"light": "#1F1B16", "dark": "#F2EDE5"},
+        "accent":       {"light": "#15467A", "dark": "#5EA0E0"},
+        "accentInk":    {"light": "#FFFFFF", "dark": "#0A1A2C"},
+        "surfaceInset": {"light": "#F2EEE5", "dark": "#23201B"},
+        "rule":         {"light": "#D8D1C2", "dark": "#3A352E"}
+    },
+    "typography": {
+        "display": "'Roboto Slab', 'Source Serif 4', Georgia, 'Times New Roman', serif",
+        "body":    "'Source Sans 3', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "mono":    "ui-monospace, 'SF Mono', Menlo, monospace",
+        "baseSize": 17
+    },
+    "motion": "gentle-slow",
+    "headerBehavior": "sticky-static",
+    "footerLayout": "minimal-1row",
+    "logoLockup": "combined",
+    "moduleStyleHints": {
+        "hero": "proprietor-photo-split-phone-cta",
+        "services": "numbered-list-trust-led",
+        "openingHours": "always-visible-large",
+        "contactBlock": "phone-up-front",
+        "testimonials": "photo-card-quote",
+        "gallery": "before-after-grid",
+        "trustBadges": "certification-pills",
+        "pricingTable": "service-tier-flat",
+        "skillPills": "soft-pill-row",
+        "manifesto": "small-business-promise",
+        "moneyBackGuarantee": "framed-promise",
+        "inquiryForm": "callback-request",
+        "posts": "card-grid"
+    },
+    "darkDefault": false
+}

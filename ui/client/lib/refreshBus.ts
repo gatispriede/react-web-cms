@@ -1,5 +1,3 @@
-import {useEffect} from 'react';
-
 /**
  * Cross-component refresh pub/sub. Every content-rendering UI class exposes
  * a `refreshView()` method and subscribes to this bus on mount. Any
@@ -13,12 +11,19 @@ import {useEffect} from 'react';
  *  - 'settings'  theme, logo, footer, flags, SEO, posts, languages
  *  - 'assets'    image library
  * `undefined` / no topic = refresh everything.
+ *
+ * NOTE: this file is intentionally React-free. The hook variant lives in
+ * `useRefreshView.ts` (marked `"use client"`) — splitting the two keeps
+ * the server-reachable `services/api/client/*.ts` import chain
+ * (which runs through `authOptions.ts` → `app/layout.tsx` RSC) free of
+ * `useEffect`, otherwise the app-router build fails with "module that
+ * depends on `useEffect` into a React Server Component module".
  */
 export type RefreshTopic = 'content' | 'settings' | 'assets';
 
-type Handler = () => void | Promise<void>;
+export type RefreshHandler = () => void | Promise<void>;
 
-interface Entry {topic?: RefreshTopic; fn: Handler}
+interface Entry {topic?: RefreshTopic; fn: RefreshHandler}
 
 class RefreshBus {
     private subs: Entry[] = [];
@@ -36,7 +41,7 @@ class RefreshBus {
         }
     }
 
-    subscribe(fn: Handler, topic?: RefreshTopic): () => void {
+    subscribe(fn: RefreshHandler, topic?: RefreshTopic): () => void {
         const entry: Entry = {fn, topic};
         this.subs.push(entry);
         return () => { this.subs = this.subs.filter(e => e !== entry); };
@@ -46,8 +51,3 @@ class RefreshBus {
 }
 
 export const refreshBus = new RefreshBus();
-
-/** Hook variant for functional components. Pass a stable fn (useCallback) or it'll re-subscribe on every render. */
-export function useRefreshView(fn: Handler, topic?: RefreshTopic): void {
-    useEffect(() => refreshBus.subscribe(fn, topic), [fn, topic]);
-}

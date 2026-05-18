@@ -9,6 +9,7 @@ import {InlineTranslatable} from "@client/lib/InlineTranslatable";
 import {slugifyAnchor} from "@utils/stringFunctions";
 import {toImageRef} from "@interfaces/IImageRef";
 import {toLinkRef} from "@interfaces/ILinkRef";
+import {inlineEditAttr} from "@client/lib/inlineEditAttr";
 import type {IProjectCard, IProjectCardLegacy} from "./ProjectCard.types";
 export type {IProjectCard, IProjectLink} from "./ProjectCard.types";
 export {EProjectCardStyle} from "./ProjectCard.types";
@@ -54,14 +55,16 @@ const resolveCoverSrc = (raw: string): string => {
     return `/${raw}`;
 };
 
-const ProjectCard = ({item, tApp}: {
+const ProjectCard = ({item, tApp, admin}: {
     item: IItem;
     t: TFunction<"translation", undefined>;
     tApp: TFunction<string, undefined>;
+    admin?: boolean;
 }) => {
     const c = new ProjectCardContent(EItemType.ProjectCard, item.content).data;
     const tr = (v: string) => <InlineTranslatable tApp={tApp as any} source={v}/>;
     const anchorId = slugifyAnchor(c.title) || undefined;
+    const editId = item.name || EItemType.ProjectCard;
     const cover = c.image.src ? (
         <img
             alt={c.image.alt ?? c.title}
@@ -82,10 +85,10 @@ const ProjectCard = ({item, tApp}: {
             hoverable
         >
             <Card.Meta
-                title={tr(c.title)}
+                title={<span {...inlineEditAttr(admin, editId, 'title')}>{tr(c.title)}</span>}
                 description={
                     <Space orientation="vertical" size={8} style={{width: '100%'}}>
-                        {c.description && <span>{tr(c.description)}</span>}
+                        {c.description && <span {...inlineEditAttr(admin, editId, 'description')}>{tr(c.description)}</span>}
                         {c.tags?.length > 0 && (
                             <Space wrap size={[4, 4]}>
                                 {c.tags.map((tag, i) => <Tag key={i}>{tr(tag)}</Tag>)}

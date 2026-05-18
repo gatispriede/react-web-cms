@@ -1,5 +1,7 @@
 import React from 'react';
 import {AdminUILoader, AdminPaneDescriptor} from '@admin/lib/loaders/AdminUILoader';
+import {AdminPageDispatch} from '@admin/lib/adminPages/AdminPageDispatch';
+import './ThemeAdminLoader';
 
 /**
  * Themes pane. Both modes share `ThemesViewModel` (admin-ui-modes
@@ -8,12 +10,15 @@ import {AdminUILoader, AdminPaneDescriptor} from '@admin/lib/loaders/AdminUILoad
  * `aui-mode-hierarchy.md` 2026-05-07) and adds the token editor with
  * color / font pickers.
  *
- * Both variants are `React.lazy`-imported so simplified-mode users
- * never download the advanced bundle (and vice versa). The shell
- * dispatcher wraps the active pane in `<Suspense>`.
+ * admin-module-composed: the pane is now module-composed — BOTH modes
+ * dispatch through the `AdminPageRegistry` via `AdminPageDispatch`. The
+ * registered `ThemeAdminLoader` bridge reads `useAdminMode()` and picks
+ * the simplified vs advanced view internally, so both slots point at the
+ * same dispatch component. `./ThemeAdminLoader` is side-imported so the
+ * `client-config/themes` bridge registers at load.
  */
-const ThemeAdvanced = React.lazy(() => import('./Theme'));
-const ThemeSimplified = React.lazy(() => import('./ThemeSimplifiedView'));
+const ThemePaneDispatch: React.FC = () =>
+    React.createElement(AdminPageDispatch, {paneId: 'client-config/themes'});
 
 export class ThemeAdminUILoader extends AdminUILoader {
     readonly id = 'themes';
@@ -24,8 +29,8 @@ export class ThemeAdminUILoader extends AdminUILoader {
         title: 'Theme',
         route: '/admin/client-config/themes',
         modes: {
-            advanced: ThemeAdvanced,
-            simplified: ThemeSimplified,
+            advanced: ThemePaneDispatch,
+            simplified: ThemePaneDispatch,
         },
     };
 }

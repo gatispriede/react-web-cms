@@ -94,7 +94,7 @@ export function usePullToRefresh(onRefresh: () => void | Promise<void>): {
         };
         // Empty deps — listeners bind once per element. State that the
         // listeners need to read at fire-time lives in refs above.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+         
     }, []);
 
     const ref = (el: HTMLElement | null): void => { elRef.current = el; };

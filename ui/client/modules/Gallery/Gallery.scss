@@ -82,7 +82,9 @@
         border-radius: 4px;
         overflow: hidden;
         background: var(--theme-colorBgInset, #e4dfc9);
-        transition: transform 160ms ease, box-shadow 160ms ease;
+        transition:
+          transform calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+          box-shadow calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
 
         &:hover {
           transform: translateY(-3px);
@@ -245,6 +247,36 @@
     &:hover { text-decoration: none; }
   }
 
+  // Tiles rendered as a <button> (lightbox-openable) must shed the native
+  // button chrome so they look identical to the <div>/<a> tile variants the
+  // theme structural variants style. Layout-affecting props only — colour /
+  // radius / background stay with the per-style + per-theme rules.
+  button.container {
+    appearance: none;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    text-align: inherit;
+    background: none;
+    width: 100%;
+    cursor: pointer;
+  }
+
+  // Zoom affordance — only on tiles that actually open the lightbox.
+  .gallery-tile--zoom {
+    cursor: zoom-in;
+  }
+
+  // Secondary caption line — the optional `text` shown beneath the `alt`
+  // primary label when `showCaptions` is on. Quieter than the primary line.
+  .text .text-secondary {
+    opacity: 0.72;
+    font-size: 0.92em;
+    margin-top: 2px;
+  }
+
   // Text-only tile — rendered when a gallery item has no `src`. Omits the
   // image slot entirely; stronger typography fills the space instead. Works
   // in any gallery style variant that supports `.container`.
@@ -274,4 +306,127 @@
   @media (max-width: 540px) {
     &.masonry .gallery-wrapper-images { column-count: 1; }
   }
+}
+
+/* --------------------------------------------------------------------------
+   Gallery lightbox — the dedicated full-screen preview overlay that replaces
+   the AntD `Image.PreviewGroup`. Rendered as a sibling of
+   `.gallery-wrapper-images` (still inside `.gallery-wrapper-app`) but
+   `position: fixed`, so it leaves the tile DOM contract the per-theme
+   structural variants depend on untouched. Keyboard (← → Esc) + mobile swipe
+   are wired in the module; this file owns the visuals only.
+   -------------------------------------------------------------------------- */
+.gallery-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background: rgba(0, 0, 0, 0.88);
+  animation: gallery-lightbox-in
+    calc(var(--motion-duration-fast) * var(--motion-scalar))
+    var(--motion-ease-standard);
+
+  &__figure {
+    margin: 0;
+    max-width: 100%;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__image {
+    max-width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+    display: block;
+    border-radius: 4px;
+  }
+
+  &__caption {
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 13px;
+    text-align: center;
+    line-height: 1.4;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__caption-title {
+    font-weight: 600;
+  }
+
+  &__caption-note {
+    opacity: 0.72;
+    font-size: 0.92em;
+  }
+
+  &__counter {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  &__close,
+  &__nav {
+    appearance: none;
+    border: 0;
+    cursor: pointer;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    transition: background
+      calc(var(--motion-duration-fast) * var(--motion-scalar))
+      var(--motion-ease-standard);
+
+    &:hover { background: rgba(255, 255, 255, 0.24); }
+    &:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 2px;
+    }
+  }
+
+  &__close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+  }
+
+  &__nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 48px;
+
+    &--prev { left: 16px; }
+    &--next {
+      right: 16px;
+      /* Reuse the left-arrow glyph mirrored — no right-arrow icon export. */
+      svg { transform: scaleX(-1); }
+    }
+  }
+
+  @media (max-width: 540px) {
+    padding: 16px;
+    &__nav { width: 40px; height: 40px; }
+    &__nav--prev { left: 8px; }
+    &__nav--next { right: 8px; }
+  }
+}
+
+@keyframes gallery-lightbox-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

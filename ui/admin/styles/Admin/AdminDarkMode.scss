@@ -15,36 +15,47 @@
  * rules that AntD doesn't own.
  */
 
+/**
+ * Admin palette tokens — bind to AntD's CSS-var tokens (exposed by
+ * `cssVar: true` on the ConfigProvider in `AdminApp.tsx`). The hex
+ * fallbacks after each `var(...)` only fire on the very first paint
+ * before AntD's runtime style injection lands, or in non-admin contexts
+ * where the ConfigProvider hasn't mounted. Once `cssVar: true` is wired,
+ * `--ant-color-*` flips automatically when the admin toggles dark mode,
+ * which means these admin-scoped tokens follow without a second
+ * `[data-admin-theme="dark"]` redefinition needing to be kept in sync.
+ */
 :root {
-    --admin-bg: #ffffff;
-    --admin-fg: #0d0d0d;
-    --admin-muted: #5a5a5a;
-    --admin-border: #e6e6e6;
-    --admin-elevated: #fafafa;
-    --admin-overlay: rgba(0, 0, 0, 0.45);
+    --admin-bg: var(--ant-color-bg-container, #ffffff);
+    --admin-fg: var(--ant-color-text, #0d0d0d);
+    --admin-muted: var(--ant-color-text-secondary, #5a5a5a);
+    --admin-border: var(--ant-color-border, #e6e6e6);
+    --admin-elevated: var(--ant-color-bg-elevated, #fafafa);
+    --admin-overlay: var(--ant-color-bg-mask, rgba(0, 0, 0, 0.45));
 }
 
 [data-admin-theme="dark"] {
-    --admin-bg: #1a1a1a;
-    --admin-fg: #f5f5f5;
-    --admin-muted: #a0a0a0;
-    --admin-border: #333333;
-    --admin-elevated: #232323;
-    --admin-overlay: rgba(0, 0, 0, 0.65);
+    /* AntD's darkAlgorithm already rewrites `--ant-color-*` to dark
+       values when cssVar:true is enabled, so the :root mapping above
+       picks up dark colors automatically. The fallbacks below only
+       matter for the FOUC window before AntD's runtime style injection
+       fires. */
+    --admin-bg: var(--ant-color-bg-container, #1a1a1a);
+    --admin-fg: var(--ant-color-text, #f5f5f5);
+    --admin-muted: var(--ant-color-text-secondary, #a0a0a0);
+    --admin-border: var(--ant-color-border, #333333);
+    --admin-elevated: var(--ant-color-bg-elevated, #232323);
+    --admin-overlay: var(--ant-color-bg-mask, rgba(0, 0, 0, 0.65));
 
     color-scheme: dark;
 
-    /* Top-top admin nav (UserStatusBar.app-login-wrapper) — visible on
-       every admin route. */
-    .app-login-wrapper {
-        background: var(--admin-elevated) !important;
-        color: var(--admin-fg);
-        border-bottom: 1px solid var(--admin-border);
-    }
-    .app-login-wrapper p,
-    .app-login-wrapper .container p {
-        color: var(--admin-fg);
-    }
+    /* Top-top admin nav (`.app-login-wrapper`) is NOT re-themed here:
+       `AppLoginWrapper.scss` consumes the `--admin-*` tokens directly,
+       and those tokens flip to dark values via the `[data-admin-theme="dark"]`
+       block above. One palette, no parallel override — see the
+       admin-dark-mode-audit spec. Only the link buttons inside it need a
+       nudge since AntD's `.ant-btn-link` colour is owned by the
+       ConfigProvider, not the SCSS token. */
     .app-login-wrapper .ant-btn-link {
         color: var(--admin-fg);
     }

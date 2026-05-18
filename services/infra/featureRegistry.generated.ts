@@ -6,25 +6,35 @@ import type {FeatureManifest} from './featureManifest';
 import {analyticsFeature} from '../features/Analytics/feature.manifest';
 import {assetsFeature} from '../features/Assets/feature.manifest';
 import {auditFeature} from '../features/Audit/feature.manifest';
+import {authFeature} from '../features/Auth/feature.manifest';
+import {backupFeature} from '../features/Backup/feature.manifest';
 import {bundleFeature} from '../features/Bundle/feature.manifest';
 import {cartFeature} from '../features/Cart/feature.manifest';
+import {checkoutFeature} from '../features/Checkout/feature.manifest';
+import {customerFeature} from '../features/Customer/feature.manifest';
 import {customerAuthFeature} from '../features/CustomerAuth/feature.manifest';
 import {diagnosticsFeature} from '../features/Diagnostics/feature.manifest';
 import {featureFlagsFeature} from '../features/FeatureFlags/feature.manifest';
 import {footerFeature} from '../features/Footer/feature.manifest';
 import {inventoryFeature} from '../features/Inventory/feature.manifest';
+import {invoicingFeature} from '../features/Invoicing/feature.manifest';
 import {languagesFeature} from '../features/Languages/feature.manifest';
+import {marketingFeature} from '../features/Marketing/feature.manifest';
 import {mcpFeature} from '../features/Mcp/feature.manifest';
 import {navigationFeature} from '../features/Navigation/feature.manifest';
+import {notificationsFeature} from '../features/Notifications/feature.manifest';
 import {observabilityFeature} from '../features/Observability/feature.manifest';
 import {onboardingFeature} from '../features/Onboarding/feature.manifest';
 import {ordersFeature} from '../features/Orders/feature.manifest';
+import {pagesFeature} from '../features/Pages/feature.manifest';
 import {permissionsFeature} from '../features/Permissions/feature.manifest';
 import {platformFeature} from '../features/Platform/feature.manifest';
 import {postsFeature} from '../features/Posts/feature.manifest';
 import {presenceFeature} from '../features/Presence/feature.manifest';
+import {productTemplatesFeature} from '../features/ProductTemplates/feature.manifest';
 import {productsFeature} from '../features/Products/feature.manifest';
 import {publishingFeature} from '../features/Publishing/feature.manifest';
+import {releasesFeature} from '../features/Releases/feature.manifest';
 import {seoFeature} from '../features/Seo/feature.manifest';
 import {serverRestartFeature} from '../features/ServerRestart/feature.manifest';
 import {themesFeature} from '../features/Themes/feature.manifest';
@@ -34,25 +44,35 @@ export const featureRegistry: readonly FeatureManifest[] = [
     analyticsFeature,
     assetsFeature,
     auditFeature,
+    authFeature,
+    backupFeature,
     bundleFeature,
     cartFeature,
+    checkoutFeature,
+    customerFeature,
     customerAuthFeature,
     diagnosticsFeature,
     featureFlagsFeature,
     footerFeature,
     inventoryFeature,
+    invoicingFeature,
     languagesFeature,
+    marketingFeature,
     mcpFeature,
     navigationFeature,
+    notificationsFeature,
     observabilityFeature,
     onboardingFeature,
     ordersFeature,
+    pagesFeature,
     permissionsFeature,
     platformFeature,
     postsFeature,
     presenceFeature,
+    productTemplatesFeature,
     productsFeature,
     publishingFeature,
+    releasesFeature,
     seoFeature,
     serverRestartFeature,
     themesFeature,

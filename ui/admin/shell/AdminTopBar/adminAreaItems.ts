@@ -32,54 +32,177 @@ export const isInArea = (view: AdminView, area: string) =>
     view === area || view.startsWith(area + '/');
 
 /**
+ * Parent-bucket override map.
+ *
+ * The new 5-bucket rails (Build / Content / Settings / Analytics / System)
+ * include items that still point at LEGACY URLs (e.g. Publishing at
+ * `/admin/release/publishing`, Theme at `/admin/client-config/themes`).
+ * Without this map, opening one of those links from the parent bucket
+ * makes `isInArea()` resolve the area as the legacy prefix
+ * (`release`, `client-config`) — the rail swaps mid-navigation.
+ *
+ * This map pins each cross-area item to its parent bucket so the rail
+ * stays put. Derived from the new-bucket rail entries themselves — keep
+ * in sync with `buildAreaItems()` below.
+ *
+ * Keys are view literals (path with leading `/admin/` stripped).
+ */
+const NEW_BUCKETS = ['build', 'content', 'settings', 'analytics', 'system'] as const;
+export const PARENT_BUCKET_OVERRIDES: Record<string, string> = {
+    // Content bucket — cross-area links to legacy URLs.
+    'release/publishing': 'content',
+    'system/inquiries': 'content',
+    // Settings bucket — cross-area links to legacy URLs.
+    'client-config/themes': 'settings',
+    'languages': 'settings',
+    'seo': 'settings',
+    'system/email': 'settings',
+    'system/compliance': 'settings',
+    'system/redirects': 'settings',
+    'system/permissions': 'settings',
+    // Analytics bucket — cross-area links.
+    'release/audit': 'analytics',
+    'system/analytics-filters': 'analytics',
+    // System bucket — cross-area links to legacy URLs.
+    'release/bundle': 'system',
+};
+
+/**
+ * Resolve which bucket the active view belongs to. Consults the
+ * cross-area override map first (so e.g. `release/publishing` stays in
+ * `content` instead of swapping to the legacy `release` rail), then falls
+ * back to prefix matching against the bucket list passed in.
+ *
+ * Returns `null` when no bucket matches — caller renders bare (no rail).
+ */
+export const resolveActiveArea = (view: AdminView, buckets: readonly string[]): string | null => {
+    const override = PARENT_BUCKET_OVERRIDES[view];
+    if (override && buckets.includes(override)) return override;
+    // Prefer new buckets over legacy ones — guarantees a cross-area link
+    // still maps to its new home even when no explicit override exists.
+    for (const area of NEW_BUCKETS) {
+        if (buckets.includes(area) && isInArea(view, area)) return area;
+    }
+    for (const area of buckets) {
+        if (isInArea(view, area)) return area;
+    }
+    return null;
+};
+
+/**
  * Per-area sub-page rails. Each entry is the URL list rendered as the
  * left-hand `<AreaNav/>` on the area's pages. Item order is the visible
  * order; `adminOnly` items disappear for editor/viewer sessions.
+ *
+ * admin-information-architecture re-pivot (2026-05-16, same day as the
+ * first ship): the 6-bucket Site/Content/Commerce/People/Analytics/System
+ * taxonomy collapses to 5 task-driven buckets: Build / Content / Settings
+ * / Analytics / System. Settings absorbs every configuration surface
+ * hierarchically (chrome / theme / seo / languages / features/* /
+ * access / account).
+ *
+ * Only the demonstrator panes whose loaders + App Router directories
+ * actually moved point at the NEW URLs. Other panes in each bucket still
+ * link to their LEGACY URLs (the 301 shim plus the per-area sweep
+ * follow-ups will move them).
+ *
+ * Legacy rails (build / client-config / seo / release / site / commerce
+ * / people) are kept so an operator landing on a still-legacy URL still
+ * sees the right rail; they retire as each per-area sweep lands.
  */
 export const buildAreaItems = (
     tAdmin: TFunction<"translation", undefined>,
 ): Record<string, AreaNavItem[]> => ({
+    // ── New top-level buckets (5) ────────────────────────────────────
+    // Build — single page, the AdminApp page editor. No sub-rail items
+    // beyond the editor itself; modules-preview is a dev tool under System.
     build: [
-        {path: '/admin/build', label: tAdmin('Pages'), icon: React.createElement(LayoutOutlined), testidSuffix: 'pages'},
-        {path: '/admin/build/modules-preview', label: tAdmin('Style matrix'), icon: React.createElement(AppstoreOutlined), testidSuffix: 'modules-preview'},
+        {path: '/admin/build', label: tAdmin('Pages'), icon: React.createElement(LayoutOutlined), testidSuffix: 'pages', description: tAdmin('rail.build.pages.description')},
     ],
+    // Content — author the content the site shows. Demonstrator
+    // SystemPages + Invoices on new URLs; others still legacy.
+    content: [
+        {path: '/admin/content/system-pages', label: tAdmin('System pages'), icon: React.createElement(FileTextOutlined), testidSuffix: 'system-pages', adminOnly: true, description: tAdmin('rail.content.systemPages.description')},
+        {path: '/admin/content/posts', label: tAdmin('Posts'), icon: React.createElement(FileTextOutlined), testidSuffix: 'posts', description: tAdmin('rail.content.posts.description')},
+        {path: '/admin/content/products', label: tAdmin('Products'), icon: React.createElement(AppstoreOutlined), testidSuffix: 'products', description: tAdmin('rail.content.products.description')},
+        {path: '/admin/content/inventory', label: tAdmin('Inventory'), icon: React.createElement(CloudUploadOutlined), testidSuffix: 'inventory', adminOnly: true, description: tAdmin('rail.content.inventory.description')},
+        {path: '/admin/content/orders', label: tAdmin('Orders'), icon: React.createElement(AppstoreOutlined), testidSuffix: 'orders', description: tAdmin('rail.content.orders.description')},
+        {path: '/admin/content/invoices', label: tAdmin('Invoices'), icon: React.createElement(FileTextOutlined), testidSuffix: 'invoices', description: tAdmin('rail.content.invoices.description')},
+        {path: '/admin/system/inquiries', label: tAdmin('Inquiries'), icon: React.createElement(MailOutlined), testidSuffix: 'inquiries', description: tAdmin('rail.content.inquiries.description')},
+        {path: '/admin/content/translations', label: tAdmin('Translations'), icon: React.createElement(GlobalOutlined), testidSuffix: 'translations', description: tAdmin('rail.content.translations.description')},
+        {path: '/admin/release/publishing', label: tAdmin('Publishing'), icon: React.createElement(CloudUploadOutlined), testidSuffix: 'publishing', adminOnly: true, description: tAdmin('rail.content.publishing.description')},
+    ],
+    // Settings — hierarchical configuration surface. Demonstrator
+    // Footer at `/admin/settings/chrome/footer` + Users at
+    // `/admin/settings/access/users`; everything else still legacy.
+    settings: [
+        {path: '/admin/settings/chrome/footer', label: tAdmin('Chrome'), icon: React.createElement(LayoutOutlined), testidSuffix: 'chrome', description: tAdmin('rail.settings.chrome.description')},
+        {path: '/admin/client-config/themes', label: tAdmin('Theme'), icon: React.createElement(BgColorsOutlined), testidSuffix: 'theme', description: tAdmin('rail.settings.theme.description')},
+        {path: '/admin/languages', label: tAdmin('Languages'), icon: React.createElement(GlobalOutlined), testidSuffix: 'languages', description: tAdmin('rail.settings.languages.description')},
+        {path: '/admin/seo', label: tAdmin('SEO defaults'), icon: React.createElement(SearchOutlined), testidSuffix: 'seo', description: tAdmin('rail.settings.seo.description')},
+        {path: '/admin/system/email', label: tAdmin('Email'), icon: React.createElement(MailOutlined), testidSuffix: 'email', adminOnly: true, description: tAdmin('rail.settings.email.description')},
+        {path: '/admin/system/compliance', label: tAdmin('Compliance'), icon: React.createElement(InfoCircleOutlined), testidSuffix: 'compliance', adminOnly: true, description: tAdmin('rail.settings.compliance.description')},
+        {path: '/admin/system/redirects', label: tAdmin('Redirects'), icon: React.createElement(GlobalOutlined), testidSuffix: 'redirects', adminOnly: true, description: tAdmin('rail.settings.redirects.description')},
+        {path: '/admin/settings/access/users', label: tAdmin('Users'), icon: React.createElement(UserOutlined), testidSuffix: 'users', adminOnly: true, description: tAdmin('rail.settings.users.description')},
+        {path: '/admin/system/permissions', label: tAdmin('Permissions'), icon: React.createElement(UserOutlined), testidSuffix: 'permissions', adminOnly: true, description: tAdmin('rail.settings.permissions.description')},
+    ],
+    // Analytics rail — Analytics dashboard (the AnalyticsPanel
+    // demonstrator) lives at `/admin/analytics`; others still legacy.
+    analytics: [
+        {path: '/admin/analytics', label: tAdmin('Overview'), icon: React.createElement(AuditOutlined), testidSuffix: 'overview', adminOnly: true, description: tAdmin('rail.analytics.overview.description')},
+        {path: '/admin/release/audit', label: tAdmin('Audit log'), icon: React.createElement(AuditOutlined), testidSuffix: 'audit-log', adminOnly: true, description: tAdmin('rail.analytics.auditLog.description')},
+        {path: '/admin/system/analytics-filters', label: tAdmin('Filters'), icon: React.createElement(SettingOutlined), testidSuffix: 'filters', adminOnly: true, description: tAdmin('rail.analytics.filters.description')},
+    ],
+    // System rail — power-user / dev tools. Demonstrator Diagnostics
+    // on its new URL; others still legacy. (Surfaces as "Advanced" in
+    // the top bar — see AdminAreaButtons.tsx for the label-only rename.)
+    system: [
+        {path: '/admin/system/diagnostics', label: tAdmin('Diagnostics'), icon: React.createElement(InfoCircleOutlined), testidSuffix: 'diagnostics', adminOnly: true, description: tAdmin('rail.system.diagnostics.description')},
+        {path: '/admin/system/mcp', label: tAdmin('MCP'), icon: React.createElement(AuditOutlined), testidSuffix: 'mcp', adminOnly: true, description: tAdmin('rail.system.mcp.description')},
+        {path: '/admin/system/features', label: tAdmin('Feature flags'), icon: React.createElement(SettingOutlined), testidSuffix: 'features', adminOnly: true, description: tAdmin('rail.system.features.description')},
+        {path: '/admin/system/agent', label: tAdmin('AI Agent'), icon: React.createElement(ThunderboltOutlined), testidSuffix: 'agent', adminOnly: true, description: tAdmin('rail.system.agent.description')},
+        {path: '/admin/system/errors', label: tAdmin('Errors'), icon: React.createElement(AuditOutlined), testidSuffix: 'errors', adminOnly: true, description: tAdmin('rail.system.errors.description')},
+        {path: '/admin/release/bundle', label: tAdmin('Bundle'), icon: React.createElement(DownloadOutlined), testidSuffix: 'bundle', adminOnly: true, description: tAdmin('rail.system.bundle.description')},
+    ],
+
+    // ── Legacy rails (kept for 301-shim period) ──────────────────────
+    // An operator landing on a still-legacy URL through an old bookmark
+    // sees its rail. After each bucket's sweep lands and its old URLs
+    // 301 to the new homes, the corresponding legacy rail entry is
+    // dropped here.
+    //
+    // The first-ship 6-bucket rails (site / commerce / people) are
+    // kept too — anyone landing via a yesterday-shipped 6-bucket URL
+    // (now also 301-redirected) lands cleanly while the shim is live.
     'client-config': [
         {path: '/admin/client-config/themes', label: tAdmin('Theme'), icon: React.createElement(BgColorsOutlined), testidSuffix: 'themes'},
         {path: '/admin/client-config/logo', label: tAdmin('Logo'), icon: React.createElement(PictureOutlined), testidSuffix: 'logo'},
         {path: '/admin/client-config/site-layout', label: tAdmin('Layout'), icon: React.createElement(AppstoreOutlined), testidSuffix: 'layout'},
     ],
-    content: [
-        {path: '/admin/content/translations', label: tAdmin('Translations'), icon: React.createElement(GlobalOutlined), testidSuffix: 'translations'},
-        {path: '/admin/content/posts', label: tAdmin('Posts'), icon: React.createElement(FileTextOutlined), testidSuffix: 'posts'},
-        {path: '/admin/content/footer', label: tAdmin('Footer'), icon: React.createElement(FileTextOutlined), testidSuffix: 'footer'},
-        {path: '/admin/content/products', label: tAdmin('Products'), icon: React.createElement(AppstoreOutlined), testidSuffix: 'products'},
-        {path: '/admin/content/inventory', label: tAdmin('Inventory'), icon: React.createElement(CloudUploadOutlined), testidSuffix: 'inventory', adminOnly: true},
-        {path: '/admin/content/orders', label: tAdmin('Orders'), icon: React.createElement(AppstoreOutlined), testidSuffix: 'orders'},
-    ],
     seo: [
         {path: '/admin/seo', label: tAdmin('SEO'), icon: React.createElement(SearchOutlined), testidSuffix: 'seo'},
-        {path: '/admin/seo/analytics', label: tAdmin('Analytics'), icon: React.createElement(AuditOutlined), testidSuffix: 'analytics', adminOnly: true},
+        {path: '/admin/analytics', label: tAdmin('Analytics'), icon: React.createElement(AuditOutlined), testidSuffix: 'analytics', adminOnly: true},
     ],
     release: [
-        // Bundle (export / import) is the most-used release surface,
-        // surface it first.
         {path: '/admin/release/bundle', label: tAdmin('Bundle'), icon: React.createElement(DownloadOutlined), testidSuffix: 'bundle'},
         {path: '/admin/release/publishing', label: tAdmin('Publishing'), icon: React.createElement(CloudUploadOutlined), testidSuffix: 'publishing'},
         {path: '/admin/release/audit', label: tAdmin('Audit'), icon: React.createElement(AuditOutlined), testidSuffix: 'audit'},
     ],
-    system: [
-        // User-facing operator concerns first — accounts, transactional
-        // mail, customer inquiries — then platform-config, then the
-        // power-user / observability surfaces.
-        {path: '/admin/system/users', label: tAdmin('Users'), icon: React.createElement(UserOutlined), testidSuffix: 'users'},
-        {path: '/admin/system/email', label: tAdmin('Email'), icon: React.createElement(MailOutlined), testidSuffix: 'email', adminOnly: true},
+    // First-ship 6-bucket rails — kept for 2 months while operators
+    // refresh their bookmarks past the same-day re-pivot.
+    site: [
+        {path: '/admin/settings/chrome/footer', label: tAdmin('Footer'), icon: React.createElement(FileTextOutlined), testidSuffix: 'footer'},
+        {path: '/admin/client-config/themes', label: tAdmin('Theme'), icon: React.createElement(BgColorsOutlined), testidSuffix: 'themes'},
+        {path: '/admin/client-config/logo', label: tAdmin('Logo'), icon: React.createElement(PictureOutlined), testidSuffix: 'logo'},
+        {path: '/admin/seo', label: tAdmin('SEO defaults'), icon: React.createElement(SearchOutlined), testidSuffix: 'seo'},
+    ],
+    commerce: [
+        {path: '/admin/content/invoices', label: tAdmin('Invoices'), icon: React.createElement(FileTextOutlined), testidSuffix: 'invoices'},
+        {path: '/admin/content/products', label: tAdmin('Products'), icon: React.createElement(AppstoreOutlined), testidSuffix: 'products'},
+        {path: '/admin/content/orders', label: tAdmin('Orders'), icon: React.createElement(AppstoreOutlined), testidSuffix: 'orders'},
+    ],
+    people: [
+        {path: '/admin/settings/access/users', label: tAdmin('Users'), icon: React.createElement(UserOutlined), testidSuffix: 'users'},
         {path: '/admin/system/inquiries', label: tAdmin('Inquiries'), icon: React.createElement(MailOutlined), testidSuffix: 'inquiries'},
-        {path: '/admin/system/features', label: tAdmin('Feature flags'), icon: React.createElement(SettingOutlined), testidSuffix: 'features', adminOnly: true},
-        // Power-user / observability — the rest below.
-        {path: '/admin/system/mcp', label: tAdmin('MCP'), icon: React.createElement(AuditOutlined), testidSuffix: 'mcp'},
-        {path: '/admin/system/analytics-filters', label: tAdmin('Analytics filters'), icon: React.createElement(SettingOutlined), testidSuffix: 'analytics-filters', adminOnly: true},
-        {path: '/admin/system/agent', label: tAdmin('AI Agent'), icon: React.createElement(ThunderboltOutlined), testidSuffix: 'agent', adminOnly: true},
-        {path: '/admin/system/errors', label: tAdmin('Errors'), icon: React.createElement(AuditOutlined), testidSuffix: 'errors', adminOnly: true},
-        {path: '/admin/system/info', label: tAdmin('Diagnostics'), icon: React.createElement(InfoCircleOutlined), testidSuffix: 'info', adminOnly: true},
     ],
 });
