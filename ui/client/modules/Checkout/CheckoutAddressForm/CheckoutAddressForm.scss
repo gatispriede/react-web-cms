@@ -3,3 +3,23 @@
     input { padding: 0.5rem; border: 1px solid var(--theme-colorBorder, #ddd); border-radius: 4px; }
     button { background: var(--theme-colorPrimary, #1677ff); color: #fff; padding: 0.5rem 1rem; border: 0; border-radius: 4px; cursor: pointer; }
 }
+
+.checkout-address-form.stacked {
+    gap: 0.75rem;
+    input { padding: 0.75rem; font-size: 1rem; }
+    button { padding: 0.75rem 1rem; font-size: 1rem; }
+}
+
+.checkout-address-form.two-col {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;
+    button { grid-column: 1 / -1; justify-self: end; }
+    @media (max-width: 600px) { grid-template-columns: 1fr; }
+}
+
+.checkout-address-form.card {
+    background: var(--bg, var(--theme-colorBgContainer, #fff));
+    border: 1px solid var(--rule, var(--theme-colorBorder, #e5e5e5));
+    border-radius: 10px;
+    padding: 1.25rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}

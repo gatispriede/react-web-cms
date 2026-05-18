@@ -3,3 +3,30 @@
     h3 { margin: 0 0 0.5rem; font-size: 1rem; font-weight: 600; }
     label { padding: 0.5rem; border: 1px solid var(--theme-colorBorder, #eee); border-radius: 4px; cursor: pointer; }
 }
+
+.checkout-shipping-method.cards {
+    gap: 0.75rem;
+    label {
+        padding: 1rem;
+        border: 1px solid var(--rule, var(--theme-colorBorder, #e5e5e5));
+        border-radius: 8px;
+        background: var(--bg, var(--theme-colorBgContainer, #fff));
+        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        transition: border-color 0.15s ease;
+    }
+    label:hover { border-color: var(--accent, var(--theme-colorPrimary, #1677ff)); }
+}
+
+.checkout-shipping-method.radio {
+    label {
+        border: 0; padding: 0.35rem 0;
+        display: flex; align-items: center; gap: 0.5rem;
+    }
+    input[type='radio'] { accent-color: var(--accent, var(--theme-colorPrimary, #1677ff)); }
+}
+
+.checkout-shipping-method.minimal {
+    gap: 0.25rem;
+    h3 { font-weight: 500; font-size: 0.85rem; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.05em; }
+    label { border: 0; padding: 0.25rem 0; }
+}

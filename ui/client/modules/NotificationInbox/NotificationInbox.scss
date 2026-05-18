@@ -175,3 +175,43 @@
         &__row-actions { grid-area: actions; flex-direction: row; flex-wrap: wrap; }
     }
 }
+
+/* Variant: Compact — tight rows. */
+.notification-inbox.compact {
+    gap: 0.25rem;
+    .notification-inbox__row { padding: 0.375rem 0.5rem; min-height: 32px; gap: 0.5rem; }
+    .notification-inbox__row-title { font-size: 0.8125rem; }
+    .notification-inbox__row-body { font-size: 0.75rem; }
+    .notification-inbox__row-date { font-size: 0.6875rem; }
+}
+
+/* Variant: Cards — each row as a card with spacing. */
+.notification-inbox.cards {
+    gap: 0.75rem;
+    .notification-inbox__rows { gap: 0.75rem; display: flex; flex-direction: column; }
+    .notification-inbox__row {
+        border: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+        border-radius: var(--theme-borderRadius, 10px);
+        background: var(--theme-colorBgContainer, #fff);
+        box-shadow: 0 2px 8px color-mix(in srgb, currentColor 5%, transparent);
+        padding: 1rem 1.25rem;
+        &:hover { transform: translateY(-1px); box-shadow: 0 6px 18px color-mix(in srgb, currentColor 10%, transparent); }
+    }
+}
+
+/* Variant: Banner — full-width rows with accent stripe. */
+.notification-inbox.banner {
+    gap: 0.5rem;
+    .notification-inbox__row {
+        width: 100%;
+        padding: 1rem 1.25rem;
+        border: 0;
+        border-left: 4px solid var(--accent, var(--theme-colorPrimary, #1677ff));
+        background: color-mix(in srgb, var(--accent, var(--theme-colorPrimary, #1677ff)) 6%, transparent);
+        border-radius: 0;
+    }
+    .notification-inbox__row[data-unread="false"] {
+        border-left-color: color-mix(in srgb, currentColor 20%, transparent);
+        background: transparent;
+    }
+}

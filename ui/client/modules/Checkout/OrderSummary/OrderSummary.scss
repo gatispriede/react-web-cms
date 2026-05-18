@@ -2,3 +2,38 @@
     h2 { margin: 0 0 1rem; font-size: 1.25rem; }
     &__total { font-weight: 700; margin-top: 0.75rem; }
 }
+
+.order-summary.card {
+    background: var(--theme-colorBgContainer, #fff);
+    border: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+    box-shadow: 0 6px 18px color-mix(in srgb, currentColor 8%, transparent);
+    border-radius: var(--theme-borderRadius, 10px);
+    padding: 1.75rem;
+}
+
+.order-summary.receipt {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background: repeating-linear-gradient(
+        to bottom,
+        var(--theme-colorBgContainer, #fff) 0,
+        var(--theme-colorBgContainer, #fff) 1.4rem,
+        color-mix(in srgb, currentColor 4%, transparent) 1.4rem,
+        color-mix(in srgb, currentColor 4%, transparent) 1.45rem
+    );
+    border: 1px dashed color-mix(in srgb, currentColor 25%, transparent);
+    border-radius: 0;
+    letter-spacing: 0.02em;
+    h2 { text-align: center; text-transform: uppercase; letter-spacing: 0.15em; font-size: 1rem; }
+    .order-summary__items li,
+    .order-summary__totals > div { font-variant-numeric: tabular-nums; }
+}
+
+.order-summary.minimal {
+    padding: 0.5rem 0;
+    border: 0;
+    border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+    border-radius: 0;
+    background: transparent;
+    h2 { font-size: 0.9375rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-2, color-mix(in srgb, currentColor 65%, transparent)); }
+}

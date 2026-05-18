@@ -70,3 +70,10 @@ export interface OrderDetailModuleProps {
     /** Stable label override for the invoice link (default: "Download invoice (PDF)"). */
     invoiceDownloadLabel?: string;
 }
+
+export enum EOrderDetailModuleStyle {
+    Default = 'default',
+    Receipt = 'receipt',
+    Card = 'card',
+    Stacked = 'stacked',
+}

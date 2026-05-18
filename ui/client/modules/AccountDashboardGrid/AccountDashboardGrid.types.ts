@@ -27,6 +27,14 @@ export interface AccountDashboardGridProps {
     ariaLabel?: string;
 }
 
+export enum EAccountDashboardGridStyle {
+    Default = 'default',
+    Cards = 'cards',
+    Tiles = 'tiles',
+    List = 'list',
+    Inline = 'inline',
+}
+
 /** Default-shape card spec — caller passes counts + hrefs. */
 export const DEFAULT_CARD_DEFS: Record<AccountDashboardCardKey, {label: string; href: string}> = {
     orders: {label: 'Orders', href: '/account/orders'},

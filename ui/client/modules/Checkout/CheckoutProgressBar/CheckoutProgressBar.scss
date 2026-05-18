@@ -5,3 +5,38 @@
     &__step.is-active { font-weight: 600; }
     &__num { width: 1.5rem; height: 1.5rem; display: inline-flex; align-items: center; justify-content: center; border: 1px solid currentColor; border-radius: 50%; }
 }
+
+.checkout-progress-bar.stepper {
+    gap: 1.5rem;
+    .checkout-progress-bar__num {
+        width: 2rem; height: 2rem;
+        background: var(--bg, var(--theme-colorBgContainer, #fff));
+        border: 2px solid var(--rule, var(--theme-colorBorder, #ddd));
+        font-weight: 600;
+    }
+    .checkout-progress-bar__step.is-active .checkout-progress-bar__num,
+    .checkout-progress-bar__step.is-done .checkout-progress-bar__num {
+        background: var(--accent, var(--theme-colorPrimary, #1677ff));
+        border-color: var(--accent, var(--theme-colorPrimary, #1677ff));
+        color: #fff;
+    }
+}
+
+.checkout-progress-bar.bar {
+    position: relative; gap: 0; padding: 0.5rem 0;
+    &::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 4px; background: var(--rule, var(--theme-colorBorder, #eee)); border-radius: 2px; }
+    .checkout-progress-bar__step { flex: 1; position: relative; z-index: 1; justify-content: center; background: var(--bg, var(--theme-colorBgContainer, #fff)); padding: 0 0.5rem; }
+    .checkout-progress-bar__num { display: none; }
+    .checkout-progress-bar__step.is-done,
+    .checkout-progress-bar__step.is-active { color: var(--accent, var(--theme-colorPrimary, #1677ff)); }
+}
+
+.checkout-progress-bar.breadcrumb {
+    gap: 0.5rem;
+    .checkout-progress-bar__num { display: none; }
+    .checkout-progress-bar__step { opacity: 0.6; }
+    .checkout-progress-bar__step + .checkout-progress-bar__step::before {
+        content: '/'; margin-right: 0.5rem; opacity: 0.4;
+    }
+    .checkout-progress-bar__step.is-active { opacity: 1; font-weight: 600; color: var(--accent, var(--theme-colorPrimary, inherit)); }
+}

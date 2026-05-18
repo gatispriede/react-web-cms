@@ -3,3 +3,34 @@
     &__lines { margin: 0 0 0.5rem; padding: 0; list-style: none; }
     &__total { font-weight: 700; }
 }
+
+.checkout-cart-summary.mini {
+    padding: 0.5rem 0.75rem; border-radius: 4px;
+    h3 { font-size: 0.85rem; }
+    .checkout-cart-summary__lines { font-size: 0.8rem; }
+    .checkout-cart-summary__total { font-size: 0.9rem; }
+}
+
+.checkout-cart-summary.detailed {
+    padding: 1.25rem;
+    .checkout-cart-summary__lines { display: flex; flex-direction: column; gap: 0.5rem; }
+    .checkout-cart-summary__line {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        gap: 0.5rem;
+        padding: 0.5rem 0;
+        border-bottom: 1px dashed var(--rule, var(--theme-colorBorder, #eee));
+    }
+    .checkout-cart-summary__total {
+        margin-top: 0.75rem; padding-top: 0.75rem;
+        border-top: 2px solid var(--ink, var(--theme-colorTextBase, currentColor));
+    }
+}
+
+.checkout-cart-summary.card {
+    background: var(--bg, var(--theme-colorBgContainer, #fff));
+    border: 1px solid var(--rule, var(--theme-colorBorder, #e5e5e5));
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    padding: 1.25rem;
+}

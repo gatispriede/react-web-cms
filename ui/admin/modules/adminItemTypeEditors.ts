@@ -81,6 +81,23 @@ import {ETrustBadgesStyle} from '@client/modules/Trust/TrustBadges';
 import {EMoneyBackGuaranteeStyle} from '@client/modules/Trust/MoneyBackGuarantee';
 import {EReferAFriendCtaStyle} from '@client/modules/Marketing/ReferAFriendCta';
 import {ESocialShareButtonsStyle} from '@client/modules/Marketing/SocialShareButtons';
+import {ECartLineItemsStyle} from '@client/modules/Checkout/CartLineItems';
+import {ECartSummaryStyle} from '@client/modules/Checkout/CartSummary';
+import {ECartActionsStyle} from '@client/modules/Checkout/CartActions';
+import {ECheckoutProgressBarStyle} from '@client/modules/Checkout/CheckoutProgressBar';
+import {ECheckoutAddressFormStyle} from '@client/modules/Checkout/CheckoutAddressForm';
+import {ECheckoutShippingMethodStyle} from '@client/modules/Checkout/CheckoutShippingMethod';
+import {ECheckoutPaymentFormStyle} from '@client/modules/Checkout/CheckoutPaymentForm';
+import {ECheckoutCartSummaryStyle} from '@client/modules/Checkout/CheckoutCartSummary';
+import {EPlaceOrderButtonStyle} from '@client/modules/Checkout/PlaceOrderButton';
+import {EOrderSummaryStyle} from '@client/modules/Checkout/OrderSummary';
+import {EMagicLinkAccountUpgradeStyle} from '@client/modules/Checkout/MagicLinkAccountUpgrade';
+import {EAccountWelcomeStyle} from '@client/modules/Checkout/AccountWelcome';
+import {EOrdersListStyle} from '@client/modules/OrdersList/OrdersList.types';
+import {EOrderDetailModuleStyle} from '@client/modules/OrderDetailModule/OrderDetailModule.types';
+import {EAddressListStyle} from '@client/modules/AddressList/AddressList.types';
+import {ENotificationInboxStyle} from '@client/modules/NotificationInbox/NotificationInbox.types';
+import {EAccountDashboardGridStyle} from '@client/modules/AccountDashboardGrid/AccountDashboardGrid.types';
 import {
     ProductDetailHeroEditor,
     ProductSpecTableEditor,
@@ -476,6 +493,121 @@ const PAGINATION_STYLE_LABELS: Record<string, string> = {
     numbered: 'Numbered',
     minimal: 'Minimal (prev/next)',
 };
+const CART_LINE_ITEMS_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    compact: 'Compact',
+    cards: 'Cards',
+    receipt: 'Receipt (mono)',
+    bordered: 'Bordered',
+};
+const CART_SUMMARY_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    compact: 'Compact',
+    card: 'Card (elevated)',
+    sticky: 'Sticky rail',
+    minimal: 'Minimal',
+};
+const CART_ACTIONS_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    compact: 'Compact',
+    pills: 'Pills',
+    stacked: 'Stacked',
+    floating: 'Floating bar',
+};
+const CHECKOUT_PROGRESS_BAR_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    compact: 'Compact',
+    stepper: 'Stepper (numbered)',
+    bar: 'Bar (continuous)',
+    breadcrumb: 'Breadcrumb',
+};
+const CHECKOUT_ADDRESS_FORM_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    compact: 'Compact',
+    stacked: 'Stacked',
+    'two-col': 'Two-column',
+    card: 'Card (elevated)',
+};
+const CHECKOUT_SHIPPING_METHOD_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    compact: 'Compact',
+    cards: 'Cards',
+    radio: 'Radio list',
+    minimal: 'Minimal',
+};
+const CHECKOUT_PAYMENT_FORM_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    compact: 'Compact',
+    card: 'Card (elevated)',
+    stacked: 'Stacked',
+    boxed: 'Boxed',
+};
+const CHECKOUT_CART_SUMMARY_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    compact: 'Compact',
+    mini: 'Mini',
+    detailed: 'Detailed',
+    card: 'Card (elevated)',
+};
+const PLACE_ORDER_BUTTON_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    compact: 'Compact',
+    wide: 'Wide (full-width)',
+    floating: 'Floating (sticky bottom)',
+    pill: 'Pill',
+};
+const ORDER_SUMMARY_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    compact: 'Compact',
+    card: 'Card (elevated)',
+    receipt: 'Receipt (mono)',
+    minimal: 'Minimal',
+};
+const MAGIC_LINK_ACCOUNT_UPGRADE_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    compact: 'Compact',
+    banner: 'Banner (full width)',
+    card: 'Card (elevated)',
+    stamp: 'Stamp (rotated)',
+};
+const ACCOUNT_WELCOME_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    compact: 'Compact',
+    hero: 'Hero (oversized greeting)',
+    editorial: 'Editorial (serif)',
+    card: 'Card (elevated)',
+};
+const ORDERS_LIST_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    cards: 'Cards (per order)',
+    compact: 'Compact',
+    table: 'Table (dense)',
+};
+const ORDER_DETAIL_MODULE_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    receipt: 'Receipt (mono)',
+    card: 'Card (elevated)',
+    stacked: 'Stacked (rules)',
+};
+const ADDRESS_LIST_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    cards: 'Cards (elevated)',
+    compact: 'Compact',
+    stacked: 'Stacked (rows)',
+};
+const NOTIFICATION_INBOX_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    compact: 'Compact',
+    cards: 'Cards (per row)',
+    banner: 'Banner (full width)',
+};
+const ACCOUNT_DASHBOARD_GRID_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    cards: 'Cards (elevated)',
+    tiles: 'Tiles (square)',
+    list: 'List (rows)',
+    inline: 'Inline (pills)',
+};
 const SOCIAL_LINKS_STYLE_LABELS: Record<string, string> = {
     default: 'Standard',
     large: 'Large',
@@ -529,18 +661,18 @@ export const ADMIN_ITEM_TYPE_EDITORS: readonly AdminItemTypeEntry[] = [
     {key: EItemType.DownloadablePdf,   Editor: DownloadablePdfEditor,   styleEnum: asEnum(EDownloadablePdfStyle), styleLabels: DOWNLOADABLE_PDF_STYLE_LABELS,    defaultContent: '{"label":"Download spec sheet (PDF)"}',                                                                                                                                     labelKey: 'Downloadable PDF',     descriptionKey: 'Auto-renders the product spec sheet as a PDF download link.',                  category: 'cta'},
     {key: EItemType.WarrantyInfo,      Editor: WarrantyInfoEditor,      styleEnum: asEnum({Default: 'default'}),    defaultContent: '{"title":"Warranty"}',                                                                                                                                                      labelKey: 'Warranty info',        descriptionKey: 'Warranty terms — auto-binds to product.attributes.warrantyYears / warrantyTerms.', category: 'content'},
     // Phase 1.D — checkout-as-composable-page (12 locked + 6 composable).
-    {key: EItemType.CartLineItems,            Editor: CartLineItemsEditor,            styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Cart line items',          descriptionKey: 'Locked — live cart contents with qty controls.',                                category: 'content'},
-    {key: EItemType.CartSummary,              Editor: CartSummaryEditor,              styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Cart summary',             descriptionKey: 'Locked — subtotal / VAT / shipping / total.',                                  category: 'content'},
-    {key: EItemType.CartActions,              Editor: CartActionsEditor,              styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Cart actions',             descriptionKey: 'Locked — Clear cart + Proceed to checkout CTAs.',                              category: 'cta'},
-    {key: EItemType.CheckoutProgressBar,      Editor: CheckoutProgressBarEditor,      styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Checkout progress bar',    descriptionKey: 'Locked — address → shipping → payment indicator.',                             category: 'content'},
-    {key: EItemType.CheckoutAddressForm,      Editor: CheckoutAddressFormEditor,      styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Address form',            descriptionKey: 'Locked — captures shipping address + guest email.',                            category: 'content'},
-    {key: EItemType.CheckoutShippingMethod,   Editor: CheckoutShippingMethodEditor,   styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Shipping method',         descriptionKey: 'Locked — picks the carrier + service level.',                                  category: 'content'},
-    {key: EItemType.CheckoutPaymentForm,      Editor: CheckoutPaymentFormEditor,      styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Payment form',           descriptionKey: 'Locked — card capture (PCI-safe iframe).',                                     category: 'content'},
-    {key: EItemType.CheckoutCartSummary,      Editor: CheckoutCartSummaryEditor,      styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Checkout cart summary',  descriptionKey: 'Locked — read-only mini cart on each checkout step.',                          category: 'content'},
-    {key: EItemType.PlaceOrderButton,         Editor: PlaceOrderButtonEditor,         styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Place order button',     descriptionKey: 'Locked — final submit; auth → capture → confirmation.',                        category: 'cta'},
-    {key: EItemType.OrderSummary,             Editor: OrderSummaryEditor,             styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Order summary',          descriptionKey: 'Locked — confirmation / order-by-token main block.',                           category: 'content'},
-    {key: EItemType.MagicLinkAccountUpgrade,  Editor: MagicLinkAccountUpgradeEditor,  styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Magic-link upgrade',     descriptionKey: 'Locked — converts guest order into customer account.',                         category: 'cta'},
-    {key: EItemType.AccountWelcome,           Editor: AccountWelcomeEditor,           styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Account welcome',        descriptionKey: 'Locked — dashboard greeting + quick links.',                                   category: 'hero'},
+    {key: EItemType.CartLineItems,            Editor: CartLineItemsEditor,            styleEnum: asEnum(ECartLineItemsStyle), styleLabels: CART_LINE_ITEMS_STYLE_LABELS, defaultContent: '{}', labelKey: 'Cart line items',          descriptionKey: 'Locked — live cart contents with qty controls.',                                category: 'content'},
+    {key: EItemType.CartSummary,              Editor: CartSummaryEditor,              styleEnum: asEnum(ECartSummaryStyle), styleLabels: CART_SUMMARY_STYLE_LABELS, defaultContent: '{}', labelKey: 'Cart summary',             descriptionKey: 'Locked — subtotal / VAT / shipping / total.',                                  category: 'content'},
+    {key: EItemType.CartActions,              Editor: CartActionsEditor,              styleEnum: asEnum(ECartActionsStyle), styleLabels: CART_ACTIONS_STYLE_LABELS, defaultContent: '{}', labelKey: 'Cart actions',             descriptionKey: 'Locked — Clear cart + Proceed to checkout CTAs.',                              category: 'cta'},
+    {key: EItemType.CheckoutProgressBar,      Editor: CheckoutProgressBarEditor,      styleEnum: asEnum(ECheckoutProgressBarStyle), styleLabels: CHECKOUT_PROGRESS_BAR_STYLE_LABELS, defaultContent: '{}', labelKey: 'Checkout progress bar',    descriptionKey: 'Locked — address → shipping → payment indicator.',                             category: 'content'},
+    {key: EItemType.CheckoutAddressForm,      Editor: CheckoutAddressFormEditor,      styleEnum: asEnum(ECheckoutAddressFormStyle), styleLabels: CHECKOUT_ADDRESS_FORM_STYLE_LABELS, defaultContent: '{}', labelKey: 'Address form',            descriptionKey: 'Locked — captures shipping address + guest email.',                            category: 'content'},
+    {key: EItemType.CheckoutShippingMethod,   Editor: CheckoutShippingMethodEditor,   styleEnum: asEnum(ECheckoutShippingMethodStyle), styleLabels: CHECKOUT_SHIPPING_METHOD_STYLE_LABELS, defaultContent: '{}', labelKey: 'Shipping method',         descriptionKey: 'Locked — picks the carrier + service level.',                                  category: 'content'},
+    {key: EItemType.CheckoutPaymentForm,      Editor: CheckoutPaymentFormEditor,      styleEnum: asEnum(ECheckoutPaymentFormStyle), styleLabels: CHECKOUT_PAYMENT_FORM_STYLE_LABELS, defaultContent: '{}', labelKey: 'Payment form',           descriptionKey: 'Locked — card capture (PCI-safe iframe).',                                     category: 'content'},
+    {key: EItemType.CheckoutCartSummary,      Editor: CheckoutCartSummaryEditor,      styleEnum: asEnum(ECheckoutCartSummaryStyle), styleLabels: CHECKOUT_CART_SUMMARY_STYLE_LABELS, defaultContent: '{}', labelKey: 'Checkout cart summary',  descriptionKey: 'Locked — read-only mini cart on each checkout step.',                          category: 'content'},
+    {key: EItemType.PlaceOrderButton,         Editor: PlaceOrderButtonEditor,         styleEnum: asEnum(EPlaceOrderButtonStyle), styleLabels: PLACE_ORDER_BUTTON_STYLE_LABELS, defaultContent: '{}', labelKey: 'Place order button',     descriptionKey: 'Locked — final submit; auth → capture → confirmation.',                        category: 'cta'},
+    {key: EItemType.OrderSummary,             Editor: OrderSummaryEditor,             styleEnum: asEnum(EOrderSummaryStyle), styleLabels: ORDER_SUMMARY_STYLE_LABELS, defaultContent: '{}', labelKey: 'Order summary',          descriptionKey: 'Locked — confirmation / order-by-token main block.',                           category: 'content'},
+    {key: EItemType.MagicLinkAccountUpgrade,  Editor: MagicLinkAccountUpgradeEditor,  styleEnum: asEnum(EMagicLinkAccountUpgradeStyle), styleLabels: MAGIC_LINK_ACCOUNT_UPGRADE_STYLE_LABELS, defaultContent: '{}', labelKey: 'Magic-link upgrade',     descriptionKey: 'Locked — converts guest order into customer account.',                         category: 'cta'},
+    {key: EItemType.AccountWelcome,           Editor: AccountWelcomeEditor,           styleEnum: asEnum(EAccountWelcomeStyle), styleLabels: ACCOUNT_WELCOME_STYLE_LABELS, defaultContent: '{}', labelKey: 'Account welcome',        descriptionKey: 'Locked — dashboard greeting + quick links.',                                   category: 'hero'},
     {key: EItemType.ShippingCalculator,       Editor: ShippingCalculatorEditor,       styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Shipping calculator',    descriptionKey: 'Composable — estimate shipping cost by postcode.',                             category: 'content'},
     {key: EItemType.DownloadInvoiceButton,    Editor: DownloadInvoiceButtonEditor,    styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Download invoice',       descriptionKey: 'Composable — direct VAT-invoice download link.',                               category: 'cta'},
     {key: EItemType.TrustBadges,              Editor: TrustBadgesEditor,              styleEnum: asEnum(ETrustBadgesStyle), styleLabels: TRUST_BADGES_STYLE_LABELS, defaultContent: '{}', labelKey: 'Trust badges',           descriptionKey: 'Composable — row of payment / security badges.',                               category: 'content'},
@@ -548,11 +680,11 @@ export const ADMIN_ITEM_TYPE_EDITORS: readonly AdminItemTypeEntry[] = [
     {key: EItemType.ReferAFriendCta,          Editor: ReferAFriendCtaEditor,          styleEnum: asEnum(EReferAFriendCtaStyle), styleLabels: REFER_A_FRIEND_CTA_STYLE_LABELS, defaultContent: '{}', labelKey: 'Refer a friend',         descriptionKey: 'Composable — invite block on confirmation.',                                   category: 'cta'},
     {key: EItemType.SocialShareButtons,       Editor: SocialShareButtonsEditor,       styleEnum: asEnum(ESocialShareButtonsStyle), styleLabels: SOCIAL_SHARE_BUTTONS_STYLE_LABELS, defaultContent: '{}', labelKey: 'Social share buttons',   descriptionKey: 'Composable — share-this-order links.',                                         category: 'cta'},
     // all-pages-module-composed — Account batch (smart wrappers; copy-only editors).
-    {key: EItemType.OrdersList,               Editor: OrdersListEditor,               styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Orders list',            descriptionKey: 'Locked — customer order history with status filter chips.',                    category: 'content'},
-    {key: EItemType.OrderDetail,              Editor: OrderDetailEditor,              styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Order detail',           descriptionKey: 'Locked — single order: progress, line items, payment, history.',              category: 'content'},
-    {key: EItemType.AddressList,              Editor: AddressListEditor,              styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Address book',           descriptionKey: 'Locked — saved shipping addresses with add / edit / delete.',                  category: 'content'},
-    {key: EItemType.NotificationInbox,        Editor: NotificationInboxEditor,        styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Notification inbox',      descriptionKey: 'Locked — in-app notifications with mark-read + dismiss.',                      category: 'content'},
-    {key: EItemType.AccountDashboardGrid,     Editor: AccountDashboardGridEditor,     styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Account dashboard',      descriptionKey: 'Locked — /account home entry-points grid (orders / addresses / settings).',   category: 'content'},
+    {key: EItemType.OrdersList,               Editor: OrdersListEditor,               styleEnum: asEnum(EOrdersListStyle), styleLabels: ORDERS_LIST_STYLE_LABELS, defaultContent: '{}', labelKey: 'Orders list',            descriptionKey: 'Locked — customer order history with status filter chips.',                    category: 'content'},
+    {key: EItemType.OrderDetail,              Editor: OrderDetailEditor,              styleEnum: asEnum(EOrderDetailModuleStyle), styleLabels: ORDER_DETAIL_MODULE_STYLE_LABELS, defaultContent: '{}', labelKey: 'Order detail',           descriptionKey: 'Locked — single order: progress, line items, payment, history.',              category: 'content'},
+    {key: EItemType.AddressList,              Editor: AddressListEditor,              styleEnum: asEnum(EAddressListStyle), styleLabels: ADDRESS_LIST_STYLE_LABELS, defaultContent: '{}', labelKey: 'Address book',           descriptionKey: 'Locked — saved shipping addresses with add / edit / delete.',                  category: 'content'},
+    {key: EItemType.NotificationInbox,        Editor: NotificationInboxEditor,        styleEnum: asEnum(ENotificationInboxStyle), styleLabels: NOTIFICATION_INBOX_STYLE_LABELS, defaultContent: '{}', labelKey: 'Notification inbox',      descriptionKey: 'Locked — in-app notifications with mark-read + dismiss.',                      category: 'content'},
+    {key: EItemType.AccountDashboardGrid,     Editor: AccountDashboardGridEditor,     styleEnum: asEnum(EAccountDashboardGridStyle), styleLabels: ACCOUNT_DASHBOARD_GRID_STYLE_LABELS, defaultContent: '{}', labelKey: 'Account dashboard',      descriptionKey: 'Locked — /account home entry-points grid (orders / addresses / settings).',   category: 'content'},
     {key: EItemType.AccountProfileForm,       Editor: AccountProfileFormEditor,       styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Account profile + password', descriptionKey: 'Locked — personal-details + password change form pair for /account/profile.', category: 'content'},
     {key: EItemType.AccountSettingsLayout,    Editor: AccountSettingsLayoutEditor,    styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Account settings layout', descriptionKey: 'Locked — tabbed customer settings (profile / security / notifications / privacy / language) for /account/settings.', category: 'content'},
     // all-pages-module-composed — Auth batch (smart wrappers; copy-only editors).

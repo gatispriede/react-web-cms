@@ -28,3 +28,10 @@ export interface OrdersListProps {
     /** Empty-state spec when orders.length === 0. */
     emptyState?: OrdersListEmptyState;
 }
+
+export enum EOrdersListStyle {
+    Default = 'default',
+    Cards = 'cards',
+    Compact = 'compact',
+    Table = 'table',
+}

@@ -8,4 +8,7 @@ export interface ICartLineItems {
 export enum ECartLineItemsStyle {
     Default = 'default',
     Compact = 'compact',
+    Cards = 'cards',
+    Receipt = 'receipt',
+    Bordered = 'bordered',
 }

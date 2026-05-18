@@ -140,3 +140,42 @@
         }
     }
 }
+
+/* Variant: Receipt — mono, dashed border, tabular. */
+.order-detail-module.receipt {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    border: 1px dashed color-mix(in srgb, currentColor 30%, transparent);
+    border-radius: 0;
+    background: var(--theme-colorBgContainer, #fff);
+    letter-spacing: 0.02em;
+    .order-detail-module__title,
+    .order-detail-module__head h2 {
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        font-size: 1rem;
+    }
+    .order-detail-module__line,
+    .order-detail-module__payment dd { font-variant-numeric: tabular-nums; }
+}
+
+/* Variant: Card — elevated card. */
+.order-detail-module.card {
+    border: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+    border-radius: var(--theme-borderRadius, 12px);
+    box-shadow: 0 8px 24px color-mix(in srgb, currentColor 10%, transparent);
+    padding: 1.75rem;
+}
+
+/* Variant: Stacked — sections separated by rules, no card. */
+.order-detail-module.stacked {
+    padding: 0;
+    background: transparent;
+    gap: 0;
+    .order-detail-module__section,
+    .order-detail-module__head {
+        padding: 1.25rem 0;
+        border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+        &:first-child { border-top: 0; }
+    }
+}

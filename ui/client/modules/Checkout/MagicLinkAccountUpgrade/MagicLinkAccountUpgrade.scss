@@ -3,3 +3,40 @@
     p { margin: 0 0 0.75rem; color: var(--theme-colorTextSecondary, #555); }
     &__cta { display: inline-block; background: var(--theme-colorPrimary, #1677ff); color: #fff; padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none; }
 }
+
+.magic-link-account-upgrade.banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    width: 100%;
+    padding: 1rem 1.5rem;
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    background: color-mix(in srgb, var(--accent, var(--theme-colorPrimary, #1677ff)) 10%, transparent);
+    h3 { margin: 0; }
+    p { margin: 0; }
+}
+
+.magic-link-account-upgrade.card {
+    padding: 1.75rem;
+    border: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+    box-shadow: 0 6px 18px color-mix(in srgb, currentColor 8%, transparent);
+    border-radius: var(--theme-borderRadius, 10px);
+}
+
+.magic-link-account-upgrade.stamp {
+    display: inline-block;
+    transform: rotate(-4deg);
+    padding: 1rem 1.5rem;
+    border: 3px double color-mix(in srgb, var(--accent, var(--theme-colorPrimary, #1677ff)) 70%, transparent);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--accent, var(--theme-colorPrimary, #1677ff));
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 700;
+    h3 { color: inherit; letter-spacing: inherit; }
+}

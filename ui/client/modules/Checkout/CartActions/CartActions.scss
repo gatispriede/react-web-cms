@@ -3,3 +3,25 @@
     &__clear { background: transparent; border: 1px solid var(--theme-colorBorder, #ddd); padding: 0.5rem 1rem; cursor: pointer; }
     &__proceed { background: var(--theme-colorPrimary, #1677ff); color: #fff; padding: 0.5rem 1.25rem; border-radius: 4px; text-decoration: none; }
 }
+
+.cart-actions.pills {
+    .cart-actions__clear,
+    .cart-actions__proceed { border-radius: 999px; padding: 0.5rem 1.25rem; }
+    .cart-actions__clear { border: 1px solid var(--rule, var(--theme-colorBorder, #ddd)); }
+    .cart-actions__proceed { background: var(--accent, var(--theme-colorPrimary, #1677ff)); }
+}
+
+.cart-actions.stacked {
+    flex-direction: column; align-items: stretch; gap: 0.5rem;
+    .cart-actions__clear,
+    .cart-actions__proceed { width: 100%; text-align: center; }
+}
+
+.cart-actions.floating {
+    justify-content: center; gap: 1rem;
+    background: var(--bg, var(--theme-colorBgContainer, #fff));
+    border-radius: 999px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    padding: 0.75rem 1.25rem;
+    width: max-content; margin: 0 auto;
+}

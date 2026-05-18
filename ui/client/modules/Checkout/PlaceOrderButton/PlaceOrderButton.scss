@@ -2,3 +2,21 @@
     background: var(--theme-colorPrimary, #1677ff); color: #fff; padding: 0.75rem 1.5rem;
     border: 0; border-radius: 4px; font-size: 1rem; font-weight: 600; cursor: pointer; width: 100%;
 }
+
+.place-order-button.wide {
+    width: 100%; padding: 1rem 1.5rem; font-size: 1.1rem; letter-spacing: 0.02em;
+}
+
+.place-order-button.floating {
+    position: sticky; bottom: 0;
+    box-shadow: 0 -4px 16px rgba(0,0,0,0.12);
+    background: var(--accent, var(--theme-colorPrimary, #1677ff));
+    border-radius: 0;
+}
+
+.place-order-button.pill {
+    width: auto; padding: 0.85rem 2.5rem;
+    border-radius: 999px;
+    background: var(--accent, var(--theme-colorPrimary, #1677ff));
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}

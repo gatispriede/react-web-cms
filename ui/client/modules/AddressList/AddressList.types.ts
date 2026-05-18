@@ -30,3 +30,10 @@ export interface AddressListProps {
     onSetDefault?: (id: string) => void | Promise<void>;
     emptyState?: AddressListEmptyState;
 }
+
+export enum EAddressListStyle {
+    Default = 'default',
+    Cards = 'cards',
+    Compact = 'compact',
+    Stacked = 'stacked',
+}

@@ -28,3 +28,10 @@ export interface NotificationInboxProps {
     onDelete?: (id: string) => void | Promise<void>;
     emptyState?: NotificationInboxEmptyState;
 }
+
+export enum ENotificationInboxStyle {
+    Default = 'default',
+    Compact = 'compact',
+    Cards = 'cards',
+    Banner = 'banner',
+}
