@@ -1,0 +1,789 @@
+/* ==========================================================================
+   Fashion — per-module overrides.
+
+   Scope: [data-theme-name="fashion"]. Brutalist-clean monochrome with a
+   single bold accent (crimson light / hot-pink dark). Sharp 0px corners
+   everywhere, hard 2px ink borders, oversized 900-weight uppercase
+   display type, massive serif quote marks on testimonials, magazine-
+   spread galleries where select tiles span two columns. The aesthetic
+   is couture lookbook — confident, graphic, no shadows.
+
+   Token-driven modules pick up palette/typography/motion overrides from
+   `theme.scss` automatically; these overrides are reserved for blocks
+   whose default geometry genuinely diverges from the fashion language
+   (sharp corners, oversized type, hide-on-down-show-on-up header,
+   brand-led-XXL footer).
+
+   Visual baselines live under
+   `tests/e2e/visual/__snapshots__/themes/fashion/`.
+   ========================================================================== */
+
+[data-theme-name="fashion"] {
+
+    /* ===================================================================
+       Header / nav — hide-on-down-show-on-up. The Medium/Headroom
+       mechanic — every pixel of editorial real estate matters. Sticky
+       white bar, ink hairline beneath, transforms off-screen on
+       scroll-down, slides back in on scroll-up.
+       =================================================================== */
+    .main-nav {
+        background: var(--color-surface);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        padding: 1.25rem 2rem;
+        border-bottom: 1px solid var(--color-ink);
+        transition: transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-emphasized);
+
+        a {
+            color: var(--color-ink);
+            font-family: var(--font-body);
+            font-weight: 500;
+            font-size: 0.8125rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            padding: 0.25rem 0;
+            border-bottom: 2px solid transparent;
+            transition: border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+        }
+
+        a:hover { border-bottom-color: var(--color-accent); }
+
+        // Toggled by scroll-direction observer.
+        &.is-hidden { transform: translateY(-100%); }
+    }
+
+    /* ===================================================================
+       Hero — VARIANT: FULL-BLEED PHOTO with MASSIVE 900-WEIGHT
+       UPPERCASE HEADLINE overlay. Real DOM: `.hero > .hero__main` (+
+       optional `.hero__bg`). Fashion crashes a 12vw display headline
+       across the lookbook photo, blend-mode difference so it reads on
+       any surface; eyebrow + meta as mono micro-cap credit lines.
+
+       Structural axis vs siblings: editorial = photo-bleed bottom-left,
+       wellness = centred-soft-serif, agency = overlay with portrait.
+       Fashion = oversized uppercase crash-headline.
+       =================================================================== */
+    .hero {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 0;
+        position: relative;
+        overflow: hidden;
+        color: var(--color-surface);
+
+        .hero__bg {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            img { width: 100%; height: 100%; object-fit: cover; filter: contrast(1.08) saturate(0.9); }
+
+            &::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.55) 100%);
+            }
+        }
+
+        &__main {
+            position: relative;
+            z-index: 2;
+            padding: 0 4vw 4vw;
+            max-width: 100%;
+            width: 100%;
+        }
+
+        &__eyebrow {
+            font-family: var(--font-body);
+            font-size: 0.75rem;
+            letter-spacing: 0.24em;
+            text-transform: uppercase;
+            color: var(--color-accent);
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
+        &__headline,
+        h1 {
+            font-family: var(--font-display);
+            font-size: clamp(3rem, 13vw, 11rem);
+            font-weight: 900;
+            line-height: 0.86;
+            letter-spacing: -0.04em;
+            text-transform: uppercase;
+            color: var(--color-surface);
+            margin: 0 0 1rem;
+            mix-blend-mode: difference;
+        }
+
+        &__subtitle,
+        &__tagline {
+            font-family: var(--font-body);
+            font-size: 1.0625rem;
+            color: color-mix(in srgb, var(--color-surface) 85%, transparent);
+            max-width: 52ch;
+            letter-spacing: 0.02em;
+        }
+
+        &__meta,
+        &__coords {
+            font-family: var(--font-body);
+            font-size: 0.6875rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: color-mix(in srgb, var(--color-surface) 70%, transparent);
+            border-top: 1px solid color-mix(in srgb, var(--color-surface) 30%, transparent);
+            padding-top: 1rem;
+            margin-top: 2.5rem;
+            gap: 2rem;
+        }
+
+        // Crash-in reveal — sharp, no bounce.
+        animation: fashion-hero-crash calc(var(--motion-duration-deliberate) * var(--motion-scalar)) var(--motion-ease-emphasized) backwards;
+
+        @media (max-width: 720px) {
+            min-height: 80vh;
+            &__main { padding: 0 1.25rem 1.5rem; }
+        }
+    }
+
+    @keyframes fashion-hero-crash {
+        from { opacity: 0; transform: translateY(2rem) scale(1.02); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ===================================================================
+       SectionHeading — uppercase eyebrow + massive serif display.
+       =================================================================== */
+    .section-heading {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 5rem 2rem 2.5rem;
+
+        .sh-root {
+            border-bottom: 2px solid var(--color-ink);
+            padding-bottom: 2rem;
+        }
+
+        .sh-eyebrow {
+            font-family: var(--font-body);
+            font-size: 0.75rem;
+            letter-spacing: 0.24em;
+            text-transform: uppercase;
+            color: var(--color-accent);
+            font-weight: 500;
+            font-style: normal;
+            margin: 0 0 1rem;
+        }
+
+        .sh-heading {
+            font-family: var(--font-display);
+            font-weight: 900;
+            font-size: clamp(2.5rem, 7vw, 5.5rem);
+            line-height: 0.9;
+            letter-spacing: -0.04em;
+            text-transform: uppercase;
+            color: var(--color-ink);
+            margin: 0;
+        }
+
+        .sh-subtitle {
+            font-family: var(--font-body);
+            font-size: 1.0625rem;
+            line-height: 1.5;
+            color: var(--ink-2);
+            font-style: normal;
+            max-width: 60ch;
+            margin-top: 1.25rem;
+        }
+    }
+
+    /* ===================================================================
+       Gallery — VARIANT: FASHION-MAGAZINE SPREAD. Masonry where select
+       tiles span 2 columns (or 2 rows) for a true editorial spread
+       rhythm. Sharp 0-radius, 2px gap, monochrome filter on hover.
+
+       Structural axis vs siblings: editorial = broken grid w/ generous
+       whitespace, wellness = soft rounded masonry, agency = horizontal
+       scroll-band, music = depth/glow stack. Fashion = couture spread.
+       =================================================================== */
+    .gallery-wrapper.gallery-wrapper-app {
+        &.default, &.Default, &.masonry, &.BorderedAlignedByThree {
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+
+            .gallery-wrapper-images {
+                display: grid;
+                grid-template-columns: repeat(6, 1fr);
+                grid-auto-flow: dense;
+                grid-auto-rows: 11vw;
+                gap: 2px;
+                column-count: initial;
+            }
+
+            .container {
+                border-radius: 0;
+                background: var(--color-ink);
+                margin: 0;
+                overflow: hidden;
+                position: relative;
+                grid-column: span 2;
+                grid-row: span 2;
+
+                // Magazine-spread rhythm — every 4th tile a wide double-col,
+                // every 5th a tall double-row, every 7th the cover slab.
+                &:nth-child(4n + 1) { grid-column: span 4; grid-row: span 3; }
+                &:nth-child(5n + 3) { grid-column: span 2; grid-row: span 3; }
+                &:nth-child(7n + 5) { grid-column: span 3; grid-row: span 2; }
+
+                .image {
+                    aspect-ratio: auto;
+                    width: 100%;
+                    height: 100%;
+                    .ant-image, img { width: 100%; height: 100%; }
+                    img {
+                        object-fit: cover;
+                        filter: contrast(1.05) saturate(0.92);
+                        transition:
+                            filter calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+                            transform calc(var(--motion-duration-deliberate) * var(--motion-scalar)) var(--motion-ease-emphasized);
+                    }
+                }
+
+                &:hover .image img {
+                    filter: grayscale(1) contrast(1.15);
+                    transform: scale(1.03);
+                }
+
+                .text {
+                    position: absolute;
+                    inset: auto 0 0 0;
+                    padding: 1rem 1.25rem;
+                    background: linear-gradient(180deg, transparent, rgba(0,0,0,0.7));
+                    p {
+                        margin: 0;
+                        font-family: var(--font-body);
+                        font-size: 0.6875rem;
+                        letter-spacing: 0.18em;
+                        text-transform: uppercase;
+                        color: var(--color-surface);
+                        border-top: 0;
+                    }
+                }
+            }
+
+            .gallery-tile--text {
+                background: var(--color-accent);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                .text {
+                    position: static;
+                    background: none;
+                    padding: 2rem;
+                    p {
+                        font-family: var(--font-display);
+                        font-weight: 900;
+                        font-size: 2rem;
+                        letter-spacing: -0.02em;
+                        text-transform: uppercase;
+                        color: var(--color-accent-ink);
+                    }
+                }
+            }
+        }
+
+        @media (max-width: 900px) {
+            &.default, &.Default, &.masonry, &.BorderedAlignedByThree {
+                .gallery-wrapper-images {
+                    grid-template-columns: repeat(2, 1fr);
+                    grid-auto-rows: 36vw;
+                }
+                .container,
+                .container:nth-child(4n + 1),
+                .container:nth-child(5n + 3),
+                .container:nth-child(7n + 5) {
+                    grid-column: span 1;
+                    grid-row: span 1;
+                }
+                .container:nth-child(4n + 1) { grid-column: span 2; grid-row: span 2; }
+            }
+        }
+    }
+
+    /* ===================================================================
+       Testimonials — VARIANT: QUOTE-ONLY, NO AVATAR, with MASSIVE SERIF
+       QUOTE MARKS. The signature couture treatment — oversized opening
+       glyph in crimson, hairline rule beneath the quote, mono attribution.
+       =================================================================== */
+    .testimonials,
+    .testimonials-module {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 6rem 2rem;
+
+        &__head {
+            margin-bottom: 4rem;
+            border-bottom: 2px solid var(--color-ink);
+            padding-bottom: 2rem;
+        }
+
+        &__title {
+            font-family: var(--font-display);
+            font-weight: 900;
+            font-size: clamp(2.25rem, 5vw, 4rem);
+            line-height: 0.9;
+            letter-spacing: -0.04em;
+            text-transform: uppercase;
+            color: var(--color-ink);
+            margin: 0;
+        }
+
+        &__grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 5rem 4rem;
+
+            @media (min-width: 720px) { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        &__card {
+            position: relative;
+            padding: 3.5rem 0 0;
+            background: transparent;
+            border: 0;
+            border-radius: 0;
+
+            // The signature — massive serif opening quote in accent.
+            &::before {
+                content: '\201C';
+                position: absolute;
+                top: -2rem;
+                left: -0.75rem;
+                font-family: var(--font-display);
+                font-size: clamp(8rem, 14vw, 12rem);
+                font-weight: 700;
+                line-height: 0.6;
+                color: var(--color-accent);
+                pointer-events: none;
+            }
+        }
+
+        &__quote {
+            font-family: var(--font-display);
+            font-size: clamp(1.5rem, 2.8vw, 2.25rem);
+            line-height: 1.2;
+            font-weight: 400;
+            color: var(--color-ink);
+            margin: 0 0 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--color-ink);
+
+            quotes: none;
+            &::before, &::after { content: none; }
+        }
+
+        // Avatar suppressed — quote-only is the rule.
+        &__avatar { display: none; }
+
+        &__who { display: block; }
+
+        &__name {
+            font-family: var(--font-display);
+            font-weight: 900;
+            font-size: 1rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--color-ink);
+        }
+
+        &__role {
+            font-family: var(--font-body);
+            font-size: 0.75rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+            margin-top: 0.25rem;
+        }
+    }
+
+    /* ===================================================================
+       FeatureGrid — VARIANT: HARD 2PX INK BORDER cards. Sharp 0-radius,
+       monochrome, accent on hover only.
+       =================================================================== */
+    .feature-grid {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 5rem 2rem;
+        list-style: none;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: -2px;
+
+        &__card {
+            background: var(--color-surface);
+            border: 2px solid var(--color-ink);
+            border-radius: 0;
+            padding: 2.25rem 1.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin: -1px; // collapse double-border between cards
+            transition:
+                background calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &:hover {
+                background: var(--color-ink);
+                color: var(--color-surface);
+
+                .feature-grid__icon { color: var(--color-accent); }
+                .feature-grid__title,
+                .feature-grid__desc { color: inherit; }
+            }
+        }
+
+        &__icon {
+            font-size: 1.5rem;
+            color: var(--color-accent);
+            transition: color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+        }
+
+        &__title {
+            font-family: var(--font-display);
+            font-weight: 900;
+            font-size: 1.25rem;
+            line-height: 1.15;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            color: var(--color-ink);
+            margin: 0;
+        }
+
+        &__desc {
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            line-height: 1.5;
+            color: var(--ink-2);
+            margin: 0;
+        }
+    }
+
+    /* ===================================================================
+       BlogFeed — editorial column, oversized serif headlines, hairline
+       ink dividers.
+       =================================================================== */
+    .blog-feed {
+        max-width: 68ch;
+        margin: 0 auto;
+        padding: 4rem 2rem;
+
+        article {
+            border-bottom: 2px solid var(--color-ink);
+            padding: 2.5rem 0;
+
+            &:last-child { border-bottom: 0; }
+
+            h2 {
+                font-family: var(--font-display);
+                font-weight: 700;
+                font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+                line-height: 1.05;
+                letter-spacing: -0.02em;
+                margin: 0 0 0.5rem;
+                color: var(--color-ink);
+                transition: color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+            }
+
+            time {
+                font-family: var(--font-body);
+                font-size: 0.6875rem;
+                letter-spacing: 0.18em;
+                text-transform: uppercase;
+                color: var(--color-accent);
+            }
+
+            p {
+                font-family: var(--font-body);
+                font-size: 1.0625rem;
+                line-height: 1.6;
+                color: var(--ink-2);
+                margin: 0.875rem 0 0;
+            }
+
+            &:hover h2 { color: var(--color-accent); }
+        }
+    }
+
+    /* ===================================================================
+       ProjectGrid / ProjectCard — catalogue-card vocabulary. Sharp
+       0-radius covers, uppercase title, mono meta.
+       =================================================================== */
+    .project-grid {
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 5rem 2rem;
+
+        &__head {
+            margin-bottom: 3rem;
+            border-bottom: 2px solid var(--color-ink);
+            padding-bottom: 1.5rem;
+        }
+
+        &__title {
+            font-family: var(--font-display);
+            font-weight: 900;
+            font-size: clamp(2rem, 5vw, 4rem);
+            line-height: 0.9;
+            letter-spacing: -0.04em;
+            text-transform: uppercase;
+            margin: 0;
+        }
+
+        &__items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2.5rem 1.5rem;
+        }
+
+        &__item {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        &__cover {
+            display: block;
+            width: 100%;
+            aspect-ratio: 3 / 4;
+            background: var(--color-ink);
+            overflow: hidden;
+            border-radius: 0;
+
+            img, .ant-image, .ant-image-img {
+                width: 100%; height: 100%;
+                object-fit: cover;
+                filter: contrast(1.05);
+                transition: transform calc(var(--motion-duration-deliberate) * var(--motion-scalar)) var(--motion-ease-emphasized);
+            }
+        }
+
+        &__meta { padding: 1rem 0 0; }
+
+        &__card-title {
+            font-family: var(--font-display);
+            font-weight: 900;
+            font-size: 1.125rem;
+            line-height: 1.1;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            margin: 0 0 0.25rem;
+            transition: color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+        }
+
+        &__stack, &__kind {
+            font-family: var(--font-body);
+            font-size: 0.6875rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+        }
+
+        &__item:hover {
+            .project-grid__cover img { transform: scale(1.04); }
+            .project-grid__card-title { color: var(--color-accent); }
+        }
+    }
+
+    .project-card {
+        border-radius: 0;
+
+        .project-card__cover, & > img {
+            border-radius: 0;
+            aspect-ratio: 3 / 4;
+            transition: transform calc(var(--motion-duration-deliberate) * var(--motion-scalar)) var(--motion-ease-emphasized);
+        }
+
+        h3, .project-card__title {
+            font-family: var(--font-display);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        &:hover {
+            .project-card__cover, & > img { transform: scale(1.02); }
+            h3, .project-card__title { color: var(--color-accent); }
+        }
+    }
+
+    /* ===================================================================
+       Rich + plain text — editorial column, serif body for long-form
+       reading. Accent links underline-only on hover.
+       =================================================================== */
+    .rich-text,
+    .plain-text {
+        font-family: var(--font-body);
+        font-size: 1.0625rem;
+        line-height: 1.65;
+        color: var(--color-ink);
+        max-width: 64ch;
+        margin: 0 auto;
+        padding: 2rem;
+
+        h1, h2, h3, h4 {
+            font-family: var(--font-display);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+            line-height: 0.95;
+            color: var(--color-ink);
+        }
+
+        h1 { font-size: clamp(2.5rem, 5vw, 3.75rem); }
+        h2 { font-size: clamp(1.75rem, 3.5vw, 2.5rem); margin-top: 2.5rem; }
+        h3 { font-size: 1.5rem; margin-top: 2rem; }
+
+        a {
+            color: var(--color-ink);
+            text-decoration: none;
+            border-bottom: 2px solid var(--color-ink);
+            transition:
+                color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &:hover {
+                color: var(--color-accent);
+                border-bottom-color: var(--color-accent);
+            }
+        }
+
+        blockquote {
+            border-left: 4px solid var(--color-accent);
+            padding-left: 1.5rem;
+            margin: 2.5rem 0;
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            line-height: 1.25;
+            color: var(--color-ink);
+        }
+    }
+
+    /* ===================================================================
+       Buttons + CTAs — square, uppercase, ink-on-white that flips to
+       accent on hover. No radius, ever.
+       =================================================================== */
+    .buy-cta, .place-order-button, .cart-actions__proceed, .add-to-cart-button,
+    .car-reservation-cta__reserve, .product-detail-hero__cta, .pricing-table__cta,
+    .empty-state-block__action--primary, .magic-link-request-form button[type="submit"],
+    .reservation-widget__submit, .event-buy-tickets-cta__trigger {
+        background: var(--color-ink);
+        color: var(--color-surface);
+        border: 2px solid var(--color-ink);
+        border-radius: 0;
+        font-family: var(--font-body);
+        font-weight: 500;
+        font-size: 0.75rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        padding: 1rem 2rem;
+        min-height: 52px;
+        transition:
+            background calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+            border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+            color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &:hover:not(:disabled) {
+            background: var(--color-accent);
+            border-color: var(--color-accent);
+            color: var(--color-accent-ink);
+        }
+    }
+
+    /* All cards flatten to 0-radius. */
+    .product-card, .car-listing-card, .pricing-table__plan,
+    .feature-grid__card, .speaker-grid__card,
+    .integration-grid__tile, .project-tile-grid__cell,
+    .testimonial-wall__card, .saved-search-list__row,
+    .account-dashboard-grid__cell, .wishlist-grid__cell,
+    .empty-state-block, .vat-badge {
+        border-radius: 0;
+    }
+
+    /* ===================================================================
+       Footer — VARIANT: BRAND-LED XXL. Huge wordmark crashes across the
+       top, links sit beneath in mono micro-cap columns.
+       =================================================================== */
+    .site-footer {
+        background: var(--color-surface);
+        color: var(--color-ink);
+        border-top: 2px solid var(--color-ink);
+        padding: 6rem 2rem 2.5rem;
+
+        &__brand,
+        &__wordmark {
+            display: block;
+            font-family: var(--font-display);
+            font-weight: 900;
+            font-size: clamp(3.5rem, 12vw, 10rem);
+            line-height: 0.85;
+            letter-spacing: -0.05em;
+            text-transform: uppercase;
+            color: var(--color-ink);
+            margin: 0 0 3rem;
+        }
+
+        &__columns {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 2.5rem 3rem;
+            padding-bottom: 3rem;
+            border-bottom: 1px solid var(--color-ink);
+        }
+
+        h4, &__heading {
+            font-family: var(--font-body);
+            font-size: 0.6875rem;
+            font-weight: 500;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+            margin: 0 0 1rem;
+        }
+
+        a {
+            color: var(--color-ink);
+            text-decoration: none;
+            font-family: var(--font-body);
+            font-size: 0.875rem;
+            letter-spacing: 0.04em;
+            border-bottom: 1px solid transparent;
+            transition: border-color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &:hover { border-bottom-color: var(--color-accent); color: var(--color-accent); }
+        }
+
+        &__bottom,
+        &__legal {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-top: 2rem;
+            font-family: var(--font-body);
+            font-size: 0.6875rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+        }
+    }
+
+    /* invisible primitives — no overrides */
+    .schema-org-injector { /* noop */ }
+}
+
+/* end fashion */

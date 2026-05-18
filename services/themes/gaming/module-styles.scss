@@ -1,0 +1,574 @@
+/* ==========================================================================
+   Gaming — per-module overrides.
+
+   Neon cyberpunk. Near-black surfaces, hot-magenta accent, scanline
+   overlays extending the theme.scss baseline. Glow on every elevated
+   surface, animated pulse on `.stats-card` numbers, hide-on-down nav
+   with neon underline on hover. Heavy on motion — expressive-bold.
+
+   Visual baselines under `tests/e2e/visual/__snapshots__/themes/gaming/`.
+   ========================================================================== */
+
+[data-theme-name="gaming"] {
+
+    /* ===================================================================
+       Header — hide-on-down / show-on-up. Toggled via .is-hidden by
+       a scroll-direction observer. Neon underline reveal on hover.
+       =================================================================== */
+    .main-nav {
+        background: color-mix(in srgb, var(--color-surface) 85%, transparent);
+        backdrop-filter: blur(8px);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        padding: 1rem 2rem;
+        border-bottom: 1px solid color-mix(in srgb, var(--color-accent) 30%, var(--color-rule));
+        transform: translateY(0);
+        transition: transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &.is-hidden,
+        &[data-scroll-direction="down"] {
+            transform: translateY(-100%);
+        }
+
+        a {
+            color: var(--color-ink);
+            font-family: var(--font-display);
+            font-size: 0.8125rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            text-decoration: none;
+            position: relative;
+            padding: 0.25rem 0;
+            transition: color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &::after {
+                content: '';
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: -2px;
+                height: 2px;
+                background: var(--color-accent);
+                transform: scaleX(0);
+                transform-origin: left;
+                box-shadow: 0 0 8px var(--color-accent),
+                            0 0 16px color-mix(in srgb, var(--color-accent) 60%, transparent);
+                transition: transform calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+            }
+
+            &:hover {
+                color: var(--color-accent);
+                &::after { transform: scaleX(1); }
+            }
+        }
+    }
+
+    /* ===================================================================
+       Hero — VARIANT: SCANLINE FULL-BLEED with neon glow + glitch
+       title. Extends the .hero::before scanlines from theme.scss with
+       a second magenta vignette + chromatic-shadow headline.
+
+       Structural axis vs siblings: saas = floating-glow split, agency =
+       centred overlay, gaming = scanline full-bleed with neon glitch.
+       =================================================================== */
+    .hero {
+        min-height: 78vh;
+        padding: 6rem 2rem;
+        background:
+            radial-gradient(ellipse at 20% 30%, color-mix(in srgb, var(--color-accent) 30%, transparent) 0%, transparent 55%),
+            radial-gradient(ellipse at 80% 70%, color-mix(in srgb, #00E5FF 22%, transparent) 0%, transparent 55%),
+            var(--color-surface);
+        text-align: center;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+
+        // Extends theme.scss scanline with a magenta sweep band.
+        &::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                180deg,
+                transparent 0%,
+                transparent 40%,
+                color-mix(in srgb, var(--color-accent) 18%, transparent) 50%,
+                transparent 60%,
+                transparent 100%
+            );
+            mix-blend-mode: screen;
+            pointer-events: none;
+            animation: gaming-scan-sweep 6s linear infinite;
+            z-index: 1;
+        }
+
+        &__main {
+            position: relative;
+            z-index: 2;
+            max-width: 60ch;
+        }
+
+        h1,
+        &__headline {
+            font-family: var(--font-display);
+            font-size: clamp(2.75rem, 7vw, 5.5rem);
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            color: var(--color-ink);
+            margin: 0 0 1.25rem;
+            text-shadow:
+                0 0 12px color-mix(in srgb, var(--color-accent) 60%, transparent),
+                0 0 28px color-mix(in srgb, var(--color-accent) 40%, transparent),
+                2px 0 0 color-mix(in srgb, #00E5FF 50%, transparent),
+                -2px 0 0 color-mix(in srgb, var(--color-accent) 50%, transparent);
+            animation: gaming-glitch calc(var(--motion-duration-deliberate) * var(--motion-scalar) * 4) steps(20, end) infinite;
+        }
+
+        &__subtitle,
+        &__tagline {
+            font-family: var(--font-body);
+            font-size: 1.125rem;
+            letter-spacing: 0.04em;
+            color: var(--color-ink);
+            opacity: 0.85;
+            max-width: 56ch;
+            margin: 0 auto 2rem;
+        }
+    }
+
+    @keyframes gaming-scan-sweep {
+        0%   { transform: translateY(-100%); }
+        100% { transform: translateY(100%); }
+    }
+    @keyframes gaming-glitch {
+        0%, 92%, 100% { text-shadow:
+            0 0 12px color-mix(in srgb, var(--color-accent) 60%, transparent),
+            0 0 28px color-mix(in srgb, var(--color-accent) 40%, transparent),
+            2px 0 0 color-mix(in srgb, #00E5FF 50%, transparent),
+            -2px 0 0 color-mix(in srgb, var(--color-accent) 50%, transparent); }
+        94% { text-shadow:
+            0 0 12px color-mix(in srgb, var(--color-accent) 60%, transparent),
+            -4px 0 0 color-mix(in srgb, #00E5FF 70%, transparent),
+            4px 0 0 color-mix(in srgb, var(--color-accent) 70%, transparent); }
+        96% { text-shadow:
+            0 0 12px color-mix(in srgb, var(--color-accent) 60%, transparent),
+            3px 0 0 color-mix(in srgb, #00E5FF 70%, transparent),
+            -3px 0 0 color-mix(in srgb, var(--color-accent) 70%, transparent); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .hero h1, .hero__headline { animation: none; }
+        .hero::after { animation: none; }
+    }
+
+    /* ===================================================================
+       Section heading — uppercase display, neon kicker.
+       =================================================================== */
+    .section-heading {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 3.5rem 2rem 1rem;
+
+        &__eyebrow {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--color-accent);
+            text-shadow: 0 0 8px color-mix(in srgb, var(--color-accent) 60%, transparent);
+        }
+
+        &__title,
+        h2 {
+            font-family: var(--font-display);
+            font-size: clamp(1.75rem, 3.2vw, 2.5rem);
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            color: var(--color-ink);
+            margin: 0.5rem 0 0;
+        }
+    }
+
+    /* ===================================================================
+       Feature grid — neon-glow cards. Subtle by default, full bloom on
+       hover.
+       =================================================================== */
+    .feature-grid {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2.5rem 2rem;
+        list-style: none;
+        display: grid;
+        gap: 1.25rem;
+
+        &--cols-2 { grid-template-columns: repeat(2, 1fr); }
+        &--cols-3 { grid-template-columns: repeat(3, 1fr); }
+
+        @media (max-width: 720px) { grid-template-columns: 1fr !important; }
+
+        &__card {
+            background: var(--color-surface-inset);
+            border: 1px solid color-mix(in srgb, var(--color-accent) 30%, var(--color-rule));
+            border-radius: var(--theme-borderRadius);
+            padding: 1.5rem;
+            position: relative;
+            box-shadow:
+                0 0 0 1px transparent,
+                0 0 18px color-mix(in srgb, var(--color-accent) 12%, transparent);
+            transition:
+                transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-emphasized),
+                border-color calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+                box-shadow calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &:hover {
+                transform: translateY(-4px);
+                border-color: var(--color-accent);
+                box-shadow:
+                    0 0 0 1px var(--color-accent),
+                    0 0 24px color-mix(in srgb, var(--color-accent) 50%, transparent),
+                    0 0 60px color-mix(in srgb, var(--color-accent) 30%, transparent);
+            }
+        }
+
+        &__icon { color: var(--color-accent); font-size: 1.5rem; margin-bottom: 0.875rem; text-shadow: 0 0 12px var(--color-accent); }
+
+        &__title {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.0625rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--color-ink);
+            margin: 0 0 0.5rem;
+        }
+
+        &__desc { font-family: var(--font-body); font-size: 0.9375rem; color: var(--color-ink); opacity: 0.75; margin: 0; line-height: 1.55; }
+    }
+
+    /* ===================================================================
+       StatsStrip + StatsCard — neon numbers with animated pulse glow.
+       Signature gaming move: the leaderboard / kill-feed reads as alive.
+       =================================================================== */
+    .stats-strip {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+
+        &__row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            background: var(--color-surface-inset);
+            border: 1px solid color-mix(in srgb, var(--color-accent) 40%, var(--color-rule));
+            border-radius: var(--theme-borderRadius);
+            box-shadow: 0 0 24px color-mix(in srgb, var(--color-accent) 15%, transparent);
+        }
+
+        &__cell {
+            border-right: 1px solid var(--color-rule);
+            padding: 1.5rem 1.5rem;
+            text-align: center;
+            &:last-child { border-right: 0; }
+        }
+
+        &__v {
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: clamp(1.75rem, 3vw, 2.5rem);
+            letter-spacing: 0.02em;
+            color: var(--color-accent);
+            font-variant-numeric: tabular-nums;
+            animation: gaming-pulse calc(var(--motion-duration-deliberate) * var(--motion-scalar) * 5) ease-in-out infinite;
+        }
+
+        &__k,
+        &__label {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--color-ink);
+            opacity: 0.6;
+            margin-top: 0.5rem;
+        }
+    }
+
+    .stats-card {
+        background: var(--color-surface-inset);
+        border: 1px solid color-mix(in srgb, var(--color-accent) 30%, var(--color-rule));
+        border-radius: var(--theme-borderRadius);
+        padding: 1.75rem;
+        box-shadow: 0 0 18px color-mix(in srgb, var(--color-accent) 10%, transparent);
+
+        &__tag {
+            font-family: var(--font-mono);
+            font-size: 0.625rem;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--color-accent);
+            border: 1px solid var(--color-accent);
+            border-radius: 0;
+            padding: 0.2rem 0.5rem;
+            box-shadow: 0 0 8px color-mix(in srgb, var(--color-accent) 40%, transparent);
+        }
+
+        &__title { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; color: var(--color-ink); }
+
+        &__n {
+            font-family: var(--font-display);
+            font-weight: 800;
+            color: var(--color-accent);
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 0 14px color-mix(in srgb, var(--color-accent) 60%, transparent);
+            animation: gaming-pulse calc(var(--motion-duration-deliberate) * var(--motion-scalar) * 5) ease-in-out infinite;
+        }
+
+        &__l { font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-ink); opacity: 0.6; }
+
+        &__features li {
+            font-family: var(--font-body);
+            color: var(--color-ink);
+            opacity: 0.85;
+            border-top: 1px solid var(--color-rule);
+            &::before { color: var(--color-accent); text-shadow: 0 0 8px var(--color-accent); }
+        }
+    }
+
+    @keyframes gaming-pulse {
+        0%, 100% { text-shadow: 0 0 12px color-mix(in srgb, var(--color-accent) 50%, transparent); }
+        50%      { text-shadow: 0 0 24px var(--color-accent),
+                                0 0 44px color-mix(in srgb, var(--color-accent) 60%, transparent); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .stats-strip__v, .stats-card__n { animation: none; }
+    }
+
+    /* ===================================================================
+       Pricing table — dramatic. Highlighted tier glows aggressively;
+       other tiers stay restrained so the glow reads as a CTA.
+       =================================================================== */
+    .pricing-table__plan {
+        background: var(--color-surface-inset);
+        border: 1px solid var(--color-rule);
+        border-radius: var(--theme-borderRadius);
+        padding: 2rem;
+        transition:
+            transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-emphasized),
+            border-color calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+
+        &:hover { transform: translateY(-4px); border-color: var(--color-accent); }
+
+        &--highlighted {
+            position: relative;
+            border: 2px solid var(--color-accent);
+            background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface-inset));
+            box-shadow:
+                0 0 0 6px color-mix(in srgb, var(--color-accent) 15%, transparent),
+                0 0 40px color-mix(in srgb, var(--color-accent) 50%, transparent),
+                0 0 80px color-mix(in srgb, var(--color-accent) 30%, transparent);
+            animation: gaming-pulse-frame calc(var(--motion-duration-deliberate) * var(--motion-scalar) * 6) ease-in-out infinite;
+
+            &::before {
+                content: 'ELITE TIER';
+                position: absolute;
+                top: -0.875rem;
+                left: 50%;
+                transform: translateX(-50%);
+                background: var(--color-accent);
+                color: var(--color-accent-ink);
+                font-family: var(--font-display);
+                font-size: 0.6875rem;
+                font-weight: 800;
+                letter-spacing: 0.18em;
+                padding: 0.3rem 0.875rem;
+                border-radius: 0;
+                box-shadow: 0 0 16px var(--color-accent);
+            }
+        }
+    }
+
+    @keyframes gaming-pulse-frame {
+        0%, 100% { box-shadow:
+            0 0 0 6px color-mix(in srgb, var(--color-accent) 15%, transparent),
+            0 0 40px color-mix(in srgb, var(--color-accent) 50%, transparent),
+            0 0 80px color-mix(in srgb, var(--color-accent) 30%, transparent); }
+        50%      { box-shadow:
+            0 0 0 6px color-mix(in srgb, var(--color-accent) 25%, transparent),
+            0 0 60px color-mix(in srgb, var(--color-accent) 70%, transparent),
+            0 0 120px color-mix(in srgb, var(--color-accent) 45%, transparent); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .pricing-table__plan--highlighted { animation: none; }
+    }
+
+    .pricing-table__price {
+        font-family: var(--font-display);
+        font-weight: 800;
+        font-size: 3rem;
+        letter-spacing: 0.02em;
+        font-variant-numeric: tabular-nums;
+        color: var(--color-accent);
+        text-shadow: 0 0 18px color-mix(in srgb, var(--color-accent) 60%, transparent);
+    }
+
+    /* ===================================================================
+       Pipeline flow — neon node track. Active step glows.
+       =================================================================== */
+    .pipeline-flow {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2.5rem 2rem;
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(0, 1fr);
+        gap: 1rem;
+        position: relative;
+
+        &__step {
+            background: var(--color-surface-inset);
+            border: 1px solid color-mix(in srgb, var(--color-accent) 30%, var(--color-rule));
+            border-radius: var(--theme-borderRadius);
+            padding: 1.25rem 1rem;
+            position: relative;
+            transition: box-shadow calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &[data-status="active"] {
+                border-color: var(--color-accent);
+                box-shadow:
+                    0 0 0 1px var(--color-accent),
+                    0 0 24px color-mix(in srgb, var(--color-accent) 60%, transparent);
+            }
+        }
+
+        &__num {
+            font-family: var(--font-mono);
+            font-size: 0.625rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--color-accent);
+        }
+        &__label { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-ink); margin-top: 0.5rem; }
+        &__desc { font-family: var(--font-body); font-size: 0.8125rem; color: var(--color-ink); opacity: 0.7; margin-top: 0.375rem; }
+
+        @media (max-width: 720px) { grid-auto-flow: row; }
+    }
+
+    /* ===================================================================
+       Blog feed — neon-bordered cards.
+       =================================================================== */
+    .blog-feed {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.25rem;
+        padding: 2rem;
+
+        .blog-card,
+        .ant-card.blog-card {
+            background: var(--color-surface-inset);
+            border: 1px solid color-mix(in srgb, var(--color-accent) 25%, var(--color-rule));
+            border-radius: var(--theme-borderRadius);
+            overflow: hidden;
+            transition:
+                transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-emphasized),
+                border-color calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+                box-shadow calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &:hover {
+                transform: translateY(-4px);
+                border-color: var(--color-accent);
+                box-shadow:
+                    0 0 0 1px var(--color-accent),
+                    0 0 32px color-mix(in srgb, var(--color-accent) 40%, transparent);
+            }
+
+            .ant-card-meta-title {
+                font-family: var(--font-display);
+                font-weight: 700;
+                letter-spacing: 0.02em;
+                text-transform: uppercase;
+                color: var(--color-ink);
+            }
+            .ant-card-meta-description { color: var(--color-ink); opacity: 0.75; font-family: var(--font-body); }
+
+            .ant-tag {
+                font-family: var(--font-mono);
+                font-size: 0.625rem;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                background: transparent;
+                color: var(--color-accent);
+                border: 1px solid var(--color-accent);
+                border-radius: 0;
+            }
+        }
+    }
+
+    /* ===================================================================
+       Footer — brand-led XXL.
+       =================================================================== */
+    .site-footer {
+        background: var(--color-surface-inset);
+        color: var(--color-ink);
+        padding: 5rem 2rem 2rem;
+        border-top: 1px solid var(--color-accent);
+        box-shadow: 0 -1px 24px color-mix(in srgb, var(--color-accent) 20%, transparent);
+
+        &__brand,
+        &__wordmark {
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--color-ink);
+            text-shadow: 0 0 24px color-mix(in srgb, var(--color-accent) 50%, transparent);
+            margin: 0 0 2rem;
+        }
+
+        &__columns {
+            display: grid;
+            grid-template-columns: 1.5fr repeat(auto-fit, minmax(140px, 1fr));
+            gap: 2.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--color-rule);
+        }
+
+        h4, &__heading {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 0.75rem;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--color-accent);
+            margin-bottom: 1rem;
+        }
+
+        a {
+            color: var(--color-ink);
+            opacity: 0.7;
+            text-decoration: none;
+            font-family: var(--font-body);
+            transition: color calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard),
+                        opacity calc(var(--motion-duration-fast) * var(--motion-scalar)) var(--motion-ease-standard);
+            &:hover { color: var(--color-accent); opacity: 1; text-shadow: 0 0 8px var(--color-accent); }
+        }
+
+        &__bottom {
+            max-width: 1200px;
+            margin: 1.5rem auto 0;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--color-ink);
+            opacity: 0.5;
+        }
+    }
+}
+
+/* gaming/module-styles.scss — neon cyberpunk, scanline sweep, pulse-glow metrics. */

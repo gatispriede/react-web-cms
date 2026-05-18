@@ -1,0 +1,747 @@
+/* ==========================================================================
+   Medical — per-module overrides.
+
+   Scope: [data-theme-name="medical"]. Clinical white surface + calm teal
+   accent + Inter humanist sans throughout. Clarity equals safety: AAA
+   contrast on ink-vs-surface, 44x44 minimum touch targets on form
+   controls and primary CTAs, 2px focus rings with high-contrast offset.
+   Motion is `snappy-default` — feedback is fast and confident, never
+   decorative.
+
+   Token-driven modules (most of the 47 in the catalogue) are NOT touched
+   here — they inherit palette + typography + motion from `theme.scss`
+   via CSS custom properties. The overrides below are reserved for cases
+   where a default value is wrong for the clinical aesthetic (sticky-
+   static header, calm-CTA hero, condition cards in feature-grid, large
+   touch-friendly inquiry form).
+
+   Visual baselines under `tests/e2e/visual/__snapshots__/themes/medical/`.
+   Per-theme capture spec at `tests/e2e/visual/themes/medical.spec.ts`.
+   ========================================================================== */
+
+[data-theme-name="medical"] {
+
+    /* ===================================================================
+       Header / nav — VARIANT: sticky-static. Does NOT shrink; the
+       wayfinding stays consistent so patients aren't disoriented mid-
+       scroll. White surface with a 1px rule, accent appointment CTA
+       always present on the right.
+
+       Distinct from legal-firm (shrink-on-scroll) and education
+       (sticky-static with eyebrow wordmark).
+       =================================================================== */
+    .main-nav {
+        background: var(--color-surface);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--color-rule);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+
+        a {
+            color: var(--color-ink);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            font-weight: 500;
+            text-decoration: none;
+            // 44px minimum target including padding.
+            padding: 0.625rem 0.5rem;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        a:hover {
+            color: var(--color-accent);
+        }
+
+        a[aria-current="page"] {
+            color: var(--color-accent);
+            font-weight: 600;
+        }
+
+        // Primary appointment CTA — always visible, AAA contrast.
+        a.btn--appointment,
+        &__cta {
+            background: var(--color-accent);
+            color: var(--color-accent-ink);
+            padding: 0.75rem 1.25rem;
+            min-height: 44px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        a.btn--appointment:hover,
+        &__cta:hover {
+            background: color-mix(in srgb, var(--color-accent) 92%, #000);
+            color: var(--color-accent-ink);
+        }
+
+        &__wordmark {
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 1.25rem;
+            color: var(--color-ink);
+            letter-spacing: -0.01em;
+        }
+    }
+
+    /* ===================================================================
+       Hero — VARIANT: CALM SINGLE-COLUMN with PROMINENT APPOINTMENT
+       CTA. No marketing flourish, no portrait, no rotated artwork. A
+       short reassuring headline, a one-line summary, and TWO CTAs:
+       primary "Book an appointment", secondary "Call the practice"
+       phone link. Real DOM: `.hero > .hero__main` (+ `.hero__lede`,
+       `.hero__cta-row`).
+
+       Structural axis vs siblings: legal-firm = split with portrait,
+       education = campus-bleed. Medical = single-column calm with
+       appointment CTA as the centrepiece.
+       =================================================================== */
+    .hero {
+        background: var(--color-surface);
+        padding: 4rem 1.5rem 4.5rem;
+        text-align: left;
+
+        @media (min-width: 720px) {
+            padding: 5rem 2.5rem 5.5rem;
+        }
+
+        &__main {
+            max-width: 56ch;
+        }
+
+        &__eyebrow {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--color-accent);
+            margin-bottom: 1rem;
+            letter-spacing: 0.04em;
+        }
+
+        h1, &__headline {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 4vw, 3.25rem);
+            font-weight: 600;
+            line-height: 1.15;
+            margin: 0 0 1.25rem;
+            color: var(--color-ink);
+            letter-spacing: -0.02em;
+        }
+
+        &__lede {
+            font-size: 1.1875rem;
+            line-height: 1.55;
+            color: var(--color-ink);
+            margin: 0 0 2rem;
+            max-width: 52ch;
+        }
+
+        &__cta-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        &__cta--primary {
+            background: var(--color-accent);
+            color: var(--color-accent-ink);
+            padding: 0.875rem 1.75rem;
+            min-height: 48px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-decoration: none;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+        }
+        &__cta--primary:hover {
+            background: color-mix(in srgb, var(--color-accent) 92%, #000);
+        }
+
+        &__cta--secondary {
+            background: transparent;
+            color: var(--color-accent);
+            padding: 0.875rem 1.5rem;
+            min-height: 48px;
+            border: 2px solid var(--color-accent);
+            border-radius: 6px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        &__cta--secondary:hover {
+            background: var(--color-surface-inset);
+        }
+    }
+
+    /* ===================================================================
+       Section heading — clean, AAA contrast, no flourish. Accent
+       eyebrow above, ink-coloured title. No underline rule.
+       =================================================================== */
+    .section-heading {
+        margin: 0 0 2rem;
+
+        &__eyebrow {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--color-accent);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-bottom: 0.625rem;
+        }
+
+        h2, &__title {
+            font-family: var(--font-display);
+            font-size: clamp(1.625rem, 3vw, 2.25rem);
+            font-weight: 600;
+            margin: 0 0 0.75rem;
+            color: var(--color-ink);
+            letter-spacing: -0.015em;
+        }
+
+        &__lede {
+            font-size: 1.0625rem;
+            line-height: 1.55;
+            color: var(--color-ink);
+            max-width: 60ch;
+            margin: 0;
+        }
+    }
+
+    /* ===================================================================
+       Feature grid — CONDITION CARDS. Each card has an icon mark,
+       condition name, a one-line brief, and a "Learn more" link.
+       Cards are bordered, not shadowed; hover lifts the border to
+       accent.
+       =================================================================== */
+    .feature-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+        padding: 3rem 1.5rem 4rem;
+
+        @media (min-width: 720px) {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        @media (min-width: 1080px) {
+            grid-template-columns: repeat(3, 1fr);
+            padding: 4rem 2.5rem 5rem;
+            gap: 1.5rem;
+        }
+
+        &__item,
+        article {
+            background: var(--color-surface);
+            border: 1px solid var(--color-rule);
+            padding: 1.75rem 1.5rem 1.75rem;
+            border-radius: 6px;
+            transition: border-color var(--motion-duration-fast) var(--motion-ease-standard);
+        }
+
+        &__item:hover,
+        article:hover {
+            border-color: var(--color-accent);
+        }
+
+        &__icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--color-surface-inset);
+            color: var(--color-accent);
+            margin-bottom: 1rem;
+        }
+
+        h3 {
+            font-family: var(--font-display);
+            font-size: 1.1875rem;
+            font-weight: 600;
+            margin: 0 0 0.5rem;
+            color: var(--color-ink);
+        }
+
+        p {
+            font-size: 0.9375rem;
+            line-height: 1.55;
+            color: var(--color-ink);
+            margin: 0 0 1rem;
+        }
+
+        a {
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: var(--color-accent);
+            text-decoration: none;
+            min-height: 32px;
+            display: inline-flex;
+            align-items: center;
+        }
+        a:hover {
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+    }
+
+    /* ===================================================================
+       Testimonials — PATIENT TESTIMONIALS. Calm bordered cards, no
+       open-quote glyph theatrics; quote sits as plain body text with
+       attribution below (patient initials, condition/treatment).
+       Sensitivity: names should not be required.
+       =================================================================== */
+    .testimonials {
+        background: var(--color-surface-inset);
+        padding: 4rem 1.5rem 4.5rem;
+
+        @media (min-width: 880px) {
+            padding: 5rem 2.5rem 5.5rem;
+        }
+
+        &__list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+
+            @media (min-width: 880px) {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            @media (min-width: 1200px) {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        &__item,
+        blockquote {
+            background: var(--color-surface);
+            border: 1px solid var(--color-rule);
+            border-radius: 6px;
+            padding: 1.75rem 1.5rem;
+            margin: 0;
+        }
+
+        p,
+        &__quote {
+            font-size: 1rem;
+            line-height: 1.65;
+            color: var(--color-ink);
+            margin: 0 0 1.25rem;
+        }
+
+        cite,
+        &__attribution {
+            display: block;
+            font-style: normal;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--color-ink);
+        }
+
+        &__condition {
+            display: block;
+            font-size: 0.8125rem;
+            color: var(--color-accent);
+            margin-top: 0.125rem;
+            font-weight: 500;
+        }
+    }
+
+    /* ===================================================================
+       Inquiry form — APPOINTMENT / CONTACT REQUEST. EXTRA-LARGE touch
+       targets (48px on inputs, 52px on submit), AAA-contrast labels,
+       clear required indicators, explicit help text. This is the
+       primary conversion surface for the practice.
+       =================================================================== */
+    .inquiry-form {
+        background: var(--color-surface);
+        padding: 3rem 1.5rem 4rem;
+        max-width: 640px;
+        margin: 0 auto;
+
+        @media (min-width: 720px) {
+            padding: 4rem 2.5rem 4.5rem;
+        }
+
+        &__intro {
+            font-size: 1.0625rem;
+            line-height: 1.55;
+            margin: 0 0 2rem;
+            color: var(--color-ink);
+        }
+
+        &__field {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: var(--color-ink);
+            margin-bottom: 0.5rem;
+        }
+
+        // Required marker — accent dot, screen-reader text.
+        label[data-required]::after,
+        .required::after {
+            content: ' (required)';
+            color: var(--color-accent);
+            font-weight: 500;
+            font-size: 0.8125rem;
+        }
+
+        // Inline help text below the label.
+        &__help {
+            font-size: 0.8125rem;
+            color: var(--color-ink);
+            opacity: 0.78;
+            margin: -0.25rem 0 0.5rem;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="date"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            min-height: 48px;
+            border: 1px solid var(--color-rule);
+            background: var(--color-surface);
+            color: var(--color-ink);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            border-radius: 6px;
+        }
+        textarea {
+            min-height: 140px;
+            resize: vertical;
+        }
+
+        // Explicit focus-visible ring per spec — 2px solid accent.
+        input:focus-visible,
+        textarea:focus-visible,
+        select:focus-visible {
+            outline: 2px solid var(--color-accent);
+            outline-offset: 2px;
+            border-color: var(--color-accent);
+        }
+
+        // Checkbox / radio — large touch targets, accent fill.
+        input[type="checkbox"],
+        input[type="radio"] {
+            width: 22px;
+            height: 22px;
+            accent-color: var(--color-accent);
+            margin-right: 0.625rem;
+        }
+
+        &__checkbox-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.625rem;
+            min-height: 44px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9375rem;
+            line-height: 1.55;
+        }
+
+        button[type="submit"] {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 52px;
+            padding: 0 2rem;
+            background: var(--color-accent);
+            color: var(--color-accent-ink);
+            border: none;
+            border-radius: 6px;
+            font-family: var(--font-body);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            min-width: 200px;
+        }
+        button[type="submit"]:hover {
+            background: color-mix(in srgb, var(--color-accent) 92%, #000);
+        }
+        button[type="submit"]:focus-visible {
+            outline: 2px solid var(--color-accent);
+            outline-offset: 3px;
+        }
+
+        // Error state — never colour-only; pairs a leading icon glyph.
+        &__error,
+        [aria-invalid="true"] {
+            border-color: #B3261E;
+        }
+        &__error-message {
+            color: #B3261E;
+            font-size: 0.875rem;
+            margin-top: 0.375rem;
+            font-weight: 500;
+        }
+        &__error-message::before {
+            content: '\26A0  ';
+            margin-right: 0.25rem;
+        }
+    }
+
+    /* ===================================================================
+       Blog feed / single post — Health Articles. Clean reading
+       column, generous line-height, content-focused.
+       =================================================================== */
+    .blog-feed {
+        padding: 3rem 1.5rem 4rem;
+
+        &__list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+
+            @media (min-width: 880px) {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            @media (min-width: 1200px) {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        article {
+            background: var(--color-surface);
+            border: 1px solid var(--color-rule);
+            border-radius: 6px;
+            padding: 1.5rem 1.5rem 1.75rem;
+        }
+
+        &__meta {
+            font-size: 0.8125rem;
+            color: var(--color-accent);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        h3 a {
+            color: var(--color-ink);
+            text-decoration: none;
+            font-family: var(--font-display);
+            font-size: 1.1875rem;
+            font-weight: 600;
+            line-height: 1.25;
+        }
+        h3 a:hover {
+            color: var(--color-accent);
+        }
+
+        p {
+            font-size: 0.9375rem;
+            line-height: 1.6;
+            color: var(--color-ink);
+            margin: 0.75rem 0 0;
+        }
+    }
+
+    .blog-post {
+        max-width: 68ch;
+        margin: 0 auto;
+        padding: 3rem 1.5rem 5rem;
+
+        h1 {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 3.6vw, 2.75rem);
+            line-height: 1.15;
+            margin: 0 0 1rem;
+        }
+
+        &__meta {
+            font-size: 0.875rem;
+            color: var(--color-accent);
+            font-weight: 600;
+            margin-bottom: 1.75rem;
+        }
+
+        p {
+            font-size: 1.0625rem;
+            line-height: 1.7;
+            margin: 0 0 1.25rem;
+        }
+    }
+
+    /* ===================================================================
+       Contact block — practice address + reception phone, AAA
+       contrast, phone link is large and obviously tappable.
+       =================================================================== */
+    .contact-block {
+        background: var(--color-surface-inset);
+        padding: 2rem 1.5rem 2.25rem;
+        border-radius: 6px;
+
+        h3 {
+            font-family: var(--font-display);
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin: 0 0 0.75rem;
+        }
+
+        address {
+            font-style: normal;
+            font-size: 1rem;
+            line-height: 1.6;
+            color: var(--color-ink);
+        }
+
+        a[href^="tel:"] {
+            display: inline-flex;
+            align-items: center;
+            min-height: 44px;
+            color: var(--color-accent);
+            font-weight: 600;
+            font-size: 1.125rem;
+            text-decoration: none;
+            margin-top: 0.5rem;
+        }
+        a[href^="tel:"]:hover {
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+    }
+
+    /* ===================================================================
+       Opening hours — PROMINENT block. Waiting-room information,
+       displayed clean and unambiguous. "Open now" / "Closed now"
+       chip at top with accent fill.
+       =================================================================== */
+    .opening-hours {
+        background: var(--color-surface);
+        border: 1px solid var(--color-rule);
+        border-radius: 6px;
+        padding: 1.75rem 1.5rem;
+        max-width: 420px;
+
+        h3 {
+            font-family: var(--font-display);
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin: 0 0 0.75rem;
+            color: var(--color-ink);
+        }
+
+        &__status {
+            display: inline-block;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            padding: 0.25rem 0.625rem;
+            border-radius: 999px;
+            background: var(--color-accent);
+            color: var(--color-accent-ink);
+            margin-bottom: 1rem;
+        }
+        &__status[data-status="closed"] {
+            background: var(--color-surface-inset);
+            color: var(--color-ink);
+            border: 1px solid var(--color-rule);
+        }
+
+        dl {
+            display: grid;
+            grid-template-columns: max-content 1fr;
+            gap: 0.5rem 1.25rem;
+            margin: 0;
+            font-size: 0.9375rem;
+        }
+
+        dt {
+            font-weight: 600;
+            color: var(--color-ink);
+        }
+        dd {
+            margin: 0;
+            color: var(--color-ink);
+            text-align: right;
+        }
+
+        // Today — emphasised with accent text.
+        dt[data-today],
+        dd[data-today] {
+            color: var(--color-accent);
+        }
+    }
+
+    /* ===================================================================
+       Site footer — SIMPLER three-column. Practice info, services,
+       hours/contact. AAA contrast on all link text.
+       =================================================================== */
+    .site-footer {
+        background: var(--color-surface-inset);
+        color: var(--color-ink);
+        padding: 3.5rem 1.5rem 1.75rem;
+        border-top: 1px solid var(--color-rule);
+
+        @media (min-width: 880px) {
+            padding: 4rem 2.5rem 2rem;
+        }
+
+        &__columns {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+
+            @media (min-width: 720px) {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 2.5rem;
+            }
+        }
+
+        h4 {
+            font-family: var(--font-display);
+            font-size: 0.9375rem;
+            font-weight: 600;
+            margin: 0 0 1rem;
+            color: var(--color-ink);
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+
+            li {
+                margin-bottom: 0.5rem;
+                font-size: 0.9375rem;
+                line-height: 1.5;
+            }
+        }
+
+        a {
+            color: var(--color-ink);
+            text-decoration: none;
+            min-height: 32px;
+            display: inline-flex;
+            align-items: center;
+        }
+        a:hover {
+            color: var(--color-accent);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        &__legal {
+            margin-top: 2.5rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--color-rule);
+            font-size: 0.8125rem;
+            color: var(--color-ink);
+            opacity: 0.8;
+        }
+    }
+}
+
+/* Medical overrides — end. */
