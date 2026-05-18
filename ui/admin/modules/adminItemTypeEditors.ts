@@ -123,6 +123,7 @@ import {
 } from '@admin/modules/_AccountPageModules/editors';
 // all-pages-module-composed — Blog batch editor.
 import {BlogPostEditor} from '@admin/modules/_BlogPageModules/editors';
+import {EBlogPostStyle} from '@client/modules/BlogPost/BlogPost.types';
 // all-pages-module-composed — Marketing batch editors.
 import {
     FeatureGridEditor,
@@ -279,6 +280,40 @@ const SECTION_HEADING_STYLE_LABELS: Record<string, string> = {
     'tech-modern': 'Modern (sans, accent)',
     'centered-marquee': 'Centered marquee',
 };
+const PRODUCT_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    bordered: 'Bordered',
+    minimal: 'Minimal',
+    cards: 'Cards (elevated)',
+    cinema: 'Cinema (16:9 dark)',
+    elevated: 'Elevated lift',
+};
+const PRODUCT_DETAIL_HERO_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    compact: 'Compact',
+    split: 'Split (50/50)',
+    stacked: 'Stacked (image top)',
+    magazine: 'Magazine (bleed)',
+};
+const PRODUCT_SPEC_TABLE_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    compact: 'Compact',
+    striped: 'Striped rows',
+    cards: 'Card chips',
+    dense: 'Dense two-col',
+};
+const PRODUCT_DESCRIPTION_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    editorial: 'Editorial (drop-cap)',
+    compact: 'Compact',
+    centered: 'Centered measure',
+};
+const BLOG_POST_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    editorial: 'Editorial (serif)',
+    compact: 'Compact',
+    magazine: 'Magazine (multi-col)',
+};
 const FEATURE_GRID_STYLE_LABELS: Record<string, string> = {
     default: 'Standard',
     cards: 'Elevated cards',
@@ -325,12 +360,12 @@ export const ADMIN_ITEM_TYPE_EDITORS: readonly AdminItemTypeEntry[] = [
     {key: EItemType.StatsStrip,      Editor: StatsStripEditor,       styleEnum: asEnum(EStatsStripStyle), styleLabels: STATS_STRIP_STYLE_LABELS,      defaultContent: '{"cells":[]}',                                                                                                                                                              labelKey: 'Stats strip',          descriptionKey: 'Horizontal numeric strip — value / unit / caption per cell.',        category: 'content'},
     {key: EItemType.SectionHeading,      Editor: SectionHeadingEditor,           styleEnum: asEnum(ESectionHeadingStyle), styleLabels: SECTION_HEADING_STYLE_LABELS, defaultContent: '{"heading":""}',                                                                                                                                                              labelKey: 'Section heading',          descriptionKey: 'Eyebrow + heading + subtitle — replaces hand-typed h2 + em pattern', category: 'content'},
     {key: EItemType.KeyValueDossier, Editor: KeyValueDossierEditor,  styleEnum: asEnum(EKeyValueDossierStyle), styleLabels: KEY_VALUE_DOSSIER_STYLE_LABELS, defaultContent: '{"items":[]}',                                                                                                                                                              labelKey: 'Key/value dossier',    descriptionKey: 'Structured label/value table — replaces hand-typed dl/dt/dd in RichText. 3 style variants.', category: 'content'},
-    {key: EItemType.Product,         Editor: ProductEditor,          styleEnum: asEnum(EProductStyle),         defaultContent: '{"mode":"grid","products":{"source":"manual","ids":[],"limit":6},"showBuyCta":true,"showPrice":true,"grid":{"columns":3,"density":"standard"}}',                                labelKey: 'Product',              descriptionKey: 'Featured / grid / carousel / comparison / related — pick mode in editor.', category: 'content'},
+    {key: EItemType.Product,         Editor: ProductEditor,          styleEnum: asEnum(EProductStyle), styleLabels: PRODUCT_STYLE_LABELS,        defaultContent: '{"mode":"grid","products":{"source":"manual","ids":[],"limit":6},"showBuyCta":true,"showPrice":true,"grid":{"columns":3,"density":"standard"}}',                                labelKey: 'Product',              descriptionKey: 'Featured / grid / carousel / comparison / related — pick mode in editor.', category: 'content'},
     // Phase 1.C — products-as-composable-page sub-jump B. Auto-injected by
     // CategoryTemplate / ProductDetailTemplate; the editors are placeholders
     // (JSON textarea or constrained Select for the Pagination variant) until
     // bespoke per-module UIs ship as a follow-up.
-    {key: EItemType.ProductDetailHero, Editor: ProductDetailHeroEditor, styleEnum: asEnum(EProductDetailHeroStyle), defaultContent: '{"productId":"","showBuyCta":true,"showVatBadge":true}',                                                                                                                       labelKey: 'Product detail hero',  descriptionKey: 'Image gallery + title + price + Buy CTA + VAT badge — bound to the page product.', category: 'hero'},
+    {key: EItemType.ProductDetailHero, Editor: ProductDetailHeroEditor, styleEnum: asEnum(EProductDetailHeroStyle), styleLabels: PRODUCT_DETAIL_HERO_STYLE_LABELS, defaultContent: '{"productId":"","showBuyCta":true,"showVatBadge":true}',                                                                                                                       labelKey: 'Product detail hero',  descriptionKey: 'Image gallery + title + price + Buy CTA + VAT badge — bound to the page product.', category: 'hero'},
     {key: EItemType.ProductSpecTable,  Editor: ProductSpecTableEditor,  styleEnum: asEnum(EProductSpecTableStyle),  defaultContent: '{"productId":"","autoFromAttributes":true}',                                                                                                                                  labelKey: 'Spec table',           descriptionKey: 'Two-column key/value table auto-generated from IProduct.attributes.',           category: 'content'},
     {key: EItemType.ProductDescription, Editor: ProductDescriptionEditor, styleEnum: asEnum(EProductDescriptionStyle), defaultContent: '{"productId":"","autoBindTo":"product.description"}',                                                                                                                       labelKey: 'Product description',  descriptionKey: 'Rich body, auto-bound to the product\'s stored description (overridable).',     category: 'content'},
     {key: EItemType.Pagination,        Editor: PaginationEditor,        styleEnum: asEnum(EPaginationStyle),        defaultContent: '{"variant":"load-more","pageSize":24}',                                                                                                                                       labelKey: 'Pagination',           descriptionKey: 'Cursor-based — load-more button or infinite-scroll.',                          category: 'cta'},

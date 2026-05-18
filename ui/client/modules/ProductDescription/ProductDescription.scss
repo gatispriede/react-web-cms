@@ -6,3 +6,39 @@
 
     &--empty { opacity: 0.6; padding: 0.5rem 0; }
 }
+
+/* Extra style variants — applied via wrapper class `style-<value>`. */
+
+.style-editorial .product-description {
+    font-family: var(--font-serif, Georgia, 'Times New Roman', serif);
+    font-size: 1.125rem;
+    line-height: 1.75;
+    max-width: 72ch;
+
+    p:first-of-type::first-letter {
+        float: left;
+        font-size: 4.5rem;
+        line-height: 0.9;
+        padding: 0.25rem 0.5rem 0 0;
+        font-weight: 700;
+        color: var(--accent, var(--theme-colorPrimary, #1677ff));
+    }
+    p { margin-bottom: 1.25rem; }
+}
+
+.style-compact .product-description {
+    padding: 0.5rem 0;
+    font-size: 0.9375rem;
+    line-height: 1.45;
+
+    p { margin: 0 0 0.5rem; }
+}
+
+.style-centered .product-description {
+    max-width: 60ch;
+    margin: 0 auto;
+    text-align: center;
+    padding: 1.5rem 1rem;
+
+    p { margin: 0 auto 1rem; }
+}

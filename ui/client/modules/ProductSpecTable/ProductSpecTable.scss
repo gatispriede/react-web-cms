@@ -14,3 +14,45 @@
 
     &--empty { padding: 1rem; opacity: 0.7; }
 }
+
+/* Extra style variants — applied via wrapper class `style-<value>`. */
+
+.style-striped .product-spec-table {
+    tbody tr:nth-child(odd) {
+        background: var(--theme-colorBgInset, color-mix(in srgb, currentColor 5%, transparent));
+    }
+    th, td { border-bottom: none; }
+    tr { border-bottom: 1px solid var(--border-muted, #eee); }
+}
+
+.style-cards .product-spec-table {
+    border-collapse: separate;
+    border-spacing: 0.5rem;
+
+    th, td {
+        border: 1px solid var(--border-muted, #e5e5e5);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        background: var(--theme-colorBgContainer, #fff);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+    th {
+        background: var(--theme-colorBgInset, color-mix(in srgb, currentColor 6%, transparent));
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 0.75rem;
+    }
+}
+
+.style-dense .product-spec-table {
+    margin: 0.5rem 0;
+    font-size: 0.8125rem;
+    line-height: 1.3;
+
+    th, td {
+        padding: 0.25rem 0.5rem;
+        border-bottom: 1px dotted var(--border-muted, #eee);
+    }
+    th { width: 30%; font-weight: 500; opacity: 0.7; }
+}

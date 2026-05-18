@@ -41,3 +41,170 @@
     opacity: .6;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Variant: mega — heavy multi-column nav, oversized brand block, newsletter
+// signup row underneath. Picked by operators running content-rich sites that
+// want every footer link discoverable from the home page.
+// ---------------------------------------------------------------------------
+.site-footer--mega {
+  padding: 72px 48px 32px;
+  background: linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.05));
+
+  .site-footer__columns {
+    max-width: 1400px;
+    grid-template-columns: 2fr repeat(auto-fit, minmax(160px, 1fr));
+    gap: 56px;
+  }
+
+  .site-footer__column {
+    h4 {
+      font-size: .95rem;
+      opacity: .9;
+      letter-spacing: 0.1em;
+      margin-bottom: 18px;
+    }
+    li { margin-bottom: 10px; font-size: .95rem; }
+
+    &:first-child {
+      h4 {
+        font-size: 1.6rem;
+        letter-spacing: 0.02em;
+        text-transform: none;
+        opacity: 1;
+        margin-bottom: 14px;
+      }
+      li { opacity: .75; font-size: .95rem; }
+    }
+  }
+
+  .site-footer__bottom {
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 0;
+    font-size: .9rem;
+
+    &::before {
+      content: 'Subscribe to our newsletter →';
+      font-weight: 600;
+      opacity: .85;
+      text-align: left;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Variant: minimal — one thin line; columns collapse into an inline row,
+// section headers hidden. For sites that lean on the header nav and only
+// need a copyright + small social row at the bottom.
+// ---------------------------------------------------------------------------
+.site-footer--minimal {
+  padding: 14px 24px;
+  margin-top: 48px;
+  border-top: 1px solid rgba(0,0,0,.08);
+  font-size: .8rem;
+
+  .site-footer__columns {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 18px;
+    max-width: none;
+  }
+
+  .site-footer__column {
+    h4 { display: none; }
+    ul {
+      display: inline-flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    li { margin: 0; }
+    a {
+      font-size: .8rem;
+      opacity: .65;
+      &:hover { transform: none; opacity: 1; }
+    }
+  }
+
+  .site-footer__bottom {
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: none;
+    font-size: .75rem;
+    opacity: .5;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Variant: brutalist — black slab, oversized uppercase brand wordmark in the
+// first column, hairline vertical rules between cols, monospace-feel labels.
+// Theme-agnostic: hard-codes its own palette so it overrides theme tokens.
+// ---------------------------------------------------------------------------
+.site-footer--brutalist {
+  background: #000;
+  color: #fff;
+  padding: 80px 32px 24px;
+  margin-top: 96px;
+  border-top: 4px solid #fff;
+
+  .site-footer__columns {
+    max-width: 1200px;
+    gap: 0;
+    grid-template-columns: 1.4fr repeat(auto-fit, minmax(160px, 1fr));
+  }
+
+  .site-footer__column {
+    padding: 0 28px;
+    border-left: 1px solid rgba(255,255,255,.18);
+
+    &:first-child {
+      border-left: none;
+      padding-left: 0;
+      h4 {
+        font-size: 2.4rem;
+        line-height: 1;
+        letter-spacing: -0.01em;
+        font-weight: 900;
+        opacity: 1;
+        margin-bottom: 24px;
+        text-transform: uppercase;
+        color: #fff;
+      }
+    }
+
+    h4 {
+      color: #fff;
+      opacity: 1;
+      font-size: .75rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    li { margin-bottom: 8px; }
+    a {
+      color: #fff;
+      opacity: .7;
+      text-transform: uppercase;
+      font-size: .78rem;
+      letter-spacing: 0.08em;
+      &:hover { opacity: 1; transform: none; text-decoration: underline; }
+    }
+  }
+
+  .site-footer__bottom {
+    border-top: 1px solid rgba(255,255,255,.2);
+    margin-top: 56px;
+    padding-top: 18px;
+    color: #fff;
+    opacity: .55;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: .75rem;
+  }
+}

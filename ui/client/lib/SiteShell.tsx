@@ -77,6 +77,10 @@ interface IHomeState {
     blogEnabled: boolean,
     layoutMode: 'tabs' | 'scroll',
     navVariant: 'default' | 'rail' | 'pill' | 'underline',
+    /** Operator-picked footer skin, read from `siteFlags.footerVariant`
+     *  and passed straight into `<SiteFooter variant=… />`. Defaults
+     *  to `'default'` so unflagged sites stay byte-identical. */
+    footerVariant: 'default' | 'mega' | 'minimal' | 'brutalist',
 }
 
 export interface ISiteShellProps {
@@ -127,6 +131,7 @@ class LegacyAppClass extends React.Component<IHomeProps> {
         blogEnabled: true,
         layoutMode: 'tabs',
         navVariant: 'default',
+        footerVariant: 'default',
     }
     private languages: any;
 
@@ -310,6 +315,10 @@ class LegacyAppClass extends React.Component<IHomeProps> {
                 const v = (data as any).navVariant;
                 return v === 'rail' || v === 'pill' || v === 'underline' ? v : 'default';
             })(),
+            footerVariant: (() => {
+                const v = (data as any).footerVariant;
+                return v === 'mega' || v === 'minimal' || v === 'brutalist' ? v : 'default';
+            })(),
             themeConfig: data.themeTokens ? buildThemeConfig(data.themeTokens) : undefined,
         };
     }
@@ -367,6 +376,7 @@ class LegacyAppClass extends React.Component<IHomeProps> {
             hasPosts: this.state.hasPosts,
             blogEnabled: this.state.blogEnabled,
             navVariant: this.state.navVariant,
+            footerVariant: this.state.footerVariant,
         }
         if (init) {
             // eslint-disable-next-line react/no-direct-mutation-state
@@ -456,6 +466,10 @@ class LegacyAppClass extends React.Component<IHomeProps> {
         {
             const v = (flags as any).navVariant;
             newState.navVariant = v === 'rail' || v === 'pill' || v === 'underline' ? v : 'default';
+        }
+        {
+            const v = (flags as any).footerVariant;
+            newState.footerVariant = v === 'mega' || v === 'minimal' || v === 'brutalist' ? v : 'default';
         }
         const activeTheme = await this.ThemeApi.getActive();
         if (activeTheme?.tokens) {
@@ -826,6 +840,7 @@ class LegacyAppClass extends React.Component<IHomeProps> {
                             blogEnabled={this.state.blogEnabled}
                             t={this.props.t as any}
                             layoutMode={this.state.layoutMode}
+                            variant={this.state.footerVariant}
                         />
                     </Spin>
                 </ConfigProvider>

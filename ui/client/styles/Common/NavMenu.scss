@@ -171,6 +171,183 @@
   }
 }
 
+/* ==========================================================================
+   Variant modifiers — site-flag-driven visual flavours layered on top of
+   the theme classes. Each variant is opt-in via `siteFlags.navVariant`
+   and only applies when the modifier class is present, so existing
+   themes render byte-identical when the flag is unset / `'default'`.
+
+   Variants are deliberately theme-agnostic: they reference only the
+   shared CSS-variable tokens emitted by `applyThemeCssVars` (--ink,
+   --ink-2, --accent, --rule, --theme-colorBgBase, --font-sans). The
+   per-theme rules above still control colour palette and typeface; the
+   variant rules below control geometry, decoration, and motion.
+   ========================================================================== */
+
+/* ---- Rail variant: sticky vertical strip on the left edge --------------- */
+/* Replaces the horizontal top bar with a fixed-width column. Hidden on
+ * mobile so the existing burger / MobileNav owns small screens — there's
+ * no room for a side rail without trampling content. */
+.nav-menu--rail.ant-menu-horizontal {
+  position: sticky;
+  top: 0;
+  left: 0;
+  /* AntD applies `flex` on horizontal Menu — flip to a column so items
+   * stack vertically. `width` & `height` give the rail its strip shape. */
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 180px;
+  min-height: 100vh;
+  padding: 24px 16px;
+  background: var(--theme-colorBgBase);
+  border-right: 1px solid var(--rule, color-mix(in oklch, var(--ink) 12%, transparent));
+  border-bottom: 0;
+  line-height: 1.4;
+
+  .ant-menu-item,
+  .ant-menu-submenu {
+    display: block;
+    width: 100%;
+    padding: 10px 8px;
+    margin-inline-start: 0 !important;
+    text-align: left;
+
+    + .ant-menu-item,
+    + .ant-menu-submenu {
+      margin-inline-start: 0;
+      margin-top: 4px;
+    }
+
+    .navigation-item {
+      display: block;
+      width: 100%;
+    }
+
+    /* Suppress the inherited horizontal-underline ::after — the rail
+     * uses a left-edge accent strip instead. */
+    &::after {
+      content: none !important;
+      border: 0 !important;
+    }
+
+    &.ant-menu-item-selected,
+    &.ant-menu-submenu-selected {
+      box-shadow: inset 3px 0 0 var(--accent);
+      color: var(--accent);
+    }
+  }
+
+  @media (max-width: 768px) {
+    display: none;
+  }
+}
+
+/* ---- Pill variant: rounded chips with subtle background ----------------- */
+/* Each item rendered as a rounded "pill". Hover lifts the background; the
+ * active item gets a full accent fill. Works against both light and dark
+ * themes because everything is composed from `color-mix(in oklch, …)`. */
+.nav-menu--pill.ant-menu-horizontal {
+  gap: 6px;
+
+  .ant-menu-item,
+  .ant-menu-submenu {
+    padding: 6px 14px !important;
+    border-radius: 999px;
+    background: color-mix(in oklch, var(--ink) 6%, transparent);
+    transition: background 180ms ease, color 180ms ease;
+
+    + .ant-menu-item,
+    + .ant-menu-submenu {
+      margin-inline-start: 6px;
+    }
+
+    .navigation-item {
+      padding: 0 2px;
+    }
+
+    &:hover {
+      background: color-mix(in oklch, var(--ink) 12%, transparent);
+    }
+
+    &::after {
+      content: none !important;
+      border: 0 !important;
+    }
+
+    &.ant-menu-item-selected,
+    &.ant-menu-submenu-selected {
+      background: var(--accent);
+      color: var(--theme-colorBgBase);
+
+      .navigation-item { color: inherit; }
+    }
+  }
+
+  .ant-menu-submenu-title {
+    padding-inline: 0;
+  }
+}
+
+/* ---- Underline variant: type-only with animated underline-slide --------- */
+/* Strips every chrome: no background, no border, no border-bottom on the
+ * menu itself. Each item gets a `::after` bar that scales-from-left on
+ * hover or when selected. `prefers-reduced-motion` collapses the slide
+ * to an instant swap so vestibular-sensitive visitors aren't punished. */
+.nav-menu--underline.ant-menu-horizontal {
+  background: transparent;
+  border-bottom: 0;
+
+  .ant-menu-item,
+  .ant-menu-submenu {
+    position: relative;
+    padding: 8px 0 !important;
+    background: transparent !important;
+
+    + .ant-menu-item,
+    + .ant-menu-submenu {
+      margin-inline-start: 32px;
+    }
+
+    /* The underline bar — `transform: scaleX()` on a `::after` is GPU-cheap
+     * and avoids re-layout on hover. `transform-origin: left` makes the
+     * slide-in read left-to-right; selected items hold it open. */
+    &::after {
+      content: '' !important;
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 2px;
+      background: var(--accent);
+      border: 0 !important;
+      transform: scaleX(0);
+      transform-origin: left center;
+      transition: transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+
+    &:hover::after,
+    &.ant-menu-item-active::after,
+    &.ant-menu-submenu-active::after,
+    &.ant-menu-item-selected::after,
+    &.ant-menu-submenu-selected::after {
+      transform: scaleX(1);
+    }
+
+    &.ant-menu-item-selected,
+    &.ant-menu-submenu-selected {
+      color: var(--ink);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ant-menu-item::after,
+    .ant-menu-submenu::after {
+      transition: none;
+    }
+  }
+}
+
 /* ---- Submenu popup styling (shared, theme-aware via tokens) ------------- */
 .ant-menu-submenu-popup .nav-menu-popup,
 .ant-menu-submenu-popup .ant-menu {
