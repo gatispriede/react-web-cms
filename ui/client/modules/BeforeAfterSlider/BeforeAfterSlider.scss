@@ -94,4 +94,61 @@
     &__percent {
         display: none;
     }
+
+    /* ---- Vertical: drag handle moves up/down */
+    &.vertical {
+        .before-after-slider__img--after {
+            clip-path: inset(calc(100% - var(--percent, 50%)) 0 0 0);
+        }
+        .before-after-slider__handle {
+            top: var(--percent, 50%);
+            bottom: auto;
+            left: 0;
+            right: 0;
+            width: auto;
+            height: 44px;
+            margin-left: 0;
+            margin-top: -22px;
+            cursor: ns-resize;
+        }
+        .before-after-slider__handle::before {
+            top: 50%;
+            bottom: auto;
+            left: 0;
+            right: 0;
+            width: auto;
+            height: 2px;
+            margin-left: 0;
+            margin-top: -1px;
+        }
+    }
+
+    /* ---- Diagonal: diagonal clip-path */
+    &.diagonal {
+        .before-after-slider__img--after {
+            clip-path: polygon(
+                0 0,
+                calc(var(--percent, 50%) + 4rem) 0,
+                calc(var(--percent, 50%) - 4rem) 100%,
+                0 100%
+            );
+        }
+        .before-after-slider__handle::before {
+            transform: rotate(12deg);
+            transform-origin: center;
+        }
+    }
+
+    /* ---- Reveal: hover-only reveal */
+    &.reveal {
+        .before-after-slider__img--after {
+            clip-path: inset(0 100% 0 0);
+            transition: clip-path 300ms ease-out;
+        }
+        &:hover .before-after-slider__img--after,
+        &:focus-within .before-after-slider__img--after {
+            clip-path: inset(0 0 0 0);
+        }
+        .before-after-slider__handle { opacity: 0; pointer-events: none; }
+    }
 }

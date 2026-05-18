@@ -14,3 +14,13 @@ export interface ChangelogTimelineProps {
     entries: ChangelogEntry[];
     maxEntries?: number;
 }
+
+export enum EChangelogTimelineStyle {
+    Default = "default",
+    /** Each entry as an elevated card. */
+    Cards = "cards",
+    /** `$ git log --oneline` monospace output. */
+    Terminal = "terminal",
+    /** Red/green diff-style changed-line aesthetic. */
+    Diff = "diff",
+}

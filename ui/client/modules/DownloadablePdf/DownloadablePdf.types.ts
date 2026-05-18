@@ -13,3 +13,13 @@ export interface IDownloadablePdf {
      *  `/api/products/{productId}/spec-sheet.pdf`. */
     href?: string;
 }
+
+export enum EDownloadablePdfStyle {
+    Default = "default",
+    /** Elevated card with PDF icon + meta. */
+    Card = "card",
+    /** Full-width accent band. */
+    Banner = "banner",
+    /** Subtle inline link with icon, no chrome. */
+    Inline = "inline",
+}

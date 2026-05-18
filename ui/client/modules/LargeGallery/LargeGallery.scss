@@ -39,4 +39,62 @@
             scroll-snap-align: start;
         }
     }
+
+    /* --- Hero: first image full-bleed, rest in a smaller grid below. */
+    &.hero {
+        .large-gallery__grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+        }
+        .large-gallery__tile:first-child {
+            grid-column: 1 / -1;
+            img { aspect-ratio: 21 / 9; }
+        }
+    }
+
+    /* --- Cinema: 16:9 letterbox row, horizontal scroll. -------------- */
+    &.cinema {
+        .large-gallery__grid {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            background: #000;
+            padding: 0.5rem 0;
+        }
+        .large-gallery__tile {
+            flex: 0 0 min(100%, 720px);
+            scroll-snap-align: center;
+            border-radius: 0;
+            img { aspect-ratio: 16 / 9; }
+        }
+    }
+
+    /* --- Polaroid: rotated tiles with white borders. ---------------- */
+    &.polaroid {
+        .large-gallery__grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem 1rem;
+            padding: 1rem 0;
+        }
+        .large-gallery__tile {
+            background: #fff;
+            padding: 0.75rem 0.75rem 2.25rem;
+            box-shadow: 0 8px 20px -10px rgba(0, 0, 0, 0.35);
+            border-radius: 2px;
+            transform: rotate(-1.2deg);
+            transition: transform 0.18s ease;
+
+            &:nth-child(2n) { transform: rotate(1.5deg); }
+            &:nth-child(3n) { transform: rotate(-0.6deg); }
+            &:hover { transform: rotate(0) scale(1.02); }
+
+            img {
+                aspect-ratio: 1 / 1;
+                border-radius: 0;
+            }
+        }
+    }
 }

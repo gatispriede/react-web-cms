@@ -441,6 +441,28 @@ const SOCIAL_SHARE_BUTTONS_STYLE_LABELS: Record<string, string> = {
     outlined: 'Outlined (bold)',
     branded: 'Branded (per-platform)',
 };
+const BREADCRUMB_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    compact: 'Compact',
+    pills: 'Pills',
+    slash: 'Slash separators',
+    arrow: 'Arrow chevrons',
+};
+const PAGINATION_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    slim: 'Slim',
+    pills: 'Pills',
+    numbered: 'Numbered',
+    minimal: 'Minimal (prev/next)',
+};
+const SOCIAL_LINKS_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    large: 'Large',
+    channels: 'Channels strip',
+    icons: 'Icons only',
+    branded: 'Branded colors',
+    floating: 'Floating rail',
+};
 
 export const ADMIN_ITEM_TYPE_EDITORS: readonly AdminItemTypeEntry[] = [
     {key: EItemType.Text,            Editor: PlainTextEditor,        styleEnum: asEnum(EPlainTextStyle), styleLabels: PLAIN_TEXT_STYLE_LABELS,      defaultContent: '{"value":""}',                                                                                                                                                              labelKey: 'Simple Text',          descriptionKey: 'Plain paragraph with inline style only.',                            category: 'content'},
@@ -452,7 +474,7 @@ export const ADMIN_ITEM_TYPE_EDITORS: readonly AdminItemTypeEntry[] = [
     {key: EItemType.ProjectCard,     Editor: ProjectCardEditor,      styleEnum: asEnum(EProjectCardStyle), styleLabels: PROJECT_CARD_STYLE_LABELS,     defaultContent: '{"title":"","description":"","image":"","tags":[]}',                                                                                                                        labelKey: 'Project card',         descriptionKey: 'Single featured project with cover and tags.',                       category: 'content'},
     {key: EItemType.SkillPills,      Editor: SkillPillsEditor,       styleEnum: asEnum(ESkillPillsStyle), styleLabels: SKILL_PILLS_STYLE_LABELS,      defaultContent: '{"category":"","items":[]}',                                                                                                                                                labelKey: 'Skill pills',          descriptionKey: 'Tag cloud or matrix of skills.',                                     category: 'content'},
     {key: EItemType.Timeline,        Editor: TimelineEditor,         styleEnum: asEnum(ETimelineStyle), styleLabels: TIMELINE_STYLE_LABELS,        defaultContent: '{"entries":[{"start":"","end":"","company":"","role":""}]}',                                                                                                                labelKey: 'Timeline',             descriptionKey: 'Vertical or horizontal milestone list.',                             category: 'content'},
-    {key: EItemType.SocialLinks,     Editor: SocialLinksEditor,      styleEnum: asEnum(ESocialLinksStyle),     defaultContent: '{"links":[{"platform":"website","url":"","label":""}]}',                                                                                                                    labelKey: 'Social links',         descriptionKey: 'Row of icon links to external profiles.',                            category: 'cta'},
+    {key: EItemType.SocialLinks,     Editor: SocialLinksEditor,      styleEnum: asEnum(ESocialLinksStyle), styleLabels: SOCIAL_LINKS_STYLE_LABELS,     defaultContent: '{"links":[{"platform":"website","url":"","label":""}]}',                                                                                                                    labelKey: 'Social links',         descriptionKey: 'Row of icon links to external profiles.',                            category: 'cta'},
     {key: EItemType.BlogFeed,        Editor: BlogFeedEditor,         styleEnum: asEnum(EBlogFeedStyle), styleLabels: BLOG_FEED_STYLE_LABELS,        defaultContent: '{"limit":6,"tag":"","heading":""}',                                                                                                                                         labelKey: 'Blog feed',            descriptionKey: 'Latest posts pulled from the Posts collection.',                     category: 'content'},
     {key: EItemType.List,            Editor: ListEditor,             styleEnum: asEnum(EListStyle), styleLabels: LIST_STYLE_LABELS,            defaultContent: '{"title":"","items":[{"label":"","value":"","href":""}]}',                                                                                                                  labelKey: 'List',                 descriptionKey: 'Bullet or numbered list, optional meta fields.',                     category: 'content'},
     {key: EItemType.Services,        Editor: ServicesEditor,         styleEnum: asEnum(EServicesStyle), styleLabels: SERVICES_STYLE_LABELS,        defaultContent: '{"sectionNumber":"","sectionTitle":"","sectionSubtitle":"","rows":[{"number":"01","title":"","description":"","ctaLabel":"","ctaHref":"","iconGlyph":"","tags":[]}]}',      labelKey: 'Services',             descriptionKey: 'Icon + heading + body cards grouped by row.',                        category: 'content'},

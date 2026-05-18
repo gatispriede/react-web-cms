@@ -25,4 +25,62 @@
     &__label {
         font-weight: 500;
     }
+
+    /* --- Card: elevated panel with prominent PDF icon. -------------- */
+    &.card {
+        .downloadable-pdf__link {
+            display: flex;
+            padding: 1.25rem 1.5rem;
+            border-radius: var(--radius-lg, 12px);
+            background: var(--theme-colorBgBase, #fff);
+            box-shadow: 0 10px 28px -14px rgba(0, 0, 0, 0.25),
+                        0 1px 3px rgba(0, 0, 0, 0.06);
+            border-color: transparent;
+        }
+        .downloadable-pdf__icon {
+            font-size: 2rem;
+            line-height: 1;
+        }
+        .downloadable-pdf__label { font-weight: 600; }
+    }
+
+    /* --- Banner: full-width accent band. ---------------------------- */
+    &.banner {
+        .downloadable-pdf__link {
+            display: flex;
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border-radius: 0;
+            border: none;
+            background: var(--accent, var(--theme-colorPrimary, #1677ff));
+            color: var(--theme-colorBgBase, #fff);
+            justify-content: center;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+
+            &:hover {
+                background: color-mix(in srgb, var(--accent, #1677ff) 88%, #000);
+            }
+        }
+    }
+
+    /* --- Inline: subtle text link with icon, no chrome. ------------- */
+    &.inline {
+        margin: 0.5rem 0;
+        .downloadable-pdf__link {
+            padding: 0;
+            border: none;
+            background: transparent;
+            color: var(--accent, var(--theme-colorPrimary, #1677ff));
+            text-decoration: underline;
+            text-underline-offset: 3px;
+
+            &:hover {
+                background: transparent;
+                color: color-mix(in srgb, var(--accent, #1677ff) 80%, #000);
+            }
+        }
+        .downloadable-pdf__icon { font-size: 1rem; }
+        .downloadable-pdf__label { font-weight: 400; }
+    }
 }
