@@ -19,7 +19,7 @@ const CartActions: React.FC<CartActionsProps> = ({item}) => {
     const clearLabel = c.clearLabel ?? 'Clear cart';
     const isEmpty = cart.items.length === 0;
     return (
-        <div className="cart-actions" data-testid="module-cart-actions">
+        <div className={`cart-actions${item.style && item.style !== 'default' ? ` ${item.style as string}` : ''}`} data-testid="module-cart-actions">
             <button
                 type="button"
                 className="cart-actions__clear"

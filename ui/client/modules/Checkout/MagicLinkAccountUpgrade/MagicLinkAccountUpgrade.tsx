@@ -14,7 +14,7 @@ const MagicLinkAccountUpgrade: React.FC<MagicLinkAccountUpgradeProps> = ({item, 
         ? `/account/magic-link?prefillEmail=${encodeURIComponent(guestEmail)}&callbackUrl=${encodeURIComponent('/account/orders')}`
         : '/account/magic-link';
     return (
-        <section className="magic-link-account-upgrade" data-testid="module-magic-link-account-upgrade">
+        <section className={`magic-link-account-upgrade${item.style && item.style !== 'default' ? ` ${item.style as string}` : ''}`} data-testid="module-magic-link-account-upgrade">
             <h3>{c.title ?? 'Save your details for next time'}</h3>
             {c.body && <p>{c.body}</p>}
             <a className="magic-link-account-upgrade__cta" href={href} data-testid="magic-link-upgrade-cta">{c.ctaLabel ?? 'Create an account'}</a>

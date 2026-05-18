@@ -36,7 +36,7 @@ const CartLineItems: React.FC<CartLineItemsProps> = ({item}) => {
 
     return (
         <section
-            className="cart-line-items"
+            className={`cart-line-items${item.style && item.style !== 'default' ? ` ${item.style as string}` : ''}`}
             data-testid="module-cart-line-items"
             style={{background: '#fff', borderRadius: 8, padding: 24, boxShadow: '0 1px 2px rgba(0,0,0,0.04)'}}
         >

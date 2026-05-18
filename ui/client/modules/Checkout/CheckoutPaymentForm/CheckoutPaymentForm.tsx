@@ -53,7 +53,7 @@ const CheckoutPaymentForm: React.FC<CheckoutPaymentFormProps> = ({item}) => {
     };
 
     return (
-        <form className="checkout-payment-form" data-testid="module-checkout-payment-form" onSubmit={onSubmit}>
+        <form className={`checkout-payment-form${item.style && item.style !== 'default' ? ` ${item.style as string}` : ''}`} data-testid="module-checkout-payment-form" onSubmit={onSubmit}>
             <h3>{c.title ?? 'Payment'}</h3>
             <input data-testid="payment-card-number" name="number" placeholder="Card number" maxLength={19} required />
             <input data-testid="payment-card-exp" name="exp" placeholder="MM/YY" maxLength={5} required />

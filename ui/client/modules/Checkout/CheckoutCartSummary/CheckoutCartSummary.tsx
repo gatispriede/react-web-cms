@@ -17,7 +17,7 @@ const CheckoutCartSummary: React.FC<CheckoutCartSummaryProps> = ({item}) => {
     const c = parseContent(item.content);
     const {cart} = useCart();
     return (
-        <aside className="checkout-cart-summary" data-testid="module-checkout-cart-summary">
+        <aside className={`checkout-cart-summary${item.style && item.style !== 'default' ? ` ${item.style as string}` : ''}`} data-testid="module-checkout-cart-summary">
             <h3>{c.title ?? 'Your order'}</h3>
             <ul className="checkout-cart-summary__lines" data-testid="checkout-cart-summary-lines">
                 {cart.items.map(line => (

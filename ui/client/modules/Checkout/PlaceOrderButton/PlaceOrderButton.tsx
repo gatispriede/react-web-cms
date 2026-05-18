@@ -52,7 +52,7 @@ const PlaceOrderButton: React.FC<PlaceOrderButtonProps> = ({item, onClick}) => {
     };
 
     return (
-        <div className="place-order-button-wrap">
+        <div className={`place-order-button-wrap${item.style && item.style !== 'default' ? ` ${item.style as string}` : ''}`}>
             <button
                 type="button"
                 className="place-order-button"

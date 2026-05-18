@@ -31,7 +31,7 @@ const CartSummary: React.FC<CartSummaryProps> = ({item}) => {
 
     return (
         <aside
-            className="cart-summary"
+            className={`cart-summary${item.style && item.style !== 'default' ? ` ${item.style as string}` : ''}`}
             data-testid="module-cart-summary"
             style={{background: '#fff', borderRadius: 8, padding: 20, boxShadow: '0 1px 2px rgba(0,0,0,0.04)', position: 'sticky', top: 16}}
         >

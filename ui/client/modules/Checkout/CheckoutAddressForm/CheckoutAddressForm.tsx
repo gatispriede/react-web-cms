@@ -78,7 +78,7 @@ const CheckoutAddressForm: React.FC<CheckoutAddressFormProps> = ({item}) => {
     };
 
     return (
-        <form className="checkout-address-form" data-testid="module-checkout-address-form" onSubmit={handleSubmit}>
+        <form className={`checkout-address-form${item.style && item.style !== 'default' ? ` ${item.style as string}` : ''}`} data-testid="module-checkout-address-form" onSubmit={handleSubmit}>
             <h3>{c.title ?? 'Shipping address'}</h3>
             <input data-testid="address-form-name" name="name" placeholder="Full name" required />
             <input data-testid="address-form-line1" name="line1" placeholder="Address line 1" required />

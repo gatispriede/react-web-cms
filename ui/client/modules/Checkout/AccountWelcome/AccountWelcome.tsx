@@ -12,7 +12,7 @@ const AccountWelcome: React.FC<AccountWelcomeProps> = ({item, name}) => {
     const c = parseContent(item.content);
     const greeting = c.title ?? (name ? `Hi ${name}!` : 'Welcome back');
     return (
-        <section className="account-welcome" data-testid="module-account-welcome">
+        <section className={`account-welcome${item.style && item.style !== 'default' ? ` ${item.style as string}` : ''}`} data-testid="module-account-welcome">
             <h1>{greeting}</h1>
             <nav className="account-welcome__nav">
                 <a href="/account/orders" data-testid="account-welcome-orders">Orders</a>

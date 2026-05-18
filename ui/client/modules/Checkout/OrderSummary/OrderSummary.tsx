@@ -53,7 +53,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({item, token}) => {
     }, [resolvedToken, orderId]);
 
     return (
-        <article className="order-summary" data-testid="module-order-summary">
+        <article className={`order-summary${item.style && item.style !== 'default' ? ` ${item.style as string}` : ''}`} data-testid="module-order-summary">
             <h2>{c.title ?? 'Order summary'}</h2>
             {loading ? (
                 <p data-testid="order-summary-loading">Loading order…</p>

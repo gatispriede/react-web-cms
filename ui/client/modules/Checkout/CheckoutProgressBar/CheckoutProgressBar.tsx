@@ -45,7 +45,7 @@ const CheckoutProgressBar: React.FC<CheckoutProgressBarProps> = ({item, currentS
     const activeIdx = STEPS.findIndex(s => s.key === resolved);
 
     return (
-        <ol className="checkout-progress-bar" data-testid="module-checkout-progress-bar">
+        <ol className={`checkout-progress-bar${item.style && item.style !== 'default' ? ` ${item.style as string}` : ''}`} data-testid="module-checkout-progress-bar">
             {STEPS.map((s, i) => {
                 const isActive = i === activeIdx;
                 const isDone = i <= activeIdx;

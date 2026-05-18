@@ -38,6 +38,23 @@ function parse<T>(raw: string | undefined): T {
 
 const wrapStyle: React.CSSProperties = {width: '100%'};
 
+/**
+ * Compose the host root className with the operator-picked style
+ * variant suffix. SectionContent forwards `item.style` (the lowercase
+ * enum value) onto each module's wrapper, but the smart-wrapper hosts
+ * historically rendered a fixed `<base>-host` class only — so picking
+ * "Cards" / "Receipt" / "Stacked" in the Style dropdown changed
+ * nothing visually. This helper appends `<base>-host--<style>` so the
+ * per-variant SCSS rules added in the recent style-variant batch
+ * actually land. Whitespace-collapsed; missing/`default` style stays
+ * a no-op so the original single-class output is preserved.
+ */
+function hostCx(base: string, item: IItem): string {
+    const style = (item.style as string | undefined) ?? '';
+    if (!style || style === 'default') return `${base}-host`;
+    return `${base}-host ${style}`;
+}
+
 // ── Orders list ──────────────────────────────────────────────────────
 
 interface OrdersListContent {
@@ -82,7 +99,7 @@ export const OrdersListHost: React.FC<{item: IItem}> = ({item}) => {
     );
 
     return (
-        <div className="account-orders-host" style={wrapStyle} data-testid="account-orders-host">
+        <div className={hostCx('account-orders', item)} style={wrapStyle} data-testid="account-orders-host">
             {c.title ? <h2 className="account-orders-host__title">{c.title}</h2> : null}
             {loading
                 ? <p data-testid="account-orders-loading">Loading…</p>
@@ -221,27 +238,29 @@ export const OrderDetailHost: React.FC<{item: IItem}> = ({item}) => {
         : undefined;
 
     return (
-        <OrderDetailModule
-            testId="account-order-detail"
-            orderNumber={String(order.orderNumber ?? id ?? '')}
-            progressSteps={buildProgressSteps(String(order.status ?? 'pending'))}
-            lineItems={lineItems}
-            shippingAddress={toOrderAddress(order.shippingAddress)}
-            billingAddress={toOrderAddress(order.billingAddress)}
-            payment={{
-                subtotalFormatted: formatMoney(order.subtotal as number, currency),
-                shippingFormatted: formatMoney(order.shippingTotal as number, currency),
-                taxFormatted: formatMoney(order.taxTotal as number, currency),
-                totalFormatted: formatMoney(order.total as number, currency),
-            }}
-            statusHistory={statusHistory}
-            actions={{
-                onContactSupport: () => {
-                    window.location.href = c.supportHref ?? '/account/inbox';
-                },
-            }}
-            invoiceDownloadUrl={invoiceUrl}
-        />
+        <div className={hostCx('account-order-detail', item)} style={wrapStyle} data-testid="account-order-detail-host">
+            <OrderDetailModule
+                testId="account-order-detail"
+                orderNumber={String(order.orderNumber ?? id ?? '')}
+                progressSteps={buildProgressSteps(String(order.status ?? 'pending'))}
+                lineItems={lineItems}
+                shippingAddress={toOrderAddress(order.shippingAddress)}
+                billingAddress={toOrderAddress(order.billingAddress)}
+                payment={{
+                    subtotalFormatted: formatMoney(order.subtotal as number, currency),
+                    shippingFormatted: formatMoney(order.shippingTotal as number, currency),
+                    taxFormatted: formatMoney(order.taxTotal as number, currency),
+                    totalFormatted: formatMoney(order.total as number, currency),
+                }}
+                statusHistory={statusHistory}
+                actions={{
+                    onContactSupport: () => {
+                        window.location.href = c.supportHref ?? '/account/inbox';
+                    },
+                }}
+                invoiceDownloadUrl={invoiceUrl}
+            />
+        </div>
     );
 };
 
@@ -312,7 +331,7 @@ export const AddressListHost: React.FC<{item: IItem}> = ({item}) => {
     }, [reload]);
 
     return (
-        <div className="account-addresses-host" style={wrapStyle} data-testid="account-addresses-host">
+        <div className={hostCx('account-addresses', item)} style={wrapStyle} data-testid="account-addresses-host">
             {c.title ? <h2 className="account-addresses-host__title">{c.title}</h2> : null}
             {error ? <Alert style={{marginBottom: 12}} type="error" showIcon message={error}/> : null}
             {loading
@@ -419,16 +438,18 @@ export const NotificationInboxHost: React.FC<{item: IItem}> = ({item}) => {
     if (loading) return <p data-testid="account-inbox-loading">Loading…</p>;
 
     return (
-        <NotificationInbox
-            testId="account-inbox"
-            notifications={visible}
-            onMarkRead={markRead}
-            onDelete={dismiss}
-            emptyState={{
-                title: c.emptyTitle ?? 'Your inbox is empty',
-                description: c.emptyDescription,
-            }}
-        />
+        <div className={hostCx('account-inbox', item)} style={wrapStyle} data-testid="account-inbox-host">
+            <NotificationInbox
+                testId="account-inbox"
+                notifications={visible}
+                onMarkRead={markRead}
+                onDelete={dismiss}
+                emptyState={{
+                    title: c.emptyTitle ?? 'Your inbox is empty',
+                    description: c.emptyDescription,
+                }}
+            />
+        </div>
     );
 };
 
@@ -506,7 +527,7 @@ export const AccountDashboardGridHost: React.FC<{item: IItem}> = ({item}) => {
         return <p data-testid="account-dashboard-loading">Loading…</p>;
     }
     return (
-        <div className="account-dashboard-host" style={wrapStyle} data-testid="account-dashboard-host">
+        <div className={hostCx('account-dashboard', item)} style={wrapStyle} data-testid="account-dashboard-host">
             <AccountDashboardGrid testId="account-dashboard" cards={cards}/>
         </div>
     );
@@ -590,7 +611,7 @@ export const AccountProfileFormHost: React.FC<{item: IItem}> = ({item}) => {
     }, [pwForm]);
 
     return (
-        <div className="account-profile-host" style={wrapStyle} data-testid="account-profile-host">
+        <div className={hostCx('account-profile', item)} style={wrapStyle} data-testid="account-profile-host">
             {c.headline ? <h2 className="account-profile-host__title">{c.headline}</h2> : null}
             {loading ? <Spin data-testid="account-profile-loading"/> : (
                 <>
@@ -683,7 +704,7 @@ export const AccountSettingsLayoutHost: React.FC<{item: IItem; pageProps?: Recor
         );
     }
     return (
-        <main data-testid="account-settings-host">
+        <main className={hostCx('account-settings', item)} data-testid="account-settings-host">
             <AccountSettingsLayoutComponent
                 me={data.me}
                 activeTab={data.activeTab ?? 'profile'}

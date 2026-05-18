@@ -52,7 +52,7 @@ const CheckoutShippingMethod: React.FC<CheckoutShippingMethodProps> = ({item}) =
     };
 
     return (
-        <div className="checkout-shipping-method" data-testid="module-checkout-shipping-method">
+        <div className={`checkout-shipping-method${item.style && item.style !== 'default' ? ` ${item.style as string}` : ''}`} data-testid="module-checkout-shipping-method">
             <h3>{c.title ?? 'Shipping method'}</h3>
             {methods.length === 0 ? (
                 <p data-testid="shipping-empty">No shipping methods available for this address.</p>

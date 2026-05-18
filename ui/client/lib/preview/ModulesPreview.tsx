@@ -115,11 +115,40 @@ export default function ModulesPreview() {
 
     return (
         <AdminPreviewModule testId="admin-modules-preview" title={t('Sample modules')} controls={controls}>
-            <div className="modules-preview-page" style={{padding: '16px 24px'}}>
+            {/* Sticky panel header — when a Collapse panel is expanded the
+                AntD `.ant-collapse-header` element should stay pinned to the
+                top of the viewport so operators can always see the module
+                name AND collapse it without scrolling back. AntD doesn't
+                ship a sticky-header prop, so override via local <style>
+                instead of pulling in a dedicated stylesheet. */}
+            <style>{`
+                .sample-modules-collapse .ant-collapse-item-active > .ant-collapse-header {
+                    position: sticky;
+                    top: 0;
+                    z-index: 5;
+                    background: var(--theme-colorBgContainer, #fff);
+                    border-bottom: 1px solid var(--theme-colorBorderSecondary, rgba(0,0,0,0.08));
+                }
+                .sample-modules-collapse .ant-collapse-content-box {
+                    padding: 10px 12px;
+                }
+                .sample-modules-collapse .ant-collapse-header {
+                    padding: 8px 12px;
+                }
+            `}</style>
+            <div className="modules-preview-page sample-modules-page" style={{padding: '8px 12px'}}>
                 <Collapse
                     activeKey={activeKeys}
                     onChange={(keys) => setActiveKeys(Array.isArray(keys) ? keys : [keys])}
                     bordered
+                    size="small"
+                    /* Sticky panel header — when a panel is expanded the
+                       header tracks the scroll position so operators can
+                       always see which module they're looking at AND
+                       collapse it without scrolling back to the top.
+                       Implemented inline rather than via SCSS so the
+                       wrapper doesn't need a new stylesheet import. */
+                    className="sample-modules-collapse"
                     items={visibleEntries.map((def) => {
                         const samples: PreviewSample[] = sampleContent[def.key] ?? [];
                         const styleValues = Object.values(def.styleEnum).filter((v) => typeof v === 'string') as string[];

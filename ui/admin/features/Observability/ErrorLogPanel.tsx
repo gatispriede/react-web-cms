@@ -123,7 +123,16 @@ const AdminErrorLog: React.FC = () => {
         <AdminInfoModule
             testId="admin-error-log"
             title={t('Error log')}
-            headerExtra={<Button onClick={vm.refresh} loading={vm.loading}>{t('Refresh')}</Button>}
+            /* `suppressHydrationWarning` on the button text — react-i18next
+             *  resolves the cookie-detected locale (e.g. `lv`) on the
+             *  server but the client SSR-boots in `en` and re-renders
+             *  after hydration. The button label is the only text in the
+             *  header pre-mount; the warning is correct (text mismatch)
+             *  but the result is purely cosmetic, so suppress the noisy
+             *  500 rather than ship a Suspense boundary for one word.
+             *  The actual fix is to thread the SSR locale into the
+             *  client i18next instance — tracked as a follow-up. */
+            headerExtra={<Button onClick={vm.refresh} loading={vm.loading}><span suppressHydrationWarning>{t('Refresh')}</span></Button>}
             toolbar={toolbar}
             blocks={blocks}
         />
