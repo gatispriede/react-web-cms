@@ -74,4 +74,118 @@
         &--breaking { background: color-mix(in srgb, var(--theme-colorError, #d4380d) 16%, transparent); color: var(--theme-colorError, #d4380d); }
         &--security { background: color-mix(in srgb, var(--theme-colorWarning, #f59e0b) 16%, transparent); color: var(--theme-colorWarning, #f59e0b); }
     }
+
+    /* --- Cards: each entry as an elevated card. --------------------- */
+    &.cards {
+        gap: 1rem;
+
+        .changelog-timeline__entry {
+            border-left: none;
+            padding: 1rem 1.25rem;
+            background: var(--theme-colorBgBase, #fff);
+            border-radius: var(--theme-borderRadius, 8px);
+            box-shadow: 0 6px 18px -10px rgba(0, 0, 0, 0.22),
+                        0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        .changelog-timeline__dot {
+            left: 1rem;
+            top: 1rem;
+        }
+    }
+
+    /* --- Terminal: $ git log --oneline mono output. ----------------- */
+    &.terminal {
+        gap: 0;
+        background: #0d1117;
+        color: #c9d1d9;
+        padding: 1rem 1.25rem;
+        border-radius: var(--theme-borderRadius, 6px);
+        font-family: var(--font-mono, ui-monospace, 'JetBrains Mono', monospace);
+        font-size: 0.875rem;
+
+        .changelog-timeline__entry {
+            padding-left: 0;
+            border-left: none;
+            display: grid;
+            grid-template-columns: auto auto 1fr;
+            column-gap: 0.75rem;
+            align-items: baseline;
+            padding: 0.125rem 0;
+
+            &::before {
+                content: '$';
+                color: #7ee787;
+                font-weight: 700;
+            }
+        }
+        .changelog-timeline__dot { display: none; }
+        .changelog-timeline__head {
+            display: contents;
+        }
+        .changelog-timeline__version {
+            color: #f0883e;
+            background: transparent;
+            padding: 0;
+            font-weight: 700;
+        }
+        .changelog-timeline__date { color: #6e7681; }
+        .changelog-timeline__title {
+            margin: 0;
+            grid-column: 1 / -1;
+            padding-left: 1.5rem;
+            color: #c9d1d9;
+            font-size: 0.875rem;
+            font-weight: 400;
+        }
+        .changelog-timeline__body {
+            grid-column: 1 / -1;
+            padding-left: 1.5rem;
+            color: #8b949e;
+            font-size: 0.8125rem;
+        }
+        .changelog-timeline__tag {
+            background: transparent;
+            color: #58a6ff;
+            padding: 0;
+            font-size: 0.75rem;
+            &::before { content: '#'; }
+        }
+    }
+
+    /* --- Diff: red/green changed-line aesthetic. -------------------- */
+    &.diff {
+        font-family: var(--font-mono, ui-monospace, monospace);
+        gap: 0;
+
+        .changelog-timeline__entry {
+            border-left: none;
+            padding: 0.5rem 0.75rem 0.5rem 2rem;
+            position: relative;
+            background: color-mix(in srgb, #16a34a 8%, transparent);
+            border-top: 1px solid color-mix(in srgb, #16a34a 28%, transparent);
+
+            &::before {
+                content: '+';
+                position: absolute;
+                left: 0.5rem;
+                top: 0.5rem;
+                color: #16a34a;
+                font-weight: 700;
+            }
+
+            &:has(.changelog-timeline__tag--breaking),
+            &:has(.changelog-timeline__tag--security) {
+                background: color-mix(in srgb, #d4380d 8%, transparent);
+                border-top-color: color-mix(in srgb, #d4380d 28%, transparent);
+                &::before { content: '-'; color: #d4380d; }
+            }
+        }
+        .changelog-timeline__dot { display: none; }
+        .changelog-timeline__version {
+            background: transparent;
+            padding: 0;
+            color: inherit;
+        }
+        .changelog-timeline__title { font-size: 0.9375rem; }
+    }
 }

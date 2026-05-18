@@ -30,6 +30,8 @@ import {EStatsCardStyle} from '@client/modules/StatsCard';
 import {EProjectGridStyle} from '@client/modules/ProjectGrid';
 import {EManifestoStyle} from '@client/modules/Manifesto';
 import {EInquiryFormStyle} from '@client/modules/InquiryForm';
+import {ELargeGalleryStyle} from '@client/modules/LargeGallery';
+import {EDownloadablePdfStyle} from '@client/modules/DownloadablePdf';
 import {EDataModelStyle} from '@client/modules/DataModel';
 import {EInfraTopologyStyle} from '@client/modules/InfraTopology';
 import {EPipelineFlowStyle} from '@client/modules/PipelineFlow';
@@ -333,6 +335,25 @@ const IMAGE_STYLE_LABELS: Record<string, string> = {
     cinema: 'Cinema (16:9 letterbox)',
     vintage: 'Vintage (sepia + vignette)',
 };
+const INQUIRY_FORM_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    editorial: 'Editorial (paper)',
+    card: 'Card (elevated)',
+    minimal: 'Minimal (hairline)',
+    inverse: 'Inverse (dark)',
+};
+const LARGE_GALLERY_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard grid',
+    hero: 'Hero (lead image)',
+    cinema: 'Cinema (16:9 row)',
+    polaroid: 'Polaroid (tilted tiles)',
+};
+const DOWNLOADABLE_PDF_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard button',
+    card: 'Card (elevated)',
+    banner: 'Banner (full-width accent)',
+    inline: 'Inline link',
+};
 const PRODUCT_STYLE_LABELS: Record<string, string> = {
     default: 'Standard',
     bordered: 'Bordered',
@@ -482,7 +503,7 @@ export const ADMIN_ITEM_TYPE_EDITORS: readonly AdminItemTypeEntry[] = [
     {key: EItemType.StatsCard,       Editor: StatsCardEditor,        styleEnum: asEnum(EStatsCardStyle), styleLabels: STATS_CARD_STYLE_LABELS,      defaultContent: '{"tag":"","title":"","stats":[{"value":"","label":""}],"features":[]}',                                                                                                     labelKey: 'Stats card',           descriptionKey: 'Metric / number callout with feature list.',                         category: 'content'},
     {key: EItemType.ProjectGrid,     Editor: ProjectGridEditor,      styleEnum: asEnum(EProjectGridStyle), styleLabels: PROJECT_GRID_STYLE_LABELS,     defaultContent: '{"sectionNumber":"","sectionTitle":"","sectionSubtitle":"","items":[{"title":"","stack":"","kind":"","year":"","coverArt":"","coverColor":"","moreLabel":"View engagement ↗","href":""}]}', labelKey: 'Project grid', descriptionKey: 'Card grid with image, title, tags per item.',                category: 'content'},
     {key: EItemType.Manifesto,       Editor: ManifestoEditor,        styleEnum: asEnum(EManifestoStyle), styleLabels: MANIFESTO_STYLE_LABELS,       defaultContent: '{"body":"","addendum":"","chips":[]}',                                                                                                                                      labelKey: 'Manifesto',            descriptionKey: 'Full-width editorial block with chip footer.',                       category: 'hero'},
-    {key: EItemType.InquiryForm,     Editor: InquiryFormEditor,      styleEnum: asEnum(EInquiryFormStyle),     defaultContent: '{"topics":[],"fields":[]}',                                                                                                                                                 labelKey: 'Inquiry form',         descriptionKey: 'Topic chips + name/email/message + submit (CV Contact).',            category: 'cta'},
+    {key: EItemType.InquiryForm,     Editor: InquiryFormEditor,      styleEnum: asEnum(EInquiryFormStyle), styleLabels: INQUIRY_FORM_STYLE_LABELS,     defaultContent: '{"topics":[],"fields":[]}',                                                                                                                                                 labelKey: 'Inquiry form',         descriptionKey: 'Topic chips + name/email/message + submit (CV Contact).',            category: 'cta'},
     {key: EItemType.DataModel,       Editor: DataModelEditor,        styleEnum: asEnum(EDataModelStyle),       styleLabels: DATA_MODEL_STYLE_LABELS, defaultContent: '{"fields":[],"collections":[],"audits":[]}',                                                                                                                                labelKey: 'Data model',           descriptionKey: 'Schema visualiser — fields table + collections aside + audit cards.',category: 'content'},
     {key: EItemType.InfraTopology,   Editor: InfraTopologyEditor,    styleEnum: asEnum(EInfraTopologyStyle),   styleLabels: INFRA_TOPOLOGY_STYLE_LABELS, defaultContent: '{"droplets":[]}',                                                                                                                                                           labelKey: 'Infra topology',       descriptionKey: 'Droplet/server cards + author-supplied SVG topology.',               category: 'content'},
     {key: EItemType.PipelineFlow,    Editor: PipelineFlowEditor,     styleEnum: asEnum(EPipelineFlowStyle),    styleLabels: PIPELINE_FLOW_STYLE_LABELS, defaultContent: '{"steps":[],"sideNotes":[]}',                                                                                                                                               labelKey: 'Pipeline flow',        descriptionKey: 'Linear CI/CD pipeline with status pills and side notes.',            category: 'content'},
@@ -499,8 +520,8 @@ export const ADMIN_ITEM_TYPE_EDITORS: readonly AdminItemTypeEntry[] = [
     {key: EItemType.ProductDetailHero, Editor: ProductDetailHeroEditor, styleEnum: asEnum(EProductDetailHeroStyle), styleLabels: PRODUCT_DETAIL_HERO_STYLE_LABELS, defaultContent: '{"productId":"","showBuyCta":true,"showVatBadge":true}',                                                                                                                       labelKey: 'Product detail hero',  descriptionKey: 'Image gallery + title + price + Buy CTA + VAT badge — bound to the page product.', category: 'hero'},
     {key: EItemType.ProductSpecTable,  Editor: ProductSpecTableEditor,  styleEnum: asEnum(EProductSpecTableStyle), styleLabels: PRODUCT_SPEC_TABLE_STYLE_LABELS, defaultContent: '{"productId":"","autoFromAttributes":true}',                                                                                                                                  labelKey: 'Spec table',           descriptionKey: 'Two-column key/value table auto-generated from IProduct.attributes.',           category: 'content'},
     {key: EItemType.ProductDescription, Editor: ProductDescriptionEditor, styleEnum: asEnum(EProductDescriptionStyle), styleLabels: PRODUCT_DESCRIPTION_STYLE_LABELS, defaultContent: '{"productId":"","autoBindTo":"product.description"}',                                                                                                                       labelKey: 'Product description',  descriptionKey: 'Rich body, auto-bound to the product\'s stored description (overridable).',     category: 'content'},
-    {key: EItemType.Pagination,        Editor: PaginationEditor,        styleEnum: asEnum(EPaginationStyle),        defaultContent: '{"variant":"load-more","pageSize":24}',                                                                                                                                       labelKey: 'Pagination',           descriptionKey: 'Cursor-based — load-more button or infinite-scroll.',                          category: 'cta'},
-    {key: EItemType.Breadcrumb,        Editor: BreadcrumbEditor,        styleEnum: asEnum(EBreadcrumbStyle),        defaultContent: '{"autoFromParentChain":true,"separator":"\\u203a"}',                                                                                                                            labelKey: 'Breadcrumb',           descriptionKey: 'Auto-walks the page parent chain — N-deep, no depth cap.',                     category: 'content'},
+    {key: EItemType.Pagination,        Editor: PaginationEditor,        styleEnum: asEnum(EPaginationStyle), styleLabels: PAGINATION_STYLE_LABELS,        defaultContent: '{"variant":"load-more","pageSize":24}',                                                                                                                                       labelKey: 'Pagination',           descriptionKey: 'Cursor-based — load-more button or infinite-scroll.',                          category: 'cta'},
+    {key: EItemType.Breadcrumb,        Editor: BreadcrumbEditor,        styleEnum: asEnum(EBreadcrumbStyle), styleLabels: BREADCRUMB_STYLE_LABELS,        defaultContent: '{"autoFromParentChain":true,"separator":"\\u203a"}',                                                                                                                            labelKey: 'Breadcrumb',           descriptionKey: 'Auto-walks the page parent chain — N-deep, no depth cap.',                     category: 'content'},
     // Phase 1.F — product-display-templates: 4 modules consumed by the
     // 5 built-in IProductTemplate seeds + operator-created customs.
     {key: EItemType.LargeGallery,      Editor: LargeGalleryEditor,      styleEnum: asEnum({Default: 'default'}),    defaultContent: '{"title":"","images":[]}',                                                                                                                                                  labelKey: 'Large gallery',        descriptionKey: 'Image-led full-bleed gallery; mobile carousel. Premium / Lookbook templates.', category: 'media'},
