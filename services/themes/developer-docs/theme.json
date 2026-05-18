@@ -1,0 +1,27 @@
+{
+    "slug": "developer-docs",
+    "name": "Developer Docs",
+    "tagline": "Docs / API-reference aesthetic — paper-grey light, calm dark slate, mono-forward typography — for open-source projects and engineering handbooks.",
+    "audience": "Open-source projects, API docs, technical handbooks, internal engineering wikis",
+    "mood": ["technical", "calm", "legible", "mono-forward", "restrained"],
+    "palette": {
+        "surface":      {"light": "#F7F7F5", "dark": "#0F1419"},
+        "ink":          {"light": "#1A1A1A", "dark": "#D4D4D8"},
+        "accent":       {"light": "#2563EB", "dark": "#60A5FA"},
+        "accentInk":    {"light": "#FFFFFF", "dark": "#0F1419"},
+        "surfaceInset": {"light": "#EDEDE8", "dark": "#161B22"},
+        "rule":         {"light": "#D4D4D0", "dark": "#21262D"}
+    },
+    "typography": {
+        "display": "'Inter', 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "body":    "'Inter', 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "mono":    "'JetBrains Mono', 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace",
+        "baseSize": 16
+    },
+    "motion": "snappy-default",
+    "headerBehavior": "sticky-static",
+    "footerLayout": "minimal-1row",
+    "logoLockup": "wordmark",
+    "darkDefault": true,
+    "placeholder": true
+}

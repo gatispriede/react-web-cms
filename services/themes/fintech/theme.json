@@ -1,0 +1,26 @@
+{
+    "slug": "fintech",
+    "name": "Fintech",
+    "tagline": "Trust-and-compliance aesthetic — deep navy surfaces, restrained mint accent, humanist sans — for banks, payment processors, and regulated SaaS.",
+    "audience": "Fintech startups, neo-banks, payment processors, regulated SaaS",
+    "mood": ["trustworthy", "compliant", "precise", "institutional", "high-contrast"],
+    "palette": {
+        "surface":      {"light": "#FFFFFF", "dark": "#0B1220"},
+        "ink":          {"light": "#0B1220", "dark": "#E6ECF5"},
+        "accent":       {"light": "#0F766E", "dark": "#5EEAD4"},
+        "accentInk":    {"light": "#FFFFFF", "dark": "#0B1220"},
+        "surfaceInset": {"light": "#F4F6FA", "dark": "#111A2E"},
+        "rule":         {"light": "#D7DEEA", "dark": "#1F2A44"}
+    },
+    "typography": {
+        "display": "'Inter Tight', 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "body":    "'Inter', 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "mono":    "'IBM Plex Mono', 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace",
+        "baseSize": 16
+    },
+    "motion": "snappy-default",
+    "headerBehavior": "sticky-static",
+    "footerLayout": "multi-column",
+    "logoLockup": "combined",
+    "placeholder": true
+}

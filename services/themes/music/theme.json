@@ -1,0 +1,32 @@
+{
+    "slug": "music",
+    "name": "Music",
+    "tagline": "Deep plum surface, bold geometric display, neon accent — for indie artists, labels, and electronic-music sites.",
+    "audience": "Indie musicians, record labels, streaming pages, electronic-music sites, concert promoters",
+    "mood": ["nocturnal", "electric", "bold", "expressive", "underground"],
+    "palette": {
+        "surface":      {"light": "#F4EFF6", "dark": "#16101F"},
+        "ink":          {"light": "#1A1124", "dark": "#F0EAF6"},
+        "accent":       {"light": "#FF5C7A", "dark": "#5CFFC4"},
+        "accentInk":    {"light": "#160812", "dark": "#0A1F18"},
+        "surfaceInset": {"light": "#E7DEF0", "dark": "#21172E"},
+        "rule":         {"light": "#C9BBD8", "dark": "#3A2C4E"}
+    },
+    "typography": {
+        "display": "'Anton', 'Druk', 'Fraktion Mono', 'Oswald', ui-sans-serif, sans-serif",
+        "body":    "'Inter', 'Manrope', system-ui, -apple-system, sans-serif",
+        "mono":    "'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace",
+        "baseSize": 16
+    },
+    "motion": "expressive-bold",
+    "headerBehavior": "hide-on-down-show-on-up",
+    "footerLayout": "multi-column",
+    "logoLockup": "wordmark",
+    "moduleStyleHints": {
+        "hero": "video-bg",
+        "posts": "card-grid",
+        "timeline": "horizontal-scroll"
+    },
+    "darkDefault": true,
+    "placeholder": true
+}

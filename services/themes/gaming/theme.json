@@ -1,0 +1,27 @@
+{
+    "slug": "gaming",
+    "name": "Gaming",
+    "tagline": "Cyberpunk scanline aesthetic — near-black surface, neon magenta accent, geometric display sans — for indie games, esports orgs, and modding communities.",
+    "audience": "Indie games, esports orgs, streamers, modding communities",
+    "mood": ["neon", "cyberpunk", "expressive", "scanline", "high-energy"],
+    "palette": {
+        "surface":      {"light": "#15151F", "dark": "#0A0A12"},
+        "ink":          {"light": "#F0F0F5", "dark": "#E8E8F0"},
+        "accent":       {"light": "#FF2E88", "dark": "#FF3DA0"},
+        "accentInk":    {"light": "#0A0A12", "dark": "#0A0A12"},
+        "surfaceInset": {"light": "#1C1C2A", "dark": "#11111C"},
+        "rule":         {"light": "#2A2A3F", "dark": "#1E1E2E"}
+    },
+    "typography": {
+        "display": "'Orbitron', 'Rajdhani', 'Geist', 'Inter Tight', system-ui, sans-serif",
+        "body":    "'Rajdhani', 'Geist', 'Inter', system-ui, -apple-system, sans-serif",
+        "mono":    "'JetBrains Mono', 'Fira Code', ui-monospace, 'SF Mono', Menlo, monospace",
+        "baseSize": 16
+    },
+    "motion": "expressive-bold",
+    "headerBehavior": "hide-on-down-show-on-up",
+    "footerLayout": "brand-led-xxl",
+    "logoLockup": "combined",
+    "darkDefault": true,
+    "placeholder": true
+}

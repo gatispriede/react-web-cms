@@ -1,0 +1,27 @@
+{
+    "slug": "education",
+    "name": "Education",
+    "tagline": "Warm sand surfaces, forest-green accents and friendly serifs — for schools, universities and tutoring services that feel welcoming and unhurried.",
+    "audience": "Schools, universities, online courses, tutoring services, educational nonprofits, language academies, learning platforms",
+    "mood": ["welcoming", "warm", "scholarly", "encouraging", "considered"],
+    "palette": {
+        "surface":      {"light": "#FAF4E8", "dark": "#15170F"},
+        "ink":          {"light": "#1E1A12", "dark": "#F1ECDD"},
+        "accent":       {"light": "#2E5D3A", "dark": "#7FB68A"},
+        "accentInk":    {"light": "#FFFFFF", "dark": "#0A1B0F"},
+        "surfaceInset": {"light": "#F1E8D2", "dark": "#1E2117"},
+        "rule":         {"light": "#D9CCAE", "dark": "#2E3224"}
+    },
+    "typography": {
+        "display": "'Lora', 'Source Serif 4', Georgia, 'Times New Roman', serif",
+        "body":    "'Source Sans 3', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "mono":    "ui-monospace, 'SF Mono', Menlo, monospace",
+        "baseSize": 17
+    },
+    "motion": "gentle-slow",
+    "headerBehavior": "sticky-static",
+    "footerLayout": "multi-column",
+    "logoLockup": "combined",
+    "darkDefault": false,
+    "placeholder": true
+}

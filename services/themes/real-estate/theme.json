@@ -1,0 +1,32 @@
+{
+    "slug": "real-estate",
+    "name": "Real Estate",
+    "tagline": "Photography-led neutrals with a single bronze accent — for listings, agencies, and architecture studios.",
+    "audience": "Real-estate agencies, property listings, architecture firms, interior designers, luxury home developers",
+    "mood": ["refined", "spacious", "photographic", "calm", "considered"],
+    "palette": {
+        "surface":      {"light": "#F6F2EC", "dark": "#15110D"},
+        "ink":          {"light": "#1A1A1A", "dark": "#EFEAE2"},
+        "accent":       {"light": "#8C5A2B", "dark": "#C68A4E"},
+        "accentInk":    {"light": "#FFFFFF", "dark": "#15110D"},
+        "surfaceInset": {"light": "#ECE6DC", "dark": "#1F1A14"},
+        "rule":         {"light": "#CFC6B7", "dark": "#3A3128"}
+    },
+    "typography": {
+        "display": "'Forum', 'Geist', 'Manrope', system-ui, sans-serif",
+        "body":    "'Manrope', 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "mono":    "'Geist Mono', 'JetBrains Mono', ui-monospace, Menlo, monospace",
+        "baseSize": 16
+    },
+    "motion": "snappy-default",
+    "headerBehavior": "shrink-on-scroll",
+    "footerLayout": "multi-column",
+    "logoLockup": "wordmark",
+    "moduleStyleHints": {
+        "hero": "photo-bleed",
+        "productGrid": "catalogue-card",
+        "posts": "card-grid"
+    },
+    "darkDefault": false,
+    "placeholder": true
+}

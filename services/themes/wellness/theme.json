@@ -1,0 +1,31 @@
+{
+    "slug": "wellness",
+    "name": "Wellness",
+    "tagline": "Sage, oat, and cream with soft serif display and unhurried motion — for studios, retreats, and mindful practitioners.",
+    "audience": "Yoga studios, mindfulness apps, wellness retreats, holistic-health practitioners",
+    "mood": ["calm", "grounded", "spacious", "restorative", "soft"],
+    "palette": {
+        "surface":      {"light": "#F6F2E8", "dark": "#161915"},
+        "ink":          {"light": "#2A2E26", "dark": "#E8E4D6"},
+        "accent":       {"light": "#6B8E6B", "dark": "#9CB89C"},
+        "accentInk":    {"light": "#FBFAF4", "dark": "#10140F"},
+        "surfaceInset": {"light": "#EDE6D2", "dark": "#1E221C"},
+        "rule":         {"light": "#D8CFB8", "dark": "#363B33"}
+    },
+    "typography": {
+        "display": "'Cormorant Garamond', 'Lora', ui-serif, Georgia, serif",
+        "body":    "'Nunito', 'Quicksand', system-ui, -apple-system, sans-serif",
+        "mono":    "ui-monospace, 'SF Mono', Menlo, monospace",
+        "baseSize": 17
+    },
+    "motion": "gentle-slow",
+    "headerBehavior": "sticky-static",
+    "footerLayout": "minimal-1row",
+    "logoLockup": "wordmark",
+    "moduleStyleHints": {
+        "hero": "split-text-media",
+        "posts": "editorial"
+    },
+    "darkDefault": false,
+    "placeholder": true
+}

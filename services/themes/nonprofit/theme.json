@@ -1,0 +1,32 @@
+{
+    "slug": "nonprofit",
+    "name": "Nonprofit",
+    "tagline": "Warm, grounded, humanist — for causes that need trust, clarity, and a generous welcome.",
+    "audience": "Charities, advocacy organisations, community foundations, civic projects, mission-driven nonprofits",
+    "mood": ["hopeful", "grounded", "warm", "humanist", "trustworthy"],
+    "palette": {
+        "surface":      {"light": "#FBF6EE", "dark": "#14201F"},
+        "ink":          {"light": "#1C1A17", "dark": "#F1EADC"},
+        "accent":       {"light": "#A8421A", "dark": "#E07A52"},
+        "accentInk":    {"light": "#FFFFFF", "dark": "#14201F"},
+        "surfaceInset": {"light": "#F1E6D2", "dark": "#1B2A29"},
+        "rule":         {"light": "#D8C9AE", "dark": "#2E3F3E"}
+    },
+    "typography": {
+        "display": "'Sofia Sans', 'Source Sans 3', 'Open Sans', system-ui, sans-serif",
+        "body":    "'Source Sans 3', 'Open Sans', system-ui, -apple-system, sans-serif",
+        "mono":    "'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace",
+        "baseSize": 17
+    },
+    "motion": "gentle-slow",
+    "headerBehavior": "sticky-static",
+    "footerLayout": "multi-column",
+    "logoLockup": "combined",
+    "moduleStyleHints": {
+        "hero": "photo-bleed",
+        "posts": "card-grid",
+        "timeline": "vertical-rail"
+    },
+    "darkDefault": false,
+    "placeholder": true
+}

@@ -1,0 +1,32 @@
+{
+    "slug": "news",
+    "name": "News",
+    "tagline": "Cream newsprint, slab-serif headlines, tight gutters, breaking-red accent — for daily newsrooms and investigative journals.",
+    "audience": "News outlets, investigative publications, daily papers, niche journals",
+    "mood": ["urgent", "authoritative", "scan-friendly", "no-nonsense", "civic"],
+    "palette": {
+        "surface":      {"light": "#FBF9F4", "dark": "#121110"},
+        "ink":          {"light": "#0E0D0B", "dark": "#F1EEE6"},
+        "accent":       {"light": "#B3261E", "dark": "#E54B3C"},
+        "accentInk":    {"light": "#FBF9F4", "dark": "#11100E"},
+        "surfaceInset": {"light": "#F2EFE7", "dark": "#1B1A18"},
+        "rule":         {"light": "#1A1916", "dark": "#3B3833"}
+    },
+    "typography": {
+        "display": "'Playfair Display', 'PT Serif', ui-serif, Georgia, 'Times New Roman', serif",
+        "body":    "'PT Serif', Georgia, 'Times New Roman', ui-serif, serif",
+        "mono":    "ui-monospace, 'SF Mono', Menlo, monospace",
+        "baseSize": 16
+    },
+    "motion": "snappy-default",
+    "headerBehavior": "hide-on-down-show-on-up",
+    "footerLayout": "multi-column",
+    "logoLockup": "wordmark",
+    "moduleStyleHints": {
+        "hero": "split-text-media",
+        "posts": "list",
+        "timeline": "vertical-rail"
+    },
+    "darkDefault": false,
+    "placeholder": true
+}

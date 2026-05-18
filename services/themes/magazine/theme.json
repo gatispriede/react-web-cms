@@ -1,0 +1,32 @@
+{
+    "slug": "magazine",
+    "name": "Magazine",
+    "tagline": "Glossy photography-first spreads, modern serif display, deep-teal jewel accent — for lifestyle, fashion and travel features.",
+    "audience": "Lifestyle magazines, fashion zines, travel features, culture publications",
+    "mood": ["glossy", "expressive", "photographic", "confident", "tactile"],
+    "palette": {
+        "surface":      {"light": "#FFFFFF", "dark": "#0B0D0E"},
+        "ink":          {"light": "#0A0A0A", "dark": "#F4F2EE"},
+        "accent":       {"light": "#0F5257", "dark": "#3FA9A8"},
+        "accentInk":    {"light": "#FFFFFF", "dark": "#06181A"},
+        "surfaceInset": {"light": "#F4F2EE", "dark": "#15191B"},
+        "rule":         {"light": "#D9D4CB", "dark": "#2E3437"}
+    },
+    "typography": {
+        "display": "'Fraunces', 'Recoleta', ui-serif, Georgia, 'Times New Roman', serif",
+        "body":    "'Inter', 'Source Sans Pro', system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "mono":    "ui-monospace, 'SF Mono', Menlo, monospace",
+        "baseSize": 17
+    },
+    "motion": "expressive-bold",
+    "headerBehavior": "shrink-on-scroll",
+    "footerLayout": "brand-led-xxl",
+    "logoLockup": "combined",
+    "moduleStyleHints": {
+        "hero": "photo-bleed",
+        "posts": "editorial",
+        "timeline": "horizontal-scroll"
+    },
+    "darkDefault": false,
+    "placeholder": true
+}

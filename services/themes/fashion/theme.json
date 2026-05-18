@@ -1,0 +1,32 @@
+{
+    "slug": "fashion",
+    "name": "Fashion",
+    "tagline": "High-contrast monochrome with one bold accent and oversized display type — for couture, boutiques, and lookbooks.",
+    "audience": "Fashion designers, e-commerce boutiques, streetwear brands, model portfolios",
+    "mood": ["bold", "editorial", "graphic", "confident", "couture"],
+    "palette": {
+        "surface":      {"light": "#FFFFFF", "dark": "#0A0A0A"},
+        "ink":          {"light": "#0A0A0A", "dark": "#F5F5F5"},
+        "accent":       {"light": "#B00020", "dark": "#FF4D6D"},
+        "accentInk":    {"light": "#FFFFFF", "dark": "#0A0A0A"},
+        "surfaceInset": {"light": "#F2F2F2", "dark": "#161616"},
+        "rule":         {"light": "#0A0A0A", "dark": "#F5F5F5"}
+    },
+    "typography": {
+        "display": "'Bodoni Moda', 'Tenor Sans', 'Didot', ui-serif, Georgia, serif",
+        "body":    "'Tenor Sans', 'Inter', system-ui, -apple-system, sans-serif",
+        "mono":    "ui-monospace, 'SF Mono', Menlo, monospace",
+        "baseSize": 16
+    },
+    "motion": "expressive-bold",
+    "headerBehavior": "hide-on-down-show-on-up",
+    "footerLayout": "brand-led-xxl",
+    "logoLockup": "wordmark",
+    "moduleStyleHints": {
+        "hero": "oversized-type",
+        "productGrid": "catalogue-card",
+        "posts": "editorial"
+    },
+    "darkDefault": false,
+    "placeholder": true
+}

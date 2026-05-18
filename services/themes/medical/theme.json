@@ -1,0 +1,27 @@
+{
+    "slug": "medical",
+    "name": "Medical",
+    "tagline": "Clinical-white surfaces, calm teal accents and high-contrast humanist sans — for clinics, dental practices and telehealth where clarity equals safety.",
+    "audience": "Clinics, dental practices, physiotherapy, telehealth platforms, medical groups, diagnostic labs, allied health practitioners",
+    "mood": ["clinical", "calm", "trustworthy", "accessible", "precise"],
+    "palette": {
+        "surface":      {"light": "#FFFFFF", "dark": "#0C1417"},
+        "ink":          {"light": "#0A1A1E", "dark": "#F2F7F9"},
+        "accent":       {"light": "#0E7C86", "dark": "#5BC2CC"},
+        "accentInk":    {"light": "#FFFFFF", "dark": "#04181B"},
+        "surfaceInset": {"light": "#EEF6F7", "dark": "#142026"},
+        "rule":         {"light": "#CFE0E3", "dark": "#26343A"}
+    },
+    "typography": {
+        "display": "'Inter', 'Source Sans 3', system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "body":    "'Inter', 'Source Sans 3', system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "mono":    "ui-monospace, 'SF Mono', Menlo, monospace",
+        "baseSize": 17
+    },
+    "motion": "snappy-default",
+    "headerBehavior": "sticky-static",
+    "footerLayout": "multi-column",
+    "logoLockup": "combined",
+    "darkDefault": false,
+    "placeholder": true
+}

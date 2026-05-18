@@ -1,0 +1,27 @@
+{
+    "slug": "legal-firm",
+    "name": "Legal Firm",
+    "tagline": "Conservative navy-and-cream identity with gold accents and traditional serifs — for firms where trust, tradition and gravitas come first.",
+    "audience": "Law firms, solo practitioners, notaries, legal consultants, bar associations, mediators, paralegal services",
+    "mood": ["authoritative", "traditional", "trustworthy", "restrained", "established"],
+    "palette": {
+        "surface":      {"light": "#F7F2E8", "dark": "#0E1626"},
+        "ink":          {"light": "#1A2238", "dark": "#EFE7D4"},
+        "accent":       {"light": "#A07A24", "dark": "#D4A84A"},
+        "accentInk":    {"light": "#FFFFFF", "dark": "#1A1308"},
+        "surfaceInset": {"light": "#EFE7D4", "dark": "#161F33"},
+        "rule":         {"light": "#C9BFA6", "dark": "#2A344A"}
+    },
+    "typography": {
+        "display": "'Cormorant Garamond', 'EB Garamond', 'Source Serif 4', Garamond, Georgia, 'Times New Roman', serif",
+        "body":    "'Source Serif 4', 'Cormorant Garamond', Garamond, Georgia, 'Times New Roman', serif",
+        "mono":    "ui-monospace, 'SF Mono', Menlo, monospace",
+        "baseSize": 17
+    },
+    "motion": "reduced-static",
+    "headerBehavior": "shrink-on-scroll",
+    "footerLayout": "multi-column",
+    "logoLockup": "combined",
+    "darkDefault": false,
+    "placeholder": true
+}

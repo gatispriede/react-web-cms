@@ -1,0 +1,31 @@
+{
+    "slug": "journal",
+    "name": "Journal",
+    "tagline": "Off-white paper, old-style serif, wide measure and generous leading — for academic blogs, longform essays and knowledge bases.",
+    "audience": "Academic blogs, longform-essay sites, knowledge bases, research notebooks",
+    "mood": ["restrained", "scholarly", "measured", "contemplative", "rigorous"],
+    "palette": {
+        "surface":      {"light": "#F6F2E9", "dark": "#15140F"},
+        "ink":          {"light": "#22201C", "dark": "#E8E3D4"},
+        "accent":       {"light": "#A85A1F", "dark": "#D08A4A"},
+        "accentInk":    {"light": "#F6F2E9", "dark": "#1A130B"},
+        "surfaceInset": {"light": "#ECE6D6", "dark": "#1E1C17"},
+        "rule":         {"light": "#CCC4AE", "dark": "#3A352B"}
+    },
+    "typography": {
+        "display": "'Source Serif Pro', 'Crimson Pro', ui-serif, Georgia, 'Times New Roman', serif",
+        "body":    "'Crimson Pro', 'Source Serif Pro', ui-serif, Georgia, 'Times New Roman', serif",
+        "mono":    "ui-monospace, 'SF Mono', Menlo, monospace",
+        "baseSize": 18
+    },
+    "motion": "gentle-slow",
+    "headerBehavior": "sticky-static",
+    "footerLayout": "minimal-1row",
+    "logoLockup": "wordmark",
+    "moduleStyleHints": {
+        "posts": "editorial",
+        "timeline": "vertical-rail"
+    },
+    "darkDefault": false,
+    "placeholder": true
+}
