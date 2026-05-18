@@ -1,0 +1,33 @@
+{
+  "$schema": "https://claude.com/schemas/mcp.json",
+  "_comment": "MCP servers for this CMS. Three environments are wired so Claude can pick the right surface to write content/data against. Tokens must be supplied via environment variables — never commit a token to this file. Issue tokens from the admin (Settings → MCP → Tokens) with the smallest viable scope; default 8h TTL.",
+  "mcpServers": {
+    "funimos-prod": {
+      "type": "sse",
+      "url": "https://funimos.pro/api/mcp/sse",
+      "headers": {
+        "Authorization": "Bearer ${FUNIMOS_PROD_MCP_TOKEN}"
+      },
+      "description": "PRODUCTION CMS for funimos.pro. The live customer-facing site. Use ONLY for: publishing reviewed content (post.upsert with draft=true first), reading audit logs, listing pages/themes. NEVER call destructive tools (release.publish, *.delete, order.refund, theme.activate) without explicit operator confirmation in the chat. Token should be scoped to content-author or audit-readonly unless the user has asked for a publisher role.",
+      "_capabilities_hint": "post.list, post.get, post.upsert (draft-only with content-author token), page.list, page.get, audit.list, release.diff. Pending-op required for anything customer-visible."
+    },
+    "skyclimber-prod": {
+      "type": "sse",
+      "url": "https://skyclimber.pro/api/mcp/sse",
+      "headers": {
+        "Authorization": "Bearer ${SKYCLIMBER_PROD_MCP_TOKEN}"
+      },
+      "description": "PRODUCTION CMS for skyclimber.pro. Second tenant on the same CMS platform, different brand and content set. Same rules as funimos-prod: drafts first, no destructive ops without operator confirmation, prefer the narrowest token scope. When in doubt about which prod to write to, ASK — content from funimos.pro must never land on skyclimber.pro and vice versa.",
+      "_capabilities_hint": "Same tool catalog as funimos-prod. Tenant scope is enforced server-side by the token."
+    },
+    "local-dev": {
+      "type": "sse",
+      "url": "http://localhost:3000/api/mcp/sse",
+      "headers": {
+        "Authorization": "Bearer ${LOCAL_DEV_MCP_TOKEN}"
+      },
+      "description": "LOCAL DEV CMS — runs against the dev Mongo on the same machine. Safe sandbox: this is the right place for exploratory tool calls, schema discovery (call tool.list here first), trying out new flows, regenerating seed data, etc. Anything destructive here is recoverable. Prefer this server for any 'just to see what it returns' style call. Defaults to localhost:3000 — adjust port if your dev server runs elsewhere.",
+      "_capabilities_hint": "Full tool catalog, no pending-op gates, looser rate limits. Same wire shape as the prod servers so behaviour matches when promoting calls to prod."
+    }
+  }
+}
