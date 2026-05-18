@@ -19,8 +19,8 @@ const getBcryptCompare = (() => {
 })();
 import {NextAuthOptions, User} from "next-auth";
 import MongoApi from "@services/api/client/MongoApi";
-import {clientIp, rateLimit} from "../_rateLimit";
-import {checkLockout, formatWait, lockoutKey, recordFailure, recordSuccess} from "../_loginLockout";
+import {clientIp, rateLimit} from "@client/lib/api-helpers/rateLimit";
+import {checkLockout, formatWait, lockoutKey, recordFailure, recordSuccess} from "@client/lib/api-helpers/loginLockout";
 import {COOKIE_NAME as CART_COOKIE_NAME, getCartCookieSecrets, verifyCartId} from "@services/features/Cart/cartCookie";
 
 /**
@@ -470,3 +470,8 @@ export const customerAuthOptions: NextAuthOptions = {
  * explicit named exports.
  */
 export const authOptions: NextAuthOptions = customerAuthOptions;
+
+// Next.js 16 requires a default export for every file in pages/api/.
+// This is a shared config module, not a route handler.
+import type {NextApiRequest, NextApiResponse} from 'next';
+export default function _noop(_req: NextApiRequest, res: NextApiResponse) { res.status(404).end(); }

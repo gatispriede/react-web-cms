@@ -34,7 +34,7 @@ import {composedCacheVersionKeys, composedSchemaSDL} from '@services/infra/featu
 import {applyCacheHeaders} from '@services/infra/cacheHeaders';
 import {adminAuthOptions, customerAuthOptions} from './auth/authOptions';
 import {resolveSessionFromReq} from '@services/features/Auth/authz';
-import {clientIp, rateLimit} from './_rateLimit';
+import {clientIp, rateLimit} from '@client/lib/api-helpers/rateLimit';
 import {
     COOKIE_NAME as CART_COOKIE_NAME,
     buildSetCookieHeader,

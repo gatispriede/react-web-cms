@@ -1,5 +1,5 @@
 import type {NextApiRequest, NextApiResponse} from 'next';
-import {requireRole} from './_authHelpers';
+import {requireRole} from '@client/lib/api-helpers/authHelpers';
 import {getMongoConnection} from '@services/infra/mongoDBConnection';
 
 export const config = {

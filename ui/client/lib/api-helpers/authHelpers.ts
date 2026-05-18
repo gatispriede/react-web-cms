@@ -1,6 +1,6 @@
 import type {NextApiRequest, NextApiResponse} from 'next';
 import {getServerSession} from 'next-auth/next';
-import {adminAuthOptions as authOptions} from './auth/authOptions';
+import {adminAuthOptions as authOptions} from '@client/pages/api/auth/authOptions';
 import {UserRole} from '@interfaces/IUser';
 
 const ROLE_RANK: Record<UserRole, number> = {viewer: 0, editor: 1, admin: 2};
@@ -21,4 +21,11 @@ export async function requireRole(
         return {ok: false};
     }
     return {ok: true, role};
+}
+
+// Default export required by Next.js 16 API route validator — this file
+// lives in `pages/api/` as a shared helper; the underscore prefix no
+// longer suppresses validation in Next 16.
+export default function _noop(_req: NextApiRequest, res: NextApiResponse) {
+    res.status(404).end();
 }

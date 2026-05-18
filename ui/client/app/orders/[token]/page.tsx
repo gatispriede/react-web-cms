@@ -15,7 +15,7 @@ import React from 'react';
 import {headers} from 'next/headers';
 import type {Metadata} from 'next';
 import {getMongoConnection} from '@services/infra/mongoDBConnection';
-import {rateLimit} from '@client/pages/api/_rateLimit';
+import {rateLimit} from '@client/lib/api-helpers/rateLimit';
 import {log} from '@services/infra/logger';
 import {loadSystemPageSnapshot, type ISystemPageSnapshot} from '@client/lib/systemPage/loadSystemPage';
 import OrderByTokenView from './OrderByTokenView';

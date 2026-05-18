@@ -133,7 +133,7 @@ export const emailSend: McpTool = defineTool({
     await enforceModeForTool(ctx.actor, 'email.send');
     // Dynamic import so the services package doesn't compile-time
     // depend on Next's `pages/` path; mirrors OrdersServiceLoader.
-    const mod: any = await import('@client/pages/api/_inquiryMailer').catch(() => null);
+    const mod: any = await import('@client/lib/api-helpers/inquiryMailer').catch(() => null);
     if (!mod || typeof mod.sendInquiryEmail !== 'function') {
         return {ok: false, error: 'mailer not available (SMTP not configured or _inquiryMailer not loadable)'};
     }

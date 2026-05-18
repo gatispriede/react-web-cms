@@ -92,7 +92,7 @@ export class OrdersServiceLoader extends ServiceLoader {
                             const [{renderTemplate}, {resolveEmailTheme}, mod] = await Promise.all([
                                 import('@services/features/Email/templates/registry'),
                                 import('@services/features/Email/templates/_shared/theme'),
-                                import('@client/pages/api/_inquiryMailer').catch(() => null),
+                                import('@client/lib/api-helpers/inquiryMailer').catch(() => null),
                             ]);
                             if (!mod || typeof (mod as any).sendInquiryEmail !== 'function') {
                                 log.warn({scope: 'orders.mailer'}, 'mailer unreachable; SMTP env set but `_inquiryMailer` not loadable');

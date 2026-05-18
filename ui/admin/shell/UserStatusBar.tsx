@@ -91,6 +91,13 @@ export type AdminView =
     | 'system/performance'
     | 'system/bundle'
     | 'system/backups'
+    | 'system/compliance'
+    | 'system/redirects'
+    | 'system/permissions'
+    | 'system/inquiries'
+    | 'system/email'
+    | 'system/audit-log'
+    | 'system/analytics-filters'
     | 'system/modules-preview'
     | 'system/demo-content/cars'
     // First-ship 6-bucket aliases — kept for the 301-shim period so the

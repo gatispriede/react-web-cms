@@ -26,7 +26,7 @@
  */
 
 import {getIdempotencyService} from '@services/infra/idempotency';
-import {rateLimit as slidingWindowRateLimit} from '@client/pages/api/_rateLimit';
+import {rateLimit as slidingWindowRateLimit} from '@client/lib/api-helpers/rateLimit';
 import {FeatureRestrictedError} from '../modeEnforcement';
 import {McpError, McpTool, McpToolContext, McpToolResult} from '../types';
 

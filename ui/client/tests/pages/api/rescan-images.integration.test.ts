@@ -12,10 +12,10 @@ vi.mock('@services/infra/mongoDBConnection', () => ({
         get assetService() { return assetServiceRef.current; },
     }),
 }));
-vi.mock('../../../pages/api/_authHelpers', () => ({
+vi.mock('../../../lib/api-helpers/authHelpers', () => ({
     requireRole: vi.fn(async () => ({ok: true, role: 'admin'})),
 }));
-vi.mock('../../../pages/api/_origin', () => ({
+vi.mock('../../../lib/api-helpers/origin', () => ({
     requireSameOrigin: vi.fn(() => true),
 }));
 

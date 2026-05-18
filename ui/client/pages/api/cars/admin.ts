@@ -9,8 +9,8 @@
  *      { action: 'cancel-reservation', reservationId }
  */
 import type {NextApiRequest, NextApiResponse} from 'next';
-import {requireRole} from '../_authHelpers';
-import {requireSameOrigin} from '../_origin';
+import {requireRole} from '@client/lib/api-helpers/authHelpers';
+import {requireSameOrigin} from '@client/lib/api-helpers/origin';
 import {getMongoConnection} from '@services/infra/mongoDBConnection';
 
 const PRODUCTS = 'Products';

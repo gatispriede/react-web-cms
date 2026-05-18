@@ -87,7 +87,8 @@ export function makeMcpDispatch(services: any): ToolDispatch {
             return JSON.stringify({error: msg});
         }
 
-        const text = outcome.result?.content?.[0]?.text;
+        const first = outcome.result?.content?.[0];
+        const text = first && 'text' in first ? first.text : undefined;
         return text ?? JSON.stringify({ok: true});
     };
 }

@@ -12,13 +12,13 @@ vi.mock('@services/infra/mongoDBConnection', () => ({
 }));
 
 // Bypass authn/origin/rate-limit — these are unit-tested elsewhere.
-vi.mock('../../../pages/api/_authHelpers', () => ({
+vi.mock('../../../lib/api-helpers/authHelpers', () => ({
     requireRole: vi.fn(async () => ({ok: true, role: 'admin'})),
 }));
-vi.mock('../../../pages/api/_origin', () => ({
+vi.mock('../../../lib/api-helpers/origin', () => ({
     requireSameOrigin: vi.fn(() => true),
 }));
-vi.mock('../../../pages/api/_rateLimit', () => ({
+vi.mock('../../../lib/api-helpers/rateLimit', () => ({
     rateLimit: vi.fn(() => ({ok: true})),
     clientIp: vi.fn(() => '127.0.0.1'),
 }));

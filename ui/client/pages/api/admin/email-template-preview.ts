@@ -9,8 +9,8 @@
  * preview HTML could leak operator branding before site launch).
  */
 import type {NextApiRequest, NextApiResponse} from 'next';
-import {requireRole} from '../_authHelpers';
-import {requireSameOrigin} from '../_origin';
+import {requireRole} from '@client/lib/api-helpers/authHelpers';
+import {requireSameOrigin} from '@client/lib/api-helpers/origin';
 import {renderTemplate, listTemplates} from '@services/features/Email/templates/registry';
 import {resolveEmailTheme} from '@services/features/Email/templates/_shared/theme';
 import sampleReceiptFixture from '@services/features/Email/templates/_fixtures/sample-receipt.json';

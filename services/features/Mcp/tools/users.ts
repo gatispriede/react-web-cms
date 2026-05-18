@@ -205,7 +205,7 @@ export const userCreate: McpTool = defineTool({
     const parsed: any = safeParse(res);
     if (args.sendInvite === true && parsed?.createUser?.id) {
         try {
-            const mod: any = await import('@client/pages/api/_inquiryMailer').catch(() => null);
+            const mod: any = await import('@client/lib/api-helpers/inquiryMailer').catch(() => null);
             if (mod && typeof mod.sendInquiryEmail === 'function') {
                 const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'site';
                 const adminUrl = (process.env.NEXT_PUBLIC_SITE_URL || '').replace(/\/$/, '') + '/admin';

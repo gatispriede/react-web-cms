@@ -137,3 +137,8 @@ export function featureCounts(snapshot: SitemapSnapshot, ctx: SitemapContext): R
         products: entriesForFeature('products', snapshot, ctx).length,
     };
 }
+
+
+// Next.js 16 requires a default export for every file in pages/api/.
+import type {NextApiResponse} from 'next';
+export default function _noop(_req: NextApiRequest, res: NextApiResponse) { res.status(404).end(); }

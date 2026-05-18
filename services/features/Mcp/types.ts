@@ -11,7 +11,7 @@ import type {AuditService} from '@services/features/Audit/AuditService';
  * DECISION: rolling our own validator avoids pulling `ajv` (~ 200 KB) for
  * what is, in practice, "check the shape and reject anything weird".
  */
-export type JSONSchemaType = 'string' | 'integer' | 'number' | 'boolean' | 'object' | 'array';
+export type JSONSchemaType = 'string' | 'integer' | 'number' | 'boolean' | 'object' | 'array' | 'any';
 
 export interface JSONSchemaProp {
     type: JSONSchemaType;

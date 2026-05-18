@@ -9,8 +9,8 @@
  */
 import type {NextApiRequest, NextApiResponse} from 'next';
 import guid from '@utils/guid';
-import {requireSameOrigin} from '../_origin';
-import {clientIp, rateLimit} from '../_rateLimit';
+import {requireSameOrigin} from '@client/lib/api-helpers/origin';
+import {clientIp, rateLimit} from '@client/lib/api-helpers/rateLimit';
 import {getMongoConnection} from '@services/infra/mongoDBConnection';
 
 const COLLECTION = 'Inquiries';

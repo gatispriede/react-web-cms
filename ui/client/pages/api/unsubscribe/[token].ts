@@ -18,7 +18,7 @@
 import type {NextApiRequest, NextApiResponse} from 'next';
 import {getMongoConnection} from '@services/infra/mongoDBConnection';
 import {verifyUnsubscribeToken} from '@services/features/Notifications/unsubscribeToken';
-import {rateLimit} from '@client/pages/api/_rateLimit';
+import {rateLimit} from '@client/lib/api-helpers/rateLimit';
 import type {NotificationsService} from '@services/features/Notifications/NotificationsService';
 
 function clientIp(req: NextApiRequest): string {

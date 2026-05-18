@@ -3,7 +3,7 @@ import {getMongoConnection} from '@services/infra/mongoDBConnection';
 import {sendEmail} from '@services/features/Email/EmailService';
 import {renderTemplate} from '@services/features/Email/templates/registry';
 import {resolveEmailTheme} from '@services/features/Email/templates/_shared/theme';
-import {clientIp, rateLimit} from '../_rateLimit';
+import {clientIp, rateLimit} from '@client/lib/api-helpers/rateLimit';
 import {log} from '@services/infra/logger';
 
 /**

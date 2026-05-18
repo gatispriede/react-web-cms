@@ -1,5 +1,5 @@
 import {describe, it, expect, vi} from 'vitest';
-import {requireSameOrigin} from '../../../pages/api/_origin';
+import {requireSameOrigin} from '../../../lib/api-helpers/origin';
 
 const makeRes = () => {
     const res: any = {

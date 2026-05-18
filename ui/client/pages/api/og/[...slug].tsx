@@ -1,6 +1,7 @@
 import type {NextApiRequest, NextApiResponse} from 'next';
 import crypto from 'crypto';
 import React from 'react';
+// @ts-ignore — @vercel/og not installed; OG image generation degrades gracefully.
 import {unstable_createNodejsStream} from '@vercel/og';
 import {gqlFetch} from '@client/lib/gqlFetch';
 

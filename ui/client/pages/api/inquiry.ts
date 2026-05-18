@@ -21,9 +21,9 @@
 
 import type {NextApiRequest, NextApiResponse} from 'next';
 import guid from '@utils/guid';
-import {requireSameOrigin} from './_origin';
-import {clientIp, rateLimit} from './_rateLimit';
-import {sendInquiryEmail} from './_inquiryMailer';
+import {requireSameOrigin} from '@client/lib/api-helpers/origin';
+import {clientIp, rateLimit} from '@client/lib/api-helpers/rateLimit';
+import {sendInquiryEmail} from '@client/lib/api-helpers/inquiryMailer';
 import {getMongoConnection} from '@services/infra/mongoDBConnection';
 
 /** Strip CR/LF and other control chars before splicing user input into
