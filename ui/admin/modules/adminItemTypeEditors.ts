@@ -72,6 +72,9 @@ import {EProductSpecTableStyle} from '@client/modules/ProductSpecTable';
 import {EProductDescriptionStyle} from '@client/modules/ProductDescription';
 import {EPaginationStyle} from '@client/modules/Pagination';
 import {EBreadcrumbStyle} from '@client/modules/Breadcrumb';
+import {EFeatureGridStyle} from '@client/modules/FeatureGrid';
+import {ELogoCloudStyle} from '@client/modules/LogoCloud';
+import {EPricingTableStyle} from '@client/modules/PricingTable';
 import {
     ProductDetailHeroEditor,
     ProductSpecTableEditor,
@@ -276,6 +279,24 @@ const SECTION_HEADING_STYLE_LABELS: Record<string, string> = {
     'tech-modern': 'Modern (sans, accent)',
     'centered-marquee': 'Centered marquee',
 };
+const FEATURE_GRID_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    cards: 'Elevated cards',
+    compact: 'Compact (4-col)',
+    iconic: 'Iconic (large icons)',
+};
+const LOGO_CLOUD_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    marquee: 'Marquee (scrolling)',
+    mono: 'Mono (greyscale)',
+    wall: 'Logo wall',
+};
+const PRICING_TABLE_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    highlighted: 'Highlighted tier',
+    toggle: 'Toggle (billing)',
+    compact: 'Compact rows',
+};
 
 export const ADMIN_ITEM_TYPE_EDITORS: readonly AdminItemTypeEntry[] = [
     {key: EItemType.Text,            Editor: PlainTextEditor,        styleEnum: asEnum(EPlainTextStyle),       defaultContent: '{"value":""}',                                                                                                                                                              labelKey: 'Simple Text',          descriptionKey: 'Plain paragraph with inline style only.',                            category: 'content'},
@@ -355,9 +376,9 @@ export const ADMIN_ITEM_TYPE_EDITORS: readonly AdminItemTypeEntry[] = [
     // all-pages-module-composed — Blog batch.
     {key: EItemType.BlogPost,                 Editor: BlogPostEditor,                 styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Blog post',              descriptionKey: 'Locked — single post body: title, cover, sanitised HTML, author, date, tags.', category: 'content'},
     // all-pages-module-composed — Marketing batch.
-    {key: EItemType.FeatureGrid,              Editor: FeatureGridEditor,              styleEnum: asEnum({Default: 'default'}), defaultContent: '{"features":[]}',       labelKey: 'Feature grid',          descriptionKey: 'Marketing — 2/3-column feature cards (title + description).',                 category: 'content'},
-    {key: EItemType.LogoCloud,                Editor: LogoCloudEditor,                styleEnum: asEnum({Default: 'default'}), defaultContent: '{"logos":[]}',          labelKey: 'Logo cloud',            descriptionKey: 'Marketing — "trusted by" row of customer logos.',                            category: 'media'},
-    {key: EItemType.PricingTable,             Editor: PricingTableEditor,             styleEnum: asEnum({Default: 'default'}), defaultContent: '{"tiers":[],"features":[]}', labelKey: 'Pricing table',     descriptionKey: 'Marketing — tier columns + feature matrix with monthly/annual toggle.',       category: 'content'},
+    {key: EItemType.FeatureGrid,              Editor: FeatureGridEditor,              styleEnum: asEnum(EFeatureGridStyle), styleLabels: FEATURE_GRID_STYLE_LABELS, defaultContent: '{"features":[]}',       labelKey: 'Feature grid',          descriptionKey: 'Marketing — 2/3-column feature cards (title + description).',                 category: 'content'},
+    {key: EItemType.LogoCloud,                Editor: LogoCloudEditor,                styleEnum: asEnum(ELogoCloudStyle), styleLabels: LOGO_CLOUD_STYLE_LABELS, defaultContent: '{"logos":[]}',          labelKey: 'Logo cloud',            descriptionKey: 'Marketing — "trusted by" row of customer logos.',                            category: 'media'},
+    {key: EItemType.PricingTable,             Editor: PricingTableEditor,             styleEnum: asEnum(EPricingTableStyle), styleLabels: PRICING_TABLE_STYLE_LABELS, defaultContent: '{"tiers":[],"features":[]}', labelKey: 'Pricing table',     descriptionKey: 'Marketing — tier columns + feature matrix with monthly/annual toggle.',       category: 'content'},
     {key: EItemType.TestimonialWall,          Editor: TestimonialWallEditor,          styleEnum: asEnum({Default: 'default'}), defaultContent: '{"items":[]}',          labelKey: 'Testimonial wall',      descriptionKey: 'Marketing — multi-column quote cards with author + company.',                 category: 'content'},
     // all-pages-module-composed — Cars batch.
     {key: EItemType.CarsList,                 Editor: CarsListEditor,                 styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Cars list',              descriptionKey: 'Locked — faceted car listing (make / model / fuel / gearbox / year / price).',category: 'content'},

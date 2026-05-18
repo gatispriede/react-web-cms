@@ -306,6 +306,10 @@ class LegacyAppClass extends React.Component<IHomeProps> {
             hasPosts: (data.posts?.length ?? 0) > 0,
             blogEnabled: data.blogEnabled !== false,
             layoutMode: (data as any).layoutMode === 'scroll' ? 'scroll' : 'tabs',
+            navVariant: (() => {
+                const v = (data as any).navVariant;
+                return v === 'rail' || v === 'pill' || v === 'underline' ? v : 'default';
+            })(),
             themeConfig: data.themeTokens ? buildThemeConfig(data.themeTokens) : undefined,
         };
     }
@@ -362,6 +366,7 @@ class LegacyAppClass extends React.Component<IHomeProps> {
             footer: this.state.footer,
             hasPosts: this.state.hasPosts,
             blogEnabled: this.state.blogEnabled,
+            navVariant: this.state.navVariant,
         }
         if (init) {
             // eslint-disable-next-line react/no-direct-mutation-state
@@ -448,6 +453,10 @@ class LegacyAppClass extends React.Component<IHomeProps> {
         newState.hasPosts = postCount > 0;
         newState.blogEnabled = flags.blogEnabled !== false;
         newState.layoutMode = (flags as any).layoutMode === 'scroll' ? 'scroll' : 'tabs';
+        {
+            const v = (flags as any).navVariant;
+            newState.navVariant = v === 'rail' || v === 'pill' || v === 'underline' ? v : 'default';
+        }
         const activeTheme = await this.ThemeApi.getActive();
         if (activeTheme?.tokens) {
             applyThemeCssVars(activeTheme.tokens);
@@ -773,6 +782,7 @@ class LegacyAppClass extends React.Component<IHomeProps> {
                                                     pages={menuPages}
                                                     activeChain={activeChain}
                                                     themeName={themeName}
+                                                    variant={this.state.navVariant}
                                                     translate={(s) => translateOrKeep(this.props.t, s) as string}
                                                     extraItems={
                                                         this.state.blogEnabled && this.state.hasPosts

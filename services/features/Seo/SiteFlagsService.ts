@@ -182,7 +182,13 @@ export const DEFAULT_SITE_FLAGS: ISiteFlags = {
     enabledCurrencies: [],
     defaultCurrency: 'EUR',
     stripeTaxEnabled: false,
+    footerVariant: 'default',
 };
+
+/** Whitelist for the `footerVariant` site flag — keeps unknown strings
+ *  from being persisted and lets the read-side fall back to the default. */
+const isFooterVariant = (s: unknown): s is NonNullable<ISiteFlags['footerVariant']> =>
+    s === 'default' || s === 'mega' || s === 'minimal' || s === 'brutalist';
 
 /** Light validation — keeps obviously-broken values from being saved.
  *  Empty string is allowed (resets to default at read time). */
@@ -295,6 +301,9 @@ export class SiteFlagsService {
             stripeTaxEnabled: typeof value?.stripeTaxEnabled === 'boolean'
                 ? value.stripeTaxEnabled
                 : DEFAULT_SITE_FLAGS.stripeTaxEnabled,
+            footerVariant: isFooterVariant(value?.footerVariant)
+                ? value.footerVariant
+                : DEFAULT_SITE_FLAGS.footerVariant,
             // Sub-records — walked from the defineFlag() registry so
             // future flags don't require touching this file.
             commerce: buildSubRecord<ICommerceFlags>('commerce', value?.commerce),
@@ -363,6 +372,9 @@ export class SiteFlagsService {
             stripeTaxEnabled: typeof flags.stripeTaxEnabled === 'boolean'
                 ? flags.stripeTaxEnabled
                 : current.stripeTaxEnabled,
+            footerVariant: isFooterVariant(flags.footerVariant)
+                ? flags.footerVariant
+                : current.footerVariant,
             // Sub-record patches: each registered flag is whitelist-validated
             // via its `typeGuard`; unknown keys are dropped.
             commerce: sanitizeSubRecord<ICommerceFlags>('commerce', flags.commerce, current.commerce ?? {}),
