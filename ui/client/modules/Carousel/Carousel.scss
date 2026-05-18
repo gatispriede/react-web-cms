@@ -323,6 +323,104 @@
     }
   }
 
+  /* ---- Coverflow — perspective tilt on side slides, flat active slide.
+     Apply 3D perspective on the track so `rotateY` reads as depth, not
+     skew. Side slides recede; the slick-current/active slide sits flat
+     and forward. We deliberately do NOT touch `.slick-list` overflow —
+     base rules clip it, which is fine; the rotated edges just feather
+     out of view rather than escaping the wrapper. */
+  &.coverflow {
+    .slick-initialized .slick-list { perspective: 1200px; }
+    .slick-initialized .slick-track { transform-style: preserve-3d; }
+    .slick-initialized .slick-slide .container {
+      transform: rotateY(35deg) scale(0.86);
+      transform-origin: center center;
+      transition: transform 360ms ease, opacity 360ms ease;
+      opacity: 0.55;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+    }
+    // Slides to the right of the active one tilt the other way so the
+    // carousel reads as a true coverflow fan, not a shear in one
+    // direction. `+ .slick-slide` walks rightward siblings; the matching
+    // leftward selector below covers the other side via the active class
+    // being the anchor.
+    .slick-initialized .slick-active ~ .slick-slide .container {
+      transform: rotateY(-35deg) scale(0.86);
+    }
+    .slick-initialized .slick-current .container,
+    .slick-initialized .slick-active.slick-current .container {
+      transform: rotateY(0deg) scale(1);
+      opacity: 1;
+      z-index: 2;
+      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.4);
+    }
+  }
+
+  /* ---- Cinema — 16:9 dark letterbox frame, dimmed non-active slides.
+     The wrapper becomes the letterbox: solid near-black bars top/bottom
+     courtesy of the wrapper bg + a constrained inner aspect-ratio. The
+     active slide sits at full opacity inside, neighbours dim. */
+  &.cinema {
+    background: #0a0a0c;
+    padding: 4vh 0;
+    max-height: 80vh;
+    .slick-initialized .container {
+      aspect-ratio: 16 / 9;
+      max-height: calc(80vh - 8vh);
+      background: #000;
+    }
+    .slick-initialized .slick-slide:not(.slick-current) .container {
+      opacity: 0.32;
+      filter: saturate(0.7) brightness(0.7);
+      transition: opacity 320ms ease, filter 320ms ease;
+    }
+    .slick-initialized .slick-current .container {
+      opacity: 1;
+      filter: none;
+      transition: opacity 320ms ease, filter 320ms ease;
+    }
+    .container .text {
+      background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.95) 100%);
+      p {
+        font-family: var(--font-mono, ui-monospace, monospace);
+        font-size: 12px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+    }
+  }
+
+  /* ---- Cards — peek of next/prev card with rounded corners + heavy
+     shadow. Slick already lays slides out side-by-side; we add internal
+     padding so neighbours peek, then round + shadow each container so
+     the strip reads as a deck. Active card lifts slightly. */
+  &.cards {
+    padding: 24px 0 32px;
+    .slick-initialized .slick-slide { padding: 0 14px; }
+    .slick-initialized .container {
+      aspect-ratio: 4 / 3;
+      max-height: 60vh;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow:
+        0 2px 6px rgba(0, 0, 0, 0.08),
+        0 14px 32px rgba(0, 0, 0, 0.22);
+      transition: transform 280ms ease, box-shadow 280ms ease;
+    }
+    .slick-initialized .container .image { border-radius: inherit; }
+    .slick-initialized .slick-current .container {
+      transform: translateY(-6px) scale(1.02);
+      box-shadow:
+        0 4px 10px rgba(0, 0, 0, 0.12),
+        0 24px 48px rgba(0, 0, 0, 0.32);
+    }
+    .container .text {
+      background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.7) 100%);
+      border-bottom-left-radius: 14px;
+      border-bottom-right-radius: 14px;
+    }
+  }
+
   //.slick-dots{
   //  li button{
   //    height: 10px;

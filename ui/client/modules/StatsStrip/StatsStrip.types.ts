@@ -22,4 +22,7 @@ export interface IStatsStrip {
 export enum EStatsStripStyle {
     Default = "default",
     Editorial = "editorial",
+    Card = "card",
+    Neon = "neon",
+    Outline = "outline",
 }

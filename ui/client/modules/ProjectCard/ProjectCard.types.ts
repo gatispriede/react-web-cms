@@ -26,4 +26,7 @@ export interface IProjectCardLegacy {
 export enum EProjectCardStyle {
     Default = "default",
     Featured = "featured",
+    Polaroid = "polaroid",
+    Cinema = "cinema",
+    Stack = "stack",
 }

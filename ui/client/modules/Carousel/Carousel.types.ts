@@ -25,4 +25,13 @@ export enum ECarouselStyle {
     /** Editorial — square crop, large sans caption block on the right
      *  with a mono attribution line underneath. */
     Editorial = "editorial",
+    /** Coverflow — perspective tilt on side slides (rotateY), center slide
+     *  flat. Slides look like album art on a turntable carousel. */
+    Coverflow = "coverflow",
+    /** Cinema — 16:9 dark letterbox frame with dimmed non-active slides;
+     *  active slide pops out of a near-black surround. */
+    Cinema = "cinema",
+    /** Cards — peek of next/prev card with rounded corners + heavy shadow
+     *  for a deck-of-cards feel; active slide elevated. */
+    Cards = "cards",
 }

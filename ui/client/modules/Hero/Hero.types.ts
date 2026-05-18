@@ -86,4 +86,7 @@ export enum EHeroStyle {
     Compact = "compact",
     Editorial = "editorial",
     Poster = "poster",
+    Cinematic = "cinematic",
+    Split = "split",
+    Glass = "glass",
 }

@@ -6,7 +6,10 @@
 
 $easing-snap:   cubic-bezier(0.16, 1, 0.3, 1);
 $easing-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+$easing-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+$easing-slam:   cubic-bezier(0.55, 1.85, 0.55, 0.95);
 $duration:      0.72s;
+$duration-long: 1.05s;
 
 // --- keyframes ---
 
@@ -35,11 +38,79 @@ $duration:      0.72s;
   to   { opacity: 1; transform: translateX(0); }
 }
 
+// --- dramatic enter keyframes (2026-05-17) ---
+// Designed to read as "the element flies in from off-screen" rather than
+// the subtle 64px nudges above. Use sparingly — one drastic animation per
+// fold is the sweet spot; stacking them feels chaotic.
+
+@keyframes sc-fly-in-left {
+  0%   { opacity: 0; transform: translate3d(-110vw, 0, 0) rotate(-6deg); }
+  60%  { opacity: 1; transform: translate3d(18px, 0, 0)   rotate(1.5deg); }
+  100% { opacity: 1; transform: translate3d(0, 0, 0)      rotate(0); }
+}
+
+@keyframes sc-fly-in-right {
+  0%   { opacity: 0; transform: translate3d(110vw, 0, 0)  rotate(6deg); }
+  60%  { opacity: 1; transform: translate3d(-18px, 0, 0)  rotate(-1.5deg); }
+  100% { opacity: 1; transform: translate3d(0, 0, 0)      rotate(0); }
+}
+
+@keyframes sc-slam-down {
+  0%   { opacity: 0; transform: translate3d(0, -85vh, 0) scaleY(1.4); }
+  70%  { opacity: 1; transform: translate3d(0, 14px, 0)  scaleY(0.92); }
+  85%  {            transform: translate3d(0, -6px, 0)  scaleY(1.04); }
+  100% { opacity: 1; transform: translate3d(0, 0, 0)     scaleY(1); }
+}
+
+@keyframes sc-rocket-up {
+  0%   { opacity: 0; transform: translate3d(0, 90vh, 0) scale(0.55); filter: blur(8px); }
+  55%  { opacity: 1; transform: translate3d(0, -22px, 0) scale(1.06); filter: blur(0); }
+  100% { opacity: 1; transform: translate3d(0, 0, 0)     scale(1); }
+}
+
+@keyframes sc-swing-in {
+  0%   { opacity: 0; transform-origin: top center; transform: rotate(-72deg) translateY(-40px); }
+  55%  { opacity: 1; transform-origin: top center; transform: rotate(14deg); }
+  80%  {              transform-origin: top center; transform: rotate(-6deg); }
+  100% { opacity: 1; transform-origin: top center; transform: rotate(0); }
+}
+
+@keyframes sc-flip-in-x {
+  0%   { opacity: 0; transform: perspective(720px) rotateX(-92deg); }
+  60%  { opacity: 1; transform: perspective(720px) rotateX(14deg); }
+  100% { opacity: 1; transform: perspective(720px) rotateX(0); }
+}
+
+@keyframes sc-flip-in-y {
+  0%   { opacity: 0; transform: perspective(720px) rotateY(-92deg); }
+  60%  { opacity: 1; transform: perspective(720px) rotateY(14deg); }
+  100% { opacity: 1; transform: perspective(720px) rotateY(0); }
+}
+
+@keyframes sc-spin-zoom-in {
+  0%   { opacity: 0; transform: rotate(-180deg) scale(0.2); }
+  100% { opacity: 1; transform: rotate(0)       scale(1); }
+}
+
+@keyframes sc-blur-focus {
+  0%   { opacity: 0; filter: blur(24px); transform: scale(1.08); }
+  100% { opacity: 1; filter: blur(0);    transform: scale(1); }
+}
+
+@keyframes sc-shake-in {
+  0%   { opacity: 0; transform: translate3d(40px, 0, 0); }
+  40%  { opacity: 1; transform: translate3d(-12px, 0, 0); }
+  60%  {            transform: translate3d(8px, 0, 0); }
+  75%  {            transform: translate3d(-5px, 0, 0); }
+  88%  {            transform: translate3d(2px, 0, 0); }
+  100% { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
 // --- base hidden state (all animated items start invisible) ---
 
 [data-anim] {
   opacity: 0;
-  will-change: opacity, transform;
+  will-change: opacity, transform, filter;
 }
 
 // --- per-animation entry states ---
@@ -48,6 +119,16 @@ $duration:      0.72s;
 [data-anim="zoom-in"]    { transform: scale(0.91); }
 [data-anim="slide-left"] { transform: translateX(64px); }
 [data-anim="slide-right"]{ transform: translateX(-64px); }
+[data-anim="fly-in-left"]   { transform: translate3d(-110vw, 0, 0) rotate(-6deg); }
+[data-anim="fly-in-right"]  { transform: translate3d(110vw, 0, 0) rotate(6deg); }
+[data-anim="slam-down"]     { transform: translate3d(0, -85vh, 0) scaleY(1.4); }
+[data-anim="rocket-up"]     { transform: translate3d(0, 90vh, 0) scale(0.55); filter: blur(8px); }
+[data-anim="swing-in"]      { transform-origin: top center; transform: rotate(-72deg) translateY(-40px); }
+[data-anim="flip-in-x"]     { transform: perspective(720px) rotateX(-92deg); }
+[data-anim="flip-in-y"]     { transform: perspective(720px) rotateY(-92deg); }
+[data-anim="spin-zoom-in"]  { transform: rotate(-180deg) scale(0.2); }
+[data-anim="blur-focus"]    { filter: blur(24px); transform: scale(1.08); }
+[data-anim="shake-in"]      { transform: translate3d(40px, 0, 0); }
 
 // --- triggered state (.anim-in added by observer) ---
 // --anim-delay is set inline per item (index × 110 ms stagger from SectionContent)
@@ -72,6 +153,38 @@ $duration:      0.72s;
   animation: sc-slide-right $duration $easing-snap var(--anim-delay, 0ms) forwards;
 }
 
+[data-anim="fly-in-left"].anim-in {
+  animation: sc-fly-in-left $duration-long $easing-bounce var(--anim-delay, 0ms) forwards;
+}
+[data-anim="fly-in-right"].anim-in {
+  animation: sc-fly-in-right $duration-long $easing-bounce var(--anim-delay, 0ms) forwards;
+}
+[data-anim="slam-down"].anim-in {
+  animation: sc-slam-down $duration-long $easing-slam var(--anim-delay, 0ms) forwards;
+}
+[data-anim="rocket-up"].anim-in {
+  animation: sc-rocket-up $duration-long $easing-bounce var(--anim-delay, 0ms) forwards;
+}
+[data-anim="swing-in"].anim-in {
+  animation: sc-swing-in $duration-long $easing-bounce var(--anim-delay, 0ms) forwards;
+  transform-origin: top center;
+}
+[data-anim="flip-in-x"].anim-in {
+  animation: sc-flip-in-x $duration $easing-snap var(--anim-delay, 0ms) forwards;
+}
+[data-anim="flip-in-y"].anim-in {
+  animation: sc-flip-in-y $duration $easing-snap var(--anim-delay, 0ms) forwards;
+}
+[data-anim="spin-zoom-in"].anim-in {
+  animation: sc-spin-zoom-in $duration $easing-bounce var(--anim-delay, 0ms) forwards;
+}
+[data-anim="blur-focus"].anim-in {
+  animation: sc-blur-focus $duration $easing-smooth var(--anim-delay, 0ms) forwards;
+}
+[data-anim="shake-in"].anim-in {
+  animation: sc-shake-in $duration $easing-smooth var(--anim-delay, 0ms) forwards;
+}
+
 // --- admin mode: always visible, no motion ---
 
 .admin-mode [data-anim],
@@ -79,6 +192,7 @@ $duration:      0.72s;
   opacity: 1 !important;
   transform: none !important;
   animation: none !important;
+  filter: none !important;
   will-change: auto;
 }
 
@@ -89,5 +203,6 @@ $duration:      0.72s;
     opacity: 1 !important;
     transform: none !important;
     animation: none !important;
+    filter: none !important;
   }
 }

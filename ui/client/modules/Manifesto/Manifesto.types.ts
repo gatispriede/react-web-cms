@@ -29,4 +29,10 @@ export enum EManifestoStyle {
     Default = "default",
     /** Full-width accent-coloured band — teal/primary bg, accent-ink text (design-v6 Brandappart). */
     Accent = "accent",
+    /** Oversized opening quote mark, italic serif body, attribution under thin rule. */
+    Quote = "quote",
+    /** All-caps headline, body in narrow right column. */
+    Poster = "poster",
+    /** Monospace font with blinking caret and ASCII rule. */
+    Typewriter = "typewriter",
 }

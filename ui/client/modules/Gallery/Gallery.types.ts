@@ -49,4 +49,7 @@ export enum EGalleryStyle {
     LogoWall = "logo-wall",
     HazardStrip = "hazard-strip",
     Masonry = "masonry",
+    Polaroid = "polaroid",
+    Mosaic = "mosaic",
+    Cinema = "cinema",
 }

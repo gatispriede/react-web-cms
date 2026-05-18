@@ -101,4 +101,117 @@
       color: var(--accent-ink, var(--theme-colorAccentInk, #fff));
     }
   }
+
+  /* ---- quote style: oversized opening quote, italic serif body ---- */
+  &.quote {
+    position: relative;
+    padding: 48px 24px 32px 72px;
+
+    &::before {
+      content: "\201C";
+      position: absolute;
+      top: -8px;
+      left: 8px;
+      font-family: var(--font-display, Georgia, serif);
+      font-size: clamp(96px, 12vw, 180px);
+      line-height: 1;
+      color: var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary, #1677ff)));
+      font-weight: 700;
+    }
+
+    .manifesto__body {
+      font-family: var(--font-display, Georgia, "Times New Roman", serif);
+      font-style: italic;
+      font-size: clamp(22px, 2.4vw, 30px);
+      line-height: 1.45;
+      max-width: 40ch;
+    }
+
+    .manifesto__addendum {
+      font-style: normal;
+      padding-top: 14px;
+      margin-top: 18px;
+      border-top: 1px solid color-mix(in srgb, var(--ink, #1f1f1f) 30%, transparent);
+      max-width: 40ch;
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+  }
+
+  /* ---- poster style: full-width caps headline, narrow right column ---- */
+  &.poster {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 32px;
+    align-items: start;
+    padding: 32px 0;
+
+    .manifesto__body {
+      font-family: var(--font-display, var(--font-sans, system-ui, sans-serif));
+      font-weight: 800;
+      text-transform: uppercase;
+      font-size: clamp(36px, 6vw, 88px);
+      line-height: 0.95;
+      letter-spacing: -0.02em;
+      max-width: none;
+      margin: 0;
+    }
+
+    .manifesto__addendum {
+      font-size: 14px;
+      line-height: 1.6;
+      max-width: 32ch;
+      padding-top: 8px;
+      border-top: 2px solid var(--ink, var(--theme-colorTextBase, #1f1f1f));
+    }
+
+    @media (max-width: 720px) {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+  }
+
+  /* ---- typewriter style: monospace, blinking caret, ASCII rule ---- */
+  &.typewriter {
+    padding: 24px 0;
+
+    .manifesto__body {
+      font-family: var(--font-mono, ui-monospace, "Courier New", monospace);
+      font-size: clamp(18px, 2vw, 24px);
+      line-height: 1.5;
+      letter-spacing: 0;
+      max-width: 60ch;
+
+      &::after {
+        content: "_";
+        display: inline-block;
+        margin-left: 4px;
+        color: var(--accent, var(--theme-colorAccent, var(--theme-colorPrimary, #1677ff)));
+        animation: manifesto-caret-blink 1s steps(2, start) infinite;
+      }
+    }
+
+    .manifesto__addendum {
+      font-family: var(--font-mono, ui-monospace, "Courier New", monospace);
+      font-size: 13px;
+      max-width: 60ch;
+      position: relative;
+      padding-top: 18px;
+
+      &::before {
+        content: "------------------------------------------------------------";
+        display: block;
+        overflow: hidden;
+        white-space: nowrap;
+        color: var(--ink-2, var(--theme-colorInkSecondary, #888));
+        margin-bottom: 10px;
+        letter-spacing: 0;
+      }
+    }
+  }
+}
+
+@keyframes manifesto-caret-blink {
+  to { opacity: 0; }
 }

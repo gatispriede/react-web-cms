@@ -163,6 +163,9 @@ const HERO_STYLE_LABELS: Record<string, string> = {
     compact: 'Compact',
     editorial: 'Photo bleed',
     poster: 'Poster',
+    cinematic: 'Cinematic (letterboxed)',
+    split: 'Split (50/50)',
+    glass: 'Glass card',
 };
 const KEY_VALUE_DOSSIER_STYLE_LABELS: Record<string, string> = {
     editorial: 'Editorial (paper)',
@@ -175,6 +178,9 @@ const GALLERY_STYLE_LABELS: Record<string, string> = {
     'logo-wall': 'Logo wall',
     'hazard-strip': 'Hazard strip',
     masonry: 'Masonry',
+    polaroid: 'Polaroid stack',
+    mosaic: 'Featured mosaic',
+    cinema: 'Cinema 16:9',
 };
 const LIST_STYLE_LABELS: Record<string, string> = {
     default: 'Bullet list',
@@ -199,6 +205,9 @@ const SERVICES_STYLE_LABELS: Record<string, string> = {
 const MANIFESTO_STYLE_LABELS: Record<string, string> = {
     default: 'Standard',
     accent: 'Accent banner',
+    quote: 'Pull quote',
+    poster: 'Poster headline',
+    typewriter: 'Typewriter',
 };
 const CAROUSEL_STYLE_LABELS: Record<string, string> = {
     default: 'Standard slides',
@@ -206,10 +215,16 @@ const CAROUSEL_STYLE_LABELS: Record<string, string> = {
     polaroid: 'Polaroid (rotated)',
     ribbon: 'Ribbon (thin)',
     editorial: 'Editorial (square)',
+    coverflow: 'Coverflow (tilted)',
+    cinema: 'Cinema (letterbox)',
+    cards: 'Cards (deck)',
 };
 const STATS_STRIP_STYLE_LABELS: Record<string, string> = {
     default: 'Standard',
     editorial: 'Editorial (rules)',
+    card: 'Card (frosted glass)',
+    neon: 'Neon (dark glow)',
+    outline: 'Outline (text stroke)',
 };
 const PROJECT_GRID_STYLE_LABELS: Record<string, string> = {
     default: 'Standard grid',
@@ -222,6 +237,9 @@ const TESTIMONIALS_STYLE_LABELS: Record<string, string> = {
 const PROJECT_CARD_STYLE_LABELS: Record<string, string> = {
     default: 'Standard',
     featured: 'Featured (large)',
+    polaroid: 'Polaroid snapshot',
+    cinema: 'Cinema letterbox',
+    stack: 'Stacked cards',
 };
 const TIMELINE_STYLE_LABELS: Record<string, string> = {
     default: 'Standard',
