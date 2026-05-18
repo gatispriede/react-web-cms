@@ -28,5 +28,5 @@
         "timeline": "vertical-rail"
     },
     "darkDefault": false,
-    "placeholder": true
+    "placeholder": false
 }

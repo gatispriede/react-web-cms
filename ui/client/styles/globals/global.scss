@@ -62,25 +62,42 @@
 @use "../../../../services/themes/local-business/theme" as localBusinessTheme;
 @use "../../../../services/themes/local-business/module-styles" as localBusinessModules;
 
-// Second-wave first-class themes (2026-05-17) — theme.scss only, no
-// per-theme module-styles.scss yet. The semantic-token block + a
-// short element-level signature block is enough to make each theme
-// visually distinct; per-module signature treatments land later.
+// Second-wave first-class themes (2026-05-17). Both theme.scss
+// (semantic-token block + element-level signature) and
+// module-styles.scss (per-module signature treatments — hero, nav,
+// footer, feature-grid, testimonials, inquiry-form, plus theme-
+// specific accents) are wired in pairs to match the established
+// editorial → local-business convention above.
 @use "../../../../services/themes/news/theme" as newsTheme;
+@use "../../../../services/themes/news/module-styles" as newsModules;
 @use "../../../../services/themes/magazine/theme" as magazineTheme;
+@use "../../../../services/themes/magazine/module-styles" as magazineModules;
 @use "../../../../services/themes/journal/theme" as journalTheme;
+@use "../../../../services/themes/journal/module-styles" as journalModules;
 @use "../../../../services/themes/fintech/theme" as fintechTheme;
+@use "../../../../services/themes/fintech/module-styles" as fintechModules;
 @use "../../../../services/themes/developer-docs/theme" as developerDocsTheme;
+@use "../../../../services/themes/developer-docs/module-styles" as developerDocsModules;
 @use "../../../../services/themes/gaming/theme" as gamingTheme;
+@use "../../../../services/themes/gaming/module-styles" as gamingModules;
 @use "../../../../services/themes/wellness/theme" as wellnessTheme;
+@use "../../../../services/themes/wellness/module-styles" as wellnessModules;
 @use "../../../../services/themes/fashion/theme" as fashionTheme;
+@use "../../../../services/themes/fashion/module-styles" as fashionModules;
 @use "../../../../services/themes/music/theme" as musicTheme;
+@use "../../../../services/themes/music/module-styles" as musicModules;
 @use "../../../../services/themes/legal-firm/theme" as legalFirmTheme;
+@use "../../../../services/themes/legal-firm/module-styles" as legalFirmModules;
 @use "../../../../services/themes/medical/theme" as medicalTheme;
+@use "../../../../services/themes/medical/module-styles" as medicalModules;
 @use "../../../../services/themes/education/theme" as educationTheme;
+@use "../../../../services/themes/education/module-styles" as educationModules;
 @use "../../../../services/themes/nonprofit/theme" as nonprofitTheme;
+@use "../../../../services/themes/nonprofit/module-styles" as nonprofitModules;
 @use "../../../../services/themes/real-estate/theme" as realEstateTheme;
+@use "../../../../services/themes/real-estate/module-styles" as realEstateModules;
 @use "../../../../services/themes/minimal-mono/theme" as minimalMonoTheme;
+@use "../../../../services/themes/minimal-mono/module-styles" as minimalMonoModules;
 
 // Per-module public renderers — one folder per item type under modules/.
 @use "../../modules/PlainImage/PlainImage";

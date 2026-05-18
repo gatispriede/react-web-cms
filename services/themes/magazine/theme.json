@@ -28,5 +28,5 @@
         "timeline": "horizontal-scroll"
     },
     "darkDefault": false,
-    "placeholder": true
+    "placeholder": false
 }

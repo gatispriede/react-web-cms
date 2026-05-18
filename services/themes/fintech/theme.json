@@ -22,5 +22,5 @@
     "headerBehavior": "sticky-static",
     "footerLayout": "multi-column",
     "logoLockup": "combined",
-    "placeholder": true
+    "placeholder": false
 }

@@ -28,5 +28,5 @@
         "posts": "editorial"
     },
     "darkDefault": false,
-    "placeholder": true
+    "placeholder": false
 }

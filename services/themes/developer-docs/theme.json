@@ -23,5 +23,5 @@
     "footerLayout": "minimal-1row",
     "logoLockup": "wordmark",
     "darkDefault": true,
-    "placeholder": true
+    "placeholder": false
 }

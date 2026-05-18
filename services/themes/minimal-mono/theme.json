@@ -28,5 +28,5 @@
         "productGrid": "tight-grid"
     },
     "darkDefault": false,
-    "placeholder": true
+    "placeholder": false
 }

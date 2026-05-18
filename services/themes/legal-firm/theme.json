@@ -23,5 +23,5 @@
     "footerLayout": "multi-column",
     "logoLockup": "combined",
     "darkDefault": false,
-    "placeholder": true
+    "placeholder": false
 }

@@ -23,5 +23,5 @@
     "footerLayout": "brand-led-xxl",
     "logoLockup": "combined",
     "darkDefault": true,
-    "placeholder": true
+    "placeholder": false
 }

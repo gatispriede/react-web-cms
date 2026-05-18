@@ -28,5 +28,5 @@
         "posts": "card-grid"
     },
     "darkDefault": false,
-    "placeholder": true
+    "placeholder": false
 }
