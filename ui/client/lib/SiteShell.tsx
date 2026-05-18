@@ -76,6 +76,7 @@ interface IHomeState {
     hasPosts: boolean,
     blogEnabled: boolean,
     layoutMode: 'tabs' | 'scroll',
+    navVariant: 'default' | 'rail' | 'pill' | 'underline',
 }
 
 export interface ISiteShellProps {
@@ -125,6 +126,7 @@ class LegacyAppClass extends React.Component<IHomeProps> {
         hasPosts: false,
         blogEnabled: true,
         layoutMode: 'tabs',
+        navVariant: 'default',
     }
     private languages: any;
 

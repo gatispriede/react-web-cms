@@ -78,6 +78,9 @@ export enum EProductStyle {
     Default = 'default',
     Bordered = 'bordered',
     Minimal = 'minimal',
+    Cards = 'cards',
+    Cinema = 'cinema',
+    Elevated = 'elevated',
 }
 
 export const DEFAULT_PRODUCT_CONTENT: IProductModule = {

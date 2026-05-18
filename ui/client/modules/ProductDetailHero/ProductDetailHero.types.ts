@@ -23,4 +23,7 @@ export interface IProductDetailHero {
 export enum EProductDetailHeroStyle {
     Default = 'default',
     Compact = 'compact',
+    Split = 'split',
+    Stacked = 'stacked',
+    Magazine = 'magazine',
 }

@@ -7,6 +7,13 @@ export interface BlogPostMeta {
     tags?: Array<{key: string; label: string; href?: string}>;
 }
 
+export enum EBlogPostStyle {
+    Default = 'default',
+    Editorial = 'editorial',
+    Compact = 'compact',
+    Magazine = 'magazine',
+}
+
 export interface BlogPostProps {
     testId: string;
     title: string;

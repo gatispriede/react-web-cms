@@ -15,4 +15,7 @@ export interface IProductDescription {
 
 export enum EProductDescriptionStyle {
     Default = 'default',
+    Editorial = 'editorial',
+    Compact = 'compact',
+    Centered = 'centered',
 }

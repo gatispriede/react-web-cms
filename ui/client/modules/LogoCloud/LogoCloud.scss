@@ -53,4 +53,93 @@
             opacity: 1;
         }
     }
+
+    /* ----- Variant: Marquee (infinite scroll) ----- */
+    &.marquee {
+        overflow: hidden;
+
+        .logo-cloud__list {
+            flex-wrap: nowrap;
+            justify-content: flex-start;
+            gap: 3rem;
+            animation: logo-cloud-marquee 30s linear infinite;
+            width: max-content;
+        }
+
+        .logo-cloud__item {
+            flex: 0 0 auto;
+        }
+
+        .logo-cloud__img {
+            max-height: 2.5rem;
+            filter: grayscale(100%);
+            opacity: 0.6;
+        }
+    }
+
+    @keyframes logo-cloud-marquee {
+        from { transform: translateX(0); }
+        to   { transform: translateX(-50%); }
+    }
+
+    /* ----- Variant: Mono (grayscale → color on hover) ----- */
+    &.mono {
+        .logo-cloud__list {
+            gap: 2.5rem 3rem;
+        }
+
+        .logo-cloud__img {
+            max-height: 2.25rem;
+            filter: grayscale(100%) contrast(0.6);
+            opacity: 0.55;
+            transition:
+                filter calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+                opacity calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard),
+                transform calc(var(--motion-duration-base) * var(--motion-scalar)) var(--motion-ease-standard);
+
+            &:hover,
+            &:focus-visible {
+                filter: grayscale(0%) contrast(1);
+                opacity: 1;
+                transform: scale(1.08);
+            }
+        }
+    }
+
+    /* ----- Variant: Wall (dense uniform grid) ----- */
+    &.wall {
+        .logo-cloud__list {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 0;
+            border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+            border-left: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+        }
+
+        @media (max-width: 960px) {
+            .logo-cloud__list {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 560px) {
+            .logo-cloud__list {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .logo-cloud__item {
+            min-height: 5rem;
+            padding: 1rem;
+            border-right: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+            border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+            background: var(--theme-colorBgContainer, #fff);
+        }
+
+        .logo-cloud__img {
+            max-height: 2rem;
+            filter: none;
+            opacity: 0.9;
+        }
+    }
 }

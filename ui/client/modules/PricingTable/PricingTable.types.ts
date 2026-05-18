@@ -29,3 +29,10 @@ export interface PricingTableProps {
     annualLabel?: string;
     mostPopularLabel?: string;
 }
+
+export enum EPricingTableStyle {
+    Default = "default",
+    Highlighted = "highlighted",
+    Toggle = "toggle",
+    Compact = "compact"
+}

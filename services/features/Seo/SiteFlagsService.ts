@@ -11,6 +11,11 @@ import '@services/features/Commerce/commerceFlags';
 
 export type SiteLayoutMode = 'tabs' | 'scroll' | 'auto';
 
+/** Public-site main-nav visual variant. `'default'` = legacy AntD
+ *  horizontal bar; `'rail'`, `'pill'`, `'underline'` are SCSS-driven
+ *  visual flavours described in `ui/client/styles/Common/NavMenu.scss`. */
+export type SiteNavVariant = 'default' | 'rail' | 'pill' | 'underline';
+
 /**
  * Resolve `'auto'` to a concrete render mode. Per the F6 spec
  * (`docs/roadmap/site-mode-toggle.md`): default `auto` → `'tabs'`
@@ -69,6 +74,10 @@ export interface ISiteFlags {
      *  `'tabs'` (the safe default for F1 sub-pages); operators set explicit
      *  `'scroll'` for legacy single-narrative bundles. */
     layoutMode: SiteLayoutMode;
+    /** Visual variant for the public-site main navigation. Defaults to
+     *  `'default'` so existing sites render byte-identical markup. The
+     *  non-default variants are styled in `NavMenu.scss`. */
+    navVariant?: SiteNavVariant;
     /** When true, editors / admins get Alt-click inline translation editing on
      *  public-site strings. Off by default — Alt-click bindings can interfere
      *  with other testing flows, so editors opt in explicitly. */
@@ -125,6 +134,11 @@ export interface ISiteFlags {
     /** Polish bundle (W8g) — toggle Stripe Tax as the VAT provider.
      *  Inert when `STRIPE_SECRET_KEY` env var is absent. */
     stripeTaxEnabled?: boolean;
+    /** Public-site footer visual variant. Operator-picked from the
+     *  admin; the site shell reads this and passes it into
+     *  `<SiteFooter variant=… />`. Undefined / `'default'` keeps the
+     *  legacy footer shape byte-identical. */
+    footerVariant?: 'default' | 'mega' | 'minimal' | 'brutalist';
     /** Sub-record namespaces — populated via `defineFlag()` in consuming
      *  features. See `docs/architecture/site-flags.md`. */
     commerce?: ICommerceFlags;
@@ -155,6 +169,7 @@ export interface ISiteMailConfig {
 export const DEFAULT_SITE_FLAGS: ISiteFlags = {
     blogEnabled: true,
     layoutMode: 'tabs',
+    navVariant: 'default',
     inlineTranslationEdit: false,
     autoHighContrast: false,
     selfHostFonts: false,
@@ -218,6 +233,13 @@ function sanitizeMailConfig(raw: unknown): ISiteMailConfig | undefined {
     };
 }
 
+/** Whitelist the variant to the published enum — unknown values
+ *  collapse to `'default'` so a typo in the admin can't break render. */
+const sanitizeNavVariant = (v: unknown): SiteNavVariant => {
+    if (v === 'rail' || v === 'pill' || v === 'underline' || v === 'default') return v;
+    return 'default';
+};
+
 const KEY = 'siteFlags';
 
 export class SiteFlagsService {
@@ -235,6 +257,7 @@ export class SiteFlagsService {
             layoutMode: (value?.layoutMode === 'scroll' || value?.layoutMode === 'tabs' || value?.layoutMode === 'auto')
                 ? value.layoutMode
                 : DEFAULT_SITE_FLAGS.layoutMode,
+            navVariant: sanitizeNavVariant(value?.navVariant),
             inlineTranslationEdit: typeof value?.inlineTranslationEdit === 'boolean'
                 ? value.inlineTranslationEdit
                 : DEFAULT_SITE_FLAGS.inlineTranslationEdit,
@@ -294,6 +317,9 @@ export class SiteFlagsService {
             layoutMode: (flags.layoutMode === 'scroll' || flags.layoutMode === 'tabs' || flags.layoutMode === 'auto')
                 ? flags.layoutMode
                 : current.layoutMode,
+            navVariant: flags.navVariant !== undefined
+                ? sanitizeNavVariant(flags.navVariant)
+                : current.navVariant,
             inlineTranslationEdit: typeof flags.inlineTranslationEdit === 'boolean'
                 ? flags.inlineTranslationEdit
                 : current.inlineTranslationEdit,

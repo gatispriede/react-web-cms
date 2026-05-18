@@ -18,4 +18,7 @@ export interface IProductSpecTable {
 export enum EProductSpecTableStyle {
     Default = 'default',
     Compact = 'compact',
+    Striped = 'striped',
+    Cards = 'cards',
+    Dense = 'dense',
 }

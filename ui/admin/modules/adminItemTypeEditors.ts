@@ -264,6 +264,13 @@ const TIMELINE_STYLE_LABELS: Record<string, string> = {
     zigzag: 'Zigzag alternating',
     cards: 'Floating cards',
 };
+const BLOG_FEED_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    compact: 'Compact',
+    magazine: 'Magazine (lead + list)',
+    cards: 'Cards (3-col grid)',
+    cinema: 'Cinema (16:9 dark)',
+};
 const SECTION_HEADING_STYLE_LABELS: Record<string, string> = {
     editorial: 'Editorial (§ NN, serif)',
     'tech-modern': 'Modern (sans, accent)',
@@ -281,7 +288,7 @@ export const ADMIN_ITEM_TYPE_EDITORS: readonly AdminItemTypeEntry[] = [
     {key: EItemType.SkillPills,      Editor: SkillPillsEditor,       styleEnum: asEnum(ESkillPillsStyle), styleLabels: SKILL_PILLS_STYLE_LABELS,      defaultContent: '{"category":"","items":[]}',                                                                                                                                                labelKey: 'Skill pills',          descriptionKey: 'Tag cloud or matrix of skills.',                                     category: 'content'},
     {key: EItemType.Timeline,        Editor: TimelineEditor,         styleEnum: asEnum(ETimelineStyle), styleLabels: TIMELINE_STYLE_LABELS,        defaultContent: '{"entries":[{"start":"","end":"","company":"","role":""}]}',                                                                                                                labelKey: 'Timeline',             descriptionKey: 'Vertical or horizontal milestone list.',                             category: 'content'},
     {key: EItemType.SocialLinks,     Editor: SocialLinksEditor,      styleEnum: asEnum(ESocialLinksStyle),     defaultContent: '{"links":[{"platform":"website","url":"","label":""}]}',                                                                                                                    labelKey: 'Social links',         descriptionKey: 'Row of icon links to external profiles.',                            category: 'cta'},
-    {key: EItemType.BlogFeed,        Editor: BlogFeedEditor,         styleEnum: asEnum(EBlogFeedStyle),        defaultContent: '{"limit":6,"tag":"","heading":""}',                                                                                                                                         labelKey: 'Blog feed',            descriptionKey: 'Latest posts pulled from the Posts collection.',                     category: 'content'},
+    {key: EItemType.BlogFeed,        Editor: BlogFeedEditor,         styleEnum: asEnum(EBlogFeedStyle), styleLabels: BLOG_FEED_STYLE_LABELS,        defaultContent: '{"limit":6,"tag":"","heading":""}',                                                                                                                                         labelKey: 'Blog feed',            descriptionKey: 'Latest posts pulled from the Posts collection.',                     category: 'content'},
     {key: EItemType.List,            Editor: ListEditor,             styleEnum: asEnum(EListStyle), styleLabels: LIST_STYLE_LABELS,            defaultContent: '{"title":"","items":[{"label":"","value":"","href":""}]}',                                                                                                                  labelKey: 'List',                 descriptionKey: 'Bullet or numbered list, optional meta fields.',                     category: 'content'},
     {key: EItemType.Services,        Editor: ServicesEditor,         styleEnum: asEnum(EServicesStyle), styleLabels: SERVICES_STYLE_LABELS,        defaultContent: '{"sectionNumber":"","sectionTitle":"","sectionSubtitle":"","rows":[{"number":"01","title":"","description":"","ctaLabel":"","ctaHref":"","iconGlyph":"","tags":[]}]}',      labelKey: 'Services',             descriptionKey: 'Icon + heading + body cards grouped by row.',                        category: 'content'},
     {key: EItemType.Testimonials,    Editor: TestimonialsEditor,     styleEnum: asEnum(ETestimonialsStyle), styleLabels: TESTIMONIALS_STYLE_LABELS,    defaultContent: '{"sectionTitle":"","sectionSubtitle":"","items":[{"quote":"","name":"","role":"","avatarInitial":""}]}',                                                                    labelKey: 'Testimonials',         descriptionKey: 'Quote cards with avatar and attribution.',                           category: 'content'},
