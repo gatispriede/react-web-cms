@@ -1,4 +1,12 @@
 // BlogFeed module — public render only. Grid of post cards.
+//
+// Style variants are theme-agnostic — they reshape layout/typography only
+// and never hard-code colours so each theme can keep its own palette via
+// `--theme-*` vars and the existing antd Card chrome.
+//
+// The outer wrapper (`.section-item-container`) gets a `style-<value>` class
+// from SectionContent based on `item.style`, so variants are scoped via
+// `.style-<name> .blog-feed { ... }`.
 
 .blog-feed {
   display: grid;
@@ -12,6 +20,119 @@
       box-shadow: 0 12px 28px rgba(0,0,0,.1);
       border-color: var(--hover-accent-border);
       background-color: var(--hover-accent-bg);
+    }
+  }
+}
+
+/* ---- magazine — first post huge feature card, rest small list -------- */
+.style-magazine .blog-feed {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+
+  > *:first-child {
+    .blog-card {
+      .ant-card-cover img {
+        height: 360px !important;
+      }
+      .ant-card-meta-title {
+        font-size: 1.75em;
+        line-height: 1.15;
+        white-space: normal;
+      }
+      .ant-card-body { padding: 24px; }
+    }
+  }
+
+  > *:not(:first-child) {
+    .blog-card {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 12px;
+      align-items: stretch;
+
+      .ant-card-cover {
+        margin: 0;
+        img { height: 100% !important; min-height: 96px; }
+      }
+      .ant-card-body { padding: 12px 16px; }
+      .ant-card-meta-title { font-size: 1em; }
+    }
+  }
+}
+
+/* ---- cards — uniform 3-col image-card grid with stronger hover-lift -- */
+.style-cards .blog-feed {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+
+  .blog-card {
+    border-radius: 12px;
+    overflow: hidden;
+
+    .ant-card-cover img {
+      height: 200px !important;
+    }
+    &:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(0,0,0,.18);
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .style-cards .blog-feed { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+  .style-cards .blog-feed { grid-template-columns: 1fr; }
+}
+
+/* ---- cinema — 16:9 dark cards, letterboxed titles ------------------- */
+.style-cinema .blog-feed {
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 12px;
+
+  .blog-card {
+    background: #0b0b0b;
+    color: #f1f1f1;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+
+    .ant-card-cover {
+      margin: 0;
+      img {
+        aspect-ratio: 16 / 9;
+        height: auto !important;
+        width: 100%;
+        object-fit: cover;
+        display: block;
+      }
+    }
+
+    .ant-card-body {
+      background: #0b0b0b;
+      padding: 14px 18px;
+      border-top: 4px solid #000;
+      border-bottom: 4px solid #000;
+    }
+
+    .ant-card-meta-title,
+    .ant-card-meta-description {
+      color: #f1f1f1 !important;
+    }
+
+    .ant-card-meta-title {
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      font-size: .95em;
+    }
+
+    &:hover {
+      transform: none;
+      box-shadow: 0 0 0 1px rgba(255,255,255,.25), 0 18px 36px rgba(0,0,0,.55);
+      background: #111;
     }
   }
 }

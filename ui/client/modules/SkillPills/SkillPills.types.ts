@@ -35,4 +35,10 @@ export enum ESkillPillsStyle {
     Matrix = "matrix",
     /** 6-column tech stack grid with per-item category labels. */
     StackGrid = "stack-grid",
+    /** Pills scattered on a starry dark backdrop with connecting lines. */
+    Constellation = "constellation",
+    /** Sharp black blocks with bold monospace text. */
+    Brutalist = "brutalist",
+    /** Hexagon-shaped pills via clip-path. */
+    Hex = "hex",
 }

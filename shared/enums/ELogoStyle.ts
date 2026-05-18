@@ -10,4 +10,7 @@ export enum ELogoStyle {
     Bordered = 'bordered', // thin accent-coloured border + padding
     Framed = 'framed',     // card: bg + shadow + radius
     Circle = 'circle',     // round clip — for avatar-style marks
+    Outlined = 'outlined', // text-stroke: transparent fill + outline
+    Reversed = 'reversed', // solid block with knocked-out text (negative)
+    Neon = 'neon',         // accent glow + thin outline
 }

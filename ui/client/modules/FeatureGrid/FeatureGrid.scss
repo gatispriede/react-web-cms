@@ -58,4 +58,107 @@
         color: var(--ink-2, color-mix(in srgb, currentColor 70%, transparent));
         line-height: 1.5;
     }
+
+    /* ----- Variant: Cards (elevated, shadowed) ----- */
+    &.cards {
+        gap: 1.75rem;
+
+        .feature-grid__card {
+            padding: 1.75rem 1.5rem;
+            background: var(--theme-colorBgContainer, #fff);
+            border: 1px solid color-mix(in srgb, currentColor 8%, transparent);
+            border-radius: calc(var(--theme-borderRadius, 8px) * 1.5);
+            box-shadow:
+                0 1px 2px color-mix(in srgb, currentColor 6%, transparent),
+                0 12px 28px -8px color-mix(in srgb, currentColor 18%, transparent);
+        }
+
+        .feature-grid__card:hover,
+        .feature-grid__card:focus-within {
+            transform: translateY(-4px);
+            box-shadow:
+                0 2px 4px color-mix(in srgb, currentColor 8%, transparent),
+                0 20px 40px -10px color-mix(in srgb, currentColor 28%, transparent);
+        }
+
+        .feature-grid__icon {
+            width: 3rem;
+            height: 3rem;
+            background: var(--accent, var(--theme-colorPrimary, #1677ff));
+            color: var(--theme-colorBgContainer, #fff);
+        }
+    }
+
+    /* ----- Variant: Compact (dense, 4 columns) ----- */
+    &.compact {
+        gap: 0.5rem;
+
+        &.feature-grid--cols-2,
+        &.feature-grid--cols-3 {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        @media (max-width: 960px) {
+            &.feature-grid--cols-2,
+            &.feature-grid--cols-3 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 560px) {
+            &.feature-grid--cols-2,
+            &.feature-grid--cols-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .feature-grid__card {
+            gap: 0.25rem;
+            padding: 0.75rem;
+            background: transparent;
+            border-left: 2px solid var(--accent, var(--theme-colorPrimary, #1677ff));
+            border-radius: 0;
+        }
+
+        .feature-grid__icon {
+            width: 1.5rem;
+            height: 1.5rem;
+            background: transparent;
+        }
+
+        .feature-grid__title {
+            font-size: 0.9375rem;
+        }
+
+        .feature-grid__desc {
+            font-size: 0.8125rem;
+        }
+    }
+
+    /* ----- Variant: Iconic (huge icon over text) ----- */
+    &.iconic {
+        gap: 2rem;
+
+        .feature-grid__card {
+            align-items: center;
+            text-align: center;
+            gap: 1rem;
+            padding: 2rem 1.25rem;
+            background: transparent;
+        }
+
+        .feature-grid__icon {
+            width: 5rem;
+            height: 5rem;
+            font-size: 2.5rem;
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--accent, var(--theme-colorPrimary, #1677ff)) 12%, transparent);
+            color: var(--accent, var(--theme-colorPrimary, #1677ff));
+        }
+
+        .feature-grid__title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+    }
 }

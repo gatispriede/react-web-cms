@@ -31,4 +31,7 @@ export enum ETimelineStyle {
     /** Collapses the left period column — just renders the body lines inline.
      *  Used for Dossier "Education" where years live inside each body. */
     Minimal = "minimal",
+    Vertical = "vertical",
+    Zigzag = "zigzag",
+    Cards = "cards",
 }

@@ -53,3 +53,121 @@
   &__achievements { margin: 6px 0 0; padding-left: 18px; }
   &__achievements li { margin-bottom: 4px; line-height: 1.55; }
 }
+
+/* ---- Vertical: prominent spine with large dotted nodes ---- */
+.timeline.vertical {
+  padding-left: 40px;
+
+  &::before {
+    left: 14px;
+    width: 4px;
+    opacity: .55;
+    background: linear-gradient(
+      to bottom,
+      var(--theme-colorPrimary),
+      color-mix(in srgb, var(--theme-colorPrimary, #1677ff) 30%, transparent)
+    );
+  }
+
+  .timeline__entry {
+    padding-left: 28px;
+    padding-bottom: 40px;
+
+    &::before {
+      left: -32px;
+      top: 4px;
+      width: 18px;
+      height: 18px;
+      border: 3px solid var(--theme-colorPrimary);
+      background: var(--theme-bgBase, #fff);
+      box-shadow: 0 0 0 6px color-mix(in srgb, var(--theme-colorPrimary, #1677ff) 12%, transparent);
+    }
+  }
+}
+
+/* ---- Zigzag: alternates entries left/right around centered spine ---- */
+.timeline.zigzag {
+  padding-left: 0;
+  max-width: 920px;
+  margin-inline: auto;
+
+  &::before {
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3px;
+    opacity: .35;
+  }
+
+  .timeline__entry {
+    width: 46%;
+    padding: 12px 18px;
+    margin-bottom: 28px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--theme-colorPrimary, #1677ff) 4%, transparent);
+    border: 1px solid color-mix(in srgb, var(--theme-colorPrimary, #1677ff) 18%, transparent);
+
+    &::before {
+      width: 16px;
+      height: 16px;
+      top: 16px;
+    }
+
+    &:nth-child(odd) {
+      margin-left: 0;
+      margin-right: auto;
+      text-align: right;
+      &::before {
+        left: auto;
+        right: -8.5%;
+      }
+    }
+    &:nth-child(even) {
+      margin-left: auto;
+      margin-right: 0;
+      text-align: left;
+      &::before {
+        left: -8.5%;
+      }
+    }
+  }
+}
+
+/* ---- Cards: each entry is a floating card with elevated date badge ---- */
+.timeline.cards {
+  padding-left: 0;
+
+  &::before { display: none; }
+
+  .timeline__entry {
+    padding: 22px 24px 24px;
+    margin-bottom: 22px;
+    border-radius: 14px;
+    background: var(--theme-bgElevated, #fff);
+    border: 1px solid color-mix(in srgb, var(--theme-colorPrimary, #1677ff) 14%, transparent);
+    box-shadow:
+      0 10px 24px -12px color-mix(in srgb, var(--theme-colorPrimary, #1677ff) 30%, transparent),
+      0 2px 4px rgba(0, 0, 0, .04);
+
+    &::before {
+      content: none;
+    }
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 18px 32px -14px color-mix(in srgb, var(--theme-colorPrimary, #1677ff) 40%, transparent),
+        0 4px 8px rgba(0, 0, 0, .06);
+    }
+  }
+
+  .timeline__when {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: var(--theme-colorPrimary);
+    color: var(--theme-colorOnPrimary, #fff);
+    opacity: 1;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+}

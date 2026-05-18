@@ -188,12 +188,18 @@ const LIST_STYLE_LABELS: Record<string, string> = {
     inline: 'Inline (single line)',
     cases: 'Case cards',
     'paper-grid': 'Paper cards',
+    checklist: 'Checklist',
+    timeline: 'Timeline',
+    numbered: 'Numbered',
 };
 const SKILL_PILLS_STYLE_LABELS: Record<string, string> = {
     default: 'Pills',
     compact: 'Compact pills',
     matrix: 'Skill matrix',
     'stack-grid': 'Tech stack grid',
+    constellation: 'Constellation',
+    brutalist: 'Brutalist blocks',
+    hex: 'Hexagon pills',
 };
 const SERVICES_STYLE_LABELS: Record<string, string> = {
     default: 'Standard',
@@ -201,6 +207,9 @@ const SERVICES_STYLE_LABELS: Record<string, string> = {
     grid: 'Card grid',
     cards: 'Inverted cards',
     tiers: 'Architecture tiers',
+    carousel: 'Scroll carousel',
+    brutalist: 'Brutalist blocks',
+    pricing: 'Pricing stacks',
 };
 const MANIFESTO_STYLE_LABELS: Record<string, string> = {
     default: 'Standard',
@@ -229,10 +238,16 @@ const STATS_STRIP_STYLE_LABELS: Record<string, string> = {
 const PROJECT_GRID_STYLE_LABELS: Record<string, string> = {
     default: 'Standard grid',
     studio: 'Studio (gradient covers)',
+    masonry: 'Masonry columns',
+    magazine: 'Magazine feature',
+    polaroid: 'Polaroid tiles',
 };
 const TESTIMONIALS_STYLE_LABELS: Record<string, string> = {
     default: 'Standard',
     cards: 'Card grid',
+    quote: 'Pull quote',
+    marquee: 'Scrolling marquee',
+    polaroid: 'Polaroid tiles',
 };
 const PROJECT_CARD_STYLE_LABELS: Record<string, string> = {
     default: 'Standard',
@@ -245,6 +260,9 @@ const TIMELINE_STYLE_LABELS: Record<string, string> = {
     default: 'Standard',
     editorial: 'Editorial (rule-divided)',
     minimal: 'Minimal',
+    vertical: 'Vertical spine',
+    zigzag: 'Zigzag alternating',
+    cards: 'Floating cards',
 };
 const SECTION_HEADING_STYLE_LABELS: Record<string, string> = {
     editorial: 'Editorial (§ NN, serif)',

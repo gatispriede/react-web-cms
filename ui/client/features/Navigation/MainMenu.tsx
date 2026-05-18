@@ -37,6 +37,10 @@ export interface IMainMenuProps {
      *  aren't `INavigation` rows (e.g. `/blog`). Keep `key` unique against
      *  page slugs. Empty/undefined when the caller has nothing to append. */
     extraItems?: IMenuNode[];
+    /** Visual variant — site-flag-driven layout flavour. `'default'`
+     *  preserves the byte-identical legacy markup; the others add a
+     *  `.nav-menu--{variant}` modifier class consumed by NavMenu.scss. */
+    variant?: 'default' | 'rail' | 'pill' | 'underline';
 }
 
 const toAntdItems = (nodes: IMenuNode[]): NonNullable<MenuProps['items']> =>
@@ -71,6 +75,7 @@ export const MainMenu: React.FC<IMainMenuProps> = ({
     locale,
     translate,
     extraItems,
+    variant,
 }) => {
     // Memoize: pages array identity changes on every parent re-render but
     // its content is stable across navigation events. Extra (non-page-tree)
@@ -90,9 +95,15 @@ export const MainMenu: React.FC<IMainMenuProps> = ({
         [pages, activeChain],
     );
 
+    // Variant modifier is appended only when explicitly set to a
+    // non-default value, keeping the legacy markup byte-identical for
+    // callers that don't pass `variant` (or pass 'default').
+    const variantClass = variant && variant !== 'default'
+        ? ` nav-menu--${variant}`
+        : '';
     const className = themeName
-        ? `nav-menu nav-menu--${themeName}`
-        : 'nav-menu';
+        ? `nav-menu nav-menu--${themeName}${variantClass}`
+        : `nav-menu${variantClass}`;
 
     return (
         <Menu

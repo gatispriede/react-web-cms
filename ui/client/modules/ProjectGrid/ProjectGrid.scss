@@ -163,4 +163,99 @@
       color: var(--bg, rgba(255, 255, 255, 0.75));
     }
   }
+
+  /* ---- masonry — pinterest-style columns with varied tile heights ---- */
+  &.masonry {
+    .project-grid__items {
+      display: block;
+      column-count: 3;
+      column-gap: 20px;
+
+      @media (max-width: 900px) { column-count: 2; }
+      @media (max-width: 600px) { column-count: 1; }
+    }
+
+    .project-grid__item {
+      display: inline-block;
+      width: 100%;
+      margin: 0 0 20px;
+      break-inside: avoid;
+      -webkit-column-break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .project-grid__cover { aspect-ratio: auto; }
+    .project-grid__item:nth-child(3n)   .project-grid__cover { aspect-ratio: 4 / 5; }
+    .project-grid__item:nth-child(3n+1) .project-grid__cover { aspect-ratio: 1 / 1; }
+    .project-grid__item:nth-child(3n+2) .project-grid__cover { aspect-ratio: 3 / 4; }
+    .project-grid__item:nth-child(5n)   .project-grid__cover { aspect-ratio: 16 / 9; }
+  }
+
+  /* ---- magazine — huge feature card on left, small cards on right ---- */
+  &.magazine {
+    .project-grid__items {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-auto-rows: minmax(120px, auto);
+      gap: 16px;
+
+      @media (max-width: 900px) { grid-template-columns: 1fr; }
+    }
+
+    .project-grid__item {
+      grid-column: span 4;
+    }
+    .project-grid__item:first-child {
+      grid-column: span 8;
+      grid-row: span 2;
+
+      .project-grid__cover { aspect-ratio: 16 / 11; }
+      .project-grid__art   { font-size: clamp(96px, 14vw, 180px); }
+      .project-grid__card-title { font-size: 28px; }
+      .project-grid__meta { padding: 22px 24px; }
+    }
+
+    @media (max-width: 900px) {
+      .project-grid__item,
+      .project-grid__item:first-child { grid-column: 1 / -1; grid-row: auto; }
+    }
+  }
+
+  /* ---- polaroid — white frames, alternating tilt, drop shadow ---- */
+  &.polaroid {
+    .project-grid__items {
+      gap: 36px 28px;
+      padding: 12px 0;
+    }
+
+    .project-grid__item {
+      background: var(--bg, var(--theme-colorBgBase, #fff));
+      border: 1px solid var(--rule, rgba(0, 0, 0, 0.08));
+      border-radius: 2px;
+      padding: 10px 10px 0;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18), 0 2px 4px rgba(0, 0, 0, 0.08);
+      transform: rotate(-1.5deg);
+      transform-origin: center;
+    }
+    .project-grid__item:nth-child(even) { transform: rotate(1.5deg); }
+    .project-grid__item:nth-child(3n)   { transform: rotate(-0.6deg); }
+
+    .project-grid__item:hover {
+      transform: rotate(0deg) translateY(-4px);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.22), 0 4px 8px rgba(0, 0, 0, 0.10);
+    }
+
+    .project-grid__cover {
+      border-radius: 0;
+      aspect-ratio: 1 / 1;
+    }
+    .project-grid__meta {
+      padding: 14px 6px 18px;
+    }
+    .project-grid__card-title {
+      font-family: var(--font-mono, ui-monospace, monospace);
+      font-size: 15px;
+      letter-spacing: 0.02em;
+    }
+  }
 }

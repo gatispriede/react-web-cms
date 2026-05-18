@@ -254,4 +254,171 @@
       .list-module__paper-grid { grid-template-columns: 1fr; }
     }
   }
+
+  /* Checklist — coloured circle markers with check glyph. */
+  &.checklist .list-module__items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    li {
+      position: relative;
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 14px;
+      padding: 6px 0 6px 0;
+      align-items: baseline;
+
+      &::before {
+        content: "";
+        grid-column: 1;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--accent, var(--theme-colorPrimary, #1677ff));
+        background-image: linear-gradient(45deg, transparent 45%, var(--bg-base, #fff) 45%, var(--bg-base, #fff) 52%, transparent 52%),
+                          linear-gradient(-45deg, transparent 60%, var(--bg-base, #fff) 60%, var(--bg-base, #fff) 67%, transparent 67%);
+        background-size: 12px 12px, 12px 12px;
+        background-position: 50% 55%, 50% 55%;
+        background-repeat: no-repeat;
+        align-self: center;
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12) inset;
+      }
+    }
+    .list-module__label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink, var(--ink-2, #1a1a1a));
+      margin-right: 8px;
+    }
+    .list-module__value {
+      color: var(--ink-2, #2b2b2b);
+      font-size: 14px;
+    }
+    .list-module__value a {
+      color: inherit;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      &:hover { color: var(--accent, var(--theme-colorPrimary, #1677ff)); }
+    }
+  }
+
+  /* Timeline — vertical rail with dot markers, content indented past rail. */
+  &.timeline .list-module__items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: relative;
+
+    &::before {
+      content: "";
+      position: absolute;
+      left: 8px;
+      top: 6px;
+      bottom: 6px;
+      width: 2px;
+      background: var(--rule-strong, rgba(0, 0, 0, 0.28));
+    }
+
+    li {
+      position: relative;
+      padding: 10px 0 14px 36px;
+      display: block;
+
+      &::before {
+        content: "";
+        position: absolute;
+        left: 2px;
+        top: 16px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--accent, var(--theme-colorPrimary, #1677ff));
+        box-shadow: 0 0 0 3px var(--bg-base, #fff), 0 0 0 4px var(--rule-strong, rgba(0, 0, 0, 0.28));
+      }
+    }
+    .list-module__label {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent, var(--theme-colorPrimary, #1677ff));
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+    .list-module__value {
+      display: block;
+      color: var(--ink-2, #2b2b2b);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .list-module__value a {
+      color: inherit;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      &:hover { color: var(--accent, var(--theme-colorPrimary, #1677ff)); }
+    }
+  }
+
+  /* Numbered — oversized outlined numerals (text-stroke) prefix each row. */
+  &.numbered .list-module__items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    counter-reset: list-numbered;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+
+    li {
+      counter-increment: list-numbered;
+      position: relative;
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      gap: 18px;
+      padding: 8px 0;
+      align-items: center;
+      border-top: 1px solid var(--rule, rgba(0, 0, 0, 0.12));
+
+      &:first-child { border-top: none; }
+
+      &::before {
+        content: counter(list-numbered, decimal-leading-zero);
+        grid-column: 1;
+        font-family: var(--font-display, var(--font-serif, serif));
+        font-size: 56px;
+        font-weight: 800;
+        line-height: 1;
+        color: transparent;
+        -webkit-text-stroke: 1.5px var(--accent, var(--theme-colorPrimary, #1677ff));
+        text-stroke: 1.5px var(--accent, var(--theme-colorPrimary, #1677ff));
+        letter-spacing: -0.02em;
+        align-self: center;
+      }
+    }
+    .list-module__label {
+      display: block;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--ink, var(--ink-2, #1a1a1a));
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .list-module__value {
+      display: block;
+      color: var(--ink-2, #2b2b2b);
+      font-size: 13.5px;
+      line-height: 1.5;
+      margin-top: 2px;
+    }
+    .list-module__value a {
+      color: inherit;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      &:hover { color: var(--accent, var(--theme-colorPrimary, #1677ff)); }
+    }
+  }
 }

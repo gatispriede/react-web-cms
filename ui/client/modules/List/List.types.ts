@@ -36,4 +36,10 @@ export enum EListStyle {
     Cases = "cases",
     /** 4-col grid of editorial paper cards — mono-caps prefix top-left, label, value paragraph (Dossier "Key technologies" B.01-B.12). */
     PaperGrid = "paper-grid",
+    /** Checkbox-marker bullets — each row prefixed by a coloured circle with a check glyph. */
+    Checklist = "checklist",
+    /** Vertical timeline rail with dots; rows indented past the rail. */
+    Timeline = "timeline",
+    /** Oversized outlined numerals (text-stroke) prefix every row. */
+    Numbered = "numbered",
 }

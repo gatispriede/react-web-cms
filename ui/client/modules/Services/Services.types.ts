@@ -32,4 +32,15 @@ export enum EServicesStyle {
      *  "FLOW →" caption between cells. Used by the CV CMS-page architecture
      *  section. */
     Tiers = "tiers",
+    /** Horizontal scroll-snap row — services flow side-by-side with snap
+     *  alignment instead of wrapping into a grid. Each card has a fixed
+     *  minimum width and the row scrolls horizontally. */
+    Carousel = "carousel",
+    /** High-contrast alternating black/white blocks with heavy borders and
+     *  oversize numerals — brutalist editorial treatment. */
+    Brutalist = "brutalist",
+    /** Pricing-card-like vertical stacks — each service rendered as a tall
+     *  card with title header, number as "tier badge", description, tags as
+     *  a feature list, and CTA pinned to the foot. */
+    Pricing = "pricing",
 }

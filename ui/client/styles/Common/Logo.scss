@@ -57,6 +57,54 @@
     img { width: 100%; height: 100%; object-fit: cover; }
     .logo-mark { border-radius: 50%; &::after { border-radius: 50%; } }
   }
+  &.logo--outlined {
+    /* Knock the fill out and stroke the glyph — works for the `.logo-mark`
+       fallback and for inline-text logos. Image logos are unaffected (no
+       text to stroke). */
+    color: transparent;
+    -webkit-text-stroke: 1px var(--logoBorderColor, var(--theme-colorPrimary, currentColor));
+    text-stroke: 1px var(--logoBorderColor, var(--theme-colorPrimary, currentColor));
+    .logo-mark {
+      background: transparent;
+      color: transparent;
+      -webkit-text-stroke: 1px var(--logo-ink, currentColor);
+      border-color: var(--logo-ink, currentColor);
+      &::after { display: none; }
+    }
+  }
+  &.logo--reversed {
+    /* Solid accent block with the glyph knocked out — high-contrast badge. */
+    background: var(--logoReversedBg, var(--theme-colorTextBase, #111));
+    color: var(--logoReversedInk, var(--theme-colorBgBase, #fff));
+    padding: 0.35rem 0.6rem;
+    border-radius: var(--logoRadius, var(--theme-borderRadius, 2px));
+    .logo-mark {
+      background: transparent;
+      border-color: var(--logoReversedInk, var(--theme-colorBgBase, #fff));
+      color: var(--logoReversedInk, var(--theme-colorBgBase, #fff));
+      &::after { border-color: var(--logoReversedInk, var(--theme-colorBgBase, #fff)); }
+    }
+  }
+  &.logo--neon {
+    /* Thin outline + multi-stop accent glow. Theme-agnostic — the glow
+       colour falls back through accent → primary → currentColor. */
+    --logo-neon-accent: var(--logoNeonAccent, var(--theme-colorPrimary, currentColor));
+    color: var(--logo-neon-accent);
+    text-shadow:
+      0 0 2px var(--logo-neon-accent),
+      0 0 6px var(--logo-neon-accent),
+      0 0 14px var(--logo-neon-accent);
+    .logo-mark {
+      border-color: var(--logo-neon-accent);
+      color: var(--logo-neon-accent);
+      box-shadow:
+        0 0 4px var(--logo-neon-accent),
+        0 0 10px var(--logo-neon-accent),
+        inset 0 0 4px var(--logo-neon-accent);
+      &::after { display: none; }
+    }
+    img { filter: drop-shadow(0 0 4px var(--logo-neon-accent)); }
+  }
 
   /* ----------------------------------------------------------------------
      Asset variants (logo-style-options — multi-variant). Each variant is a

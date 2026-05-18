@@ -13,3 +13,10 @@ export interface FeatureGridProps {
     /** Desktop columns. Default 3; allowed 2 or 3. */
     columns?: 2 | 3;
 }
+
+export enum EFeatureGridStyle {
+    Default = "default",
+    Cards = "cards",
+    Compact = "compact",
+    Iconic = "iconic"
+}

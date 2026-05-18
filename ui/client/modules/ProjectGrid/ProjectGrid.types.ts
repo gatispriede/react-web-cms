@@ -29,4 +29,10 @@ export enum EProjectGridStyle {
     Default = "default",
     /** Studio — 2-col cards with colored gradient covers + art letters. */
     Studio = "studio",
+    /** Masonry — pinterest-style varying-height tiles via CSS columns. */
+    Masonry = "masonry",
+    /** Magazine — first card is a huge feature, rest small cards in 12-col grid. */
+    Magazine = "magazine",
+    /** Polaroid — white-bordered tiles with slight rotation and drop-shadow. */
+    Polaroid = "polaroid",
 }

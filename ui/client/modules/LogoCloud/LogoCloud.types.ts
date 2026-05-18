@@ -10,3 +10,10 @@ export interface LogoCloudProps {
     headline?: string;
     logos: LogoEntry[];
 }
+
+export enum ELogoCloudStyle {
+    Default = "default",
+    Marquee = "marquee",
+    Mono = "mono",
+    Wall = "wall"
+}

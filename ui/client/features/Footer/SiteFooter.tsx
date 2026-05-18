@@ -15,6 +15,12 @@ interface Props {
      *  scroll-mode page. Default 'tabs' keeps legacy behavior — entries
      *  resolve as-is. F6 site-mode-toggle. */
     layoutMode?: 'tabs' | 'scroll' | 'auto';
+    /** Visual variant for the footer root. Operator-controlled via the
+     *  `footerVariant` site flag. When undefined (or `'default'`) the
+     *  footer renders byte-identical to its legacy shape — no extra
+     *  class is added to the root. The variant string is appended as
+     *  `site-footer--<variant>` and themed in `SiteFooter.scss`. */
+    variant?: 'default' | 'mega' | 'minimal' | 'brutalist';
 }
 
 const isExternal = (url: string) => /^https?:\/\/|^mailto:|^tel:/i.test(url);
@@ -76,7 +82,7 @@ const renderEntry = (entry: {label: string; url?: string}, key: string | number)
     return <li key={key}><Link data-testid={testId} href={entry.url}>{entry.label}</Link></li>;
 };
 
-const SiteFooter: React.FC<Props> = ({config, pages, hasPosts, blogEnabled, t, layoutMode}) => {
+const SiteFooter: React.FC<Props> = ({config, pages, hasPosts, blogEnabled, t, layoutMode, variant}) => {
     if (!config.enabled) return null;
     const columns: IFooterColumn[] = buildFooterColumns(config, {pages, hasPosts, blogEnabled}, t);
     // F6 — in scroll mode, rewrite page-shaped URLs to `#<slug>` so
@@ -94,8 +100,14 @@ const SiteFooter: React.FC<Props> = ({config, pages, hasPosts, blogEnabled, t, l
             })),
         }))
         : columns;
+    // Keep the legacy class string byte-identical when no variant (or
+    // the explicit `'default'`) is requested — the appended modifier
+    // only shows up when an operator has opted into a styled variant.
+    const rootClass = (variant && variant !== 'default')
+        ? `site-footer site-footer--${variant}`
+        : 'site-footer';
     return (
-        <footer className="site-footer">
+        <footer className={rootClass}>
             <RevealOnScroll className="site-footer__columns">
                 {projected.map((col, i) => (
                     <div className="site-footer__column" key={i}>

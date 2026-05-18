@@ -7,4 +7,7 @@ export interface IBlogFeed {
 export enum EBlogFeedStyle {
     Default = "default",
     Compact = "compact",
+    Magazine = "magazine",
+    Cards = "cards",
+    Cinema = "cinema",
 }

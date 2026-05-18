@@ -18,4 +18,10 @@ export enum ETestimonialsStyle {
     Default = "default",
     /** 3-col card grid (design-v2). */
     Cards = "cards",
+    /** Oversized opening quotation mark, italic body, attribution under a rule. */
+    Quote = "quote",
+    /** Horizontal infinite-scroll of compact testimonial chips. */
+    Marquee = "marquee",
+    /** White-bordered tiles with avatar, slight rotation per card. */
+    Polaroid = "polaroid",
 }
