@@ -12,3 +12,13 @@ export interface ILargeGallery {
      *  `product.images` from `ProductContext`. */
     images?: IImageRef[];
 }
+
+export enum ELargeGalleryStyle {
+    Default = "default",
+    /** First image full-bleed, rest in a smaller grid below. */
+    Hero = "hero",
+    /** 16:9 cinematic letterbox single row. */
+    Cinema = "cinema",
+    /** Rotated polaroid tiles with white borders. */
+    Polaroid = "polaroid",
+}

@@ -10,3 +10,10 @@ export interface BeforeAfterSliderProps {
     beforeLabel?: string;
     afterLabel?: string;
 }
+
+export enum EBeforeAfterSliderStyle {
+    Default = 'default',
+    Vertical = 'vertical',
+    Diagonal = 'diagonal',
+    Reveal = 'reveal',
+}

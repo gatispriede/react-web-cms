@@ -52,4 +52,10 @@ export enum EInquiryFormStyle {
     Default = "default",
     /** Paper / editorial CV variant — dashed rules, mono labels. */
     Editorial = "editorial",
+    /** Form inside an elevated card with soft shadow. */
+    Card = "card",
+    /** No borders — hairline rules only, very airy. */
+    Minimal = "minimal",
+    /** Dark surface + light inputs. */
+    Inverse = "inverse",
 }

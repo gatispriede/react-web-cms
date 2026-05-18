@@ -139,4 +139,82 @@
 
   /* Editorial variant inherits the base — themes layer their own paper
      finishes (warm bg, serif title, dashed rules) on top via theme scss. */
+
+  /* --- Card: elevated panel with soft shadow ------------------------ */
+  &.card {
+    border: 1px solid transparent;
+    background: var(--theme-colorBgBase, #fff);
+    box-shadow: 0 12px 32px -16px rgba(0, 0, 0, 0.28),
+                0 2px 6px rgba(0, 0, 0, 0.06);
+    border-radius: calc(var(--theme-borderRadius, 6px) * 2);
+    padding: clamp(24px, 4vw, 40px);
+
+    .inquiry-form__footer { border-top-style: solid; }
+    input, textarea {
+      background: var(--theme-colorBgInset, rgba(0, 0, 0, 0.025));
+      border: 1px solid var(--if-rule);
+      border-radius: var(--theme-borderRadius, 6px);
+      padding: 12px 14px;
+      &:focus { border-color: var(--if-accent); }
+    }
+  }
+
+  /* --- Minimal: hairlines only, no border around the form ----------- */
+  &.minimal {
+    border: none;
+    background: transparent;
+    padding: 12px 0;
+
+    .inquiry-form__footer {
+      border-top: 1px solid var(--if-rule);
+    }
+    .inquiry-form__chip {
+      border: none;
+      border-bottom: 1px solid var(--if-rule);
+      padding: 6px 4px;
+      &.is-active {
+        background: transparent;
+        color: var(--if-ink);
+        border-bottom-color: var(--if-ink);
+      }
+    }
+    input, textarea {
+      border-bottom-color: var(--if-rule);
+    }
+  }
+
+  /* --- Inverse: dark surface, light inputs -------------------------- */
+  &.inverse {
+    --if-ink: #f4f4f5;
+    --if-ink-2: #c4c4c8;
+    --if-ink-3: #9a9aa1;
+    --if-rule: rgba(255, 255, 255, 0.18);
+    --if-rule-strong: rgba(255, 255, 255, 0.34);
+    background: var(--theme-colorBgInverse, #111114);
+    border-color: transparent;
+    color: var(--if-ink);
+
+    .inquiry-form__chip {
+      color: var(--if-ink-2);
+      &.is-active {
+        background: var(--if-ink);
+        color: #111114;
+        border-color: var(--if-ink);
+      }
+    }
+    input, textarea {
+      color: var(--if-ink);
+      &::placeholder { color: var(--if-ink-3); }
+    }
+    .inquiry-form__submit {
+      background: var(--if-ink);
+      color: #111114;
+      border-color: var(--if-ink);
+      &:hover:not(:disabled) {
+        background: var(--if-accent);
+        color: #fff;
+        border-color: var(--if-accent);
+      }
+    }
+  }
 }

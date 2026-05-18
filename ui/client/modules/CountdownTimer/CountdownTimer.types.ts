@@ -16,3 +16,10 @@ export interface CountdownTimerProps {
     /** Test-only force reduced-motion render path. */
     forceReducedMotion?: boolean;
 }
+
+export enum ECountdownTimerStyle {
+    Default = 'default',
+    FlipCard = 'flip-card',
+    Neon = 'neon',
+    Minimal = 'minimal',
+}

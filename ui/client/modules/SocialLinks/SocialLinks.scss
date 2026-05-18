@@ -76,4 +76,61 @@
       }
     }
   }
+
+  /* ---- Icons: icon-only round chips */
+  &.icons {
+    gap: 8px;
+    a {
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border-radius: 999px;
+      justify-content: center;
+      gap: 0;
+      span:not([class*="anticon"]) { display: none; }
+      svg, [class*="anticon"] { font-size: 18px; }
+    }
+  }
+
+  /* ---- Branded: per-platform brand colors */
+  &.branded {
+    a {
+      color: #fff;
+      border-color: transparent;
+      &[data-platform="github"]   { background: #24292e; }
+      &[data-platform="linkedin"] { background: #0a66c2; }
+      &[data-platform="twitter"]  { background: #1da1f2; }
+      &[data-platform="youtube"]  { background: #ff0000; }
+      &[data-platform="email"]    { background: #d44638; }
+      &[data-platform="phone"]    { background: #25d366; }
+      &[data-platform="website"]  { background: #4a4a4a; }
+      &[data-platform="other"]    { background: #6c757d; }
+      &:hover { filter: brightness(1.1); transform: translateY(-2px); }
+    }
+  }
+
+  /* ---- Floating: vertical floating rail */
+  &.floating {
+    position: fixed;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    flex-direction: column;
+    gap: 0.5rem;
+    z-index: 50;
+    padding: 0.5rem;
+    background: var(--theme-colorBgContainer, #fff);
+    border-radius: 999px;
+    box-shadow: 0 4px 16px color-mix(in srgb, currentColor 20%, transparent);
+    a {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border-radius: 999px;
+      justify-content: center;
+      gap: 0;
+      border: 0;
+      span:not([class*="anticon"]) { display: none; }
+    }
+  }
 }

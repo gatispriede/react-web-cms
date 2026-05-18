@@ -308,6 +308,30 @@ const SECTION_HEADING_STYLE_LABELS: Record<string, string> = {
     editorial: 'Editorial (§ NN, serif)',
     'tech-modern': 'Modern (sans, accent)',
     'centered-marquee': 'Centered marquee',
+    'eyebrow-rule': 'Eyebrow + rule',
+    banner: 'Banner (full-bleed band)',
+    magazine: 'Magazine (serif + italic)',
+};
+const PLAIN_TEXT_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    centered: 'Centered',
+    centeredBoxed: 'Centered boxed',
+    lede: 'Lede (large opener)',
+    quote: 'Quote (italic + accent rule)',
+    dropCap: 'Drop-cap',
+};
+const RICH_TEXT_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    centeredBoxed: 'Centered boxed',
+    magazine: 'Magazine (drop-cap, 2-col)',
+    mono: 'Mono (typewriter)',
+    letter: 'Letter (handwritten)',
+};
+const IMAGE_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    polaroid: 'Polaroid (tilted)',
+    cinema: 'Cinema (16:9 letterbox)',
+    vintage: 'Vintage (sepia + vignette)',
 };
 const PRODUCT_STYLE_LABELS: Record<string, string> = {
     default: 'Standard',
@@ -419,9 +443,9 @@ const SOCIAL_SHARE_BUTTONS_STYLE_LABELS: Record<string, string> = {
 };
 
 export const ADMIN_ITEM_TYPE_EDITORS: readonly AdminItemTypeEntry[] = [
-    {key: EItemType.Text,            Editor: PlainTextEditor,        styleEnum: asEnum(EPlainTextStyle),       defaultContent: '{"value":""}',                                                                                                                                                              labelKey: 'Simple Text',          descriptionKey: 'Plain paragraph with inline style only.',                            category: 'content'},
-    {key: EItemType.RichText,        Editor: RichTextEditor,         styleEnum: asEnum(ERichTextStyle),        defaultContent: '{"value":""}',                                                                                                                                                              labelKey: 'Rich text',            descriptionKey: 'HTML body with italic-accent runs and headings.',                    category: 'content'},
-    {key: EItemType.Image,           Editor: PlainImageEditor,       styleEnum: asEnum(EImageStyle),           defaultContent: '{"src":"","useAsBackground":false}',                                                                                                                                        labelKey: 'Image',                descriptionKey: 'Single image with optional caption.',                                category: 'media'},
+    {key: EItemType.Text,            Editor: PlainTextEditor,        styleEnum: asEnum(EPlainTextStyle), styleLabels: PLAIN_TEXT_STYLE_LABELS,      defaultContent: '{"value":""}',                                                                                                                                                              labelKey: 'Simple Text',          descriptionKey: 'Plain paragraph with inline style only.',                            category: 'content'},
+    {key: EItemType.RichText,        Editor: RichTextEditor,         styleEnum: asEnum(ERichTextStyle), styleLabels: RICH_TEXT_STYLE_LABELS,       defaultContent: '{"value":""}',                                                                                                                                                              labelKey: 'Rich text',            descriptionKey: 'HTML body with italic-accent runs and headings.',                    category: 'content'},
+    {key: EItemType.Image,           Editor: PlainImageEditor,       styleEnum: asEnum(EImageStyle), styleLabels: IMAGE_STYLE_LABELS,            defaultContent: '{"src":"","useAsBackground":false}',                                                                                                                                        labelKey: 'Image',                descriptionKey: 'Single image with optional caption.',                                category: 'media'},
     {key: EItemType.Gallery,         Editor: GalleryEditor,          styleEnum: asEnum(EGalleryStyle), styleLabels: GALLERY_STYLE_LABELS,         defaultContent: '{"items":[],"showCaptions":true}',                                                                                                                                           labelKey: 'Gallery',              descriptionKey: 'Image grid with optional text-only tiles.',                          category: 'media'},
     {key: EItemType.Carousel,        Editor: CarouselEditor,         styleEnum: asEnum(ECarouselStyle), styleLabels: CAROUSEL_STYLE_LABELS,        defaultContent: '{"items":[]}',                                                                                                                                                              labelKey: 'Carousel',             descriptionKey: 'Horizontally scrollable image strip.',                               category: 'media'},
     {key: EItemType.Hero,            Editor: HeroEditor,             styleEnum: asEnum(EHeroStyle), styleLabels: HERO_STYLE_LABELS,            defaultContent: '{"headline":"","subtitle":"","tagline":"","bgImage":"","accent":""}',                                                                                                       labelKey: 'Hero',                 descriptionKey: 'Full-bleed header with headline, subtitle, CTA.',                    category: 'hero'},

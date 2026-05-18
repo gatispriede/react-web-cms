@@ -44,4 +44,80 @@
         background: var(--theme-colorBgInset, color-mix(in srgb, currentColor 6%, transparent));
         border-radius: var(--theme-borderRadius, 8px);
     }
+
+    /* ---- Flip-card: 3D flip-style cards */
+    &.flip-card {
+        gap: 0.75rem;
+        .countdown-timer__unit {
+            background: #1a1a1a;
+            color: #fff;
+            box-shadow: 0 4px 12px color-mix(in srgb, #000 25%, transparent);
+            perspective: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+        .countdown-timer__value {
+            color: #fff;
+            font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+            animation: countdown-flip 1s ease-in-out infinite;
+        }
+        .countdown-timer__unit::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 1px;
+            background: color-mix(in srgb, #000 60%, transparent);
+        }
+        .countdown-timer__label { color: rgba(255, 255, 255, 0.6); }
+    }
+    @keyframes countdown-flip {
+        0%, 90%, 100% { transform: rotateX(0deg); }
+        45% { transform: rotateX(-10deg); }
+    }
+
+    /* ---- Neon: dark bg with glowing digits */
+    &.neon {
+        background: #0a0a14;
+        padding: 1rem;
+        border-radius: var(--theme-borderRadius, 8px);
+        .countdown-timer__unit {
+            background: transparent;
+            border: 1px solid color-mix(in srgb, #00ffd1 35%, transparent);
+        }
+        .countdown-timer__value {
+            color: #00ffd1;
+            text-shadow:
+                0 0 4px #00ffd1,
+                0 0 12px color-mix(in srgb, #00ffd1 60%, transparent),
+                0 0 24px color-mix(in srgb, #00ffd1 35%, transparent);
+        }
+        .countdown-timer__label {
+            color: color-mix(in srgb, #00ffd1 70%, transparent);
+            letter-spacing: 0.15em;
+        }
+    }
+
+    /* ---- Minimal: just numbers, no labels */
+    &.minimal {
+        gap: 0.5rem;
+        .countdown-timer__unit {
+            background: transparent;
+            padding: 0;
+            min-width: auto;
+        }
+        .countdown-timer__label { display: none; }
+        .countdown-timer__value {
+            font-size: 1.5rem;
+            color: var(--ink, var(--theme-colorTextBase, inherit));
+        }
+        .countdown-timer__unit + .countdown-timer__unit::before {
+            content: ':';
+            margin-right: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            opacity: 0.4;
+        }
+    }
 }
