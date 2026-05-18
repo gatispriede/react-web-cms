@@ -1,0 +1,105 @@
+/* ==========================================================================
+   Education — first-class theme.
+
+   Warm sand paper, forest-green accent, Lora serif headings + Source Sans 3
+   humanist body. Scoped under `[data-theme-name="education"]`. The
+   aesthetic of a well-lit campus library — welcoming, considered,
+   unhurried. Motion is `gentle-slow`: confident but never rushed.
+
+   Distinct from siblings:
+   - editorial:   cooler cream + literary serif + slower
+   - nonprofit:   mission-led photography + warmer accent
+   - local-business: trade-blue + slab serif + photo-led
+
+   Bespoke visuals live in `module-styles.scss` alongside.
+   ========================================================================== */
+
+[data-theme-name="education"] {
+    /* ---- Semantic palette (light, dark) — mirrors theme.json. ---------- */
+    --color-surface:       light-dark(#FAF4E8, #15170F);
+    --color-ink:           light-dark(#1E1A12, #F1ECDD);
+    --color-accent:        light-dark(#2E5D3A, #7FB68A);
+    --color-accent-ink:    light-dark(#FFFFFF, #0A1B0F);
+    --color-surface-inset: light-dark(#F1E8D2, #1E2117);
+    --color-rule:          light-dark(#D9CCAE, #2E3224);
+
+    /* Legacy aliases. */
+    --background: var(--color-surface);
+    --ink:    var(--color-ink);
+    --ink-2:  color-mix(in srgb, var(--color-ink) 65%, transparent);
+    --accent: var(--color-accent);
+    --accent-hover: color-mix(in srgb, var(--color-accent) 88%, var(--color-ink) 12%);
+
+    /* ---- Typography ---------------------------------------------------- */
+    --font-display: 'Lora', 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    --font-body:    'Source Sans 3', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono:    ui-monospace, 'SF Mono', Menlo, monospace;
+
+    --theme-headingFont: var(--font-display);
+    --theme-bodyFont:    var(--font-body);
+
+    /* ---- Motion (gentle-slow) ------------------------------------------ */
+    --motion-duration-fast:       220ms;
+    --motion-duration-base:       380ms;
+    --motion-duration-slow:       600ms;
+    --motion-duration-deliberate: 980ms;
+    --motion-ease-standard:       cubic-bezier(0.32, 0.72, 0.24, 1);
+    --motion-ease-entrance:       cubic-bezier(0.16, 1, 0.3, 1);
+    --motion-ease-exit:           cubic-bezier(0.4, 0, 0.72, 0.12);
+    --motion-ease-emphasized:     cubic-bezier(0.2, 0.84, 0.32, 1);
+
+    --motion-distance-sm: 10px;
+    --motion-distance-md: 28px;
+    --motion-distance-lg: 72px;
+
+    /* Generous rounding — friendly, classroom-poster energy. */
+    --theme-borderRadius: 14px;
+
+    /* ---- Body baseline ------------------------------------------------- */
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-size: 17px;
+
+    h1, h2, h3,
+    .heading,
+    .heading--display {
+        font-family: var(--font-display);
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        line-height: 1.2;
+    }
+
+    /* Rounded, friendly buttons — warm hover mixes ink into accent for a
+       deepened-but-still-green resting state. */
+    .btn,
+    button.btn,
+    .button {
+        border-radius: 14px;
+        font-weight: 600;
+        transition: background-color var(--motion-duration-fast) var(--motion-ease-standard),
+                    color var(--motion-duration-fast) var(--motion-ease-standard);
+    }
+    .btn:hover,
+    button.btn:hover,
+    .button:hover {
+        background-color: var(--accent-hover);
+    }
+
+    /* Eyebrow — small-caps tag above section headings. Schools love them. */
+    .section-heading__eyebrow,
+    .eyebrow {
+        font-family: var(--font-body);
+        font-size: 0.78em;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--color-accent);
+    }
+
+    /* Accessible focus — green ring on sand has solid contrast. */
+    *:focus-visible {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 2px;
+    }
+}

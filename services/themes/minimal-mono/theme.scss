@@ -1,0 +1,101 @@
+/* ==========================================================================
+   Minimal Mono — first-class theme.
+
+   Pure black & white, single electric-blue accent. All-mono typography (Geist
+   Mono everywhere — display, body, labels). Sharp 0px corners. Reduced-static
+   motion: instant state changes, no transitions on color. Aggressive whitespace.
+
+   Scoped under `[data-theme-name="minimal-mono"]`.
+   ========================================================================== */
+
+[data-theme-name="minimal-mono"] {
+    --color-surface:       light-dark(#FFFFFF, #000000);
+    --color-ink:           light-dark(#000000, #FFFFFF);
+    --color-accent:        light-dark(#1D4ED8, #60A5FA);
+    --color-accent-ink:    light-dark(#FFFFFF, #000000);
+    --color-surface-inset: light-dark(#F4F4F4, #0B0B0B);
+    --color-rule:          light-dark(#000000, #FFFFFF);
+
+    --background: var(--color-surface);
+    --ink:    var(--color-ink);
+    --ink-2:  color-mix(in srgb, var(--color-ink) 65%, transparent);
+    --accent: var(--color-accent);
+    --accent-hover: var(--color-accent);
+
+    --font-display: 'Geist Mono', 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    --font-body:    'Geist Mono', 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    --font-mono:    'Geist Mono', 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+    --theme-headingFont: var(--font-display);
+    --theme-bodyFont:    var(--font-body);
+
+    /* reduced-static motion — instant, no easing theatre. */
+    --motion-duration-fast:       0ms;
+    --motion-duration-base:       0ms;
+    --motion-duration-slow:       0ms;
+    --motion-duration-deliberate: 0ms;
+    --motion-ease-standard:       linear;
+    --motion-ease-entrance:       linear;
+    --motion-ease-exit:           linear;
+    --motion-ease-emphasized:     linear;
+
+    --motion-distance-sm: 0px;
+    --motion-distance-md: 0px;
+    --motion-distance-lg: 0px;
+
+    --theme-borderRadius: 0px;
+
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-mono);
+    font-size: 15px;
+    line-height: 1.5;
+
+    /* Mono everywhere — no exceptions, that's the whole point. */
+    * {
+        font-family: var(--font-mono);
+    }
+
+    h1, h2, h3,
+    .heading,
+    .heading--display {
+        font-family: var(--font-mono);
+        font-weight: 500;
+        letter-spacing: -0.02em;
+        line-height: 1.0;
+        text-transform: uppercase;
+    }
+
+    /* Sharp corners — no radius, ever. */
+    button, .btn, input, select, textarea, .card, .project-card {
+        border-radius: 0;
+    }
+
+    /* Single-accent rule — only links get the electric blue. */
+    a {
+        color: var(--color-accent);
+        text-decoration: underline;
+        text-decoration-thickness: 1px;
+        text-underline-offset: 2px;
+        transition: none;
+    }
+
+    /* Kill color transitions — state changes are instant. */
+    a, button, .btn {
+        transition: none;
+    }
+
+    /* Aggressive whitespace between sections. */
+    section + section {
+        margin-top: 6rem;
+    }
+
+    .label--mono,
+    .meta--mono {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-2);
+    }
+}
