@@ -156,4 +156,120 @@
     color: var(--dm-ink-2);
     line-height: 1.5;
   }
+
+  // --- ERD: boxed entity look with thick separators ---
+  &.erd {
+    .data-model__body {
+      grid-template-columns: minmax(0, 1.4fr) minmax(240px, 1fr);
+      gap: 0;
+      @media (max-width: 900px) { grid-template-columns: 1fr; }
+    }
+    .data-model__table-wrap {
+      border: 2px solid var(--dm-ink);
+      padding: 12px 14px;
+      position: relative;
+    }
+    .data-model__table-wrap::before {
+      content: "ENTITY";
+      position: absolute;
+      top: -9px; left: 12px;
+      background: var(--theme-colorBgBase, #fff);
+      padding: 0 6px;
+      font-family: var(--font-mono, ui-monospace, monospace);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      color: var(--dm-ink);
+    }
+    .data-model__aside {
+      border-left: none;
+      margin-left: 28px;
+      padding: 12px 14px;
+      border: 2px solid var(--dm-accent);
+      position: relative;
+    }
+    .data-model__aside::before {
+      content: "";
+      position: absolute;
+      left: -28px;
+      top: 28px;
+      width: 26px;
+      height: 0;
+      border-top: 2px dashed var(--dm-ink-2);
+    }
+    .data-model__aside::after {
+      content: "1..N";
+      position: absolute;
+      left: -28px;
+      top: 14px;
+      font-family: var(--font-mono, ui-monospace, monospace);
+      font-size: 10px;
+      color: var(--dm-ink-3);
+    }
+    .data-model__collections {
+      grid-template-columns: 1fr;
+      li { border-right: none; }
+    }
+    .data-model__audit { border: 2px solid var(--dm-rule-strong); border-radius: 0; }
+    @media (max-width: 900px) {
+      .data-model__aside { margin-left: 0; }
+      .data-model__aside::before, .data-model__aside::after { display: none; }
+    }
+  }
+
+  // --- Terminal: SQL describe-table mono output ---
+  &.terminal {
+    background: #0e1410;
+    color: #b8f5c8;
+    padding: 18px;
+    font-family: var(--font-mono, ui-monospace, monospace);
+    --dm-rule: rgba(96, 224, 128, 0.28);
+    --dm-rule-strong: rgba(96, 224, 128, 0.55);
+    --dm-ink: #b8f5c8;
+    --dm-ink-2: #80d49a;
+    --dm-ink-3: #4a8a5e;
+    --dm-accent: #6fff9c;
+
+    .data-model__title { font-family: var(--font-mono, ui-monospace, monospace); color: #6fff9c; font-size: 18px; }
+    .data-model__title::before { content: "mysql> "; color: #4a8a5e; }
+    .data-model__table th { color: #4a8a5e; border-bottom: 1px solid #6fff9c; }
+    .data-model__table td { border-bottom: 1px dashed rgba(96, 224, 128, 0.22); }
+    .data-model__type { color: #ffd479; }
+    .data-model__pill { border: 1px solid rgba(96, 224, 128, 0.4); background: transparent; }
+    .data-model__aside { border-left: 1px dashed rgba(96, 224, 128, 0.32); }
+    .data-model__audit { border: 1px dashed rgba(96, 224, 128, 0.4); background: rgba(96, 224, 128, 0.04); }
+  }
+
+  // --- Cards: each collection as a tilted card, audits become depth-shadowed cards ---
+  &.cards {
+    .data-model__collections {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      border: none;
+      gap: 10px;
+      li {
+        border: 1px solid var(--dm-rule);
+        border-radius: 8px;
+        background: var(--theme-colorBgBase, #fff);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06), 0 1px 0 rgba(0, 0, 0, 0.04);
+        transform: rotate(-1.2deg);
+        transition: transform 0.18s ease;
+        &:nth-child(even) { transform: rotate(1.4deg); }
+        &:hover { transform: rotate(0); }
+      }
+    }
+    .data-model__audit {
+      border: 1px solid var(--dm-rule);
+      border-radius: 8px;
+      background: var(--theme-colorBgBase, #fff);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(0, 0, 0, 0.04);
+      padding: 16px;
+    }
+    .data-model__table-wrap {
+      border: 1px solid var(--dm-rule);
+      border-radius: 8px;
+      padding: 12px 14px;
+      background: var(--theme-colorBgBase, #fff);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+  }
 }

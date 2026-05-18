@@ -17,6 +17,9 @@ export interface IPagination {
 export enum EPaginationStyle {
     Default = 'default',
     Slim = 'slim',
+    Pills = 'pills',
+    Numbered = 'numbered',
+    Minimal = 'minimal',
 }
 
 export const PAGINATION_VARIANT_OPTIONS: ReadonlyArray<{value: PaginationVariant; label: string}> = [

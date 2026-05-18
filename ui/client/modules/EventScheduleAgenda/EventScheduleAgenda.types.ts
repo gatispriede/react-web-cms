@@ -1,3 +1,10 @@
+export enum EEventScheduleAgendaStyle {
+    Default = 'default',
+    Timeline = 'timeline',
+    Cards = 'cards',
+    Compact = 'compact',
+}
+
 export interface ScheduleSession {
     key: string;
     track: string;

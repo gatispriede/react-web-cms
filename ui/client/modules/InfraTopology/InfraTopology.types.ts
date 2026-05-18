@@ -33,4 +33,7 @@ export interface IInfraTopology {
 export enum EInfraTopologyStyle {
     Default = "default",
     Editorial = "editorial",
+    Terminal = "terminal",
+    Dashboard = "dashboard",
+    Blueprint = "blueprint",
 }

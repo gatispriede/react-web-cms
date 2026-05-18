@@ -34,4 +34,10 @@ export enum ETimelineStyle {
     Vertical = "vertical",
     Zigzag = "zigzag",
     Cards = "cards",
+    /** Subway-map style — colored connector segments + station dots. */
+    Subway = "subway",
+    /** Terminal — git-log style mono output, dark background. */
+    Terminal = "terminal",
+    /** Horizontal — left-to-right flow on desktop. */
+    Horizontal = "horizontal",
 }

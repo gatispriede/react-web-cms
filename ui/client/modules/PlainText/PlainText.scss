@@ -13,4 +13,36 @@
     -moz-box-shadow: 5px 5px 5px 0px rgba(0, 0, 0, 0.2);
     box-shadow: 5px 5px 5px 0px rgba(0, 0, 0, 0.2);
   }
+
+  /* Lede — large opening-paragraph treatment. */
+  &.lede p {
+    font-size: 1.5rem;
+    line-height: 1.5;
+    font-weight: 300;
+    letter-spacing: -0.005em;
+    color: var(--theme-colorTextBase, #222);
+    max-width: 42rem;
+  }
+
+  /* Quote — italic body with an accent left border. */
+  &.quote p {
+    font-style: italic;
+    font-size: 1.15rem;
+    line-height: 1.6;
+    padding: 0.25rem 0 0.25rem 1rem;
+    border-left: 4px solid var(--theme-colorAccent, var(--theme-colorPrimary, #B85C38));
+    color: var(--theme-colorTextSecondary, #555);
+    margin: 0;
+  }
+
+  /* Drop-cap — oversized initial letter on the first paragraph. */
+  &.dropCap p::first-letter {
+    float: left;
+    font-family: var(--theme-fontDisplay, 'Source Serif Pro', ui-serif, Georgia, serif);
+    font-size: 3.5em;
+    line-height: 0.85;
+    padding: 0.1em 0.1em 0 0;
+    font-weight: 600;
+    color: var(--theme-colorAccent, var(--theme-colorPrimary, #B85C38));
+  }
 }

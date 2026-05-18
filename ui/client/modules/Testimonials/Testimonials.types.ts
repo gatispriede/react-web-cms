@@ -24,4 +24,10 @@ export enum ETestimonialsStyle {
     Marquee = "marquee",
     /** White-bordered tiles with avatar, slight rotation per card. */
     Polaroid = "polaroid",
+    /** One big highlighted quote with avatar row beneath. */
+    Carousel = "carousel",
+    /** Huge opening quote spanning the section with a smaller supporting grid. */
+    Magazine = "magazine",
+    /** Overlapping/offset stack of testimonial cards. */
+    Stacked = "stacked",
 }

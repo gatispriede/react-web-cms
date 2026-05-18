@@ -90,3 +90,58 @@
         padding: 0;
     }
 }
+
+.event-schedule-agenda.timeline {
+    position: relative;
+    padding-inline-start: 2rem;
+
+    &::before {
+        content: '';
+        position: absolute;
+        left: 0.5rem;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--theme-colorBorder, color-mix(in srgb, currentColor 18%, transparent));
+    }
+
+    .event-schedule-agenda__session {
+        position: relative;
+        padding-inline-start: 1rem;
+    }
+
+    .event-schedule-agenda__session::before {
+        content: '';
+        position: absolute;
+        left: -1.5rem;
+        top: 0.5rem;
+        width: 0.75rem;
+        height: 0.75rem;
+        border-radius: 50%;
+        background: var(--theme-colorPrimary, #4f46e5);
+    }
+}
+
+.event-schedule-agenda.cards {
+    .event-schedule-agenda__session {
+        padding: 1rem;
+        border-radius: var(--theme-borderRadius, 8px);
+        background: var(--theme-colorBgContainer, #fff);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        border: 1px solid var(--theme-colorBorder, color-mix(in srgb, currentColor 12%, transparent));
+        margin-bottom: 0.75rem;
+    }
+}
+
+.event-schedule-agenda.compact {
+    gap: 0.25rem;
+    font-size: 0.875rem;
+
+    .event-schedule-agenda__session {
+        display: grid;
+        grid-template-columns: 8rem 1fr auto;
+        gap: 0.5rem;
+        padding: 0.25rem 0.5rem;
+        border-bottom: 1px solid var(--theme-colorBorder, color-mix(in srgb, currentColor 10%, transparent));
+    }
+}

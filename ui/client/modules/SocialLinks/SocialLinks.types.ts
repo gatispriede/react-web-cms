@@ -16,4 +16,7 @@ export enum ESocialLinksStyle {
     /** Editorial CV "channels strip" — card grid with platform glyph,
      *  big href row, mono "OPEN" affordance. */
     Channels = "channels",
+    Icons = "icons",
+    Branded = "branded",
+    Floating = "floating",
 }

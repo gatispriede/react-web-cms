@@ -112,3 +112,76 @@
     }
   }
 }
+
+/* ==========================================================================
+   StatsCard variants — ticker / neon / outline
+   ========================================================================== */
+.stats-card.ticker {
+  background: var(--bg, #fff);
+  border-color: var(--rule-strong, rgba(0, 0, 0, 0.18));
+
+  .stats-card__n {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.08em;
+    display: inline-block;
+    padding: 6px 10px;
+    background: var(--ink, #111);
+    color: var(--accent, var(--theme-colorAccent, #f6d24a));
+    border-radius: 4px;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      inset 0 -2px 4px rgba(0, 0, 0, 0.6);
+  }
+  .stats-card__l {
+    margin-top: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 11px;
+  }
+}
+
+.stats-card.neon {
+  background: #0b0f17;
+  color: #e6f0ff;
+  border-color: rgba(120, 200, 255, 0.2);
+  box-shadow:
+    0 0 0 1px rgba(120, 200, 255, 0.18),
+    0 20px 40px -20px rgba(0, 200, 255, 0.4);
+
+  .stats-card__tag {
+    color: rgba(180, 220, 255, 0.6);
+    border-color: rgba(120, 200, 255, 0.3);
+  }
+  .stats-card__title { color: #f0f8ff; }
+  .stats-card__n {
+    color: #6df1ff;
+    text-shadow:
+      0 0 6px rgba(109, 241, 255, 0.8),
+      0 0 18px rgba(109, 241, 255, 0.5),
+      0 0 36px rgba(109, 241, 255, 0.25);
+  }
+  .stats-card__l { color: rgba(180, 220, 255, 0.5); }
+  .stats-card__features li {
+    color: rgba(220, 235, 255, 0.78);
+    border-top-color: rgba(120, 200, 255, 0.18);
+    &::before {
+      color: #6df1ff;
+      text-shadow: 0 0 8px rgba(109, 241, 255, 0.7);
+    }
+  }
+}
+
+.stats-card.outline {
+  .stats-card__n {
+    color: transparent;
+    -webkit-text-stroke: 2px var(--ink, var(--theme-colorTextBase, #111));
+    text-stroke: 2px var(--ink, var(--theme-colorTextBase, #111));
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .stats-card__l {
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+  }
+}

@@ -7,4 +7,62 @@
     box-shadow: 5px 6px 42px 28px rgba(0, 0, 0, 0.3);
     background-attachment: fixed;
   }
+
+  /* Magazine — drop-cap + two-column body. */
+  &.magazine {
+    font-family: var(--theme-fontDisplay, 'Source Serif Pro', ui-serif, Georgia, serif);
+    column-count: 2;
+    column-gap: 2.5rem;
+    column-rule: 1px solid rgba(0, 0, 0, 0.08);
+    line-height: 1.6;
+    max-width: 60rem;
+    margin: 1.5rem auto;
+    padding: 0 1rem;
+    p:first-of-type::first-letter {
+      float: left;
+      font-size: 4em;
+      line-height: 0.85;
+      padding: 0.05em 0.1em 0 0;
+      font-weight: 700;
+      color: var(--theme-colorAccent, var(--theme-colorPrimary, #B85C38));
+    }
+    h2, h3 {
+      column-span: all;
+    }
+    @media (max-width: 720px) {
+      column-count: 1;
+    }
+  }
+
+  /* Mono — typewriter monospace body. */
+  &.mono {
+    font-family: var(--theme-fontMono, ui-monospace, 'SF Mono', Menlo, Consolas, monospace);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    max-width: 42rem;
+    margin: 1.25rem auto;
+    padding: 1rem 1.25rem;
+    background: rgba(0, 0, 0, 0.03);
+    border-left: 3px solid var(--theme-colorAccent, var(--theme-colorPrimary, #B85C38));
+  }
+
+  /* Letter — handwritten / signature look. */
+  &.letter {
+    font-family: 'Caveat', 'Patrick Hand', 'Comic Sans MS', cursive;
+    font-size: 1.45rem;
+    line-height: 1.45;
+    max-width: 44rem;
+    margin: 1.5rem auto;
+    padding: 1.75rem 2rem;
+    background: #fffdf5;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 2.0rem,
+      rgba(0, 0, 0, 0.06) 2.0rem,
+      rgba(0, 0, 0, 0.06) calc(2.0rem + 1px)
+    );
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    color: #2a2a2a;
+  }
 }

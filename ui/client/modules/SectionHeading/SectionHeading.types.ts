@@ -31,4 +31,10 @@ export enum ESectionHeadingStyle {
     TechModern = "tech-modern",
     /** Large centered display, marquee feel (commerce theme). */
     CenteredMarquee = "centered-marquee",
+    /** Small eyebrow + hairline rule + huge heading. */
+    EyebrowRule = "eyebrow-rule",
+    /** Full-bleed band background behind the heading. */
+    Banner = "banner",
+    /** Oversized serif heading + italic subhead, magazine feel. */
+    Magazine = "magazine",
 }

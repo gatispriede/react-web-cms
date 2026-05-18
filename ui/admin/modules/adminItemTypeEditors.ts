@@ -75,6 +75,10 @@ import {EBreadcrumbStyle} from '@client/modules/Breadcrumb';
 import {EFeatureGridStyle} from '@client/modules/FeatureGrid';
 import {ELogoCloudStyle} from '@client/modules/LogoCloud';
 import {EPricingTableStyle} from '@client/modules/PricingTable';
+import {ETrustBadgesStyle} from '@client/modules/Trust/TrustBadges';
+import {EMoneyBackGuaranteeStyle} from '@client/modules/Trust/MoneyBackGuarantee';
+import {EReferAFriendCtaStyle} from '@client/modules/Marketing/ReferAFriendCta';
+import {ESocialShareButtonsStyle} from '@client/modules/Marketing/SocialShareButtons';
 import {
     ProductDetailHeroEditor,
     ProductSpecTableEditor,
@@ -175,6 +179,9 @@ const KEY_VALUE_DOSSIER_STYLE_LABELS: Record<string, string> = {
     editorial: 'Editorial (paper)',
     'tech-modern': 'Modern (dark)',
     'card-grid': 'Card grid',
+    spec: 'Spec sheet',
+    print: 'Dot-matrix print',
+    compact: 'Compact dense',
 };
 const GALLERY_STYLE_LABELS: Record<string, string> = {
     default: 'Standard grid',
@@ -195,6 +202,9 @@ const LIST_STYLE_LABELS: Record<string, string> = {
     checklist: 'Checklist',
     timeline: 'Timeline',
     numbered: 'Numbered',
+    cards: 'Card rows',
+    newspaper: 'Newspaper columns',
+    tasks: 'Tasks (strike-through)',
 };
 const SKILL_PILLS_STYLE_LABELS: Record<string, string> = {
     default: 'Pills',
@@ -204,6 +214,9 @@ const SKILL_PILLS_STYLE_LABELS: Record<string, string> = {
     constellation: 'Constellation',
     brutalist: 'Brutalist blocks',
     hex: 'Hexagon pills',
+    tags: 'Hashtag tags',
+    cloud: 'Word cloud',
+    neon: 'Neon glow',
 };
 const SERVICES_STYLE_LABELS: Record<string, string> = {
     default: 'Standard',
@@ -232,6 +245,13 @@ const CAROUSEL_STYLE_LABELS: Record<string, string> = {
     cinema: 'Cinema (letterbox)',
     cards: 'Cards (deck)',
 };
+const STATS_CARD_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    panel: 'Industrial panel',
+    ticker: 'Ticker (odometer)',
+    neon: 'Neon (dark glow)',
+    outline: 'Outline (text stroke)',
+};
 const STATS_STRIP_STYLE_LABELS: Record<string, string> = {
     default: 'Standard',
     editorial: 'Editorial (rules)',
@@ -245,6 +265,9 @@ const PROJECT_GRID_STYLE_LABELS: Record<string, string> = {
     masonry: 'Masonry columns',
     magazine: 'Magazine feature',
     polaroid: 'Polaroid tiles',
+    cinema: 'Cinema (16:9 dark)',
+    tilt: 'Tilt (perspective)',
+    filmstrip: 'Filmstrip (horizontal)',
 };
 const TESTIMONIALS_STYLE_LABELS: Record<string, string> = {
     default: 'Standard',
@@ -252,6 +275,9 @@ const TESTIMONIALS_STYLE_LABELS: Record<string, string> = {
     quote: 'Pull quote',
     marquee: 'Scrolling marquee',
     polaroid: 'Polaroid tiles',
+    carousel: 'Carousel (single quote)',
+    magazine: 'Magazine (feature + grid)',
+    stacked: 'Stacked deck',
 };
 const PROJECT_CARD_STYLE_LABELS: Record<string, string> = {
     default: 'Standard',
@@ -267,6 +293,9 @@ const TIMELINE_STYLE_LABELS: Record<string, string> = {
     vertical: 'Vertical spine',
     zigzag: 'Zigzag alternating',
     cards: 'Floating cards',
+    subway: 'Subway map (colored connectors)',
+    terminal: 'Terminal (git log mono)',
+    horizontal: 'Horizontal (left-to-right)',
 };
 const BLOG_FEED_STYLE_LABELS: Record<string, string> = {
     default: 'Standard',
@@ -332,6 +361,62 @@ const PRICING_TABLE_STYLE_LABELS: Record<string, string> = {
     toggle: 'Toggle (billing)',
     compact: 'Compact rows',
 };
+const INFRA_TOPOLOGY_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    editorial: 'Editorial (paper)',
+    terminal: 'Terminal (green-on-black)',
+    dashboard: 'Dashboard (status pills)',
+    blueprint: 'Blueprint (cyan grid)',
+};
+const DATA_MODEL_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    editorial: 'Editorial (paper)',
+    erd: 'ERD (entity boxes)',
+    terminal: 'Terminal (mysql>)',
+    cards: 'Cards (tilted)',
+};
+const PIPELINE_FLOW_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    editorial: 'Editorial (paper)',
+    subway: 'Subway (colored rail)',
+    terminal: 'Terminal ($ run)',
+    neon: 'Neon (glow)',
+};
+const ARCHITECTURE_TIERS_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    editorial: 'Editorial (paper)',
+    cards: 'Cards (depth)',
+    stack: 'Stack (vertical slabs)',
+    timeline: 'Timeline (left-to-right)',
+};
+const TRUST_BADGES_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    compact: 'Compact',
+    inline: 'Inline (single line)',
+    neon: 'Neon (dark glow)',
+    outlined: 'Outlined (bold)',
+};
+const MONEY_BACK_GUARANTEE_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    compact: 'Compact',
+    banner: 'Banner (full width)',
+    card: 'Card (elevated)',
+    ribbon: 'Ribbon (dark)',
+};
+const REFER_A_FRIEND_CTA_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    compact: 'Compact',
+    card: 'Card (elevated)',
+    banner: 'Banner (gradient)',
+    stamp: 'Stamp (rotated)',
+};
+const SOCIAL_SHARE_BUTTONS_STYLE_LABELS: Record<string, string> = {
+    default: 'Standard',
+    compact: 'Compact',
+    pills: 'Pills (filled)',
+    outlined: 'Outlined (bold)',
+    branded: 'Branded (per-platform)',
+};
 
 export const ADMIN_ITEM_TYPE_EDITORS: readonly AdminItemTypeEntry[] = [
     {key: EItemType.Text,            Editor: PlainTextEditor,        styleEnum: asEnum(EPlainTextStyle),       defaultContent: '{"value":""}',                                                                                                                                                              labelKey: 'Simple Text',          descriptionKey: 'Plain paragraph with inline style only.',                            category: 'content'},
@@ -348,15 +433,15 @@ export const ADMIN_ITEM_TYPE_EDITORS: readonly AdminItemTypeEntry[] = [
     {key: EItemType.List,            Editor: ListEditor,             styleEnum: asEnum(EListStyle), styleLabels: LIST_STYLE_LABELS,            defaultContent: '{"title":"","items":[{"label":"","value":"","href":""}]}',                                                                                                                  labelKey: 'List',                 descriptionKey: 'Bullet or numbered list, optional meta fields.',                     category: 'content'},
     {key: EItemType.Services,        Editor: ServicesEditor,         styleEnum: asEnum(EServicesStyle), styleLabels: SERVICES_STYLE_LABELS,        defaultContent: '{"sectionNumber":"","sectionTitle":"","sectionSubtitle":"","rows":[{"number":"01","title":"","description":"","ctaLabel":"","ctaHref":"","iconGlyph":"","tags":[]}]}',      labelKey: 'Services',             descriptionKey: 'Icon + heading + body cards grouped by row.',                        category: 'content'},
     {key: EItemType.Testimonials,    Editor: TestimonialsEditor,     styleEnum: asEnum(ETestimonialsStyle), styleLabels: TESTIMONIALS_STYLE_LABELS,    defaultContent: '{"sectionTitle":"","sectionSubtitle":"","items":[{"quote":"","name":"","role":"","avatarInitial":""}]}',                                                                    labelKey: 'Testimonials',         descriptionKey: 'Quote cards with avatar and attribution.',                           category: 'content'},
-    {key: EItemType.StatsCard,       Editor: StatsCardEditor,        styleEnum: asEnum(EStatsCardStyle),       defaultContent: '{"tag":"","title":"","stats":[{"value":"","label":""}],"features":[]}',                                                                                                     labelKey: 'Stats card',           descriptionKey: 'Metric / number callout with feature list.',                         category: 'content'},
+    {key: EItemType.StatsCard,       Editor: StatsCardEditor,        styleEnum: asEnum(EStatsCardStyle), styleLabels: STATS_CARD_STYLE_LABELS,      defaultContent: '{"tag":"","title":"","stats":[{"value":"","label":""}],"features":[]}',                                                                                                     labelKey: 'Stats card',           descriptionKey: 'Metric / number callout with feature list.',                         category: 'content'},
     {key: EItemType.ProjectGrid,     Editor: ProjectGridEditor,      styleEnum: asEnum(EProjectGridStyle), styleLabels: PROJECT_GRID_STYLE_LABELS,     defaultContent: '{"sectionNumber":"","sectionTitle":"","sectionSubtitle":"","items":[{"title":"","stack":"","kind":"","year":"","coverArt":"","coverColor":"","moreLabel":"View engagement ↗","href":""}]}', labelKey: 'Project grid', descriptionKey: 'Card grid with image, title, tags per item.',                category: 'content'},
     {key: EItemType.Manifesto,       Editor: ManifestoEditor,        styleEnum: asEnum(EManifestoStyle), styleLabels: MANIFESTO_STYLE_LABELS,       defaultContent: '{"body":"","addendum":"","chips":[]}',                                                                                                                                      labelKey: 'Manifesto',            descriptionKey: 'Full-width editorial block with chip footer.',                       category: 'hero'},
     {key: EItemType.InquiryForm,     Editor: InquiryFormEditor,      styleEnum: asEnum(EInquiryFormStyle),     defaultContent: '{"topics":[],"fields":[]}',                                                                                                                                                 labelKey: 'Inquiry form',         descriptionKey: 'Topic chips + name/email/message + submit (CV Contact).',            category: 'cta'},
-    {key: EItemType.DataModel,       Editor: DataModelEditor,        styleEnum: asEnum(EDataModelStyle),       defaultContent: '{"fields":[],"collections":[],"audits":[]}',                                                                                                                                labelKey: 'Data model',           descriptionKey: 'Schema visualiser — fields table + collections aside + audit cards.',category: 'content'},
-    {key: EItemType.InfraTopology,   Editor: InfraTopologyEditor,    styleEnum: asEnum(EInfraTopologyStyle),   defaultContent: '{"droplets":[]}',                                                                                                                                                           labelKey: 'Infra topology',       descriptionKey: 'Droplet/server cards + author-supplied SVG topology.',               category: 'content'},
-    {key: EItemType.PipelineFlow,    Editor: PipelineFlowEditor,     styleEnum: asEnum(EPipelineFlowStyle),    defaultContent: '{"steps":[],"sideNotes":[]}',                                                                                                                                               labelKey: 'Pipeline flow',        descriptionKey: 'Linear CI/CD pipeline with status pills and side notes.',            category: 'content'},
+    {key: EItemType.DataModel,       Editor: DataModelEditor,        styleEnum: asEnum(EDataModelStyle),       styleLabels: DATA_MODEL_STYLE_LABELS, defaultContent: '{"fields":[],"collections":[],"audits":[]}',                                                                                                                                labelKey: 'Data model',           descriptionKey: 'Schema visualiser — fields table + collections aside + audit cards.',category: 'content'},
+    {key: EItemType.InfraTopology,   Editor: InfraTopologyEditor,    styleEnum: asEnum(EInfraTopologyStyle),   styleLabels: INFRA_TOPOLOGY_STYLE_LABELS, defaultContent: '{"droplets":[]}',                                                                                                                                                           labelKey: 'Infra topology',       descriptionKey: 'Droplet/server cards + author-supplied SVG topology.',               category: 'content'},
+    {key: EItemType.PipelineFlow,    Editor: PipelineFlowEditor,     styleEnum: asEnum(EPipelineFlowStyle),    styleLabels: PIPELINE_FLOW_STYLE_LABELS, defaultContent: '{"steps":[],"sideNotes":[]}',                                                                                                                                               labelKey: 'Pipeline flow',        descriptionKey: 'Linear CI/CD pipeline with status pills and side notes.',            category: 'content'},
     {key: EItemType.RepoTree,        Editor: RepoTreeEditor,         styleEnum: asEnum(ERepoTreeStyle),        defaultContent: '{"nodes":[]}',                                                                                                                                                              labelKey: 'Repo tree',            descriptionKey: 'Interactive repo path tree with detail pane.',                       category: 'content'},
-    {key: EItemType.ArchitectureTiers, Editor: ArchitectureTiersEditor, styleEnum: asEnum(EArchitectureTiersStyle), defaultContent: '{"tiers":[]}',                                                                                                                                                         labelKey: 'Architecture tiers',   descriptionKey: 'Tier cards (concern/role/title/pills/modules) + shared footer + lifecycle rail.', category: 'content'},
+    {key: EItemType.ArchitectureTiers, Editor: ArchitectureTiersEditor, styleEnum: asEnum(EArchitectureTiersStyle), styleLabels: ARCHITECTURE_TIERS_STYLE_LABELS, defaultContent: '{"tiers":[]}',                                                                                                                                                         labelKey: 'Architecture tiers',   descriptionKey: 'Tier cards (concern/role/title/pills/modules) + shared footer + lifecycle rail.', category: 'content'},
     {key: EItemType.StatsStrip,      Editor: StatsStripEditor,       styleEnum: asEnum(EStatsStripStyle), styleLabels: STATS_STRIP_STYLE_LABELS,      defaultContent: '{"cells":[]}',                                                                                                                                                              labelKey: 'Stats strip',          descriptionKey: 'Horizontal numeric strip — value / unit / caption per cell.',        category: 'content'},
     {key: EItemType.SectionHeading,      Editor: SectionHeadingEditor,           styleEnum: asEnum(ESectionHeadingStyle), styleLabels: SECTION_HEADING_STYLE_LABELS, defaultContent: '{"heading":""}',                                                                                                                                                              labelKey: 'Section heading',          descriptionKey: 'Eyebrow + heading + subtitle — replaces hand-typed h2 + em pattern', category: 'content'},
     {key: EItemType.KeyValueDossier, Editor: KeyValueDossierEditor,  styleEnum: asEnum(EKeyValueDossierStyle), styleLabels: KEY_VALUE_DOSSIER_STYLE_LABELS, defaultContent: '{"items":[]}',                                                                                                                                                              labelKey: 'Key/value dossier',    descriptionKey: 'Structured label/value table — replaces hand-typed dl/dt/dd in RichText. 3 style variants.', category: 'content'},
@@ -391,10 +476,10 @@ export const ADMIN_ITEM_TYPE_EDITORS: readonly AdminItemTypeEntry[] = [
     {key: EItemType.AccountWelcome,           Editor: AccountWelcomeEditor,           styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Account welcome',        descriptionKey: 'Locked — dashboard greeting + quick links.',                                   category: 'hero'},
     {key: EItemType.ShippingCalculator,       Editor: ShippingCalculatorEditor,       styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Shipping calculator',    descriptionKey: 'Composable — estimate shipping cost by postcode.',                             category: 'content'},
     {key: EItemType.DownloadInvoiceButton,    Editor: DownloadInvoiceButtonEditor,    styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Download invoice',       descriptionKey: 'Composable — direct VAT-invoice download link.',                               category: 'cta'},
-    {key: EItemType.TrustBadges,              Editor: TrustBadgesEditor,              styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Trust badges',           descriptionKey: 'Composable — row of payment / security badges.',                               category: 'content'},
-    {key: EItemType.MoneyBackGuarantee,       Editor: MoneyBackGuaranteeEditor,       styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Money-back guarantee',   descriptionKey: 'Composable — refund policy callout.',                                          category: 'content'},
-    {key: EItemType.ReferAFriendCta,          Editor: ReferAFriendCtaEditor,          styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Refer a friend',         descriptionKey: 'Composable — invite block on confirmation.',                                   category: 'cta'},
-    {key: EItemType.SocialShareButtons,       Editor: SocialShareButtonsEditor,       styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Social share buttons',   descriptionKey: 'Composable — share-this-order links.',                                         category: 'cta'},
+    {key: EItemType.TrustBadges,              Editor: TrustBadgesEditor,              styleEnum: asEnum(ETrustBadgesStyle), styleLabels: TRUST_BADGES_STYLE_LABELS, defaultContent: '{}', labelKey: 'Trust badges',           descriptionKey: 'Composable — row of payment / security badges.',                               category: 'content'},
+    {key: EItemType.MoneyBackGuarantee,       Editor: MoneyBackGuaranteeEditor,       styleEnum: asEnum(EMoneyBackGuaranteeStyle), styleLabels: MONEY_BACK_GUARANTEE_STYLE_LABELS, defaultContent: '{}', labelKey: 'Money-back guarantee',   descriptionKey: 'Composable — refund policy callout.',                                          category: 'content'},
+    {key: EItemType.ReferAFriendCta,          Editor: ReferAFriendCtaEditor,          styleEnum: asEnum(EReferAFriendCtaStyle), styleLabels: REFER_A_FRIEND_CTA_STYLE_LABELS, defaultContent: '{}', labelKey: 'Refer a friend',         descriptionKey: 'Composable — invite block on confirmation.',                                   category: 'cta'},
+    {key: EItemType.SocialShareButtons,       Editor: SocialShareButtonsEditor,       styleEnum: asEnum(ESocialShareButtonsStyle), styleLabels: SOCIAL_SHARE_BUTTONS_STYLE_LABELS, defaultContent: '{}', labelKey: 'Social share buttons',   descriptionKey: 'Composable — share-this-order links.',                                         category: 'cta'},
     // all-pages-module-composed — Account batch (smart wrappers; copy-only editors).
     {key: EItemType.OrdersList,               Editor: OrdersListEditor,               styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Orders list',            descriptionKey: 'Locked — customer order history with status filter chips.',                    category: 'content'},
     {key: EItemType.OrderDetail,              Editor: OrderDetailEditor,              styleEnum: asEnum({Default: 'default'}), defaultContent: '{}', labelKey: 'Order detail',           descriptionKey: 'Locked — single order: progress, line items, payment, history.',              category: 'content'},

@@ -174,4 +174,107 @@
       transform: translateY(12px) scale(1.04);
     }
   }
+
+  // Tags — hashtag-style monospace.
+  &.tags .skill-pills__list {
+    gap: 6px 12px;
+
+    .ant-tag {
+      background: transparent;
+      border: none;
+      color: var(--theme-colorAccent, var(--theme-colorPrimary, #1677ff));
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      font-size: 13px;
+      padding: 2px 0;
+      font-weight: 500;
+    }
+    .ant-tag::before {
+      content: "#";
+      opacity: 0.6;
+      margin-right: 1px;
+    }
+    .ant-tag:hover {
+      transform: none;
+      background: transparent;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+  }
+
+  // Cloud — varied font sizes by nth-child rotation.
+  &.cloud .skill-pills__list {
+    align-items: baseline;
+    gap: 8px 14px;
+    line-height: 1.3;
+
+    .ant-tag {
+      background: transparent;
+      border: none;
+      padding: 0 4px;
+      color: var(--theme-colorTextBase, #1a1a1a);
+      font-weight: 600;
+      transition: color 180ms ease, transform 180ms ease;
+    }
+    .ant-tag:nth-child(5n+1) { font-size: 28px; opacity: 1; }
+    .ant-tag:nth-child(5n+2) { font-size: 14px; opacity: 0.7; }
+    .ant-tag:nth-child(5n+3) { font-size: 22px; opacity: 0.9; }
+    .ant-tag:nth-child(5n+4) { font-size: 16px; opacity: 0.8; }
+    .ant-tag:nth-child(5n+5) { font-size: 19px; opacity: 0.85; }
+    .ant-tag:hover {
+      color: var(--theme-colorAccent, var(--theme-colorPrimary, #1677ff));
+      transform: scale(1.08);
+      background: transparent;
+    }
+  }
+
+  // Neon — dark surface with glowing outlined pills.
+  &.neon {
+    background: #0b0b14;
+    border-radius: 10px;
+    padding: 18px;
+
+    .skill-pills__category {
+      color: #cfcfe8;
+      opacity: 0.85;
+    }
+    .skill-pills__list {
+      gap: 12px;
+
+      .ant-tag {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid #ff4dd2;
+        color: #ff8af0;
+        padding: 6px 14px;
+        border-radius: 999px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        font-size: 12px;
+        box-shadow:
+          0 0 6px rgba(255, 77, 210, 0.6),
+          inset 0 0 6px rgba(255, 77, 210, 0.25);
+        text-shadow: 0 0 4px rgba(255, 77, 210, 0.7);
+      }
+      .ant-tag:nth-child(3n+2) {
+        border-color: #4dffd2;
+        color: #8affe8;
+        box-shadow:
+          0 0 6px rgba(77, 255, 210, 0.6),
+          inset 0 0 6px rgba(77, 255, 210, 0.25);
+        text-shadow: 0 0 4px rgba(77, 255, 210, 0.7);
+      }
+      .ant-tag:nth-child(3n+3) {
+        border-color: #4d9cff;
+        color: #8ac0ff;
+        box-shadow:
+          0 0 6px rgba(77, 156, 255, 0.6),
+          inset 0 0 6px rgba(77, 156, 255, 0.25);
+        text-shadow: 0 0 4px rgba(77, 156, 255, 0.7);
+      }
+      .ant-tag:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.2);
+      }
+    }
+  }
 }

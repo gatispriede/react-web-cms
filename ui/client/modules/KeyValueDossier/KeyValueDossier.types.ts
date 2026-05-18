@@ -39,4 +39,10 @@ export enum EKeyValueDossierStyle {
     TechModern = "tech-modern",
     /** Light surface, 3-col mini-cards, label-above-value. Commerce-style. */
     CardGrid = "card-grid",
+    /** Specification-sheet — hairline rules, tight tracking, technical feel. */
+    Spec = "spec",
+    /** Dot-matrix print receipt aesthetic: monospace everything, dashed rules. */
+    Print = "print",
+    /** Dense compact layout, all keys aligned, minimal padding. */
+    Compact = "compact",
 }

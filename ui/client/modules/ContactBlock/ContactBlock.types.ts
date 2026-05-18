@@ -1,3 +1,10 @@
+export enum EContactBlockStyle {
+    Default = 'default',
+    Card = 'card',
+    Split = 'split',
+    Minimal = 'minimal',
+}
+
 export type SocialPlatform = 'facebook' | 'instagram' | 'twitter' | 'tiktok' | 'youtube' | 'linkedin';
 
 export interface ContactSocial {

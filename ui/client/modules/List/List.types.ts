@@ -42,4 +42,10 @@ export enum EListStyle {
     Timeline = "timeline",
     /** Oversized outlined numerals (text-stroke) prefix every row. */
     Numbered = "numbered",
+    /** Each row rendered as a soft elevated card with hover lift. */
+    Cards = "cards",
+    /** Multi-column flowing list with vertical column-rules — newspaper feel. */
+    Newspaper = "newspaper",
+    /** Strike-through completed checklist with filled checkbox markers. */
+    Tasks = "tasks",
 }

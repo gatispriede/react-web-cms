@@ -22,4 +22,10 @@ export enum EStatsCardStyle {
     Default = "default",
     /** Industrial panel — dark panel, yellow accent rule on the left. */
     Panel = "panel",
+    /** Ticker — mechanical odometer-style numbers in framed digit boxes. */
+    Ticker = "ticker",
+    /** Neon — dark canvas with glowing accent numbers. */
+    Neon = "neon",
+    /** Outline — text-stroke (hollow) numbers, transparent fill. */
+    Outline = "outline",
 }

@@ -5,5 +5,8 @@ export interface IPlainTextContent {
 export enum EPlainTextStyle {
     Default = "default",
     Centered = "centered",
-    CenteredBoxed = "centeredBoxed"
+    CenteredBoxed = "centeredBoxed",
+    Lede = "lede",
+    Quote = "quote",
+    DropCap = "dropCap"
 }

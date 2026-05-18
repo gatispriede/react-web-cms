@@ -35,4 +35,10 @@ export enum EProjectGridStyle {
     Magazine = "magazine",
     /** Polaroid — white-bordered tiles with slight rotation and drop-shadow. */
     Polaroid = "polaroid",
+    /** Cinema — 16:9 dark letterboxed frame cards. */
+    Cinema = "cinema",
+    /** Tilt — perspective rotation applied to each card. */
+    Tilt = "tilt",
+    /** Filmstrip — horizontal scrolling strip with sprocket-edge frames. */
+    Filmstrip = "filmstrip",
 }

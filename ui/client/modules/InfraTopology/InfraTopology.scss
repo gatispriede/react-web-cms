@@ -90,4 +90,100 @@
     text-transform: uppercase;
     color: var(--it-ink-3);
   }
+
+  // --- Terminal: green-on-black mono ASCII look ---
+  &.terminal {
+    background: #0b1110;
+    color: #b8f5c8;
+    padding: 18px;
+    font-family: var(--font-mono, ui-monospace, monospace);
+    --it-rule: rgba(96, 224, 128, 0.32);
+    --it-rule-strong: rgba(96, 224, 128, 0.65);
+    --it-ink: #b8f5c8;
+    --it-ink-2: #6fd48a;
+    --it-ink-3: #4a8a5e;
+    --it-accent: #6fff9c;
+
+    .infra-topology__title { font-family: var(--font-mono, ui-monospace, monospace); color: #6fff9c; font-size: 18px; letter-spacing: 0.04em; }
+    .infra-topology__title::before { content: "$ "; color: #4a8a5e; }
+    .infra-topology__subtitle { color: #6fd48a; }
+    .infra-topology__droplet {
+      border: 1px dashed rgba(96, 224, 128, 0.4);
+      border-left: 4px solid #6fff9c;
+      background: rgba(96, 224, 128, 0.04);
+    }
+    .infra-topology__droplet-name::before { content: "▸ "; color: #6fff9c; }
+    .infra-topology__services li { color: #6fff9c; }
+    .infra-topology__topology { border: 1px dashed rgba(96, 224, 128, 0.4); }
+  }
+
+  // --- Dashboard: status-pill grid panel ---
+  &.dashboard {
+    --it-accent: var(--theme-colorAccent, #2f8f4e);
+    background: var(--theme-colorBgInset, rgba(0, 0, 0, 0.03));
+    padding: 18px;
+    border: 1px solid var(--it-rule);
+
+    .infra-topology__droplets {
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+    }
+    .infra-topology__droplet {
+      border: 1px solid var(--it-rule);
+      border-left-width: 1px;
+      border-radius: 6px;
+      background: var(--theme-colorBgBase, #fff);
+      padding: 12px 14px;
+      position: relative;
+    }
+    .infra-topology__droplet::after {
+      content: "";
+      position: absolute;
+      top: 14px; right: 14px;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--it-accent);
+      box-shadow: 0 0 0 3px color-mix(in oklch, var(--it-accent) 18%, transparent);
+    }
+    .infra-topology__droplet-role {
+      display: inline-block;
+      border: 1px solid var(--it-rule);
+      border-radius: 999px;
+      padding: 1px 8px;
+      color: var(--it-ink-2);
+    }
+    .infra-topology__services li {
+      display: inline-block;
+      border: 1px solid var(--it-accent);
+      border-radius: 999px;
+      padding: 1px 8px;
+      margin: 2px 4px 2px 0;
+      &:first-child { border-top: 1px solid var(--it-accent); }
+    }
+  }
+
+  // --- Blueprint: cyan-on-dark grid background ---
+  &.blueprint {
+    background:
+      linear-gradient(rgba(94, 188, 220, 0.08) 1px, transparent 1px) 0 0 / 24px 24px,
+      linear-gradient(90deg, rgba(94, 188, 220, 0.08) 1px, transparent 1px) 0 0 / 24px 24px,
+      #0d1c2a;
+    color: #b8e4f5;
+    padding: 22px;
+    --it-rule: rgba(120, 200, 230, 0.32);
+    --it-rule-strong: rgba(120, 200, 230, 0.6);
+    --it-ink: #d6efff;
+    --it-ink-2: #94c8e0;
+    --it-ink-3: #5a8aa6;
+    --it-accent: #5ecbe6;
+
+    .infra-topology__title { color: #e6f4ff; font-family: var(--font-mono, ui-monospace, monospace); letter-spacing: 0.06em; }
+    .infra-topology__droplet {
+      border: 1px solid var(--it-rule);
+      border-left: 4px solid var(--it-accent);
+      background: rgba(13, 28, 42, 0.6);
+    }
+    .infra-topology__topology { border: 1px solid var(--it-rule); background: rgba(13, 28, 42, 0.4); }
+    .infra-topology__services li { color: var(--it-accent); }
+  }
 }

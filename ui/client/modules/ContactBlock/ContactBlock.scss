@@ -79,3 +79,58 @@
         background: var(--theme-colorBgInset, color-mix(in srgb, currentColor 6%, transparent));
     }
 }
+
+.contact-block.card {
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--theme-colorBorder, color-mix(in srgb, currentColor 12%, transparent));
+    background: var(--theme-colorBgContainer, #fff);
+}
+
+.contact-block.split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 2rem;
+    padding: 2rem;
+
+    .contact-block__headline {
+        grid-column: 1 / -1;
+    }
+
+    @media (max-width: 640px) {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+.contact-block.minimal {
+    flex-direction: row;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 0.5rem 0;
+    background: transparent;
+    border-radius: 0;
+
+    .contact-block__headline {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .contact-block__fields {
+        display: flex;
+        flex-direction: row;
+        gap: 1rem;
+        margin: 0;
+    }
+
+    .contact-block__field {
+        display: inline-flex;
+        gap: 0.25rem;
+    }
+
+    .contact-block__label {
+        display: none;
+    }
+}

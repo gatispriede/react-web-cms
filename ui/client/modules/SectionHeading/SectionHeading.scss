@@ -113,6 +113,68 @@
     }
   }
 
+  /* --- Variant: eyebrow-rule ------------------------------------------- */
+  section[data-variant="eyebrow-rule"] {
+    .sh-root { padding-top: 2rem; }
+    .sh-eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.8rem;
+      &::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--sh-eyebrow-ink);
+        opacity: 0.4;
+      }
+    }
+    .sh-heading {
+      font-size: 3rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+    }
+  }
+
+  /* --- Variant: banner ------------------------------------------------- */
+  section[data-variant="banner"] {
+    .sh-root {
+      background: var(--sh-accent);
+      color: #fff;
+      padding: 2rem 1.5rem;
+      max-width: none;
+      width: 100%;
+    }
+    .sh-eyebrow { color: rgba(255, 255, 255, 0.8); }
+    .sh-heading { color: #fff; font-weight: 700; }
+    .sh-subtitle { color: rgba(255, 255, 255, 0.85); font-style: normal; }
+  }
+
+  /* --- Variant: magazine ----------------------------------------------- */
+  section[data-variant="magazine"] {
+    .sh-root { padding-top: 2.5rem; }
+    .sh-eyebrow {
+      font-family: var(--sh-font-display);
+      font-style: italic;
+      text-transform: none;
+      letter-spacing: 0;
+      font-size: 1rem;
+    }
+    .sh-heading {
+      font-family: var(--sh-font-display);
+      font-size: 3.5rem;
+      font-weight: 400;
+      line-height: 1.02;
+      letter-spacing: -0.025em;
+    }
+    .sh-subtitle {
+      font-family: var(--sh-font-display);
+      font-style: italic;
+      font-size: 1.25rem;
+    }
+  }
+
   /* --- Mobile ---------------------------------------------------------- */
   @media (max-width: 640px) {
     --sh-heading-size: 1.6rem;

@@ -53,4 +53,7 @@ export interface IArchitectureTiers {
 export enum EArchitectureTiersStyle {
     Default = "default",
     Editorial = "editorial",
+    Cards = "cards",
+    Stack = "stack",
+    Timeline = "timeline",
 }

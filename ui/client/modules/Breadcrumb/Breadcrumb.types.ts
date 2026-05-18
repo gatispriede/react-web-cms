@@ -37,4 +37,7 @@ export interface IBreadcrumb {
 export enum EBreadcrumbStyle {
     Default = 'default',
     Compact = 'compact',
+    Pills = 'pills',
+    Slash = 'slash',
+    Arrow = 'arrow',
 }

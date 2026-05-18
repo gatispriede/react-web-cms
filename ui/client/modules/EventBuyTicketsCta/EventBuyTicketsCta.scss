@@ -125,3 +125,57 @@
         color: var(--ink-2, color-mix(in srgb, currentColor 65%, transparent));
     }
 }
+
+.event-buy-tickets-cta.ticket {
+    .event-buy-tickets-cta__sheet {
+        background:
+            radial-gradient(circle at 0 50%, transparent 0.6rem, var(--theme-colorBgContainer, #fff) 0.6rem) left center / 1.2rem 100% no-repeat,
+            radial-gradient(circle at 100% 50%, transparent 0.6rem, var(--theme-colorBgContainer, #fff) 0.6rem) right center / 1.2rem 100% no-repeat,
+            var(--theme-colorBgContainer, #fff);
+        border-radius: var(--theme-borderRadius, 8px);
+        position: relative;
+    }
+
+    .event-buy-tickets-cta__sheet::before {
+        content: '';
+        position: absolute;
+        inset-block: 0.5rem;
+        left: 33%;
+        width: 1px;
+        border-left: 2px dashed var(--theme-colorBorder, color-mix(in srgb, currentColor 25%, transparent));
+    }
+}
+
+.event-buy-tickets-cta.banner {
+    .event-buy-tickets-cta__trigger {
+        position: static;
+        display: block;
+        width: 100%;
+        border-radius: 0;
+        padding: 1rem;
+        background: var(--theme-colorPrimary, #4f46e5);
+        color: #fff;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+}
+
+.event-buy-tickets-cta.floating {
+    .event-buy-tickets-cta__trigger {
+        position: fixed;
+        right: 1rem;
+        bottom: 1rem;
+        border-radius: 999px;
+        padding: 0.875rem 1.5rem;
+        background: var(--theme-colorPrimary, #4f46e5);
+        color: #fff;
+        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.25);
+        animation: event-buy-tickets-cta-float 3s ease-in-out infinite;
+    }
+}
+
+@keyframes event-buy-tickets-cta-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}

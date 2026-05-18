@@ -1,3 +1,10 @@
+export enum EEventBuyTicketsCtaStyle {
+    Default = 'default',
+    Ticket = 'ticket',
+    Banner = 'banner',
+    Floating = 'floating',
+}
+
 export interface TicketTier {
     key: string;
     name: string;

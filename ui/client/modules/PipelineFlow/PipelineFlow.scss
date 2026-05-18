@@ -95,4 +95,105 @@
       &:first-child { border-top: 1px solid var(--pf-rule); }
     }
   }
+
+  // --- Subway: colored vertical rail with station dots ---
+  &.subway {
+    .pipeline-flow__steps {
+      position: relative;
+      padding-left: 18px;
+    }
+    .pipeline-flow__steps::before {
+      content: "";
+      position: absolute;
+      left: 8px; top: 16px; bottom: 16px;
+      width: 6px;
+      border-radius: 3px;
+      background: linear-gradient(180deg, #e85d4a, #f1a23b, #2f8f4e, #2a7be8);
+    }
+    .pipeline-flow__step {
+      border-top: none;
+      grid-template-columns: 40px 1fr;
+      gap: 14px;
+      position: relative;
+      padding: 12px 0;
+      &:first-child { border-top: none; }
+    }
+    .pipeline-flow__step::before {
+      content: "";
+      position: absolute;
+      left: -16px;
+      top: 18px;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--theme-colorBgBase, #fff);
+      border: 3px solid var(--pf-accent);
+      box-shadow: 0 0 0 2px var(--theme-colorBgBase, #fff);
+    }
+    .pipeline-flow__step-no { color: var(--pf-ink-3); font-size: 14px; }
+  }
+
+  // --- Terminal: $ pipeline run console output ---
+  &.terminal {
+    background: #0b1110;
+    color: #b8f5c8;
+    padding: 18px;
+    font-family: var(--font-mono, ui-monospace, monospace);
+    --pf-rule: rgba(96, 224, 128, 0.28);
+    --pf-rule-strong: rgba(96, 224, 128, 0.55);
+    --pf-ink: #b8f5c8;
+    --pf-ink-2: #80d49a;
+    --pf-ink-3: #4a8a5e;
+    --pf-accent: #6fff9c;
+
+    .pipeline-flow__title { font-family: var(--font-mono, ui-monospace, monospace); color: #6fff9c; font-size: 18px; }
+    .pipeline-flow__title::before { content: "$ pipeline run "; color: #4a8a5e; }
+    .pipeline-flow__step { border-top: 1px dashed rgba(96, 224, 128, 0.22); }
+    .pipeline-flow__step:first-child { border-top: 1px solid rgba(96, 224, 128, 0.6); }
+    .pipeline-flow__step-no::before { content: "["; color: #4a8a5e; }
+    .pipeline-flow__step-no::after { content: "]"; color: #4a8a5e; }
+    .pipeline-flow__step-label::before { content: "› "; color: #6fff9c; }
+    .pipeline-flow__status { border-radius: 0; background: transparent; }
+    .pipeline-flow__aside { border-left: 1px dashed rgba(96, 224, 128, 0.32); }
+  }
+
+  // --- Neon: glowing arrows / accents on dark ---
+  &.neon {
+    background: #0d0b18;
+    color: #e2dcff;
+    padding: 22px;
+    --pf-rule: rgba(160, 120, 255, 0.28);
+    --pf-rule-strong: rgba(160, 120, 255, 0.6);
+    --pf-ink: #efe9ff;
+    --pf-ink-2: #b9adef;
+    --pf-ink-3: #7a6ec0;
+    --pf-accent: #c47cff;
+
+    .pipeline-flow__title {
+      color: #fff;
+      text-shadow: 0 0 12px rgba(196, 124, 255, 0.7), 0 0 24px rgba(196, 124, 255, 0.35);
+    }
+    .pipeline-flow__step {
+      border-top: 1px solid var(--pf-rule);
+      position: relative;
+    }
+    .pipeline-flow__step-no {
+      color: var(--pf-accent);
+      text-shadow: 0 0 8px rgba(196, 124, 255, 0.7);
+    }
+    .pipeline-flow__step-label { color: #fff; }
+    .pipeline-flow__step:not(:last-child)::after {
+      content: "↓";
+      position: absolute;
+      left: 22px;
+      bottom: -10px;
+      color: var(--pf-accent);
+      font-size: 16px;
+      text-shadow: 0 0 8px rgba(196, 124, 255, 0.85), 0 0 16px rgba(196, 124, 255, 0.55);
+    }
+    .pipeline-flow__status {
+      border-color: var(--pf-accent);
+      color: var(--pf-accent);
+      box-shadow: 0 0 8px rgba(196, 124, 255, 0.4) inset, 0 0 8px rgba(196, 124, 255, 0.3);
+    }
+  }
 }

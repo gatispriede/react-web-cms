@@ -41,4 +41,10 @@ export enum ESkillPillsStyle {
     Brutalist = "brutalist",
     /** Hexagon-shaped pills via clip-path. */
     Hex = "hex",
+    /** Hashtag-prefixed monospace tags. */
+    Tags = "tags",
+    /** Cloud of varied-size pills (nth-child driven). */
+    Cloud = "cloud",
+    /** Dark backdrop, glowing neon-outlined pills. */
+    Neon = "neon",
 }

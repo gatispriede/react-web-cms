@@ -43,4 +43,7 @@ export interface IDataModel {
 export enum EDataModelStyle {
     Default = "default",
     Editorial = "editorial",
+    Erd = "erd",
+    Terminal = "terminal",
+    Cards = "cards",
 }

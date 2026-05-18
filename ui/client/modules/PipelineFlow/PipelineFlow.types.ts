@@ -25,4 +25,7 @@ export interface IPipelineFlow {
 export enum EPipelineFlowStyle {
     Default = "default",
     Editorial = "editorial",
+    Subway = "subway",
+    Terminal = "terminal",
+    Neon = "neon",
 }

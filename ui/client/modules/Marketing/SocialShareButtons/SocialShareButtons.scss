@@ -1,3 +1,22 @@
 .social-share-buttons { display: flex; gap: 0.5rem; list-style: none; padding: 0; margin: 0;
     a { padding: 0.4rem 0.8rem; border: 1px solid var(--theme-colorBorder, #ddd); border-radius: 4px; text-decoration: none; color: inherit; font-size: 0.85rem; }
+
+    &.pills {
+        a { padding: 0.5rem 1.1rem; border: none; border-radius: 999px; background: var(--accent, var(--theme-colorPrimary, #1677ff)); color: #fff; font-weight: 600; transition: transform 0.15s ease;
+            &:hover { transform: translateY(-1px); }
+        }
+    }
+
+    &.outlined {
+        a { padding: 0.5rem 1rem; border: 2px solid var(--ink, currentColor); border-radius: 0; background: transparent; color: var(--ink, var(--theme-colorTextBase, #111)); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+            &:hover { background: var(--ink, #111); color: var(--bg, #fff); }
+        }
+    }
+
+    &.branded {
+        a { padding: 0.5rem 1rem; border: none; border-radius: 4px; color: #fff; font-weight: 600; }
+        [data-testid="social-share-twitter"] { background: #1da1f2; }
+        [data-testid="social-share-facebook"] { background: #1877f2; }
+        [data-testid="social-share-linkedin"] { background: #0a66c2; }
+    }
 }

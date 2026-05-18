@@ -222,4 +222,89 @@
     font-size: 11px;
     color: var(--at-ink-3);
   }
+
+  // --- Cards: each tier as a card with depth ---
+  &.cards {
+    .arch-tiers__row {
+      background: transparent;
+      border: none;
+      gap: 16px;
+    }
+    .arch-tiers__card {
+      border: 1px solid var(--at-rule);
+      border-right: 1px solid var(--at-rule);
+      border-radius: 10px;
+      background: var(--theme-colorBgBase, #fff);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(0, 0, 0, 0.04);
+      &:last-child { border-right: 1px solid var(--at-rule); }
+    }
+    .arch-tiers__shared {
+      border: 1px solid var(--at-rule);
+      border-radius: 10px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+      margin-top: 16px;
+    }
+  }
+
+  // --- Stack: vertically stacked slabs ---
+  &.stack {
+    .arch-tiers__row {
+      grid-template-columns: 1fr;
+      gap: 0;
+      border-top: 1px solid var(--at-rule-strong);
+    }
+    .arch-tiers__card {
+      border-right: none;
+      border-bottom: 1px solid var(--at-rule);
+      padding: 20px 24px;
+      display: grid;
+      grid-template-columns: minmax(180px, 220px) 1fr;
+      gap: 24px;
+      align-items: start;
+      @media (max-width: 760px) { grid-template-columns: 1fr; gap: 8px; }
+      &:last-child { border-right: none; }
+    }
+    .arch-tiers__card-head { grid-column: 1 / 2; border-bottom: none; padding-bottom: 0; margin-bottom: 6px; flex-direction: column; align-items: flex-start; }
+    .arch-tiers__role { grid-column: 1 / 2; }
+    .arch-tiers__card-title { grid-column: 1 / 2; }
+    .arch-tiers__card-desc { grid-column: 2 / 3; margin-top: 0; }
+    .arch-tiers__pills { grid-column: 2 / 3; }
+    .arch-tiers__modules { grid-column: 2 / 3; }
+    @media (max-width: 760px) {
+      .arch-tiers__card > * { grid-column: 1 / -1; }
+    }
+  }
+
+  // --- Timeline: left-to-right with vertical rules + ordinals as ticks ---
+  &.timeline {
+    .arch-tiers__row {
+      background: transparent;
+      border-top: 2px solid var(--at-accent);
+      border-bottom: none;
+      position: relative;
+      gap: 0;
+    }
+    .arch-tiers__card {
+      position: relative;
+      padding-top: 28px;
+      border-right: 1px solid var(--at-rule);
+      &:last-child { border-right: none; }
+    }
+    .arch-tiers__card::before {
+      content: "";
+      position: absolute;
+      top: -8px;
+      left: 22px;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--theme-colorBgBase, #fff);
+      border: 3px solid var(--at-accent);
+    }
+    .arch-tiers__ord {
+      font-size: 12px;
+      color: var(--at-accent);
+      font-weight: 600;
+    }
+    .arch-tiers__card-head { border-bottom: 1px dashed var(--at-rule); }
+  }
 }

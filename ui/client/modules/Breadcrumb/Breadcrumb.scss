@@ -31,4 +31,40 @@
         &--mobile-collapse &__full { display: none; }
         &--mobile-collapse &__mobile { display: inline-flex; }
     }
+
+    /* ---- Pills: chip-style crumbs */
+    &.pills {
+        .breadcrumb__full { gap: 0.375rem; }
+        li > a, li > span {
+            padding: 0.25rem 0.625rem;
+            border-radius: 999px;
+            background: color-mix(in srgb, currentColor 8%, transparent);
+            font-size: 0.8125rem;
+        }
+        .breadcrumb__sep { display: none; }
+    }
+
+    /* ---- Slash: thin slash separator */
+    &.slash {
+        .breadcrumb__sep::before { content: '/'; }
+        .breadcrumb__sep {
+            font-weight: 300;
+            color: var(--accent, var(--theme-colorPrimary, #1677ff));
+            opacity: 0.85;
+        }
+        .breadcrumb__sep > * { display: none; }
+    }
+
+    /* ---- Arrow: chevron + bg color steps */
+    &.arrow {
+        .breadcrumb__full { gap: 0; }
+        li {
+            padding: 0.25rem 0.75rem 0.25rem 1.125rem;
+            background: color-mix(in srgb, currentColor 5%, transparent);
+            clip-path: polygon(0 0, calc(100% - 0.5rem) 0, 100% 50%, calc(100% - 0.5rem) 100%, 0 100%, 0.5rem 50%);
+            margin-right: -0.5rem;
+        }
+        li:first-child { padding-left: 0.75rem; }
+        .breadcrumb__sep { display: none; }
+    }
 }

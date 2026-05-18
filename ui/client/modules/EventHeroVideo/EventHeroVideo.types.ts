@@ -1,3 +1,10 @@
+export enum EEventHeroVideoStyle {
+    Default = 'default',
+    Cinematic = 'cinematic',
+    Split = 'split',
+    Fullscreen = 'fullscreen',
+}
+
 export interface EventHeroVideoProps {
     testId: string;
     videoUrl: string;

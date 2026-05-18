@@ -27,5 +27,8 @@ export interface IPlainImageLegacy {
 }
 
 export enum EImageStyle {
-    Default = "default"
+    Default = "default",
+    Polaroid = "polaroid",
+    Cinema = "cinema",
+    Vintage = "vintage"
 }

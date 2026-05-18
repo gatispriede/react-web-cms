@@ -421,4 +421,102 @@
       &:hover { color: var(--accent, var(--theme-colorPrimary, #1677ff)); }
     }
   }
+
+  // Cards — each row as a soft card with hover lift.
+  &.cards .list-module__items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+
+    li {
+      padding: 16px 18px;
+      background: var(--card-bg, var(--theme-colorBgContainer, #fff));
+      border: 1px solid var(--card-border, var(--theme-colorBorder, #e5e5e5));
+      border-radius: 10px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      transition: transform 180ms ease, box-shadow 180ms ease;
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+      }
+    }
+    .list-module__label {
+      display: block;
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 4px;
+      color: var(--ink, var(--ink-2, #1a1a1a));
+    }
+    .list-module__value {
+      display: block;
+      color: var(--ink-2, #4a4a4a);
+      font-size: 13.5px;
+    }
+  }
+
+  // Newspaper — multi-column flow with column-rule.
+  &.newspaper .list-module__items {
+    list-style: disc inside;
+    margin: 0;
+    padding: 0;
+    column-count: 3;
+    column-gap: 28px;
+    column-rule: 1px solid var(--rule, var(--theme-colorBorder, #d4d4d4));
+
+    @media (max-width: 900px) { column-count: 2; }
+    @media (max-width: 560px) { column-count: 1; }
+
+    li {
+      break-inside: avoid;
+      padding: 4px 0;
+      font-size: 14px;
+    }
+    .list-module__label { font-weight: 600; }
+    .list-module__value { color: var(--ink-2, #4a4a4a); margin-left: 4px; }
+  }
+
+  // Tasks — checkbox markers + strike-through values.
+  &.tasks .list-module__items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    li {
+      position: relative;
+      padding: 8px 0 8px 30px;
+      border-bottom: 1px dashed var(--rule, var(--theme-colorBorder, #d4d4d4));
+    }
+    li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 10px;
+      width: 16px;
+      height: 16px;
+      border: 1.5px solid var(--accent, var(--theme-colorPrimary, #1677ff));
+      border-radius: 3px;
+      background: transparent;
+    }
+    li:nth-child(odd)::after {
+      content: "";
+      position: absolute;
+      left: 3px;
+      top: 13px;
+      width: 10px;
+      height: 5px;
+      border-left: 2px solid var(--accent, var(--theme-colorPrimary, #1677ff));
+      border-bottom: 2px solid var(--accent, var(--theme-colorPrimary, #1677ff));
+      transform: rotate(-45deg);
+    }
+    li:nth-child(odd) .list-module__label,
+    li:nth-child(odd) .list-module__value {
+      text-decoration: line-through;
+      opacity: 0.55;
+    }
+    .list-module__label { font-weight: 600; }
+    .list-module__value { margin-left: 8px; color: var(--ink-2, #4a4a4a); }
+  }
 }

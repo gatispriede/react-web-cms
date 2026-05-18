@@ -4,5 +4,8 @@ export interface IRichText {
 
 export enum ERichTextStyle {
     Default = "default",
-    CenteredBoxed = "centeredBoxed"
+    CenteredBoxed = "centeredBoxed",
+    Magazine = "magazine",
+    Mono = "mono",
+    Letter = "letter"
 }

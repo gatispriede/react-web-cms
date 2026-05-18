@@ -171,3 +171,127 @@
     margin-bottom: 10px;
   }
 }
+
+/* ==========================================================================
+   Timeline variants — subway / terminal / horizontal
+   ========================================================================== */
+.timeline.subway {
+  padding-left: 36px;
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: 14px;
+    top: 8px;
+    bottom: 8px;
+    width: 6px;
+    border-radius: 6px;
+    background: linear-gradient(
+      to bottom,
+      var(--theme-colorPrimary, #1677ff) 0 33%,
+      #f6a623 33% 66%,
+      #2bb673 66% 100%
+    );
+  }
+
+  .timeline__entry {
+    position: relative;
+    padding-left: 16px;
+    margin-bottom: 22px;
+
+    &::before {
+      content: "";
+      position: absolute;
+      left: -28px;
+      top: 6px;
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: var(--theme-bgElevated, #fff);
+      border: 4px solid var(--theme-colorPrimary, #1677ff);
+      box-shadow: 0 0 0 2px var(--theme-bgElevated, #fff);
+    }
+    &:nth-child(3n+2)::before { border-color: #f6a623; }
+    &:nth-child(3n)::before   { border-color: #2bb673; }
+  }
+}
+
+.timeline.terminal {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  background: #0d1117;
+  color: #c9d1d9;
+  padding: 20px 24px;
+  border-radius: 8px;
+
+  &::before { display: none; }
+
+  .timeline__entry {
+    padding: 8px 0;
+    border: 0;
+    background: transparent;
+
+    &::before {
+      content: "$ git log --";
+      display: block;
+      color: #7ee787;
+      font-size: 12px;
+      margin-bottom: 4px;
+      position: static;
+      width: auto;
+      height: auto;
+      background: none;
+      border: 0;
+    }
+  }
+  .timeline__when {
+    color: #79c0ff;
+    background: transparent;
+    padding: 0;
+  }
+  .timeline__company { color: #ffa657; }
+  .timeline__role    { color: #d2a8ff; }
+  .timeline__quote   { color: #8b949e; font-style: italic; }
+}
+
+.timeline.horizontal {
+  padding-left: 0;
+
+  &::before {
+    left: 0;
+    right: 0;
+    top: 24px;
+    bottom: auto;
+    width: auto;
+    height: 2px;
+    background: var(--rule-strong, rgba(0, 0, 0, 0.18));
+  }
+
+  @media (min-width: 768px) {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(220px, 1fr);
+    gap: 24px;
+    overflow-x: auto;
+    padding-top: 48px;
+    padding-bottom: 12px;
+
+    .timeline__entry {
+      padding-left: 0;
+      padding-top: 24px;
+      border-left: 0;
+      border-top: 2px solid transparent;
+      position: relative;
+
+      &::before {
+        content: "";
+        position: absolute;
+        top: -29px;
+        left: 0;
+        width: 12px;
+        height: 12px;
+        border-radius: 999px;
+        background: var(--theme-colorPrimary, #1677ff);
+      }
+    }
+  }
+}

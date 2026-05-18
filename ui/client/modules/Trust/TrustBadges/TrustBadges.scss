@@ -1,3 +1,17 @@
 .trust-badges { display: flex; gap: 1rem; flex-wrap: wrap; padding: 1rem 0; margin: 0; list-style: none;
     li { padding: 0.4rem 0.8rem; border: 1px solid var(--theme-colorBorder, #ddd); border-radius: 4px; font-size: 0.85rem; color: var(--theme-colorTextSecondary, #555); }
+
+    &.inline { gap: 0.35rem; padding: 0.5rem 0; flex-wrap: nowrap; overflow-x: auto;
+        li { padding: 0.15rem 0.5rem; border: none; border-right: 1px solid var(--rule, #ddd); border-radius: 0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap;
+            &:last-child { border-right: none; }
+        }
+    }
+
+    &.neon { gap: 0.6rem; padding: 1rem; background: #0b0b14; border-radius: 8px;
+        li { background: transparent; border: 1px solid var(--accent, #6cf); border-radius: 999px; color: var(--accent, #6cf); text-shadow: 0 0 6px var(--accent, #6cf); box-shadow: 0 0 8px rgba(108,204,255,0.35), inset 0 0 6px rgba(108,204,255,0.2); font-weight: 600; }
+    }
+
+    &.outlined { gap: 0.5rem;
+        li { background: transparent; border: 2px solid var(--ink, #111); border-radius: 0; color: var(--ink, var(--theme-colorTextBase, #111)); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+    }
 }
