@@ -1,0 +1,726 @@
+/* ==========================================================================
+   Legal Firm — per-module overrides.
+
+   Scope: [data-theme-name="legal-firm"]. Conservative navy + cream paper
+   + restrained gold. Cormorant Garamond display, Source Serif 4 body.
+   The aesthetic is a partner's letterhead — gravitas, tradition, no
+   theatrics. Motion is `reduced-static`: colour-shifts only, no
+   translates, no scales, no shadows blooming.
+
+   Token-driven modules (most of the 47 in the catalogue) are NOT touched
+   here — they inherit palette + typography + motion from `theme.scss`
+   via CSS custom properties. The overrides below are reserved for cases
+   where a default value is geometrically wrong for the firm aesthetic
+   (e.g. shrink-on-scroll header, gold-rule underlines on section
+   headings, formal multi-column footer with practice-area columns).
+
+   Visual baselines for these blocks live under
+   `tests/e2e/visual/__snapshots__/themes/legal-firm/`. The per-theme
+   capture spec at `tests/e2e/visual/themes/legal-firm.spec.ts` walks
+   every EItemType under `[data-theme-name="legal-firm"]` and snapshots
+   the result.
+   ========================================================================== */
+
+[data-theme-name="legal-firm"] {
+
+    /* ===================================================================
+       Header / nav — VARIANT: shrink-on-scroll. Sits on cream surface
+       with a fine gold rule beneath; on scroll the bar condenses from
+       generous 1.5rem to a tight 0.75rem, the rule thickens to 2px,
+       and the firm wordmark drops one size step. The whole effect is
+       the courthouse-door brass-plaque feeling — present without
+       shouting.
+
+       Distinct from medical (sticky-static, never shrinks) and
+       education (sticky-static with eyebrow above wordmark).
+       =================================================================== */
+    .main-nav {
+        background: var(--color-surface);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid var(--color-rule);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 2rem;
+        transition: padding var(--motion-duration-base) var(--motion-ease-standard),
+                    border-bottom-width var(--motion-duration-base) var(--motion-ease-standard);
+
+        a {
+            color: var(--color-ink);
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: var(--color-accent);
+        }
+
+        // Active practice area — gold underline citation style.
+        a[aria-current="page"] {
+            border-bottom: 1px solid var(--color-accent);
+            padding-bottom: 2px;
+        }
+
+        &.is-scrolled {
+            padding: 0.75rem 2rem;
+            border-bottom: 2px solid var(--color-accent);
+        }
+
+        &__wordmark {
+            font-family: var(--font-display);
+            font-weight: 500;
+            font-size: 1.5rem;
+            letter-spacing: 0.01em;
+            color: var(--color-ink);
+        }
+    }
+
+    /* ===================================================================
+       Hero — VARIANT: SPLIT with SENIOR PARTNER PORTRAIT. Copy on the
+       left (serif display headline + tagline + restrained CTA), a
+       formal portrait area on the right framed by a 1px gold rule.
+       Real DOM: `.hero > .hero__main` (+ `.hero__portrait`,
+       `.hero__eyebrow`, `.hero__cta`).
+
+       Structural axis vs siblings: medical = single-column calm with
+       prominent appointment CTA, education = campus-photo-bleed.
+       Legal-firm = split with FORMAL portrait — no rotation, no glow,
+       gold-rule frame only. The headshot sits square the way it
+       does on a chamber profile page.
+       =================================================================== */
+    .hero {
+        position: relative;
+        min-height: 60vh;
+        padding: 4rem 1.75rem 4.5rem;
+        background: var(--color-surface);
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 3rem;
+        align-items: center;
+
+        @media (min-width: 880px) {
+            grid-template-columns: 1.2fr 1fr;
+            padding: 6rem 3rem 6.5rem;
+            gap: 4rem;
+        }
+
+        &__eyebrow {
+            font-family: var(--font-body);
+            font-size: 0.8125rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--color-accent);
+            margin-bottom: 1.25rem;
+            font-weight: 600;
+        }
+
+        &__main {
+            max-width: 56ch;
+        }
+
+        h1, .hero__headline {
+            font-family: var(--font-display);
+            font-size: clamp(2.25rem, 4.6vw, 3.75rem);
+            font-weight: 500;
+            line-height: 1.12;
+            margin: 0 0 1.25rem;
+            color: var(--color-ink);
+        }
+
+        // Gold-rule underline under the headline — citation flourish.
+        h1::after,
+        .hero__headline::after {
+            content: '';
+            display: block;
+            width: 72px;
+            height: 1px;
+            background: var(--color-accent);
+            margin-top: 1.5rem;
+        }
+
+        &__tagline {
+            font-size: 1.125rem;
+            line-height: 1.55;
+            color: var(--ink-2);
+            margin: 0 0 2rem;
+            max-width: 48ch;
+        }
+
+        &__portrait {
+            position: relative;
+            aspect-ratio: 4 / 5;
+            background: var(--color-surface-inset);
+            border: 1px solid var(--color-accent);
+            outline: 1px solid var(--color-rule);
+            outline-offset: 8px;
+        }
+
+        &__cta {
+            display: inline-block;
+            padding: 0.875rem 2rem;
+            background: var(--color-ink);
+            color: var(--color-surface);
+            font-family: var(--font-display);
+            font-size: 1rem;
+            letter-spacing: 0.04em;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        &__cta:hover {
+            background: var(--color-accent);
+            color: var(--color-accent-ink);
+        }
+    }
+
+    /* ===================================================================
+       Section heading — gold-rule underline beneath every H2. The
+       firm's recurring typographic motif: serif heading, hairline
+       gold rule, restrained eyebrow above.
+       =================================================================== */
+    .section-heading {
+        margin: 0 0 2.5rem;
+
+        &__eyebrow {
+            font-family: var(--font-body);
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--color-accent);
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        h2, &__title {
+            font-family: var(--font-display);
+            font-size: clamp(1.75rem, 3vw, 2.5rem);
+            font-weight: 500;
+            margin: 0 0 1rem;
+            color: var(--color-ink);
+        }
+
+        // Gold-rule under every section heading.
+        &::after {
+            content: '';
+            display: block;
+            width: 56px;
+            height: 1px;
+            background: var(--color-accent);
+            margin-top: 1.25rem;
+        }
+    }
+
+    /* ===================================================================
+       Feature grid — PRACTICE AREAS. Three- or four-up cards with
+       serif title, gold rule, summary, and a "View practice" link.
+       Each card has a hairline border and a generous interior. No
+       shadows, no hover lift — colour-shift only.
+       =================================================================== */
+    .feature-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        padding: 3rem 1.75rem 4rem;
+        background: var(--color-surface);
+
+        @media (min-width: 720px) {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        @media (min-width: 1080px) {
+            grid-template-columns: repeat(3, 1fr);
+            padding: 4rem 3rem 5rem;
+            gap: 2rem;
+        }
+
+        &__item,
+        article {
+            background: var(--color-surface-inset);
+            border: 1px solid var(--color-rule);
+            padding: 2rem 1.75rem 2.25rem;
+            border-radius: 4px;
+            transition: border-color var(--motion-duration-base) var(--motion-ease-standard);
+        }
+
+        &__item:hover,
+        article:hover {
+            border-color: var(--color-accent);
+        }
+
+        h3 {
+            font-family: var(--font-display);
+            font-size: 1.375rem;
+            font-weight: 500;
+            margin: 0 0 0.75rem;
+            color: var(--color-ink);
+        }
+
+        // Gold rule under each practice area title.
+        h3::after {
+            content: '';
+            display: block;
+            width: 36px;
+            height: 1px;
+            background: var(--color-accent);
+            margin-top: 0.75rem;
+        }
+
+        p {
+            font-size: 0.9375rem;
+            line-height: 1.6;
+            color: var(--ink-2);
+            margin: 0 0 1.25rem;
+        }
+
+        a {
+            font-family: var(--font-display);
+            font-size: 0.9375rem;
+            color: var(--color-accent);
+            text-decoration: none;
+            border-bottom: 1px solid var(--color-accent);
+            padding-bottom: 1px;
+        }
+    }
+
+    /* ===================================================================
+       Testimonials — CLIENT QUOTES. Block-quote style with serif
+       open-quote glyph, attribution line below with practice area
+       in small-caps. Single-column on mobile, two-up on desktop.
+       =================================================================== */
+    .testimonials {
+        background: var(--color-surface-inset);
+        padding: 4rem 1.75rem 4.5rem;
+
+        @media (min-width: 880px) {
+            padding: 5rem 3rem 5.5rem;
+        }
+
+        &__list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2.5rem;
+
+            @media (min-width: 880px) {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 3rem;
+            }
+        }
+
+        blockquote,
+        &__item {
+            position: relative;
+            padding: 1.5rem 0 0 2.25rem;
+            margin: 0;
+            border-left: 1px solid var(--color-accent);
+            padding-left: 1.75rem;
+
+            // Large serif open-quote glyph in gold.
+            &::before {
+                content: '\201C';
+                position: absolute;
+                left: -0.35rem;
+                top: -1.25rem;
+                font-family: var(--font-display);
+                font-size: 4rem;
+                line-height: 1;
+                color: var(--color-accent);
+            }
+        }
+
+        p,
+        &__quote {
+            font-family: var(--font-display);
+            font-size: 1.1875rem;
+            line-height: 1.55;
+            font-style: italic;
+            color: var(--color-ink);
+            margin: 0 0 1.25rem;
+        }
+
+        cite,
+        &__attribution {
+            display: block;
+            font-style: normal;
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            color: var(--color-ink);
+            font-weight: 600;
+        }
+
+        // Practice area, set small-caps below the name.
+        &__practice {
+            display: block;
+            font-family: var(--font-body);
+            font-size: 0.75rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--color-accent);
+            margin-top: 0.25rem;
+            font-weight: 600;
+        }
+    }
+
+    /* ===================================================================
+       Inquiry form — FORMAL CONSULTATION REQUEST. Conservative
+       layout, full-width single-column, restrained labels above
+       fields. The conversion surface for the firm; intake form
+       posture matters.
+       =================================================================== */
+    .inquiry-form {
+        background: var(--color-surface);
+        padding: 3rem 1.75rem 4rem;
+        max-width: 640px;
+        margin: 0 auto;
+        border-top: 1px solid var(--color-accent);
+
+        @media (min-width: 720px) {
+            padding: 4rem 2.5rem 4.5rem;
+        }
+
+        &__intro {
+            margin: 0 0 2rem;
+            font-size: 1rem;
+            line-height: 1.6;
+            color: var(--ink-2);
+        }
+
+        label {
+            display: block;
+            font-family: var(--font-body);
+            font-size: 0.8125rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--color-ink);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 0.75rem 0.875rem;
+            border: 1px solid var(--color-rule);
+            background: var(--color-surface);
+            color: var(--color-ink);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+        }
+        textarea {
+            min-height: 140px;
+            resize: vertical;
+        }
+
+        input:focus-visible,
+        textarea:focus-visible,
+        select:focus-visible {
+            border-color: var(--color-accent);
+            outline: 2px solid var(--color-accent);
+            outline-offset: 1px;
+        }
+
+        // Required-asterisk in gold.
+        label[data-required]::after,
+        .required::after {
+            content: ' *';
+            color: var(--color-accent);
+        }
+
+        &__disclaimer {
+            font-size: 0.8125rem;
+            color: var(--ink-2);
+            line-height: 1.55;
+            margin: 1rem 0 1.5rem;
+            font-style: italic;
+        }
+
+        button[type="submit"] {
+            display: inline-block;
+            padding: 0.9375rem 2.25rem;
+            background: var(--color-ink);
+            color: var(--color-surface);
+            border: none;
+            font-family: var(--font-display);
+            font-size: 1rem;
+            letter-spacing: 0.04em;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button[type="submit"]:hover {
+            background: var(--color-accent);
+            color: var(--color-accent-ink);
+        }
+    }
+
+    /* ===================================================================
+       Blog feed / single post — Insights & Publications. Treated as
+       a journal — serif body, small-caps eyebrow with practice area
+       and date, gold-rule above titles.
+       =================================================================== */
+    .blog-feed {
+        padding: 3rem 1.75rem 4rem;
+
+        &__list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2.5rem;
+
+            @media (min-width: 880px) {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        article {
+            border-top: 1px solid var(--color-accent);
+            padding-top: 1.5rem;
+        }
+
+        h3 a {
+            font-family: var(--font-display);
+            color: var(--color-ink);
+            text-decoration: none;
+            font-size: 1.375rem;
+            font-weight: 500;
+            line-height: 1.25;
+        }
+        h3 a:hover {
+            color: var(--color-accent);
+        }
+
+        &__meta {
+            font-family: var(--font-body);
+            font-size: 0.75rem;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--color-accent);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        p {
+            font-size: 0.9375rem;
+            line-height: 1.6;
+            color: var(--ink-2);
+            margin: 0.75rem 0 0;
+        }
+    }
+
+    .blog-post {
+        max-width: 68ch;
+        margin: 0 auto;
+        padding: 3rem 1.75rem 5rem;
+        font-family: var(--font-body);
+
+        h1 {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 3.6vw, 3rem);
+            line-height: 1.15;
+            margin: 0 0 1rem;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 64px;
+            height: 1px;
+            background: var(--color-accent);
+            margin-top: 1.5rem;
+        }
+
+        &__meta {
+            font-size: 0.8125rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--color-accent);
+            font-weight: 600;
+            margin-bottom: 1.75rem;
+        }
+
+        p {
+            font-size: 1.0625rem;
+            line-height: 1.75;
+            margin: 0 0 1.25rem;
+        }
+
+        blockquote {
+            border-left: 2px solid var(--color-accent);
+            padding-left: 1.25rem;
+            font-style: italic;
+            color: var(--ink-2);
+            margin: 1.75rem 0;
+        }
+    }
+
+    /* ===================================================================
+       Contact block — partner office address card. Formal layout,
+       gold rule above, mailing-address style.
+       =================================================================== */
+    .contact-block {
+        background: var(--color-surface-inset);
+        border-top: 1px solid var(--color-accent);
+        padding: 2.5rem 1.75rem 2.75rem;
+
+        h3 {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 500;
+            margin: 0 0 1rem;
+        }
+
+        address {
+            font-style: normal;
+            font-family: var(--font-body);
+            font-size: 1rem;
+            line-height: 1.65;
+            color: var(--color-ink);
+        }
+
+        a[href^="tel:"],
+        a[href^="mailto:"] {
+            color: var(--color-accent);
+            text-decoration: none;
+            border-bottom: 1px solid var(--color-accent);
+        }
+    }
+
+    /* ===================================================================
+       Opening hours — chambers' availability. Plain list with day
+       on the left, hours on the right; closed days dimmed.
+       =================================================================== */
+    .opening-hours {
+        padding: 2rem 1.75rem 2.5rem;
+        max-width: 420px;
+
+        h3 {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 500;
+            margin: 0 0 1rem;
+        }
+        h3::after {
+            content: '';
+            display: block;
+            width: 36px;
+            height: 1px;
+            background: var(--color-accent);
+            margin-top: 0.75rem;
+        }
+
+        dl {
+            display: grid;
+            grid-template-columns: max-content 1fr;
+            gap: 0.5rem 1.5rem;
+            margin: 0;
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+        }
+
+        dt {
+            font-weight: 600;
+            color: var(--color-ink);
+        }
+        dd {
+            margin: 0;
+            color: var(--ink-2);
+            text-align: right;
+        }
+
+        &__closed dd,
+        dd[data-closed] {
+            color: var(--color-rule);
+            font-style: italic;
+        }
+    }
+
+    /* ===================================================================
+       Site footer — MULTI-COLUMN with practice areas, firm info,
+       publications, contact. Conservative, dense, mailing-address
+       formality.
+       =================================================================== */
+    .site-footer {
+        background: var(--color-surface-inset);
+        color: var(--color-ink);
+        padding: 4rem 1.75rem 2rem;
+        border-top: 2px solid var(--color-accent);
+
+        @media (min-width: 880px) {
+            padding: 5rem 3rem 2.5rem;
+        }
+
+        &__columns {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2.5rem;
+
+            @media (min-width: 720px) {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            @media (min-width: 1080px) {
+                grid-template-columns: 1.4fr repeat(3, 1fr);
+                gap: 3rem;
+            }
+        }
+
+        h4 {
+            font-family: var(--font-display);
+            font-size: 0.9375rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin: 0 0 1.25rem;
+            color: var(--color-accent);
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+
+            li {
+                margin-bottom: 0.625rem;
+                font-family: var(--font-body);
+                font-size: 0.9375rem;
+                line-height: 1.5;
+            }
+        }
+
+        a {
+            color: var(--color-ink);
+            text-decoration: none;
+        }
+        a:hover {
+            color: var(--color-accent);
+        }
+
+        &__wordmark {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+            color: var(--color-ink);
+        }
+
+        &__legal {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--color-rule);
+            font-family: var(--font-body);
+            font-size: 0.8125rem;
+            color: var(--ink-2);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+    }
+}
+
+/* Legal-firm overrides — end. */

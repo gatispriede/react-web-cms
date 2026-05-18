@@ -1,0 +1,436 @@
+/* ==========================================================================
+   Journal — per-module overrides.
+
+   Scope: [data-theme-name="journal"]. Restrained academic aesthetic:
+   very narrow body measure (60-65ch), small-caps section headings,
+   drop-cap first paragraph in long copy, footnote-style numbered
+   superscripts via CSS counters, and text-only `.blog-feed` rows
+   (no thumbnails — scholarly journals don't lead with imagery).
+
+   Token-driven modules already inherit palette + typography from
+   `theme.scss`. The overrides below cover only the blocks whose default
+   geometry would feel too marketing-y or photo-led for a scholarly site.
+
+   Visual baselines under `tests/e2e/visual/__snapshots__/themes/journal/`.
+   ========================================================================== */
+
+[data-theme-name="journal"] {
+
+    /* ===================================================================
+       Header — `sticky-static`. Always present, never animates. A
+       quiet pinned band: small-caps wordmark, thin rule below, no
+       backdrop blur, no scroll-driven state changes.
+       =================================================================== */
+    .main-nav {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: var(--color-surface);
+        border-bottom: 1px solid var(--color-rule);
+        padding: 1rem 1.5rem;
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+
+        .logo, .site-logo {
+            font-family: var(--font-display);
+            font-variant: small-caps;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            font-size: 1.25rem;
+        }
+
+        ul {
+            display: flex;
+            gap: 1.5rem;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        a {
+            font-family: var(--font-body);
+            font-variant: small-caps;
+            letter-spacing: 0.05em;
+            font-size: 0.95rem;
+            color: var(--color-ink);
+            text-decoration: none;
+
+            &:hover { color: var(--color-accent); }
+        }
+    }
+
+    /* ===================================================================
+       Hero — VARIANT: TYPESET TITLE BLOCK. No photo, no overlay.
+       Just a centred title, italic dek, hairline rules above/below,
+       like an essay opening page. Heroic only in restraint.
+       =================================================================== */
+    .hero {
+        padding: 5rem 1.5rem 4rem;
+        text-align: center;
+        max-width: 68ch;
+        margin: 0 auto;
+        border-bottom: 1px solid var(--color-rule);
+
+        &__eyebrow {
+            font-family: var(--font-body);
+            font-variant: small-caps;
+            letter-spacing: 0.12em;
+            font-size: 0.875rem;
+            color: var(--color-accent);
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        &__title, .hero__title {
+            font-family: var(--font-display);
+            font-size: clamp(2.25rem, 4.5vw, 3.5rem);
+            line-height: 1.1;
+            font-weight: 600;
+            letter-spacing: -0.005em;
+            margin: 0 0 1rem;
+        }
+
+        &__dek {
+            font-family: var(--font-display);
+            font-style: italic;
+            font-size: 1.25rem;
+            line-height: 1.5;
+            color: color-mix(in srgb, var(--color-ink) 80%, transparent);
+            max-width: 52ch;
+            margin: 0 auto;
+        }
+
+        &__bg, &__portrait { display: none; }
+    }
+
+    /* ===================================================================
+       Footer — minimal-1row. A single quiet line: credit + a few
+       reference links. No columns, no logo banner.
+       =================================================================== */
+    .site-footer {
+        border-top: 1px solid var(--color-rule);
+        padding: 2rem 1.5rem;
+        text-align: center;
+        font-family: var(--font-body);
+        font-size: 0.875rem;
+        color: color-mix(in srgb, var(--color-ink) 70%, transparent);
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 0.5rem;
+            display: inline-flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        a {
+            color: var(--color-ink);
+            text-decoration: underline;
+            text-underline-offset: 0.2em;
+            text-decoration-thickness: 1px;
+
+            &:hover { color: var(--color-accent); }
+        }
+    }
+
+    /* ===================================================================
+       Blog feed + post — editorial layout, TEXT ONLY. No thumbnails.
+       Each row is title + date + short dek + read-time. Academic
+       index-of-essays feel.
+       =================================================================== */
+    .blog-feed {
+        max-width: 65ch;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+
+        &__item, article {
+            padding: 1.5rem 0;
+            border-bottom: 1px solid var(--color-rule);
+
+            img, picture, .blog-feed__thumb { display: none; }
+        }
+
+        &__date, &__meta {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            color: color-mix(in srgb, var(--color-ink) 60%, transparent);
+            text-transform: uppercase;
+        }
+
+        &__title {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            line-height: 1.2;
+            font-weight: 600;
+            margin: 0.25rem 0 0.5rem;
+
+            a { color: var(--color-ink); text-decoration: none; }
+            a:hover { color: var(--color-accent); }
+        }
+
+        &__dek {
+            font-family: var(--font-display);
+            font-style: italic;
+            color: color-mix(in srgb, var(--color-ink) 80%, transparent);
+            margin: 0;
+        }
+    }
+
+    .blog-post {
+        max-width: 62ch;
+        margin: 0 auto;
+        padding: 3rem 1.5rem;
+        counter-reset: footnote;
+
+        &__title {
+            font-family: var(--font-display);
+            font-size: clamp(2.25rem, 4vw, 3.25rem);
+            font-weight: 600;
+            line-height: 1.1;
+            margin: 0 0 0.5rem;
+            text-align: center;
+        }
+
+        &__meta {
+            font-family: var(--font-body);
+            font-variant: small-caps;
+            letter-spacing: 0.08em;
+            font-size: 0.875rem;
+            text-align: center;
+            color: color-mix(in srgb, var(--color-ink) 60%, transparent);
+            margin: 0 0 2.5rem;
+        }
+
+        // Drop-cap first paragraph.
+        p:first-of-type::first-letter {
+            font-family: var(--font-display);
+            font-size: 3.5em;
+            float: left;
+            line-height: 0.85;
+            padding: 0.05em 0.1em 0 0;
+            font-weight: 600;
+            color: var(--color-accent);
+        }
+
+        // Footnote superscripts via CSS counter.
+        .footnote-ref {
+            counter-increment: footnote;
+            vertical-align: super;
+            font-size: 0.7em;
+            color: var(--color-accent);
+
+            &::before { content: counter(footnote); }
+        }
+    }
+
+    /* ===================================================================
+       Timeline — vertical-rail (per theme.json moduleStyleHints).
+       Hairline rail, small-caps dates, no icons.
+       =================================================================== */
+    .timeline {
+        max-width: 60ch;
+        margin: 0 auto;
+        padding-left: 2rem;
+        border-left: 1px solid var(--color-rule);
+
+        &__item {
+            position: relative;
+            padding: 0.75rem 0 1.5rem;
+
+            &::before {
+                content: "";
+                position: absolute;
+                left: -2.31rem;
+                top: 1.2rem;
+                width: 9px;
+                height: 9px;
+                border: 1px solid var(--color-accent);
+                background: var(--color-surface);
+                border-radius: 50%;
+            }
+        }
+
+        &__date {
+            font-family: var(--font-body);
+            font-variant: small-caps;
+            letter-spacing: 0.08em;
+            font-size: 0.875rem;
+            color: var(--color-accent);
+        }
+
+        &__title {
+            font-family: var(--font-display);
+            font-size: 1.1875rem;
+            font-weight: 600;
+            margin: 0.15rem 0 0.35rem;
+        }
+
+        &__body {
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            line-height: 1.55;
+            color: color-mix(in srgb, var(--color-ink) 85%, transparent);
+        }
+    }
+
+    /* ===================================================================
+       Project grid / card — quiet text-led cards. No imagery emphasis.
+       =================================================================== */
+    .project-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 2rem;
+        padding: 2rem 0;
+    }
+
+    .project-card {
+        background: transparent;
+        border: none;
+        border-top: 1px solid var(--color-rule);
+        padding: 1.25rem 0 0;
+        border-radius: 0;
+
+        img { display: none; }
+
+        &__title {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0 0 0.25rem;
+        }
+
+        &__meta {
+            font-family: var(--font-body);
+            font-variant: small-caps;
+            letter-spacing: 0.06em;
+            font-size: 0.8125rem;
+            color: color-mix(in srgb, var(--color-ink) 60%, transparent);
+        }
+
+        &__desc {
+            font-family: var(--font-body);
+            font-size: 0.975rem;
+            line-height: 1.55;
+            margin-top: 0.5rem;
+        }
+    }
+
+    /* ===================================================================
+       Testimonials — citation-styled blockquotes with em-dash attribution.
+       =================================================================== */
+    .testimonials {
+        max-width: 60ch;
+        margin: 0 auto;
+        padding: 2rem 0;
+
+        &__item, blockquote {
+            font-family: var(--font-display);
+            font-style: italic;
+            font-size: 1.125rem;
+            line-height: 1.55;
+            border: none;
+            border-left: 2px solid var(--color-accent);
+            padding: 0.25rem 0 0.25rem 1.25rem;
+            margin: 0 0 2rem;
+        }
+
+        cite, &__attr {
+            display: block;
+            margin-top: 0.5rem;
+            font-family: var(--font-body);
+            font-style: normal;
+            font-variant: small-caps;
+            letter-spacing: 0.06em;
+            font-size: 0.8125rem;
+            color: color-mix(in srgb, var(--color-ink) 65%, transparent);
+
+            &::before { content: "— "; }
+        }
+    }
+
+    /* ===================================================================
+       Section heading — small-caps with hairline above.
+       =================================================================== */
+    .section-heading {
+        margin: 3rem auto 1.5rem;
+        max-width: 62ch;
+        padding-top: 1rem;
+        border-top: 1px solid var(--color-rule);
+
+        &__eyebrow {
+            font-family: var(--font-body);
+            font-variant: small-caps;
+            letter-spacing: 0.12em;
+            font-size: 0.8125rem;
+            color: var(--color-accent);
+            margin-bottom: 0.25rem;
+        }
+
+        &__title {
+            font-family: var(--font-display);
+            font-variant: small-caps;
+            letter-spacing: 0.04em;
+            font-weight: 600;
+            font-size: clamp(1.5rem, 2.5vw, 2rem);
+            line-height: 1.15;
+            margin: 0;
+        }
+    }
+
+    /* ===================================================================
+       Rich text / plain text — narrow measure, drop-cap on first para.
+       =================================================================== */
+    .rich-text, .plain-text {
+        font-family: var(--font-body);
+        font-size: 1.125rem;
+        line-height: 1.7;
+        color: var(--color-ink);
+        max-width: 62ch;
+        margin-inline: auto;
+        counter-reset: footnote;
+
+        p { margin: 0 0 1.1em; }
+
+        a {
+            color: var(--color-accent);
+            text-decoration: underline;
+            text-underline-offset: 0.2em;
+            text-decoration-thickness: 1px;
+        }
+
+        blockquote {
+            font-style: italic;
+            border-left: 2px solid var(--color-accent);
+            padding-left: 1.25rem;
+            margin: 1.5rem 0;
+            color: color-mix(in srgb, var(--color-ink) 85%, transparent);
+        }
+
+        sup.footnote-ref {
+            counter-increment: footnote;
+            color: var(--color-accent);
+
+            &::before { content: counter(footnote); }
+        }
+    }
+
+    .rich-text p:first-of-type::first-letter {
+        font-family: var(--font-display);
+        font-size: 3.25em;
+        float: left;
+        line-height: 0.85;
+        padding: 0.05em 0.1em 0 0;
+        font-weight: 600;
+        color: var(--color-accent);
+    }
+
+    // plain-text keeps the narrow measure but no drop-cap (utilitarian).
+    .plain-text { font-family: var(--font-body); }
+}
+
+/* End journal/module-styles.scss */

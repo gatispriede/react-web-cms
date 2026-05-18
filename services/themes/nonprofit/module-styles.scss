@@ -1,0 +1,868 @@
+/* ==========================================================================
+   Nonprofit — per-module overrides.
+
+   Warm and hopeful. The mission is the message and the donate CTA is the
+   load-bearing element on every page. Sofia Sans display + Source Sans 3
+   body — humanist sans pairing that reads as approachable, never corporate.
+   Terracotta on cream, generous breathing room, gentle-slow motion. Where
+   agency shouts in 9rem all-caps and portfolio whispers in italic serif,
+   nonprofit speaks at conversational volume — confident but kind.
+
+   Module priorities for a nonprofit / cause site:
+   1. Hero — mission statement + donate CTA, side by side
+   2. InquiryForm — donation form variant (amount buttons + "other")
+   3. FeatureGrid — program cards with impact-stat callouts
+   4. Testimonials — beneficiary stories with photo + first name
+   5. Footer — multi-column with cause / program links
+   6. SectionHeading — eyebrow + heading + supporting copy
+   7. CTA — donate buttons, sign-up affordances
+
+   Visual baselines under `tests/e2e/visual/__snapshots__/themes/nonprofit/`.
+   ========================================================================== */
+
+[data-theme-name="nonprofit"] {
+
+    /* ===================================================================
+       Header / nav — sticky-static. Always visible (a donate link should
+       never scroll away). Cream surface with a slight translucent veil,
+       hairline rule, terracotta on hover. The Donate CTA at the right
+       end gets the accent fill so it reads as the priority action.
+       =================================================================== */
+    .main-nav {
+        background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+        backdrop-filter: blur(10px);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        padding: 1.25rem 2.25rem;
+        border-bottom: 1px solid var(--color-rule);
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+
+        a {
+            color: var(--color-ink);
+            font-family: var(--font-body);
+            font-weight: 600;
+            font-size: 0.9375rem;
+            letter-spacing: -0.005em;
+            text-decoration: none;
+            transition: color var(--motion-duration-fast) var(--motion-ease-standard);
+
+            &:hover { color: var(--color-accent); }
+
+            // Donate-CTA emphasis inside the nav.
+            &.cta--donate,
+            &[data-variant="donate"] {
+                background: var(--color-accent);
+                color: var(--color-accent-ink);
+                padding: 0.55rem 1.1rem;
+                border-radius: 999px;
+                margin-left: auto;
+
+                &:hover {
+                    background: var(--accent-hover);
+                    color: var(--color-accent-ink);
+                }
+            }
+        }
+    }
+
+    /* ===================================================================
+       Hero — VARIANT: MISSION-STATEMENT PROMINENT. Large humanist
+       headline on the left, supporting copy + Donate CTA below. Optional
+       portrait of a beneficiary on the right with a soft terracotta
+       wash. The hero argues for the cause first, then offers the act.
+
+       Structural axis vs siblings:
+         agency = centred overlay (headline overlaps portrait)
+         portfolio = split with portrait beside (equal weight)
+         nonprofit = MISSION-LEFT, ACT-NEXT — copy carries the weight,
+                     portrait supports, donate button is unmistakable.
+       =================================================================== */
+    .hero {
+        min-height: 78vh;
+        display: flex;
+        align-items: center;
+        gap: 3.5rem;
+        padding: 4.5rem 2.25rem;
+        max-width: 1440px;
+        margin: 0 auto;
+        position: relative;
+
+        &__main {
+            flex: 1 1 58%;
+            max-width: 36em;
+        }
+
+        h1,
+        &__headline {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: clamp(2.5rem, 6.5vw, 4.75rem);
+            line-height: 1.04;
+            letter-spacing: -0.018em;
+            color: var(--color-ink);
+            margin: 0 0 1.5rem;
+
+            // Em-runs become terracotta-stressed phrases — "every child
+            // deserves a meal" sort of cadence.
+            em, .em-accent {
+                font-style: normal;
+                color: var(--color-accent);
+                font-weight: 700;
+            }
+        }
+
+        &__subtitle,
+        &__tagline {
+            font-family: var(--font-body);
+            font-size: 1.1875rem;
+            line-height: 1.6;
+            color: var(--ink-2);
+            max-width: 44ch;
+            margin: 0 0 2.25rem;
+        }
+
+        &__cta-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.875rem;
+            justify-content: flex-start;
+        }
+
+        &__meta,
+        &__coords {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-top: 2.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--color-rule);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+        }
+
+        // Beneficiary portrait — soft 12px radius, terracotta cast on
+        // hover. The face on the page matters; treat it warmly.
+        &--has-portrait {
+            .hero__portrait {
+                flex: 0 0 40%;
+                max-width: 460px;
+                aspect-ratio: 4 / 5;
+                border-radius: 12px;
+                overflow: hidden;
+                background: var(--color-surface-inset);
+                box-shadow: 0 1px 0 var(--color-rule),
+                            0 28px 60px -34px rgba(168, 66, 26, 0.28);
+
+                img, .ant-image-img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    transition: transform var(--motion-duration-slow) var(--motion-ease-emphasized);
+                }
+
+                &:hover img,
+                &:hover .ant-image-img { transform: scale(1.03); }
+            }
+        }
+
+        animation: nonprofit-hero-enter var(--motion-duration-deliberate) var(--motion-ease-entrance) backwards;
+
+        @media (max-width: 900px) {
+            flex-direction: column;
+            min-height: auto;
+            padding: 3.5rem 1.5rem;
+            gap: 2.25rem;
+
+            &__main { max-width: 100%; }
+            &--has-portrait .hero__portrait {
+                flex: 0 0 auto;
+                width: 100%;
+                max-width: 360px;
+            }
+        }
+    }
+
+    @keyframes nonprofit-hero-enter {
+        from { opacity: 0; transform: translateY(var(--motion-distance-md)); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===================================================================
+       SectionHeading — eyebrow in terracotta mono uppercase, heading in
+       Sofia Sans display, supporting copy in body. Generous bottom
+       padding to give programs / stories room to land.
+       =================================================================== */
+    .section-heading {
+        max-width: 1300px;
+        margin: 0 auto;
+        padding: 4rem 2.25rem 2.5rem;
+
+        .sh-root {
+            display: grid;
+            gap: 1rem;
+            padding-bottom: 1.75rem;
+            border-bottom: 1px solid var(--color-rule);
+        }
+
+        .sh-eyebrow {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--color-accent);
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .sh-heading {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: clamp(1.875rem, 4.2vw, 3.25rem);
+            line-height: 1.08;
+            letter-spacing: -0.018em;
+            color: var(--color-ink);
+            margin: 0;
+        }
+
+        .sh-subtitle {
+            font-family: var(--font-body);
+            font-size: 1.125rem;
+            line-height: 1.55;
+            color: var(--ink-2);
+            max-width: 58ch;
+            margin: 0;
+        }
+    }
+
+    /* ===================================================================
+       FeatureGrid — VARIANT: PROGRAM CARDS WITH IMPACT-STAT CALLOUTS.
+       Each card is one program (After-school tutoring, Food bank, etc.).
+       The number leads — "12,400 meals served this year" — set in
+       oversized display weight so the impact lands before the copy.
+       Hover lifts the card a half-step and tints the rule terracotta.
+       =================================================================== */
+    .feature-grid {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 3.5rem 2.25rem;
+        list-style: none;
+        display: grid;
+        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+
+        &--cols-2 { grid-template-columns: repeat(2, 1fr); }
+        &--cols-3 { grid-template-columns: repeat(3, 1fr); }
+
+        @media (max-width: 720px) {
+            grid-template-columns: 1fr !important;
+        }
+
+        &__card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-rule);
+            border-radius: 12px;
+            padding: 2rem 1.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            transition: border-color var(--motion-duration-base) var(--motion-ease-standard),
+                        transform var(--motion-duration-base) var(--motion-ease-emphasized),
+                        box-shadow var(--motion-duration-base) var(--motion-ease-standard);
+
+            &:hover {
+                border-color: var(--color-accent);
+                transform: translateY(-3px);
+                box-shadow: 0 18px 40px -28px rgba(168, 66, 26, 0.25);
+            }
+        }
+
+        // Impact-stat callout — oversized display numeral on top of the
+        // card. The number is the headline; the label sits beneath in
+        // mono uppercase. Reads like a quiet annual report.
+        &__stat,
+        &__icon {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: clamp(2.25rem, 4vw, 3.25rem);
+            line-height: 1;
+            letter-spacing: -0.025em;
+            color: var(--color-accent);
+            margin-bottom: 0.25rem;
+        }
+
+        &__title {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.25rem;
+            letter-spacing: -0.01em;
+            line-height: 1.2;
+            margin: 0;
+            color: var(--color-ink);
+        }
+
+        &__desc {
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            line-height: 1.55;
+            color: var(--ink-2);
+            margin: 0;
+        }
+    }
+
+    /* ===================================================================
+       Testimonials — VARIANT: BENEFICIARY STORIES. Soft-rounded photo on
+       top, story in body sans, attribution as FIRST-NAME-ONLY in mono
+       (privacy + dignity). Terracotta opening quote glyph.
+       =================================================================== */
+    .testimonials,
+    .testimonials-module {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 5rem 2.25rem;
+
+        &__head {
+            margin-bottom: 3.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--color-rule);
+        }
+
+        &__title {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: clamp(1.875rem, 4vw, 3rem);
+            line-height: 1.08;
+            letter-spacing: -0.018em;
+            color: var(--color-ink);
+            margin: 0 0 0.625rem;
+        }
+
+        &__sub {
+            font-family: var(--font-body);
+            font-size: 1rem;
+            line-height: 1.55;
+            color: var(--ink-2);
+            max-width: 56ch;
+        }
+
+        &__grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+
+            @media (min-width: 820px) {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            @media (min-width: 1100px) {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        &__card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-rule);
+            border-radius: 14px;
+            padding: 1.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            position: relative;
+            transition: border-color var(--motion-duration-base) var(--motion-ease-standard),
+                        transform var(--motion-duration-base) var(--motion-ease-emphasized);
+
+            &::before {
+                content: '\201C';
+                position: absolute;
+                top: 0.5rem;
+                right: 1.25rem;
+                font-family: var(--font-display);
+                font-size: 4.5rem;
+                line-height: 0.6;
+                color: var(--color-accent);
+                opacity: 0.32;
+                pointer-events: none;
+            }
+
+            &:hover {
+                border-color: var(--color-accent);
+                transform: translateY(-2px);
+            }
+        }
+
+        &__photo,
+        &__avatar {
+            width: 4.5rem;
+            height: 4.5rem;
+            border-radius: 999px;
+            background: var(--color-surface-inset);
+            border: 2px solid var(--color-rule);
+            overflow: hidden;
+            flex-shrink: 0;
+
+            img { width: 100%; height: 100%; object-fit: cover; }
+        }
+
+        &__quote {
+            font-family: var(--font-body);
+            font-size: 1.0625rem;
+            line-height: 1.55;
+            color: var(--color-ink);
+            margin: 0;
+            quotes: none;
+            &::before, &::after { content: none; }
+        }
+
+        &__who {
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--color-rule);
+        }
+
+        &__name {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--color-ink);
+        }
+
+        &__role {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+        }
+    }
+
+    /* ===================================================================
+       InquiryForm — VARIANT: DONATION FORM. The most important form on
+       the site. Big amount buttons in a row (suggested giving levels),
+       an "Other" free-entry field, then the contact details below.
+       Terracotta fill on selected amount; large, unmissable submit
+       button at the bottom.
+       =================================================================== */
+    .inquiry-form {
+        max-width: 640px;
+        margin: 4rem auto;
+        padding: 2.5rem 2.25rem;
+        background: var(--color-surface);
+        border: 1px solid var(--color-rule);
+        border-radius: 16px;
+        box-shadow: 0 20px 50px -32px rgba(168, 66, 26, 0.22);
+
+        &__title,
+        h2, h3 {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: clamp(1.5rem, 3vw, 2rem);
+            line-height: 1.1;
+            letter-spacing: -0.015em;
+            color: var(--color-ink);
+            margin: 0 0 0.5rem;
+        }
+
+        &__lede,
+        &__intro {
+            font-family: var(--font-body);
+            font-size: 1rem;
+            line-height: 1.55;
+            color: var(--ink-2);
+            margin: 0 0 1.75rem;
+        }
+
+        // Amount-button row — flagship donation control.
+        &__amounts,
+        &__amount-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.625rem;
+            margin-bottom: 1.25rem;
+
+            @media (max-width: 480px) {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        &__amount,
+        &__amount-btn {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.0625rem;
+            color: var(--color-ink);
+            background: var(--color-surface-inset);
+            border: 2px solid var(--color-rule);
+            border-radius: 10px;
+            padding: 0.95rem 0.5rem;
+            cursor: pointer;
+            text-align: center;
+            transition: border-color var(--motion-duration-fast) var(--motion-ease-standard),
+                        background var(--motion-duration-fast) var(--motion-ease-standard),
+                        color var(--motion-duration-fast) var(--motion-ease-standard),
+                        transform var(--motion-duration-fast) var(--motion-ease-emphasized);
+
+            &:hover {
+                border-color: var(--color-accent);
+                transform: translateY(-1px);
+            }
+
+            &[aria-pressed="true"],
+            &.is-selected,
+            &--selected {
+                background: var(--color-accent);
+                color: var(--color-accent-ink);
+                border-color: var(--color-accent);
+            }
+        }
+
+        // "Other amount" — wider input row beneath the preset buttons.
+        &__other,
+        &__amount-other {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 0.625rem;
+            align-items: center;
+            margin-bottom: 1.5rem;
+
+            label {
+                font-family: var(--font-mono);
+                font-size: 0.75rem;
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+                color: var(--ink-2);
+            }
+        }
+
+        label {
+            display: block;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+            margin-bottom: 0.375rem;
+            font-weight: 600;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="number"],
+        input[type="tel"],
+        textarea,
+        select {
+            width: 100%;
+            font-family: var(--font-body);
+            font-size: 1rem;
+            color: var(--color-ink);
+            background: var(--color-surface);
+            border: 1px solid var(--color-rule);
+            border-radius: 10px;
+            padding: 0.75rem 0.875rem;
+            margin-bottom: 1.125rem;
+            transition: border-color var(--motion-duration-fast) var(--motion-ease-standard),
+                        box-shadow var(--motion-duration-fast) var(--motion-ease-standard);
+
+            &:focus {
+                outline: none;
+                border-color: var(--color-accent);
+                box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 22%, transparent);
+            }
+        }
+
+        textarea { min-height: 7rem; resize: vertical; }
+
+        &__submit,
+        button[type="submit"] {
+            display: block;
+            width: 100%;
+            background: var(--color-accent);
+            color: var(--color-accent-ink);
+            border: none;
+            border-radius: 999px;
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.0625rem;
+            letter-spacing: -0.005em;
+            padding: 1rem 1.5rem;
+            min-height: 52px;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            transition: background var(--motion-duration-fast) var(--motion-ease-standard),
+                        transform var(--motion-duration-fast) var(--motion-ease-emphasized);
+
+            &:hover {
+                background: var(--accent-hover);
+                transform: translateY(-1px);
+            }
+        }
+
+        &__reassure,
+        &__footnote {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+            text-align: center;
+            margin-top: 1rem;
+        }
+    }
+
+    /* ===================================================================
+       CTA — donate buttons + secondary affordances. Pill shape, big tap
+       target, accent fill primary, hairline ghost secondary. The donate
+       button needs to look like a yes.
+       =================================================================== */
+    .cta,
+    .cta--donate,
+    .place-order-button,
+    .pricing-table__cta,
+    .product-detail-hero__cta,
+    .event-buy-tickets-cta__trigger {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        background: var(--color-accent);
+        color: var(--color-accent-ink);
+        border: 2px solid var(--color-accent);
+        border-radius: 999px;
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 1rem;
+        letter-spacing: -0.005em;
+        padding: 0.85rem 1.6rem;
+        min-height: 48px;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background var(--motion-duration-fast) var(--motion-ease-standard),
+                    border-color var(--motion-duration-fast) var(--motion-ease-standard),
+                    transform var(--motion-duration-fast) var(--motion-ease-emphasized);
+
+        &:hover:not(:disabled) {
+            background: var(--accent-hover);
+            border-color: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+
+        &--ghost,
+        &.secondary {
+            background: transparent;
+            color: var(--color-ink);
+            border-color: var(--color-rule);
+
+            &:hover {
+                border-color: var(--color-accent);
+                color: var(--color-accent);
+                background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+            }
+        }
+    }
+
+    /* ===================================================================
+       Rich-text / plain-text body — generous line-height, terracotta
+       drop-cap optional, gentle paragraph rhythm. The voice is
+       conversational; the type should breathe.
+       =================================================================== */
+    .rich-text,
+    .plain-text {
+        max-width: 64ch;
+        margin: 3rem auto;
+        padding: 0 2.25rem;
+        font-family: var(--font-body);
+        font-size: 1.0625rem;
+        line-height: 1.65;
+        color: var(--color-ink);
+
+        h2 {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.75rem;
+            line-height: 1.15;
+            letter-spacing: -0.015em;
+            margin: 2.5rem 0 0.875rem;
+        }
+
+        h3 {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.3125rem;
+            line-height: 1.2;
+            margin: 2rem 0 0.625rem;
+        }
+
+        p { margin: 0 0 1.25rem; }
+
+        a {
+            color: var(--color-accent);
+            text-decoration: underline;
+            text-decoration-thickness: 1px;
+            text-underline-offset: 3px;
+
+            &:hover { text-decoration-thickness: 2px; }
+        }
+
+        blockquote {
+            margin: 2rem 0;
+            padding: 1.25rem 1.5rem;
+            border-left: 3px solid var(--color-accent);
+            background: var(--color-surface-inset);
+            border-radius: 0 10px 10px 0;
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 1.1875rem;
+            line-height: 1.4;
+            color: var(--color-ink);
+        }
+    }
+
+    /* ===================================================================
+       Footer — multi-column with cause / program links. Wordmark up top,
+       three or four columns (Programs / Get involved / About / Contact),
+       legal strip beneath a hairline rule. The footer of a nonprofit
+       carries a LOT of links; lay it out for scannability.
+       =================================================================== */
+    .site-footer {
+        background: var(--color-surface-inset);
+        color: var(--color-ink);
+        padding: 5rem 2.25rem 2.5rem;
+        border-top: 1px solid var(--color-rule);
+
+        > .site-footer__wordmark,
+        .site-footer__brand {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: clamp(1.875rem, 4.5vw, 2.875rem);
+            letter-spacing: -0.018em;
+            color: var(--color-accent);
+            margin: 0 0 2.25rem;
+            display: block;
+            line-height: 1;
+        }
+
+        h4, .site-footer__heading {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--color-accent);
+            margin-bottom: 1rem;
+        }
+
+        a {
+            color: var(--color-ink);
+            text-decoration: none;
+            font-family: var(--font-body);
+            font-weight: 500;
+            font-size: 0.9375rem;
+            transition: color var(--motion-duration-fast) var(--motion-ease-standard);
+
+            &:hover { color: var(--color-accent); }
+        }
+
+        .site-footer__columns,
+        > .site-footer__cols {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 2.25rem 2.5rem;
+            padding-bottom: 2.75rem;
+            border-bottom: 1px solid var(--color-rule);
+        }
+
+        .site-footer__column,
+        .site-footer__col {
+            display: flex;
+            flex-direction: column;
+            gap: 0.625rem;
+        }
+
+        // Footer-level donate strip — last-chance affordance.
+        .site-footer__donate,
+        .site-footer__cta-strip {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            border-radius: 12px;
+            background: var(--color-accent);
+            color: var(--color-accent-ink);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+
+            a {
+                color: var(--color-accent-ink);
+                font-family: var(--font-display);
+                font-weight: 700;
+                text-decoration: underline;
+            }
+        }
+
+        .site-footer__meta,
+        .site-footer__legal {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-top: 2rem;
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+        }
+    }
+
+    /* ===================================================================
+       Gallery — soft-radius tile grid. Nonprofit galleries usually show
+       events, beneficiaries, or program in action. Gentle hover zoom,
+       terracotta caption strip on hover.
+       =================================================================== */
+    .gallery-wrapper.gallery-wrapper-app {
+        &.default, &.Default, &.masonry {
+            padding: 3rem 2.25rem;
+            max-width: 1400px;
+            margin: 0 auto;
+
+            .gallery-wrapper-images {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                gap: 1.25rem;
+            }
+
+            .container {
+                border-radius: 12px;
+                overflow: hidden;
+                background: var(--color-surface-inset);
+                position: relative;
+                aspect-ratio: 4 / 3;
+
+                img { transition: transform var(--motion-duration-slow) var(--motion-ease-emphasized); }
+                &:hover img { transform: scale(1.04); }
+
+                .text {
+                    position: absolute;
+                    inset: auto 0 0 0;
+                    padding: 1rem;
+                    background: linear-gradient(180deg, transparent, rgba(28, 26, 23, 0.72));
+                    p {
+                        margin: 0;
+                        font-family: var(--font-mono);
+                        font-size: 0.75rem;
+                        letter-spacing: 0.06em;
+                        text-transform: uppercase;
+                        color: var(--color-surface);
+                    }
+                }
+            }
+        }
+    }
+}
+
+/* nonprofit module-styles — terracotta on cream, mission-first, donate-loud. */
