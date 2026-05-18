@@ -1,0 +1,106 @@
+/* ==========================================================================
+   News — first-class theme.
+
+   Cream newsprint surface + near-black ink + breaking-red accent. Playfair
+   Display headlines over PT Serif body, snappy-default motion. Scoped under
+   `[data-theme-name="news"]`. Built for daily-paper scannability — thick
+   rules, tight typographic hierarchy, civic-confident voice.
+
+   Bespoke visuals live in `module-styles.scss` alongside.
+   ========================================================================== */
+
+[data-theme-name="news"] {
+    /* ---- Semantic palette (light, dark) — mirrors theme.json. ---------- */
+    --color-surface:       light-dark(#FBF9F4, #121110);
+    --color-ink:           light-dark(#0E0D0B, #F1EEE6);
+    --color-accent:        light-dark(#B3261E, #E54B3C);
+    --color-accent-ink:    light-dark(#FBF9F4, #11100E);
+    --color-surface-inset: light-dark(#F2EFE7, #1B1A18);
+    --color-rule:          light-dark(#1A1916, #3B3833);
+
+    /* Legacy aliases — many modules still read these without the
+       --color- prefix. Mirror so older SCSS keeps rendering correctly. */
+    --background: var(--color-surface);
+    --ink:    var(--color-ink);
+    --ink-2:  color-mix(in srgb, var(--color-ink) 65%, transparent);
+    --accent: var(--color-accent);
+    --accent-hover: color-mix(in srgb, var(--color-accent) 85%, #000);
+
+    /* ---- Typography ---------------------------------------------------- */
+    --font-display: 'Playfair Display', 'PT Serif', ui-serif, Georgia, 'Times New Roman', serif;
+    --font-body:    'PT Serif', Georgia, 'Times New Roman', ui-serif, serif;
+    --font-mono:    ui-monospace, 'SF Mono', Menlo, monospace;
+
+    /* AntD ConfigProvider bridge — chrome inherits the news display face. */
+    --theme-headingFont: var(--font-display);
+    --theme-bodyFont:    var(--font-body);
+
+    font-size: 16px;
+
+    /* ---- Motion personality (snappy-default) --------------------------- */
+    --motion-duration-fast:       150ms;
+    --motion-duration-base:       240ms;
+    --motion-duration-slow:       400ms;
+    --motion-duration-deliberate: 640ms;
+    --motion-ease-standard:       cubic-bezier(0.2, 0, 0, 1);
+    --motion-ease-entrance:       cubic-bezier(0, 0, 0.15, 1);
+    --motion-ease-emphasized:     cubic-bezier(0.3, 0, 0.1, 1);
+
+    --motion-distance-sm: 8px;
+    --motion-distance-md: 24px;
+    --motion-distance-lg: 64px;
+
+    /* ---- Borders + radii ---------------------------------------------- */
+    /* Newsprint hates rounded corners — keep edges crisp. */
+    --theme-borderRadius: 0px;
+
+    /* ---- Body baseline ------------------------------------------------- */
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+
+    /* ---- Signature touches -------------------------------------------- */
+    /* Slab-leaning serif headlines, packed tight. */
+    h1, h2, h3,
+    .heading,
+    .heading--display {
+        font-family: var(--font-display);
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        line-height: 1.1;
+    }
+
+    /* Thick separator rules — masthead-style dividers between stories. */
+    hr,
+    .module-section-divider {
+        border: 0;
+        border-top: 2px solid var(--color-ink);
+        margin-block: 1.5rem;
+    }
+
+    /* Breaking-red links — underline reveals on hover, scan-friendly. */
+    a {
+        color: var(--color-accent);
+        text-decoration: none;
+        border-bottom: 1px solid transparent;
+        transition: border-color var(--motion-duration-fast) var(--motion-ease-standard);
+    }
+    a:hover {
+        border-bottom-color: var(--color-accent);
+    }
+
+    /* Mono kicker labels for section eyebrows. */
+    .label--mono,
+    .meta--mono {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-2);
+    }
+}
+/* news theme — daily-paper scannability with breaking-red accent. */
+
+@mixin news-module-styles {
+    /* Placeholder — module-styles.scss owns bespoke per-module visuals. */
+}

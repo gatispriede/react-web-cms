@@ -1,0 +1,96 @@
+/* ==========================================================================
+   Fashion — first-class theme.
+
+   Stark white + true black + one bold accent. Bodoni Moda display, Tenor
+   Sans body, expressive-bold motion. Scoped under
+   `[data-theme-name="fashion"]`. Aggressive contrast, sharp corners,
+   uppercase display — couture lookbook energy.
+   ========================================================================== */
+
+[data-theme-name="fashion"] {
+    --color-surface:       light-dark(#FFFFFF, #0A0A0A);
+    --color-ink:           light-dark(#0A0A0A, #F5F5F5);
+    --color-accent:        light-dark(#B00020, #FF4D6D);
+    --color-accent-ink:    light-dark(#FFFFFF, #0A0A0A);
+    --color-surface-inset: light-dark(#F2F2F2, #161616);
+    --color-rule:          light-dark(#0A0A0A, #F5F5F5);
+
+    --background: var(--color-surface);
+    --ink:    var(--color-ink);
+    --ink-2:  color-mix(in srgb, var(--color-ink) 60%, transparent);
+    --accent: var(--color-accent);
+    /* Hover pushes accent toward ink — keeps the bold contrast intact
+       instead of fading toward the surface. */
+    --accent-hover: color-mix(in srgb, var(--color-accent) 80%, var(--color-ink));
+
+    --font-display: 'Bodoni Moda', 'Tenor Sans', 'Didot', ui-serif, Georgia, serif;
+    --font-body:    'Tenor Sans', 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono:    ui-monospace, 'SF Mono', Menlo, monospace;
+
+    --theme-headingFont: var(--font-display);
+    --theme-bodyFont:    var(--font-body);
+
+    font-size: 16px;
+
+    /* ---- Motion personality (expressive-bold) -------------------------- */
+    --motion-duration-fast:       150ms;
+    --motion-duration-base:       240ms;
+    --motion-duration-slow:       360ms;
+    --motion-duration-deliberate: 600ms;
+    --motion-ease-standard:       cubic-bezier(0.34, 1.56, 0.64, 1);
+    --motion-ease-entrance:       cubic-bezier(0.34, 1.56, 0.64, 1);
+    --motion-ease-exit:           cubic-bezier(0.36, 0, 0.66, -0.56);
+    --motion-ease-emphasized:     cubic-bezier(0.68, -0.55, 0.32, 1.55);
+
+    --motion-distance-sm: 16px;
+    --motion-distance-md: 48px;
+    --motion-distance-lg: 140px;
+
+    /* Sharp corners — no rounding anywhere. */
+    --theme-borderRadius: 0px;
+
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+
+    h1, h2,
+    .heading--display {
+        font-family: var(--font-display);
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        text-transform: uppercase;
+        line-height: 0.95;
+    }
+
+    h3 {
+        font-family: var(--font-display);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+    }
+
+    /* Hard rules in ink — runway-divider weight. */
+    hr {
+        border: 0;
+        border-top: 2px solid var(--color-ink);
+    }
+
+    button,
+    .btn {
+        border-radius: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 600;
+    }
+
+    .btn:hover {
+        background: var(--accent-hover);
+        transition: background var(--motion-duration-fast) var(--motion-ease-standard);
+    }
+
+    /* Full-bleed hero — break out of the content gutter. */
+    .hero,
+    .hero--fullbleed {
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+    }
+}

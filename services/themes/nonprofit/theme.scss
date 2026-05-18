@@ -1,0 +1,100 @@
+/* ==========================================================================
+   Nonprofit — first-class theme.
+
+   Terracotta on cream. Warm, grounded, humanist. Sofia Sans display + Source
+   Sans 3 body — soft humanist sans pairing. Gentle-slow motion, generous
+   spacing, rounded-medium corners. Donation CTA is the load-bearing element.
+
+   Scoped under `[data-theme-name="nonprofit"]`.
+   ========================================================================== */
+
+[data-theme-name="nonprofit"] {
+    --color-surface:       light-dark(#FBF6EE, #14201F);
+    --color-ink:           light-dark(#1C1A17, #F1EADC);
+    --color-accent:        light-dark(#A8421A, #E07A52);
+    --color-accent-ink:    light-dark(#FFFFFF, #14201F);
+    --color-surface-inset: light-dark(#F1E6D2, #1B2A29);
+    --color-rule:          light-dark(#D8C9AE, #2E3F3E);
+
+    --background: var(--color-surface);
+    --ink:    var(--color-ink);
+    --ink-2:  color-mix(in srgb, var(--color-ink) 65%, transparent);
+    --accent: var(--color-accent);
+    --accent-hover: color-mix(in srgb, var(--color-accent) 85%, #000);
+
+    --font-display: 'Sofia Sans', 'Source Sans 3', 'Open Sans', system-ui, sans-serif;
+    --font-body:    'Source Sans 3', 'Open Sans', system-ui, -apple-system, sans-serif;
+    --font-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+    --theme-headingFont: var(--font-display);
+    --theme-bodyFont:    var(--font-body);
+
+    /* gentle-slow motion — welcoming, unhurried. */
+    --motion-duration-fast:       280ms;
+    --motion-duration-base:       480ms;
+    --motion-duration-slow:       820ms;
+    --motion-duration-deliberate: 1200ms;
+    --motion-ease-standard:       cubic-bezier(0.32, 0.08, 0.24, 1);
+    --motion-ease-entrance:       cubic-bezier(0.16, 0.84, 0.44, 1);
+    --motion-ease-exit:           cubic-bezier(0.5, 0, 0.75, 0);
+    --motion-ease-emphasized:     cubic-bezier(0.22, 0.61, 0.36, 1);
+
+    --motion-distance-sm: 10px;
+    --motion-distance-md: 24px;
+    --motion-distance-lg: 56px;
+
+    --theme-borderRadius: 10px;
+
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.6;
+
+    h1, h2, h3,
+    .heading,
+    .heading--display {
+        font-family: var(--font-display);
+        font-weight: 600;
+        letter-spacing: -0.015em;
+        line-height: 1.12;
+        color: var(--color-ink);
+    }
+
+    /* Donation-CTA emphasis — the primary action of any nonprofit site. */
+    .btn--primary,
+    .button--primary,
+    .cta--donate {
+        background: var(--color-accent);
+        color: var(--color-accent-ink);
+        padding: 0.85rem 1.6rem;
+        border-radius: 10px;
+        font-weight: 600;
+        border: none;
+        transition: background var(--motion-duration-fast) var(--motion-ease-standard),
+                    transform var(--motion-duration-fast) var(--motion-ease-standard);
+
+        &:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+    }
+
+    button, .btn, input, select, textarea {
+        border-radius: 8px;
+    }
+
+    /* Generous breathing room — community sites read as welcoming. */
+    section + section {
+        margin-top: 4.5rem;
+    }
+
+    .label--mono,
+    .meta--mono {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-2);
+    }
+}

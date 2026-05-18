@@ -1,0 +1,107 @@
+/* ==========================================================================
+   Journal — first-class theme.
+
+   Off-white paper + warm dark ink + burnt-sienna accent. Source Serif Pro
+   display + Crimson Pro body, gentle-slow motion. Scoped under
+   `[data-theme-name="journal"]`. Built for longform reading: wide measure,
+   generous leading, drop-cap-ready first paragraph, scholarly restraint.
+
+   Bespoke visuals live in `module-styles.scss` alongside.
+   ========================================================================== */
+
+[data-theme-name="journal"] {
+    /* ---- Semantic palette (light, dark) — mirrors theme.json. ---------- */
+    --color-surface:       light-dark(#F6F2E9, #15140F);
+    --color-ink:           light-dark(#22201C, #E8E3D4);
+    --color-accent:        light-dark(#A85A1F, #D08A4A);
+    --color-accent-ink:    light-dark(#F6F2E9, #1A130B);
+    --color-surface-inset: light-dark(#ECE6D6, #1E1C17);
+    --color-rule:          light-dark(#CCC4AE, #3A352B);
+
+    /* Legacy aliases. */
+    --background: var(--color-surface);
+    --ink:    var(--color-ink);
+    --ink-2:  color-mix(in srgb, var(--color-ink) 65%, transparent);
+    --accent: var(--color-accent);
+    --accent-hover: color-mix(in srgb, var(--color-accent) 85%, #000);
+
+    /* ---- Typography ---------------------------------------------------- */
+    --font-display: 'Source Serif Pro', 'Crimson Pro', ui-serif, Georgia, 'Times New Roman', serif;
+    --font-body:    'Crimson Pro', 'Source Serif Pro', ui-serif, Georgia, 'Times New Roman', serif;
+    --font-mono:    ui-monospace, 'SF Mono', Menlo, monospace;
+
+    --theme-headingFont: var(--font-display);
+    --theme-bodyFont:    var(--font-body);
+
+    /* Generous base for longform comfort. */
+    font-size: 18px;
+
+    /* ---- Motion personality (gentle-slow) — like turning a page. ------ */
+    --motion-duration-fast:       240ms;
+    --motion-duration-base:       400ms;
+    --motion-duration-slow:       640ms;
+    --motion-duration-deliberate: 1100ms;
+    --motion-ease-standard:       cubic-bezier(0.2, 0, 0, 1);
+    --motion-ease-entrance:       cubic-bezier(0, 0, 0.15, 1);
+    --motion-ease-emphasized:     cubic-bezier(0.05, 0, 0.05, 1);
+
+    --motion-distance-sm: 12px;
+    --motion-distance-md: 32px;
+    --motion-distance-lg: 96px;
+
+    /* ---- Borders + radii ---------------------------------------------- */
+    /* Hairline rules over rounded boxes — scholarly restraint. */
+    --theme-borderRadius: 2px;
+
+    /* ---- Body baseline ------------------------------------------------- */
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    line-height: 1.65;
+
+    /* ---- Signature touches -------------------------------------------- */
+    /* Serif everywhere — display and body share the family. */
+    h1, h2, h3, h4,
+    .heading,
+    .heading--display {
+        font-family: var(--font-display);
+        font-weight: 600;
+        letter-spacing: -0.005em;
+        line-height: 1.2;
+    }
+
+    /* Wide measure — cap text columns at a readable line length and centre. */
+    .rich-text,
+    .plain-text {
+        max-width: 68ch;
+        margin-inline: auto;
+    }
+
+    /* Drop-cap-ready opening paragraph. */
+    .rich-text p:first-of-type::first-letter,
+    .plain-text p:first-of-type::first-letter,
+    article p:first-of-type::first-letter {
+        font-family: var(--font-display);
+        font-size: 3.6em;
+        font-weight: 700;
+        float: inline-start;
+        line-height: 0.9;
+        padding-inline-end: 0.08em;
+        padding-block-start: 0.05em;
+        color: var(--color-accent);
+    }
+
+    /* Footnote-style muted meta. */
+    .label--mono,
+    .meta--mono {
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        letter-spacing: 0.04em;
+        color: var(--ink-2);
+    }
+}
+/* journal theme — longform restraint with drop-cap-ready first paragraph. */
+
+@mixin journal-module-styles {
+    /* Placeholder — module-styles.scss owns bespoke per-module visuals. */
+}

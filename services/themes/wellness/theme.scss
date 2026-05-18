@@ -1,0 +1,93 @@
+/* ==========================================================================
+   Wellness — first-class theme.
+
+   Sage on cream, soft Cormorant Garamond display + Nunito body, gentle-slow
+   motion. Scoped under `[data-theme-name="wellness"]`. Generous rounding,
+   unhurried easing, low-contrast hovers — feels like a deep exhale.
+   ========================================================================== */
+
+[data-theme-name="wellness"] {
+    /* ---- Semantic palette (light, dark) — mirrors theme.json. ---------- */
+    --color-surface:       light-dark(#F6F2E8, #161915);
+    --color-ink:           light-dark(#2A2E26, #E8E4D6);
+    --color-accent:        light-dark(#6B8E6B, #9CB89C);
+    --color-accent-ink:    light-dark(#FBFAF4, #10140F);
+    --color-surface-inset: light-dark(#EDE6D2, #1E221C);
+    --color-rule:          light-dark(#D8CFB8, #363B33);
+
+    /* Legacy aliases. */
+    --background: var(--color-surface);
+    --ink:    var(--color-ink);
+    --ink-2:  color-mix(in srgb, var(--color-ink) 65%, transparent);
+    --accent: var(--color-accent);
+    /* Hover stays inside the sage family — never let it go contrasty.
+       Mix toward ink (10%) rather than black for a restful settle. */
+    --accent-hover: color-mix(in srgb, var(--color-accent) 90%, var(--color-ink) 10%);
+
+    /* ---- Typography ---------------------------------------------------- */
+    --font-display: 'Cormorant Garamond', 'Lora', ui-serif, Georgia, serif;
+    --font-body:    'Nunito', 'Quicksand', system-ui, -apple-system, sans-serif;
+    --font-mono:    ui-monospace, 'SF Mono', Menlo, monospace;
+
+    --theme-headingFont: var(--font-display);
+    --theme-bodyFont:    var(--font-body);
+
+    font-size: 17px;
+
+    /* ---- Motion personality (gentle-slow) ------------------------------ */
+    --motion-duration-fast:       240ms;
+    --motion-duration-base:       400ms;
+    --motion-duration-slow:       640ms;
+    --motion-duration-deliberate: 1100ms;
+    --motion-ease-standard:       cubic-bezier(0.2, 0, 0, 1);
+    --motion-ease-entrance:       cubic-bezier(0, 0, 0.15, 1);
+    --motion-ease-emphasized:     cubic-bezier(0.05, 0, 0.05, 1);
+
+    --motion-distance-sm: 10px;
+    --motion-distance-md: 28px;
+    --motion-distance-lg: 80px;
+
+    /* ---- Borders + radii ---------------------------------------------- */
+    /* Everything is round here — pill controls, soft cards. */
+    --theme-borderRadius: 18px;
+
+    /* ---- Body baseline ------------------------------------------------- */
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    line-height: 1.75;
+
+    h1, h2, h3,
+    .heading,
+    .heading--display {
+        font-family: var(--font-display);
+        font-weight: 500;
+        letter-spacing: -0.005em;
+        line-height: 1.2;
+    }
+
+    /* Subtle italic for sub-display — soft serif texture without shouting. */
+    h2, h3 {
+        font-style: italic;
+    }
+
+    /* Pill controls — wellness signature. */
+    button,
+    .btn,
+    input,
+    select,
+    textarea {
+        border-radius: 9999px;
+    }
+
+    .btn:hover {
+        background: var(--accent-hover);
+        transition: background var(--motion-duration-base) var(--motion-ease-standard);
+    }
+
+    /* Hairline rules in the rule color, not ink — keep contrast gentle. */
+    hr {
+        border: 0;
+        border-top: 1px solid var(--color-rule);
+    }
+}

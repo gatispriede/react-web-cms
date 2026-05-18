@@ -1,0 +1,105 @@
+/* ==========================================================================
+   Gaming — first-class theme.
+
+   Near-black surface + neon magenta accent (darkDefault), Orbitron display
+   + Rajdhani body, expressive-bold motion with snappy quick durations.
+   Scoped under `[data-theme-name="gaming"]`. Cyberpunk signature touches:
+   text-shadow glow on display headings, scanline pseudo on hero, neon
+   box-shadow on button hover.
+
+   Bespoke visuals live in `module-styles.scss` alongside.
+   ========================================================================== */
+
+[data-theme-name="gaming"] {
+    --color-surface:       light-dark(#15151F, #0A0A12);
+    --color-ink:           light-dark(#F0F0F5, #E8E8F0);
+    --color-accent:        light-dark(#FF2E88, #FF3DA0);
+    --color-accent-ink:    light-dark(#0A0A12, #0A0A12);
+    --color-surface-inset: light-dark(#1C1C2A, #11111C);
+    --color-rule:          light-dark(#2A2A3F, #1E1E2E);
+
+    --background: var(--color-surface);
+    --ink:    var(--color-ink);
+    --ink-2:  color-mix(in srgb, var(--color-ink) 65%, transparent);
+    --accent: var(--color-accent);
+    --accent-hover: color-mix(in srgb, var(--color-accent) 85%, #fff);
+
+    --font-display: 'Orbitron', 'Rajdhani', 'Geist', 'Inter Tight', system-ui, sans-serif;
+    --font-body:    'Rajdhani', 'Geist', 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono:    'JetBrains Mono', 'Fira Code', ui-monospace, 'SF Mono', Menlo, monospace;
+
+    --theme-headingFont: var(--font-display);
+    --theme-bodyFont:    var(--font-body);
+
+    font-size: 16px;
+
+    /* expressive-bold motion — snappy quick durations, energetic eases. */
+    --motion-duration-fast:       150ms;
+    --motion-duration-base:       220ms;
+    --motion-duration-slow:       320ms;
+    --motion-duration-deliberate: 540ms;
+    --motion-ease-standard:       cubic-bezier(0.34, 1.56, 0.64, 1);
+    --motion-ease-entrance:       cubic-bezier(0.34, 1.56, 0.64, 1);
+    --motion-ease-exit:           cubic-bezier(0.36, 0, 0.66, -0.2);
+    --motion-ease-emphasized:     cubic-bezier(0.68, -0.55, 0.32, 1.55);
+
+    --motion-distance-sm: 14px;
+    --motion-distance-md: 40px;
+    --motion-distance-lg: 100px;
+
+    /* Sharp angular radii — geometric / panel-cut feel. */
+    --theme-borderRadius: 2px;
+
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+
+    h1, h2,
+    .heading--display {
+        font-family: var(--font-display);
+        font-weight: 900;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        text-shadow: 0 0 8px var(--color-accent),
+                     0 0 24px color-mix(in srgb, var(--color-accent) 40%, transparent);
+    }
+
+    h3, h4,
+    .heading {
+        font-family: var(--font-display);
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    /* Subtle horizontal scanlines on hero — 2px intervals. */
+    .hero {
+        position: relative;
+        isolation: isolate;
+    }
+
+    .hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: repeating-linear-gradient(
+            to bottom,
+            transparent 0,
+            transparent 1px,
+            color-mix(in srgb, var(--color-ink) 6%, transparent) 1px,
+            color-mix(in srgb, var(--color-ink) 6%, transparent) 2px
+        );
+        z-index: 0;
+        mix-blend-mode: overlay;
+    }
+
+    /* Neon glow on button hover. */
+    button:hover,
+    .button:hover,
+    [role="button"]:hover {
+        box-shadow: 0 0 0 1px var(--color-accent),
+                    0 0 12px var(--color-accent),
+                    0 0 28px color-mix(in srgb, var(--color-accent) 45%, transparent);
+    }
+}

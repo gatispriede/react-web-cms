@@ -1,0 +1,114 @@
+/* ==========================================================================
+   Legal Firm — first-class theme.
+
+   Conservative navy + cream paper + restrained gold accent, Cormorant
+   Garamond display + Source Serif 4 body. Scoped under
+   `[data-theme-name="legal-firm"]`. The aesthetic of a partner's letterhead
+   — gravitas, tradition, no theatrics. Motion is `reduced-static`: nothing
+   slides, nothing bounces. Hover states are colour-shifts only.
+
+   Distinct from siblings:
+   - editorial: warm cream + literary serif + slow page-turn motion
+   - medical:   clinical white + teal + humanist sans
+   - nonprofit: warmer surface + mission-led photography
+
+   Bespoke visuals live in `module-styles.scss` alongside.
+   ========================================================================== */
+
+[data-theme-name="legal-firm"] {
+    /* ---- Semantic palette (light, dark) — mirrors theme.json. ---------- */
+    --color-surface:       light-dark(#F7F2E8, #0E1626);
+    --color-ink:           light-dark(#1A2238, #EFE7D4);
+    --color-accent:        light-dark(#A07A24, #D4A84A);
+    --color-accent-ink:    light-dark(#FFFFFF, #1A1308);
+    --color-surface-inset: light-dark(#EFE7D4, #161F33);
+    --color-rule:          light-dark(#C9BFA6, #2A344A);
+
+    /* Legacy aliases. */
+    --background: var(--color-surface);
+    --ink:    var(--color-ink);
+    --ink-2:  color-mix(in srgb, var(--color-ink) 65%, transparent);
+    --accent: var(--color-accent);
+    --accent-hover: color-mix(in srgb, var(--color-accent) 82%, #000);
+
+    /* ---- Typography ---------------------------------------------------- */
+    --font-display: 'Cormorant Garamond', 'EB Garamond', 'Source Serif 4', Garamond, Georgia, 'Times New Roman', serif;
+    --font-body:    'Source Serif 4', 'Cormorant Garamond', Garamond, Georgia, 'Times New Roman', serif;
+    --font-mono:    ui-monospace, 'SF Mono', Menlo, monospace;
+
+    --theme-headingFont: var(--font-display);
+    --theme-bodyFont:    var(--font-body);
+
+    /* ---- Motion (reduced-static) --------------------------------------- */
+    /* Near-linear easing, modest durations — no springs, no overshoots. */
+    --motion-duration-fast:       180ms;
+    --motion-duration-base:       260ms;
+    --motion-duration-slow:       380ms;
+    --motion-duration-deliberate: 520ms;
+    --motion-ease-standard:       cubic-bezier(0.4, 0.0, 0.6, 1);
+    --motion-ease-entrance:       cubic-bezier(0.4, 0.0, 0.6, 1);
+    --motion-ease-exit:           cubic-bezier(0.4, 0.0, 0.6, 1);
+    --motion-ease-emphasized:     cubic-bezier(0.4, 0.0, 0.6, 1);
+
+    --motion-distance-sm: 4px;
+    --motion-distance-md: 10px;
+    --motion-distance-lg: 24px;
+
+    /* Conservative corners — letterhead, not chip. */
+    --theme-borderRadius: 4px;
+
+    /* ---- Body baseline ------------------------------------------------- */
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-size: 17px;
+
+    h1, h2, h3,
+    .heading,
+    .heading--display {
+        font-family: var(--font-display);
+        font-weight: 500;
+        letter-spacing: -0.005em;
+        line-height: 1.18;
+    }
+
+    /* Body itself stays in serif — the entire theme is set in serif faces. */
+    p, li, blockquote {
+        font-family: var(--font-body);
+    }
+
+    /* Gold-accent links with subtle underline — the citation style. */
+    a {
+        color: var(--color-accent);
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        text-decoration-thickness: 1px;
+        transition: color var(--motion-duration-fast) var(--motion-ease-standard);
+    }
+    a:hover {
+        color: var(--accent-hover);
+    }
+
+    /* Conservative buttons — 4px radius, colour-shift hover only, no
+       translate / scale / shadow gymnastics. */
+    .btn,
+    button.btn,
+    .button {
+        border-radius: 4px;
+        font-family: var(--font-display);
+        letter-spacing: 0.01em;
+        transition: background-color var(--motion-duration-fast) var(--motion-ease-standard),
+                    color var(--motion-duration-fast) var(--motion-ease-standard);
+    }
+    .btn:hover,
+    button.btn:hover,
+    .button:hover {
+        background-color: var(--accent-hover);
+    }
+
+    /* Visible focus ring — gold on cream needs explicit contrast. */
+    *:focus-visible {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 2px;
+    }
+}

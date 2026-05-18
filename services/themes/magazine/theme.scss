@@ -1,0 +1,115 @@
+/* ==========================================================================
+   Magazine — first-class theme.
+
+   Pure white surface + true-black ink + deep-teal jewel accent. Fraunces
+   display over Inter body, expressive-bold motion for glossy spread feel.
+   Scoped under `[data-theme-name="magazine"]`. Built photography-first:
+   huge serif headlines, full-bleed-friendly, tactile.
+
+   Bespoke visuals live in `module-styles.scss` alongside.
+   ========================================================================== */
+
+[data-theme-name="magazine"] {
+    /* ---- Semantic palette (light, dark) — mirrors theme.json. ---------- */
+    --color-surface:       light-dark(#FFFFFF, #0B0D0E);
+    --color-ink:           light-dark(#0A0A0A, #F4F2EE);
+    --color-accent:        light-dark(#0F5257, #3FA9A8);
+    --color-accent-ink:    light-dark(#FFFFFF, #06181A);
+    --color-surface-inset: light-dark(#F4F2EE, #15191B);
+    --color-rule:          light-dark(#D9D4CB, #2E3437);
+
+    /* Legacy aliases. */
+    --background: var(--color-surface);
+    --ink:    var(--color-ink);
+    --ink-2:  color-mix(in srgb, var(--color-ink) 65%, transparent);
+    --accent: var(--color-accent);
+    --accent-hover: color-mix(in srgb, var(--color-accent) 85%, #000);
+
+    /* ---- Typography ---------------------------------------------------- */
+    --font-display: 'Fraunces', 'Recoleta', ui-serif, Georgia, 'Times New Roman', serif;
+    --font-body:    'Inter', 'Source Sans Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono:    ui-monospace, 'SF Mono', Menlo, monospace;
+
+    --theme-headingFont: var(--font-display);
+    --theme-bodyFont:    var(--font-body);
+
+    font-size: 17px;
+
+    /* ---- Motion personality (expressive-bold) — springy overshoot. ---- */
+    --motion-duration-fast:       200ms;
+    --motion-duration-base:       320ms;
+    --motion-duration-slow:       600ms;
+    --motion-duration-deliberate: 900ms;
+    --motion-ease-standard:       cubic-bezier(0.34, 1.56, 0.64, 1);
+    --motion-ease-entrance:       cubic-bezier(0.34, 1.56, 0.64, 1);
+    --motion-ease-exit:           cubic-bezier(0.36, 0, 0.66, -0.56);
+    --motion-ease-emphasized:     cubic-bezier(0.68, -0.55, 0.32, 1.55);
+
+    --motion-distance-sm: 16px;
+    --motion-distance-md: 48px;
+    --motion-distance-lg: 120px;
+
+    /* ---- Borders + radii ---------------------------------------------- */
+    /* Soft edges echo glossy print finishing. */
+    --theme-borderRadius: 6px;
+
+    /* ---- Body baseline ------------------------------------------------- */
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+
+    /* ---- Signature touches -------------------------------------------- */
+    /* Huge serif display — magazine cover energy. */
+    h1, h2,
+    .heading--display {
+        font-family: var(--font-display);
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        line-height: 1.0;
+    }
+
+    h3 {
+        font-family: var(--font-display);
+        font-weight: 700;
+        letter-spacing: -0.015em;
+    }
+
+    /* Hero gets accent treatment — jewel-toned bleed strip behind kicker. */
+    .hero {
+        position: relative;
+    }
+    .hero .label--mono,
+    .hero .meta--mono,
+    .hero .eyebrow {
+        color: var(--color-accent);
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+    }
+    .hero::before {
+        content: "";
+        position: absolute;
+        inset-inline-start: 0;
+        inset-block-start: 0;
+        inline-size: 4px;
+        block-size: 100%;
+        background: var(--color-accent);
+        opacity: 0.85;
+    }
+
+    /* Pull quotes lean on the accent — full-bleed-friendly, no body padding. */
+    blockquote {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-size: 1.6em;
+        line-height: 1.25;
+        border-inline-start: 3px solid var(--color-accent);
+        padding-inline-start: 1rem;
+    }
+}
+/* magazine theme — photography-first glossy spreads with jewel accent. */
+
+@mixin magazine-module-styles {
+    /* Placeholder — module-styles.scss owns bespoke per-module visuals. */
+}

@@ -1,0 +1,94 @@
+/* ==========================================================================
+   Fintech — first-class theme.
+
+   Deep navy surface + restrained mint accent, Inter Tight display + Inter
+   body, snappy motion with institutional restraint. Scoped under
+   `[data-theme-name="fintech"]`. High-contrast rules and heavy heading
+   weights signal compliance + regulated trust. No playful flourishes.
+
+   Bespoke visuals live in `module-styles.scss` alongside.
+   ========================================================================== */
+
+[data-theme-name="fintech"] {
+    --color-surface:       light-dark(#FFFFFF, #0B1220);
+    --color-ink:           light-dark(#0B1220, #E6ECF5);
+    --color-accent:        light-dark(#0F766E, #5EEAD4);
+    --color-accent-ink:    light-dark(#FFFFFF, #0B1220);
+    --color-surface-inset: light-dark(#F4F6FA, #111A2E);
+    --color-rule:          light-dark(#D7DEEA, #1F2A44);
+
+    --background: var(--color-surface);
+    --ink:    var(--color-ink);
+    --ink-2:  color-mix(in srgb, var(--color-ink) 65%, transparent);
+    --accent: var(--color-accent);
+    --accent-hover: color-mix(in srgb, var(--color-accent) 85%, #000);
+
+    --font-display: 'Inter Tight', 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-body:    'Inter', 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono:    'IBM Plex Mono', 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+    --theme-headingFont: var(--font-display);
+    --theme-bodyFont:    var(--font-body);
+
+    font-size: 16px;
+
+    /* snappy-default motion — restrained, no overshoot. */
+    --motion-duration-fast:       100ms;
+    --motion-duration-base:       180ms;
+    --motion-duration-slow:       280ms;
+    --motion-duration-deliberate: 480ms;
+    --motion-ease-standard:       cubic-bezier(0.4, 0, 0.2, 1);
+    --motion-ease-entrance:       cubic-bezier(0, 0, 0.2, 1);
+    --motion-ease-exit:           cubic-bezier(0.4, 0, 1, 1);
+    --motion-ease-emphasized:     cubic-bezier(0.2, 0, 0, 1);
+
+    --motion-distance-sm: 6px;
+    --motion-distance-md: 16px;
+    --motion-distance-lg: 48px;
+
+    /* Institutional radii — small, deliberate. */
+    --theme-borderRadius: 4px;
+
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+
+    /* Heavier heading weights — institutional authority. */
+    h1, h2,
+    .heading--display {
+        font-family: var(--font-display);
+        font-weight: 700;
+        letter-spacing: -0.025em;
+    }
+
+    h3, h4,
+    .heading {
+        font-family: var(--font-display);
+        font-weight: 600;
+        letter-spacing: -0.015em;
+    }
+
+    /* Sharper, higher-contrast rules — ledger-line tier. */
+    hr {
+        border: 0;
+        border-top: 1px solid var(--color-ink);
+        opacity: 0.85;
+    }
+
+    /* Subtle elevation on button hover — no transform jitter. */
+    button:hover,
+    .button:hover,
+    [role="button"]:hover {
+        box-shadow: 0 1px 2px color-mix(in srgb, var(--color-ink) 18%, transparent),
+                    0 2px 6px color-mix(in srgb, var(--color-ink) 10%, transparent);
+    }
+
+    /* Monospace meta — ticker-style numerics. */
+    .meta--mono,
+    .label--mono,
+    .figure--numeric {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0.02em;
+    }
+}
